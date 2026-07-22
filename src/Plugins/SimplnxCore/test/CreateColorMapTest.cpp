@@ -15,6 +15,9 @@
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <array>
+#include <limits>
+
 namespace fs = std::filesystem;
 using namespace nx::core;
 
@@ -225,6 +228,56 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ColorTableUtilities: RGB interpolation helpers", "[SimplnxCore][ColorTableUtilities]")
+{
+  // Two-color black->white map. Flattened control points: {A, R, G, B} per color.
+  const std::vector<float32> twoColor = {0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F};
+  const std::vector<float32> binPoints2 = ColorTableUtilities::NormalizeBinPoints(twoColor);
+  REQUIRE(binPoints2.size() == 2);
+  REQUIRE(binPoints2[0] == Approx(0.0F));
+  REQUIRE(binPoints2[1] == Approx(1.0F));
+
+  // Midpoint of black->white: 0.5 * 255 == 127.5 -> truncates to 127.
+  const std::array<uint8, 3> mid = ColorTableUtilities::ComputeRgbFromControlPoints(0.5F, binPoints2, twoColor, 2);
+  REQUIRE(mid[0] == 127);
+  REQUIRE(mid[1] == 127);
+  REQUIRE(mid[2] == 127);
+
+  // Three-color map with non-[0,1] A-values -> normalized bin points {0, 0.5, 1}.
+  const std::vector<float32> threeColor = {0.0F, 0.0F, 0.0F, 0.0F, 5.0F, 1.0F, 0.0F, 0.0F, 10.0F, 0.0F, 0.0F, 1.0F};
+  const std::vector<float32> binPoints3 = ColorTableUtilities::NormalizeBinPoints(threeColor);
+  REQUIRE(binPoints3[1] == Approx(0.5F));
+  const std::array<uint8, 3> pureRed = ColorTableUtilities::ComputeRgbFromControlPoints(0.5F, binPoints3, threeColor, 3);
+  REQUIRE(pureRed[0] == 255);
+  REQUIRE(pureRed[1] == 0);
+  REQUIRE(pureRed[2] == 0);
+
+  // min == max guard: normalized value is 0.0 regardless of value.
+  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(5, 5, 5) == Approx(0.0F));
+  REQUIRE(ColorTableUtilities::NormalizeValue<float32>(2.0F, 0.0F, 4.0F) == Approx(0.5F));
+
+  // Negative-min normalization: differences must be handled without signed-integer overflow.
+  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(-8, -8, 7) == Approx(0.0F));
+  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(7, -8, 7) == Approx(1.0F));
+  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(0, -8, 7) == Approx(8.0F / 15.0F));
+
+  // Full int64 range would overflow a signed subtraction; the hardened helper returns a finite value in [0, 1].
+  const float32 fullRange = ColorTableUtilities::NormalizeValue<int64>(0, std::numeric_limits<int64>::min(), std::numeric_limits<int64>::max());
+  REQUIRE(std::isfinite(fullRange));
+  REQUIRE(fullRange >= 0.0F);
+  REQUIRE(fullRange <= 1.0F);
+  REQUIRE(fullRange == Approx(0.5F));
+
+  // Non-finite guard: NaN inputs deterministically map to the first control color (0.0F).
+  REQUIRE(ColorTableUtilities::NormalizeValue<float32>(std::numeric_limits<float32>::quiet_NaN(), 0.0F, 1.0F) == 0.0F);
+
+  // Degenerate bin points: a single control color must not produce NaN from a 0/0 divide.
+  const std::vector<float32> singleColor = {0.5F, 1.0F, 0.0F, 0.0F};
+  const std::vector<float32> binPoints1 = ColorTableUtilities::NormalizeBinPoints(singleColor);
+  REQUIRE(binPoints1.size() == 1);
+  REQUIRE(binPoints1[0] == Approx(0.0F));
 }
 
 TEST_CASE("SimplnxCore::CreateColorMapFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateColorMapFilter][BackwardsCompatibility]")

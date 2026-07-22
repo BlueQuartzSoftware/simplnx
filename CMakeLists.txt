@@ -556,6 +556,9 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Fonts/Fonts.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Fonts/LatoRegular.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ScaleBarRenderer.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
@@ -792,6 +795,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ScaleBarRenderer.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   #${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
@@ -900,6 +904,7 @@ target_include_directories(simplnx
   PUBLIC
     $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
+    $<BUILD_INTERFACE:${SIMPLNX_SOURCE_DIR}/3rdParty/canvas_ity/src>
     $<INSTALL_INTERFACE:include>
 )
 

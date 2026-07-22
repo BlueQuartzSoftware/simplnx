@@ -284,8 +284,20 @@
     },
     {
       "args": {
+        "add_scale_bar": {
+          "value": false,
+          "version": 1
+        },
+        "create_color_table": {
+          "value": false,
+          "version": 1
+        },
         "file_name": {
           "value": "Data/Output/TexturedCopper/IPF_Unexposed.png",
+          "version": 1
+        },
+        "flip_mode_index": {
+          "value": 0,
           "version": 1
         },
         "image_array_path": {
@@ -300,16 +312,44 @@
           "value": "Cugrid_after 2nd_15kv_2kx_2",
           "version": 1
         },
-        "parameters_version": 1,
+        "invalid_color_value": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "leading_digit_character": {
+          "value": "0",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 5,
         "plane_index": {
           "value": 0,
+          "version": 1
+        },
+        "selected_preset": {
+          "value": "Black-Body Radiation",
+          "version": 1
+        },
+        "total_index_digits": {
+          "value": 3,
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
           "version": 1
         }
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ITKImageWriterFilter",
-        "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
+        "name": "nx::core::WriteImageFilter",
+        "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587"
       },
       "isDisabled": false
     },

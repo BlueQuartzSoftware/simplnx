@@ -5,9 +5,11 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace nx::core
 {
@@ -21,6 +23,13 @@ struct SIMPLNXCORE_EXPORT WriteImageInputValues
   std::string leadingDigitCharacter = "0";
   DataPath imageGeometryPath;
   DataPath imageDataArrayPath;
+  bool createColorTable = false;
+  std::string presetName;
+  bool useMask = false;
+  DataPath maskArrayPath;
+  std::vector<uint8> invalidColor; ///< size 3, RGB
+  ImageFlipTransform flipMode = ImageFlipTransform::None;
+  bool addScaleBar = false;
 };
 
 /**
