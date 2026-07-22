@@ -1,0 +1,115 @@
+{
+  "isDisabled": false,
+  "name": "nx.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "import_data_object": {
+          "value": {
+            "data_paths": [],
+            "file_path": "/Users/mjackson/Workspace5/simplnx/src/Plugins/OrientationAnalysis/vv/comparisons/CAxisSegmentFeaturesFilter/results/caxis_ab_input.dream3d",
+            "path_import_policy": 0
+          },
+          "version": 2
+        },
+        "parameters_version": 1
+      },
+      "comments": "Read the SAME legacy-format input file the 6.5.171 pipeline reads.",
+      "filter": {"name": "nx::core::ReadDREAM3DFilter", "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"},
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_geometry_path": {"value": "TC1_Chain", "version": 1},
+        "misorientation_tolerance": {"value": 10.0, "version": 1},
+        "use_mask": {"value": false, "version": 1},
+        "quats_array_path": {"value": "TC1_Chain/CellData/Quats", "version": 1},
+        "cell_phases_array_path": {"value": "TC1_Chain/CellData/Phases", "version": 1},
+        "mask_array_path": {"value": "", "version": 1},
+        "crystal_structures_array_path": {"value": "TC1_Chain/CellEnsembleData/CrystalStructures", "version": 1},
+        "feature_ids_array_name": {"value": "FeatureIds", "version": 1},
+        "cell_feature_attribute_matrix_name": {"value": "CellFeatureData", "version": 1},
+        "active_array_name": {"value": "Active", "version": 1},
+        "randomize_feature_ids": {"value": false, "version": 1},
+        "neighbor_scheme_index": {"value": 0, "version": 1},
+        "parameters_version": 2
+      },
+      "comments": "TC1 chain, face, no mask. Expected partition {0,1,2}{3,4}{5,6}{7}.",
+      "filter": {"name": "nx::core::CAxisSegmentFeaturesFilter", "uuid": "9fe07e17-aef1-4bf1-834c-d3a73dafc27d"},
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_geometry_path": {"value": "TC2_PiFold", "version": 1},
+        "misorientation_tolerance": {"value": 10.0, "version": 1},
+        "use_mask": {"value": false, "version": 1},
+        "quats_array_path": {"value": "TC2_PiFold/CellData/Quats", "version": 1},
+        "cell_phases_array_path": {"value": "TC2_PiFold/CellData/Phases", "version": 1},
+        "mask_array_path": {"value": "", "version": 1},
+        "crystal_structures_array_path": {"value": "TC2_PiFold/CellEnsembleData/CrystalStructures", "version": 1},
+        "feature_ids_array_name": {"value": "FeatureIds", "version": 1},
+        "cell_feature_attribute_matrix_name": {"value": "CellFeatureData", "version": 1},
+        "active_array_name": {"value": "Active", "version": 1},
+        "randomize_feature_ids": {"value": false, "version": 1},
+        "neighbor_scheme_index": {"value": 0, "version": 1},
+        "parameters_version": 2
+      },
+      "comments": "TC2 pi-fold antiparallel c-axes. Expected partition {0,1}{2}.",
+      "filter": {"name": "nx::core::CAxisSegmentFeaturesFilter", "uuid": "9fe07e17-aef1-4bf1-834c-d3a73dafc27d"},
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_geometry_path": {"value": "TC3_Mask", "version": 1},
+        "misorientation_tolerance": {"value": 10.0, "version": 1},
+        "use_mask": {"value": true, "version": 1},
+        "quats_array_path": {"value": "TC3_Mask/CellData/Quats", "version": 1},
+        "cell_phases_array_path": {"value": "TC3_Mask/CellData/Phases", "version": 1},
+        "mask_array_path": {"value": "TC3_Mask/CellData/Mask", "version": 1},
+        "crystal_structures_array_path": {"value": "TC3_Mask/CellEnsembleData/CrystalStructures", "version": 1},
+        "feature_ids_array_name": {"value": "FeatureIds", "version": 1},
+        "cell_feature_attribute_matrix_name": {"value": "CellFeatureData", "version": 1},
+        "active_array_name": {"value": "Active", "version": 1},
+        "randomize_feature_ids": {"value": false, "version": 1},
+        "neighbor_scheme_index": {"value": 0, "version": 1},
+        "parameters_version": 2
+      },
+      "comments": "TC3 bool mask excludes voxels 0 and 3. Expected {1,2}{4}, masked cells id 0.",
+      "filter": {"name": "nx::core::CAxisSegmentFeaturesFilter", "uuid": "9fe07e17-aef1-4bf1-834c-d3a73dafc27d"},
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_geometry_path": {"value": "TC4_Phase0", "version": 1},
+        "misorientation_tolerance": {"value": 10.0, "version": 1},
+        "use_mask": {"value": false, "version": 1},
+        "quats_array_path": {"value": "TC4_Phase0/CellData/Quats", "version": 1},
+        "cell_phases_array_path": {"value": "TC4_Phase0/CellData/Phases", "version": 1},
+        "mask_array_path": {"value": "", "version": 1},
+        "crystal_structures_array_path": {"value": "TC4_Phase0/CellEnsembleData/CrystalStructures", "version": 1},
+        "feature_ids_array_name": {"value": "FeatureIds", "version": 1},
+        "cell_feature_attribute_matrix_name": {"value": "CellFeatureData", "version": 1},
+        "active_array_name": {"value": "Active", "version": 1},
+        "randomize_feature_ids": {"value": false, "version": 1},
+        "neighbor_scheme_index": {"value": 0, "version": 1},
+        "parameters_version": 2
+      },
+      "comments": "TC4 unindexed (phase 0) cell 0. Expected {1,2,3}, cell 0 id 0.",
+      "filter": {"name": "nx::core::CAxisSegmentFeaturesFilter", "uuid": "9fe07e17-aef1-4bf1-834c-d3a73dafc27d"},
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {"value": "/Users/mjackson/Workspace5/simplnx/src/Plugins/OrientationAnalysis/vv/comparisons/CAxisSegmentFeaturesFilter/results/nx_out.dream3d", "version": 1},
+        "write_xdmf_file": {"value": false, "version": 1},
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {"name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"},
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

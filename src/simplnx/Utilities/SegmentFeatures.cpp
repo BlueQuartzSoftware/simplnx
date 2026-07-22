@@ -148,7 +148,11 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   // Initialize a sequence of execution modifiers
   int32 gnum = 1;
   int64 nextSeed = 0;
-  int64 seed = 0; // Always use the very first value of the array that we are using to segment
+  // The first seed must be validated (and its cell stamped with gnum) by getSeed() exactly like
+  // every later seed; bursting from a raw index 0 can grow a feature from a masked or phase-0
+  // voxel and leaves an empty feature behind whenever index 0 cannot legitimately seed anything.
+  int64 seed = getSeed(gnum, nextSeed);
+  nextSeed = seed + 1;
   usize size = 0;
 
   // Initialize containers

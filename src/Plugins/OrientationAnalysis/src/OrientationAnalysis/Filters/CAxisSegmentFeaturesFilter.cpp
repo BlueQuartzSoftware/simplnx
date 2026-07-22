@@ -4,11 +4,12 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -121,7 +122,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
-    return {MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
+    return {MakeErrorResult<OutputActions>(-655, "Misorientation Tolerance cannot equal ZERO.")};
   }
 
   // Validate the Grid Geometry
@@ -182,7 +183,10 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  // Derive the FeatureIds path from the geometry's cell-data AttributeMatrix, exactly as
+  // preflightImpl created it (the Quats array is not required to live in that AttributeMatrix).
+  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
+  inputValues.FeatureIdsArrayPath = gridGeom.getCellDataPath().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));

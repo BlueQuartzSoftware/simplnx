@@ -4,7 +4,7 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -30,7 +30,8 @@ CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 Result<> CAxisSegmentFeatures::operator()()
 {
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
-  auto* imageGeometry = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  // The geometry parameter accepts Image AND RectGrid geometries; both derive from IGridGeometry.
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   if(m_InputValues->UseMask)
@@ -50,25 +51,28 @@ Result<> CAxisSegmentFeatures::operator()()
   // a hexagonal phase. This guards against there being multiple phases defined in
   // and EBSD file but the non-hexagonal phases were actually never found
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  usize numCells = m_CellPhases->getNumberOfTuples();
+  const usize numCells = m_CellPhases->getNumberOfTuples();
+  const usize numEnsembles = crystalStructures.getNumberOfTuples();
   for(usize cellIdx = 0; cellIdx < numCells; ++cellIdx)
   {
-    int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
-    // Only consider valid ebsd phase values
-    if(currentPhaseIdx < 1)
+    const int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
+    // Cells that can never seed or join a feature are exempt from the crystal-structure
+    // requirement: phase 0 is the conventional "unindexed" phase (its CrystalStructures entry is
+    // the 999 "unknown" sentinel), and masked-out cells are excluded from segmentation entirely.
+    if(currentPhaseIdx <= 0 || (m_GoodVoxelsArray != nullptr && !m_GoodVoxelsArray->isTrue(cellIdx)))
     {
       continue;
     }
-    // Only consider valid mask values
-    if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(cellIdx))
+    if(static_cast<usize>(currentPhaseIdx) >= numEnsembles)
     {
-      continue;
+      return MakeErrorResult(-8364, fmt::format("Cell {} has a phase value of {} but the Crystal Structures array '{}' only has {} entries.", cellIdx, currentPhaseIdx,
+                                                m_InputValues->CrystalStructuresArrayPath.toString(), numEnsembles));
     }
     const auto crystalStructureType = crystalStructures[currentPhaseIdx];
 
     if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
     {
-      return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires all phases to be either Hexagonal-Low 6/m "
+      return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis misorientation requires all phases to be either Hexagonal-Low 6/m "
                                                 "or Hexagonal-High 6/mmm type crystal structures.",
                                                 CrystalStructureEnumToString(crystalStructureType)));
     }
@@ -76,11 +80,11 @@ Result<> CAxisSegmentFeatures::operator()()
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0);
-  auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  active->fill(1);
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArray->fill(1);
 
   // Run the segmentation algorithm
-  execute(imageGeometry);
+  execute(gridGeom);
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
@@ -93,7 +97,6 @@ Result<> CAxisSegmentFeatures::operator()()
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 
   // make sure all values are initialized and "re-reserve" index 0
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   activeArray->getDataStore()->fill(1);
   (*activeArray)[0] = 0;
 
@@ -152,9 +155,9 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   bool group = false;
 
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
-  Float32Array& currentQuat = *m_QuatsArray;
+  const Float32Array& quats = *m_QuatsArray;
   Int32Array& featureIds = *m_FeatureIdsArray;
-  Int32Array& cellPhases = *m_CellPhases;
+  const Int32Array& cellPhases = *m_CellPhases;
 
   bool neighborPointIsGood = false;
   if(m_GoodVoxelsArray != nullptr)
@@ -166,8 +169,8 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   {
     if(cellPhases[referencepoint] == cellPhases[neighborpoint])
     {
-      const ebsdlib::QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
-      const ebsdlib::QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);
+      const ebsdlib::QuatF q1(quats[referencepoint * 4], quats[referencepoint * 4 + 1], quats[referencepoint * 4 + 2], quats[referencepoint * 4 + 3]);
+      const ebsdlib::QuatF q2(quats[neighborpoint * 4 + 0], quats[neighborpoint * 4 + 1], quats[neighborpoint * 4 + 2], quats[neighborpoint * 4 + 3]);
 
       const ebsdlib::OrientationMatrixFType oMatrix1 = q1.toOrientationMatrix();
       const ebsdlib::OrientationMatrixFType oMatrix2 = q2.toOrientationMatrix();
