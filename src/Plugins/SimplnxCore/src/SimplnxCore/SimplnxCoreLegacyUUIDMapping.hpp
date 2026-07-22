@@ -85,6 +85,7 @@
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
@@ -204,6 +205,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects2
     {nx::core::Uuid::FromString("119861c5-e303-537e-b210-2e62936222e9").value(), {nx::core::FilterTraits<PointSampleTriangleGeometryFilter>::uuid, &PointSampleTriangleGeometryFilter::FromSIMPLJson}}, // PointSampleTriangleGeometry
     {nx::core::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), {nx::core::FilterTraits<QuickSurfaceMeshFilter>::uuid, &QuickSurfaceMeshFilter::FromSIMPLJson}}, // QuickSurfaceMesh
+    {nx::core::Uuid::FromString("86d77279-5a18-5b75-a411-c4e0c50bc4a4").value(), {nx::core::FilterTraits<M3CSurfaceMeshingFilter>::uuid, &M3CSurfaceMeshingFilter::FromSIMPLJson}}, // M3CSliceBySlice
     {nx::core::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), {nx::core::FilterTraits<ReadRawBinaryFilter>::uuid, &ReadRawBinaryFilter::FromSIMPLJson}}, // RawBinaryReader
     {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), {nx::core::FilterTraits<RemoveFlaggedVerticesFilter>::uuid, &RemoveFlaggedVerticesFilter::FromSIMPLJson}}, // RemoveFlaggedVerticesFilter
     {nx::core::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), {nx::core::FilterTraits<RequireMinimumSizeFeaturesFilter>::uuid, &RequireMinimumSizeFeaturesFilter::FromSIMPLJson}}, // MinSize

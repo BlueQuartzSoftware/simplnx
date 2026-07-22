@@ -34,20 +34,34 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
   const usize numTuples = faceLabelsStore.getNumberOfTuples();
   std::vector<bool> visited(faceLabelsStore.getNumberOfTuples(), false);
   std::vector<bool> unmodified(faceLabelsStore.getNumberOfTuples(), false);
+
+  // Precompute the first triangle carrying each feature label in a single pass. The original code
+  // re-scanned every triangle for each feature to find a seed, which is O(features * triangles) and
+  // dominates the runtime on large meshes; this makes seeding O(1) per feature.
+  constexpr IGeometry::MeshIndexType k_NoSeed = std::numeric_limits<IGeometry::MeshIndexType>::max();
+  std::vector<IGeometry::MeshIndexType> firstTriOfFeature(static_cast<usize>(maxFeature) + 1, k_NoSeed);
+  for(usize i = 0; i < numTuples; i++)
+  {
+    for(usize c = 0; c < 2; c++)
+    {
+      const int32 lbl = faceLabelsStore[(i * 2) + c];
+      if(lbl >= 1 && lbl <= maxFeature && firstTriOfFeature[static_cast<usize>(lbl)] == k_NoSeed)
+      {
+        firstTriOfFeature[static_cast<usize>(lbl)] = i;
+      }
+    }
+  }
+
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
 
-    // process base case
-    for(usize i = 0; i < numTuples; i++)
+    // process base case: seed from the first triangle carrying this feature (O(1) lookup)
+    const IGeometry::MeshIndexType seedTri = firstTriOfFeature[static_cast<usize>(feature)];
+    if(seedTri != k_NoSeed)
     {
-      if(faceLabelsStore[i * 2] != feature && faceLabelsStore[(i * 2) + 1] != feature)
-      {
-        continue;
-      }
-
-      auto numElem = neighbors.getNumberOfElements(i);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+      auto numElem = neighbors.getNumberOfElements(seedTri);
+      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(seedTri);
 
       for(uint16 element = 0; element < numElem; element++)
       {
@@ -59,8 +73,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
         searchTargets.push(neighbor);
       }
 
-      visited[i] = true;
-      break;
+      visited[seedTri] = true;
     }
 
     // begin mass search
@@ -82,7 +95,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2.2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
         start = std::chrono::steady_clock::now();
       }
 
@@ -183,20 +196,30 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
   auto start = std::chrono::steady_clock::now();
   const usize numTuples = regionsStore.getNumberOfTuples();
   std::vector<bool> visited(regionsStore.getNumberOfTuples(), false);
+
+  // Precompute the first triangle carrying each region id in a single pass (see the note in
+  // ProcessWindingsWithLabels): avoids the O(features * triangles) per-feature seed rescan.
+  constexpr IGeometry::MeshIndexType k_NoSeed = std::numeric_limits<IGeometry::MeshIndexType>::max();
+  std::vector<IGeometry::MeshIndexType> firstTriOfFeature(static_cast<usize>(maxFeature) + 1, k_NoSeed);
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const int32 rid = regionsStore[i];
+    if(rid >= 1 && rid <= maxFeature && firstTriOfFeature[static_cast<usize>(rid)] == k_NoSeed)
+    {
+      firstTriOfFeature[static_cast<usize>(rid)] = i;
+    }
+  }
+
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
 
-    // process base case
-    for(usize i = 0; i < numTuples; i++)
+    // process base case: seed from the first triangle carrying this region (O(1) lookup)
+    const IGeometry::MeshIndexType seedTri = firstTriOfFeature[static_cast<usize>(feature)];
+    if(seedTri != k_NoSeed)
     {
-      if(regionsStore[i] != feature)
-      {
-        continue;
-      }
-
-      auto numElem = neighbors.getNumberOfElements(i);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+      auto numElem = neighbors.getNumberOfElements(seedTri);
+      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(seedTri);
 
       for(uint16 element = 0; element < numElem; element++)
       {
@@ -208,8 +231,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
         searchTargets.push(neighbor);
       }
 
-      visited[i] = true;
-      break;
+      visited[seedTri] = true;
     }
 
     // begin mass search
@@ -231,7 +253,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2.2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
         start = std::chrono::steady_clock::now();
       }
 

@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "M3C Surface Meshing Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "M3C Surface Meshing (Slice at a time)",
+    "Filter_Name": "M3CSliceBySlice",
+    "Filter_Uuid": "{86d77279-5a18-5b75-a411-c4e0c50bc4a4}",
+    "DeleteTempFiles": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "VertexAttributeMatrixName": "TestName",
+    "SurfaceMeshNodeTypesArrayName": "TestName",
+    "FaceAttributeMatrixName": "TestName",
+    "FaceLabelsArrayName": "TestName"
+  }
+}
