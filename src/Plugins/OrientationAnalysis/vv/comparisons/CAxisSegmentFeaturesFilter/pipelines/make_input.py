@@ -22,7 +22,9 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, "/Users/mjackson/Workspace1/Claude_Support/skills/compare-legacy-dream3d")
+# The legacy_dream3d writer module ships with the compare-legacy-dream3d skill; point
+# LEGACY_DREAM3D_SKILL_DIR at a checkout of it if yours lives elsewhere.
+sys.path.insert(0, os.environ.get("LEGACY_DREAM3D_SKILL_DIR", "/Users/mjackson/Workspace1/Claude_Support/skills/compare-legacy-dream3d"))
 from legacy_dream3d import D3DLegacyWriter  # noqa: E402
 
 HEX_HIGH = 0

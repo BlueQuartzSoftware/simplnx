@@ -162,8 +162,14 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   }
 
   // Create the Cell Level FeatureIds array with the cell AttributeMatrix's tuple shape so the
-  // created array always matches the AttributeMatrix that hosts it.
+  // created array always matches the AttributeMatrix that hosts it. That AttributeMatrix must
+  // itself agree with the geometry, or FeatureIds would be smaller than the flood-fill walk.
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
+  if(cellDataAM.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  {
+    return {MakeErrorResult<OutputActions>(-653, fmt::format("The geometry's cell AttributeMatrix '{}' has {} tuples but the selected geometry '{}' has {} cells.", inputCellDataPath.toString(),
+                                                             cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
+  }
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM.getShape(), std::vector<usize>{1}, featureIdsPath);
 
   // Create the Feature Attribute Matrix

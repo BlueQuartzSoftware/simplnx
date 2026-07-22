@@ -15,9 +15,9 @@
 | Aspect                 | Current state                                                                                                                                                                                                                                                                              |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Minor changes.** Line-for-line port of legacy `getSeed`/`determineGrouping` (same c-axis math, including the clamped `acos` and the π-fold), plus deliberate NX additions: crystal-structure validation, 26-neighbor scheme, uint8 masks, RectGrid input, deterministic opt-in FeatureId randomization. Three SIMPLNX defects (D1, D4, D5) found and **fixed during this V&V cycle**. |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — pure-Phi Bunge quats make the folded c-axis distance between cells exactly `min(\|ΔΦ\|, 180°−\|ΔΦ\|)`; expected FeatureIds derive in closed form. Encoded as 8 fixture tests in `test/CAxisSegmentFeaturesTest.cpp`; all pass. |
+| Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — pure-Phi Bunge quats make the folded c-axis distance between cells exactly `min(\|ΔΦ\|, 180°−\|ΔΦ\|)`; expected FeatureIds derive in closed form. Encoded as 10 fixture tests in `test/CAxisSegmentFeaturesTest.cpp`; all pass. |
 | Code paths enumerated  | 20 of 20 enumerated; 18 exercised (2 gaps: defensive mask-instantiation error, cancel-signal path).                                                                                                                                                                                            |
-| Tests today            | 18 test cases: 7 Class 1 analytical (chain, π-fold, neighbor-scheme, mask bool/uint8, phase separation, 3-D linearization, RectGrid), 2 Class 4 invariants (randomize non-identity/determinism, masked-zero preservation), 2 tolerance pins (phase-0, masked non-hex), 3 execute-error, 3 preflight-error, 1 SIMPL 6.4/6.5 conversion (DYNAMIC_SECTION). |
+| Tests today            | 20 test cases: 8 Class 1 analytical (chain, π-fold, neighbor-scheme, mask bool/uint8, phase separation, 3-D linearization, Quats-outside-cell-AM, RectGrid), 2 Class 4 invariants (randomize non-identity/determinism, masked-zero preservation), 2 tolerance pins (phase-0, masked non-hex), 3 execute-error, 4 preflight-error, 1 SIMPL 6.4/6.5 conversion (DYNAMIC_SECTION). |
 | Exemplar archive       | **None — fixtures inlined in the test source.** The filter's consumption of `segment_features_test_data.tar.gz` (circular oracle) is retired; the archive remains for the EBSD segmentation tests.                                                                                            |
 | Legacy comparison      | **Run** (2026-07-22, `vv/comparisons/CAxisSegmentFeaturesFilter/`) — all 4 shared-behavior fixtures match 6.5.171 at the segmentation-partition level with identical feature counts; bit-identical ids are unattainable because 6.5.171 always clock-randomizes FeatureIds (D2).              |
 | Bug flags              | D1, D4, D5 — all SIMPLNX defects, all **fixed this cycle** and pinned by tests. No legacy bug flags.                                                                                                                                                                                           |
@@ -43,7 +43,7 @@
 6. **D1 (fixed this cycle):** PR #1466's driver restructure made the first seed an unvalidated raw index 0 — phantom/misgrown first feature when voxel 0 could not seed. Restored `getSeed()` for the first seed (also fixes EBSD/Scalar segmentation, which share the driver).
 7. **D4 (fixed this cycle):** the delta-2 validation loop originally checked phase-0 and masked-out cells (which can never participate) and indexed `CrystalStructures` without a bounds check.
 8. **D5 (fixed this cycle):** stale `getDataAs<ImageGeom>` cast crashed RectGrid input; now `IGridGeometry`, matching the sibling algorithms.
-9. **Adversarial-review hardening (this cycle, no legacy behavior change):** preflight now rejects cell arrays whose tuple count differs from the geometry's cell count (`-652`, previously an out-of-bounds walk); FeatureIds is created with the cell AttributeMatrix's tuple shape instead of the Quats array's; a canceled run returns cleanly instead of misreporting `-87000`.
+9. **Review hardening (this cycle, no legacy behavior change):** preflight now rejects cell arrays whose tuple count differs from the geometry's cell count (`-652`, previously an out-of-bounds walk) and a cell AttributeMatrix smaller than the geometry (`-653`); `executeImpl` derives the FeatureIds path from the geometry's cell AttributeMatrix exactly as preflight does (previously from the Quats array's parent — a crash when Quats lived elsewhere) and creates it with that AttributeMatrix's tuple shape; a canceled run returns cleanly instead of misreporting `-87000`.
 
 *Material PRs since baseline:* #1373 (26-neighbor option), #1444/#1498 (progress messaging), #1466 (feature-count fix; introduced D1), #1472 (EbsdLib 2.0 API), #1535 (preflight cleanup), #1501 (Vec3 consolidation).
 
@@ -53,7 +53,7 @@
 
 *Applied:* For pure Bunge Euler angles (φ1=0, Φ, φ2=0), stored as quats `{sin(Φ/2), 0, 0, cos(Φ/2)}`, the sample-frame c-axis of a cell is `(0, ±sin Φ, cos Φ)`, so the c-axis angle between two cells is exactly `|ΦA−ΦB|` and the algorithm's folded metric is `min(|ΔΦ|, 180°−|ΔΦ|)`. Expected FeatureIds follow in closed form from per-cell Φ, the tolerance, and grid adjacency (derivation comment at `AnalyticalFixtures::QuatFromPhiDeg`). Class 4 companions: feature AM has `numFeatures+1` tuples, `Active[0]==0`, all real features active, masked/unindexed cells keep id 0, randomization preserves the partition and is a deterministic permutation of `{1..N}`.
 
-*Encoded:* `test/CAxisSegmentFeaturesTest.cpp` — `Class 1 Analytical (Pure-Phi Chain, Face)`, `(Pi-Fold Antiparallel C-Axes)`, `(Neighbor Scheme Face vs All)` [2 sections], `(Mask Excludes Voxel 0)` [2 sections], `(Phase Separation)`, `(RectGrid Geometry)`, `Class 4 Invariants (RandomizeFeatureIds)` — all pass in both builds.
+*Encoded:* `test/CAxisSegmentFeaturesTest.cpp` — `Class 1 Analytical (Pure-Phi Chain, Face)`, `(Pi-Fold Antiparallel C-Axes)`, `(Neighbor Scheme Face vs All)` [2 sections], `(Mask Excludes Voxel 0)` [2 sections], `(Phase Separation)`, `(3D Linearization, 3x2x2)`, `(Quats Outside Cell AttributeMatrix)`, `(RectGrid Geometry)`, `Class 4 Invariants (RandomizeFeatureIds)`, `Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)` — all pass in both builds.
 
 *Second-engineer review:* pending at PR review (sign-off convention). The pure-Phi c-axis derivation is sibling-shared with the previously reviewed `GroupMicroTextureRegionsFilter` / `ComputeFeatureNeighborCAxisMisalignmentsFilter` Class 1 oracles.
 
@@ -88,7 +88,7 @@ Logical phases: **(a) init + validation** in `operator()`, **(b) flood-fill driv
 | 19 | (e)   | `foundFeatures < 1` → error `-87000`; else AM resize, Active refill, `Active[0]=0`          | `No Features Found (-87000)` (error); `CheckActiveArray` in every passing test (success)  |
 | 20 | (e)   | `RandomizeFeatureIds == true` → deterministic, non-identity shuffle preserving id 0         | `Class 4 Invariants (RandomizeFeatureIds)` (non-identity + determinism); `Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)` |
 
-Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple mismatch → `-651`, cell arrays vs geometry cell count → `-652` — are covered by the three `Preflight Error` tests; SIMPL 6.4/6.5 argument conversion by `SIMPL Backwards Compatibility`. The cancel early-return added to `operator()` (clean return instead of `-87000` on cancel) shares path 11's not-directly-tested status.
+Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple mismatch → `-651`, cell arrays vs geometry cell count → `-652`, cell AttributeMatrix vs geometry cell count → `-653` — are covered by the four `Preflight Error` tests; SIMPL 6.4/6.5 argument conversion by `SIMPL Backwards Compatibility`. The cancel early-return added to `operator()` (clean return instead of `-87000` on cancel) shares path 11's not-directly-tested status.
 
 ## Test inventory
 
@@ -100,6 +100,7 @@ Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple m
 | `Class 1 Analytical (Mask Excludes Voxel 0)` | new-for-V&V | DYNAMIC_SECTION over bool + uint8 masks; **D1 regression pin** (pre-fix: phantom feature + shifted ids). |
 | `Class 1 Analytical (Phase Separation)` | new-for-V&V | Identical orientations split at a phase boundary; also covers Hexagonal_Low acceptance. |
 | `Class 1 Analytical (3D Linearization, 3x2x2)` | new-for-V&V | Pins the x-fastest linearization + y/z stride branches with an axis-asymmetric Phi field (added after adversarial review showed the original fixtures were invariant under dims permutation). |
+| `Class 1 Analytical (Quats Outside Cell AttributeMatrix)` | new-for-V&V | Pins the preflight/execute FeatureIds path agreement when Quats lives in a sibling AttributeMatrix (pre-fix: execute dereferenced a null FeatureIds array). |
 | `Class 1 Analytical (RectGrid Geometry)` | new-for-V&V | **D5 regression pin** (pre-fix: null-pointer crash on RectGrid input). |
 | `Class 4 Invariants (RandomizeFeatureIds)` | new-for-V&V | Partition preservation, permutation of {1..4}, non-identity vs canonical labeling (kills a dead randomizer), same-seed determinism across two runs. |
 | `Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)` | new-for-V&V | Masked cells keep FeatureId 0 through the shuffle (pins the 0→0 mapping guarantee). |
@@ -110,11 +111,12 @@ Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple m
 | `Execute Error - No Features Found (-87000)` | new-for-V&V | All cells masked; **D1 regression pin** (pre-fix: success with 1 phantom feature). |
 | `Preflight Error - Zero Tolerance (-655)` | new-for-V&V | Preflight rejects tolerance == 0. |
 | `Preflight Error - Cell arrays smaller than geometry (-652)` | new-for-V&V | Cell arrays consistent with each other but not with the geometry's cell count (pre-fix: out-of-bounds walk at execute). |
+| `Preflight Error - Cell AttributeMatrix smaller than geometry (-653)` | new-for-V&V | Cell arrays match the geometry but the FeatureIds-hosting AttributeMatrix does not. |
 | `Preflight Error - Cell array tuple count mismatch (-651)` | kept | Synthetic tuple-count mismatch between Quats and Phases. |
 | `SIMPL Backwards Compatibility` | kept | DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; UUID + argument-key conversion only. |
 | *(retired)* `CAxisSegmentFeatures:Face` / `:All` / `:MaskFace` / `:MaskAll` | retired | Consumed the `segment_features_test_data.tar.gz` exemplar whose `CAxis_FeatureIds_*` arrays were generated from SIMPLNX output — a circular oracle (see provenance sidecar). Replaced by the Class 1 fixtures, which cover the same scheme × mask parameter cube with independent expected output. |
 
-All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (15/15 each, 2026-07-22). The shared-driver fix (D1) was regression-checked against `EBSDSegmentFeatures` (5/5) and `ScalarSegmentFeatures` (2/2) in both builds.
+All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (20/20 each, 2026-07-22). The shared-driver fix (D1) was regression-checked against `EBSDSegmentFeatures` (5/5) and `ScalarSegmentFeatures` (2/2) in both builds.
 
 ## Exemplar archive
 

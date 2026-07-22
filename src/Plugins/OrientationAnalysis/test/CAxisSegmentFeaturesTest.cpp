@@ -437,6 +437,43 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Quats Outside Cell AttributeMatrix)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // The Quats/Phases arrays are not required to live in the geometry's cell AttributeMatrix —
+  // only to match its cell count. FeatureIds must still be created in the geometry's cell
+  // AttributeMatrix (preflight and execute must derive the same path; pre-fix, execute derived
+  // it from the Quats array's parent and dereferenced a null array here). Same expectations as
+  // the 3-cell chain: Phi = [0, 5, 45], tol 10 -> {0,1} {2}.
+  FixtureData td = CreateScaffold(3, 1, 1);
+  auto* orientationAM = AttributeMatrix::Create(td.ds, "OrientationData", ShapeType{1, 1, 3}, td.geom->getId());
+  auto* quatsArrayPtr = CreateTestDataArray<float32>(td.ds, "QuatsElsewhere", ShapeType{1, 1, 3}, {4}, orientationAM->getId());
+  auto* phasesArrayPtr = CreateTestDataArray<int32>(td.ds, "PhasesElsewhere", ShapeType{1, 1, 3}, {1}, orientationAM->getId());
+  const std::vector<float32> phiValues = {0.0f, 5.0f, 45.0f};
+  for(usize cellIdx = 0; cellIdx < phiValues.size(); cellIdx++)
+  {
+    const std::array<float32, 4> quat = QuatFromPhiDeg(phiValues[cellIdx]);
+    for(usize comp = 0; comp < 4; comp++)
+    {
+      (*quatsArrayPtr)[cellIdx * 4 + comp] = quat[comp];
+    }
+    (*phasesArrayPtr)[cellIdx] = 1;
+  }
+
+  Arguments args = BuildArgs(10.0f, segment_features::k_6NeighborIndex, false);
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_ImageGeomPath.createChildPath("OrientationData").createChildPath("QuatsElsewhere")));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_ImageGeomPath.createChildPath("OrientationData").createChildPath("PhasesElsewhere")));
+
+  auto executeResult = RunFilter(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // FeatureIds lands in the geometry's cell AttributeMatrix, not next to the Quats array.
+  CheckFeatureIds(td.ds, {1, 1, 2});
+  CheckActiveArray(td.ds, 2);
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
@@ -660,6 +697,43 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -652);
+}
+
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell AttributeMatrix smaller than geometry (-653)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  // The selected cell arrays match the geometry (10 tuples in a sibling AttributeMatrix) but the
+  // geometry's own cell AttributeMatrix — which hosts the created FeatureIds — only has 9 tuples.
+  // FeatureIds would be smaller than the flood-fill walk, so preflight must reject with -653.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeom->setDimensions({10, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* orientationAM = AttributeMatrix::Create(dataStructure, "OrientationData", {10}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, orientationAM->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, orientationAM->getId());
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  CAxisSegmentFeaturesFilter filter;
+  Arguments args;
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "OrientationData", "Quats"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "OrientationData", "Phases"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -653);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell array tuple count mismatch (-651)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")

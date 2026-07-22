@@ -35,7 +35,7 @@ read by BOTH runners, so the Quats/Phases/Mask/CrystalStructures inputs are byte
 
 **All four cases match at the segmentation-partition level, and feature counts are identical.**
 Raw legacy ids are a random permutation of NX ids because 6.5.171 unconditionally randomizes
-FeatureIds with a clock-derived seed (`CAxisSegmentFeatures-D2`); bit-identical FeatureIds are
+FeatureIds with a clock-derived seed (`CAxisSegmentFeaturesFilter-D2`); bit-identical FeatureIds are
 not attainable against 6.5.171 by construction. NX ids additionally match the Class 1 oracle
 expectation exactly.
 
