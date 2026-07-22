@@ -13,18 +13,12 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
-#include <fstream>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
 
 namespace
 {
-const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Constants::k_Confidence_Index);
-const std::string k_ExemplarDataContainer2("DataContainer");
-
 // Names for the self-contained synthetic test below.
 const std::string k_SyntheticImageGeomName("Image3D");
 const std::string k_SyntheticCellAMName("CellData");
@@ -64,55 +58,8 @@ DataStructure BuildSyntheticDataStructure(float32 goodValue, float32 badValue, c
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
-                                                              "6_6_replace_element_attributes_with_neighbor");
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = nx::core::UnitTest::LoadDataStructure(exemplarFilePath);
-
-  // Read the Test Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-
-  {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
-    ReplaceElementAttributesWithNeighborValuesFilter filter;
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_MinConfidence_Key, std::make_any<float32>(0.1F));
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_Loop_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_ComparisonDataPath, std::make_any<DataPath>(k_ConfidenceIndexPath));
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer2);
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_replace_element_attributes_with_neighbor.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
-  UnitTest::LoadPlugins();
-
   // Bad voxels at the center (all six face neighbors in-bounds) plus two opposite corners
   // (each missing three neighbors) so both sides of every neighbor-edge branch are exercised.
   const std::vector<usize> badIndices = {0, 13, 26};
@@ -211,6 +158,46 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     REQUIRE(confStore[13] == Approx(k_Good));
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+
+  SECTION("bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)")
+  {
+    constexpr float32 k_Good = 0.9F;
+    constexpr float32 k_Bad = 0.1F;
+    // Center voxel 13=(1,1,1) and its 6 face neighbors {4,10,12,14,16,22} are all bad.
+    // In the scan pass every compare1 call for voxel 13 returns false, so bestNeighbor[13]
+    // stays -1 and voxel 13 is not copied. The six ring voxels each have at least one good
+    // face neighbor outside the cluster and are replaced in the same pass.
+    const std::vector<usize> clusterIndices = {4, 10, 12, 13, 14, 16, 22};
+    DataStructure dataStructure = BuildSyntheticDataStructure(k_Good, k_Bad, clusterIndices);
+
+    ReplaceElementAttributesWithNeighborValuesFilter filter;
+    Arguments args;
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_MinConfidence_Key, std::make_any<float32>(k_Threshold));
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_Loop_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_ComparisonDataPath, std::make_any<DataPath>(k_SyntheticConfPath));
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_SyntheticImageGeomName})));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath));
+    const auto& confStore = dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath).getDataStoreRef();
+
+    // Center voxel: all six face neighbors were bad, so compare1 returned false for each
+    // and bestNeighbor[13] stayed -1. Voxel 13 must remain unchanged.
+    REQUIRE(confStore[13] == Approx(k_Bad));
+
+    // Ring voxels: each had at least one good face neighbor outside the cluster; all replaced.
+    for(usize idx : {4UL, 10UL, 12UL, 14UL, 16UL, 22UL})
+    {
+      REQUIRE(confStore[idx] == Approx(k_Good));
+    }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][BackwardsCompatibility]")
@@ -219,7 +206,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL 
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
 
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+  const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
   const std::vector<std::pair<std::string, fs::path>> fixtures = {
       {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReplaceElementAttributesWithNeighborValuesFilter.json"},
