@@ -272,12 +272,16 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibi
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
+      // The feature attribute matrix is derived from the legacy AvgCAxesArrayPath (the created array),
+      // and the AvgCAxes array name comes from that same path.
       CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<std::string>(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key) == "TestArray");
+      // The legacy filter had no Cell Phases or Crystal Structures inputs; the conversion derives the
+      // conventional locations from the legacy FeatureIds path.
+      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
+      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}));
     }
   }
 }

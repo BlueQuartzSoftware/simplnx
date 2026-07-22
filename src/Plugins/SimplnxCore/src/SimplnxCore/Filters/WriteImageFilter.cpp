@@ -281,9 +281,14 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     break;
   }
 
-  // Generate example filename for PreflightValues
-  const std::string indexStr = CreateIndexString(maxSlice, static_cast<usize>(totalDigits), fillChar);
-  const std::string exampleFileName = fmt::format("{}/{}_{}{}", fs::absolute(filePath).parent_path().string(), filePath.stem().string(), indexStr, filePath.extension().string());
+  // Generate example filename for PreflightValues. A single-slice volume writes exactly the
+  // user-specified file name; the index suffix is only appended when multiple slices are produced.
+  std::string exampleFileName = fmt::format("{}/{}{}", fs::absolute(filePath).parent_path().string(), filePath.stem().string(), filePath.extension().string());
+  if(maxSlice > 1)
+  {
+    const std::string indexStr = CreateIndexString(maxSlice, static_cast<usize>(totalDigits), fillChar);
+    exampleFileName = fmt::format("{}/{}_{}{}", fs::absolute(filePath).parent_path().string(), filePath.stem().string(), indexStr, filePath.extension().string());
+  }
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

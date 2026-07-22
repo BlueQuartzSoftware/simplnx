@@ -189,7 +189,9 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: SIMPL Backwards Co
       const Arguments args = pipelineFilter->getArguments();
       // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key) == "TestName");
+      // The legacy CreatedArrayName is intentionally NOT mapped onto the suffix; the copied array keeps
+      // the input array's name, so the suffix stays at its default (empty).
+      CHECK(args.value<std::string>(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key).empty());
     }
   }
 }
