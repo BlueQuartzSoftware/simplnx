@@ -145,12 +145,28 @@ Result<Arguments> ComputeAvgCAxesFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  // The feature attribute matrix comes from the created AvgCAxes array (e.g. "CellFeatureData"),
+  // not from the cell-level Quats/FeatureIds arrays (e.g. "CellData").
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
+
+  // The legacy FindAvgCAxes filter had no Cell Phases or Crystal Structures inputs, so there is nothing
+  // to convert. Derive the conventional locations from the legacy FeatureIds path so common pipelines
+  // convert to a runnable filter: "Phases" sits next to the Feature Ids array and "CrystalStructures"
+  // lives in the DataContainer's "CellEnsembleData" attribute matrix. Non-standard names need editing.
+  if(json.contains(SIMPL::k_FeatureIdsArrayPathKey))
+  {
+    Result<std::string> dcNameResult = SIMPLConversion::ReadDataContainerName(json[SIMPL::k_FeatureIdsArrayPathKey.view()], "FindAvgCAxes");
+    Result<std::string> amNameResult = SIMPLConversion::ReadAttributeMatrixName(json[SIMPL::k_FeatureIdsArrayPathKey.view()], "FindAvgCAxes");
+    if(dcNameResult.valid() && amNameResult.valid())
+    {
+      args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({dcNameResult.value(), amNameResult.value(), "Phases"})));
+      args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({dcNameResult.value(), "CellEnsembleData", "CrystalStructures"})));
+    }
+  }
 
   Result<> conversionResult = MergeResults(std::move(results));
 
