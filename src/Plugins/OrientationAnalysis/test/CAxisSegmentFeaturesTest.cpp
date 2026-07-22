@@ -359,6 +359,31 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (3D Linearization, 3x2x2)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Pins the x-fastest voxel linearization (cell index = z*6 + y*3 + x) and exercises the y- and
+  // z-stride neighbor branches that 1-D and single-slice fixtures cannot reach. The Phi field is
+  // axis-asymmetric: swapping any two dimensions in the neighbor decode changes the partition
+  // (verified by simulating the flood fill under every dims permutation), so a linearization bug
+  // cannot pass. Folded-distance edges at tol 10: x: 0-1(5); y: 0-3(8), 2-5(4), 6-9(9);
+  // z: 0-6(3), 3-9(4), 4-10(5). Expected partition: {0,1,3,6,9} {2,5} {4,10} {7} {8} {11}.
+  FixtureData td = CreateScaffold(3, 2, 2);
+  const std::vector<float32> phiValues = {0.0f, 5.0f, 40.0f, 8.0f, 90.0f, 44.0f, 3.0f, 60.0f, 130.0f, 12.0f, 85.0f, 170.0f};
+  for(usize cellIdx = 0; cellIdx < phiValues.size(); cellIdx++)
+  {
+    SetPhi(td, cellIdx, phiValues[cellIdx]);
+  }
+
+  auto executeResult = RunFilter(td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  CheckFeatureIds(td.ds, {1, 1, 2, 1, 3, 2, 1, 4, 5, 1, 3, 6});
+  CheckActiveArray(td.ds, 6);
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (RectGrid Geometry)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
@@ -454,9 +479,48 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
   // Permutation invariant: the relabeled ids are exactly {1, 2, 3, 4}.
   REQUIRE(distinctIds == std::set<int32>{1, 2, 3, 4});
 
+  // Non-identity invariant: with the fixed seed the shuffle produces a relabeling different from
+  // the canonical (unrandomized) labeling, so a dead/never-invoked randomizer fails this test.
+  REQUIRE(firstRun != std::vector<int32>{1, 1, 1, 2, 2, 3, 3, 4});
+
   // Determinism invariant: the shuffle uses a fixed seed, so a second run is bit-identical.
   const std::vector<int32> secondRun = runOnce();
   REQUIRE(firstRun == secondRun);
+}
+
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // FeatureId 0 is reserved for cells outside the segmentation; randomization must map 0 -> 0.
+  // Re-uses the mask fixture (voxels 0 and 3 masked out) with randomization enabled.
+  FixtureData td = CreateScaffold(5, 1, 1);
+  const std::vector<float32> phiValues = {0.0f, 20.0f, 22.0f, 0.0f, 90.0f};
+  for(usize cellIdx = 0; cellIdx < phiValues.size(); cellIdx++)
+  {
+    SetPhi(td, cellIdx, phiValues[cellIdx]);
+  }
+  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cellAM->getId());
+  const std::vector<uint8> maskValues = {0, 1, 1, 0, 1};
+  for(usize cellIdx = 0; cellIdx < maskValues.size(); cellIdx++)
+  {
+    (*maskArrayPtr)[cellIdx] = (maskValues[cellIdx] != 0);
+  }
+
+  auto executeResult = RunFilter(td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, true, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  const auto& featureIdsRef = td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  // Masked cells keep FeatureId 0 through the shuffle.
+  REQUIRE(featureIdsRef[0] == 0);
+  REQUIRE(featureIdsRef[3] == 0);
+  // Partition invariant survives the shuffle: {1,2} together, {4} separate, both ids from {1,2}.
+  REQUIRE(featureIdsRef[1] == featureIdsRef[2]);
+  REQUIRE(featureIdsRef[1] != featureIdsRef[4]);
+  REQUIRE(std::set<int32>{featureIdsRef[1], featureIdsRef[4]} == std::set<int32>{1, 2});
+  CheckActiveArray(td.ds, 2);
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Phase 0 (Unindexed) Cells Tolerated", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
@@ -560,6 +624,42 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ze
   auto preflightResult = filter.preflight(td.ds, BuildArgs(0.0f, segment_features::k_6NeighborIndex, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -655);
+}
+
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell arrays smaller than geometry (-652)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  // Quats and Phases agree with each other (9 tuples) but not with the 10-cell geometry; the
+  // -651 cross-array check passes and the -652 geometry check must catch it (pre-fix the flood
+  // fill would index the cell arrays out of bounds).
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeom->setDimensions({10, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {9}, {4}, cellAM->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, cellAM->getId());
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  CAxisSegmentFeaturesFilter filter;
+  Arguments args;
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -652);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell array tuple count mismatch (-651)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")

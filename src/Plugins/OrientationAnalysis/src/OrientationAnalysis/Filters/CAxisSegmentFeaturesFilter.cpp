@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/Filters/Algorithms/CAxisSegmentFeatures.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -151,9 +152,19 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
     return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  // Create the Cell Level FeatureIds array
+  // The cell-level arrays must have exactly one tuple per geometry cell; the check above only
+  // validates the arrays against each other, not against the geometry the flood fill walks.
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, quats.getIDataStore()->getTupleShape(), std::vector<usize>{1}, featureIdsPath);
+  if(quats.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  {
+    return {MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(), gridGeomPath.toString(),
+                                                             inputGridGeom->getNumberOfCells()))};
+  }
+
+  // Create the Cell Level FeatureIds array with the cell AttributeMatrix's tuple shape so the
+  // created array always matches the AttributeMatrix that hosts it.
+  const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM.getShape(), std::vector<usize>{1}, featureIdsPath);
 
   // Create the Feature Attribute Matrix
   auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellFeatureAttributeMatrixNameValue, std::vector<usize>{1});
