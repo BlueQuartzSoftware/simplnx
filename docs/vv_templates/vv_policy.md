@@ -93,4 +93,4 @@ When SIMPLNX and 6.5.171 differ, each Deviation entry names one root cause (or a
 - **Precision** — different floating-point width or intermediate-math type
 - **Order of operations** — associativity differences in parallel reductions, different loop order, different accumulation
 - **Library** — Eigen vs. hand-rolled, different EbsdLib version, different HDF5 versions
-- **Algorithmic choice** — deliberate change in method (used only for Rewrite relationships)
+- **Algorithmic choice** — a deliberate difference in method or behavior (an added validation guard, a changed default, exposed randomization, a replacement algorithm). Any Algorithm Relationship may carry algorithmic-choice deviations — a **Port** or **Minor changes** filter that adds a guard legacy lacked is the common case. A **Rewrite** consists of algorithmic choices by definition, and a Rewrite whose outputs diverge must defend the shared UUID (see above)
