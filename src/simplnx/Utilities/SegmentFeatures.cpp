@@ -143,9 +143,8 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   usize totalVoxels = udims[0] * udims[1] * udims[2];
 
-  int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
+  int64 dims[3] = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
-  // Initialize a sequence of execution modifiers
   int32 gnum = 1;
   int64 nextSeed = 0;
   // The first seed must be validated (and its cell stamped with gnum) by getSeed() exactly like

@@ -155,6 +155,25 @@ Arguments BuildArgs(float32 toleranceDeg, ChoicesParameter::ValueType neighborSc
   return args;
 }
 
+// Arguments for the hand-built preflight-error fixtures, which use a "DataContainer" geometry
+// with per-test array placement instead of the AnalyticalFixtures scaffold.
+Arguments BuildManualPreflightArgs(const DataPath& quatsPath, const DataPath& phasesPath)
+{
+  Arguments args;
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(quatsPath));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  return args;
+}
+
 // Preflight + execute; returns the execute result for error-path tests.
 IFilter::ExecuteResult RunFilter(DataStructure& dataStructure, const Arguments& args)
 {
@@ -196,7 +215,7 @@ void CheckActiveArray(const DataStructure& dataStructure, usize expectedNumFeatu
 
 using namespace AnalyticalFixtures;
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pure-Phi Chain, Face)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pure-Phi Chain, Face)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -221,7 +240,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pi-Fold Antiparallel C-Axes)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pi-Fold Antiparallel C-Axes)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -241,7 +260,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Neighbor Scheme Face vs All)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Neighbor Scheme Face vs All)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -282,7 +301,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   }
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Mask Excludes Voxel 0)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Mask Excludes Voxel 0)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -339,7 +358,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   }
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Phase Separation)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Phase Separation)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -359,7 +378,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (3D Linearization, 3x2x2)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (3D Linearization, 3x2x2)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -384,7 +403,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (RectGrid Geometry)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (RectGrid Geometry)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -393,6 +412,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   // pointer and crashed). 3x1x1 RectGrid with non-uniform x bounds, Phi = [0, 5, 45], tol 10:
   // cells 0-1 group (distance 5), cell 2 breaks (distance 40).
   DataStructure dataStructure;
+  // Deliberately reuses k_GeomName ("ImageGeometry") so BuildArgs and the shared check helpers
+  // resolve their paths unchanged, even though the geometry here is a RectGrid.
   auto* rectGridGeom = RectGridGeom::Create(dataStructure, k_GeomName);
   rectGridGeom->setDimensions(SizeVec3{3, 1, 1});
   auto* xBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{4}, ShapeType{1}, rectGridGeom->getId());
@@ -437,7 +458,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Quats Outside Cell AttributeMatrix)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Quats Outside Cell AttributeMatrix)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
   UnitTest::LoadPlugins();
 
@@ -474,7 +495,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class4]")
 {
   UnitTest::LoadPlugins();
 
@@ -525,7 +546,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
   REQUIRE(firstRun == secondRun);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class4]")
 {
   UnitTest::LoadPlugins();
 
@@ -663,7 +684,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ze
   REQUIRE(preflightResult.outputActions.errors()[0].code == -655);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell arrays smaller than geometry (-652)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell Arrays Smaller Than Geometry (-652)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
   UnitTest::LoadPlugins();
 
@@ -681,25 +702,14 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
 
   CAxisSegmentFeaturesFilter filter;
-  Arguments args;
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "CellData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -652);
 }
 
-TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell AttributeMatrix smaller than geometry (-653)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell AttributeMatrix Smaller Than Geometry (-653)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
   UnitTest::LoadPlugins();
 
@@ -718,18 +728,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
 
   CAxisSegmentFeaturesFilter filter;
-  Arguments args;
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "OrientationData", "Quats"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "OrientationData", "Phases"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "OrientationData", "Quats"}), DataPath({"DataContainer", "OrientationData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -760,18 +759,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
 
   CAxisSegmentFeaturesFilter filter;
-  Arguments args;
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "MismatchData", "Phases"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "MismatchData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);

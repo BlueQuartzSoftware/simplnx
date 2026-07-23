@@ -27,8 +27,8 @@ import numpy as np
 sys.path.insert(0, os.environ.get("LEGACY_DREAM3D_SKILL_DIR", "/Users/mjackson/Workspace1/Claude_Support/skills/compare-legacy-dream3d"))
 from legacy_dream3d import D3DLegacyWriter  # noqa: E402
 
-HEX_HIGH = 0
-UNKNOWN = 999
+HEX_HIGH = 0  # EbsdLib CrystalStructure enum value for Hexagonal_High
+UNKNOWN = 999  # EbsdLib CrystalStructure "unknown" sentinel (ensemble 0)
 
 
 def quat_from_phi_deg(phi_deg):

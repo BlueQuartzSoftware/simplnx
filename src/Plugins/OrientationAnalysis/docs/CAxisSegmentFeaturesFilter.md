@@ -6,7 +6,7 @@ Reconstruction (Segmentation)
 
 ## Description
 
-This **Filter** segments the **Features** by grouping neighboring **Cells** that satisfy the *C-axis misalignment tolerance*, i.e., have misalignment angle less than the value set by the user. The *C-axis misalignment* refers to the angle between the <001> directions (C-axis in the hexagonal system) that is present between neighboring **Cells**. Because the c-axis is a direction (not a vector), the misalignment is folded into [0°, 90°]: two nearly antiparallel c-axes are considered aligned. The process by which the **Features** are identified is given below and is a standard *burn algorithm*.
+This **Filter** segments the **Features** by grouping neighboring **Cells** that satisfy the *c-axis misalignment tolerance*, i.e., have misalignment angle less than the value set by the user. The *c-axis misalignment* refers to the angle between the [0001] directions (the c-axis in the hexagonal system) that is present between neighboring **Cells**. Because the c-axis is a direction (not a vector), the misalignment is folded into [0°, 90°]: two nearly antiparallel c-axes are considered aligned. The process by which the **Features** are identified is given below and is a standard *burn algorithm*.
 
 1. Select the next unassigned **Cell** in row-major order that is eligible to seed a **Feature** (not excluded by the mask and with a phase value greater than 0), add it to an empty list and set its *Feature Id* to the current **Feature**
 2. Compare the **Cell** to each of its neighbors as selected by the *Neighbor Scheme* parameter (i.e., calculate the c-axis misalignment with each neighbor)
@@ -26,7 +26,7 @@ The c-axis is only a physically meaningful unique axis for hexagonal Laue classe
 
 ### Randomize Feature Ids
 
-When *Randomize Feature Ids* is enabled the final *Feature Ids* are relabeled with a deterministic (fixed-seed) random permutation, which improves visual contrast between neighboring **Features** when coloring by *Feature Id*. The segmentation itself is unchanged, and repeated runs produce identical output. (Legacy DREAM.3D 6.x always randomized with a clock-derived seed, so its labeling differed on every run; see the migration deviation notes.)
+When *Randomize Feature Ids* is enabled the final *Feature Ids* are relabeled with a deterministic (fixed-seed) random permutation, which improves visual contrast between neighboring **Features** when coloring by *Feature Id*. The segmentation itself is unchanged, and repeated runs produce identical output. (Legacy DREAM.3D 6.x always randomized with a clock-derived seed, so its labeling differed on every run; see the migration deviation notes in `vv/deviations/CAxisSegmentFeaturesFilter.md` of the simplnx source tree.)
 
 ### Neighbor Scheme
 

@@ -11,6 +11,7 @@
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 using namespace nx::core;
@@ -29,7 +30,7 @@ CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::operator()()
 {
-  this->m_NeighborScheme = m_InputValues->NeighborScheme;
+  m_NeighborScheme = m_InputValues->NeighborScheme;
   // The geometry parameter accepts Image AND RectGrid geometries; both derive from IGridGeometry.
   auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
@@ -43,7 +44,7 @@ Result<> CAxisSegmentFeatures::operator()()
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath '{}' does not exist or is not of the correct type (Bool | UInt8).", m_InputValues->MaskArrayPath.toString()));
     }
   }
 
@@ -72,8 +73,8 @@ Result<> CAxisSegmentFeatures::operator()()
 
     if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
     {
-      return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis misorientation requires all phases to be either Hexagonal-Low 6/m "
-                                                "or Hexagonal-High 6/mmm type crystal structures.",
+      return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis misorientation requires every phase that participates in the "
+                                                "segmentation to be either Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures.",
                                                 CrystalStructureEnumToString(crystalStructureType)));
     }
   }
@@ -96,15 +97,15 @@ Result<> CAxisSegmentFeatures::operator()()
     return {};
   }
   // Sanity check the result.
-  if(this->m_FoundFeatures < 1)
+  if(m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly.", this->m_FoundFeatures));
+    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. The C-Axis Misorientation Tolerance may be set too low.", m_FoundFeatures));
   }
 
   // Resize the Feature Attribute Matrix
-  ShapeType tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
-  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
-  cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
+  ShapeType tDims = {static_cast<usize>(m_FoundFeatures + 1)};
+  auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  cellFeatureAM.resizeTuples(tDims); // This will resize the active array
 
   // make sure all values are initialized and "re-reserve" index 0
   activeArray->getDataStore()->fill(1);
@@ -115,7 +116,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->RandomizeFeatureIds)
   {
-    ClusterUtilities::RandomizeFeatureIds(m_FeatureIdsArray->getDataStoreRef(), this->m_FoundFeatures + 1);
+    ClusterUtilities::RandomizeFeatureIds(m_FeatureIdsArray->getDataStoreRef(), m_FoundFeatures + 1);
   }
 
   return {};
@@ -124,18 +125,18 @@ Result<> CAxisSegmentFeatures::operator()()
 // -----------------------------------------------------------------------------
 int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
-  DataArray<int32>::store_type& featureIds = m_FeatureIdsArray->getDataStoreRef();
-  const usize totalPoints = featureIds.getNumberOfTuples();
-  AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
+  AbstractDataStore<int32>& featureIdsRef = m_FeatureIdsArray->getDataStoreRef();
+  const usize totalPoints = featureIdsRef.getNumberOfTuples();
+  const AbstractDataStore<int32>& cellPhasesRef = m_CellPhases->getDataStoreRef();
 
   // Linearly scan for the next eligible voxel, starting just after the last seed
   auto candidatePoint = static_cast<usize>(nextSeed);
   int64 seed = -1;
   while(seed == -1 && candidatePoint < totalPoints)
   {
-    if(featureIds[candidatePoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
+    if(featureIdsRef[candidatePoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(candidatePoint)) && cellPhases[candidatePoint] > 0)
+      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(candidatePoint)) && cellPhasesRef[candidatePoint] > 0)
       {
         seed = static_cast<int64>(candidatePoint);
       }
@@ -152,7 +153,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   if(seed >= 0)
   {
     auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
-    featureIds[static_cast<usize>(seed)] = gnum;
+    featureIdsRef[static_cast<usize>(seed)] = gnum;
     const ShapeType tDims = {static_cast<usize>(gnum) + 1};
     cellFeatureAM.resizeTuples(tDims); // This will resize the active array
   }
