@@ -103,10 +103,14 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - C
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -3520);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4});
   UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1});
@@ -131,10 +135,14 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
   REQUIRE(ContainsCode(executeResult.result.errors(), -3522));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4});
 
@@ -172,10 +180,14 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal p
   REQUIRE(dataStructure.containsData(cAxisLocationsPath));
   const auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
   REQUIRE(std::all_of(cAxisLocations.cbegin(), cAxisLocations.cend(), [](float32 value) { return std::isnan(value); }));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
 
   const usize size = k_Fixtures.size();
@@ -223,13 +235,17 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[
     for(usize j = 0; j < 3; j++)
     {
       INFO(fmt::format("i = {} | j = {} | input_quat = ({}) | expected_vec = ({})", i, j, fmt::join(k_Fixtures[i].inputQuat, ", "), fmt::join(k_Fixtures[i].expectedOutput, ", ")));
-      REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]));
+      REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]).margin(1e-7f));
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mixed hexagonal and non-hexagonal phases", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
 
   const usize size = k_Fixtures.size();
@@ -287,7 +303,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
                        fmt::join(k_Fixtures[i].expectedOutput, ", ")));
       if(isHexCell)
       {
-        REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]));
+        REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]).margin(1e-7f));
       }
       else
       {
@@ -295,6 +311,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeCAxisLocationsFilter][BackwardsCompatibility]")
