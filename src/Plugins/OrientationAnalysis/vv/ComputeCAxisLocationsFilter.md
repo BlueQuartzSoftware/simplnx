@@ -15,8 +15,8 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 
 | Aspect                 | Current state                                                                                                                |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branchs when the crystal structure type is not hexagonal. |
-| Oracle (confirmed)     | Class 1 (Analytical) -  2 hand derived data fixtures |
+| Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branches when the crystal structure type is not hexagonal. |
+| Oracle (confirmed)     | Class 1 (Analytical) -  15 hand derived data fixtures |
 | Code paths enumerated  | 6 of 7 paths exercised - only the filter cancelation path is untested |
 | Tests today            | 5 test cases - 1 test with Class 1 Oracle, 2 error path tests, 1 warning path test, 1 SIMPL json backwards compatibility test |
 | Exemplar archive       | None - removed test using circular oracle data from `caxis_data.tar.gz` |
@@ -59,7 +59,7 @@ There were no deviations that affect the output found for hexagonal materials.
 
 *Class:* **Class 1 (Analytical)**
 
-*Applied:* Handed derived output of C-axis locations from quaternions. The expected outputs agree between DREAM3DNX, DREAM3D 6.5.171, and manual calculations (`v_passive ​= Rᵀv` with z component forced to postive). Includes 15 different orientations about x, y, and z at different angles. The using the previous formula the exact form results were produced and compared against DREAM3D output.
+*Applied:* Handed derived output of C-axis locations from quaternions. The expected outputs agree between DREAM3DNX, DREAM3D 6.5.171, and manual calculations (`v_passive ​= Rᵀv` with z component forced to positive). Includes 15 different orientations about x, y, and z at different angles. Using the previous formula, the exact form results were produced and compared against DREAM3D output.
 
 *Encoded:* *`test/ComputeCAxisLocationsTest.cpp::"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"` - 15 fixtures, all pass.*
 
@@ -69,7 +69,7 @@ There were no deviations that affect the output found for hexagonal materials.
 
 *6 of 7 paths exercised. The non-covered path is the cancellation branch which is not currently able to be tested for all filters*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/<ComputeCAxisLocationsFilter>.cpp` (N lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeCAxisLocations.cpp` (107 lines).
 
 | #  | Phase           | Path                                              | Test case                                  |
 |----|-----------------|---------------------------------------------------|--------------------------------------------|
@@ -86,7 +86,7 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | Test case | Status | Notes |
 |-----------|--------|-------|
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: Valid Filter Execution" | retired | Circular oracle |
-| "OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Execution" | retired | Superceded by more specific test "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Execution" | retired | Superseded by more specific test "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - Cell array tuple count mismatch (-3520)" | kept | Covers preflight error for tuple mismatch of phases and quats |
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Compatibility" | kept | Covers SIMPL json backwards compatibility |
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" | new-for-V&V | Covers no hexagonal phases branch |
