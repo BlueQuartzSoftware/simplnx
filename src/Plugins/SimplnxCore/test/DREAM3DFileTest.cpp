@@ -373,12 +373,12 @@ DataStructure CreateTestDataStructure()
   auto* dataGroup = DataGroup::Create(dataStructure, Constants::k_DataContainer);
 
   auto listStorePtr = std::make_shared<ListStore<int16>>(Constants::k_TupleShape);
-  listStorePtr->setList(0, std::vector<int16>{1,2});
-  listStorePtr->setList(1, std::vector<int16>{1,2});
-  listStorePtr->setList(2, std::vector<int16>{1,2});
-  listStorePtr->setList(3, std::vector<int16>{1,2});
-  listStorePtr->setList(4, std::vector<int16>{1,2});
-  listStorePtr->setList(5, std::vector<int16>{1,2});
+  listStorePtr->setList(0, std::vector<int16>{1, 2});
+  listStorePtr->setList(1, std::vector<int16>{1, 2});
+  listStorePtr->setList(2, std::vector<int16>{1, 2});
+  listStorePtr->setList(3, std::vector<int16>{1, 2});
+  listStorePtr->setList(4, std::vector<int16>{1, 2});
+  listStorePtr->setList(5, std::vector<int16>{1, 2});
   auto* neighborList = Int16NeighborList::Create(dataStructure, Constants::k_NeighborList, listStorePtr, dataGroup->getId());
 
   auto vertices = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{3}, 0.0f);
