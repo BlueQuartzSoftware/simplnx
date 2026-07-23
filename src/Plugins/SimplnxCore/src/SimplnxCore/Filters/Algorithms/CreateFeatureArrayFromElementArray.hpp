@@ -22,9 +22,12 @@ struct SIMPLNXCORE_EXPORT CreateFeatureArrayFromElementArrayInputValues
 
 /**
  * @class CreateFeatureArrayFromElementArray
- * @brief This algorithm implements support code for the CreateFeatureArrayFromElementArrayFilter
+ * @brief Copies element-level values up to a Feature-level array indexed by Feature Id: scans
+ * FeatureIds for the largest id (rejecting negatives), resizes the destination Feature
+ * AttributeMatrix to max(FeatureIds) + 1 tuples, then copies each cell's tuple to index
+ * FeatureId so the last cell of each Feature wins. Emits at most one warning (-1000) when a
+ * Feature's cells do not all hold the same value.
  */
-
 class SIMPLNXCORE_EXPORT CreateFeatureArrayFromElementArray
 {
 public:

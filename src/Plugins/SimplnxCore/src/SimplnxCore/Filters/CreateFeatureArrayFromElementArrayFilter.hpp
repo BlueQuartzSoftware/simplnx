@@ -9,7 +9,9 @@ namespace nx::core
 {
 /**
  * @class CreateFeatureArrayFromElementArrayFilter
- * @brief This filter will ....
+ * @brief Copies element-level values up to a Feature-level array indexed by Feature Id. The
+ * destination Feature AttributeMatrix is resized to max(FeatureIds) + 1 tuples and the last
+ * element of each Feature provides the Feature's value.
  */
 class SIMPLNXCORE_EXPORT CreateFeatureArrayFromElementArrayFilter : public IFilter
 {
