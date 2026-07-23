@@ -28,7 +28,6 @@ const DataPath k_TestArrayIntPath = k_ImageCellDataName.createChildPath(k_TestAr
 const DataPath k_MultiComponentArrayPath = k_ImageCellDataName.createChildPath(k_MultiComponentArrayName);
 const DataPath k_ThresholdArrayPath = k_ImageCellDataName.createChildPath(k_ThresholdArrayName);
 
-const DataPath k_MismatchingComponentsArrayPath = k_ImageCellDataName.createChildPath("MismatchingComponentsArray");
 const DataPath k_MismatchingTuplesArrayPath({"MismatchingTuplesArray"});
 
 constexpr int8 k_TupleCount = 5;
