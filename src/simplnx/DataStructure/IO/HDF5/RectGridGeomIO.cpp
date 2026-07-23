@@ -70,7 +70,13 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
   }
 
   {
-    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+    auto groupReader = dataStructureGroup.openGroup(dataPath.getTargetName());
+    if(!groupReader.isValid())
+    {
+      return MakeErrorResult(-50597, fmt::format("Failed to finish importing geometry at path '{}': could not open its HDF5 group '{}' inside parent group '{}'. The file may be corrupt or was "
+                                                 "written by an incompatible version of DREAM3D-NX.",
+                                                 dataPath.toString(), dataPath.getTargetName(), dataStructureGroup.getObjectPath()));
+    }
 
     if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
     {

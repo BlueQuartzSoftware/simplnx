@@ -6,10 +6,19 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
@@ -271,6 +280,171 @@ Pipeline CreateMultiImportPipeline()
 DREAM3D::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
+}
+
+//------------------------------------------------------------------------------
+// Helpers below build a small, valid instance of every Geometry type. Each accepts an
+// optional parentId so the same geometry can be created at the top level or nested inside
+// a DataGroup. They exercise the read/write code paths covered by issue #1642.
+
+using MeshIndexType = IGeometry::MeshIndexType;
+
+// Creates a 4-vertex coordinate array as a child of the geometry and wires it in.
+Float32Array* CreateVertexList(DataStructure& dataStructure, INodeGeometry0D& geometry)
+{
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, geometry.getId());
+  for(usize i = 0; i < vertices->getSize(); i++)
+  {
+    (*vertices)[i] = static_cast<float32>(i);
+  }
+  geometry.setVertices(*vertices);
+  AttributeMatrix* vertexMatrix = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{4}, geometry.getId());
+  geometry.setVertexAttributeMatrix(*vertexMatrix);
+  return vertices;
+}
+
+VertexGeom* CreateVertexGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* vertexGeom = VertexGeom::Create(dataStructure, geomName, parentId);
+  CreateVertexList(dataStructure, *vertexGeom);
+  return vertexGeom;
+}
+
+EdgeGeom* CreateEdgeGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* edgeGeom = EdgeGeom::Create(dataStructure, geomName, parentId);
+  CreateVertexList(dataStructure, *edgeGeom);
+
+  auto* edges = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedEdgeList", {2}, {2}, edgeGeom->getId());
+  (*edges)[0] = 0;
+  (*edges)[1] = 1;
+  (*edges)[2] = 2;
+  (*edges)[3] = 3;
+  edgeGeom->setEdgeList(*edges);
+  AttributeMatrix* edgeMatrix = AttributeMatrix::Create(dataStructure, "Edge Data", ShapeType{2}, edgeGeom->getId());
+  edgeGeom->setEdgeAttributeMatrix(*edgeMatrix);
+  return edgeGeom;
+}
+
+TriangleGeom* CreateTriangleGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* triangleGeom = TriangleGeom::Create(dataStructure, geomName, parentId);
+  CreateVertexList(dataStructure, *triangleGeom);
+
+  auto* triangles = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTriList", {1}, {3}, triangleGeom->getId());
+  (*triangles)[0] = 0;
+  (*triangles)[1] = 1;
+  (*triangles)[2] = 2;
+  triangleGeom->setFaceList(*triangles);
+  AttributeMatrix* faceMatrix = AttributeMatrix::Create(dataStructure, "Face Data", ShapeType{1}, triangleGeom->getId());
+  triangleGeom->setFaceAttributeMatrix(*faceMatrix);
+  return triangleGeom;
+}
+
+QuadGeom* CreateQuadGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* quadGeom = QuadGeom::Create(dataStructure, geomName, parentId);
+  CreateVertexList(dataStructure, *quadGeom);
+
+  auto* quads = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedQuadList", {1}, {4}, quadGeom->getId());
+  (*quads)[0] = 0;
+  (*quads)[1] = 1;
+  (*quads)[2] = 2;
+  (*quads)[3] = 3;
+  quadGeom->setFaceList(*quads);
+  AttributeMatrix* faceMatrix = AttributeMatrix::Create(dataStructure, "Face Data", ShapeType{1}, quadGeom->getId());
+  quadGeom->setFaceAttributeMatrix(*faceMatrix);
+  return quadGeom;
+}
+
+TetrahedralGeom* CreateTetrahedralGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* tetGeom = TetrahedralGeom::Create(dataStructure, geomName, parentId);
+  CreateVertexList(dataStructure, *tetGeom);
+
+  auto* tets = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTetList", {1}, {4}, tetGeom->getId());
+  (*tets)[0] = 0;
+  (*tets)[1] = 1;
+  (*tets)[2] = 2;
+  (*tets)[3] = 3;
+  tetGeom->setPolyhedraList(*tets);
+  AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Polyhedron Data", ShapeType{1}, tetGeom->getId());
+  tetGeom->setPolyhedraAttributeMatrix(*cellMatrix);
+  return tetGeom;
+}
+
+HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* hexGeom = HexahedralGeom::Create(dataStructure, geomName, parentId);
+  // A hexahedron references 8 vertices, so create 8 here instead of the default 4.
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {8}, {3}, hexGeom->getId());
+  for(usize i = 0; i < vertices->getSize(); i++)
+  {
+    (*vertices)[i] = static_cast<float32>(i);
+  }
+  hexGeom->setVertices(*vertices);
+  AttributeMatrix* vertexMatrix = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{8}, hexGeom->getId());
+  hexGeom->setVertexAttributeMatrix(*vertexMatrix);
+
+  auto* hexes = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedHexList", {1}, {8}, hexGeom->getId());
+  for(usize i = 0; i < 8; i++)
+  {
+    (*hexes)[i] = i;
+  }
+  hexGeom->setPolyhedraList(*hexes);
+  AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Polyhedron Data", ShapeType{1}, hexGeom->getId());
+  hexGeom->setPolyhedraAttributeMatrix(*cellMatrix);
+  return hexGeom;
+}
+
+ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* imageGeom = ImageGeom::Create(dataStructure, geomName, parentId);
+  imageGeom->setDimensions(SizeVec3{2, 2, 2});
+  imageGeom->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F});
+  imageGeom->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F});
+  AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2, 2}, imageGeom->getId());
+  imageGeom->setCellData(*cellMatrix);
+  return imageGeom;
+}
+
+RectGridGeom* CreateRectGridGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
+{
+  auto* rectGridGeom = RectGridGeom::Create(dataStructure, geomName, parentId);
+  rectGridGeom->setDimensions(SizeVec3{2, 2, 2});
+
+  auto* xBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "X Bounds", {3}, {1}, rectGridGeom->getId());
+  auto* yBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "Y Bounds", {3}, {1}, rectGridGeom->getId());
+  auto* zBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "Z Bounds", {3}, {1}, rectGridGeom->getId());
+  for(usize i = 0; i < 3; i++)
+  {
+    (*xBounds)[i] = static_cast<float32>(i);
+    (*yBounds)[i] = static_cast<float32>(i);
+    (*zBounds)[i] = static_cast<float32>(i);
+  }
+  rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+  AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2, 2}, rectGridGeom->getId());
+  rectGridGeom->setCellData(*cellMatrix);
+  return rectGridGeom;
+}
+
+// A single named geometry-builder + a type-checked verifier used to drive the parameterized
+// nested-geometry round-trip test below.
+struct GeometryTestCase
+{
+  std::string typeName;
+  std::function<void(DataStructure&, const std::string&, const std::optional<DataObject::IdType>&)> build;
+  std::function<void(const DataStructure&, const DataPath&)> requireType;
+};
+
+template <typename GeomType>
+GeometryTestCase MakeGeometryTestCase(std::string typeName, std::function<GeomType*(DataStructure&, const std::string&, const std::optional<DataObject::IdType>&)> builder)
+{
+  GeometryTestCase testCase;
+  testCase.typeName = std::move(typeName);
+  testCase.build = [builder](DataStructure& dataStructure, const std::string& name, const std::optional<DataObject::IdType>& parentId) { builder(dataStructure, name, parentId); };
+  testCase.requireType = [](const DataStructure& dataStructure, const DataPath& path) { REQUIRE_NOTHROW(dataStructure.getDataRefAs<GeomType>(path)); };
+  return testCase;
 }
 
 } // End Namespace
@@ -930,6 +1104,69 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
   REQUIRE(sizesByLevel.size() == levels.size());
   REQUIRE(sizesByLevel[0] >= sizesByLevel[1]);
   REQUIRE(sizesByLevel[1] >= sizesByLevel[2]);
+}
+
+TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  Application::GetOrCreateInstance();
+
+  const std::vector<GeometryTestCase> testCases = {
+      MakeGeometryTestCase<VertexGeom>("VertexGeom", CreateVertexGeometry),
+      MakeGeometryTestCase<EdgeGeom>("EdgeGeom", CreateEdgeGeometry),
+      MakeGeometryTestCase<TriangleGeom>("TriangleGeom", CreateTriangleGeometry),
+      MakeGeometryTestCase<QuadGeom>("QuadGeom", CreateQuadGeometry),
+      MakeGeometryTestCase<TetrahedralGeom>("TetrahedralGeom", CreateTetrahedralGeometry),
+      MakeGeometryTestCase<HexahedralGeom>("HexahedralGeom", CreateHexahedralGeometry),
+      MakeGeometryTestCase<ImageGeom>("ImageGeom", CreateImageGeometry),
+      MakeGeometryTestCase<RectGridGeom>("RectGridGeom", CreateRectGridGeometry),
+  };
+
+  for(const auto& testCase : testCases)
+  {
+    DYNAMIC_SECTION(testCase.typeName)
+    {
+      const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("nested_geometry_{}.dream3d", testCase.typeName);
+      fs::remove(outPath);
+
+      // Build a DataStructure with the geometry at the top level (control) and an identical
+      // geometry nested inside a DataGroup (the case that previously crashed).
+      DataStructure dataStructure;
+      const std::string topName = "Top";
+      const std::string nestName = "Nested";
+      testCase.build(dataStructure, topName, {});
+      auto* group = DataGroup::Create(dataStructure, "Grp");
+      testCase.build(dataStructure, nestName, group->getId());
+
+      // Write the file
+      {
+        WriteDREAM3DFilter writeFilter;
+        Arguments writeArgs;
+        writeArgs.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+        writeArgs.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+        Result<> writeResult = writeFilter.execute(dataStructure, writeArgs).result;
+        SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+      }
+
+      // Read the file back. This must not crash and must succeed.
+      DataStructure importDataStructure;
+      {
+        ReadDREAM3DFilter readFilter;
+        Arguments readArgs;
+        Dream3dImportParameter::ImportData importData(outPath);
+        readArgs.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, importData);
+        Result<> readResult = readFilter.execute(importDataStructure, readArgs).result;
+        SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+      }
+
+      // Both the nested geometry and the top-level control must survive the round trip with
+      // the correct concrete type.
+      const DataPath nestedPath({"Grp", nestName});
+      testCase.requireType(importDataStructure, nestedPath);
+      testCase.requireType(importDataStructure, DataPath({topName}));
+
+      UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+    }
+  }
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[WriteDREAM3DFilter][Compression]")
