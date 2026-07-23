@@ -17,7 +17,7 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 |------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branches when the crystal structure type is not hexagonal. |
 | Oracle (confirmed)     | Class 1 (Analytical) -  15 hand derived data fixtures |
-| Code paths enumerated  | 6 of 7 paths exercised - only the filter cancelation path is untested |
+| Code paths enumerated  | 7 of 8 paths exercised - only the filter cancelation path is untested |
 | Tests today            | 5 test cases - 1 test with Class 1 Oracle, 2 error path tests, 1 warning path test, 1 SIMPL json backwards compatibility test |
 | Exemplar archive       | None - removed test using circular oracle data from `caxis_data.tar.gz` |
 | Legacy comparison      | Run against DREAM3D 6.5.171 with the inline test data for the Class 1 Oracle. Result is bit-identical between 6.5.171 and NX for hexagonal phases. |
@@ -67,19 +67,20 @@ There were no deviations that affect the output found for hexagonal materials.
 
 ## Code path coverage
 
-*6 of 7 paths exercised. The non-covered path is the cancellation branch which is not currently able to be tested for all filters*
+*7 of 8 paths exercised. The non-covered path is the cancellation branch which is not currently able to be tested for all filters*
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeCAxisLocations.cpp` (107 lines).
 
 | #  | Phase           | Path                                              | Test case                                  |
 |----|-----------------|---------------------------------------------------|--------------------------------------------|
 | 1  | *Preflight* | Tuple validity check (-3520 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - Cell array tuple count mismatch (-3520)" |
-| 2  | *Execute* | No hexagonal phases check (-3522 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
-| 3  | *Execute* | Not all phases hexagonal check (-3523 warning code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
-| 4  | *Execute - per-cell* | Should cancel check | Not directly tested - no filter cancellation testing infrastructure |
-| 5  | *Execute - per-cell* | Hexagonal C-axis location calculation path | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
-| 6  | *Execute - per-cell* | C-axis direction flip check | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
-| 7  | *Execute - per-cell* | Non-hexagonal NAN branch | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
+| 2  | *Preflight* | Unconditional warning advising user to ensure their data contains hexagonal phases | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
+| 3  | *Execute* | No hexagonal phases check (-3522 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
+| 4  | *Execute* | Not all phases hexagonal check (-3523 warning code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
+| 5  | *Execute - per-cell* | Should cancel check | Not directly tested - no filter cancellation testing infrastructure |
+| 6  | *Execute - per-cell* | Hexagonal C-axis location calculation path | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
+| 7  | *Execute - per-cell* | C-axis direction flip check | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
+| 8  | *Execute - per-cell* | Non-hexagonal NAN branch | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
 
 ## Test inventory
 

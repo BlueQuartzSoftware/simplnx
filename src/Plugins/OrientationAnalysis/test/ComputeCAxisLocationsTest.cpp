@@ -172,6 +172,9 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal p
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
+  // Check for unconditional preflight warning about ensuring nonhexagonal data
+  REQUIRE(ContainsCode(preflightResult.outputActions.warnings(), -3521));
+
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
