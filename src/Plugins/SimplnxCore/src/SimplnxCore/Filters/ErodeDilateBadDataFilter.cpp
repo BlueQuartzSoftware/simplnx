@@ -23,7 +23,7 @@ namespace
 {
 int32 k_NoDirections_Error = -14601;
 int32 k_NoGeometryDimensions = -14602;
-}
+} // namespace
 
 namespace nx::core
 {
@@ -115,7 +115,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if (!xDirOn && !yDirOn && !zDirOn)
+  if(!xDirOn && !yDirOn && !zDirOn)
   {
     return {MakeErrorResult<OutputActions>(k_NoDirections_Error, "ErodeDilateBadData requires at least one direction to operate over")};
   }
