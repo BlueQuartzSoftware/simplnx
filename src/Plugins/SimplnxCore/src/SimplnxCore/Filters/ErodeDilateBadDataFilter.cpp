@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/ErodeDilateBadData.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -17,6 +18,12 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
+
+namespace
+{
+int32 k_NoDirections_Error = -14601;
+int32 k_NoGeometryDimensions = -14602;
+}
 
 namespace nx::core
 {
@@ -97,12 +104,28 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto pOperationValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  auto xDirOn = filterArgs.value<bool>(k_XDirOn_Key);
+  auto yDirOn = filterArgs.value<bool>(k_YDirOn_Key);
+  auto zDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   PreflightResult preflightResult;
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  if (!xDirOn && !yDirOn && !zDirOn)
+  {
+    return {MakeErrorResult<OutputActions>(k_NoDirections_Error, "ErodeDilateBadData requires at least one direction to operate over")};
+  }
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  auto dims = imageGeom.getDimensions();
+  if(dims[0] == 0 && dims[1] == 0 && dims[2] == 0)
+  {
+    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensions, "ErodeDilateBadData requires that the ImageGeom have its dimensions set")};
+  }
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
                                            "level data should be rerun to ensure accurate final results from your pipeline.";
