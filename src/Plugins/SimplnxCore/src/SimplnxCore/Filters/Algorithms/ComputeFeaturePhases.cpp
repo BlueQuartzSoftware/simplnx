@@ -5,6 +5,11 @@
 
 using namespace nx::core;
 
+namespace
+{
+constexpr usize k_MaxListedFeatures = 15;
+}
+
 // -----------------------------------------------------------------------------
 ComputeFeaturePhases::ComputeFeaturePhases(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeFeaturePhasesInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -35,11 +40,6 @@ Result<> ComputeFeaturePhases::operator()()
   }
 
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
-  if(totalPoints != cellPhasesStore.getNumberOfTuples())
-  {
-    return MakeErrorResult(-61860, "Size mismatch between cell feature indices and cell phases arrays.");
-  }
-
   const usize numFeatures = featurePhasesStore.getNumberOfTuples();
   std::vector<int32> initialFeaturePhase(numFeatures, -1);
   std::vector<bool> warnFeature(numFeatures, false);
@@ -65,7 +65,7 @@ Result<> ComputeFeaturePhases::operator()()
       return MakeErrorResult(-61861, fmt::format("Cell phases contains a negative value. Index: {} | Value: {}", i, currentPhaseId));
     }
 
-    int32 storedPhaseId = initialFeaturePhase[featureId];
+    const int32 storedPhaseId = initialFeaturePhase[featureId];
     if(storedPhaseId == -1)
     {
       initialFeaturePhase[featureId] = currentPhaseId;
@@ -87,7 +87,7 @@ Result<> ComputeFeaturePhases::operator()()
   {
     if(warnFeature[i])
     {
-      if(count < 15)
+      if(count < k_MaxListedFeatures)
       {
         if(count > 0)
         {
@@ -101,9 +101,9 @@ Result<> ComputeFeaturePhases::operator()()
 
   if(count != 0)
   {
-    if(count > 15)
+    if(count > k_MaxListedFeatures)
     {
-      usize remainder = count - 15;
+      usize remainder = count - k_MaxListedFeatures;
       warnStr.append(fmt::format(", and {} more {}", remainder, remainder == 1 ? "occurrence" : "occurrences"));
     }
     result.warnings().push_back(Warning{-500, std::move(warnStr)});

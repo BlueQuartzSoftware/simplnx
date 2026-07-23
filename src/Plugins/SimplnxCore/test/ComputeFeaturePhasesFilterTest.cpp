@@ -318,13 +318,10 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Cell Array Size Mis
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto executeResult = filter.execute(dataStructure, args);
 
   // Validation
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors().front().code == -61860);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -61860);
 }
 
 // Case 7: Negative Cell Phase

@@ -22,7 +22,7 @@ The pre-V&V test `SimplnxCore::ComputeFeaturePhasesFilter(Valid Parameters)` loa
 | **Archive** | `6_6_stats_test_v2.tar.gz` |
 | **SHA512** | `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723` |
 | **Circular array** | `DataContainer/Cell Feature Data/Phases` — not an independent oracle |
-| **Retained for** | `SIMPL Backwards Compatibility` test (parameter conversion only); legacy comparison (Phase 9) |
+| **Retained for** | Nothing — fully retired. No active test references this archive. (`SIMPL Backwards Compatibility` loads `.json` SIMPL conversion fixtures, not `.dream3d` files.) |
 
 **Resolution (2026-07-10):** Retired `(Valid Parameters)` test. Replaced by 8 inline Class 1 oracle TEST_CASEs in `test/ComputeFeaturePhasesFilterTest.cpp` covering all code paths except cancel-signal injection.
 
@@ -41,7 +41,7 @@ All oracle assertions are embedded directly in `test/ComputeFeaturePhasesFilterT
 | 3 | `Valid: Mixed Phase Warning` | 2 cells, 1 feature, phase conflict; warning code -500 | 8, 9 |
 | 4 | `Valid: Truncated Mixed Feature Warning` | 16 conflicting features; truncation suffix "and 1 more occurrence" | 9 (truncation) |
 | 5 | `Invalid: FeatureId Out Of Bounds` | featureId 5 with Feature AM of 3 tuples; error -5351 | 1 (partial — OOB only) |
-| 6 | `Invalid: Cell Array Size Mismatch` | featureIds (4 tuples) vs cellPhases (5 tuples); error -61860 | 2 |
+| 6 | `Invalid: Cell Array Size Mismatch` | featureIds (4 tuples) vs cellPhases (5 tuples); preflight error -61860 | 2 |
 | 7 | `Invalid: Negative Cell Phase` | cellPhases contains -1; error -61861 | 5 |
 | 8 | `Invalid: Negative FeatureId` | featureIds contains -1; error -5355 | 1b |
 
@@ -58,7 +58,7 @@ All oracle assertions are embedded directly in `test/ComputeFeaturePhasesFilterT
 | Warning code = -500 for Cases 3, 4 | 1 — Analytical | Hard-coded in algorithm |
 | Error code = -5351 for Case 5 | 1 — Analytical | Hard-coded in `ValidateFeatureIdsToFeatureAttributeMatrixIndexing` |
 | Error code = -5355 for Case 8 | 1 — Analytical | Hard-coded in `ValidateFeatureIdsToFeatureAttributeMatrixIndexing` |
-| Error code = -61860 for Case 6 | 1 — Analytical | Hard-coded in algorithm |
+| Preflight error code = -61860 for Case 6 | 1 — Analytical | Hard-coded in `preflightImpl()` (`ComputeFeaturePhasesFilter.cpp:102`) |
 | Error code = -61861 for Case 7 | 1 — Analytical | Hard-coded in algorithm |
 | `featurePhases[f] ∈ {phases of cells with featureId == f}` for `f > 0` | 4 — Invariant | Single-pass indirection |
 

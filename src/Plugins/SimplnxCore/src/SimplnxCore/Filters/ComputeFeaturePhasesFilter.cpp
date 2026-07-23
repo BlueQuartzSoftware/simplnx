@@ -95,9 +95,14 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
     resultOutputActions.value().appendAction(std::move(createFeaturePhasesAction));
   }
 
-  std::vector<PreflightValue> preflightUpdatedValues;
+  const auto* cellPhasesArray = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue);
+  const auto* featureIdsArray = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  if(featureIdsArray->getNumberOfTuples() != cellPhasesArray->getNumberOfTuples())
+  {
+    return MakePreflightErrorResult(-61860, "Size mismatch between cell feature indices and cell phases arrays.");
+  }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
