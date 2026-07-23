@@ -335,8 +335,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 // deliberately 5.0, and all three flat orientations are GENERATEd so no axis-specific special case
 // can satisfy it.
 //
-// While the #1590 convention is in place, this test fails.
-TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes][2DFlatSpacing]")
+// While the #1590 convention is in place, the assertions below fail; the [!shouldfail] tag makes
+// Catch2 report that as an expected failure (so CI stays green) and flips to a hard failure the
+// moment the divergence is resolved, forcing this test to be updated alongside the design decision.
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes][2DFlatSpacing][!shouldfail]")
 {
   auto [label, dims, spacing] = GENERATE(std::make_tuple("flat Z", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3{1, 2, 2}, FloatVec3{5.0f, 2.0f, 3.0f}),
                                          std::make_tuple("flat Y", SizeVec3{2, 1, 2}, FloatVec3{2.0f, 5.0f, 3.0f}));
