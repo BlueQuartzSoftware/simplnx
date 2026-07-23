@@ -30,7 +30,7 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 ComputeCAxisLocationsFilter determines the direction of the C-axis for each element, in the *sample reference frame*, by applying the quaternion of the element to the <001> direction, which is the C-axis for *Hexagonal* materials.
 
-The filter is verified with a Class 1 (Analytical) oracle. The filter uses the quaternion to rotate the C-axis into the sample reference frame. This is done by converting the quaternion to a rotation matrix. Then the transpose of the matrix is used due to DREAM3D conventions (see docs/ReferenceFrameNotes.rst). Due to the transpose the sign of the third element may need to be flipped. A new test was added with handed verified data.
+The filter is verified with a Class 1 (Analytical) oracle. The filter uses the quaternion to rotate the C-axis into the sample reference frame. This is done by converting the quaternion to a rotation matrix. Then the transpose of the matrix is used due to DREAM3D conventions (see `wrapping/python/docs/source/Reference_Frame_Notes.md`). Due to the transpose the sign of the third element may need to be flipped. A new test was added with handed verified data.
 
 There were no deviations that affect the output found for hexagonal materials.
 
