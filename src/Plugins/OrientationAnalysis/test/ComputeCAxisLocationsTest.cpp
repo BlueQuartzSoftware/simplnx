@@ -228,6 +228,75 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[
   }
 }
 
+TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mixed hexagonal and non-hexagonal phases", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
+{
+  DataStructure dataStructure;
+
+  const usize size = k_Fixtures.size();
+
+  Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {size}, {4});
+
+  for(usize i = 0; i < size; i++)
+  {
+    for(usize j = 0; j < 4; j++)
+    {
+      quats->setComponent(i, j, k_Fixtures[i].inputQuat[j]);
+    }
+  }
+
+  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1});
+  crystalStructures->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
+  crystalStructures->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
+
+  // Alternate hexagonal (phase 1) and cubic (phase 2) cells so a single execution exercises
+  // both the computed c-axis path and the non-hexagonal NaN path, and verifies the NaN
+  // branch does not disturb neighboring computed values.
+  Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
+  for(usize i = 0; i < size; i++)
+  {
+    phases->setValue(i, i % 2 == 0 ? 1 : 2);
+  }
+
+  DataPath cAxisLocationsPath({"CAxisLocations"});
+
+  ComputeCAxisLocationsFilter filter;
+  Arguments args;
+
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(std::vector<std::string>{"Quats"}));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(std::vector<std::string>{"Phases"}));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(std::vector<std::string>{"CrystalStructures"}));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key, std::make_any<std::string>(cAxisLocationsPath.getTargetName()));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE(ContainsCode(executeResult.result.warnings(), -3523));
+
+  REQUIRE(dataStructure.containsData(cAxisLocationsPath));
+  auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
+  for(usize i = 0; i < size; i++)
+  {
+    const bool isHexCell = i % 2 == 0;
+    for(usize j = 0; j < 3; j++)
+    {
+      INFO(fmt::format("i = {} | j = {} | phase = {} | input_quat = ({}) | expected_vec = ({})", i, j, phases->getValue(i), fmt::join(k_Fixtures[i].inputQuat, ", "),
+                       fmt::join(k_Fixtures[i].expectedOutput, ", ")));
+      if(isHexCell)
+      {
+        REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]));
+      }
+      else
+      {
+        REQUIRE(std::isnan(cAxisLocations.getComponent(i, j)));
+      }
+    }
+  }
+}
+
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeCAxisLocationsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
