@@ -6,11 +6,28 @@ IO (Input)
 
 ## Description
 
-This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data.
+This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data.
+
+### Created Data
+
+The **Image Geometry** dimensions come from the `NCOLS_EVEN`/`NROWS` header values, the spacing from `XSTEP`/`YSTEP` (Z spacing is 1.0), the origin is (0, 0, 0), and the length units are always **micrometers**.
+
+| Location | Array | Type | Notes |
+|---|---|---|---|
+| Cell | EulerAngles | float32 (3) | phi1, PHI, phi2 columns interleaved, in radians as stored in the file |
+| Cell | Phases | int32 | Phase values less than 1 (un-indexed points) are remapped to 1 |
+| Cell | Image Quality, Confidence Index, SEM Signal, Fit, X Position, Y Position | float32 | Copied verbatim from the file columns |
+| Ensemble | CrystalStructures | uint32 | From each phase's TSL `Symmetry` code; index 0 is reserved for the invalid phase (999) |
+| Ensemble | MaterialName | string | Whitespace-trimmed material name; index 0 is "Invalid Phase" |
+| Ensemble | LatticeConstants | float32 (6) | a, b, c (Angstroms), alpha, beta, gamma (degrees); index 0 is all zeros |
+
+### Note on Length Units
+
+The created **Image Geometry** is always marked as **micrometers**, matching standard EDAX SEM-based `.ang` files. Legacy DREAM.3D 6.5 detected certain retired TEM/ACOM `.ang` variants and marked them as nanometers; EDAX retired those file formats over a decade ago and this filter does not special-case them. If you are importing such an archival file, set the geometry units manually after import.
 
 ### Default TSL Transformations
 
-If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, he following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
+If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
 
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
@@ -25,7 +42,7 @@ OIMAnalysis can create EBSD data sampled on a hexagonal grid. The user can look 
 # GRID: HexGrid
 ```
 
-If the user's .ang files are hexagonal grid files then they will need to run the {ref}`Convert EDAX Hex Grid to Square Grid (.ang)<OrientationAnalysis/ConvertHexGridToSquareGridFilter:Description>` filter to first convert the input files square gridded files.
+If the user's .ang files are hexagonal grid files then they will need to run the {ref}`Convert EDAX Hex Grid to Square Grid (.ang)<OrientationAnalysis/ConvertHexGridToSquareGridFilter:Description>` filter to first convert the input files to square gridded files. This filter rejects hexagonal grid files during preflight with error `-19500`.
 
 
 ### Note on .ang file Data Ordering
@@ -48,10 +65,17 @@ Fit of Solution
 
 ## Example Pipelines
 
-+ INL Export
-+ Export Small IN100 ODF Data (StatsGenerator)
-+ Edax IPF Colors
-+ Confidence Index Histogram
++ Read_EDAX_Ang_File
++ Edax_IPF_Colors
++ CI_Histogram
++ EBSD_Hexagonal_Data_Analysis
++ ReplaceElementAttributesWithNeighbor (SimplnxCore)
++ ExtractVertexGeometry (SimplnxCore)
++ ApplyTransformation_Image (SimplnxCore)
+
+## Differences from DREAM.3D 6.5
+
+Behavioral differences from the legacy `ReadAngData` filter (material-name trimming, length-unit handling for retired TEM/ACOM files, error-code changes, and a legacy crash on non-contiguous phase indices) are documented in the source tree at `src/Plugins/OrientationAnalysis/vv/deviations/ReadAngDataFilter.md`.
 
 ## License & Copyright
 

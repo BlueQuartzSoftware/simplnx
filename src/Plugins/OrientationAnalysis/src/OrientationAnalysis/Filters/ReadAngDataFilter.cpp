@@ -20,6 +20,7 @@
 #include <EbsdLib/IO/TSL/AngReader.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <algorithm>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -118,10 +119,6 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), 1.0F};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
-  // These variables should be updated with the latest data generated for each variable during preflight.
-  // These will be returned through the preflightResult variable to the
-  // user interface. You could make these member variables instead if needed.
-
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
   EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
 
@@ -171,9 +168,17 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Create the Ensemble AttributeMatrix
+  // Create the Ensemble AttributeMatrix. Slot 0 is always reserved for the "Invalid Phase",
+  // and the arrays are sized from the LARGEST phase index in the file (not the phase count)
+  // because the ensemble arrays are indexed by AngPhase::getPhaseIndex(), which is not
+  // guaranteed to be contiguous starting at 1.
   std::vector<std::shared_ptr<ebsdlib::AngPhase>> angPhases = reader.getPhaseVector();
-  tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
+  size_t maxPhaseIndex = 0;
+  for(const std::shared_ptr<ebsdlib::AngPhase>& angPhase : angPhases)
+  {
+    maxPhaseIndex = std::max(maxPhaseIndex, static_cast<size_t>(std::max(angPhase->getPhaseIndex(), 0)));
+  }
+  tupleDims = {std::max(maxPhaseIndex, angPhases.size()) + 1};
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(ensembleAttributeMatrixPath, tupleDims);
