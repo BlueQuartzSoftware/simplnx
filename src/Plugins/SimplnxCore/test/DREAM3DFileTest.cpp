@@ -22,6 +22,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -59,6 +60,26 @@ const fs::path k_ExportFilename2 = "export2.dream3d";
 const fs::path k_MultiExportFilename1 = "multi_export1.dream3d";
 const fs::path k_MultiExportFilename2 = "multi_export2.dream3d";
 const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
+
+constexpr StringLiteral k_CellData = "Cell Data";
+constexpr StringLiteral k_DataContainer = "Data Container";
+constexpr StringLiteral k_EdgeGeom = "EdgeGeom";
+constexpr StringLiteral k_ImageGeom = "ImageGeom";
+constexpr StringLiteral k_HexGeom = "HexahedralGeom";
+constexpr StringLiteral k_QuadGeom = "QuadGeom";
+constexpr StringLiteral k_TetrahedralGeom = "TetrahedralGeom";
+constexpr StringLiteral k_TriangleGeom = "TriangleGeom";
+constexpr StringLiteral k_VertexGeom = "VertexGeom";
+
+constexpr StringLiteral k_DynamicListArray = "DynamicList";
+constexpr StringLiteral k_NeighborList = "NeighborList";
+constexpr StringLiteral k_StringArray = "String Array";
+constexpr StringLiteral k_VertexList = "Vertices";
+constexpr StringLiteral k_Edges = "Edges";
+constexpr StringLiteral k_Faces = "Faces";
+constexpr StringLiteral k_Polyhedra = "Polyhedrals";
+const ShapeType k_TupleShape{3, 2, 1};
+constexpr int16 k_ListCount = 6;
 } // namespace Constants
 
 std::mutex m_DataMutex;
@@ -152,6 +173,188 @@ fs::path GetReMultiExportDataPath()
   return GetDataDir(*app) / Constants::k_MultiExportFilename3;
 }
 
+/**
+ * @brief Creates and sets arrays for a 2D geometry of type T.
+ * @param dataStructure
+ * @param name
+ * @param vertexArray
+ * @param edgeList
+ * @param faceList
+ * @return T*
+ */
+template <typename T>
+T* Create2DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexList& vertexArray, const IGeometry::SharedEdgeList& edgeList,
+                const IGeometry::SharedFaceList& faceList)
+{
+  auto* geom = T::Create(dataStructure, name);
+  geom->setVertices(vertexArray);
+  geom->setEdgeList(edgeList);
+  geom->setFaceList(faceList);
+  return geom;
+}
+
+/**
+ * @brief Creates and sets arrays for a 3D geometry of type T.
+ * @param dataStructure
+ * @param name
+ * @param vertexArray
+ * @param edgeList
+ * @param faceList
+ * @param polyArray
+ * @return T*
+ */
+template <typename T>
+T* Create3DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexList& vertexArray, const IGeometry::SharedEdgeList& edgeList,
+                const IGeometry::SharedFaceList& faceList, const IGeometry::SharedHexList& polyArray)
+{
+  auto* geom = T::Create(dataStructure, name);
+  geom->setVertices(vertexArray);
+  geom->setEdgeList(edgeList);
+  geom->setFaceList(faceList);
+  geom->setPolyhedraList(polyArray);
+  return geom;
+}
+
+/**
+ * @brief Fill the data store with values, but do not use values greater than the number of tuples.
+ * @param dataStore
+ */
+template <typename T>
+void FillDataStore(AbstractDataStore<T>& dataStore)
+{
+  const auto numTuples = dataStore.getNumberOfTuples();
+  const auto numComponents = dataStore.getNumberOfComponents();
+
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const usize offset = i * numComponents;
+    for(usize j = 0; j < numComponents; j++)
+    {
+      usize value = (i + j) % numTuples;
+      dataStore[offset + j] = static_cast<T>(value);
+    }
+  }
+}
+
+template <typename T>
+void CheckDataStore(const AbstractDataStore<T>& dataStore, usize requiredComponents)
+{
+  const auto numTuples = dataStore.getNumberOfTuples();
+  const auto numComponents = dataStore.getNumberOfComponents();
+  REQUIRE(numComponents == requiredComponents);
+
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const usize offset = i * numComponents;
+    for(usize j = 0; j < numComponents; j++)
+    {
+      usize value = (i + j) % numTuples;
+      REQUIRE(dataStore[offset + j] == static_cast<T>(value));
+    }
+  }
+}
+
+void CheckGeom0D(const INodeGeometry0D* geom, DataObject::IdType vertexId)
+{
+  REQUIRE(geom != nullptr);
+  REQUIRE(geom->getVertexListId() == vertexId);
+}
+
+void CheckGeom1D(const INodeGeometry1D* geom, DataObject::IdType vertexId, DataObject::IdType edgeId)
+{
+  REQUIRE(geom != nullptr);
+  REQUIRE(geom->getEdgeListId() == edgeId);
+  CheckGeom0D(geom, vertexId);
+}
+
+void CheckGeom2D(const INodeGeometry2D* geom, DataObject::IdType vertexId, DataObject::IdType edgeId, DataObject::IdType faceId)
+{
+  REQUIRE(geom != nullptr);
+  REQUIRE(geom->getFaceListId() == faceId);
+  CheckGeom1D(geom, vertexId, edgeId);
+}
+
+void CheckGeom3D(const INodeGeometry3D* geom, DataObject::IdType vertexId, DataObject::IdType edgeId, DataObject::IdType faceId, DataObject::IdType polyhedraId)
+{
+  REQUIRE(geom != nullptr);
+  REQUIRE(geom->getPolyhedronListId().has_value());
+  REQUIRE(geom->getPolyhedronListId().value() == polyhedraId);
+  CheckGeom2D(geom, vertexId, edgeId, faceId);
+}
+
+void CheckTestDataStructure(const DataStructure& dataStructure)
+{
+  DataPath dataGroupPath({Constants::k_DataContainer});
+  REQUIRE(dataStructure.getDataAs<DataGroup>(dataGroupPath) != nullptr);
+
+  const auto* neighborList = dataStructure.getDataAs<Int16NeighborList>(dataGroupPath.createChildPath(Constants::k_NeighborList));
+  REQUIRE(neighborList != nullptr);
+  const auto storePtr = neighborList->getStore();
+  REQUIRE(storePtr != nullptr);
+  REQUIRE(storePtr->getNumberOfTuples() == 6);
+
+  const auto* vertexArray = dataStructure.getDataAs<Float32Array>(dataGroupPath.createChildPath(Constants::k_VertexList));
+  REQUIRE(vertexArray != nullptr);
+  const auto& vertices = vertexArray->getDataStoreRef();
+  CheckDataStore<float32>(vertices, 3);
+
+  const auto* edgeArray = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(Constants::k_Edges));
+  REQUIRE(edgeArray != nullptr);
+  const auto& edges = edgeArray->getDataStoreRef();
+  CheckDataStore<uint64>(edges, 2);
+
+  const auto* faceArray = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(Constants::k_Faces));
+  REQUIRE(faceArray != nullptr);
+  const auto& faces = faceArray->getDataStoreRef();
+  CheckDataStore<uint64>(faces, 3);
+
+  const auto* polyArray = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(Constants::k_Polyhedra));
+  REQUIRE(polyArray != nullptr);
+  const auto& polyhedra = polyArray->getDataStoreRef();
+  CheckDataStore<uint64>(polyhedra, 4);
+
+  const auto* stringArray = dataStructure.getDataAs<StringArray>(dataGroupPath.createChildPath(Constants::k_StringArray));
+  REQUIRE(stringArray != nullptr);
+  auto stringCount = stringArray->getNumberOfTuples();
+  REQUIRE(stringCount == 6);
+  REQUIRE(stringArray->at(0) == "1");
+  REQUIRE(stringArray->at(1) == "2");
+  REQUIRE(stringArray->at(2) == "3");
+  REQUIRE(stringArray->at(3) == "4");
+  REQUIRE(stringArray->at(4) == "5");
+  REQUIRE(stringArray->at(5) == "6");
+
+  const auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(DataPath({Constants::k_VertexGeom}));
+  CheckGeom0D(vertexGeom, vertexArray->getId());
+
+  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(DataPath({Constants::k_EdgeGeom}));
+  CheckGeom1D(edgeGeom, vertexArray->getId(), edgeArray->getId());
+
+  const auto* quadGeom = dataStructure.getDataAs<QuadGeom>(DataPath({Constants::k_QuadGeom}));
+  CheckGeom2D(quadGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId());
+
+  const auto* triGeom = dataStructure.getDataAs<TriangleGeom>(DataPath({Constants::k_TriangleGeom}));
+  CheckGeom2D(triGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId());
+
+  const auto* hexGeom = dataStructure.getDataAs<HexahedralGeom>(DataPath({Constants::k_HexGeom}));
+  CheckGeom3D(hexGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId(), polyArray->getId());
+
+  const auto* tetraGeom = dataStructure.getDataAs<TetrahedralGeom>(DataPath({Constants::k_TetrahedralGeom}));
+  CheckGeom3D(tetraGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId(), polyArray->getId());
+
+  DataPath imageGeomPath({Constants::k_ImageGeom});
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  REQUIRE(imageGeom != nullptr);
+  auto dims = imageGeom->getDimensions();
+  REQUIRE(dims[0] == Constants::k_TupleShape[0]);
+  REQUIRE(dims[1] == Constants::k_TupleShape[1]);
+  REQUIRE(dims[2] == Constants::k_TupleShape[2]);
+  const auto* cellData = dataStructure.getDataAs<AttributeMatrix>(imageGeomPath.createChildPath(Constants::k_CellData));
+  REQUIRE(cellData != nullptr);
+  REQUIRE(imageGeom->getCellDataId() == cellData->getId());
+  REQUIRE(cellData->getShape() == Constants::k_TupleShape);
+};
+
 DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
@@ -165,6 +368,61 @@ DataStructure CreateTestDataStructure()
   Result<> arrayCreationResults =
       ArrayCreationUtilities::CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}),
                                                 IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1");
+
+  // Create Arrays and DataGroup
+  auto* dataGroup = DataGroup::Create(dataStructure, Constants::k_DataContainer);
+
+  auto listStorePtr = std::make_shared<ListStore<int16>>(Constants::k_TupleShape);
+  listStorePtr->setList(0, std::vector<int16>{1,2});
+  listStorePtr->setList(1, std::vector<int16>{1,2});
+  listStorePtr->setList(2, std::vector<int16>{1,2});
+  listStorePtr->setList(3, std::vector<int16>{1,2});
+  listStorePtr->setList(4, std::vector<int16>{1,2});
+  listStorePtr->setList(5, std::vector<int16>{1,2});
+  auto* neighborList = Int16NeighborList::Create(dataStructure, Constants::k_NeighborList, listStorePtr, dataGroup->getId());
+
+  auto vertices = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{3}, 0.0f);
+  auto* vertexArray = Float32Array::Create(dataStructure, Constants::k_VertexList, vertices, dataGroup->getId());
+  FillDataStore<float32>(*vertices.get());
+
+  auto edges = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{2}, 0);
+  auto* edgesArray = IGeometry::SharedEdgeList::Create(dataStructure, Constants::k_Edges, edges, dataGroup->getId());
+  FillDataStore<uint64>(*edges.get());
+
+  auto faces = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{3}, 0);
+  auto* facesArray = IGeometry::SharedTriList::Create(dataStructure, Constants::k_Faces, faces, dataGroup->getId());
+  FillDataStore<uint64>(*faces.get());
+
+  auto polyhedra = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
+  auto* polyhedraArray = IGeometry::SharedTriList::Create(dataStructure, Constants::k_Polyhedra, polyhedra, dataGroup->getId());
+  FillDataStore<uint64>(*polyhedra.get());
+
+  StringArray::collection_type strings = {"1", "2", "3", "4", "5", "6"};
+  auto* stringArray = StringArray::CreateWithValues(dataStructure, Constants::k_StringArray, Constants::k_TupleShape, strings, dataGroup->getId());
+
+  // Create Geometries and make sure special arrays are set.
+  auto* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeom);
+  auto* cellMatrix = AttributeMatrix::Create(dataStructure, Constants::k_CellData, Constants::k_TupleShape, imageGeom->getId());
+  imageGeom->setCellData(cellMatrix->getId());
+  imageGeom->setDimensions(Constants::k_TupleShape);
+
+  // 0D Geometry
+  auto* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeom);
+  vertexGeom->setVertices(*vertexArray);
+
+  // 1D Geometry
+  auto* edgeGeom = EdgeGeom::Create(dataStructure, Constants::k_EdgeGeom);
+  edgeGeom->setVertices(*vertexArray);
+  edgeGeom->setEdgeList(*edgesArray);
+
+  // 2D Geometries
+  auto* quadGeom = Create2DGeom<QuadGeom>(dataStructure, Constants::k_QuadGeom, *vertexArray, *edgesArray, *facesArray);
+  auto* triangleGeom = Create2DGeom<TriangleGeom>(dataStructure, Constants::k_TriangleGeom, *vertexArray, *edgesArray, *facesArray);
+
+  // 3D Geometries
+  auto* hexGeom = Create3DGeom<HexahedralGeom>(dataStructure, Constants::k_HexGeom, *vertexArray, *edgesArray, *facesArray, *polyhedraArray);
+  auto* tetrahedralGeom = Create3DGeom<TetrahedralGeom>(dataStructure, Constants::k_TetrahedralGeom, *vertexArray, *edgesArray, *facesArray, *polyhedraArray);
+
   return dataStructure;
 }
 
@@ -449,11 +707,93 @@ GeometryTestCase MakeGeometryTestCase(std::string typeName, std::function<GeomTy
 
 } // End Namespace
 
+TEST_CASE("WriteDREAM3DFilter:Invalid Parameters")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+  WriteDREAM3DFilter filter;
+
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(GetIODataPath()));
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
+
+  SECTION("Empty FilePath")
+  {
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(std::filesystem::path()));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  }
+
+  SECTION("Bad Compression Level")
+  {
+    args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(true));
+    args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(0));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  }
+}
+
+TEST_CASE("WriteDREAM3DFilter:Valid Parameters")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+  WriteDREAM3DFilter filter;
+
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(GetIODataPath()));
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+}
+
+TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  bool writeXdmf = GENERATE(true, false);
+  Pipeline exportPipeline = GENERATE(CreateExportPipeline(), Pipeline());
+
+  auto writeResult = DREAM3D::WriteFile(GetIODataPath(), CreateTestDataStructure(), exportPipeline, writeXdmf);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+}
+
+TEST_CASE("WriteDREAM3D:Invalid File")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  bool writeXdmf = GENERATE(true, false);
+  Pipeline exportPipeline = GENERATE(CreateExportPipeline(), Pipeline());
+
+  auto writeResult = DREAM3D::WriteFile(fs::path(), CreateTestDataStructure(), exportPipeline, writeXdmf);
+  SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
+}
+
 TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  bool writeXdmf = GENERATE(true, false);
   // Write .dream3d file
   {
     auto fileData = CreateFileData();
@@ -470,6 +810,8 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 
     auto [pipeline, dataStructure] = fileResult.value();
+
+    CheckTestDataStructure(dataStructure);
 
     // Test reading the DataStructure
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
