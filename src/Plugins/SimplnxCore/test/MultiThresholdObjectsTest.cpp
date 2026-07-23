@@ -69,10 +69,10 @@ DataStructure CreateTestDataStructure()
   Int32Array* data1 = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, am->getId());
   Int32Array* multiComponentData = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, am->getId());
 
-  Float32Array* invalid1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingComponentsArrayPath.getTargetName(), tDims, cDimsMulti, am->getId());
-  invalid1->fill(1.0);
-  Float32Array* invalid2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
-  invalid2->fill(2.0);
+  // Mismatched tuple count throws an error.
+  // This is not true for mismatched component shapes.
+  Float32Array* problemArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
+  problemArray->fill(2.0);
 
   usize numComponents = multiComponentData->getNumberOfComponents();
 
@@ -89,6 +89,58 @@ DataStructure CreateTestDataStructure()
       multiComponentData->setComponent(i, j, InputIntComponentValue(i, j));
     }
   }
+  return dataStructure;
+}
+
+template <typename T>
+void SetArrayValues(DataArray<T>& dataArray)
+{
+  auto& dataStore = dataArray.getDataStoreRef();
+  usize count = dataStore.size();
+  for(usize i = 0; i < count; i++)
+  {
+    dataStore[i] = static_cast<T>(i);
+  }
+}
+
+DataStructure CreateTestDataStructure2()
+{
+  DataStructure dataStructure;
+  // Create two test arrays, a float array and a int array
+  // Set up geometry for tuples, a cuboid with dimensions 20, 10, 1
+  ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  std::vector<usize> dims = {k_TupleCount, 1, 1};
+  image->setDimensions(dims);
+
+  ShapeType tDims = {k_TupleCount};
+  ShapeType cDims = {1};
+  ShapeType cDimsMulti = {k_MultiComponentCount};
+
+  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());
+  auto* int8Array = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, "int8", tDims, cDims, am->getId());
+  auto* int16Array = Int16Array::CreateWithStore<Int16DataStore>(dataStructure, "int16", tDims, cDims, am->getId());
+  auto* int32Array = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "int32", tDims, cDims, am->getId());
+  auto* int64Array = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, "int64", tDims, cDims, am->getId());
+  auto* uint8Array = UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, "uint8", tDims, cDims, am->getId());
+  auto* uint16Array = UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, "uint16", tDims, cDims, am->getId());
+  auto* uint32Array = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "uint32", tDims, cDims, am->getId());
+  auto* uint64Array = UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, "uint64", tDims, cDims, am->getId());
+  auto* float32Array = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "float32", tDims, cDims, am->getId());
+  auto* float64Array = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "float64", tDims, cDims, am->getId());
+  auto* boolArray = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "bool", tDims, cDims, am->getId());
+
+  SetArrayValues<int8>(*int8Array);
+  SetArrayValues<int16>(*int16Array);
+  SetArrayValues<int32>(*int32Array);
+  SetArrayValues<int64>(*int64Array);
+  SetArrayValues<uint8>(*uint8Array);
+  SetArrayValues<uint16>(*uint16Array);
+  SetArrayValues<uint32>(*uint32Array);
+  SetArrayValues<uint64>(*uint64Array);
+  SetArrayValues<float32>(*float32Array);
+  SetArrayValues<float64>(*float64Array);
+  SetArrayValues<bool>(*boolArray);
+
   return dataStructure;
 }
 
@@ -976,4 +1028,110 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Mask DataType", 
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+{
+  usize count = mask.size();
+  for(usize i = 0; i < count; i++)
+  {
+    int8 targetValue = (i < comparisonValue) ? 1 : 0;
+    REQUIRE(mask[i] == targetValue);
+  }
+}
+
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateTestDataStructure2();
+
+  float64 comparisonValue = 3.0;
+  DataPath matrixPath({k_ImageGeometry, k_CellData});
+
+  // Shared filter setup
+  MultiThresholdObjectsFilter filter;
+  Arguments args;
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::LessThan);
+  threshold->setComparisonValue(comparisonValue);
+  thresholdSet.setArrayThresholds({threshold});
+
+  // Signed
+  SECTION("Int8")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("int8"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Int16")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("int16"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Int32")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("int32"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Int64")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("int64"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  // Unsigned
+  SECTION("UInt8")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("uint8"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("UInt16")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("uint16"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("UInt32")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("uint32"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("UInt64")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("uint64"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  // Floating Point
+  SECTION("Float32")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("float32"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Float64")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("float64"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  // Bool
+  SECTION("Boolean")
+  {
+    threshold->setArrayPath(matrixPath.createChildPath("bool"));
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    comparisonValue = 0.9;
+  }
+
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  auto* maskArray = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
+  auto& maskStore = maskArray->getDataStoreRef();
+  TestMaskOutputForInputType(maskStore, comparisonValue);
 }
