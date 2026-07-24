@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
 #include <EbsdLib/IO/TSL/AngReader.h>
 
@@ -13,7 +14,7 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ReadAngDataInputValues
 {
-  std::filesystem::path InputFile;
+  FileSystemPathParameter::ValueType InputFile;
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;

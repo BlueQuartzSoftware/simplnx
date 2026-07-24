@@ -17,9 +17,9 @@
 
 #include <EbsdLib/IO/HKL/CtfConstants.h>
 #include <EbsdLib/IO/HKL/CtfFields.h>
-#include <EbsdLib/IO/HKL/CtfPhase.h>
 #include <EbsdLib/IO/HKL/CtfReader.h>
-#include <EbsdLib/LaueOps/LaueOps.h>
+
+#include <fmt/format.h>
 
 #include <filesystem>
 
@@ -104,40 +104,60 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
-  PreflightResult preflightResult;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::CtfReader reader;
   reader.setFileName(pInputFileValue.string());
-  int32_t err = reader.readHeaderOnly();
+  const int32 err = reader.readHeaderOnly();
   if(err < 0)
   {
-    return {MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+    // CtfReader does not set its error-code member on every failure path, so fall back to the returned code.
+    const int32 errorCode = reader.getErrorCode() < 0 ? reader.getErrorCode() : err;
+    return {MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
   }
 
-  CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
+  // CtfReader::readHeaderOnly() reports success even when the header carries no usable
+  // dimensions (a missing or zero XCells/YCells key parses as 0), so reject that here
+  // instead of creating a zero-sized Image Geometry.
+  if(reader.getXCells() < 1 || reader.getYCells() < 1)
+  {
+    return {MakeErrorResult<OutputActions>(-19604, fmt::format("The .ctf file header reports X Cells = {} and Y Cells = {}. Both must be at least 1. The file may be malformed or not a .ctf file.",
+                                                               reader.getXCells(), reader.getYCells()))};
+  }
+
+  // .ctf files can carry more than one slice (ZCells > 1). A missing ZCells key parses as its
+  // default of 1. A NEGATIVE value must be rejected here: CtfReader::readData() captures its slice
+  // loop bound before clamping the value, so it would read zero data lines while sizing its buffers
+  // for one slice — the copies would then see only sentinel bytes, never the file's data.
+  if(reader.getZCells() < 0)
+  {
+    return {MakeErrorResult<OutputActions>(
+        -19604, fmt::format("The .ctf file header reports Z Cells = {}. A negative slice count is not usable. The file may be malformed or not a .ctf file.", reader.getZCells()))};
+  }
+  // A ZCells of 0 slips through the header-only read; it is caught at execute by the -19603
+  // reader/geometry cell-count guard.
+  const size_t zCells = reader.getZCells() < 1 ? 1 : static_cast<size_t>(reader.getZCells());
+  CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXCells()), static_cast<size_t>(reader.getYCells()), zCells};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), 1.0F};
+  // A 2D .ctf file has no ZStep key (parses as 0), in which case the slice thickness defaults to 1.
+  // A negative ZStep is equally unusable and gets the same default.
+  const float32 zStep = reader.getZStep() > 0.0F ? reader.getZStep() : 1.0F;
+  CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), zStep};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
-
-  // These variables should be updated with the latest data generated for each variable during preflight.
-  // These will be returned through the preflightResult variable to the
-  // user interface. You could make these member variables instead if needed.
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
   EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
 
-  // Define a custom class that generates the changes to the DataStructure.
-  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
-                                                                               origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
+  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
 
-  // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   nx::core::Result<OutputActions> resultOutputActions;
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
 
+  // These are the 7 pass-through columns; the copy loop in Algorithms/ReadCtfData.cpp
+  // (passthroughColumns) must stay in lockstep with CtfFields::getFilterFeatures().
   ebsdlib::CtfFields ctfFeatures;
   const auto names = ctfFeatures.getFilterFeatures<std::vector<std::string>>();
   std::vector<size_t> cDims = {1ULL};
@@ -174,9 +194,10 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Create the Ensemble AttributeMatrix
-  std::vector<std::shared_ptr<ebsdlib::CtfPhase>> angPhases = reader.getPhaseVector();
-  tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
+  // Create the Ensemble AttributeMatrix. Slot 0 is always reserved for the "Invalid Phase";
+  // CtfReader assigns phase indices sequentially starting at 1, so the tuple count is
+  // (number of phases) + 1.
+  tupleDims = {reader.getPhaseVector().size() + 1};
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(ensembleAttributeMatrixPath, tupleDims);
@@ -204,7 +225,6 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

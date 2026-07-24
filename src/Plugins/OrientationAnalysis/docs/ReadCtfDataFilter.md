@@ -6,8 +6,16 @@ IO (Input)
 
 ## Description
 
-This **Filter** will read a single .ctf file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be **undefined, inaccurate and/or wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data. An excellent reference for this is the following PDF file:
+This **Filter** will read a single .ctf file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and an **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be **undefined, inaccurate and/or wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data. An excellent reference for this is the following PDF file:
 [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
+
+### Multi-Slice (3D) .ctf Files
+
+If the file header declares more than one slice (`ZCells` > 1), the created **Image Geometry** is sized X × Y × Z and the slice thickness is taken from the header's `ZStep` key (a missing or zero `ZStep` defaults to 1.0). Single-slice (2D) files produce a geometry with a z-extent of 1.
+
+### Unindexed Points (Phase 0)
+
+Points the acquisition software could not index ("zero solutions") carry a phase value of **0** in the .ctf file, and this filter preserves that value in the `Phases` array. (Legacy DREAM3D 6.5 remapped these points to phase 1, silently assigning them to a real phase — see the migration notes below.) To mask unindexed points, threshold on *Error* = 0 (see below) or on *Phases* > 0.
 
 ### Default HKL Transformations
 
@@ -18,9 +26,13 @@ If the data has come from a HKL acquisition system and the settings of the acqui
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Error* = 0.
 
+### Memory Requirements
+
+While the filter executes, the reader's per-column buffers and the created **Attribute Arrays** are resident simultaneously: peak memory is roughly **88 bytes per scan point** for a standard 11-column file (about 4.4 GB for a 50-million-point map). Files carrying optional columns (Z, GrainIndex, GrainRandomColour) cost about 4 bytes per point more for each extra column.
+
 ### Radians and Degrees
 
-Most 2D .ctf files have their angles in **degrees** where as DREAM3D-NX expects radians. The filter provides an option to convert the Euler Angles to Radians and is turned on by default. The user is encouraged to create an IPF Image of their EBSD data to ensure that they do in-fact need to have this option enabled.
+Most 2D .ctf files have their angles in **degrees** whereas DREAM3D-NX expects radians. The filter provides an option to convert the Euler angles to radians, which is enabled by default. The user is encouraged to create an IPF Image of their EBSD data to ensure that they do in fact need to have this option enabled.
 
 ### The Axis Alignment Issue for Hexagonal Symmetry [1]
 
@@ -31,14 +43,18 @@ Most 2D .ctf files have their angles in **degrees** where as DREAM3D-NX expects 
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ **The result of this is that the filter will by default add 30 degrees to the second Euler Angle (phi2) when reading Oxford Instr (.ctf) files. This can be disabled by the user if necessary.**
++ **The result of this is that the filter will by default add 30 degrees to the third Euler angle (phi2) of every point belonging to a hexagonal (6/mmm) phase when reading Oxford Instr (.ctf) files. Unindexed (Phase 0) points are never shifted. This can be disabled by the user if necessary.**
 
 | Figure 1 |
 |--------|
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
-| Figure 1:**showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in**Red |
+| Figure 1: showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Instr. is in **Red**. |
 
 % Auto generated parameter table will be inserted here
+
+## Migration Notes from DREAM3D 6.5
+
+Documented behavioral differences from legacy DREAM3D 6.5 are maintained as Deviation entries in the source tree at `src/Plugins/OrientationAnalysis/vv/deviations/ReadCtfDataFilter.md`. In brief: unindexed points keep their phase value of 0 (legacy remapped them to 1, and consequently also applied the hexagonal +30° shift to them), and malformed .ctf files that crashed legacy DREAM3D are rejected with descriptive errors.
 
 ## Example Pipelines
 
