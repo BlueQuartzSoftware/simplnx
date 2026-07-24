@@ -6,7 +6,13 @@ Statistics (Morphological)
 
 ## Description
 
-This **Filter** determines the number of **Features** in each **Ensemble** by summing the total number of rows in the feature attribute matrix belonging to each phase.
+This **Filter** determines the number of **Features** in each **Ensemble** by counting the **Features** assigned to each **Ensemble**. An **Ensemble** is a group of **Features** that share common characteristics — most commonly a *phase* (a distinct material or crystallographic constituent in the sample). The filter reads the per-**Feature** phase array and tallies how many **Features** belong to each phase.
+
+The output is a single-component count array indexed by **Ensemble** (phase) Id: tuple *i* holds the number of **Features** belonging to **Ensemble** *i*.
+
+### Required Input Sources
+
+- **Feature Phases** -- the per-**Feature** phase (**Ensemble** Id) array, produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

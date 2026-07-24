@@ -6,13 +6,15 @@ DREAM3D Review (Clustering)
 
 ## Description
 
-This **Filter** computes the silhouette for a clustered **Attribute Array**.  The user must select both the original array that has been clustered and the array of cluster Ids.  The silhouette represents a measure for the quality of a clustering.  Specifically, the silhouette provides a measure for how strongly a given point belongs to its own cluster compared to all other clusters.  The silhouette is computed as follows:
+This **Filter** computes the silhouette for a clustered **Attribute Array**.  The user must select both the original array that has been clustered and the array of cluster Ids.  The silhouette is a dimensionless measure of the quality of a clustering.  Specifically, the silhouette provides a measure of how strongly a given point belongs to its own cluster compared to all other clusters.  The silhouette is computed as follows:
 
-\f[ s_{i} = \frac{b_{i} - a_{i}}{\max\{a_{i},b_{i}\}} \f]
+$$ s_{i} = \frac{b_{i} - a_{i}}{\max\{a_{i},b_{i}\}} $$
 
-where \f$ a \f$ is the average distance between point \f$ i \f$ and all other points in the cluster point \f$ i \f$ belongs to, \f$ b \f$ is the *next closest* average distance among all other clusters, and \f$ s \f$ is the silhouette value.  Using this definition, \f$ s \f$ exists on the interval \f$ [-1, 1] \f$, where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
+where $a$ is the average distance between point $i$ and all other points in the cluster point $i$ belongs to, $b$ is the *next closest* average distance among all other clusters, and $s$ is the silhouette value.  Using this definition, $s$ exists on the interval $[-1, 1]$ (dimensionless), where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
 
-The silhouette can be used to determine how well a particular clustering has performed, such as k means or k medoids.
+The filter writes one float silhouette value per input point into the created silhouette array, located alongside the input array. Each value lies in the range $[-1, 1]$ (dimensionless).
+
+The silhouette can be used to determine how well a particular clustering has performed, such as a clustering produced by [Compute K Means](ComputeKMeansFilter.md) or [Compute K Medoids](ComputeKMedoidsFilter.md).
 
 ### Distance Metric
 
@@ -25,13 +27,18 @@ The *Distance Metric* parameter controls how the distance between two points is 
 - **Pearson [4]**: Correlation-based distance derived from the Pearson correlation coefficient.
 - **Squared Pearson [5]**: Square of the Pearson distance.
 
+### Required Input Sources
+
+- **Cluster Ids** -- the per-point cluster label array, produced by [Compute K Means](ComputeKMeansFilter.md) or [Compute K Medoids](ComputeKMedoidsFilter.md).
+- **Clustered Attribute Array** -- the original **Attribute Array** that was clustered (the same array passed to the clustering filter).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

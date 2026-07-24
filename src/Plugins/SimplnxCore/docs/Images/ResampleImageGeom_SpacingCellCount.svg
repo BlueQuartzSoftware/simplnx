@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 410" width="760" height="410" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="rArr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5D6D7E"/></marker>
+  </defs>
+  <rect width="760" height="410" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="380" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Resample Image Geometry</text>
+  <text x="380" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">Change the grid resolution — the physical size stays the same</text>
+
+  <!-- BEFORE: fine 8x8 -->
+  <rect x="110" y="96" width="140" height="140" fill="#EAF3FA" stroke="#2874A6" stroke-width="1.75"/>
+  <rect x="145" y="131" width="35" height="35" fill="#ABEBC6" stroke="#27AE60" stroke-width="1.5"/>
+  <g stroke="#B8D4EA" stroke-width="1">
+    <line x1="127.5" y1="96" x2="127.5" y2="236"/><line x1="145" y1="96" x2="145" y2="236"/><line x1="162.5" y1="96" x2="162.5" y2="236"/><line x1="180" y1="96" x2="180" y2="236"/><line x1="197.5" y1="96" x2="197.5" y2="236"/><line x1="215" y1="96" x2="215" y2="236"/><line x1="232.5" y1="96" x2="232.5" y2="236"/>
+    <line x1="110" y1="113.5" x2="250" y2="113.5"/><line x1="110" y1="131" x2="250" y2="131"/><line x1="110" y1="148.5" x2="250" y2="148.5"/><line x1="110" y1="166" x2="250" y2="166"/><line x1="110" y1="183.5" x2="250" y2="183.5"/><line x1="110" y1="201" x2="250" y2="201"/><line x1="110" y1="218.5" x2="250" y2="218.5"/>
+  </g>
+  <text x="180" y="258" text-anchor="middle" fill="#2C3E50" font-size="12" font-weight="600">spacing (1, 1)</text>
+  <text x="180" y="274" text-anchor="middle" fill="#5D6D7E" font-size="11">8 × 8 cells</text>
+
+  <!-- arrow -->
+  <line x1="270" y1="166" x2="418" y2="166" stroke="#5D6D7E" stroke-width="2" marker-end="url(#rArr)"/>
+  <text x="344" y="156" text-anchor="middle" fill="#5D6D7E" font-size="12" font-weight="600">resample</text>
+  <text x="344" y="184" text-anchor="middle" fill="#8E44AD" font-size="11" font-weight="600">spacing × 2</text>
+
+  <!-- AFTER: coarse 4x4, same 140x140 extent -->
+  <rect x="438" y="96" width="140" height="140" fill="#EAF3FA" stroke="#2874A6" stroke-width="1.75"/>
+  <rect x="473" y="131" width="35" height="35" fill="#ABEBC6" stroke="#27AE60" stroke-width="1.5"/>
+  <g stroke="#B8D4EA" stroke-width="1">
+    <line x1="473" y1="96" x2="473" y2="236"/><line x1="508" y1="96" x2="508" y2="236"/><line x1="543" y1="96" x2="543" y2="236"/>
+    <line x1="438" y1="131" x2="578" y2="131"/><line x1="438" y1="166" x2="578" y2="166"/><line x1="438" y1="201" x2="578" y2="201"/>
+  </g>
+  <text x="508" y="258" text-anchor="middle" fill="#2C3E50" font-size="12" font-weight="600">spacing (2, 2)</text>
+  <text x="508" y="274" text-anchor="middle" fill="#5D6D7E" font-size="11">4 × 4 cells</text>
+
+  <!-- Note callout -->
+  <g transform="translate(40, 300)">
+    <rect x="0" y="0" width="680" height="86" rx="7" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.2"/>
+    <circle cx="20" cy="24" r="9" fill="#8E44AD"/>
+    <text x="20" y="28" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">i</text>
+    <text x="38" y="21" fill="#4A235A" font-size="12">The physical bounds are unchanged, so <tspan font-weight="600">doubling the spacing along an axis halves the cell count</tspan> there</text>
+    <text x="38" y="39" fill="#4A235A" font-size="12">(cells become larger and fewer). Each new cell copies the value of the <tspan font-weight="600">nearest source cell — no interpolation</tspan>.</text>
+    <text x="38" y="61" fill="#4A235A" font-size="12">Three modes set the new grid: <tspan font-weight="600">Spacing</tspan> (physical units), <tspan font-weight="600">Scaling</tspan> (percent per axis), or</text>
+    <text x="38" y="79" fill="#4A235A" font-size="12"><tspan font-weight="600">Exact Dimensions</tspan> (target cell counts).</text>
+  </g>
+</svg>

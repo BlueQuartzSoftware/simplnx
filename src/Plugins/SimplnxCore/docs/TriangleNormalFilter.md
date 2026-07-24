@@ -6,14 +6,30 @@ Surface Meshing (Misc)
 
 ## Description
 
-This **Filter** computes the normal of each **Triangle** in a **Triangle Geometry** by utilizing matrix subtraction, cross product, and normalization to implement the following theory:
-    For a triangle with point1, point2, point3, if the vector U = point2 - point1 and the vector V = point3 - point1
+This filter computes the **normal** of each **Triangle** in a **Triangle Geometry** (a surface mesh built from triangles) and stores the result as a per-triangle **Face Data** array. A normal is the direction that points straight out of the flat triangle surface.
 
-    Nx = UyVz - UzVy
-    Ny = UzVx - UxVz
-    Nz = UxVy - UyVx
+### How It Is Computed
 
-    Where "point#" represents a 3x1 Matrix of coordinates x, y, and z belonging to one of a Triangles vertexes and N represents the normal of the corresponding axis value
+For a triangle with corner **vertices** *point1*, *point2*, and *point3*, the filter forms two edge vectors
+
+    U = point2 - point1
+    V = point3 - point1
+
+and computes their **cross product** (a vector perpendicular to both edges, and therefore perpendicular to the triangle):
+
+    Nx = Uy*Vz - Uz*Vy
+    Ny = Uz*Vx - Ux*Vz
+    Nz = Ux*Vy - Uy*Vx
+
+The result is then normalized to unit length.
+
+### Output and Direction
+
+The output is a 3-component **unit vector** (length 1) and is therefore **dimensionless**. Its sense (which of the two opposite directions it points along) is set by the **winding order** -- the order in which the triangle's three vertices are listed. Reversing the vertex order flips the normal to point the opposite way. Consistent winding across the mesh is what makes all normals point consistently inward or outward.
+
+### Required Input Sources
+
+- **Triangle Geometry** -- a surface mesh, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
 
 % Auto generated parameter table will be inserted here
 

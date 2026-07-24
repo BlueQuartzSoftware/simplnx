@@ -1,6 +1,6 @@
 # ITK Binary Dilate Image Filter
 
-Fast binary dilation of a single intensity value in the image.
+Grows (dilates) the foreground objects of a binary or segmented image.
 
 ## Group (Subgroup)
 
@@ -8,31 +8,31 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-BinaryDilateImageFilter is a binary dilation morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetDilateValue() ) is considered as foreground, and other intensity values are considered background.
+**Dilation** is a morphological operation that grows the foreground region of an image: a small probe shape called the **structuring element** is swept over the image, and any background pixel touched by the structuring element when it is centered on a foreground pixel becomes foreground. Dilation fills small gaps, connects nearby objects, and enlarges objects by the radius of the structuring element. (The inverse operation is [ITK Binary Erode Image Filter](ITKBinaryErodeImageFilter.md); combining the two gives [opening](ITKBinaryMorphologicalOpeningImageFilter.md) and [closing](ITKBinaryMorphologicalClosingImageFilter.md).)
 
-Grayscale images can be processed as binary images by selecting a "ForegroundValue" (alias "DilateValue"). Pixel values matching the dilate value are considered the "foreground" and all other pixels are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be processed. ForegroundValue defaults to the maximum possible value of the PixelType.
+The filter treats one chosen value as foreground. This makes it work directly on segmented images: if segment 1 has value 1, segment 2 has value 2, and so on, set *Foreground Value* to the segment number you want to dilate.
 
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel. A reasonable choice of structuring element is itk::BinaryBallStructuringElement .
+### Parameter Guidance
 
-This implementation is based on the papers:
+- **Foreground Value** — the pixel value treated as the object/foreground (everything else is background). Default *1*.
+- **Background Value** — the value used for background pixels. Default *0*.
+- **Boundary To Foreground** — controls whether the region just outside the image border is treated as foreground or background, which affects objects that touch the edge of the volume.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Objects grow by this amount.
 
-L.Vincent "Morphological transformations of binary images with
-arbitrary structuring elements", and
+#### Kernel Type
 
-N.Nikopoulos et al. "An efficient algorithm for 3d binary
-morphological transformations with 3d structuring elements
-for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.* ImageToImageFilter BinaryErodeImageFilter BinaryMorphologyImageFilter
-
-![](Images/ITKBinaryDilation.png)
-
-### Kernel Type
-
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on a binary/segmented image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
+
+![Binary dilation example.](Images/ITKBinaryDilation.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -40,7 +40,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

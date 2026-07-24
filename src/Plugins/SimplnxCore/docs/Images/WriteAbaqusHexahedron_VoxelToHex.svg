@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 410" width="760" height="410" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="ex" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5D6D7E"/></marker>
+  </defs>
+  <rect width="760" height="410" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="380" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Write Abaqus Hexahedron</text>
+  <text x="380" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">Each voxel becomes an 8-node hexahedral (C3D8) element</text>
+
+  <!-- Left: solid voxel -->
+  <polygon points="110,118 174,118 200,96 136,96" fill="#AED6F1" stroke="#2874A6" stroke-width="1.5"/>
+  <polygon points="174,118 200,96 200,160 174,182" fill="#5DADE2" stroke="#2874A6" stroke-width="1.5"/>
+  <polygon points="110,118 174,118 174,182 110,182" fill="#7FC0E8" stroke="#2874A6" stroke-width="1.5"/>
+  <text x="155" y="208" text-anchor="middle" fill="#2C3E50" font-size="12" font-weight="600">voxel (cell)</text>
+
+  <!-- arrow -->
+  <line x1="238" y1="140" x2="300" y2="140" stroke="#5D6D7E" stroke-width="2" marker-end="url(#ex)"/>
+  <text x="269" y="130" text-anchor="middle" fill="#5D6D7E" font-size="12" font-weight="600">export</text>
+
+  <!-- Right: hex element wireframe + 8 nodes -->
+  <g stroke="#2874A6" stroke-width="1.5" fill="none">
+    <!-- hidden edges (through back-bottom-left BBL 346,160) -->
+    <line x1="320" y1="182" x2="346" y2="160" stroke-dasharray="4,3"/>
+    <line x1="346" y1="160" x2="410" y2="160" stroke-dasharray="4,3"/>
+    <line x1="346" y1="160" x2="346" y2="96" stroke-dasharray="4,3"/>
+    <!-- front square -->
+    <polygon points="320,118 384,118 384,182 320,182"/>
+    <!-- back square (visible edges) -->
+    <line x1="346" y1="96" x2="410" y2="96"/><line x1="410" y1="96" x2="410" y2="160"/>
+    <!-- connectors -->
+    <line x1="320" y1="118" x2="346" y2="96"/><line x1="384" y1="118" x2="410" y2="96"/><line x1="384" y1="182" x2="410" y2="160"/>
+  </g>
+  <g fill="#E67E22" stroke="#ffffff" stroke-width="1">
+    <circle cx="320" cy="118" r="5"/><circle cx="384" cy="118" r="5"/><circle cx="384" cy="182" r="5"/><circle cx="320" cy="182" r="5"/>
+    <circle cx="346" cy="96" r="5"/><circle cx="410" cy="96" r="5"/><circle cx="410" cy="160" r="5"/><circle cx="346" cy="160" r="5"/>
+  </g>
+  <text x="365" y="208" text-anchor="middle" fill="#2C3E50" font-size="12" font-weight="600">C3D8 element · 8 nodes</text>
+
+  <!-- Output files box -->
+  <g transform="translate(460, 96)">
+    <rect x="0" y="0" width="266" height="150" rx="8" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.2"/>
+    <text x="16" y="24" fill="#2874A6" font-size="13" font-weight="700">Output files (Abaqus .inp)</text>
+    <text x="16" y="48" fill="#4A235A" font-size="11.5"><tspan font-weight="600">&lt;prefix&gt;.inp</tspan> — master (*Include)</text>
+    <text x="16" y="68" fill="#4A235A" font-size="11.5"><tspan font-weight="600">_nodes.inp</tspan> — node coordinates</text>
+    <text x="16" y="88" fill="#4A235A" font-size="11.5"><tspan font-weight="600">_elems.inp</tspan> — C3D8 connectivity</text>
+    <text x="16" y="108" fill="#4A235A" font-size="11.5"><tspan font-weight="600">_elset.inp</tspan> — element sets (per grain)</text>
+    <text x="16" y="128" fill="#4A235A" font-size="11.5"><tspan font-weight="600">_sects.inp</tspan> — sections</text>
+  </g>
+
+  <!-- Shared-node note -->
+  <g transform="translate(40, 300)">
+    <rect x="0" y="0" width="680" height="76" rx="7" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.2"/>
+    <circle cx="20" cy="22" r="9" fill="#8E44AD"/>
+    <text x="20" y="26" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">i</text>
+    <text x="38" y="19" fill="#4A235A" font-size="12">Each <tspan font-weight="600">Cell</tspan> becomes one <tspan font-weight="600">C3D8</tspan> hexahedron with 8 corner nodes. Nodes shared between neighboring</text>
+    <text x="38" y="37" fill="#4A235A" font-size="12">voxels are written <tspan font-weight="600">once</tspan>, so the mesh is fully connected — a 2×2×2 block of 8 voxels has 27 unique</text>
+    <text x="38" y="55" fill="#4A235A" font-size="12">nodes, not 64. Element sets are written per grain from the <tspan font-weight="600">Cell Feature Ids</tspan>.</text>
+  </g>
+</svg>

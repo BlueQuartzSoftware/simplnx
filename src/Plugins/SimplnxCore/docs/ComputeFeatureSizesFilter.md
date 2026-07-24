@@ -12,6 +12,8 @@ This **Filter** calculates the sizes, volumes/areas, and equivalent diameters of
 
 To do so, the **Filter** simply iterates through all **Elements** querying for the **Feature** that owns them and keeping a tally for each **Feature**. The tally is then stored as *NumElements* and the *Volume* and *EquivalentDiameter* are also calculated (and stored) by knowing the volume of each **Element**.
 
+![Fig. 1: The Equivalent (Spherical) Diameter of a feature is the diameter of the sphere whose volume equals the feature's volume (number of cells × voxel volume).](Images/ComputeFeatureSizes_EquivalentDiameter.png)
+
 Note here that **Image Geometry** will always be faster than its equivalent **Rectilinear Grid Geometry** because we leverage the uniformity of voxel sizes to perform volume/area calculations at the feature level rather than the cell level.
 
 During the computation of the **Feature** sizes, the size of each individual **Element** is computed and stored in the corresponding **Geometry**. By default, these sizes are deleted after executing the **Filter** to save memory. If you wish to store the **Element** sizes, select the *Generate Missing Element Sizes* option. The sizes will be stored within the **Geometry** definition itself, not as a separate **Attribute Array**.
@@ -24,6 +26,10 @@ Due to the way *Image Geometry* is stored, if you have a `1` in any of the dimen
 it will be turned into a 2D calculation instead. This means **Areas instead of Volumes** and **Equivalent Circular Diameters instead of Equivalent Spherical Diameters**. Furthermore, you must have two dimensions greater than `1` to pass preflight. The reason for this being orientation becomes ambiguous once a second dimension is "empty".
 
 To illustrate why this is think about an image geometry with the dimensions of `1x1x5 (XYZ)`. There is no way to tell whether a `Z * X` or `Z * Y` scaling would be appropriate for the area calculation, given the current information accessible in the algorithm.
+
+### Required Input Sources
+
+- **Feature Ids** -- a per-**Cell** integer label array produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

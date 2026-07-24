@@ -73,7 +73,10 @@ Parameters ITKIsoContourDistanceImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64Parameter>(k_LevelSetValue_Key, "Level Set Value", "Set/Get the value of the level set to be located. The default value is 0.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_FarValue_Key, "Far Value", "Set/Get the value of the level set to be located. The default value is 0.", 10));
+  params.insert(std::make_unique<Float64Parameter>(k_FarValue_Key, "Far Value",
+                                                   "The saturation distance assigned to pixels that are not adjacent to the iso-contour. Pixels beyond the immediate neighborhood of the contour are "
+                                                   "clamped to this value. The default value is 10.",
+                                                   10));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

@@ -6,21 +6,21 @@ Processing (Cleanup)
 
 ## Description
 
-Often when performing a serial sectioning experiment (especially in the FIB-SEM), the sample is *over scanned* resulting 
-in a border of *bad* data around the sample.  This **Filter** attempts to *identify* the sample within the over scanned 
-volume.  The **Filter** makes the assumption that there is only one contiguous set of **Cells** that belong to the sample. 
-The **Filter** requires that the user has already *thresheld* the data to determine which **Cells** are *good* and which 
-are *bad*.  The algorithm for the identification of the sample is then as follows:
+Serial-sectioning experiments -- especially FIB-SEM -- typically *over-scan* the sample area, producing a border of *bad* data around the actual sample. This **Filter** identifies the sample within that over-scanned volume by finding the single largest contiguous region of *good* cells.
 
-1. Search for the largest contiguous set of *good* **Cells**. (This is assumed to be the sample)
-2. Change all other *good* **Cells**  to be *bad* **Cells**.  (This removes the "speckling" of what was *threshold* as *good* data in the outer border region)
+The filter assumes that the sample is one connected set of cells, and it requires that the user has already produced a boolean mask marking which cells are *good* and which are *bad* -- typically via [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to a confidence or quality array.
 
-If *Fill Holes* is set to *true* additional steps are taken:
+The algorithm is:
 
-1. Search for the largest contiguous set of *bad* **Cells**. (This is assumed to be the outer border region)
-2. Change all other *bad* **Cells**  to be *good* **Cells**. (This removes the "speckling" of what was *threshold* as *bad* data inside the sample).
+1. Search for the largest contiguous set of *good* cells. This is assumed to be the sample.
+2. Change all other *good* cells to *bad*. (This removes the "speckling" of *good* cells in the outer border region.)
 
-*Note:* if there are in fact "holes" in the sample, then this **Filter** will "close" them (if *Fill Holes* is set to true) by calling all the **Cells** "inside" the sample *good*.  If the user wants to reidentify those holes, then reuse the threshold **Filter** with the criteria of *GoodVoxels = 1* and whatever original criteria identified the "holes" as this will limit applying those original criteria to within the sample and not the outer border region.
+If *Fill Holes* is enabled, two additional steps are run:
+
+1. Search for the largest contiguous set of *bad* cells. This is assumed to be the outer border region.
+2. Change all other *bad* cells to *good*. (This removes the "speckling" of *bad* cells inside the sample.)
+
+*Note:* If the sample contains real holes, enabling *Fill Holes* will close them by calling all cells "inside" the sample *good*. To reidentify those holes afterward, re-run the threshold filter with the criteria *GoodVoxels = 1* AND whatever original criterion identified the holes. This limits the original hole-finding criteria to within the sample and not the outer border region.
 
 ## Slice-By-Slice Option
 
@@ -45,6 +45,10 @@ When *Process Data Slice-By-Slice* is enabled, the *Slice-By-Slice Plane* parame
 - **XY [0]**: Processes the volume slice by slice along the Z axis, scanning each XY plane independently.
 - **XZ [1]**: Processes the volume slice by slice along the Y axis, scanning each XZ plane independently.
 - **YZ [2]**: Processes the volume slice by slice along the X axis, scanning each YZ plane independently.
+
+### Required Input Sources
+
+- **Good Voxels Mask** -- a boolean array marking cells as *good* or *bad*, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to EBSD confidence index, image quality, or a similar scalar.
 
 % Auto generated parameter table will be inserted here
 

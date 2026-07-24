@@ -1,6 +1,6 @@
 # Read Images [3D Stack] (ITK)
 
-This filter directly wraps an ITK filter of the same name.
+Reads a stack of 2D images and assembles them into a 3D Image Geometry using the ITK library.
 
 ## Group (Subgroup)
 
@@ -9,6 +9,8 @@ ITKImageProcessing (ITKImageProcessing)
 ## Description
 
 Read in a stack of 2D images and stack the images into a 3D Volume using the ITK library. Supports most common scalar pixel types and the many file formats supported by ITK.
+
+This filter shares its human name with the SimplnxCore [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md) filter. This ITK-based variant supports the broader range of file formats handled by ITK along with additional cropping, resampling, and data-type conversion options.
 
 ### Processing Order
 

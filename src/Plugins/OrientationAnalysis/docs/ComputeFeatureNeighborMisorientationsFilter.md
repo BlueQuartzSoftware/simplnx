@@ -6,19 +6,30 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** determines, for each **Feature**, the misorientations with each of the **Features** that are in contact with it.  The misorientations are stored as a list (for each **Feature**) of angles (in degrees).  The axis of the misorientation is not stored by this **Filter**.
+This **Filter** computes the misorientation angle between each **Feature** (grain) and its neighboring **Features**. Misorientation is the angular difference between the crystal orientations of two grains -- it describes how much one grain's crystal lattice is rotated relative to another's.
 
-The user can also calculate the average misorientation between the feature and all contacting features.
+![Fig. 1: The misorientation between two grains is the rotation relating their crystal orientations; its angle is the misorientation angle. Because a crystal has symmetry-equivalent orientations, the smallest equivalent angle — the disorientation — is what the filter reports.](Images/Misorientation_Concept.png)
 
-### Notes
+For each **Feature**, the filter produces a list of misorientation angles (in degrees), one for each neighboring **Feature** it shares a boundary with. The axis of the misorientation is not stored, only the angle.
 
-**NOTE:** Only features with identical crystal structures will be calculated. If two features have different crystal structures then a value of NaN is set for the misorientation.
+Optionally, the filter can also compute the average misorientation between a **Feature** and all of its neighbors. This average value provides a quick summary of how differently oriented a grain is compared to its surroundings.
+
+### Note
+
+Only **Features** with identical crystal structures are compared. If two neighboring **Features** have different crystal structures, a value of NaN is stored for their misorientation, since misorientation between different crystal systems is not physically meaningful.
+
+### Required Input Sources
+
+- **Neighbor List** -- produced by [Compute Feature Neighbors](../SimplnxCore/ComputeFeatureNeighborsFilter.md) or [Compute Feature Neighborhoods](../SimplnxCore/ComputeNeighborhoodsFilter.md).
+- **Average Quaternions** -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ (04) Small IN100 Crystallographic Statistics
++ `(05) SmallIN100 Crystallographic Statistics`
 
 ## License & Copyright
 

@@ -6,11 +6,14 @@ Generic (Misc)
 
 ## Description
 
-This **Filter** determines the **Ensemble** (phase) of each **Feature** by iterating over all **Elements** and writing `featurePhases[featureId] = cellPhase` for each cell. When all cells of a **Feature** share the same phase the result is unambiguous. When they differ, the last cell encountered (by ascending index order) wins and a warning is emitted listing up to 15 affected **Feature** IDs.
+This **Filter** determines the **Ensemble** (phase) of each **Feature** by querying the **Ensemble** of the **Elements** that belong to the **Feature**. A **Feature** is a connected region of **Elements** sharing the same **Feature Id**; an **Element** is a single member of a geometry (for an **Image Geometry** this is a **Cell**, i.e. a voxel); and an **Ensemble** is a group of **Features** that share a common phase. Note that it is assumed that all **Elements** belonging to a **Feature** are of the same phase, and thus any **Element** can be used to determine the **Ensemble** of the **Feature** that owns that **Element**.
 
-**Background feature:** Cells with `featureId == 0` are skipped. `featurePhases[0]` is never written and will always be `0`; downstream filters should not rely on its value.
+The output is a single-component, per-**Feature** phase array: tuple *i* holds the **Ensemble** (phase) Id of **Feature** *i*.
 
-**Errors:** The filter halts with an error if a cell belonging to a valid **Feature** (`featureId > 0`) has a negative phase value, or if the **Cell Phases** and **Feature Ids** arrays have different tuple counts. Because background cells are skipped before the phase value is read, a negative phase on a cell with `featureId == 0` is ignored rather than reported.
+### Required Input Sources
+
+- **Cell Feature Ids** -- the per-**Element** **Feature** label array, typically produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or another segmentation filter.
+- **Cell Phases** -- the per-**Element** phase array, typically read from EBSD data via [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md).
 
 % Auto generated parameter table will be inserted here
 

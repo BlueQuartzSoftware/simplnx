@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The computations are performed using std::sin(x).
+Computes the sine of each pixel. Pixel values are interpreted as radians; the output is in the range [-1, 1]. Operates on any scalar image.
 
 ![](Images/ITKSinImageFilter.png)
 
@@ -18,7 +18,7 @@ The computations are performed using std::sin(x).
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

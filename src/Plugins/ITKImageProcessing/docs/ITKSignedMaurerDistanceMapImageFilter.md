@@ -1,6 +1,6 @@
 # ITK Signed Maurer Distance Map Image Filter
 
-This filter calculates the Euclidean distance transform of a binary image in linear time for arbitrary dimensions.
+Computes an exact Euclidean signed distance map of a binary image in linear time.
 
 ## Group (Subgroup)
 
@@ -8,17 +8,33 @@ ITKDistanceMap (DistanceMap)
 
 ## Description
 
- Inputs and Outputs
-This is an image-to-image filter. The dimensionality is arbitrary. The only dimensionality constraint is that the input and output images be of the same dimensions and size. To maintain integer arithmetic within the filter, the default output is the signed squared distance. This implies that the input image should be of type "unsigned int" or "int" whereas the output image is of type "int". Obviously, if the user wishes to utilize the image spacing or to have a filter with the Euclidean distance (as opposed to the squared distance), output image types of float or double should be used.
+A **distance map** replaces every pixel with its distance to the nearest object boundary. This filter computes the **exact** Euclidean distance (not an approximation) using the Maurer algorithm, which runs in linear time for images of any dimension.
 
-The inside is considered as having negative distances. Outside is treated as having positive distances. To change the convention, use the InsideIsPositive(bool) function.
+It produces a **signed** distance map: pixels **inside** an object are given **negative** distances and pixels **outside** are given **positive** distances. By default inside is negative; enable *Inside Is Positive* to flip the convention. Unlike the Danielsson filters, this filter does not produce a Voronoi map.
 
- Parameters
-Set/GetBackgroundValue specifies the background of the value of the input binary image. Normally this is zero and, as such, zero is the default value. Other than that, the usage is completely analogous to the itk::DanielssonDistanceImageFilter class except it does not return the Voronoi map.
+Use this when you need an accurate signed Euclidean distance field — for example as a level-set input or for precise distance-from-boundary measurements.
 
-Reference: C. R. Maurer, Jr., R. Qi, and V. Raghavan, "A Linear Time Algorithm
- for Computing Exact Euclidean Distance Transforms of Binary Images in
- Arbitrary Dimensions", IEEE - Transactions on Pattern Analysis and Machine Intelligence, 25(2): 265-270, 2003.
+> Important — the default output is the **squared** distance, not the distance itself. *Squared Distance* is enabled by default so the filter can stay in fast integer arithmetic. To get true (un-squared) Euclidean distance, turn *Squared Distance* off.
+
+> Note: for true Euclidean distances, or when *Use Image Spacing* is enabled, choose a floating-point output array type. An integer output can only represent the squared, pixel-unit distances correctly.
+
+### Parameter Guidance
+
+- **Inside Is Positive** — by default, pixels inside an object are negative and pixels outside are positive. Enable this to reverse the convention.
+- **Squared Distance** — when enabled (the default), the output holds the distance **squared**. Disable it to get the actual (linear) distance.
+- **Use Image Spacing** — when enabled, distances are measured in the image's **physical units** (using pixel spacing). When disabled, distances are measured in **pixels**.
+- **Background Value** — the input intensity that marks the background. Object pixels are everything else. Normally *0* (the default).
+
+### Required Input Sources
+
+Requires a binary image where the *Background Value* marks background and all other pixels mark object. This is typically a segmentation mask produced upstream.
+
+## See Also
+
+- [ITK Danielsson Distance Map Image Filter](ITKDanielssonDistanceMapImageFilter.md)
+- [ITK Signed Maurer Distance Map Image Filter (ITK Doxygen)](https://itk.org/Doxygen/html/classitk_1_1SignedMaurerDistanceMapImageFilter.html)
+
+Reference: C. R. Maurer, Jr., R. Qi, and V. Raghavan, "A Linear Time Algorithm for Computing Exact Euclidean Distance Transforms of Binary Images in Arbitrary Dimensions," IEEE Transactions on Pattern Analysis and Machine Intelligence, 25(2): 265-270, 2003.
 
 % Auto generated parameter table will be inserted here
 
@@ -26,7 +42,7 @@ Reference: C. R. Maurer, Jr., R. Qi, and V. Raghavan, "A Linear Time Algorithm
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

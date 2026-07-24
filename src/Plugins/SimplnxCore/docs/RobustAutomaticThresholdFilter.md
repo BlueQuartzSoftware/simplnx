@@ -2,15 +2,19 @@
 
 ## Group (Subgroup)
 
-DREAM3D Review (Threshold)
+Threshold
 
 ## Description
 
-This **Filter** automatically computes a threshold value for a scalar **Attribute Array** based on the array's gradient magnitude, producing a boolean array that is *false* where the input array is less than the threshold value and *true* otherwise.  The threshold value is computed using the following equation:
+This filter is *automatic* because it computes the threshold value itself, and *robust* because it derives that value from where the data changes most sharply rather than from a fixed cutoff. The user does not have to choose a threshold value manually; the filter selects one that tends to separate the input array along its sharpest boundaries. It produces a boolean **Mask** array that is *false* where the input array is less than the computed threshold and *true* otherwise.
 
-![\f[ T = \sum_{i = 1}^{n} \frac{a_{i} g_{i}}{g_{i}} \f]](Images/latex24.png)
+The threshold is computed as a gradient-magnitude-weighted average of the input array. Each value of the input array is weighted by its corresponding gradient magnitude, so **Cells** that sit on strong boundaries (high gradient magnitude) contribute most to the chosen threshold, while flat interior regions (low gradient magnitude) contribute little. The result is a single threshold value `T` that generally partitions the input array where its gradient is highest.
 
-where \f$ a \f$ is the input array, \f$ g \f$ is the gradient magnitude array, \f$ n \f$ is the length of the input array, and \f$ T \f$ is the computed threshold value.  Computing a threshold in this manner will generally partition the input array where its gradient is highest.  Gradients may be computed using the Find Derivatives **Filter**.  The gradient magnitude may then be found by computing the 2-norm of the gradient.
+The *gradient magnitude* measures how quickly the input field changes from one location to the next: it is large at edges or boundaries and near zero in smooth regions. It is obtained by computing the *2-norm* (the square root of the sum of the squares of the per-axis derivative components) of the gradient vector at each **Cell**, which collapses the multi-component gradient into a single non-negative scalar value per **Cell**. The required gradient magnitude array can be produced with the [ITK Gradient Magnitude Image Filter](../ITKImageProcessing/ITKGradientMagnitudeImageFilter.md).
+
+### Required Input Sources
+
+- **Gradient Magnitude Data** -- a single-component 32-bit float array giving the gradient magnitude of the input array, produced by [ITK Gradient Magnitude Image Filter](../ITKImageProcessing/ITKGradientMagnitudeImageFilter.md).
 
 % Auto generated parameter table will be inserted here
 

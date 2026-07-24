@@ -6,22 +6,25 @@ Surface Meshing (Generation)
 
 ## Description
 
-This filter uses the algorithm from {1} to produce a triangle surface mesh. The code is directly based on the sample code from the paper but has been modified to
-work with the simplnx library classes. This filter uses a different algorithm that aims to produce a mush that keeps sharp edges
-while still producing a mesh superior to marching cubes or QuickMesh.
+This filter generates a **Triangle Geometry** (a surface mesh) that wraps the boundaries between labeled regions in a volume. It uses the **Surface Nets** algorithm from {1}. The code is based directly on the sample code from that paper, modified to work with the simplnx library classes.
+
+Unlike **marching cubes** (a classic algorithm that builds an isosurface by placing triangles inside each cube of eight neighboring **Cells**), Surface Nets keeps sharp edges between materials while still producing a mesh that is generally smoother and higher quality than either marching cubes or the older [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) approach.
+
+An **isosurface** is the surface that separates regions above a threshold from regions below it; for a labeled volume the "threshold" is simply the boundary between one **Feature** label and a different one.
 
 From the abstract of the paper:
 
-        We extend 3D SurfaceNets to generate surfaces of segmented 3D medical images composed
-        of multiple materials represented as indexed labels. Our extension generates smooth, high-
-        quality triangle meshes suitable for rendering and tetrahedralization, preserves topology and
-        sharp boundaries between materials, guarantees a user-specified accuracy, and is fast enough
-        that users can interactively explore the trade-off between accuracy and surface smoothness.
+> We extend 3D SurfaceNets to generate surfaces of segmented 3D medical images composed
+> of multiple materials represented as indexed labels. Our extension generates smooth, high-
+> quality triangle meshes suitable for rendering and tetrahedralization, preserves topology and
+> sharp boundaries between materials, guarantees a user-specified accuracy, and is fast enough
+> that users can interactively explore the trade-off between accuracy and surface smoothness.
 
-This filter will ensure that the smallest of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in
-downstream filters to continue to work correctly.
+The filter writes a **Face Labels** array on each triangle: a 2-component value holding the **Feature** Id on either side of the triangle. The filter guarantees the smaller of the two Face Labels values is always stored in the first component (component 0), so that assumptions made in downstream filters continue to work correctly.
 
-This filter attempts to repair the windings for a mesh. This may not be possible due to the nature of how meshes are stored in the software. See Verify Traingle Winding documentation for detailed breakdown of nuance.
+The filter also attempts to repair the triangle **winding** (the order in which a triangle's three vertices are listed, which determines the direction its normal points). A fully consistent winding may not be achievable because of how meshes are stored in the software; see [Verify Triangle Winding](VerifyTriangleWindingFilter.md) for a detailed breakdown of the nuances.
+
+The *Relaxation Iterations* parameter is a dimensionless count of smoothing passes, and *Max Distance from Voxel Center* is a physical length (same units as the Image Geometry spacing) limiting how far a node may move from its originating voxel center.
 
 ---------------
 
@@ -39,12 +42,11 @@ SurfaceNets output **with** the built-in smoothing operation applied.
 
 ## Node Types
 
-During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. These will range from 0 to 6. The value is an internal representation from the SurfaceNets algorithm. They are roughly equivelent to the Node Types from the Quick Surface Mesh algorithm but not strictly the same.
+During the meshing process, each vertex (node) is assigned a "Node Type" value ranging from 0 to 6. The value is an internal representation from the Surface Nets algorithm. The values are roughly equivalent to the Node Types from the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) algorithm but are not strictly the same.
 
-- Node Type = 0: This is a node that ONLY has 2 features connected to the node.
-- Node Type = 2: This is a node that has 3 features connected to the node, such as a triple line
-- Node Type = 3-6: These nodes have 4 or more features connected to the node.
-
+- Node Type = 0: A node that has ONLY 2 features connected to it.
+- Node Type = 2: A node that has 3 features connected to it, such as a **triple line** (the edge where exactly three features meet).
+- Node Type = 3-6: Nodes that have 4 or more features connected to them.
 
 | Node Type | Example Image                                |
 |-----------|----------------------------------------------|
@@ -56,20 +58,22 @@ During the meshing process, each vertex, or node, will get a "Node Type" value a
 
 ### Exterior or Boundary Nodes
 
-Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume should have a value of 12.
+Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume has a value of 12.
 
 ![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
 
 ### Exterior or Boundary Triangles
 
-Each triangle that is created will have an 2 component attribute called `Face Labels` that represent the Feature ID on either
-side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
-have a value of -1.
+Each triangle has a 2-component **Face Labels** array that holds the Feature Id on either side of the triangle. If a triangle lies on the border of the virtual bounding box, one of its Face Labels values is -1.
 
 ## Notes
 
-This filter should be used in place of the "QuickMesh Surface Filter".
+This filter should be used in place of the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) filter.
 
+### Required Input Sources
+
+- **Image Geometry** -- the labeled volume to mesh, from an image/volume reader or an upstream processing filter.
+- **Cell Feature Ids** -- the per-Cell integer label array that defines the regions to wrap, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 ## Comparison of Surface Meshing Filters
 
@@ -92,19 +96,18 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 
 ## Example Pipelines
 
-        Pipelines/SimplnxCore/SurfaceNets_Demo.d3dpipeline
+Pipelines/SimplnxCore/SurfaceNets_Demo.d3dpipeline
 
 ## Citations
 
-{1}[SurfaceNets for Multi-Label Segmentations with Preservation of Sharp Boundaries](https://jcgt.org/published/0011/01/03/paper.pdf)
+{1} [SurfaceNets for Multi-Label Segmentations with Preservation of Sharp Boundaries](https://jcgt.org/published/0011/01/03/paper.pdf)
+
+Sarah F. Frisken, *SurfaceNets for Multi-Label Segmentations with Preservation of Sharp Boundaries*, Journal of Computer Graphics Techniques (JCGT), vol. 11, no. 1, 34-54, 2022. [http://jcgt.org/published/0011/01/03](http://jcgt.org/published/0011/01/03)
 
 ## License & Copyright
 
-`Sarah F. Frisken, SurfaceNets for Multi-Label Segmentations with Preservation of Sharp
-Boundaries, Journal of Computer Graphics Techniques (JCGT), vol. 11, no. 1, 34–54, 2022`
-[http://jcgt.org/published/0011/01/03](http://jcgt.org/published/0011/01/03)
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D-NX Mailing Lists
+## DREAM3D-NX Help
 
-If you need more help with a **Filter**, please consider asking your question on
-the [DREAM3D-NX Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -8,16 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-This filter is templated over the pixel type of the input image and the pixel type of the output image.
-
-The filter walks over all the pixels in the input image, and for each pixel does do the following:
-
-- cast the pixel value to double ,
-- apply the std::acos() function to the double value
-- cast the double value resulting from std::acos() to the pixel type of the output image
-- store the casted value into the output image.
-
-The filter expects both images to have the same dimension (e.g. both 2D, or both 3D, or both ND).
+Computes the arccosine (inverse cosine) of each pixel. Input values should be in the range [-1, 1]; the output is in radians. Operates on any scalar image.
 
 % Auto generated parameter table will be inserted here
 
@@ -25,7 +16,7 @@ The filter expects both images to have the same dimension (e.g. both 2D, or both
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

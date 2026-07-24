@@ -1,6 +1,6 @@
 # ITK H Minima Image Filter
 
-Suppress local minima whose depth below the baseline is less than h.
+Fills shallow dark valleys by suppressing local minima whose depth is less than *h*.
 
 ## Group (Subgroup)
 
@@ -8,16 +8,18 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-HMinimaImageFilter suppresses local minima that are less than h intensity units below the (local) background. This has the effect of smoothing over the "low" parts of the noise in the image without smoothing over large changes in intensity (region boundaries). See the HMaximaImageFilter to suppress the local maxima whose height is less than h intensity units above the (local) background.
+The **H-Minima** transform removes insignificant dark dips from a grayscale image. Any local minimum that lies **less than *h* below its local background** is filled in — raised to an estimate of that background — while deeper, genuine valleys are preserved. This smooths over the "low" parts of the noise without blurring real region boundaries or large intensity changes.
 
-If original image is subtracted from the output of HMinimaImageFilter , the significant "valleys" in the image can be identified. This is what the HConcaveImageFilter provides.
+Use this filter to clean up dark speckle and spurious low spots before segmentation, or as a preconditioning step for minima detection (for example to control over-segmentation in a watershed). It is the dark-feature counterpart of the [H Maxima](ITKHMaximaImageFilter.md) filter; the matching operation that *extracts* prominent bright peaks is the [H Convex](ITKHConvexImageFilter.md) filter.
 
-This filter uses the GrayscaleGeodesicErodeImageFilter . It provides its own input as the "mask" input to the geodesic dilation. The "marker" image for the geodesic dilation is the input image plus the height parameter h.
+### Parameter Guidance
 
-Geodesic morphology and the H-Minima algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter , HConvexImageFilter
+- **Height** — the depth *h*, in the **input image's intensity units**. Minima that lie less than *h* below their local background are filled; valleys deeper than *h* survive. Larger values fill more dips. Default *2.0*.
+- **Fully Connected** — controls pixel connectivity. When off (default), neighbors share a face; when on, neighbors also include edge- and corner-touching pixels. Turn it on for thin, one-pixel-wide features.
 
-- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -25,7 +27,7 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

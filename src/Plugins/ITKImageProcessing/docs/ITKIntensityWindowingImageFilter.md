@@ -1,6 +1,6 @@
 # ITK Intensity Windowing Image Filter
 
-Applies a linear transformation to the intensity levels of the input Image that are inside a user-defined interval. Values below this interval are mapped to a constant. Values over the interval are mapped to another constant.
+Linearly stretches a chosen input intensity window into a target output range, clamping everything outside the window.
 
 ## Group (Subgroup)
 
@@ -8,12 +8,21 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-IntensityWindowingImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and maximum values that the output image should have and the lower and upper limits of the intensity window of the input image. This operation is very common in visualization, and can also be applied as a convenient preprocessing operation for image segmentation.
+This filter remaps pixel intensities with a linear "window/level" transform, the operation behind most medical-image and CT contrast controls. Input values inside the window — between *Window Minimum* and *Window Maximum* — are stretched linearly to fill the output range *Output Minimum* to *Output Maximum*. Input values below the window are clamped to *Output Minimum*, and values above it are clamped to *Output Maximum*. It is commonly used for visualization and as a preprocessing step before segmentation.
 
-All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.* RescaleIntensityImageFilter
+To map the *full* input range automatically instead of a chosen window, use [ITK Rescale Intensity Image Filter](ITKRescaleIntensityImageFilter.md).
 
-![](Images/ITKIntensityWindowingImageFilter.png)
-![](Images/ITKIntensityWindowingImageFilter_2.png)
+### Parameter Guidance
+
+- **Window Minimum** / **Window Maximum** — the lower and upper bounds of the input intensity window of interest, in **input intensity units**. This window is what gets stretched.
+- **Output Minimum** / **Output Maximum** — the target output range, in **output intensity units** (defaults *0* and *255*).
+
+![Intensity windowing example.](Images/ITKIntensityWindowingImageFilter.png)
+![Intensity windowing example.](Images/ITKIntensityWindowingImageFilter_2.png)
+
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -21,7 +30,7 @@ All computations are performed in the precision of the input pixel's RealType. B
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

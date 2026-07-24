@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The computation is performed using std::log10(x).
+Computes the base-10 logarithm of each pixel. Input values must be greater than zero. Operates on any scalar image.
 
 % Auto generated parameter table will be inserted here
 
@@ -16,7 +16,7 @@ The computation is performed using std::log10(x).
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

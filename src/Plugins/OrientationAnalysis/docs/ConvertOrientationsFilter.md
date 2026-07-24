@@ -12,6 +12,8 @@ The following table lists the various orientation representations that are suppo
 is capable of converting between any representation with some caveats. The Input and
 Output Orientation Type are represented as a zero based index into the combo box widget.
 
+![Fig. 1: The eight orientation representations Convert Orientation Representation maps between, with their zero-based indices and component counts. All describe the same 3D crystal rotation.](Images/ConvertOrientations_Representations.png)
+
 ### Input Orientation Type
 
 The *Input Orientation Type* parameter provides the following choices:
@@ -75,12 +77,12 @@ The valid range for Euler angles is (Degrees):
     + Phi : 0 to 180
     + phi-2: 0 to 360
 
-Rodrigues Vector: Length must be positive and the vector must be normalized.
-Homochoric Vector: Sum of Squares must = 1.0
-Quaternion: Scalar part must be positive and have unit norm
-Axis Angle: Angle must be in the range of 0-Pi.
-Stereographic Vector: Must be unit norm
-Orientation Matrix: Determinant must be +1.0
+- Rodrigues Vector: Length must be positive and the vector must be normalized.
+- Homochoric Vector: Sum of Squares must = 1.0
+- Quaternion: Scalar part must be positive and have unit norm
+- Axis Angle: Angle must be in the range of 0-Pi.
+- Stereographic Vector: Must be unit norm
+- Orientation Matrix: Determinant must be +1.0
 
 ### Data Conversion Notes
 

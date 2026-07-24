@@ -8,11 +8,21 @@ Processing (Cleanup)
 
 This **Filter** removes **Features** that have fewer contiguous neighboring **Features** than the selected minimum. It uses a precomputed *Number of Neighbors* array, which is normally created by the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter**. **Feature** tuple 0 is retained as the background tuple.
 
-When *Apply to Single Phase Only* is disabled, the minimum is applied to every non-background **Feature**. When it is enabled, only **Features** belonging to the selected *Phase Index* are tested against the minimum; **Features** in other **Ensembles** remain active.
+The most common use case is cleaning up isolated single-feature islands left over from segmentation -- features whose surroundings turned out to be too sparsely connected to support a meaningful grain. After flagged features are removed, the remaining features grow outward via [isotropic coarsening](RequireMinimumSizeFeaturesFilter.md) until every cell is reassigned.
+
+The threshold is a **count of contiguous neighbors** (a non-negative integer). Setting the threshold to 0 removes nothing. Setting it larger than the maximum number of neighbors any feature has produces an error (since all features would be removed). Inspect the *Number of Neighbors* output of [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) before choosing a threshold.
+
+When *Apply to Single Phase Only* is disabled, the minimum is applied to every non-background **Feature**. When it is enabled, only **Features** belonging to the selected *Phase Index* are tested against the minimum; **Features** in other **Ensembles** remain active. This is useful when isolated features are noise in one phase but meaningful in another.
 
 Cells belonging to removed **Features**, along with cells that already have a negative Feature ID, are reassigned iteratively. During each pass, every unresolved **Cell** examines its valid face neighbors and selects a neighbor associated with the most frequently occurring non-negative Feature ID. Vote ties are resolved by the face-neighbor traversal order. Every currently fillable **Cell** is updated during the pass, so the process may fill many cells per iteration. This produces an isotropic, face-connected growth of retained **Features** into the regions left by removed **Features**.
 
 After coarsening completes, inactive feature tuples are removed from the feature **Attribute Matrix** and the remaining Feature IDs are remapped.
+
+## Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+- **Number of Neighbors** -- produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).
+- **Feature Phases** (only when *Apply to Single Phase* is enabled) -- produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
 ## Required Geometry and Inputs
 

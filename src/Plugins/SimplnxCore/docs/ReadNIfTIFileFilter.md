@@ -15,10 +15,10 @@ The filter transparently handles both uncompressed (`.nii`) and gzipped
 comparing `sizeof_hdr` against the expected value of 348.
 
 NIfTI-1 allows a variable-length extension block between the 348-byte
-header and the voxel data. The filter honors `vox_offset` and seeks
-past the extension block before reading voxels — any custom extension
-metadata (DICOM attributes, AFNI XML, etc.) is **skipped, not
-preserved**.
+header and the voxel data. The filter honors `vox_offset` (the byte offset
+in the file where the voxel data begins) and seeks past the extension
+block before reading voxels — any custom extension metadata (DICOM
+attributes, AFNI XML, etc.) is **skipped, not preserved**.
 
 ### Supported voxel datatypes
 
@@ -41,10 +41,19 @@ Complex and 128-bit float types are not currently supported.
 
 ### Orientation
 
-When *Use Stored Affine Transform* is enabled (the default), the filter uses
+NIfTI stores up to two affine transforms that map voxel indices to physical
+space: the `sform` ("standard" transform, a general affine matrix) and the
+`qform` ("quaternion" transform, a rigid rotation plus translation). When
+*Use Stored Affine Transform* is enabled (the default), the filter uses
 the NIfTI `sform` transform (if `sform_code > 0`) or `qform` transform (if
 `qform_code > 0`) to set the **Image Geometry** origin and spacing. If neither
-is set, the filter falls back to `pixdim[1..3]` for spacing and a zero origin.
+is set, the filter falls back to `pixdim[1..3]` (the per-axis voxel size
+stored in the header) for spacing and a zero origin.
+
+The spacing units are whatever the source file recorded (most commonly
+millimeters for medical NIfTI data) and are **not** converted by this
+filter. Treat the resulting **Image Geometry** spacing as being in the
+file's native physical units.
 
 simplnx Image Geometries are axis-aligned; if the stored transform contains a
 non-trivial rotation, only the spacing (column magnitudes) and origin are
@@ -53,8 +62,10 @@ native storage order.
 
 ### Data scaling
 
-When *Apply Scaling Transform* is enabled and the header specifies a
-non-trivial scaling (`scl_slope != 0` and (`scl_slope != 1` or
+NIfTI can store a linear intensity rescaling defined by two header fields:
+`scl_slope` (the multiplicative slope) and `scl_inter` (the additive
+intercept). When *Apply Scaling Transform* is enabled and the header
+specifies a non-trivial scaling (`scl_slope != 0` and (`scl_slope != 1` or
 `scl_inter != 0`)), the filter computes `y = scl_slope * x + scl_inter` at
 read time and promotes the output array to `float32`. Per the NIfTI-1
 specification, scaling is never applied to `RGB24` or `RGBA32` data and a
@@ -129,18 +140,6 @@ version:
 In short: use cropping to keep the output DataArray small, not to make
 large compressed files read faster.
 
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| Input NIfTI File | File path | — | Path to the `.nii` or `.nii.gz` file to read. |
-| Use Stored Affine Transform | Bool | `true` | Use `sform`/`qform` to set origin + spacing when present. |
-| Apply Scaling Transform | Bool | `true` | Apply `y = slope*x + inter` at read time; promotes to float32. |
-| Cropping Options | CropGeometry | `NoCropping` | Optional voxel-index or physical-coordinate sub-volume. Only the selected region is retained in the output DataArray; data outside the region is read but never stored. |
-| Image Geometry | Data Path | `NIfTI Image` | Path to the created Image Geometry. |
-| Cell Attribute Matrix Name | String | `Cell Data` | Name of the attribute matrix holding voxel values. |
-| Image Data Array Name | String | `ImageData` | Name of the array receiving voxel values. |
-
 ## Caveats
 
 * Only the single-file NIfTI-1 format (magic `n+1`) is supported. The
@@ -163,7 +162,11 @@ large compressed files read faster.
 * `start <= end` is required on each cropped axis; reversed ranges are
   rejected at parameter-validation time.
 
-% Auto generated parameter table will be inserted here                                                                    
+## Required Input Sources
+
+None — this filter reads directly from a `.nii` or `.nii.gz` file on disk.
+
+% Auto generated parameter table will be inserted here
 
 ## Reference
 

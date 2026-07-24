@@ -1,6 +1,6 @@
 # ITK Binary Morphological Closing Image Filter
 
-binary morphological closing of an image.
+Fills small holes and thin gaps in the foreground of a binary image (dilation followed by erosion).
 
 ## Group (Subgroup)
 
@@ -8,30 +8,32 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-This filter removes small (i.e., smaller than the structuring element) holes and tube like structures in the interior or at the boundaries of the image. The morphological closing of an image "f" is defined as: Closing(f) = Erosion(Dilation(f)).
+**Closing** is a morphological operation that fills small holes and thin gaps inside and along the borders of foreground objects, without much changing their overall size. It is a **dilation followed by an erosion** using the same structuring element: `Closing(f) = Erosion(Dilation(f))`. The dilation fills features smaller than the **structuring element** (the probe shape swept over the image), and the following erosion shrinks the objects back to roughly their original size. Use it to close up pinholes and cracks in segmented regions. The inverse pairing is [ITK Binary Morphological Opening Image Filter](ITKBinaryMorphologicalOpeningImageFilter.md), which removes small specks instead.
 
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.
+### Parameter Guidance
 
-This code was contributed in the Insight Journal paper: "Binary morphological closing and opening image filters" by Lehmann G. <https://www.insight-journal.org/browse/publication/58>
+- **Foreground Value** — the pixel value treated as the object/foreground. Default *1*.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Holes/gaps smaller than this are filled.
+- **Safe Border** — when on (default), a temporary border is added around the image during processing to avoid edge artifacts and removed afterward.
 
-### Author
+#### Kernel Type
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
-
-### Related Filters
-
-- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
-
-![](Images/ITKBinaryClosing.png)
-
-### Kernel Type
-
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on a binary/segmented image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
+
+![Binary closing example.](Images/ITKBinaryClosing.png)
+
+## Reference
+
+G. Lehmann, "Binary morphological closing and opening image filters," Insight Journal, <https://www.insight-journal.org/browse/publication/58>.
 
 % Auto generated parameter table will be inserted here
 
@@ -39,7 +41,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

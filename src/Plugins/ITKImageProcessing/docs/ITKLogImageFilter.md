@@ -8,6 +8,8 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
+Computes the natural logarithm of each pixel. Input values must be greater than zero. Operates on any scalar image.
+
 ![](Images/ITKLogImageFilter.png)
 
 % Auto generated parameter table will be inserted here
@@ -16,7 +18,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

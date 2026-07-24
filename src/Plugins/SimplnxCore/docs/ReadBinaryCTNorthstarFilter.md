@@ -2,13 +2,13 @@
 
 ## Group (Subgroup)
 
-IOFilters (Input)
+IO (Input)
 
 ## Description
 
-This **Filter** will import a NorthStar Imaging data set consisting of a single .nsihdr and one or more .nsidat files. The data is read into an Image Geometry. The user can import a subvolume instead of reading the entire data set into memory.
+This **Filter** will import a NorthStar Imaging computed tomography (CT) data set consisting of a single .nsihdr and one or more .nsidat files. The data is read into an **Image Geometry**. The scan intensities are stored in a single-component `float32` array (default name *Density*) inside a **Cell Attribute Matrix** (default name *CT Scan Data*).
 
-The user should note that when using the subvolume feature that the ending voxels are **inclusive**.
+The user can import a subvolume instead of reading the entire data set into memory. The subvolume start and end values are specified in **voxels** (zero-based), and both the starting and ending voxels are **inclusive**.
 
 The .nsihdr file will be read during preflight and the .nsidat file(s) will be extracted from there. The expectation is that the .nsidat files are in the same directory as the .nsihdr files.
 
@@ -17,6 +17,10 @@ The .nsihdr file will be read during preflight and the .nsidat file(s) will be e
 The *Length Unit* parameter sets the physical units associated with the **Image Geometry** spacing. This is for descriptive purposes only and does not affect the numerical values. The available choices are:
 
 Yoctometer, Zeptometer, Attometer, Femtometer, Picometer, Nanometer, Micrometer, Millimeter, Centimeter, Decimeter, Meter, Decameter, Hectometer, Kilometer, Megameter, Gigameter, Terameter, Petameter, Exameter, Zettameter, Yottameter, Angstrom, Mil, Inch, Foot, Mile, Fathom, Unspecified, Unknown.
+
+## Required Input Sources
+
+None — this filter reads directly from a `.nsihdr`/`.nsidat` file set on disk.
 
 % Auto generated parameter table will be inserted here
 

@@ -6,22 +6,38 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** will smooth the interface between *good* and *bad* data. The user can specify a *coordination number*,
-which is the number of neighboring **Cells** of opposite type (i.e., *good* or *bad*) compared to a given **Cell** that
-is acceptable. For example, a single *bad* **Cell** surrounded by *good* **Cells** would have a *coordination number* of
-*6*. The number entered by the user is actually the maximum tolerated *coordination number*. If the user entered a value
-of *4*, then all *good* **Cells** with 5 or more *bad* neighbors and *bad* **Cells** with 5 or more *good* neighbors
-would be removed. After **Cells** with unacceptable *coordination number* are removed, then the neighboring **Cells**
-are *coarsened* to fill the removed **Cells**.
+This **Filter** smooths the interface between *good* and *bad* cells (or, more generally, between any two adjacent feature regions) by removing cells whose neighborhood is mostly the opposite class. It targets isolated voxels and small protrusions that are surrounded by cells of a different feature, then fills them in with their neighbors' data via isotropic coarsening.
 
-By default, the **Filter** will only perform a single iteration and will not concern itself with the possibility that
-after one iteration, **Cells** that were acceptable may become unacceptable by the original *coordination number*
-criteria due to the small changes to the structure during the *coarsening*. The user can opt to enable the *Loop Until
-Gone* parameter, which will continue to run until no **Cells** fail the original criteria.
+The *coordination number* is the count of a cell's face-sharing neighbors that belong to a different class. With 6 face neighbors, the coordination number ranges from **0 to 6**:
 
-| Before Filter                      | After Filter                       |
-|--------------------------------------|--------------------------------------|
+- **CN = 0** -- all 6 neighbors agree with the cell. Solidly inside a region.
+- **CN = 1-2** -- on a flat or gently curved feature boundary.
+- **CN = 4-5** -- a thin protrusion or finger of one feature sticking into another.
+- **CN = 6** -- a single isolated cell completely surrounded by another feature.
+
+![Fig. 1: A cell's coordination number is the count of its six face-neighbors belonging to a different feature; cells whose coordination number meets the threshold are absorbed into a neighboring feature.](Images/ErodeDilateCoordinationNumber_CoordinationNumber.png)
+
+| Before Filter                                        | After Filter                                        |
+|------------------------------------------------------|-----------------------------------------------------|
 | ![](Images/ErodeDilateCoordinationNumber_Before.png) | ![](Images/ErodeDilateCoordinationNumber_After.png) |
+
+### How This Filter Works
+
+The user specifies a *coordination number* threshold. Any cell whose coordination number is **greater than or equal to** this threshold (and greater than 0) is removed. After the offending cells are identified, neighboring features grow outward (isotropic coarsening) to fill the resulting gaps. See [Remove Minimum Size Features](RequireMinimumSizeFeaturesFilter.md) for the shared definition of isotropic coarsening.
+
+For example, a threshold of *4* removes any cell with 4, 5, or 6 differing neighbors (i.e., isolated voxels and thin protrusions). A threshold of *2* is much more aggressive and will erase any cell with 2 or more differing neighbors.
+
+### Loop Until Gone
+
+By default the filter performs **one** pass. After one pass, the coarsening can leave new cells whose coordination number now exceeds the threshold (because their neighbors changed). Enabling *Loop Until Gone* repeats the algorithm until no remaining cell exceeds the original criterion. Use this for full smoothing; use the single-pass mode when you want a controlled, gentle cleanup.
+
+### When to Use This Filter
+
+This is the right tool for "salt-and-pepper" cleanup -- isolated single-voxel grains, thin two-cell protrusions, and other small geometric anomalies that segmentation produced but are likely noise. It is more morphologically aware than the size-based filters because it considers neighborhood shape, not just cell count.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

@@ -6,15 +6,24 @@ Sampling (Resolution)
 
 ## Description
 
-This **Filter** "samples" a triangulated surface mesh on a rectilinear grid, but with "uncertainty" in the absolute position of the **Cells**.  The "uncertainty" is meant to simulate the possible positioning error in a sampling probe.  The user can specify the number of **Cells** along the X, Y, and Z directions in addition to the resolution in each direction and origin to define a rectilinear grid.  The sampling, with "uncertainty", is then performed by the following steps:
+This **Filter** "samples" a triangulated surface mesh onto a **rectilinear grid** (a regular grid of box-shaped **Cells**), but with "uncertainty" in the absolute position of each Cell. The uncertainty simulates the possible positioning error of a sampling probe. A **Cell** is a single volume element of the output grid, and a **Feature** is one labeled region of the surface mesh.
 
-1. Determine the bounding box and **Triangle** list of each **Feature** by scanning all **Triangles** and noting the **Features** on either side of the **Triangle**
-2. For each **Cell** in the rectilinear grid, perturb the location of the **Cell** by generating a three random numbers between [-1, 1] and multiplying them by the three uncertainty values (one for each direction)
-3. For each perturbed **Cell** in the rectilinear grid, determine which bounding box(es) they fall in (*Note:* the bounding box of multiple **Features** can overlap)
-4. For each bounding box a **Cell** falls in, check against that **Feature's** **Triangle** list to determine if the **Cell** falls within that n-sided polyhedra. (*Note:* if the surface mesh is conformal, then each **Cell** will only belong to one **Feature**, but if not, the last **Feature** the **Cell** is found to fall inside of will *own* the **Cell**)
-5. Assign the **Feature** number that the **Cell** falls within to the *Feature Ids* array in the new rectilinear grid geometry
+The user specifies the number of **Cells** along the X, Y, and Z directions, plus the resolution (spacing) and origin that define the grid. The grid resolution and origin are given in the same physical length units as the input surface mesh (typically microns). The three uncertainty values are also physical lengths in those same units. The sampling, with uncertainty, is performed by the following steps:
 
-**Note that the unperturbed grid is where the *Feature Ids* actually live, but the perturbed locations are where the Cells are sampled from.  Essentially, the *Feature Ids* are stored where the user *thinks* the sampling took place, not where it actually took place!**
+1. Determine the bounding box and **Triangle** list of each **Feature** by scanning all **Triangles** and noting the **Features** on either side of each **Triangle**.
+2. For each **Cell** in the rectilinear grid, perturb its location by generating three random numbers in the range [-1, 1] and multiplying them by the three uncertainty values (one for each direction).
+3. For each perturbed **Cell**, determine which bounding box(es) it falls in (*Note:* the bounding boxes of multiple **Features** can overlap).
+4. For each bounding box a **Cell** falls in, test it against that **Feature's** **Triangle** list to determine whether the **Cell** lies within that n-sided polyhedron. (*Note:* if the surface mesh is **conformal** -- meaning adjacent features share exactly one common surface with no gaps or overlaps -- each **Cell** belongs to only one **Feature**; if not, the last **Feature** the **Cell** is found inside of *owns* the **Cell**.)
+5. Assign the **Feature** number that the **Cell** falls within to the *Feature Ids* array in the new rectilinear grid geometry.
+
+**Note that the unperturbed grid is where the *Feature Ids* actually live, but the perturbed locations are where the Cells are sampled from. Essentially, the *Feature Ids* are stored where the user *thinks* the sampling took place, not where it actually took place.**
+
+For the variant that samples onto a regular grid without positional uncertainty, see the sibling filter [Sample Triangle Geometry on Regular Grid](RegularGridSampleSurfaceMeshFilter.md), which shares the same grid (dimensions, origin, spacing) parameters.
+
+### Required Input Sources
+
+- **Triangle Geometry** -- the surface mesh to sample, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
+- **Face Labels** -- the per-face 2-component array identifying the **Features** on either side of each triangle, produced by the same surface-meshing filter.
 
 % Auto generated parameter table will be inserted here
 

@@ -6,32 +6,36 @@ IO (Input)
 
 ## Description
 
-This filter will read data from a single .h5oina file into a new **Image Geometry**, allowing the immediate use of
-**Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and
-**Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control
-over the names of the created **Attribute Arrays**.
+This filter reads data from a single `.h5oina` file (the HDF5-based export from Oxford Instruments' AZtec software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
+
+### What This Filter Produces
+
+The file is EBSD (Electron Backscatter Diffraction) scan data. The most important imported arrays are:
+
+- **Orientation** — stored as three **Euler angles** per pixel (the three angles, in Bunge Z-X-Z convention, that describe how each measured crystal is rotated relative to the sample). Orientation is the basis for almost all downstream crystallographic analysis.
+- **Phase** — a per-pixel index identifying which material (phase) was measured at that point.
+- **Pattern-quality metrics** — values such as Band Contrast, Band Slope, Bands, and Mean Angular Deviation describe how clear and reliable each measurement is. These are commonly used to flag unreliable pixels (see *Reference Frames* below).
+- **Per-phase (Ensemble) data** — the crystal structure, lattice constants, and material name for each phase. An **Ensemble** here means one distinct material/crystal type.
 
 ### Limitations of the Filter
 
-The current implementation only understands the FORMAT VERSION 2.0 of the H5OINA file. This means that a user
-can use a newer H5OINA file but the filter will only extract out the VERSION 2.0 headers and data. If the user
-needs additional data from the file, the "Import HDF5 Dataset" filter can be used to agment this filter.
+The current implementation only understands **FORMAT VERSION 2.0** of the H5OINA file. A user can still read a newer H5OINA file, but the filter will only extract the VERSION 2.0 headers and data. If additional data is needed from the file, the [Read HDF5 Dataset](../SimplnxCore/ReadHDF5DatasetFilter.md) filter can be used to augment this filter.
 
 ![Overview of the user interface.](Images/ImportH5OinaFilter_1.png)
 
 ## Notes About Reference Frames
 
-In order to bring the crystal reference frame and sample reference frame into coincidence, rotations **MAY** need to be applied to the data. There are 2 filters that can perform the necessary rotations.
+In order to bring the crystal reference frame and the sample reference frame into coincidence, rotations **MAY** need to be applied to the data. Two filters can perform the necessary rotations:
 
-- {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
-- {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
+- [Rotate Euler Reference Frame](RotateEulerRefFrameFilter.md)
+- [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md)
 
-Historical reference frame operations for a .ctf file are the following:
+Historical reference frame operations for Oxford data are the following:
 
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: None
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Error* = 0.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Error* = 0.
 
 ### Radians and Degrees
 
@@ -46,44 +50,22 @@ All orientation data in the H5OINA file are in radians.
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ __The result of this is that the filter will by default add 30 degrees to the second Euler Angle (phi2) when reading Oxford Instr (.ctf) files. This can be disabled by the user if necessary.__
++ __The result of this is that the filter will by default add 30 degrees to the second Euler Angle (phi2) when reading Oxford `.h5oina` files. This can be disabled by the user if necessary.__
 
 | Figure 1 |
 |--------|
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
 | **Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in **Red** |
 
-## Parameters
+### Downstream Processing
 
-| Name | Type | Description |
-|------|------| ----------- |
-| Input File | File Path | The input .h5 file path |
-| Scan Name | String | The name of the scan in the .h5oina file. |
-| Z Spacing | float | The spacing in microns between each layer. |
-| Origin | float (3x1) | The origin of the volume |
-| Import Pattern Data | bool | Default=OFF |
-| Hexagonal Axis Alignment | bool | Should the filter convert a Hexagonal phase to the EDAX standard for x-axis alignment |
-| Convert Phase data to Int32 | bool | Should the phase data be converted to Int32 or keep the original uint8 |
+Once the reference frames are correct, the imported Euler angles are typically converted to other orientation representations (quaternions, etc.) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
 
-## Created Objects
+## Required Input Sources
 
-| Kind        | Default Name | Type | Comp Dims | Description                            |
-|-------------|--------------|------|-----------|----------------------------------------|
-| Data Container  | ImageDataContainer | N/A | N/A    | Created Data Container name with an **Image Geometry** |
-| Attribute Matrix  | Cell Data | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| Attribute Matrix  | Cell Ensemble Data | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
-| Cell Attribute Array | Band Contrast  | uint8 | (1) |  |
-| Cell Attribute Array | Band Slope  | uint8 | (1) |  |
-| Cell Attribute Array | Bands  | uint8 | (1) |  |
-| Cell Attribute Array | Error  | uint8 | (1) | The error descriptions are saved as attributes in the .h5oina file  |
-| Cell Attribute Array | Euler  | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
-| Cell Attribute Array | MeanAngularDeviation  | float | (1) |  |
-| Cell Attribute Array | Phase  | uint8 | (1) |  |
-| Cell Attribute Array | X  | float | (1) | The X Position of the scan point |
-| Cell Attribute Array | Y  | float | (1) | The Y Position of the scan point |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble** |
+None — this filter reads directly from a `.h5oina` file on disk.
+
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -91,6 +73,6 @@ All orientation data in the H5OINA file are in radians.
 
 [1] Rollett, A.D. Lecture Slides located at [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

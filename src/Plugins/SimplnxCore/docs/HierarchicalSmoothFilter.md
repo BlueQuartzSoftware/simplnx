@@ -97,15 +97,7 @@ This safety mechanism prevents the smoothing from producing mesh artifacts in re
 
 ![](Images/HierarchicalSmooth_error_threshold.png)
 
-## Parameters
-
-| Name | Type | Description | Default |
-|------|------|-------------|---------|
-| Max Bisection Iterations | Int32 | Maximum number of bisection iterations for smoothing parameter optimization (see above) | 53 |
-| Error Threshold | Float64 | Displacement rejection threshold as a multiple of the reference edge length (see above) | 2.0 |
-| Triangle Geometry | Geometry Selection | The triangle geometry to smooth | - |
-| Node Type | Array Selection (Int8, 1-comp) | Array specifying node type (2=interior, 3=triple, 4=quad; +10 for surface) | - |
-| Face Labels | Array Selection (Int32, 2-comp) | Array specifying grain IDs on either side of each face | - |
+In addition to the two numeric parameters described above, the filter requires the **Triangle Geometry** to smooth, a per-vertex **Node Type** array (Int8, single-component: 2 = interior, 3 = triple line, 4 = quad point; add 10 for the outer-surface variants), and a per-face **Face Labels** array (Int32, 2-component) giving the grain IDs on either side of each face. These three inputs are normally produced together by a surface-meshing filter. Unlike simple [Laplacian Smoothing](LaplacianSmoothingFilter.md), this filter uses the **Node Type** and **Face Labels** information to respect the topological hierarchy of the boundary network.
 
 ## Notes
 
@@ -115,6 +107,10 @@ This safety mechanism prevents the smoothing from producing mesh artifacts in re
 - The conjugate gradient solver handles its own internal convergence; the max iterations parameter controls only the bisection search for the optimal smoothing parameter, not the CG solver iterations.
 - If the filter reports rejected nodes, consider increasing the Error Threshold or inspecting the input mesh for degenerate triangles near the rejected vertices.
 
+## Required Input Sources
+
+- **Triangle Geometry**, **Node Type**, and **Face Labels** -- a polycrystalline surface mesh and its node-type and face-label arrays, produced together by a surface-meshing filter such as [Quick Surface Mesh](QuickSurfaceMeshFilter.md).
+
 % Auto generated parameter table will be inserted here
 
 ## Reference
@@ -122,12 +118,10 @@ This safety mechanism prevents the smoothing from producing mesh artifacts in re
 - S. Maddali, "HierarchicalSmooth" - Topology-aware smoothing for polycrystalline grain boundary networks. Carnegie Mellon University, 2016-2018.
 - S. Maddali, S. Ta'asan, R. M. Suter, Topology-faithful nonparametric estimation and tracking of bulk interface networks, Computational Materials Science 125, 328-340 (2016).
 
-## Example Pipelines
-
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

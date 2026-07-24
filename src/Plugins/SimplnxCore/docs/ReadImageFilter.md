@@ -6,7 +6,9 @@ IO (Input)
 
 ## Description
 
-Reads a single 2D image file into a newly created Image Geometry. This filter does not depend on ITK. It uses stb_image for PNG/JPEG/BMP files and libtiff for TIFF files.
+Reads a single 2D image file into a newly created **Image Geometry**. To read a numbered sequence of slices into a 3D volume instead, use [Read Images [3D Stack]](ReadImageStackFilter.md).
+
+This filter does not depend on ITK. It uses stb_image for PNG/JPEG/BMP files and libtiff for TIFF files.
 
 The following image types are supported:
 
@@ -17,7 +19,7 @@ The following image types are supported:
 
 ### Origin & Spacing Caveats
 
-The user can optionally override the origin and spacing (length units per pixel) for the imported image. The default values from the input file will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
+The user can optionally override the origin and spacing for the imported image. *Spacing* is the physical size of each pixel and *Origin* is the coordinate of the lower-left corner of the geometry; both are expressed in the same physical length units (for example microns). The default values from the input file will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
 
 When setting a custom origin, the user can choose whether to place the origin at the corner of the geometry (default) or at the center of the geometry by enabling the "Put Input Origin at the Center of Geometry" option.
 
@@ -49,6 +51,10 @@ The user can crop the incoming 2D image using the Cropping Options section. The 
 - **Physical Subvolume**: Crop the image using physical coordinates
 
 Both subvolume cropping types have checkboxes to turn on/off cropping in the X and Y dimensions. For example, if **Physical Subvolume** is selected and only **Crop Y Dimension** is enabled, the image will be cropped in the Y dimension only using physical coordinate bounds.
+
+## Required Input Sources
+
+None — this filter reads directly from a single image file on disk.
 
 % Auto generated parameter table will be inserted here
 

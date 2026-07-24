@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 560 560" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,541.143,364.704)">
+        <path d="M560,12L560,548C560,554.623 554.623,560 548,560L12,560C5.377,560 0,554.623 0,548L0,12C0,5.377 5.377,0 12,0L548,0C554.623,0 560,5.377 560,12Z" style="fill:white;stroke:rgb(208,213,218);stroke-width:1.5px;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,280,30)">
+        <text x="-167.672px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:17px;fill:rgb(44,62,80);">Schmid Factor — Geometric Relationship</text>
+    </g>
+    <g transform="matrix(1,0,0,1,280,50)">
+        <text x="-141.251px" y="0px" style="font-family:'Helvetica';font-size:13px;fill:rgb(93,109,126);">Schmid Factor = cos(φ) × cos(λ),  range: 0 to 0.5</text>
+    </g>
+    <g transform="matrix(1,0,0,1,250,290)">
+        <ellipse cx="0" cy="-155" rx="55" ry="18" style="fill:none;stroke:rgb(208,213,218);stroke-width:1.5px;stroke-dasharray:4,3;"/>
+        <path d="M-55,-155L-55,155" style="fill:none;fill-rule:nonzero;stroke:rgb(171,178,185);stroke-width:2px;"/>
+        <path d="M55,-155L55,155" style="fill:none;fill-rule:nonzero;stroke:rgb(171,178,185);stroke-width:2px;"/>
+        <rect x="-55" y="-155" width="110" height="310" style="fill:rgb(232,236,240);fill-opacity:0.3;"/>
+        <g transform="matrix(0.906308,-0.422618,0.422618,0.906308,0,0)">
+            <ellipse cx="0" cy="0" rx="72" ry="30" style="fill:rgb(230,126,34);fill-opacity:0.25;stroke:rgb(230,126,34);stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,70.3429,59.562)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:13px;fill:rgb(230,126,34);">Slip plane</text>
+        </g>
+        <ellipse cx="0" cy="155" rx="55" ry="18" style="fill:rgb(232,236,240);fill-opacity:0.5;stroke:rgb(171,178,185);stroke-width:2px;"/>
+        <ellipse cx="0" cy="-155" rx="55" ry="18" style="fill:rgb(232,236,240);fill-opacity:0.5;stroke:rgb(171,178,185);stroke-width:2px;"/>
+        <path d="M0,175L0,-175" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;stroke-dasharray:6,4;"/>
+        <path d="M0,-175L0,-210" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:3px;"/>
+        <g transform="matrix(1,0,0,1,10,-205)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:13px;fill:rgb(44,62,80);">F (tensile)</text>
+        </g>
+        <g transform="matrix(1,0,0,0.624212,0,65.7628)">
+            <path d="M0,175L0,210" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:3px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,10.0782,189.367)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:13px;fill:rgb(44,62,80);">F (tensile)</text>
+        </g>
+        <path d="M0,0L55,-95" style="fill:none;fill-rule:nonzero;stroke:rgb(231,76,60);stroke-width:2.5px;"/>
+        <g transform="matrix(1,0,0,1,62,-92)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:12px;fill:rgb(231,76,60);">Slip plane</text>
+        </g>
+        <g transform="matrix(1,0,0,1,62,-78)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:12px;fill:rgb(231,76,60);">normal</text>
+        </g>
+        <path d="M0,0L-85,50" style="fill:none;fill-rule:nonzero;stroke:rgb(40,116,166);stroke-width:2.5px;"/>
+        <g transform="matrix(1,0,0,1,-145,40)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:12px;fill:rgb(40,116,166);">Slip</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-145,55)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:12px;fill:rgb(40,116,166);">direction</text>
+        </g>
+        <path d="M0,-40C7.759,-40.177 15.405,-38.092 22,-34" style="fill:none;fill-rule:nonzero;stroke:rgb(231,76,60);stroke-width:2px;"/>
+        <g transform="matrix(1,0,0,1,10.4239,-54.2882)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:15px;fill:rgb(231,76,60);">φ</text>
+        </g>
+        <g transform="matrix(1,0,0,1,0,-9.20128)">
+            <path d="M0,50C-9.771,39.455 -23.629,33.62 -38,34" style="fill:none;fill-rule:nonzero;stroke:rgb(40,116,166);stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-52,18)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:15px;fill:rgb(40,116,166);">λ</text>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,30,490)">
+        <path d="M0,8L20,8" style="fill:none;fill-rule:nonzero;stroke:rgb(231,76,60);stroke-width:2.5px;"/>
+        <g transform="matrix(1,0,0,1,25,13)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:11px;fill:rgb(44,62,80);">φ</text>
+            <text x="11px" y="0px" style="font-family:'Helvetica';font-size:11px;fill:rgb(44,62,80);">= angle between tensile axis and slip plane normal</text>
+        </g>
+        <path d="M0,30L20,30" style="fill:none;fill-rule:nonzero;stroke:rgb(40,116,166);stroke-width:2.5px;"/>
+        <g transform="matrix(1,0,0,1,25,35)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:11px;fill:rgb(44,62,80);">λ</text>
+            <text x="9.174px" y="0px" style="font-family:'Helvetica';font-size:11px;fill:rgb(44,62,80);">= angle between tensile axis and slip direction</text>
+        </g>
+        <path d="M300,8L320,8" style="fill:none;fill-rule:nonzero;stroke:rgb(230,126,34);stroke-width:2.5px;"/>
+        <g transform="matrix(1,0,0,1,325.642,11.8619)">
+            <text x="0px" y="0px" style="font-family:'Helvetica';font-size:11px;fill:rgb(44,62,80);">Slip plane (amber)</text>
+        </g>
+        <g transform="matrix(1,0,0,1,290.071,-191.911)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Oblique', 'Helvetica';font-style:italic;font-size:11px;fill:rgb(93,109,126);">Maximum Schmid factor</text>
+            <text x="0px" y="11px" style="font-family:'Helvetica-Oblique', 'Helvetica';font-style:italic;font-size:11px;fill:rgb(93,109,126);">0.5 (at φ = λ = 45°)</text>
+        </g>
+    </g>
+</svg>

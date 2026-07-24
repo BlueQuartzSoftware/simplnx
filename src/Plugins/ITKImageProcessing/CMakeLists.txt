@@ -185,7 +185,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKMeanProjectionImageFilter
     # ITKStandardDeviationProjectionImage
     # ITKSumProjectionImage
-    # ITKMorphologicalWatershedFromMarkersImage
+    # ITKMorphologicalWatershedFromMarkersImage  # disabled: incomplete wrapper, no marker-image input. See https://github.com/BlueQuartzSoftware/simplnx/issues/1639
     # ITKSmoothingRecursiveGaussianImage
 
     # -----------------------------------------------------------------------------

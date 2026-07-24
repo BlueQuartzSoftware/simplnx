@@ -1,6 +1,6 @@
 # ITK Iso Contour Distance Image Filter
 
-Compute an approximate distance from an interpolated isocontour to the close grid points.
+For a level-set (signed) image, estimates how far each grid pixel near the zero contour is from that contour.
 
 ## Group (Subgroup)
 
@@ -8,40 +8,33 @@ ITKDistanceMap (DistanceMap)
 
 ## Description
 
-For standard level set algorithms, it is useful to periodically reinitialize the evolving image to prevent numerical accuracy problems in computing derivatives. This reinitialization is done by computing a signed distance map to the current level set. This class provides the first step in this reinitialization by computing an estimate of the distance from the interpolated isocontour to the pixels (or voxels) that are close to it, i.e. for which the isocontour crosses a segment between them and one of their direct neighbors. This class supports narrowbanding. If the input narrowband is provided, the algorithm will only locate the level set within the input narrowband.
+This is a specialized filter used in **level-set** methods. A level-set image is a signed image whose zero crossing (the **iso-contour** at value 0) implicitly represents a curve or surface — pixels inside the shape are negative and pixels outside are positive. As a level-set evolves, the values drift away from a true distance and must periodically be "reinitialized" back to a clean signed-distance field.
 
-Implementation of this class is based on Fast and Accurate Redistancing for Level Set Methods Krissian K. and Westin C.F., EUROCAST NeuroImaging Workshop Las Palmas Spain, Ninth International Conference on Computer Aided Systems Theory , pages 48-51, Feb 2003.
+This filter performs the first step of that reinitialization: for the grid pixels lying immediately next to the iso-contour (those for which the contour crosses a segment to a direct neighbor), it computes an accurate estimate of the distance from the pixel to the interpolated contour. Pixels farther from the contour are left at a saturated "far" value. If a narrowband is supplied, only pixels within that band are processed.
 
-## Parameters
+This filter is for users implementing level-set / fast-marching workflows; for a general-purpose distance transform of a binary mask use one of the distance-map filters such as [ITK Signed Maurer Distance Map Image Filter](ITKSignedMaurerDistanceMapImageFilter.md).
 
-| Name | Type | Description |
-|------|------|-------------|
-| LevelSetValue | float64 | Set/Get the value of the level set to be located. The default value is 0. |
-| FarValue | float64 | Set/Get the value of the level set to be located. The default value is 0. |
+### Parameter Guidance
 
-## Required Geometry
+- **Level Set Value** — the iso-value whose contour is located, in the **input image's intensity units** (default *0*, the usual zero level set).
+- **Far Value** — the saturation distance assigned to pixels that are not adjacent to the contour. Pixels beyond the immediate neighborhood of the contour are clamped to this value (default *10*), so it should be set larger than the band width you care about. (Units are the same length units as the computed distances.)
 
-Image Geometry
+### Required Input Sources
 
-## Required Objects
+Operates on a signed scalar (level-set) image — typically the output of a prior level-set or distance-map filter.
 
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
+## Reference
 
-## Created Objects
+K. Krissian and C.-F. Westin, "Fast and Accurate Redistancing for Level Set Methods," EUROCAST NeuroImaging Workshop, Ninth International Conference on Computer Aided Systems Theory, pp. 48-51, Feb 2003.
 
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

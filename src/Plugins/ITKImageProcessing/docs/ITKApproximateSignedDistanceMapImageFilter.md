@@ -1,6 +1,6 @@
 # ITK Approximate Signed Distance Map Image Filter
 
-Create a map of the approximate signed distance from the boundaries of a binary image.
+Computes a fast, approximate signed distance map from the object boundaries in a binary image.
 
 ## Group (Subgroup)
 
@@ -8,33 +8,35 @@ ITKDistanceMap (DistanceMap)
 
 ## Description
 
-The ApproximateSignedDistanceMapImageFilter takes as input a binary image and produces a signed distance map. Each pixel value in the output contains the approximate distance from that pixel to the nearest "object" in the binary image. This filter differs from the DanielssonDistanceMapImageFilter in that it calculates the distance to the "object edge" for pixels within the object.
+A **distance map** replaces every pixel with its distance to the nearest object boundary. This filter produces a **signed** distance map: pixels inside an object are given **negative** distances, and pixels outside an object are given **positive** distances. The magnitude of each value is the (approximate) distance, in **pixels**, from that pixel to the closest object boundary.
 
-Negative values in the output indicate that the pixel at that position is within an object in the input image. The absolute value of a negative pixel represents the approximate distance to the nearest object boundary pixel.
+The distances are **Chamfer distances**, a fast approximation to true Euclidean distance. This filter trades some accuracy for speed. If you need a closer approximation to Euclidean distance, use the [Danielsson](ITKDanielssonDistanceMapImageFilter.md) or [Signed Maurer](ITKSignedMaurerDistanceMapImageFilter.md) distance maps instead.
 
-WARNING: This filter requires that the output type be floating-point. Otherwise internal calculations will not be performed to the appropriate precision, resulting in completely incorrect (read: zero-valued) output.
+Use a signed distance map when you need a smooth field that grows away from object boundaries in both directions — for example, as a speed/level-set input, for shape morphing, or to find points a fixed distance from a feature edge.
 
-The distances computed by this filter are Chamfer distances, which are only an approximation to Euclidean distances, and are not as exact approximations as those calculated by the DanielssonDistanceMapImageFilter . On the other hand, this filter is faster.
+> Note: distances are computed and stored as floating-point values. Choose a floating-point output array type; an integer output cannot represent fractional or negative distances correctly.
 
-This filter requires that an "inside value" and "outside value" be set as parameters. The "inside value" is the intensity value of the binary image which corresponds to objects, and the "outside value" is the intensity of the background. (A typical binary image often represents objects as black (0) and background as white (usually 255), or vice-versa.) Note that this filter is slightly faster if the inside value is less than the outside value. Otherwise an extra iteration through the image is required.
+### Parameter Guidance
 
-This filter uses the FastChamferDistanceImageFilter and the IsoContourDistanceImageFilter internally to perform the distance calculations.
+The binary input is interpreted using two intensity values:
+
+- **Inside Value** — the pixel intensity that marks the **object** (foreground). Default *1*.
+- **Outside Value** — the pixel intensity that marks the **background**. Default *0*.
+
+For example, in a typical mask where objects are labeled *1* and background is *0*, set *Inside Value = 1* and *Outside Value = 0*. If your mask labels objects as *255* on a *0* background, set *Inside Value = 255* and *Outside Value = 0*.
+
+The filter runs slightly faster when *Inside Value* is less than *Outside Value*; otherwise an extra pass over the image is required.
+
+### Required Input Sources
+
+Requires a binary (two-value) image where one intensity marks objects and the other marks background. This is typically a segmentation mask produced by a thresholding or segmentation filter upstream.
 
 ## See Also
 
-- [DanielssonDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1DanielssonDistanceMapImageFilter.html)
-
-- [SignedDanielssonDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1SignedDanielssonDistanceMapImageFilter.html)
-
-- [SignedMaurerDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1SignedMaurerDistanceMapImageFilter.html)
-
-- [FastChamferDistanceImageFilter](https://itk.org/Doxygen/html/classitk_1_1FastChamferDistanceImageFilter.html)
-
-- [IsoContourDistanceImageFilter](https://itk.org/Doxygen/html/classitk_1_1IsoContourDistanceImageFilter.html)
-
-## Author
-
-- Zach Pincus
+- [ITK Danielsson Distance Map Image Filter](ITKDanielssonDistanceMapImageFilter.md)
+- [ITK Signed Danielsson Distance Map Image Filter](ITKSignedDanielssonDistanceMapImageFilter.md)
+- [ITK Signed Maurer Distance Map Image Filter](ITKSignedMaurerDistanceMapImageFilter.md)
+- [ITK ApproximateSignedDistanceMapImageFilter (ITK Doxygen)](https://itk.org/Doxygen/html/classitk_1_1ApproximateSignedDistanceMapImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 
@@ -42,8 +44,8 @@ This filter uses the FastChamferDistanceImageFilter and the IsoContourDistanceIm
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

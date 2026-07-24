@@ -1,4 +1,4 @@
-# ITK Normalize To Constant Image Filter (ITKNormalizeToConstantImage)
+# ITK Normalize To Constant Image Filter
 
 Scales image pixel intensities to make the sum of all pixels equal a user-defined constant.
 
@@ -8,9 +8,11 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The default value of the constant is 1. It can be changed with SetConstant() .
+Scales every pixel so that the sum of all pixel values equals the user-defined Constant. This transform is especially useful for normalizing a convolution kernel.
 
-This transform is especially useful for normalizing a convolution kernel.
+### Parameter Guidance
+
+- **Constant**: The target sum for all pixel values after scaling. This is a dimensionless value with a default of 1.
 
 This code was contributed in the Insight Journal paper: ["FFT based
 convolution" by Lehmann G. https://insight-journal.org/browse/publication/717](https://insight-journal.org/browse/publication/717)
@@ -35,6 +37,6 @@ convolution" by Lehmann G. https://insight-journal.org/browse/publication/717](h
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

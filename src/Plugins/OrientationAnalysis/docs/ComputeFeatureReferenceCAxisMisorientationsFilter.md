@@ -6,17 +6,40 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** calculates the misorientation angle between the C-axis of each **Cell** within a **Feature** and the average C-axis for that **Feature** and stores that value for each **Cell**.  The average and standard deviation of those values for all **Cells** belonging to the same **Feature** is also stored for each **Feature**.
+This **Filter** measures how much the C-axis orientation varies within each **Feature** (grain) in hexagonal materials. It does this by comparing the C-axis direction of each individual **Cell** (voxel) to the average C-axis direction for the grain it belongs to.
 
-This filter requires at least one Hexagonal crystal structure phase (Hexagonal-Low 6/m or Hexagonal-High 6/mmm). Although it is not recommended, you can give input data with mixed phase types and all non hexagonal phases will be skipped in the calculations.
+This metric is useful for characterizing intragranular orientation gradients -- regions within a grain where the crystal lattice has rotated relative to the grain's average orientation, which can indicate deformation, subgrain boundaries, or measurement noise.
 
-Results from this filter can differ from its original version in DREAM3D 6.6 by around 0.0001. This version uses double precision in part of its calculation to improve agreement and accuracy between platforms (notably ARM).
+### What This Filter Computes
+
+For each **Cell**, the filter calculates the angle (in degrees) between that cell's C-axis and the average C-axis of its parent **Feature**. The filter then computes summary statistics per **Feature**:
+
+- **Average misalignment** -- the mean C-axis deviation across all cells in the grain
+- **Standard deviation** -- how much the deviation varies within the grain
+
+A low average misalignment indicates a grain with a uniform C-axis orientation. A high value suggests significant internal orientation variation.
+
+### Hexagonal Materials Only
+
+This filter requires at least one hexagonal crystal structure phase (6/m or 6/mmm). Non-hexagonal phases are skipped. See the [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md) documentation for an explanation of why C-axis calculations are restricted to hexagonal materials.
+
+### Note
+
+Results may differ from the DREAM3D 6.6 version by approximately 0.0001 degrees due to improved double-precision calculations for cross-platform accuracy.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md) or [Segment Features (C-Axis Misalignment)](CAxisSegmentFeaturesFilter.md).
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Average C-Axes** -- produced by [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-EBSD_Hexagonal_Data_Analysis
++ `EBSD_Hexagonal_Data_Analysis`
 
 ## License & Copyright
 

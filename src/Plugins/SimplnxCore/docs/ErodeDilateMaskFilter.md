@@ -6,31 +6,39 @@ Processing (Cleanup)
 
 ## Description
 
-If the mask is _dilated_, the **Filter** grows the _true_ regions by one **Cell** in an iterative sequence for a user
-defined number of iterations. During the _dilate_ process, the classification of any **Cell** neighboring a _false_ *
-*Cell** will be changed to _true_. If the mask is _eroded_, the **Filter** shrinks the _true_ regions by one **Cell** in
-an iterative sequence for a user defined number of iterations. During the _erode_ process, _true_ **Cells** that have
-at least one _false_ neighbor are changed to _false_. The **Filter** also offers the option(s) to
-turn on/off the erosion or dilation in specific directions (X, Y or Z).
+This **Filter** grows or shrinks the *true* region of a boolean *mask* array by one cell-layer per iteration, using standard image-morphology operations. The mask is a cell-level boolean array (typically produced by a threshold operation such as [Multi-Threshold Objects](MultiThresholdObjectsFilter.md)) where *true* marks cells of interest and *false* marks excluded cells.
 
-This filter will ONLY change the _Mask_ data array and not any of the other data arrays in the same attribute matrix.
+Only the **Mask** array is modified; no other cell data is changed.
 
-The example images below were generated **AFTER** the execution of the filter and essentially any black pixel is where the **Mask** was false and any other color is where the **Mask** is true. (The colors are the typical IPF Colors using a <001> reference direction)
+The example images below show the IPF-colored data after the filter has run. Black pixels are cells where the mask is *false*; colored pixels are where the mask is *true*.
 
-| Before Dilatation                      | After Dilation                       |
-|--------------------------------------|--------------------------------------|
+| Before Dilation                        | After Dilation                         |
+|----------------------------------------|----------------------------------------|
 | ![](Images/ErodeDilateMask_Before.png) | ![](Images/ErodeDilateMask_Dilate.png) |
 
-| Before Erosion                      | After Erosion                       |
-|--------------------------------------|--------------------------------------|
-| ![](Images/ErodeDilateMask_Before.png) | ![](Images/ErodeDilateMask_Erode.png) |
+| Before Erosion                         | After Erosion                          |
+|----------------------------------------|----------------------------------------|
+| ![](Images/ErodeDilateMask_Before.png) | ![](Images/ErodeDilateMask_Erode.png)  |
 
-### Operation
+### When to Use This Filter
 
-The *Operation* parameter selects which morphological operation to apply to the mask:
+- **Erode** the mask to discard the boundary layer of valid cells. Useful before computing feature-level statistics from EBSD data, since cells right at the sample edge are often unreliable even after passing a quality threshold.
+- **Dilate** the mask to recover cells that were marked invalid by an over-aggressive threshold but lie immediately adjacent to valid data.
 
-- **Dilate [0]**: Expands the masked (true) regions by one **Cell** per iteration. Any **Cell** neighboring a false **Cell** is changed to true.
-- **Erode [1]**: Shrinks the masked (true) regions by one **Cell** per iteration. True **Cells** that have at least one false neighbor are changed to false.
+### Opening and Closing
+
+Chaining an erode and a dilate pass (with equal iteration counts) performs the two classic compound morphology operations:
+
+![Fig. 1: Opening (erode then dilate) removes small isolated true regions and thin protrusions while returning the larger region to about its original size; Closing (dilate then erode) fills small holes and gaps while preserving the outer boundary.](Images/Morphology_OpeningClosing.png)
+
+### Iterations and Direction
+
+- *Number of Iterations* is in **cell-layers**. An iteration count of 3 grows or shrinks the *true* region by 3 cells.
+- *X Direction*, *Y Direction*, and *Z Direction* toggle whether the morphology is applied along that axis. Disable an axis to perform anisotropic morphology -- useful when serial-sectioning resolution is anisotropic (typically Z is coarser than X and Y) and you want to limit growth or shrinking along the fine axes.
+
+### Required Input Sources
+
+- **Mask Array** -- a boolean cell-level array, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to an EBSD confidence index, image quality, or similar scalar.
 
 % Auto generated parameter table will be inserted here
 

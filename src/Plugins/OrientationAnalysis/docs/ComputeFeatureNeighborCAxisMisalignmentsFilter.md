@@ -6,25 +6,39 @@ Statistics (Crystallography)
 
 ## Description
 
-For each feature, the C-Axis misalignments are determined for each neighbor of the feature. The neighbor list is a variable that is passed in by the user. This "NeighborList" could have been generated from any other appropriate filter. This means that a neighbor list could represent all neighbors that are physically connected to the current feature (Find Feature Neighbors), within a certain radius of the feature (Compute Feature Neighborhoods) or any other custom filter.
+This **Filter** computes the C-axis misalignment angle between each **Feature** (grain) and its neighbors in hexagonal materials. The C-axis misalignment is the angular difference between the C-axis directions of two neighboring grains -- it measures how closely their unique crystallographic axes are aligned.
 
-There are 2 outputs from this filter:
-- The list of misalignments
-- Optionally the average of all misalignments.
+This is distinct from a full misorientation, which considers the complete rotational difference between two crystal orientations. C-axis misalignment only considers the alignment of the [001] direction, which is often the most mechanically significant axis in hexagonal materials.
 
-**The misalignment values are stored as Degrees.**
+### Flexible Neighbor Definition
 
-### Notes
+The neighbor list is supplied by the user and can come from any filter that produces neighbor relationships. For example:
+- [Compute Feature Neighbors](../SimplnxCore/ComputeFeatureNeighborsFilter.md) -- neighbors that physically share a boundary
+- [Compute Feature Neighborhoods](../SimplnxCore/ComputeNeighborhoodsFilter.md) -- neighbors within a specified radius
+- Any other custom filter that generates a neighbor list
 
-**NOTE:** Only features with identical phase values and a crystal structure of **Hexagonal_High** (6/mmm) or **Hexagonal_Low** (6/m) will be calculated. If two features have different phase values, or if the shared phase has a crystal structure that is not one of the two hexagonal Laue classes, then a value of NaN is set for the misalignment.
+The filter also optionally computes the average misalignment across all of a feature's neighbors.
 
-Results from this filter can differ from its original version in DREAM.3D 6.5.171 by around 0.0001 degrees. This version uses double precision and Eigen for matrix operations which account for the differences in output.
+### Hexagonal Materials Only
+
+Only **Features** with identical phase values and a crystal structure of **Hexagonal_High** (6/mmm) or **Hexagonal_Low** (Hexagonal 6/m (C6h)) are compared. If two **Features** have different phases or a non-hexagonal crystal structure, a value of NaN is stored for the misalignment. See the [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md) documentation for an explanation of why C-axis calculations are restricted to hexagonal materials.
+
+### Note
+
+Results from this filter may differ from the original DREAM.3D 6.5 version by approximately 0.0001 degrees due to the use of double precision and Eigen for matrix operations.
+
+### Required Input Sources
+
+- **Neighbor List** -- produced by [Compute Feature Neighbors](../SimplnxCore/ComputeFeatureNeighborsFilter.md) or [Compute Feature Neighborhoods](../SimplnxCore/ComputeNeighborhoodsFilter.md).
+- **Average Quaternions** -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-EBSD_Hexagonal_Data_Analysis
++ `EBSD_Hexagonal_Data_Analysis`
 
 ## License & Copyright
 

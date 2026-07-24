@@ -14,8 +14,10 @@ Reads MHA images and the transformation matrix using ITK. Some select headers fr
 
 - Number of Dimensions
 - Center of Rotation (0,0,0 is the default)
-- Offset (used at the origin for the created Image Geometr: 0,0,0 is the default)
+- Offset (used as the origin for the created Image Geometry; 0,0,0 is the default)
 - Transformation Matrix
+
+This is a variant of the [Read Image (ITK)](ITKImageReaderFilter.md) filter that also handles the transformation matrix embedded in the MHA file.
 
 ### Use of the Transformation Matrix Notes
 
@@ -23,12 +25,7 @@ There is an option to use the transpose of the Transformation Matrix. This can b
 
 #### Technical Discussion
 
-A 4x4 transformation matrix that involves only rotation (and no translation, scaling, or other transformations), the transpose of the matrix is equivalent to its inverse. This property is specific to orthogonal matrices, which are matrices where the rows and columns form a set of orthonormal vectors. In the context of 3D graphics and transformations, a rotation matrix is a type of orthogonal matrix.
-
-The key properties that make the transpose of a rotation matrix equivalent to its inverse are:
-
-- **Preservation of Dot Product**: The rotation does not change the dot product between vectors, preserving angles and lengths.
-- **Orthonormal Rows and Columns**: The rows (and columns) of a rotation matrix are orthonormal, meaning they have unit length and are perpendicular to each other. This property ensures that multiplying the matrix by its transpose results in the identity matrix, indicating that the transpose is indeed the inverse.
+For a pure rotation matrix (no translation, scaling, or shear) the transpose is equal to the inverse, because rotation matrices are orthogonal (their rows and columns are orthonormal). This is why transposing is only valid when the transformation represents a pure rotation.
 
 ### Interpolation Type
 

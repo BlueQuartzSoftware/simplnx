@@ -2,15 +2,19 @@
 
 ## Group (Subgroup)
 
-IO (Output) (Write) (Export) (Text) (CSV) (ASCII)
+IO (Output)
 
 ## Description
 
-This filter will write the selected DataArrays to either individual files or as a single CSV style of file.
+This filter will write the selected **Data Array**s to either individual files or as a single CSV style of file. The inputs are any existing **Data Array**s (numeric or string) that the user selects to export.
+
+### Maximum Tuples Per Line
+
+When writing to multiple files, the *Maximum Tuples Per Line* parameter controls how many tuples are printed on each row of an output file (units: tuples per row). For example, with a value of *1* each tuple is written on its own line; with a value of *10* up to ten tuples are written per line before a new line begins. This makes it possible to reshape long single-column output into a more compact block. The parameter does not apply to string arrays.
 
 ## String Data Array Caveats
 
-- The "Maximum Tuples per Line" will not have any effect for that specific array.
+- The "Maximum Tuples Per Line" will not have any effect for that specific array.
 - If the output is for a single file, then each String value will be enclosed in a set of Single Quotes (') characters.
 
 ### Multiple Files

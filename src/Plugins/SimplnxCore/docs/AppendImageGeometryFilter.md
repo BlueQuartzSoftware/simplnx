@@ -6,8 +6,9 @@ Sampling (Memory/Management)
 
 ## Description
 
-This filter allows the user to append one or multiple image geometries to a given image geometry, in any direction (X,Y,Z). The input and
-destination **ImageGeometry** objects must have the same dimensions in the directions that are NOT chosen.  If the X direction is chosen, the geometries must match in Y & Z.  If the Y direction is chosen, the geometries must match in X & Z.  If the Z direction is chosen, the geometries must match in X & Y.  Optional checks for equal **Resolution** values can also be performed.
+This **Filter** appends one or more **Image Geometries** to a destination Image Geometry along a chosen axis (X, Y, or Z), producing a single larger Image Geometry. The input geometries must have matching dimensions in the two axes that are *not* the append direction. Optionally, the filter can also verify that the input and destination geometries have matching spacing on all axes before appending.
+
+For an introduction to Image Geometry dimensions and spacing, see [Create Image Geometry](CreateImageGeometryFilter.md).
 
 This filter also has an option to mirror the resulting geometry in the chosen direction.  If the X direction is chosen, it will mirror the positions of the YZ planes.  If the Y direction is chosen, it will mirror the positions of the XZ planes.  If the Z direction is chosen, it will mirror the positions of the XY planes.
 
@@ -93,6 +94,10 @@ Here's the SmallIN100 dataset example sliced into three pieces in the Z directio
 And here is what the geometry looks like after appending the three pieces together in the Z direction.  On the left is the regular result, on the right is the mirrored result:
 | ![](Images/AppendImageGeometry/z_complete.png) | ![](Images/AppendImageGeometry/z_mirrored.png) |
 |:----------------------:|:----------------------:|
+
+### Required Input Sources
+
+- **Destination Image Geometry** and **Input Image Geometries** -- all geometries to be appended. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader. All must share matching cell-level Attribute Array names if cell data is to be preserved during the append.
 
 % Auto generated parameter table will be inserted here
 

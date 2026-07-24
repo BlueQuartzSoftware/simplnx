@@ -1,6 +1,6 @@
 # ITK Opening By Reconstruction Image Filter
 
-Opening by reconstruction of an image.
+Removes small bright features from a grayscale image while preserving the shape of the structures that remain.
 
 ## Group (Subgroup)
 
@@ -8,31 +8,32 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-This filter preserves regions, in the foreground, that can completely contain the structuring element. At the same time, this filter eliminates all other regions of foreground pixels. Contrary to the morphological opening, the opening by reconstruction preserves the shape of the components that are not removed by erosion. The opening by reconstruction of an image "f" is defined as:
+A standard morphological **opening** (erosion followed by dilation) removes small bright features that are smaller than the **structuring element**, but it also distorts the shapes of the larger features it touches. **Opening by reconstruction** achieves the same effect while preserving the exact shape of the structures, by replacing the final dilation with a morphological reconstruction step.
 
-OpeningByReconstruction(f) = DilationByReconstruction(f, Erosion(f)).
+It keeps the foreground regions that can fully contain the structuring element and removes the rest; the surviving regions are restored to their original shape rather than the eroded approximation. It is defined as `OpeningByReconstruction(f) = DilationByReconstruction(Erosion(f))`. In addition to removing small bright features, the operation tends to lower the contrast of the brightest regions.
 
-Opening by reconstruction not only removes structures destroyed by the erosion, but also levels down the contrast of the brightest regions. If PreserveIntensities is on, a subsequent reconstruction by dilation using a marker image that is the original image for all unaffected pixels.
+### Parameter Guidance
 
-Opening by reconstruction is described in Chapter 6.3.9 of Pierre Soille's book "Morphological Image Analysis: Principles and
-Applications", Second Edition, Springer, 2003.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Bright features smaller than this are removed.
+- **Fully Connected** — controls neighbor connectivity during reconstruction (face-only versus face + edge + corner). Turn it on for thin, one-pixel-wide features.
+- **Preserve Intensities** — when on, pixels that the operation did not need to change are restored to their exact original gray values, so only the affected regions differ from the input.
 
-### Author
+#### Kernel Type
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
-
-### Related Filters
-
-- GrayscaleMorphologicalOpeningImageFilter
-
-### Kernel Type
-
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on any scalar (grayscale) image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter. Compare with the standard [ITK Grayscale Morphological Opening Image Filter](ITKGrayscaleMorphologicalOpeningImageFilter.md).
+
+## Reference
+
+Pierre Soille, *Morphological Image Analysis: Principles and Applications*, Second Edition, Springer, 2003 (Chapter 6.3.9).
 
 % Auto generated parameter table will be inserted here
 
@@ -40,7 +41,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

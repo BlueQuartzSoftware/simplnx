@@ -4,81 +4,67 @@
 
 Surface Meshing (Generation)
 
-## Deprecation Notice
+## ⚠ Deprecation Notice
 
-The "SurfaceNets" filter should be used instead. Search the filter list for "Surface Nets".
+**This filter is deprecated.** Use the [Surface Nets](SurfaceNetsFilter.md) filter instead. Surface Nets produces a smoother mesh (no stair-stepping), runs faster, and includes smoothing in a single pass. This filter is retained for compatibility with legacy pipelines.
 
 ## Description
 
-This **Filter** generates a **Triangle Geometry** from a grid **Geometry** (either an **Image Geometry** or a **RectGrid Geometry**) that represents a surface mesh of the present **Features**. The algorithm proceeds by creating a pair of **Triangles** for each face of the **Cell** where the neighboring **Cells** have a different **Feature** Id value. The meshing operation is extremely quick but can result in a surface mesh that is very "stair stepped". The user is encouraged to use a smoothing operation to reduce this "blockiness".
+This **Filter** generates a **Triangle Geometry** surface mesh from a grid **Geometry** (Image or Rectilinear Grid). For every cell face shared between two different **Features** (i.e., a Feature boundary), the filter emits two triangles, producing the *stair-stepped* surface that defines the boundary of each Feature.
 
-The user may choose any number of **Cell Attribute Arrays** to transfer to the created **Triangle Geometry**. The **Faces** will gain the values of the **Cells** from which they were created.  Currently, the **Filter** disallows the transferring of data that has a *multi-dimensional* component dimensions vector.  For example, scalar values and vector values are allowed to be transferred, but N x M matrices cannot currently be transferred.
-
-This filter will ensure that the smaller of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in downstream filters to continue to work correctly.
-
-This filter attempts to repair the windings for a mesh. This may not be possible due to the nature of how meshes are stored in the software. See Verify Traingle Winding documentation for detailed breakdown of nuance.
-
-For more information on surface meshing, visit the tutorial.
-
----------------
+The resulting mesh is "blocky" because each triangle aligns with a voxel face. To smooth it, apply [Laplacian Smoothing](LaplacianSmoothingFilter.md) afterward -- or, preferably, use [Surface Nets](SurfaceNetsFilter.md), which combines meshing and smoothing in one step.
 
 ![Example Quick Mesh Output](Images/QuickSurface_Output.png)
 
-Quick Surface Mesh output **without** any extra smoothing applied
-
----------------
+*Quick Surface Mesh output without smoothing.*
 
 ![Example Quick Mesh Output](Images/QuickSurface_Smooth_Output.png)
 
-Quick Surface Mesh output **with** Laplacian Smoothing filter applied.
+*Quick Surface Mesh output with Laplacian Smoothing applied.*
 
----------------
+### Cell Data Transfer
 
-![NodeType = 2](Images/QuickMesh_NodeType_2.png)
+The user may select any number of **Cell Attribute Arrays** to transfer onto the new **Triangle Geometry**. Each output **Face** inherits the values of the **Cell** it came from. Only scalar and vector arrays can be transferred; multi-dimensional component shapes (e.g., N×M matrices) are not supported.
 
-NodeType = 2
+### Face Labels Convention
 
----------------
+Each triangle gets a 2-component *Face Labels* attribute storing the two Feature IDs on either side of the boundary. The filter guarantees the smaller Feature ID is in component 0, so downstream filters can rely on a consistent ordering.
 
-![NodeType = 3](Images/QuickMesh_NodeType_3.png)
-
-NodeType = 3
-
----------------
-
-![NodeType = 4](Images/QuickMesh_NodeType_4.png)
-
-NodeType = 4
-
----------------
+If a triangle borders the outer volume rather than a real Feature (i.e., the cell on one side is outside the geometry), one of its Face Labels is set to **-1**.
 
 ### Node Types
 
-One of the arrays to come out of the algorithm is the "Node Type" vertex array. This array uses a value to label each vertex as to what kind of node it was determined to be during the meshing process.
+A *Node Type* vertex array is produced classifying each vertex by its mesh role:
 
 | Value | Description |
 |-------|-------------|
-| 2 | Node within the interior of the grain face.  |
-| 3 | Node along a triple line  |
-| 4 | Node that is a Quadruple point  |
-| 12 | Node that is on the exterior of the mesh  |
-| 13 | Node that is on the exterior of the mesh and is a triple line  |
-| 14 | Node that is on the exterior of the mesh and is a quadruple point   |
+| 2 | Vertex on the interior of a grain face |
+| 3 | Vertex on a triple line (3 grains meet) |
+| 4 | Vertex on a quadruple point (4 grains meet) |
+| 12 | Vertex on the exterior of the mesh, on a grain face |
+| 13 | Vertex on the exterior of the mesh, on a triple line |
+| 14 | Vertex on the exterior of the mesh, on a quadruple point |
 
-### Exterior or Boundary Triangles
+![NodeType = 2](Images/QuickMesh_NodeType_2.png)
 
-Each triangle that is created will have an 2 component attribute called `Face Labels` that represent the Feature ID on either
-side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
-have a value of -1.
+*Node Type 2 -- interior face vertex.*
 
-## Notes
+![NodeType = 3](Images/QuickMesh_NodeType_3.png)
 
-The Quick Mesh algorithm is very crude and naive in its implementation. This filter
-along with the Laplacian Smoothing filter can give you reasonable results. The
-newer filter that should replace both the Quick Mesh and the Laplacian Smoothing
-filter is the "Surface Nets" surface meshing algorithm. This will create the surface
-mesh and smooth in a single filter and give subjectively better results and perform
-much faster at both.
+*Node Type 3 -- triple line vertex.*
+
+![NodeType = 4](Images/QuickMesh_NodeType_4.png)
+
+*Node Type 4 -- quadruple point vertex.*
+
+### Winding
+
+The filter attempts to repair mesh windings so that triangle normals point outward consistently. This may not always succeed -- see [Verify Triangle Winding](VerifyTriangleWindingFilter.md) for cases where the mesh storage scheme prevents fully consistent windings.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+- **Image Geometry** -- typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
 
 ## Comparison of Surface Meshing Filters
 

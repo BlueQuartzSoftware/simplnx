@@ -68,7 +68,13 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 | Double | 64 bit | -1.7e+308 to -2.2e-308, 0.0, 2.2e-308 to 1.7e+308 (15 digits)|
 | Boolean | 8 bit |0 = false and any other value will be forced to 1 = true|
 
-The component dimensions should multiply together into a total number of components equal to at least 1. Examples of *Component Dimensions* would be [3] for an RGB Image, [1] for a gray scale image, [1] for a scalar array, [4] for a quaternions array, [10x5] for an array with 10x5 grids at each tuple, etc.  All values of the array will be initialized using the chosen initialization option.
+The component dimensions should multiply together into a total number of components of at least 1. Examples of *Component Dimensions* would be [3] for an RGB image, [1] for a grayscale image or scalar array, [4] for a quaternions array, [3, 3] for a 3×3 tensor at each tuple, etc. All values of the array are initialized using the chosen initialization option.
+
+For the simpler case of a single-component-dimension array (most data), use [Create Data Array](CreateDataArrayFilter.md). This advanced version is required only when the component shape itself has more than one dimension.
+
+### Required Input Sources
+
+None. The array is created from user-supplied parameters; when the parent is an Attribute Matrix, the tuple dimensions are inherited from it.
 
 % Auto generated parameter table will be inserted here
 

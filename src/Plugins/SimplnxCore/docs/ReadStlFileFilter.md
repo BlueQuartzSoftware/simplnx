@@ -6,40 +6,44 @@ IO (Input)
 
 ## Description
 
-This **Filter**  will read a binary STL File and create a **Triangle Geometry** object in memory. The STL reader is very strict to the STL specification. An explanation of the STL file format can be found on [Wikipedia](https://en.wikipedia.org/wiki/STL). The structure of the file is as follows:
+An STL file describes a 3D surface as a list of triangles. This filter reads a **binary** STL file from disk and creates a **Triangle Geometry** (a surface mesh made of triangular faces) in memory, along with a *Face Normals* array (one 3-component normal vector per triangle) and, optionally, a *Face Labels* array.
+
+The vertex coordinates in an STL file are plain numbers with no embedded unit. They are in whatever length unit the file's author intended (often millimeters or inches), so the reader treats them as dimensionless and copies them through unchanged.
+
+**Only binary STL files are supported. ASCII STL files are not read by this filter; the filter will report an error if given one.** An ASCII STL file can be converted to binary using a separate 3D mesh tool before reading.
+
+An explanation of the STL file format can be found on [Wikipedia](https://en.wikipedia.org/wiki/STL_(file_format)). The binary structure is:
 
     UINT8[80]     Header
-    UINT32     Number of triangles
+    UINT32        Number of triangles
 
     foreach triangle
       REAL32[3]     Normal vector
       REAL32[3]     Vertex 1
       REAL32[3]     Vertex 2
       REAL32[3]     Vertex 3
-      UINT16     Attribute byte count
+      UINT16        Attribute byte count
     end
 
-The filter will look for specific header information to try and determine the vendor of the STL file. Certain vendors do not write STL files that adhere to the file spec.
+The filter inspects the header to try to determine the vendor of the STL file, because some vendors do not write files that strictly follow the specification.
 
-## IMPORANT NOTES:
+## IMPORTANT NOTES
 
-**It is very important that the "Attribute byte Count" is correct as DREAM3D-NX follows the specification strictly.** If you are writing an STL file be sure that the value for the "Attribute byte count" is *zero* (0). If you chose to encode additional data into a section after each triangle then be sure that the "Attribute byte count" is set correctly. DREAM3D-NX will obey the value located in the "Attribute byte count".
+The reader follows the STL specification strictly and obeys the "Attribute byte count" value written after each triangle. If you are writing an STL file, set the "Attribute byte count" to *zero* (0) unless you are deliberately encoding extra data after each triangle, in which case the count must exactly match the number of extra bytes. An incorrect "Attribute byte count" is the most common cause of read failures, because the reader will skip the number of bytes the file claims are present.
 
-## Known Vendors who Write out of spec STL Files
+## Known Vendors Who Write Out-of-Spec STL Files
 
 - Materialise Magics [https://www.materialise.com/en/industrial/software/magics-data-build-preparation](https://www.materialise.com/en/industrial/software/magics-data-build-preparation)
 
-    The filter looks in the header for "COLOR=" and "MATERIAL=" strings in the header.
+    The filter looks in the header for "COLOR=" and "MATERIAL=" strings.
 
 - Creaform VXelements [https://www.creaform3d.com/en/metrology-solutions/3d-applications-software-platforms](https://www.creaform3d.com/en/metrology-solutions/3d-applications-software-platforms)
-    
+
     The filter looks for "VXelements" in the header.
 
-## Code to convert
+## Code to Convert
 
-If you find yourself in a situation where the STL File is non-conforming and is not made by one of the vendors above, this bit of Python
-code can clean up the file. This makes the absolute assumption that the **ONLY** thing wrong with the STL file is that the trailing UINT16 value for
-each triangle needs to be set to ZERO.
+If you have a non-conforming STL file that was not made by one of the vendors above, the Python snippet below can clean it up. It assumes the **ONLY** problem with the file is that the trailing UINT16 "Attribute byte count" value for each triangle needs to be set to zero.
 
         import struct
 
@@ -48,24 +52,24 @@ each triangle needs to be set to ZERO.
                 # Read and copy header
                 header = input_file.read(80)
                 output_file.write(header)
-                
+
                 # Read number of triangles
                 num_triangles = struct.unpack('<I', input_file.read(4))[0]
                 output_file.write(struct.pack('<I', num_triangles))
-                
+
                 # Define the format for one triangle (50 bytes total)
                 triangle_format = '<12fH'
                 triangle_size = struct.calcsize(triangle_format)
-                
+
                 # Process each triangle
                 for _ in range(num_triangles):
                     # Read triangle data
                     triangle_data = input_file.read(triangle_size)
-                    
+
                     # Unpack and modify the last 2 bytes (attribute byte count)
                     data = list(struct.unpack(triangle_format, triangle_data))
                     data[-1] = 0  # Set the attribute byte count to zero
-                    
+
                     # Repack and write the modified triangle data
                     modified_triangle_data = struct.pack(triangle_format, *data)
                     output_file.write(modified_triangle_data)
@@ -76,8 +80,9 @@ each triangle needs to be set to ZERO.
 
         modify_stl(input_stl_path, output_stl_path)
 
+### Required Input Sources
 
-
+None — this filter reads directly from a binary `.stl` file on disk.
 
 % Auto generated parameter table will be inserted here
 

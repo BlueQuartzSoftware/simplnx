@@ -1,6 +1,6 @@
 # ITK Erode Object Morphology Image Filter
 
-Erosion of an object in an image.
+Shrinks (erodes) a single labeled object in a mask image — a fast single-object variant of binary erosion.
 
 ## Group (Subgroup)
 
@@ -8,20 +8,26 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-Erosion of an image using binary morphology. Pixel values matching the object value are considered the "object" and all other pixels are "background". This is useful in processing mask images containing only one object.
+This filter **erodes one object** in a mask image. Pixels whose value equals the *Object Value* are treated as the object; all other pixels are background. Wherever an object pixel sits at the boundary with background, the **structuring element** (the probe shape swept over the image) is centered on it and the covered neighboring pixels are set to the *Background Value*, shrinking the object inward. It is intended for masks that contain a single object; to erode any of several segment values in a general segmented image, use [ITK Binary Erode Image Filter](ITKBinaryErodeImageFilter.md).
 
-If the pixel covered by the center of the kernel has the pixel value ObjectValue and the pixel is adjacent to a non-object valued pixel, then the kernel is centered on the object-value pixel and neighboring pixels covered by the kernel are assigned the background value. The structuring element is assumed to be composed of binary values (zero or one).* ObjectMorphologyImageFilter , BinaryFunctionErodeImageFilter
+### Parameter Guidance
 
-- BinaryErodeImageFilter
+- **Object Value** — the pixel value of the object to erode. Default *1*.
+- **Background Value** — the value assigned to eroded pixels. Default *0*.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). The object shrinks by this amount.
 
-### Kernel Type
+#### Kernel Type
 
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on a binary/single-object mask image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here
 
@@ -29,7 +35,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

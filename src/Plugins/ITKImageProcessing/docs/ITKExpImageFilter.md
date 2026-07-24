@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The computation is performed using std::exp(x).
+Computes the natural exponential (e raised to the pixel value) of each pixel. Operates on any scalar image.
 
 % Auto generated parameter table will be inserted here
 
@@ -16,7 +16,7 @@ The computation is performed using std::exp(x).
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

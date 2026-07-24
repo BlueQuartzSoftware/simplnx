@@ -26,9 +26,9 @@ Each **Cell** (voxel) in a grain has its own measured orientation. This filter d
 
 This filter only produces valid results for hexagonal phases (6/mmm or 6/m symmetry). In hexagonal materials, the C-axis is unique -- there is only one [001] direction, so crystal symmetry does not create ambiguity.
 
-In cubic materials, the [001], [010], and [100] directions are all crystallographically equivalent. Applying symmetry operators would move the [001] direction to different positions in the sample frame, making a simple average meaningless. For this reason, the filter **silently skips non-hexagonal cells** during accumulation. A **Feature** whose contributing cells are *all* non-hexagonal (or which has no cells assigned to it at all) will have its output set to **NaN**.
+In cubic materials, the [001], [010], and [100] directions are all crystallographically equivalent. Applying symmetry operators would move the [001] direction to different positions in the sample frame, making a simple average meaningless. For this reason, **non-hexagonal phases will have their output values set to NaN**.
 
-The filter will produce an error if no hexagonal phases are present in the data (`-76402`: "No phases that have a crystal symmetry of Hexagonal (6/mmm or 6/m) were found.").
+The filter will produce an error if no hexagonal phases are present in the data.
 
 ### Required Input Sources
 

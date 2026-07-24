@@ -69,6 +69,10 @@ Statistics are computed on the *weighted* values (`kernel_weight * source_value`
 
 Median is not supported because it requires storing every vertex's contribution, which would negate the memory savings of the flat accumulation approach.
 
+### Required Input Sources
+
+- **Vertex Geometry** -- the point cloud whose arrays will be interpolated, produced by a filter that creates a **Vertex Geometry** such as [Extract Vertex Geometry](ExtractVertexGeometryFilter.md) or [Create Geometry](CreateGeometryFilter.md).
+
 ### Mask
 
 An optional boolean or uint8 mask array may be provided. Vertices where the mask value is *false* or *0* are skipped entirely during interpolation – they do not contribute to any voxel's accumulated value or statistics.
@@ -79,7 +83,7 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 
 ### Voxel Index Computation
 
-The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the *Map Point Cloud to Regular Grid* filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
+The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
 
 % Auto generated parameter table will be inserted here
 

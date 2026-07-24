@@ -1,6 +1,6 @@
 # ITK Rescale Intensity Image Filter
 
-Applies a linear transformation to the intensity levels of the input Image .
+Linearly rescales the full intensity range of an image into a chosen output range.
 
 ## Group (Subgroup)
 
@@ -8,15 +8,21 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-RescaleIntensityImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and maximum values that the output image should have.
+This filter applies a linear transform that maps the **full** intensity range of the input image onto a user-specified output range. The smallest input value maps to *Output Minimum*, the largest input value maps to *Output Maximum*, and everything in between scales proportionally. It is the standard way to normalize an image to a fixed range (for example 0-255 for display, or 0-1 for downstream processing).
 
-The following equation gives the mapping of the intensity values
+$$
+\text{output} = (\text{input} - \text{inputMin}) \cdot \frac{\text{OutputMax} - \text{OutputMin}}{\text{inputMax} - \text{inputMin}} + \text{OutputMin}
+$$
 
- \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f]
+The input minimum and maximum are detected automatically, so only the output range is set by the user. To stretch a *chosen* input window rather than the full range (clamping outside it), use [ITK Intensity Windowing Image Filter](ITKIntensityWindowingImageFilter.md).
 
-All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
+### Parameter Guidance
 
-NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter. If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear transformation for the intensity, then please use the ShiftScaleImageFilter .* IntensityWindowingImageFilter
+- **Output Minimum** / **Output Maximum** — the target output range, in **output intensity units** (defaults *0* and *255*).
+
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -24,7 +30,7 @@ NOTE: In this filter the minimum and maximum values of the input image are compu
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

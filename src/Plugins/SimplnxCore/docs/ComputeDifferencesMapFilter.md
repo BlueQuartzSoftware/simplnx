@@ -18,9 +18,13 @@ Note that in the above algorithm, the difference is taken as the *first selected
 
 **WARNING: The resulting difference values *may be negative* if the values of the first array are smaller than those in the second array. Therefore, if the two arrays are *unsigned integers*, it may be possible to underflow the resulting difference map values if the first array is sufficiently smaller than the second array. "Underflow" means that what should be a negative value will end up being a potentially very large value!**
 
-% Auto generated parameter table will be inserted here
+The output Difference Map is created at the user-specified path and inherits the primitive type, component shape, and number of tuples of the two input arrays.
 
-## Example Pipelines
+### Required Input Sources
+
+None -- this filter operates on any two generic **Attribute Arrays** that share the same primitive type, component dimensions, and number of tuples, regardless of how they were produced.
+
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 

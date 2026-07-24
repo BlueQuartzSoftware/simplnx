@@ -8,6 +8,8 @@ Sampling (Resolution)
 
 This **Filter** "samples" a triangulated surface mesh onto a regular grid (Image Geometry) using scanline rasterization. The user can either create a new Image Geometry by specifying dimensions, spacing, and origin, or use an existing Image Geometry. The filter assigns a **Feature Id** (or part number) to each voxel based on which region of the surface mesh the voxel falls within.
 
+The **Origin** and **Spacing** are specified in the same physical length unit as the input **Triangle Geometry** coordinates (e.g., microns, millimeters). **Dimensions** are unitless voxel counts along X, Y, and Z. For an uncertain (noisy) sampling variant, see [Sample Triangle Geometry on Uncertain Regular Grid](UncertainRegularGridSampleSurfaceMeshFilter.md).
+
 ### Use existing geometry
 
 The *Use existing geometry* parameter controls how the target **Image Geometry** is provided:
@@ -78,6 +80,11 @@ The spacing allows you to scale the size of the bounding box, which can be thoug
 The origin can be thought of as moving the camera left and right and up and down. Allowing you to center the focal point in the image or cut out unwanted parts.
 
 All in all, it is best practice to try to fit the bounding box as closely to the actual geometry as possible to ensure you get the most detail out of the used memory.
+
+### Required Input Sources
+
+- **Triangle Geometry** -- the surface mesh to sample, typically read from a CAD mesh via [Read STL File](ReadStlFileFilter.md) or produced by a surface-meshing filter such as [Quick Surface Mesh](QuickSurfaceMeshFilter.md).
+- **Face Labels / Part Numbers** -- a per-face integer array identifying the **Features** (2-component) or part number (1-component) bordering each triangle.
 
 % Auto generated parameter table will be inserted here
 

@@ -1,6 +1,6 @@
 # ITK Median Image Filter
 
-Applies a median filter to an image.
+Replaces each pixel with the median of its neighborhood — removes speckle/salt-and-pepper noise while keeping edges sharp.
 
 ## Group (Subgroup)
 
@@ -8,15 +8,15 @@ ITKSmoothing (Smoothing)
 
 ## Description
 
-Computes an image where a given pixel is the median value of the the pixels in a neighborhood about the corresponding input pixel.
+This filter replaces each pixel with the **median** value of the pixels in a neighborhood around it. The median is a nonlinear statistic that is not pulled toward extreme values, so a median filter removes isolated noise spikes (salt-and-pepper / shot noise) much more cleanly than a mean/Gaussian blur, and it preserves sharp edges better because it does not average across them.
 
-A median filter is one of the family of nonlinear filters. It is used to smooth an image without being biased by outliers or shot noise.
+### Parameter Guidance
 
-This filter requires that the input pixel type provides an operator<() (LessThan Comparable).* Image
+- **Radius** — the neighborhood half-width per axis, **in pixels**. The neighborhood spans `2 × Radius + 1` pixels along each axis (so a radius of *1* gives a 3×3×3 window). Larger radii remove more noise but blur fine detail; typical values are 1-2.
 
-- Neighborhood
-- NeighborhoodOperator
-- NeighborhoodIterator
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -24,7 +24,7 @@ This filter requires that the input pixel type provides an operator<() (LessThan
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

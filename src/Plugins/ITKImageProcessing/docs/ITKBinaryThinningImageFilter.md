@@ -1,6 +1,6 @@
 # ITK Binary Thinning Image Filter
 
-This filter computes one-pixel-wide edges of the input image.
+Reduces the foreground objects of a binary image to a one-pixel-wide skeleton.
 
 ## Group (Subgroup)
 
@@ -8,17 +8,19 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-This class is parameterized over the type of the input image and the type of the output image.
+This filter computes the **skeleton** (medial axis) of the foreground objects in a binary image: it repeatedly removes boundary pixels until each object is reduced to a connected, one-pixel-wide line that still captures the object's overall shape and connectivity. Skeletons are useful for analyzing the topology of elongated structures — measuring branch lengths, counting junctions, or tracing networks of fibers, cracks, or vessels.
 
-The input is assumed to be a binary image. If the foreground pixels of the input image do not have a value of 1, they are rescaled to 1 internally to simplify the computation.
+The input is treated as a binary image; if the foreground pixels are not already valued 1 they are rescaled to 1 internally. In the output, background pixels are 0 and the skeleton pixels are 1.
 
-The filter will produce a skeleton of the object. The output background values are 0, and the foreground values are 1.
+**Caveat:** this is a sequential 2D thinning algorithm (the classic Gonzalez & Woods method). On a 3D volume it operates slice by slice rather than producing a true 3D skeleton, and its run time grows with image size.
 
-This filter is a sequential thinning algorithm and known to be computational time dependable on the image size. The algorithm corresponds with the 2D implementation described in:
+### Required Input Sources
 
-Rafael C. Gonzales and Richard E. Woods. Digital Image Processing. Addison Wesley, 491-494, (1993).
+Operates on a binary image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
-To do: Make this filter ND.* MorphologyImageFilter
+## Reference
+
+Rafael C. Gonzalez and Richard E. Woods. *Digital Image Processing*. Addison Wesley, 491-494 (1993).
 
 % Auto generated parameter table will be inserted here
 
@@ -26,7 +28,7 @@ To do: Make this filter ND.* MorphologyImageFilter
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

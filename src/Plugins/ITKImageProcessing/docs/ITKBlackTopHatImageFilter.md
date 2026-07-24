@@ -1,6 +1,6 @@
 # ITK Black Top Hat Image Filter
 
-Black top hat extracts local minima that are smaller than the structuring element.
+Extracts small dark features by subtracting the original image from its grayscale closing.
 
 ## Group (Subgroup)
 
@@ -8,27 +8,32 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-Black top hat extracts local minima that are smaller than the structuring element. It subtracts the background from the input image. The output of the filter transforms the black valleys into white peaks.
+The **black top-hat** isolates small **dark** features — dark spots and narrow dark valleys smaller than the **structuring element** (the probe shape swept over the image). It is computed as the grayscale **closing** of the image minus the original image, which turns the dark valleys into bright peaks on a flat (near-zero) background. A common use is correcting uneven dark background or extracting small dark details for measurement. The bright-feature counterpart is [ITK White Top Hat Image Filter](ITKWhiteTopHatImageFilter.md).
 
-Top-hats are described in Chapter 4.5 of Pierre Soille's book "Morphological Image Analysis: Principles and Applications", Second Edition, Springer, 2003.
+### Parameter Guidance
 
-### Author
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). It sets the size scale: features smaller than the structuring element are extracted, larger structures are removed.
+- **Safe Border** — when on (default), a temporary border is added during processing to avoid edge artifacts and removed afterward.
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+#### Kernel Type
 
-### Related Filters
-
-![](Images/ITKBlackTopHat_1.png)
-![](Images/ITKBlackTopHat_2.png)
-
-### Kernel Type
-
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on any scalar (grayscale) image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
+
+![Black top-hat example.](Images/ITKBlackTopHat_1.png)
+![Black top-hat example.](Images/ITKBlackTopHat_2.png)
+
+## Reference
+
+Pierre Soille, *Morphological Image Analysis: Principles and Applications*, Second Edition, Springer, 2003 (Chapter 4.5).
 
 % Auto generated parameter table will be inserted here
 
@@ -36,7 +41,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

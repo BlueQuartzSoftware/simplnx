@@ -6,9 +6,11 @@ DREAM3D Review (Clustering)
 
 ## Description
 
-***Warning:* The randomnes in this filter is not currently consistent between operating systems even if the same seed is used. Specifically between Unix and Windows. This does not affect the results, but the IDs will not correspond. For example if the Cluster Identifier at index one on Linux is 1 it could be 2 on Windows, the overarching clusters will be the same, but their IDs will be different.**
+***Warning:* The randomness in this filter is not currently consistent between operating systems even if the same seed is used. Specifically between Unix and Windows. This does not affect the results, but the IDs will not correspond. For example if the Cluster Identifier at index one on Linux is 1 it could be 2 on Windows, the overarching clusters will be the same, but their IDs will be different.**
 
-This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns to each point of the **Attribute Array** a *cluster Id*.  The user must specify the number of clusters in which to partition the array.  Specifically, a k means partitioning is a *Voronoi tesselation*; an optimal solution to the k means problem is such that each point in the data set is associated with the cluster that has the closest mean.  This partitioning is the one that minimizes the within cluster variance (i.e., minimizes the within cluster sum of squares differences).  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
+This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns each point (each tuple) of the **Attribute Array** to a *cluster Id*.  A **cluster** is a group of data points that are more similar to each other than to points in other groups.  The user must specify the number of clusters (a dimensionless count, *k*) in which to partition the array.
+
+Each cluster is summarized by its **centroid**, which is the arithmetic mean (the average position) of all the points assigned to that cluster.  A k means partitioning is a *Voronoi tessellation*: every point is assigned to the cluster whose centroid is closest to it, so the data space is carved into regions where each region contains all the points nearer to one centroid than to any other.  An optimal solution to the k means problem is one in which each point is associated with the cluster that has the closest mean.  This partitioning minimizes the **within-cluster variance**, that is, the sum over all clusters of the squared distances from each point to its cluster centroid; minimizing it makes the points within each cluster as tightly grouped as possible.  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
 
 ### Distance Metric
 
@@ -27,13 +29,13 @@ Optimal solutions to the k means partitioning problem are computationally diffic
 2. Until convergence, repeat the following steps:
 
 - Associate each point with the closest mean, where "closest" is determined by the selected distance metric
-- Recompute the means based on the new tesselation
+- Recompute the means based on the new tessellation
 
 Convergence is defined as when the computed means change very little (precisely, when the differences are within machine epsilon).  Since Lloyd's algorithm is iterative, it only serves as an approximation, and may result in different classifications on each execution with the same input data.  The user may opt to use a mask to ignore certain points; where the mask is *false*, the points will be placed in cluster 0.
 
 Note: In SIMPLNX there is no explicit positional subtyping for Attribute Matrix, so the next section should be treated as a high-level understanding of what is being created. Naming the Attribute Matrix to include the type listed on the respective line in the 'Attribute Matrix Created' column is encouraged to help with readability and comprehension.
 
-A clustering algorithm can be considered a kind of segmentation; this implementation of k means does not rely on the **Geometry** on which the data lie, only the *topology* of the space that the array itself forms.  Therefore, this **Filter** has the effect of creating either **Features** or **Ensembles** depending on the kind of array passed to it for clustering.  If an **Element** array (e.g., voxel-level **Cell** data) is passed to the **Filter**, then **Features** are created (in the previous example, a **Cell Feature Attribute Matrix** will be created).  If a **Feature** array is passed to the **Filter**, then an Ensemble Attribute Matrix** is created.  The following table shows what type of **Attribute Matrix** is created based on what sort of array is used for clustering:
+A clustering algorithm can be considered a kind of segmentation; this implementation of k means does not rely on the **Geometry** on which the data lie, only on the arrangement of the values within the array itself (the *topology* of the space that the array forms).  Therefore, this **Filter** has the effect of creating either **Features** or **Ensembles** depending on the kind of array passed to it for clustering.  If an **Element** array (e.g., voxel-level **Cell** data) is passed to the **Filter**, then **Features** are created (in the previous example, a **Cell Feature Attribute Matrix** will be created).  If a **Feature** array is passed to the **Filter**, then an **Ensemble Attribute Matrix** is created.  The following table shows what type of **Attribute Matrix** is created based on what sort of array is used for clustering:
 
 | Attribute Matrix Source             | Attribute Matrix Created |
 |------------------|--------------------|
@@ -51,7 +53,17 @@ A clustering algorithm can be considered a kind of segmentation; this implementa
 | Face Ensemble | Face Ensemble |
 | Cell Ensemble | Cell Ensemble|
 
-This **Filter** will store the means for the final clusters within the created **Attribute Matrix**.
+The filter creates a *cluster Ids* array (one dimensionless integer cluster label per input point) alongside the input array, and stores the final cluster means (one mean vector per cluster, in the units of the input array) within the created **Attribute Matrix**.
+
+### Related Filters
+
+- [Compute K Medoids](ComputeKMedoidsFilter.md) uses representative data points (medoids) instead of means as the cluster centers.
+- [DBSCAN](DBSCANFilter.md) is a density-based clustering algorithm that does not require the number of clusters to be specified in advance.
+- [Silhouette](SilhouetteFilter.md) evaluates the quality of a clustering produced by this filter.
+
+### Required Input Sources
+
+- **Clustered Attribute Array** -- any **Attribute Array** (cell-level, feature-level, or generic) whose tuples are to be partitioned into clusters. This is typically an output of an earlier computation or import step.
 
 % Auto generated parameter table will be inserted here
 
@@ -63,7 +75,7 @@ This **Filter** will store the means for the final clusters within the created *
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

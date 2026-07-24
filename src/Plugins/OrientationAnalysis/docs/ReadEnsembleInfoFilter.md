@@ -6,7 +6,13 @@ IO (Input)
 
 ## Description
 
-This **Filter** reads in information about the crystal structure and phase types of all the **Features** that are contained in a **Cell** based volume. These values are needed to allow the calculation of statistics on the volume, if they have not already been provided by some other means.  The format of the input file is a simple ASCII text file with the extension .ini or .txt. The first group in the file is the name [EnsembleInfo] in square brackets with the key Number_Phases=*number of phases* that are contained in the volume. Subsequent groups in the file list the **Phase Number**, **Crystal Structure** and **Phase Type**. The proper values for the crystal structure and phase type come from internal constants within DREAM3D-NX and are listed here:
+An **Ensemble** in DREAM3D-NX is a *phase*: a distinct material or crystal type present in the sample. This filter reads a small ASCII text file that describes each phase and creates the per-phase metadata that many statistics filters require. Specifically, for every phase it records a **Crystal Structure** (the crystal symmetry, which determines how orientations and misorientations are computed) and a **Phase Type** (the role the phase plays, such as a primary matrix phase or a precipitate phase).
+
+The filter does not create a new geometry. The *Data Container* parameter selects an existing geometry or data group, and the filter adds a new **Ensemble Attribute Matrix** (per-phase data) containing the **Crystal Structures** and **Phase Types** arrays into it. Downstream statistics and synthetic-structure filters read these arrays to know how to treat each phase. This information is needed to compute statistics on the volume when it has not already been provided by some other means (for example, by an EBSD reader).
+
+The input file is a simple ASCII text file with either a `.ini` or `.txt` extension; both use the same format. The first group is named `[EnsembleInfo]` in square brackets with the key `Number_Phases=`*number of phases* contained in the volume. Subsequent groups list the **Phase Number**, **Crystal Structure** and **Phase Type**. The valid string values for the crystal structure and phase type come from internal constants within DREAM3D-NX and are listed below. These tables describe the *content of the input file*, not the filter's parameters.
+
+A **Crystal Structure** value names the Laue (point-group) symmetry of the phase. A **Phase Type** value names the role the phase plays in subsequent analysis.
 
 **Crystal Structure**
 
@@ -52,9 +58,11 @@ For example, if you have a structure that has 2 phases that consist of a Cubic P
     CrystalStructure=Hexagonal_High
     PhaseType=MatrixPhase
 
-% Auto generated parameter table will be inserted here
+### Required Input Sources
 
-## Example Pipelines
+None — this filter reads directly from a `.ini` or `.txt` file on disk. It does require an existing **Data Container** (a geometry or data group) into which the created **Ensemble Attribute Matrix** is placed.
+
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 

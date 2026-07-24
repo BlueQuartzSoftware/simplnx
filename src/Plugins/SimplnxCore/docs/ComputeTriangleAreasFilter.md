@@ -6,11 +6,25 @@ Surface Meshing (Misc)
 
 ## Description
 
-This **Filter** computes the area of each **Triangle** in a **Triangle Geometry** by calculating the following:
+This filter computes the surface area of every **Triangle** in a **Triangle Geometry** (a surface mesh built from triangles) and stores the result as a per-triangle **Face Data** array.
 
-    1/2*|AB||AC|sin(O)
+### What This Measures and Why
 
-where *O* is the angle between |AB| and |AC|.
+Each triangle is defined by three corner **vertices** (nodes). The filter computes the area enclosed by those three vertices using
+
+    Area = 1/2 * |AB| * |AC| * sin(O)
+
+where *AB* and *AC* are two edge vectors of the triangle and *O* is the angle between them.
+
+Per-triangle area is a basic mesh-quality and statistics input. It is used to weight other per-triangle quantities (for example, area-weighting triangle normals or curvature when computing feature-level averages) so that large triangles contribute proportionally more than small ones, and it can be summed to report the total surface area of a **Feature** or boundary.
+
+### Units
+
+The output area is reported in **squared geometry length units** (length^2). The value uses whatever length unit the **Triangle Geometry** vertices are stored in (for example, micrometers^2 if the mesh coordinates are in micrometers).
+
+### Required Input Sources
+
+- **Triangle Geometry** -- a surface mesh, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
 
 % Auto generated parameter table will be inserted here
 

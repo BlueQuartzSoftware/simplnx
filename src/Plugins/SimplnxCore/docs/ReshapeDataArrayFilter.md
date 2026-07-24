@@ -6,17 +6,33 @@ Core (Generation)
 
 ## Description
 
-This **Filter** is used to modify the tuple shape of Data Arrays, Neighbor Lists, and String Arrays within a data structure.  It validates the new tuple dimensions to ensure they are positive and differ from the current shape, preventing unnecessary or invalid reshapes.
+This **Filter** updates the **tuple dimensions** (the *shape* metadata) of an existing **Data Array**, **Neighbor List**, or **String Array** in place. The total number of tuples is unchanged; only how the shape is described is changed.
 
-**THIS FILTER DOES NOT MOVE ANY THE VALUES IN MEMORY. IT SIMPLY UPDATES THE TUPLE DIMENSIONS. This means that if the data does not
-have the proper stride for the new dimensions this could result in incorrect results.**
+## ⚠ CRITICAL WARNING: Values Are Not Reordered
 
-For example if a data set is read in from an HDF5 file with a tuple dimension of 3 x 45 this means that there are 45 columns
-and 3 rows. If this data is supposed to be interpreted as 3D points, using this data within DREAM3D-NX would not
-work because DREAM3D-NX is "C" ordered and the dimensions should be 3 columns x 45 rows. Using this filter will 
-**NOT** result the correct ordering of the data because the filter will not move any data in memory.
+**This filter does NOT move any data in memory.** It only updates the tuple-dimensions metadata. If the data's existing memory layout does not match the new shape's expected layout, **the filter will silently produce incorrectly-shaped data** that downstream filters will misinterpret.
 
-**NOTE:** If the input array is a Neighbor List or String Array, the filter will throw a warning if the new tuple dimensions are multi-dimensional.  This is because these array types do not support multi-dimensional tuple dimensions and the filter will default to reshaping the data to an equivalent 1-dimensional number of tuples.
+### When This Is Safe vs Dangerous
+
+DREAM3DNX uses **C-order (row-major)** layout: the last dimension varies fastest in memory. So `(3, 45)` is stored as 3 rows × 45 columns -- 3 contiguous chunks of 45 values each.
+
+- **Safe**: changing `(135)` → `(3, 45)` simply tells the system "treat this 135-tuple array as a 3×45 array". The bytes in memory are the same; only the shape interpretation changes.
+- **Safe**: changing `(3, 45)` → `(135)` flattens to 1D. Memory is identical.
+- **DANGEROUS**: reading an array from an HDF5 file that was stored 3 rows × 45 columns and trying to use it as 3-component 45-vertex data. In DREAM3DNX, 3-vertex data is stored as `(N, 3)` with 3 contiguous values per tuple. Calling Reshape from `(3, 45)` to `(45, 3)` **does not transpose** -- it just relabels the shape, and the bytes are now in the wrong order for the new shape.
+
+To actually transpose or reorder data, use external preprocessing (e.g., reshape the HDF5 dataset before reading) or use an array-arithmetic filter to manually rebuild the array with the desired ordering.
+
+### Validation
+
+The filter validates that the new tuple dimensions are positive and that the total tuple count matches the array's existing total. A shape change that would alter the total tuple count fails preflight.
+
+### Neighbor Lists and String Arrays
+
+Neighbor Lists and String Arrays do not support multi-dimensional tuple shapes. If you specify a multi-dimensional new shape for one of these array types, the filter emits a warning and falls back to an equivalent 1-D tuple count.
+
+### Required Input Sources
+
+- **Array to Reshape** -- any **Data Array**, **Neighbor List**, or **String Array** in the Data Structure.
 
 % Auto generated parameter table will be inserted here
 

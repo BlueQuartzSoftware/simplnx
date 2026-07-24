@@ -18,13 +18,17 @@ This **Filter** will produce three new scalar unsigned 8-bit arrays:
 
 The user must specify a postfix string to add to the newly created arrays. For example, if the original multicomponent **Attribute Array** is named "Foo" and the postfix is set to "Component", this **Filter** will produce three new arrays named "FooComponent0", "FooComponent1", and "FooComponent2".  The numbering will always be present regardless of how the postfix is set.  
 
-There is an alternative option which allows the user to select a subset of components to extract instead of extracting all the components by entering the components to be extracted.  The components should be specified starting with the first componet as 0.  So if the original array has 3 components and the user wanted the first and second components, the unput to the component table should be 0 and 1 respectively.
+An alternative *Select Components* option lets the user extract a subset of components rather than all of them. Components are **0-based** -- for a 3-component array, entering 0 and 1 extracts only the first two components.
 
-This **Filter** is the opposite operation of the Combine Attribute Arrays **Filter**, and the generalized version of the Extract Component as Attribute Array **Filter**.
+This **Filter** is the inverse of [Combine Attribute Arrays](CombineAttributeArraysFilter.md), and a generalized version of [Extract/Remove Components](ExtractComponentAsArrayFilter.md).
 
 **Looking to split by *tuples* instead?**  
 
 See the *[Split Data Array (By Tuple)](SplitDataArrayByTupleFilter.md)* filter that separates a data array into several smaller data arrays based on the tuple layout.
+
+### Required Input Sources
+
+- **Multi-Component Input Array** -- any multi-component **Attribute Array**.
 
 % Auto generated parameter table will be inserted here
 

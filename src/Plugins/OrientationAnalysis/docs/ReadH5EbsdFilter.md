@@ -6,7 +6,11 @@ IO (Input)
 
 ## Description
 
-This **Filter** reads from the .h5ebsd file that was generated with the *Import Orientation File(s) to H5EBSD* **Filter**.
+This filter reads orientation data from a `.h5ebsd` file into a new **Image Geometry**. A `.h5ebsd` file is an HDF5 container that bundles one or more EBSD scan slices (along with their metadata) into a single file, which makes reading a multi-slice 3D volume fast and convenient.
+
+### Required Input Sources
+
+The `.h5ebsd` file read by this filter is not a manufacturer's native export. It must first be produced from one or more raw EBSD scan files (such as `.ang` or `.ctf`) using the [Import Orientation File(s) to H5EBSD](EbsdToH5EbsdFilter.md) filter.
 
 ![Read H5Ebsd File User Interface](Images/ReadH5Ebsd_UI.png)
 
@@ -21,11 +25,11 @@ The **user** is solely responsible for knowing any sample reference frame transf
 
 If the user does not want the **Read H5Ebsd** filter to perform any transformations then the checkbox can be unchecked and the user can manually perform any desired transformations by inserting the appropriate filters into the pipeline. The suggested filters are:
 
-+ {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
-+ {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
-+ {ref}`Convert Angles to Degrees or Radians <SimplnxCore/ChangeAngleRepresentationFilter:Description>`
++ [Rotate Euler Reference Frame](RotateEulerRefFrameFilter.md)
++ [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md)
++ [Convert Angles to Degrees or Radians](../SimplnxCore/ChangeAngleRepresentationFilter.md)
 
-An excellant reference for this is the following PDF file:
+An excellent reference for this is the following PDF file:
 [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
 
 | Incorrect | Correct |
@@ -34,18 +38,22 @@ An excellant reference for this is the following PDF file:
 | Euler angles were treated as Radians | Euler angles were converted from Degrees to Radians |
 |"Interstitial Free (IF) Steel courtesy of [1]"| |
 
-### The Axis Alignment Issue for Hexagonal Symmetry [2]
+### The Axis Alignment Issue for Hexagonal Symmetry (Advanced) [2]
 
 + The issue with hexagonal materials is the alignment of the Cartesian coordinate system used for calculations with the crystal coordinate system (the Bravais lattice).
 + In one convention (e.g. EDAX.TSL), the x-axis, i.e. [1,0,0], is aligned with the crystal a1 axis, i.e. the [2,-1,-1,0] direction. In this case, the y-axis is aligned with the [0,1,-1,0] direction. (Green Axis in Figure 1)
 + In the other convention, (e.g. Oxford Instr, Univ. Metz software), the x-axis, i.e. [1,0,0], is aligned with the crystal [1,0,-1,0] direction. In this case, the y-axis is aligned with the [-1,2,-1,0] direction. (Red Axis in Figure 1)
-+ This is important because texture analysis can lead to an ambiguity as to the alignment of [2,-1,-1,0] versus [1,0,-1,0], with apparent **30** shifts in the data.
++ This is important because texture analysis can lead to an ambiguity as to the alignment of [2,-1,-1,0] versus [1,0,-1,0], with apparent **30 degree** shifts in the data.
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ **The result of this is that the filter will *AUTOMATICALLY* add 30   to phi2 when reading Oxford Instr (.ctf) files or .h5ebsd files denoted with the HKL manufacturer ID. There is no way to turn off this behavior.**
++ **The result of this is that the filter will *AUTOMATICALLY* add 30 degrees to phi2 when reading Oxford Instr (.ctf) files or .h5ebsd files denoted with the HKL manufacturer ID. There is no way to turn off this behavior.**
 
 ![Figure 1 showing TSL \& Oxford Instr. conventions.](Images/Hexagonal_Axis_Alignment.png)
+
+### Downstream Processing
+
+Once the reference frames are correct, the imported Euler angles (three angles, in the Bunge Z-X-Z convention, describing each crystal's orientation relative to the sample) are typically converted to other orientation representations (quaternions, and so on) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
 
 % Auto generated parameter table will be inserted here
 

@@ -6,33 +6,48 @@ Statistics (Morphological)
 
 ## Description
 
-This **Filter** calculates the second-order moments of each **Feature** in order to determine the *principal axis lengths, principal axis directions, aspect ratios and moment invariant Omega3s*.  The *principal axis lengths* are those of a "best-fit" ellipsoid.  The algorithm for determining the moments and these values is as follows:
+This **Filter** characterizes the 3D shape of each **Feature** (grain or particle) by fitting a best-fit ellipsoid to its voxels. The result is a set of shape descriptors including axis lengths, aspect ratios, axis orientations, and a shape invariant (Omega3).
 
-1. For each **Cell**, determine the x, y and z distance to the centroid of the **Feature** that owns the **Cell**
-2. For each **Cell**, calculate Ixx, Iyy, Izz, Ixy, Ixz and Iyz using the x, y and z distances determined in step 1.
-3. Sum the individual Ixx, Iyy, Izz, Ixy, Ixz and Iyz values for all **Cells** belonging to the same **Feature**
-4. Find the *eigenvalues* and *eigenvectors* of the *3x3* symmetric matrix defined by the *6* values calculated in step 3 for each **Feature**
-5. Use the relationship of *principal moments* to the *principal axis lengths* for an ellipsoid, which can be found in [4], to determine the *Semi-Axis Lengths*
-6. Calculate the *Aspect Ratios* from the *Semi-Axis Lengths* found in step 5.
-7. Determine the Euler angles required to represent the *principal axis directions* in the *sample reference frame* and store them as the **Feature**'s *Axis Euler Angles*.
-8. Calculate the moment variant Omega3 as definied in [2] and is discussed further in [1] and [3]
+### What This Filter Produces
+
+- **Semi-Axis Lengths** -- The half-lengths of the three principal axes of the best-fit ellipsoid (a &ge; b &ge; c). These describe the size and elongation of the grain.
+- **Aspect Ratios** -- The ratios b/a and c/a, which describe the grain's shape independent of its size. An equiaxed (roughly spherical) grain has aspect ratios near 1.0; an elongated grain has lower values.
+- **Axis Euler Angles** -- The orientation of the ellipsoid's principal axes in the sample reference frame, stored as Euler angles. These describe which direction the grain is elongated.
+- **Omega3** -- A dimensionless shape invariant derived from the second-order moments [2]. Omega3 is 1.0 for a perfect sphere and decreases for shapes that deviate from spherical. It provides a single-number summary of how "round" a grain is, independent of its size or orientation.
+
+### How This Filter Works
+
+1. For each **Cell**, compute the x, y, and z distances from the cell center to the centroid of its parent **Feature**
+2. Accumulate the second-order moment terms (Ixx, Iyy, Izz, Ixy, Ixz, Iyz) for all **Cells** in each **Feature**
+3. Solve for the eigenvalues and eigenvectors of the resulting 3x3 moment tensor for each **Feature**
+4. Convert eigenvalues to ellipsoid semi-axis lengths using the relationship between principal moments and axis lengths [4]
+5. Compute aspect ratios, axis orientation angles, and the Omega3 shape invariant
+
+### Note
+
+For shape analysis on triangle geometry meshes rather than voxelized image geometry, see the [Compute Feature Shapes (Triangle Geometry)](ComputeShapesTriangleGeomFilter.md) filter.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](../SimplnxCore/ScalarSegmentFeaturesFilter.md).
+- **Feature Centroids** -- produced by [Compute Feature Centroids](../SimplnxCore/ComputeFeatureCentroidsFilter.md).
 
 % Auto generated parameter table will be inserted here
 
-## References ##
+## References
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR FA9550-07-1-0179 Final Report, 20 Dec 2010.
 
-[2] On the use of moment invariants for the automated classifcation of 3-D particle shapes, J. MacSleyne, J.P. Simmons and M. De Graef, Modeling and Simulations in Materials Science and Engineering, 16, 045008 (2008).
+[2] J. MacSleyne, J.P. Simmons, and M. De Graef. On the use of moment invariants for the automated classification of 3-D particle shapes. *Modeling and Simulations in Materials Science and Engineering*, 16, 045008 (2008).
 
-[3] n-Dimensional Moment Invariants and Conceptual Mathematical Theory of Recognition n-Dimensional Solids, Alexander G. Mamistvalov, IEEE TRANSACTIONS ON PATTERN ANALYSIS AND MACHINE INTELLIGENCE, VOL. 20, NO. 8, AUGUST 1998, p. 819-831.
+[3] A.G. Mamistvalov. n-Dimensional Moment Invariants and Conceptual Mathematical Theory of Recognition n-Dimensional Solids. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 20(8), 819-831 (1998).
 
-[4] M. Groeber, M. Uchic, D. Dimiduk, and S. Ghosh.    A Framework for Automated Analysis and Simulation of 3D Polycrystalline Microstructures, Part 1: Statistical Characterization    Acta Materialia, 56 (2008), 1257-1273.
+[4] M. Groeber, M. Uchic, D. Dimiduk, and S. Ghosh. A Framework for Automated Analysis and Simulation of 3D Polycrystalline Microstructures, Part 1: Statistical Characterization. *Acta Materialia*, 56, 1257-1273 (2008).
 
 ## Example Pipelines
 
-+ (03) Small IN100 Morphological Statistics
-+ (06) SmallIN100 Synthetic
++ `(03) Small IN100 Morphological Statistics`
++ `(06) SmallIN100 Synthetic`
 
 ## License & Copyright
 

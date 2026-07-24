@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 430" width="440" height="430" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <filter id="sh" x="-2%" y="-2%" width="104%" height="106%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- Card -->
+  <rect width="440" height="430" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="220" y="32" text-anchor="middle" fill="#2C3E50" font-size="17" font-weight="700">2D View: Radius (1, 2, 0)</text>
+  <text x="220" y="54" text-anchor="middle" fill="#5D6D7E" font-size="13">3 × 5 kernel  =  <tspan font-weight="600">15 cells</tspan> examined per voxel</text>
+
+  <!-- 7x7 grid, 3 wide x 5 tall kernel -->
+  <!-- X radius=1: cols 2,3,4   Y radius=2: rows 1,2,3,4,5 -->
+  <g transform="translate(68, 80)">
+    <!-- Row 0: all outside -->
+    <rect x="0"   y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="132" y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="176" y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="220" y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="0" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <!-- Row 1: kernel cols 2,3,4 -->
+    <rect x="0"   y="44" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="44" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="44" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="132" y="44" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="176" y="44" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="220" y="44" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="44" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <!-- Row 2 -->
+    <rect x="0"   y="88" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="88" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="88" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="132" y="88" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="176" y="88" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="220" y="88" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="88" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <!-- Row 3: center row -->
+    <rect x="0"   y="132" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="132" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="132" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="132" y="132" width="40" height="40" rx="5" fill="#2874A6" stroke="#1a5276" stroke-width="2.5" filter="url(#sh)"/>
+    <rect x="176" y="132" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="220" y="132" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="132" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <text x="152" y="157" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">C</text>
+    <!-- Row 4 -->
+    <rect x="0"   y="176" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="176" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="176" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="132" y="176" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="176" y="176" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="220" y="176" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="176" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <!-- Row 5 -->
+    <rect x="0"   y="220" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="220" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="220" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="132" y="220" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="176" y="220" width="40" height="40" rx="5" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#sh)"/>
+    <rect x="220" y="220" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="220" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <!-- Row 6: all outside -->
+    <rect x="0"   y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="44"  y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="88"  y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="132" y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="176" y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="220" y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <rect x="264" y="264" width="40" height="40" rx="5" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+
+    <!-- Kernel dashed outline (purple annotation) -->
+    <rect x="85" y="41" width="134" height="222" rx="4" fill="none" stroke="#8E44AD" stroke-width="2.5" stroke-dasharray="6,3"/>
+
+    <!-- Axis labels -->
+    <text x="152" y="-8" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600">X (R=1)</text>
+    <text x="-18" y="157" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600" transform="rotate(-90,-18,157)">Y (R=2)</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(60, 400)">
+    <rect x="0" y="0" width="14" height="14" rx="3" fill="#2874A6" stroke="#1a5276" stroke-width="1"/>
+    <text x="20" y="12" fill="#2c3e50" font-size="11">Center (C)</text>
+    <rect x="120" y="0" width="14" height="14" rx="3" fill="#AED6F1" stroke="#2874A6" stroke-width="1"/>
+    <text x="140" y="12" fill="#2c3e50" font-size="11">Kernel neighbor</text>
+    <rect x="270" y="0" width="14" height="14" rx="3" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <text x="290" y="12" fill="#2c3e50" font-size="11">Outside kernel</text>
+  </g>
+</svg>

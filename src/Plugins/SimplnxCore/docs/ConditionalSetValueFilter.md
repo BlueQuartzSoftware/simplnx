@@ -6,23 +6,42 @@ Core (Misc)
 
 ## Description
 
-This **Filter** replaces values in a user specified **Attribute Array** with a user specified value a second boolean **Attribute Array** specifies, but only when **Use Conditional Mask** is *true*. For example, if the user entered a *Replace Value* of *5.5*, then for every occurence of *true* in the conditional boolean array, the selected **Attribute Array** would be changed to 5.5. If **Use Conditional Mask** is *false*, then **Value to Replace** will be searched for in the provided **Attribute Array** and all instances will be replaced. Below are the ranges for the values that can be entered for the different primitive types of arrays (for user reference). The selected **Attribute Array** must be a scalar array.
+This **Filter** replaces selected values in a scalar **Attribute Array** with a user-specified value. The filter operates in one of two modes selected by the *Use Conditional Mask* parameter.
 
-### Primitive Data Types
+### Mode 1 -- Conditional Mask (Use Conditional Mask = ON)
 
-| Type             | Size |        Range       |
-|------------------|------|--------------------|
-| Signed Integer | 8 bit |-128 to 127|
-| Unsigned Integer | 8 bit |0 to 255|
-| Signed Integer | 16 bit |-32,768 to 32,767|
-| Unsigned Integer | 16 bit |0 to 65,535|
-| Signed Integer | 32 bit |-2,147,483,648 to 2,147,483,647|
-| Unsigned Integer | 32 bit |0 to 4,294,967,295|
-| Signed Integer | 64 bit |   9,223,372,036,854,775,808 to 9,223,372,036,854,775,807|
-| Unsigned Integer | 64 bit |0 to 18,446,744,073,709,551,615|
-| Float | 32 bit | -3.4e+38 to -1.1e-38, 0.0, 1.1e-38 to 3.4e+38 (7 digits)|
-| Double | 64 bit | -1.7e+308 to -2.2e-308, 0.0, 2.2e-308 to 1.7e+308 (15 digits)|
-| Boolean | 8 bit |0 = false and any other value will be forced to 1 = true|
+A second boolean array (the *Conditional Mask*) of the same length picks which tuples to overwrite. Every tuple where the mask is *true* has its scalar value set to *Replace Value*; tuples where the mask is *false* are unchanged.
+
+Typical use case: replace cell values flagged by an upstream threshold (e.g., set all "bad" cells to 0).
+
+### Mode 2 -- Value Match (Use Conditional Mask = OFF)
+
+Every occurrence of *Value to Replace* in the target array is replaced with *Replace Value*. The Conditional Mask parameter is ignored.
+
+Typical use case: remap a specific sentinel value (e.g., turn every -1 into 0).
+
+### Numeric Type Compatibility
+
+The target array must be a **scalar** (single-component) array. *Replace Value* (and *Value to Replace* in Mode 2) are reinterpreted as the array's data type. The valid range for each primitive type:
+
+| Type | Size | Range |
+|------|------|-------|
+| Signed Integer | 8 bit | -128 to 127 |
+| Unsigned Integer | 8 bit | 0 to 255 |
+| Signed Integer | 16 bit | -32,768 to 32,767 |
+| Unsigned Integer | 16 bit | 0 to 65,535 |
+| Signed Integer | 32 bit | -2,147,483,648 to 2,147,483,647 |
+| Unsigned Integer | 32 bit | 0 to 4,294,967,295 |
+| Signed Integer | 64 bit | -9.2e18 to 9.2e18 |
+| Unsigned Integer | 64 bit | 0 to 1.8e19 |
+| Float | 32 bit | ±1.1e-38 to ±3.4e+38 (7 digits) |
+| Double | 64 bit | ±2.2e-308 to ±1.7e+308 (15 digits) |
+| Boolean | 8 bit | 0 = false, non-zero = true |
+
+### Required Input Sources
+
+- **Target Array** -- the scalar cell-level (or other tuple-level) array whose values will be overwritten.
+- **Conditional Mask** (only when *Use Conditional Mask* is enabled) -- a boolean array with the same number of tuples; typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here
 

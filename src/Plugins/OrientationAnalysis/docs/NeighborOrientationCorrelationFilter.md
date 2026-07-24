@@ -22,7 +22,7 @@ Neighbors are defined as the "nearest neighbors" which share a "face". For 3D st
 | 1 | (13.0, 0.0, 0.0) CI=0.2   | (0.0, 0.0, 0.0) CI=0.05 | (12.0, 0.0, 0.0) CI=0.2 |
 | 2 |   | (15.0, 0.0, 0.0) CI=0.2 |   |
 
-Schematic layout of the neighboring cells. Only the In-Plane neighbors are shown.
+Cell (1,1) has CI = 0.05, which is below a 0.1 minimum, so it is flagged. Its 4 in-plane neighbors all have orientations within 5 degrees of each other (Euler angles around (12-15, 0, 0)) but more than 5 degrees from (1,1)'s orientation (0, 0, 0). At *Cleanup Level* = 4, the four neighbors agree, so (1,1)'s attributes are replaced with one of them.
 
 In this example, cell (1,1) has a confidence index < 0.1. Its four neighbors are compared pairwise with each other: (13.0), (14.0), (12.0) and (15.0) are all within a few degrees of each other, so every neighbor participates in several similar pairs. The central cell (1,1) has all of its attributes replaced with those of the neighbor holding the highest similar-pair count. Note that the central cell's own orientation and phase play no role in choosing the replacement — only the mutual similarity of its neighbors matters.
 
@@ -31,13 +31,13 @@ In this example, cell (1,1) has a confidence index < 0.1. Its four neighbors are
 |    Example Input/Output Images |
 |--------------------------------|
 | ![](Images/BadDataNeighborOrientationCheckFilter_2.png) |
-| The Small IN100 data just after some intial cleanup filters have been used. |
+| The Small IN100 data just after some initial cleanup filters have been used. |
 | ![](Images/NeighborOrientationCorrelationFilter_1.png) |
-| The Small IN100 data just after running this filter with a *Misorientation Tolerance* of 5 degrees,  and a *Cleanup Level* of 2 and a minimum *Confidence Index* of 0.2 |
+| The Small IN100 data after running this filter with *Misorientation Tolerance* = 5°, *Cleanup Level* = 2, and *Minimum Confidence Index* = 0.2. |
 
-These before and after images show how this filter can be used to "fill in" data that was deemed non-indexed (in EBSD terms). The user should be careful with this filter as it is meant to clean up small sets of voxels and not flood fill an entire volume of voxels.
+These before-and-after images show how this filter can fill in non-indexed EBSD cells. Use it for small isolated bad regions, not for flood-filling entire low-confidence areas.
 
-### Warning - Cell Level Data Modification
+### Warning - Cell-Level Data Modification
 
 This filter will copy all attribute data from neighboring cells into the target cell if the criteria is met. Arrays listed in *Attribute Arrays to Ignore* are excluded from the copy.
 

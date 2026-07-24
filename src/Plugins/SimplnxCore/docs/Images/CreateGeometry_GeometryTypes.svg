@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="900" height="560" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <rect width="900" height="560" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="450" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">The eight geometry types</text>
+  <text x="450" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">Create Geometry builds each type from the data that defines it</text>
+
+  <!-- ============ P1 Image ============ -->
+  <g transform="translate(18, 66)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <g stroke="#2874A6" fill="#AED6F1" stroke-width="1.5">
+      <rect x="66" y="34" width="24" height="24"/><rect x="90" y="34" width="24" height="24"/><rect x="114" y="34" width="24" height="24"/>
+      <rect x="66" y="58" width="24" height="24"/><rect x="90" y="58" width="24" height="24"/><rect x="114" y="58" width="24" height="24"/>
+      <rect x="66" y="82" width="24" height="24"/><rect x="90" y="82" width="24" height="24"/><rect x="114" y="82" width="24" height="24"/>
+    </g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Image</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">origin + spacing + dimensions</text>
+  </g>
+
+  <!-- ============ P2 Rectilinear Grid ============ -->
+  <g transform="translate(238, 66)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <g stroke="#2874A6" fill="#AED6F1" stroke-width="1.5">
+      <rect x="60" y="34" width="18" height="16"/><rect x="78" y="34" width="34" height="16"/><rect x="112" y="34" width="26" height="16"/>
+      <rect x="60" y="50" width="18" height="32"/><rect x="78" y="50" width="34" height="32"/><rect x="112" y="50" width="26" height="32"/>
+      <rect x="60" y="82" width="18" height="24"/><rect x="78" y="82" width="34" height="24"/><rect x="112" y="82" width="26" height="24"/>
+    </g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Rectilinear Grid</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">X / Y / Z bounds arrays</text>
+  </g>
+
+  <!-- ============ P3 Vertex ============ -->
+  <g transform="translate(458, 66)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <g fill="#2874A6">
+      <circle cx="70" cy="46" r="4"/><circle cx="104" cy="36" r="4"/><circle cx="138" cy="54" r="4"/>
+      <circle cx="66" cy="86" r="4"/><circle cx="100" cy="78" r="4"/><circle cx="136" cy="96" r="4"/>
+      <circle cx="92" cy="112" r="4"/>
+    </g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Vertex</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertex list (points)</text>
+  </g>
+
+  <!-- ============ P4 Edge ============ -->
+  <g transform="translate(678, 66)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <polyline points="64,108 86,52 112,90 140,44 150,96" fill="none" stroke="#2874A6" stroke-width="2.5"/>
+    <g fill="#2874A6">
+      <circle cx="64" cy="108" r="4"/><circle cx="86" cy="52" r="4"/><circle cx="112" cy="90" r="4"/><circle cx="140" cy="44" r="4"/><circle cx="150" cy="96" r="4"/>
+    </g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Edge</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertices + edges (2 nodes)</text>
+  </g>
+
+  <!-- ============ P5 Triangle ============ -->
+  <g transform="translate(18, 300)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <polygon points="70,116 104,42 140,112" fill="#AED6F1" stroke="#2874A6" stroke-width="2"/>
+    <g fill="#2874A6"><circle cx="70" cy="116" r="4"/><circle cx="104" cy="42" r="4"/><circle cx="140" cy="112" r="4"/></g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Triangle</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertices + triangles (3 nodes)</text>
+  </g>
+
+  <!-- ============ P6 Quadrilateral ============ -->
+  <g transform="translate(238, 300)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <polygon points="66,52 140,44 146,114 72,118" fill="#AED6F1" stroke="#2874A6" stroke-width="2"/>
+    <g fill="#2874A6"><circle cx="66" cy="52" r="4"/><circle cx="140" cy="44" r="4"/><circle cx="146" cy="114" r="4"/><circle cx="72" cy="118" r="4"/></g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Quadrilateral</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertices + quads (4 nodes)</text>
+  </g>
+
+  <!-- ============ P7 Tetrahedral ============ -->
+  <g transform="translate(458, 300)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <!-- base + apex; hidden back edge dashed -->
+    <polygon points="66,116 140,108 108,44" fill="#AED6F1" stroke="#2874A6" stroke-width="2"/>
+    <line x1="66" y1="116" x2="102" y2="86" stroke="#2874A6" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="140" y1="108" x2="102" y2="86" stroke="#2874A6" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="108" y1="44" x2="102" y2="86" stroke="#2874A6" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <g fill="#2874A6"><circle cx="66" cy="116" r="4"/><circle cx="140" cy="108" r="4"/><circle cx="108" cy="44" r="4"/><circle cx="102" cy="86" r="4"/></g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Tetrahedral</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertices + tets (4 nodes)</text>
+  </g>
+
+  <!-- ============ P8 Hexahedral ============ -->
+  <g transform="translate(678, 300)">
+    <rect x="0" y="0" width="204" height="228" rx="8" fill="#F7F9FB" stroke="#E1E6EA"/>
+    <!-- back face -->
+    <polygon points="92,44 148,44 148,96 92,96" fill="#AED6F1" stroke="#2874A6" stroke-width="1.5" opacity="0.6"/>
+    <!-- connectors -->
+    <line x1="64" y1="66" x2="92" y2="44" stroke="#2874A6" stroke-width="1.5"/>
+    <line x1="120" y1="66" x2="148" y2="44" stroke="#2874A6" stroke-width="1.5"/>
+    <line x1="120" y1="120" x2="148" y2="96" stroke="#2874A6" stroke-width="1.5"/>
+    <line x1="64" y1="120" x2="92" y2="96" stroke="#2874A6" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- front face -->
+    <polygon points="64,66 120,66 120,120 64,120" fill="#AED6F1" stroke="#2874A6" stroke-width="2"/>
+    <g fill="#2874A6">
+      <circle cx="64" cy="66" r="3.5"/><circle cx="120" cy="66" r="3.5"/><circle cx="120" cy="120" r="3.5"/><circle cx="64" cy="120" r="3.5"/>
+      <circle cx="92" cy="44" r="3.5"/><circle cx="148" cy="44" r="3.5"/><circle cx="148" cy="96" r="3.5"/><circle cx="92" cy="96" r="3.5"/>
+    </g>
+    <text x="102" y="172" text-anchor="middle" fill="#2C3E50" font-size="14" font-weight="600">Hexahedral</text>
+    <text x="102" y="194" text-anchor="middle" fill="#5D6D7E" font-size="11.5">vertices + hexes (8 nodes)</text>
+  </g>
+</svg>

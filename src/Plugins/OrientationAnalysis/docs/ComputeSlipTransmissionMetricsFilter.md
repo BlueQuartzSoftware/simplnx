@@ -6,35 +6,51 @@ Statistics (Crystallography)
 
 ## Description
 
-**THIS FILTER ONLY WORKS ON Cubic m-3m LAUE CLASSES**
+This **Filter** calculates a suite of *slip transmission metrics* for each pair of neighboring **Features** (grains). These metrics quantify how easily plastic deformation (slip) can transfer across a grain boundary from one grain to another, based on the geometric alignment of their slip systems.
 
-This **Filter** calculates a suite of *slip transmission metrics* that are related to the alignment of slip directions and planes across **Feature** boundaries. The algorithm for calculation of these metrics is as follows:
+When a material deforms, slip occurs along specific crystallographic planes and directions within each grain. At grain boundaries, slip in one grain must either transmit into the neighboring grain, be blocked, or nucleate new slip. The degree of geometric compatibility between the slip systems on each side of a boundary is a key factor in determining whether transmission occurs or whether stress concentrations develop that can lead to crack initiation.
 
-1. Get the average orientation of the **Feature**
-2. Get the **Feature**'s list of neighboring **Features**
-3. Get the average orientation of each neighboring **Feature**
-4. Calculate metrics given by equations in *slip transmission metrics*
-5. Store metrics in lists for the **Feature**
-6. Repeat for all **Features**
+### Cubic Materials Only
 
-*Note:* The transmission metrics are calculated using the average orientations for neighboring **Features** and not the local orientation near the boundary. Also, the metrics are calculated twice (i.e., when **Feature** 1 has neighbor **Feature** 2 and when **Feature** 2 has neighbor **Feature** 1) because the direction across the boundary between the **Features** affects the value of the metric.
+This filter only works on **cubic m-3m Laue classes**.
 
-## Luster-Morris Parameter (M' Values)
+### How This Filter Works
 
-The values are calculated as presented in [1].
+1. For each **Feature**, the filter retrieves its average orientation and list of neighboring **Features**
+2. For each neighbor pair, the filter evaluates all possible combinations of slip systems across the boundary
+3. The transmission metrics are computed in both directions (Feature 1 → Feature 2 and Feature 2 → Feature 1) because the directionality affects the result
+4. Results are stored as lists per **Feature**, one value per neighbor
 
-## Fracture Initiation Parameter (fip)
+### Note
 
-Three (3) *fip* values are computed as outputs to this filter. These are best explained in [2], see page 021012-4
+The metrics are calculated using the **average orientations** of neighboring grains, not the local orientations near the boundary.
+
+### Luster-Morris Parameter (M')
+
+The Luster-Morris parameter (M') measures the geometric compatibility between two slip systems across a boundary. A value of 1.0 indicates perfect alignment; lower values indicate poorer compatibility. Calculated as presented in [1].
+
+### Fracture Initiation Parameters (F1, F1spt, F7)
+
+Three fracture initiation parameter (fip) values are computed, which relate to the likelihood of crack nucleation at grain boundaries due to slip incompatibility. These are defined in [2] (see page 021012-4):
 
 ![Fracture Initiation Parameter F1](Images/ComputeNeighborSlipTransmission_F1.png)
 
 ![Fracture Initiation Parameter F1spt](Images/ComputeNeighborSlipTransmission_F1spt.png)
 
-![Fracture Initiation Parameter F7.png](Images/ComputeNeighborSlipTransmission_F7.png)
+![Fracture Initiation Parameter F7](Images/ComputeNeighborSlipTransmission_F7.png)
 
+### Comparison with Compute Feature Boundary Strength Metrics
 
-## Citations
+This filter stores results per **Feature** (in neighbor lists). The [Compute Feature Boundary Strength Metrics](ComputeBoundaryStrengthsFilter.md) filter computes the same metrics but stores results per **Face** on a **Triangle Geometry**, which is useful for visualization on the boundary mesh.
+
+### Required Input Sources
+
+- **Neighbor List** -- produced by [Compute Feature Neighbors](../SimplnxCore/ComputeFeatureNeighborsFilter.md) or [Compute Feature Neighborhoods](../SimplnxCore/ComputeNeighborhoodsFilter.md).
+- **Average Quaternions** -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
+
+## References
 
 [1] [Luster, J., Morris, M.A., 1995. *Compatibility Of Deformation In Two-Phase Ti-Al Alloys: Dependence On Microstructure And Orientation Relationships*. **Metallurgical and Materials Transactions A 26, 1745**](https://link.springer.com/article/10.1007/BF02670762)
 

@@ -6,7 +6,11 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** computes the average orientation of each **Feature** using one or more of three available averaging methods. Each method can be independently enabled, and their results are stored in separate output arrays.
+This **Filter** computes the average crystal orientation for each **Feature** (grain). Since each grain is made up of many **Cells** (voxels) that each have their own measured orientation, this filter combines those individual measurements into a single representative orientation per grain.
+
+The average orientation is used by many downstream filters (e.g., misorientation calculations, Schmid factor, GBCD) and is one of the fundamental statistics computed during microstructure characterization.
+
+Three averaging methods are available, and each can be independently enabled. Their results are stored in separate output arrays.
 
 ### Method 1: Rodrigues Average (Original)
 
@@ -70,6 +74,13 @@ These values may be exposed as user-configurable parameters in a future release.
 - **Invalid phases and crystal structures:** Elements whose phase value lies outside the range of the Crystal Structures array, and elements or features whose crystal structure value is not a supported Laue class (for example 999 = Unknown), are **excluded** from the averaging. The filter emits a warning (-54672 for out-of-range phases, -54671 for unknown crystal structures) reporting how many were dropped — the drop is never silent. A feature whose elements are all excluded finalizes to the identity quaternion (Rodrigues) or NaN (vMF/Watson).
 - **Multi-phase features:** The vMF/Watson methods use a single crystal structure per feature, taken from the phase of the feature's highest-index element; the Rodrigues method uses each element's own phase. Features are normally single-phase, so this distinction rarely matters.
 - **No method enabled:** If none of the three averaging methods is enabled the filter fails in preflight with error -54673.
+
+### Required Input Sources
+
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md); can also be produced from Euler angles by [Convert Orientations](ConvertOrientationsFilter.md).
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

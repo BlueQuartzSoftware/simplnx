@@ -6,11 +6,23 @@ Core (Memory/Management)
 
 ## Description
 
-This **Filter** will do one of the following to one component of a multicomponent **Attribute Array**:
+This **Filter** operates on a single component of a multicomponent **Attribute Array**, supporting three modes of behavior:
 
-- Remove 1 component from multicomponent **Attribute Array** completely [This is done implicitly so long as **Move Extracted Components To New Array** is false]
-- Extract 1 component from multicomponent **Attribute Array** and store it in a new **DataArray** without removing from original
-- Extract 1 component from multicomponent **Attribute Array** and store it in a new **DataArray** and remove that component from the original
+- **Remove only** (default): the selected component is deleted from the source array; no new array is created.
+- **Extract only** (*Move Extracted Components To New Array* = true, *Remove from Original* = false): the selected component is copied into a new scalar **DataArray**; the source array is unchanged.
+- **Extract and remove** (*Move Extracted Components To New Array* = true, *Remove from Original* = true): the selected component is moved into a new scalar **DataArray** and removed from the source.
+
+### Component Indexing
+
+The component selector is **0-based**. For a 3-component array, valid component indices are 0, 1, and 2.
+
+### When to Use This Filter
+
+Use to pull a single channel out of a color image (e.g., extract R from an RGB array), strip a known-bad component from a tensor, or split one specific component while leaving the rest intact. For splitting *all* components into separate arrays at once, use [Split Data Array (By Component)](SplitDataArrayByComponentFilter.md) instead.
+
+### Required Input Sources
+
+- **Source Multi-Component Array** -- any **Attribute Array** with two or more components.
 
 % Auto generated parameter table will be inserted here
 

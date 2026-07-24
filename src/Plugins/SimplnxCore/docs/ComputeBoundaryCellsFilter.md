@@ -17,6 +17,12 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 |--|--|
 | ![Feature Ids](Images/ComputeBoundaryCellsInput.png) | ![Boundary Cells](Images/ComputeBoundaryCellsOutput.png) |
 
+The output is a per-**Cell** count ranging from **0** (an interior cell whose six neighbors all belong to the same **Feature**) to **6** (an isolated cell differing from all six neighbors). Cells on the outer edge of the volume have fewer than six in-bounds neighbors, so their count reflects only the neighbors that exist.
+
+### Required Input Sources
+
+- **Feature Ids** -- a per-**Cell** integer label array produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -1,6 +1,6 @@
 # ITK Zero Crossing Image Filter
 
-This filter finds the closest pixel to the zero-crossings (sign changes) in a signed itk::Image .
+Marks the pixels that sit at sign changes (zero crossings) of a signed image, which typically correspond to edges.
 
 ## Group (Subgroup)
 
@@ -8,25 +8,27 @@ ITKImageFeature (ImageFeature)
 
 ## Description
 
-Pixels closest to zero-crossings are labeled with a foreground value. All other pixels are marked with a background value. The algorithm works by detecting differences in sign among neighbors using city-block style connectivity (4-neighbors in 2d, 6-neighbors in 3d, etc.).
+A **zero crossing** is a place where a signed image changes sign — going from positive to negative or vice versa. When the input is a second-derivative image such as a Laplacian, these sign changes line up with the edges in the original image, so detecting them is a common edge-finding step.
 
-## Parameter Information
+This filter examines each pixel and its immediate neighbors using city-block (face) connectivity — 4 neighbors in 2D, 6 in 3D. Where a sign change is found, the pixel nearest the crossing is labeled as foreground; every other pixel is labeled as background. The result is a thin, binary edge map.
 
-- The input to this filter is an itk::Image of arbitrary dimension. The algorithm assumes a signed data type (zero-crossings are not defined for unsigned int data types), and requires that operator>, operator<, operator==, and operator!= are defined.
+The input must be a **signed** image. Zero crossings are not defined for unsigned data, since unsigned values never go negative.
 
-- The output of the filter is a binary, labeled image of user-specified type. By default, zero-crossing pixels are labeled with a default "foreground" value of itk::NumericTraits<OutputDataType>::OneValue() , where OutputDataType is the data type of the output image. All other pixels are labeled with a default "background" value of itk::NumericTraits<OutputDataType>::ZeroValue() .
+Use this filter after computing a Laplacian (or other signed response) to extract edge locations.
 
-- There are two parameters for this filter. ForegroundValue is the value that marks zero-crossing pixels. The BackgroundValue is the value given to all other pixels.
+### Parameter Guidance
+
+- **Foreground Value** — the label written to pixels that lie on a zero crossing (the detected edges). Default *1*.
+- **Background Value** — the label written to all other pixels. Default *0*.
+
+### Required Input Sources
+
+Requires a **signed** scalar image whose sign changes are meaningful — most commonly the output of a Laplacian-of-Gaussian step such as [ITK Laplacian Recursive Gaussian Image Filter](ITKLaplacianRecursiveGaussianImageFilter.md).
 
 ## See Also
 
-- [Image](https://itk.org/Doxygen/html/classitk_1_1Image.html)
-
-- [Neighborhood](https://itk.org/Doxygen/html/classitk_1_1Neighborhood.html)
-
-- [NeighborhoodOperator](https://itk.org/Doxygen/html/classitk_1_1NeighborhoodOperator.html)
-
-- [NeighborhoodIterator](https://itk.org/Doxygen/html/classitk_1_1NeighborhoodIterator.html)
+- [ITK Laplacian Recursive Gaussian Image Filter](ITKLaplacianRecursiveGaussianImageFilter.md)
+- [ITK ZeroCrossingImageFilter (ITK Doxygen)](https://itk.org/Doxygen/html/classitk_1_1ZeroCrossingImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 
@@ -34,8 +36,8 @@ Pixels closest to zero-crossings are labeled with a foreground value. All other 
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

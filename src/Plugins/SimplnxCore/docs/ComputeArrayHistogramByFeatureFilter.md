@@ -2,7 +2,7 @@
 
 ## Description
 
-This **Filter** accepts one or more numeric **DataArray** inputs and computes feature-specific histograms. For each selected array, values are grouped by feature, then divided into equal-width bins—using either automatically derived or user-defined minimum/maximum bounds—and counted per bin.
+This **Filter** accepts one or more numeric **DataArray** inputs and computes per-**Feature** histograms. A **Feature** is a connected region of **Cells** that share the same **Feature Id** (the integer label assigned by a segmentation filter). For each selected array, the per-Cell values are grouped according to their owning **Feature Id**, then divided into equal-width bins—using either automatically derived or user-defined minimum/maximum bounds—and counted per bin.
 
 Optionally, a mask **DataArray** can be provided to include only specific elements in the histogram computation.
 
@@ -16,9 +16,11 @@ Outputs include:
 - **Modal Bin Ranges INeighborList** (optional): One NeighborList that contains one list per feature specifying inclusive lower bound and exclusive upper bound containing the feature's mode(s). Because there can be multiple modes, each list may include more than 2 entries.
   - *Example*: list 5 contains `[0.5, 10.2, 41.3, 54.1]` if feature 5 has two mode values and they fall between 0.5 and 10.2 and between 41.3 and 54.1.
 
-% Auto generated parameter table will be inserted here
+### Required Input Sources
 
-## Example Pipelines
+- **Cell Feature Ids** -- the per-Cell **Feature** label array, typically produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or another segmentation filter.
+
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 

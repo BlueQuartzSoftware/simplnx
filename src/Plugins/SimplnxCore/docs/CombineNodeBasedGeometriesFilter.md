@@ -2,15 +2,19 @@
 
 ## Group (Subgroup)
 
-Core
+Core (Combining)
 
 ## Description
 
-This **Filter** will combine any node-based geometries together into one node-based geometry.  The algorithm is governed by several rules:
+This **Filter** merges two or more **node-based geometries** into a single combined geometry. A **node-based geometry** is any geometry built from a shared list of vertices (nodes) plus a connectivity that defines its elements: a **Vertex Geometry** (points only), an **Edge Geometry** (line segments), a **Triangle** or **Quadrilateral Geometry** (surface faces), or a **Tetrahedral** or **Hexahedral Geometry** (solid cells).
 
-1. All input geometries must have the same geometry type.  For example, inputting all Triangle geometries will output a combined Triangle geometry, all Edge geometries will output a combined Edge geometry, etc.
-2. All input geometries must contain vertex and node data that have the exact same names, types, and component dimensions.  For example, if one input geometry has an edges array with edges data arrays, all input geometries must have an edges array with edges data arrays that have the exact same names, types, and component dimensions.  If one input geometry has vertex data arrays, then all input geometries must have vertex data arrays that all have the exact same names, types, and component dimensions.
-3. Higher order input geometries can include lower order node data.  For example, an input tetrahedral geometry can include edge data (as long as all input tetrahedral geometries contain edge data with the same names, types, and component dimensions).
+When combining, the filter concatenates the vertex lists of all inputs into one list and then renumbers the connectivity. The element (cell) indices from each input geometry are shifted by the running total number of vertices contributed by all preceding geometries, so that every element continues to reference the correct vertices in the merged vertex list. **Duplicate or coincident vertices are *not* detected or merged** — if two inputs contain a vertex at the same physical location, both copies appear in the output.
+
+The algorithm is governed by several rules:
+
+1. All input geometries must have the same geometry type. For example, combining only **Triangle Geometries** produces a combined **Triangle Geometry**, and combining only **Edge Geometries** produces a combined **Edge Geometry**.
+2. All input geometries must contain vertex and element data arrays with the exact same names, types, and component dimensions. For example, if one input has an edge data array, every input must have an edge data array with a matching name, type, and component dimension; the same requirement applies to vertex data arrays.
+3. A **higher-order** geometry (one whose elements are built from more vertices, such as a **Tetrahedral Geometry**) may also carry the data of its **lower-order** elements. For example, a tetrahedral geometry may include edge data, as long as every input tetrahedral geometry includes matching edge data.
 
 *NOTE:* Any additional groups, attribute matrices, or arrays that are not one of the following:
 
@@ -19,11 +23,13 @@ This **Filter** will combine any node-based geometries together into one node-ba
 3. Face arrays or face data
 4. Polyhedra arrays or polyhedra data
 
-WILL BE ignored and will not exist in the geometry outputted by this filter.
+will be ignored and will not appear in the geometry produced by this filter.
+
+### Required Input Sources
+
+- **Input Geometries** -- two or more **node-based geometries** of the *same* type. Surface meshes are typically produced by [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md); edge geometries by [Slice Triangle Geometry](SliceTriangleGeometryFilter.md) or [Create AM Scan Paths](CreateAMScanPathsFilter.md).
 
 % Auto generated parameter table will be inserted here
-
-## Example Pipelines
 
 ## License & Copyright
 

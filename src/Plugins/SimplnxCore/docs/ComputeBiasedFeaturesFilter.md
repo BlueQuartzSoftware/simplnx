@@ -6,7 +6,15 @@ Generic (Spatial)
 
 ## Description
 
-This **Filter** determines which **Features** are *biased* by the outer surfaces of the sample. Larger **Features** are more likely to intersect the outer surfaces and thus it is not sufficient to only note which **Features** touch the outer surfaces of the sample. Denoting which **Features** are biased is important so that they may be excluded from any statistical analyses. The algorithm for determining whether a **Feature** is *biased* is as follows:
+This **Filter** flags each **Feature** as *biased* or *unbiased* by the outer surfaces of the sample, producing a feature-level boolean array suitable for excluding biased features from downstream statistical analyses (size distributions, shape distributions, ODFs, etc.).
+
+### Why Bias Matters for Statistics
+
+When a sample volume is cut out of a larger material, some grains are truncated by the cut. If only size or shape statistics are needed, surface-touching features like those flagged by [Compute Surface Features](ComputeSurfaceFeaturesFilter.md) can be excluded -- but that undercounts the problem. Larger grains are more likely to touch any given surface simply because they are larger, so excluding only surface-touching features still leaves a size-dependent sampling bias: *small* grains that don't touch the surface are over-represented relative to *large* grains that do. The biased-feature flag produced here corrects for this by identifying which features' centroids are close enough to a boundary that they are statistically suspect, regardless of whether the feature itself touches the boundary.
+
+### How This Filter Works
+
+The algorithm for determining whether a **Feature** is *biased* is as follows:
 
 1. The *centroids* of all **Features** are calculated
 2. All **Features** are tested to determine if they touch an outer surface of the sample
@@ -21,6 +29,12 @@ By definition of the box, no **Feature** that intersects an outer surface of the
 
 The images below show the feature ids before and after running this filter. The image on the right shows the biased features colored in red, the unbiased features colored by their feature id, the bounding box (described in step 3 of the algorithm above), and the feature centroids (white for unbiased and purple for biased).
 ![2D Before and After Biased Features](Images/ComputeBiasedFeaturesBeforeAndAfter.png)
+
+### Required Input Sources
+
+- **Feature Centroids** -- produced by [Compute Feature Centroids](ComputeFeatureCentroidsFilter.md).
+- **Surface Features** -- produced by [Compute Surface Features](ComputeSurfaceFeaturesFilter.md) or as an optional output of [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).
+- **Feature Phases** (only when applying to a single phase) -- produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

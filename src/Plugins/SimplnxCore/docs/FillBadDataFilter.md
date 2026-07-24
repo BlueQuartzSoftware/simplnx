@@ -6,45 +6,47 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** removes small *noise* in the data but keeps larger regions that are possibly **Features**, e.g., pores or defects. This **Filter** identifies *bad* **Cells** (*Feature Id = 0*) and fills small defects by copying data from neighboring good cells, while preserving large defect regions that meet or exceed the minimum allowed defect size specified by the user.
+This **Filter** distinguishes small *bad-data noise* from large *real defects* in a segmented dataset and fills only the noise. **Cells** with *Feature Id = 0* are considered *bad*; the filter groups them into connected components, classifies each component by its size, and fills components below the user threshold by copying the most common neighbor's data into them. Components at or above the threshold are left intact, since they likely represent real features (pores, cracks, voids).
 
 | Small IN100 Before                   | Small IN100 After                   |
 |--------------------------------------|-------------------------------------|
 | ![](Images/fill_bad_data_before.png) | ![](Images/fill_bad_data_after.png) |
 
-The above images show the before and after results of running this filter with a minimum defect size of 1000 voxels. Note that because the minimum defect size was set to 1000 voxels that the over scan area was not modified (the area in all black around the sample).
+The above images show the before and after results of running this filter with a minimum defect size of 1000 voxels. The all-black overscan area around the sample exceeds the 1000-voxel threshold, so it is correctly preserved.
 
-## Algorithm Overview
+### How This Filter Works
 
-The filter uses a four-phase algorithm optimized for both in-memory and out-of-core data processing:
+1. **Connected components.** All bad cells (*Feature Id = 0*) are grouped into connected regions using face neighbors.
+2. **Classify by size.**
+   - Components with fewer than *Minimum Allowed Defect Size* cells are flagged as *small noise* and filled.
+   - Components with at least *Minimum Allowed Defect Size* cells are kept as bad data, or optionally moved to a new phase if *Store Defects as New Phase* is enabled.
+3. **Iterative fill.** Each cell flagged for filling examines its 6 face neighbors and copies all cell-level array data from whichever neighbor's *Feature Id* is most common. The pass repeats until every flagged cell has been filled.
 
-### Phase 1: Connected Component Labeling (CCL)
-The algorithm first identifies all connected regions of bad data (voxels with Feature Id = 0) using a chunk-sequential scanline algorithm. Each connected component is assigned a unique provisional label, and equivalences between components that span chunk boundaries are tracked using a Union-Find data structure.
+### Minimum Defect Size Units
 
-### Phase 2: Global Resolution
-All provisional labels are resolved to their root representatives, and the total size (voxel count) of each connected component is computed by aggregating counts across all chunks.
+The *Minimum Allowed Defect Size* is in **cells** (integer voxel count), not physical units. To convert a physical-volume threshold into a cell count, divide by the cell volume (dx * dy * dz).
 
-### Phase 3: Classification and Relabeling
-Each connected component is classified based on its size:
-- **Small defects** (size < minimum allowed defect size): Marked with Feature Id = -1 for filling
-- **Large defects** (size ≥ minimum allowed defect size): Retained as Feature Id = 0 (or assigned to a new phase if requested)
+Choose the threshold based on what you want to keep:
 
-### Phase 4: Iterative Morphological Fill
-Small defects are filled using an iterative erosion process:
-1. For each voxel marked for filling (Feature Id = -1), examine its 6 face-connected neighbors
-2. Determine the most common positive Feature Id among the neighbors
-3. Copy all cell array data from that neighbor to the current voxel
-4. Repeat until all small defects are filled
+- For removing single-cell or small-cluster EBSD scan noise, **5-50 cells** is typical.
+- For preserving real pores while cleaning small noise (as in the example above), thresholds of **500-5000 cells** depend on pore size.
 
-The algorithm processes data in a chunk-sequential manner, making it efficient for large datasets stored using out-of-core data structures.
+### Store Defects as New Phase
 
-## Performance Characteristics
+When this option is enabled, any connected component that meets or exceeds the size threshold has its cells reassigned to a new phase index rather than being left as Feature Id 0. This makes large defects available to downstream filters as a distinct phase (e.g., for separate statistics or visualization).
 
-This implementation is optimized for out-of-core processing where data may reside on disk rather than in memory. The chunk-sequential access pattern minimizes disk I/O operations compared to random-access algorithms, providing significant performance improvements for large datasets (10-100x faster for typical use cases with out-of-core storage).
+### Performance Note
+
+The implementation is chunk-sequential and optimized for out-of-core data. For large datasets stored on disk, expect 10-100x speedups over random-access algorithms.
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
+By modifying cell-level data, any feature-level data that was previously computed (sizes, centroids, average orientations, etc.) will most likely be invalid after this filter runs. Re-run any downstream feature-level computation filters to ensure accurate results.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md). Cells with Feature Id = 0 are treated as bad.
+- **Cell Phases** -- typically read from EBSD data; only required when *Store Defects as New Phase* is enabled.
 
 % Auto generated parameter table will be inserted here
 

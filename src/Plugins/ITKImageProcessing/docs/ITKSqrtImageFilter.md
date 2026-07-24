@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The computations are performed using std::sqrt(x).
+Replaces each pixel value with its square root. The input image should contain only non-negative values, since the square root of a negative number is undefined. Pixel values are in image intensity units.
 
 ![](Images/ITKSqrtImageFilter.png)
 

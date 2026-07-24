@@ -75,6 +75,10 @@ The output array can be placed in two ways:
 
 2. **Standalone**: Select an output path that is not inside an Attribute Matrix (e.g., `MyArray`). The user must provide explicit tuple dimensions via the *Set Tuple Dimensions* checkbox and table.
 
+### Required Input Sources
+
+None — this filter reads directly from a raw binary file on disk.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

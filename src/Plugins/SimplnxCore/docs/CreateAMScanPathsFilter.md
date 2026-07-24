@@ -6,7 +6,16 @@ Core (Geometry/Processing)
 
 ## Description
 
-Given an input **Edge Geometry**, hatch spacing, hatch length, and hatch rotation angle, this **Filter** will generate an **Edge Geometry** representing the additive manufacturing scan paths along with arrays containing region ids and slice ids for each scan path. The "SliceTriangleGeometry" filter is typically used before this filter to generate the proper edge geometry.
+Given an input **Edge Geometry**, hatch spacing, hatch length, and hatch rotation angle, this **Filter** will generate an **Edge Geometry** representing the additive manufacturing scan paths along with arrays containing region ids and slice ids for each scan path.
+
+### Units
+
+- **Hatch Spacing** and **Hatch Length** are lengths expressed in the same coordinate units as the input **Edge Geometry** (e.g., millimeters if the slicing was done in millimeters). They are not dimensionless and not pixels.
+- **Hatch Rotation Angle** is specified in **degrees**. It is the per-slice rotation applied to the hatch direction.
+
+### Required Input Sources
+
+- An input **Edge Geometry** together with its per-edge **Slice Ids** and **Region Ids** arrays. These are typically produced by the [Slice Triangle Geometry](SliceTriangleGeometryFilter.md) filter, which slices a surface-mesh **Triangle Geometry** into the edge geometry consumed here.
 
 ![](Images/CreateAMScanVectors_5.png)
 

@@ -50,6 +50,14 @@ An optional flag allows you to delete the original input array after splitting.
 
 See the *[Split Data Array (By Component)](SplitDataArrayByComponentFilter.md)* filter that separates each component into its own scalar array.
 
+### Tuple Counts
+
+The per-output *tuple counts* are integers. The sum of all requested output counts along the split dimension must equal the input's tuple count along that dimension.
+
+### Required Input Sources
+
+- **Input Data Array** -- the array to split.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

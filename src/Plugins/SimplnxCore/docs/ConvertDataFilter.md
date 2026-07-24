@@ -40,6 +40,15 @@ Down casting can have undefined behavior depending on the primitive types involv
 
 When converting data from signed values to unsigned values or vice-versa, there can also be undefined behavior. For example, if the user were to convert a signed 4 byte integer array to an unsigned 4 byte integer array and the input array has negative values, then the conversion rules are undefined and may differ from operating system to operating system.
 
+### Related Filters
+
+- [Reshape Data Array](ReshapeDataArrayFilter.md) -- changes the tuple-dimensions interpretation of an array without converting its underlying data type. Use Reshape (not Convert) when you want to interpret existing bytes under a different shape.
+- [Create Data Array](CreateDataArrayFilter.md) -- create a fresh array of the desired type and copy values into it manually.
+
+### Required Input Sources
+
+- **Input Array** -- the **Data Array** whose values will be cast to the new type.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -6,7 +6,9 @@ Reconstruction (Reconstruction)
 
 ## Description
 
-This **Filter** computes the XYZ minimum and maximum coordinates for each **Feature** in a segmentation. This data can be important for finding the smallest encompassing volume. This values are given in **Pixel** coordinates.
+This **Filter** computes the XYZ minimum and maximum coordinates for each **Feature** in a segmentation. A **Feature** is a contiguous group of **Cells** (voxels) that share the same Feature Id; a **Cell** is a single voxel. This data can be important for finding the smallest encompassing volume. These values are given in **Pixel** coordinates (zero-based voxel indices), not physical length units.
+
+If you instead need the bounding box corners in physical coordinates, see [Compute Feature Bounding Boxes](ComputeFeatureBoundsFilter.md).
 
 |       | 0 | 1 | 2 | 3 | 4 |
 |-------|---|---|---|---|---|
@@ -25,6 +27,10 @@ If the example matrix above which represents a single feature where the feature 
     X Max = 4
     Y Max = 3
     Z Max = 0
+
+### Required Input Sources
+
+This filter requires a **Cell Feature Ids** array, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or one of the misorientation-based segmentation filters in the OrientationAnalysis plugin.
 
 % Auto generated parameter table will be inserted here
 

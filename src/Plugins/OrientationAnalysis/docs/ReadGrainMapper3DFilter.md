@@ -6,11 +6,11 @@ Readers
 
 ## Description
 
-This filter will read Version 4 and Version 5 GrainMapper3D HDF5 files. 
+This filter reads Version 4 and Version 5 **GrainMapper3D** HDF5 (`.h5`) files. GrainMapper3D is [XNovo Technology](https://xnovotech.com)'s lab diffraction-contrast-tomography (LabDCT) reconstruction software, used to reconstruct 3D crystallographic grain maps from laboratory X-ray measurements.
 
-- Euler data is read as radians
-- The Image Geometry that is produced is in units of millimeters
-- The user has the opportunity to create compatible Orientation Data and Phase data. See below.
+- Euler data is read in **radians**.
+- The **Image Geometry** that is produced is in units of **millimeters**. This differs from the micron length-unit assumption made by many downstream DREAM3D-NX filters (for example, size and spacing computations). Be aware of this difference when chaining this reader into a pipeline.
+- The user has the opportunity to create DREAM3D-NX compatible Orientation Data and Phase data. See below.
 
 ## Parameter Discussion
 
@@ -22,18 +22,22 @@ will be output.
 Specifically, the Rodrigues vector will be converted into a 4 component and the conjugate computed. The quaternion
 order will be changed from wxyz to xyzw and the conjugate will be computed.
 
-PhaseId data will be converted to "int32" (as an option) to make that data immediately compatible
-with DREAM3D's filters.
+PhaseId data will be converted to *int32* (when the *Create Compatible Phase Data* option is checked) to make that data immediately compatible with DREAM3D-NX's filters.
 
-IPFColors can be stored as either uint8 or float values. If you want to immediately view the IPF Colors then 
-the user should check the box for "Create Compatible IPF Color Data"
+IPF (inverse pole figure) colors can be stored in the file as either *uint8* or *float32* values. To immediately view the IPF colors that came from the file, the user should check the box for *Create Compatible IPFColor Data*, which converts any *float32* color data to *uint8*.
 
 ## Special Notes
 
-The IPF colors (if any) that are read in from the file are *NOT* compatible with the IPF 
-Color legends provided by DREAM3D-NX or EBSDLib. The user can use the "Compute IPF Colors"
-if they need to specifically understand the crystallographic orientations or they
-can obtain the IPF legends from XNovo.
+The IPF colors (if any) that are read in from the file are **NOT** compatible with the IPF color legends provided by DREAM3D-NX or EBSDLib. There are two distinct options at play, and they should not be confused:
+
+- *Create Compatible IPFColor Data* only re-types the colors that were *already computed by GrainMapper3D* so they can be displayed; it does not recompute them against DREAM3D-NX's legends.
+- To obtain IPF colors that match the DREAM3D-NX / EBSDLib legends, run [Compute IPF Colors](ComputeIPFColorsFilter.md) downstream on the imported orientation data. Alternatively, the user can obtain the matching IPF legends from XNovo.
+
+Use [Compute IPF Colors](ComputeIPFColorsFilter.md) if you need to specifically understand the crystallographic orientations using DREAM3D-NX's color conventions.
+
+## Required Input Sources
+
+None. This filter reads directly from a `.h5` GrainMapper3D file and creates the **Image Geometry**, **Cell** data, and **Ensemble** data itself.
 
 % Auto generated parameter table will be inserted here
 

@@ -4,23 +4,22 @@
 
 Statistics (Morphological)
 
-## Caveats
-
-This filter has two caveats.
-
-Firstly, the axial lengths of this filter will be different than those produced by the voxelized version of this filter. This is for two reasons:
-
-- The sampling rate and density for the grid that was used to voxelize the mesh. See *Sample Triangle Geometry on Regular Grid* (RegularGridSampleSurfaceMesh).
-- This filter determines axial lengths via distance from feature centroid to mesh intersection points along each of the principle axes. This means they are relative to the mesh itself rather than the grid it exists in.
-
-Secondly, shapes that exhibit rotational symmetry (e.g. cube, sphere, regular octahedron, etc.) may have different Euler Angles than those of the voxelized implementation, but they are functionally identical. This is more prevalent in meshes with less traingles, but this is seemly due to the fact the tested shapes are more uniform in low-poly. It is presumed that fiducial markers will stabilize ouputs for these specific shapes.
-
 ## Description
 
-This **Filter** calculates the second-order moments of each enclosed **Feature** in a **Triangle Geometry**. The
-second-order moments allow for the determination of the *principal axis lengths, principal axis directions, aspect
-ratios and moment invariant Omega3s*. The *principal axis lengths* are those of a "best-fit" ellipsoid. The algorithm
-for determining the moments and these values is as follows:
+This **Filter** characterizes the 3D shape of each enclosed **Feature** in a **Triangle Geometry** surface mesh by fitting a best-fit ellipsoid. It produces the same types of shape descriptors as the [Compute Feature Shapes (Image Geometry)](ComputeShapesFilter.md) filter -- axis lengths, aspect ratios, axis orientations, and the Omega3 shape invariant -- but operates on triangle meshes rather than voxelized data.
+
+For a description of what each output represents (semi-axis lengths, aspect ratios, Omega3, etc.), see the [Compute Feature Shapes (Image Geometry)](ComputeShapesFilter.md) documentation.
+
+### Differences from the Image Geometry Version
+
+- **Axis lengths will differ** from the voxelized version because this filter measures distances from the feature centroid to mesh intersection points along the principal axes, rather than using voxel-based moment calculations. The voxelized result also depends on the sampling resolution used to create the grid.
+- **Euler angles for symmetric shapes** (cube, sphere, octahedron, etc.) may differ numerically from the voxelized version but represent equivalent orientations. This is more apparent in low-polygon meshes.
+
+### Mesh Quality Requirements
+
+Accurate results require the mesh to be **watertight** (fully enclosed with no holes or gaps). The filter computes the Euler characteristic of each mesh region, which can indicate whether a mesh is watertight. See [Euler characteristic](https://en.wikipedia.org/wiki/Euler_characteristic) for more information. If a region is not watertight, the computed shape values may be inaccurate.
+
+### How This Filter Works
 
 1. For each **Triangle** on the bounding surface of a **Feature**, construct a tetrahedron whose fourth vertex is the
    centroid of the **Feature**, ensuring normals are consistent (this **Filter** uses the convention where normals point
@@ -41,14 +40,10 @@ for determining the moments and these values is as follows:
 represented, resulting in inaccurate Omega3 values. This problem is especially apparent for perfect rectangular prisms,
 but any shape with clear sharp corners may be affected.
 
-This filter also computes the Euler Characteristic value which **can** be an indication of the __watertightness__ of the mesh(s). See
-more information at [https://en.wikipedia.org/wiki/Euler_characteristic](https://en.wikipedia.org/wiki/Euler_characteristic)
+### Required Input Sources
 
-## WARNING
-
-Accurate computations depend on the mesh being water tight. If a triangle mesh has multiple regions
-then these values will be computed for each region. If a region is not watertight then the computed
-values are probably not correct.
+- **Triangle Geometry** with **Face Labels** -- produced by a surface meshing filter such as [Quick Surface Mesh](../SimplnxCore/QuickSurfaceMeshFilter.md).
+- **Feature Centroids** -- produced by [Compute Feature Centroids](../SimplnxCore/ComputeFeatureCentroidsFilter.md), typically on the voxelized feature data before meshing.
 
 % Auto generated parameter table will be inserted here
 

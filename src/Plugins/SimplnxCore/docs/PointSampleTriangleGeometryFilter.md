@@ -2,37 +2,39 @@
 
 ## Group (Subgroup)
 
-DREAM3D Review (Geometry)
+Sampling (Geometry)
 
 ## Description
 
-This **Filter** randomly samples point locations on **Triangles** in a **Triangle Geometry**.  The sampled point locations are then used to construct a **Vertex Geometry**.  The number of point samples may either be specified manually or by inferring from another **Geometry**:
+This **Filter** randomly samples point locations on the triangles of a **Triangle Geometry** (a node-based surface mesh of triangular faces) and uses those sampled locations to construct a new **Vertex Geometry** (a point cloud). The total number of sample points is supplied directly through the *Number of Sample Points* parameter.
 
-| Geometry | Source for Number of Samples |
-|----------|-----------|
-| Image | Number of cells |
-| Rectilinear Grid | Number of cells |
-| Vertex | Number of vertices |
-| Edge | Number of vertices |
-| Triangle | Number of vertices |
-| Quadrilateral | Number of vertices |
-| Tetrahedral | Number of vertices |
+To ensure an even sampling across the whole surface area of the **Triangle Geometry**, the average number of points placed on each triangle is made proportional to that triangle's area. Larger triangles therefore receive proportionally more samples than smaller ones, which produces a spatially uniform point density rather than an even count per triangle.
 
-In order to ensure an even sampling of the total surface are of the **Triangle Geometry**, the average number of points sampled per triangle is made proportional to the area of the triangle.  Within a given **Triangle**, a point is chosen using the following approach:
+Within a given triangle, each point is chosen with the following formula:
 
-![Equation 1](Images/PointSampleTriangleGeometry_Eqn1.png)
+![Equation: the sampled point P equals (1 minus the square root of r1) times A, plus the square root of r1 times (1 minus r2) times B, plus the square root of r1 times r2 times C.](Images/PointSampleTriangleGeometry_Eqn1.png)
 
-where ![](Images/PSTG_2.png) are the coordinates of the sampled point; ![](Images/PSTG_3.png), ![](Images/PSTG_4.png), and ![](Images/PSTG_5.png) are the coordinates of the vertices beloning to the **Triangle**; and ![](Images/PSTG_6.png) and ![](Images/PSTG_7.png) are random real numbers on the interval ![](Images/PSTG_8.png).  This approach has the benefit of uniform sampling within the **Triangle** area, and functions correctly regardless of the dimensionality of the space embedding (i.e., whether the **Triangle** is in the plane or embedded in 3D).
+where ![the sampled point coordinates P](Images/PSTG_2.png) are the coordinates of the sampled point; ![vertex A](Images/PSTG_3.png), ![vertex B](Images/PSTG_4.png), and ![vertex C](Images/PSTG_5.png) are the coordinates of the vertices belonging to the triangle; and ![random number r1](Images/PSTG_6.png) and ![random number r2](Images/PSTG_7.png) are random real numbers on the interval ![the interval from zero to one](Images/PSTG_8.png). This approach gives uniform sampling within the triangle area and works correctly regardless of the dimensionality of the embedding space (whether the triangle lies in a plane or is embedded in 3D).
 
-The user may opt to use a mask to prevent certain **Triangles** from being sampled; where the mask is _false_, the **Triangle** will not be sampled.  Additionally, the user may choose any number of **Face Attribute Arrays** to transfer to the created **Vertex Geometry**. The vertices in the new **Vertex Geometry** will gain the values of the **Faces** from which they were sampled.
+### Random Sampling and Reproducibility
+
+The point placement is **random**: both the distribution of samples across triangles and the location of each point within its triangle are drawn from a pseudo-random number generator. By default a new seed is used each run, so the output point cloud differs from run to run. To obtain repeatable results, enable *Use Seed for Random Generation* and supply a fixed *Seed Value*; the seed actually used is also stored in an output array so a run can be reproduced later.
+
+### Masking and Transferred Data
+
+The user may opt to use a **mask** (a boolean per-face flag) to prevent certain triangles from being sampled; where the mask is *false*, the triangle is not sampled. Additionally, the user may choose any number of **Face Attribute Arrays** to transfer to the created **Vertex Geometry**. Each vertex in the new geometry inherits the values of the face from which it was sampled.
+
+### Required Input Sources
+
+- **Triangle Geometry to Sample** -- a **Triangle Geometry** (surface mesh), typically produced by [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
+- **Face Areas** -- a single-component per-face area array, produced by [Compute Triangle Areas](ComputeTriangleAreasFilter.md).
+- **Mask** (optional) -- a boolean per-face array, typically produced by a thresholding filter such as [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here
 
-## Example Pipelines
-
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

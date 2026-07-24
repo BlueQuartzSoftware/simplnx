@@ -1,6 +1,6 @@
-# ITK Mean Projection Image Filter (ITKMeanProjectionImage)
+# ITK Mean Projection Image Filter
 
-Mean projection.
+Collapses a 3D volume to a 2D image by taking the mean (average) voxel value along one axis.
 
 ## Group (Subgroup)
 
@@ -8,27 +8,22 @@ ITKImageStatistics (ImageStatistics)
 
 ## Description
 
-This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71 
+A **projection** collapses a 3D volume into a 2D image by combining all voxels along one axis into a single output value. This filter uses the **mean**: for each line of voxels parallel to the selected axis, the output voxel is the arithmetic average of all values along that line. The result has one fewer dimension than the input.
 
-## Author
+Mean projection produces a smooth, noise-suppressed summary of the volume because averaging reduces random fluctuations. Use it when you want a representative average view rather than emphasizing the brightest or darkest voxels. Note that the mean is sensitive to outliers; if a few extreme voxels would skew the result, consider [ITK Median Projection Image Filter](ITKMedianProjectionImageFilter.md) instead.
 
-- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+```{note}
+This filter changes the dimensionality of the **Image Geometry** that the data is tied to. As a side effect, **every** Data Array stored in the same Attribute Matrix as the input and output array is also affected.
+```
 
-## See Also
+### Parameter Guidance
 
-- [ProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1ProjectionImageFilter.html)
+- *Projection Dimension* — the axis to collapse, given as an index: *0*, *1*, or *2*. Index *0* is the slowest-moving dimension. The output image keeps the two remaining axes.
+- *Perform In-Place* — when enabled, the projection replaces the input geometry rather than creating a new one.
 
-- [MedianProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MedianProjectionImageFilter.html)
+### Required Input Sources
 
-- [MinimumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MinimumProjectionImageFilter.html)
-
-- [StandardDeviationProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1StandardDeviationProjectionImageFilter.html)
-
-- [SumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1SumProjectionImageFilter.html)
-
-- [BinaryProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1BinaryProjectionImageFilter.html)
-
-- [MaximumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MaximumProjectionImageFilter.html)
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -36,7 +31,7 @@ This class was contributed to the Insight Journal by Gaetan Lehmann. The origina
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

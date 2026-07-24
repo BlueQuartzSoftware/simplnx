@@ -1,30 +1,34 @@
 # Create Geometry (Image)
 
-## This filter should be considered deprecated. Use the "Create Geometry" filter instead
-
 ## Group (Subgroup)
 
 Core (Generation)
 
+> ⚠ **Deprecation Notice.** This filter is deprecated. Use the more general [Create Geometry](CreateGeometryFilter.md) filter instead. This filter is retained for compatibility with legacy pipelines.
+
 ## Description
 
-This **Filter** creates an **Image Geometry** specifically for the representation of a 3D rectilinear grid of voxels (3D) or pixels
-(2D). Each axis can have its starting point (origin), resolution, and length defined for the **Geometry**. The **Data Container** in which to place the **Image Geometry** must be specified.
+This **Filter** creates an **Image Geometry** -- a regular grid of voxels (3D) or pixels (2D). The user supplies the dimensions, spacing, and origin; the filter creates a new geometry object with no cell data attached. Use it before reading raw binary data into a grid, before creating synthetic data on a regular grid, or whenever you need a fresh empty Image Geometry.
 
-An **Image Geometry** is a *grid-like* **Geometry**, and is the simplest and most widely used of the basic **Geometry** types.  An **Image Geometry** is a *regular, rectilinear grid*; if the *dimenionality* of the image is *d*, then only *3*d* numbers are needed to completely define the **Geometry**: three *d*-vectors for the *dimensions*, *origin*, and *spacing*.
+An Image Geometry is the simplest and most widely used DREAM3D-NX geometry type. For dimensionality *d*, only 3 × *d* numbers are needed to completely define it: three *d*-vectors for the dimensions, origin, and spacing.
 
-- Dimensions define the extents of the grid. Stored as unsigned 64 bit integers. The dimensions are also known as the **extents** and are *zero* based thus a dimension with a value of 10 has extents from 0-9.
-- Spacing defines the physical distance between grid planes for each orthogonal direction (constant along a given direction). Stored as 32 bit floating point numbers. Spacing has been known in the past as *resolution* but this term is ambiguous so spacing is used. A value of "microns per pixel" is a good example of "Spacing" units.
-- Origin defines the physical location of the *bottom left* grid point in *d*-dimensional space. Stored as 32 bit floating point numbers.
+- **Dimensions** -- grid extents. Stored as unsigned 64-bit integers. Dimensions are **0-based**, so a dimension of 10 spans extents 0-9. No dimension may be zero or negative.
+- **Spacing** -- physical distance between grid planes along each axis. Stored as 32-bit floats. Units match the source data (e.g., microns per voxel). Spacing must be positive and non-zero. (*Resolution* was the older name; *spacing* is preferred because *resolution* is ambiguous.)
+- **Origin** -- physical location of the bottom-left grid point in the geometry's coordinate system. Stored as 32-bit floats. No value restriction.
 
-All **Image Geometries** in **DREAM3D-NX** are defined as 3D images.  A 2D image is assumed when one of the dimension values is exactly 1; the 2D image is then considered a plane.  Most **DREAM3D-NX** **Filters** will properly take account for the **Image** dimension if it matters (for example, the Find Feature Shapes **Filter** accounts for whether the **Image** is 2D or 3D when computing values such as *aspect ratios* or *axis Euler angles*).  No dimension may be negative or equal to 0.  The spacing must be a positive, non-zero value. The Origin has no value restrictions.  This **Filter** requires the user to enter the nine values for the dimenions, origin, and spacing.
+All Image Geometries are stored as 3D; a 2D image is represented by setting one dimension to exactly 1, producing a plane. Downstream filters that care about dimensionality (e.g., *Compute Feature Shapes*) detect the 2D case automatically.
 
-Since all **Image Geometries** are implicitly 3D (even when plane-like), the fundamental building-block of an image is a *voxel*, which is a 3D object; therefore, the basic **Element** type for an **Image Geometry** is **Cell**.  **Attribute Arrays** associated with **Image Cells** are assumed to raster *x-y-z*, fastest to slowest.
+Since all Image Geometries are implicitly 3D, the building block is a *voxel*, which is a 3D object. The basic **Element** type for an Image Geometry is **Cell**. Attribute arrays associated with cells are stored in x-y-z raster order (fastest to slowest).
+
+![Fig. 1: An Image Geometry is defined by its dimensions (number of cells per axis), spacing (physical distance between grid planes per axis), and origin (the bottom-left grid point).](Images/CreateImageGeometry_OriginSpacingDimensions.png)
 
 ### Example Usage
 
-If you are reading in raw binary data that represents data on a regular grid, the user will need to run this
-filter first to create a description of the **Geometry**.
+When importing raw binary data on a regular grid, run this filter first to create the geometry description; then attach data via subsequent reader filters.
+
+### Required Input Sources
+
+None. The geometry is created from user-supplied parameters.
 
 % Auto generated parameter table will be inserted here
 

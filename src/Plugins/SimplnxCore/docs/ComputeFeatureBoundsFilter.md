@@ -8,7 +8,9 @@ Geometry
 
 **Warning**: *Potential Runtime Error* - It is expected that the max feature id plus one (`max_feature_id_value` + 1) is equal to or less than the number of tuples in the supplied feature Attribute Matrix. This cannot be checked in preflight and will terminate the pipeline if encountered.
 
-This filter calculates the bounding boxes for each feature given Feature Ids and Geometry (refer to table below for supported geometry types and their corresponding feature id sizing). _**This filter does output `NaN`s for empty features**_, cases where a point can not be associated to a feature. The bounding boxes are defined and stored as two points in space, a lower and upper point. The optimal storage solution is use case defined, and as such there are two options provided `split` and `unified`.
+This filter calculates the bounding boxes for each **Feature** given Feature Ids and Geometry (refer to table below for supported geometry types and their corresponding feature id sizing). A **Feature** is a contiguous region of cells (voxels, vertices, edges, or faces) that share the same Feature Id; a **Cell** is the smallest addressable element of the geometry. _**This filter does output `NaN`s for empty features**_, cases where a point can not be associated to a feature. The bounding boxes are defined and stored as two points in space, a lower and upper point. The optimal storage solution is use case defined, and as such there are two options provided `split` and `unified`.
+
+The bounding box values are stored in **physical coordinates** (the same length units as the geometry's origin and spacing), not cell/voxel indices. For an **Image Geometry** each coordinate is computed as `origin + index * spacing`; for node-based geometries (Vertex, Edge, Triangle, Quad) the vertex coordinates are used directly.
 
 ### Output Array(s) Type
 
@@ -19,9 +21,9 @@ The *Output Array(s) Type* parameter controls how the bounding box data is store
 
 | Geometry Type | Expected Feature ID Length|
 |---------------|---------------------------|
-| Image | Equal to Image Dimesions; typically equivalent to the `Cell Data` Attribute Matrix |
+| Image | Equal to the Image Dimensions; typically equivalent to the `Cell Data` Attribute Matrix |
 | Vertex | Equal to the Number of Vertices/Points; typically equivalent to the `Vertex Data` Attribute Matrix |
-| Edge | Equal to the Number of Edges; ; typically equivalent to the `Edge Data` Attribute Matrix |
+| Edge | Equal to the Number of Edges; typically equivalent to the `Edge Data` Attribute Matrix |
 | Triangle | Equal to the Number of Triangles/Faces; typically equivalent to the `Face Data` Attribute Matrix |
 | Quad | Equal to the Number of Quads/Faces; typically equivalent to the `Face Data` Attribute Matrix |
 
@@ -85,6 +87,10 @@ The edges for each bounding box are 12 in number and constructed in following or
 ```
 
 Since edges are the cell level data in edge geometries, the feature ids map to the edges. This means that the feature ids array will always contain 11 more consecutive instances of the same feature from when it first appears (12 total). To know the number of features in the edge geom, just divide the number of edges by 12.
+
+### Required Input Sources
+
+This filter requires a **Cell Feature Ids** array, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or one of the misorientation-based segmentation filters in the OrientationAnalysis plugin. The selected **Feature Data Attribute Matrix** is where the output bounds arrays are created.
 
 % Auto generated parameter table will be inserted here
 

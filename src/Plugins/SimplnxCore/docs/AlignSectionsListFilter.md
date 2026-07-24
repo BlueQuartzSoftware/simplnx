@@ -6,81 +6,57 @@ Reconstruction (Alignment)
 
 ## Description
 
-This **Filter** will apply the precalculated cell shifts to each section of an Image Geometry. It allows for both *relative* or *cumulative* cell shifts. The difference between the two being the former is dependent on the previous slice's position. Under the covers, relative is translated to cumulative before applying shifts to the cells themselves. Previously, the only accepted input was utilizing relative shifts, so use those for backwards compatibility. See the **Handling User Created Shifts File** and **Example Pipelines** sections of this documentation for further hints.
+This **Filter** applies precomputed cell shifts to each section of an **Image Geometry**. Unlike the other alignment filters (which calculate shifts automatically), this filter takes a set of known X and Y shifts as input and applies them directly. This is useful for:
 
-### Input Array Type
+- Applying shifts that were computed by another alignment filter in a previous run
+- Applying user-measured or externally-calculated alignment corrections
+- Re-applying a known good alignment to a dataset
 
-The *Input Array Type* parameter controls how the shift values in the input arrays are interpreted:
+### Shift Units
 
-- **Relative [0]**: Each shift value is a relative offset between adjacent sections. The shift for section N describes how far section N has moved compared to section N-1. These values are internally converted to cumulative shifts before being applied.
-- **Cumulative [1]**: Each shift value is an absolute (cumulative) offset measured from a fixed reference point. The shift for section N describes how far section N has moved from that reference.
+All shift values are in **cell (voxel) units**, not physical units. A shift of 3 means move the section by 3 cells, regardless of the cell's physical size (spacing). The shifts must be integers.
 
-## Handling User Created Shifts File
+### Relative vs. Cumulative Shifts
 
-In this section we will be covering how to get a user defined shift file into the algorithm. This has been included in the documentation for posterity, as the capability was removed in order to offer a less rigid file structuring and to centralize the I/O paradigm.
+The input shifts can be provided in either format:
 
-### File Information
+- **Relative [0]**: Each shift describes the offset of section N relative to section N-1. The filter internally converts these to cumulative shifts before applying them.
+- **Cumulative [1]**: Each shift describes the absolute offset of section N from a fixed reference point.
+
+### Preparing Shift Data from a File
+
+If your shifts are stored in an external file, you need to import them into a DataArray before using this filter:
 
 **Requirements:**
+- The number of shift entries must equal the number of slices (Z dimension of the geometry)
+- Slices must be ordered from bottom to top
 
-- The number of shifts (`x` and `y` both) must be equivalent to the number of slices (Z dimension of the geometry)
-- The slices must be ordered from the bottom of the sample to the top of the sample.
-
-If using relative shifts for the algorithm, the first line of shifts should be the second slice relative to the first, then the next line is the third slice relative to the second, and so on
-
-**Recommendations:**
-
-The **user** created alignment file is recommended have the format as follows:
+**Recommended file format** (space-delimited, two values per line):
 
 ```console
 xshift yshift
 xshift yshift
 xshift yshift
-etc...
+...
 ```
 
-**Backwards Compatibility Information:**
+**To import this format:**
 
-For versions of 7.0.3 and below, the DREAM3D and DREAM3DNX produced had the following format:
+1. Use the [Read Text Data Array](ReadTextDataArrayFilter.md) filter
+2. Set *Input Numeric Type* to `signed int 64 bit`
+3. Set *Number of Components* to `2`
+4. Set *Delimiter* to space
+5. Set the *Data Array Dimensions* to match the Z dimension of your geometry
 
-```console
-slice_m slice_m+1 newxshift newyshift xshifts yshifts
-slice_n slice_n+1 newxshift newyshift xshifts yshifts
-etc...
-```
+For more complex file formats (e.g., legacy DREAM3D alignment files with 6 columns), use the [Read CSV File](ReadCSVFileFilter.md) filter instead. See the backwards compatibility example pipeline for details.
 
-Where:
+### Note on Legacy Files
 
-- `newxshift` and `newyshift` were the relative shifts
-- `xshifts` and `yshifts` were the cumulative shifts.
-- `xcentroid` and `ycentroid` were appended to the end for `AlignSectionsFeatureCentroid`
+Alignment shift files from DREAM3D/DREAM3DNX versions 7.0.3 and earlier used a 6-column format with both relative and cumulative shifts. If using these files, import via the [Read CSV File](ReadCSVFileFilter.md) filter and select the appropriate columns. Files produced by the legacy `AlignSectionsFeatureCentroid` contained zeros for relative shifts -- use cumulative shifts for those.
 
-**Note: Previous implementations of `AlignSectionsFeatureCentroid` were printing zeros for the relative shifts, so if you are using a file produced by that you must use cumulative shifts.**
+### Required Input Sources
 
-### Importing
-
-Use "Read CSV File" (`ReadCSVFileFilter`) or "Read Text Data Array" (`ReadTextDataArrayFilter`) to get your data into an array.
-
-**Recommendations:**
-
-If you have a file matching the recommended **user** created alignement file above, the process can be expidited with "Read Text Data Array" (`ReadTextDataArrayFilter`).
-
-To do so:
-
-1. supply your file in the "Input Text File" parameter
-2. set "Input Numeric Type" parameter to `signed int 64 bit`
-3. set "Number of Components" parameter to `2`
-4. change the "Delimiter" parameter to ` (space)` (index number `2` for python)
-5. in the "Created Array Path" parameter, leave the path empty, and name it according to the type of shifts ("relative_shifts" or "cumulative_shifts")
-6. get the tuple dims of the Z dimension of your geometry, and put it into the "Data Array Dimensions (Slowest to Fastest)" parameter
-
-**Backwards Compatibility Information:**
-
-For alignment shifts files from the previous version, you **must** use the "Read CSV File" (`ReadCSVFileFilter`). This is a complicated filter parameter wise, so see the documentation provided with the filter. It is recommended to store these in an Attribute Matrix with dimensions equivalent to that of the Z dimension of the target geometry.
-
-### Conclusion
-
-The imported data should be prepared and compatible with the Align Sections List input by now. If you have further questions see one of the example pipelines below.
+- **Cell Shifts Array** -- a two-component int64 array with one entry per Z-slice. Import this from an external file using [Read Text Data Array](ReadTextDataArrayFilter.md) (simple format) or [Read CSV File](ReadCSVFileFilter.md) (complex/legacy format); or pass the *Relative Shifts* / *Cumulative Shifts* array produced by another alignment filter such as [Align Sections (Feature Centroid)](AlignSectionsFeatureCentroidFilter.md), [Align Sections (Misorientation)](../OrientationAnalysis/AlignSectionsMisorientationFilter.md), or [Align Sections (Mutual Information)](../OrientationAnalysis/AlignSectionsMutualInformationFilter.md).
 
 % Auto generated parameter table will be inserted here
 

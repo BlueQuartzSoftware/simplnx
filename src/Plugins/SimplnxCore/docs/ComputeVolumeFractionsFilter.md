@@ -6,11 +6,17 @@ Statistics (Morphological)
 
 ## Description
 
-This **Filter** determines the volume fraction of each **Ensemble**. The **Filter** counts the number of **Cells** belonging to each **Ensemble** and stores the number fraction.
+This filter determines the volume fraction of each **Ensemble**. An **Ensemble** is a grouping of **Features** that share a common characteristic, such as a crystallographic phase. The filter counts the number of **Cells** belonging to each **Ensemble** and divides by the total number of **Cells**.
+
+On an **Image Geometry** every **Cell** has the same volume, so this count fraction is identical to the true volume fraction: dividing each **Ensemble**'s **Cell** count by the total **Cell** count gives the same result as dividing each **Ensemble**'s summed **Cell** volume by the total volume. The output is therefore a per-**Ensemble**, dimensionless volume fraction in the range [0, 1], where all of the fractions sum to 1.
+
+The result is written to the *Volume Fractions* array in the selected **Ensemble Attribute Matrix**.
+
+### Required Input Sources
+
+- **Cell Phases** -- a per-**Cell** integer array specifying which **Ensemble** each **Cell** belongs to. This array is typically read directly from EBSD data; the related feature-level array is produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
 % Auto generated parameter table will be inserted here
-
-## Example Pipelines
 
 ## License & Copyright
 

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="axArr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2C3E50"/></marker>
+    <marker id="vArrB" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#B7C0C8"/></marker>
+    <marker id="vArrA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2874A6"/></marker>
+    <marker id="thArr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#8E44AD"/></marker>
+  </defs>
+
+  <rect width="760" height="420" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="380" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Rotation by axis and angle</text>
+  <text x="380" y="56" text-anchor="middle" fill="#5D6D7E" font-size="13">Apply Transformation to Geometry — the "Rotation" transform type</text>
+
+  <!-- ===== axis-angle scene (left) ===== -->
+  <!-- plane of rotation (disk) -->
+  <ellipse cx="250" cy="235" rx="95" ry="32" fill="#EBF5FB" fill-opacity="0.7" stroke="#AED6F1" stroke-width="1.5"/>
+  <!-- rotation axis n through the disk -->
+  <line x1="228" y1="330" x2="272" y2="118" stroke="#2C3E50" stroke-width="2.5" marker-end="url(#axArr)"/>
+  <text x="278" y="112" fill="#2C3E50" font-size="13" font-weight="700">n = (x, y, z)</text>
+  <text x="214" y="344" fill="#5D6D7E" font-size="11">rotation axis</text>
+
+  <!-- before vector (faded) -->
+  <line x1="250" y1="235" x2="345" y2="235" stroke="#B7C0C8" stroke-width="2.5" marker-end="url(#vArrB)"/>
+  <text x="352" y="239" fill="#98A2AB" font-size="11.5" font-weight="600">before</text>
+  <!-- after vector (blue) -->
+  <line x1="250" y1="235" x2="160" y2="214" stroke="#2874A6" stroke-width="2.5" marker-end="url(#vArrA)"/>
+  <text x="118" y="210" fill="#2874A6" font-size="11.5" font-weight="600">after</text>
+  <!-- angle theta arc over the top -->
+  <path d="M 322 224 Q 250 176 178 212" fill="none" stroke="#8E44AD" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#thArr)"/>
+  <text x="250" y="196" text-anchor="middle" fill="#8E44AD" font-size="15" font-weight="700">θ</text>
+
+  <!-- ===== right column ===== -->
+  <!-- parameter box -->
+  <g transform="translate(430, 84)">
+    <rect x="0" y="0" width="288" height="70" rx="7" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.2"/>
+    <text x="14" y="22" fill="#2874A6" font-size="12" font-weight="700">Rotation parameter</text>
+    <text x="14" y="45" fill="#1a5276" font-size="15" font-weight="700" font-family="'DejaVu Sans Mono',monospace">rotation = [ x, y, z, θ° ]</text>
+    <text x="14" y="62" fill="#5D6D7E" font-size="11">unit axis (x, y, z)  +  angle θ in degrees</text>
+  </g>
+
+  <!-- geometric-vs-refframe note -->
+  <g transform="translate(430, 168)">
+    <rect x="0" y="0" width="288" height="88" rx="7" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.2"/>
+    <circle cx="18" cy="22" r="9" fill="#8E44AD"/>
+    <text x="18" y="26" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">i</text>
+    <text x="34" y="19" fill="#4A235A" font-size="11.5">A <tspan font-weight="600">true geometric transform</tspan> — the geometry</text>
+    <text x="34" y="35" fill="#4A235A" font-size="11.5">actually moves (image geometries are re-gridded</text>
+    <text x="34" y="51" fill="#4A235A" font-size="11.5">and interpolated). To rotate the coordinate frame</text>
+    <text x="34" y="67" fill="#4A235A" font-size="11.5">instead, use <tspan font-weight="600">Rotate Sample Reference Frame</tspan>.</text>
+  </g>
+
+  <!-- tip: other transform types -->
+  <g transform="translate(430, 270)">
+    <rect x="0" y="0" width="288" height="66" rx="7" fill="#FEF5E7" stroke="#E67E22" stroke-width="1.2"/>
+    <path d="M18 8 l2.4 4.9 5.4 0.8 -3.9 3.8 0.9 5.4 -4.8 -2.5 -4.8 2.5 0.9 -5.4 -3.9 -3.8 5.4 -0.8 z" fill="#E67E22"/>
+    <text x="36" y="20" fill="#7E5109" font-size="11.5"><tspan font-weight="600">Transformation Type</tspan> also offers Translation,</text>
+    <text x="36" y="36" fill="#7E5109" font-size="11.5">Scale, a manual 4×4 matrix, or a precomputed</text>
+    <text x="36" y="52" fill="#7E5109" font-size="11.5">transformation matrix.</text>
+  </g>
+</svg>
