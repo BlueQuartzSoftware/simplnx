@@ -2,7 +2,6 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
@@ -17,12 +16,12 @@ struct CopyCellDataFunctor
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
+    const usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
 
     std::map<int32, usize> featureMap;
     Result<> result;
 
-    usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
+    const usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
     for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
       if(shouldCancel)
@@ -30,17 +29,17 @@ struct CopyCellDataFunctor
         return {};
       }
 
-      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-      int32 featureIdx = featureIds[cellTupleIdx];
+      // Get the feature identifier (or whatever the user has selected as their "Feature" identifier
+      const int32 featureIdx = featureIds[cellTupleIdx];
 
       // Store the index of the first tuple with this feature identifier in the map
-      if(featureMap.find(featureIdx) == featureMap.end())
+      if(!featureMap.contains(featureIdx))
       {
         featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
       }
 
       // Check that the values at the current index match the value at the first index
-      usize firstInstanceCellTupleIdx = featureMap[featureIdx];
+      const usize firstInstanceCellTupleIdx = featureMap[featureIdx];
       for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
       {
         T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
@@ -83,8 +82,8 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
   auto* createdArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size
-  usize featureIdsMaxIdx = std::distance(featureIdsRef.begin(), std::max_element(featureIdsRef.cbegin(), featureIdsRef.cend()));
-  usize maxValue = featureIdsRef[featureIdsMaxIdx];
+  const usize featureIdsMaxIdx = std::distance(featureIdsRef.begin(), std::max_element(featureIdsRef.cbegin(), featureIdsRef.cend()));
+  const usize maxValue = featureIdsRef[featureIdsMaxIdx];
   auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
 
   auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
