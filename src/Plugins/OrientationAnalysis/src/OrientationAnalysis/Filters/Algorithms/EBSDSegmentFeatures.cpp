@@ -58,7 +58,7 @@ Result<> EBSDSegmentFeatures::operator()()
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures));
+    return MakeErrorResult(-87000, "No Features were detected: no Cell was eligible to seed a Feature. Every Cell is either excluded by the Mask or has a Phase value of 0 (unindexed).");
   }
 
   // Resize the Feature Attribute Matrix

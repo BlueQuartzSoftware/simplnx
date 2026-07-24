@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
@@ -54,13 +55,26 @@ Result<> CAxisSegmentFeatures::operator()()
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   const usize numCells = m_CellPhases->getNumberOfTuples();
   const usize numEnsembles = crystalStructures.getNumberOfTuples();
+  // Each phase only needs to be validated once. Caching validated phases keeps the loop from
+  // paying a per-cell mask lookup (expensive per-element access on out-of-core stores) for every
+  // cell of an already-validated phase — in the common all-hexagonal case the mask is consulted
+  // only for the first cell of each phase.
+  std::vector<uint8> phaseValidated(numEnsembles, 0);
   for(usize cellIdx = 0; cellIdx < numCells; ++cellIdx)
   {
     const int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
     // Cells that can never seed or join a feature are exempt from the crystal-structure
     // requirement: phase 0 is the conventional "unindexed" phase (its CrystalStructures entry is
     // the 999 "unknown" sentinel), and masked-out cells are excluded from segmentation entirely.
-    if(currentPhaseIdx <= 0 || (m_GoodVoxelsArray != nullptr && !m_GoodVoxelsArray->isTrue(cellIdx)))
+    if(currentPhaseIdx <= 0)
+    {
+      continue;
+    }
+    if(static_cast<usize>(currentPhaseIdx) < numEnsembles && phaseValidated[currentPhaseIdx] != 0)
+    {
+      continue;
+    }
+    if(m_GoodVoxelsArray != nullptr && !m_GoodVoxelsArray->isTrue(cellIdx))
     {
       continue;
     }
@@ -77,6 +91,7 @@ Result<> CAxisSegmentFeatures::operator()()
                                                 "segmentation to be either Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures.",
                                                 CrystalStructureEnumToString(crystalStructureType)));
     }
+    phaseValidated[currentPhaseIdx] = 1;
   }
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -97,7 +112,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // Sanity check the result.
   if(m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. The C-Axis Misorientation Tolerance may be set too low.", m_FoundFeatures));
+    return MakeErrorResult(-87000, "No Features were detected: no Cell was eligible to seed a Feature. Every Cell is either excluded by the Mask or has a Phase value of 0 (unindexed).");
   }
 
   // Resize the Feature Attribute Matrix

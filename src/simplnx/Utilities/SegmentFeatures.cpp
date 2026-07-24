@@ -147,6 +147,12 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   int32 gnum = 1;
   int64 nextSeed = 0;
+  // A run that is already canceled on entry must not mutate anything; getSeed() stamps the seed
+  // cell's FeatureId as a side effect.
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   // The first seed must be validated (and its cell stamped with gnum) by getSeed() exactly like
   // every later seed; bursting from a raw index 0 can grow a feature from a masked or phase-0
   // voxel and leaves an empty feature behind whenever index 0 cannot legitimately seed anything.
