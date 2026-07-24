@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+// DataObjectNameParameter.hpp and MultiPathSelectionParameter.hpp provide the SIMPLConversion
+// converters (LinkedPathCreation..., SingleToMultiDataPathSelection...) used in FromSIMPLJson()
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
@@ -52,9 +54,9 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Cell Data",
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPaths_Key, "Feature Data to Copy to Cell Data",
                                                                "The DataPath to the feature data that should be copied to the cell level", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -81,9 +83,9 @@ IFilter::UniquePointer CopyFeatureArrayToElementArrayFilter::clone() const
 IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto pSelectedFeatureArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPath_Key);
-  const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto createdArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
+  const auto pSelectedFeatureArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
+  const auto pFeatureIdsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  const auto pCreatedArraySuffixValue = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -91,6 +93,11 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
   if(pSelectedFeatureArrayPathsValue.empty())
   {
     return MakePreflightErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, "You must select at least one feature data array to copy to an element data array.");
+  }
+
+  if(pCreatedArraySuffixValue.find('/') != std::string::npos)
+  {
+    return MakePreflightErrorResult(-3021, fmt::format("The Created Array Suffix '{}' must not contain a '/' character.", pCreatedArraySuffixValue));
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
@@ -101,14 +108,14 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
   const IDataStore& featureIdsArrayStore = featureIdsArray.getIDataStoreRef();
-  const std::vector<usize>& tDims = featureIdsArrayStore.getTupleShape();
+  const std::vector<usize>& tupleShape = featureIdsArrayStore.getTupleShape();
 
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
-    DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
+    DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + pCreatedArraySuffixValue);
     const auto& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
     DataType dataType = selectedFeatureArray.getDataType();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, selectedFeatureArray.getComponentShape(), createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, tupleShape, selectedFeatureArray.getComponentShape(), createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -120,7 +127,7 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   CopyFeatureArrayToElementArrayInputValues inputValues;
-  inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPath_Key);
+  inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
   inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CreatedArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
@@ -144,7 +151,7 @@ Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nloh
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   // Do NOT map the legacy CreatedArrayName onto k_CreatedArraySuffix_Key: the legacy filter converted a
   // single array whose output name was CreatedArrayName, but in SIMPLNX that string would be appended to
