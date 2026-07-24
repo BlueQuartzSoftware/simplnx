@@ -210,7 +210,17 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Run the segmentation algorithm
-  execute(gridGeom);
+  Result<> segmentResult = execute(gridGeom);
+  if(segmentResult.invalid())
+  {
+    return segmentResult;
+  }
+  // A canceled run returns successfully with no feature count; do not misreport it below as
+  // "no Features were detected".
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {

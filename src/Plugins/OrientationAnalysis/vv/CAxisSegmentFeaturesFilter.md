@@ -79,7 +79,7 @@ Logical phases: **(a) init + validation** in `operator()`, **(b) flood-fill driv
 | 10 | (b)   | All-connected (26-neighbor) scheme                                                          | `Class 1 Analytical (Neighbor Scheme Face vs All)` — "All Connected Neighbors" section    |
 | 11 | (b)   | Cancel requested → early return                                                             | *Not directly tested. Requires cancel-signal injection; low-value gap.*                   |
 | 12 | (c)   | Seed scan skips owned / masked / phase ≤ 0 cells                                            | `Mask Excludes Voxel 0`; `Phase 0 (Unindexed) Cells Tolerated`                            |
-| 13 | (c)   | Seed found → stamp FeatureId + resize feature AM                                            | Every successful Class 1 test (`CheckActiveArray` tuple counts)                           |
+| 13 | (c)   | Seed found → stamp FeatureId (feature AM resized once, post-run, in phase (e))              | Every successful Class 1 test (`CheckActiveArray` tuple counts)                           |
 | 14 | (c)   | No seed remains → return −1, driver exits                                                   | Every test (loop termination); immediately in `No Features Found (-87000)`                |
 | 15 | (d)   | Neighbor already owned or masked-out → reject                                               | Chain fixtures (burst revisits owned neighbors); `Mask Excludes Voxel 0` (cells 0, 3)     |
 | 16 | (d)   | Phases differ → reject                                                                      | `Class 1 Analytical (Phase Separation)`; `Phase 0 (Unindexed) Cells Tolerated`            |

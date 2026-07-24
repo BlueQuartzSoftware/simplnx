@@ -81,8 +81,6 @@ Result<> CAxisSegmentFeatures::operator()()
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0);
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->fill(1);
 
   // Run the segmentation algorithm
   Result<> segmentResult = execute(gridGeom);
@@ -108,6 +106,7 @@ Result<> CAxisSegmentFeatures::operator()()
   cellFeatureAM.resizeTuples(tDims); // This will resize the active array
 
   // make sure all values are initialized and "re-reserve" index 0
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   activeArray->getDataStore()->fill(1);
   (*activeArray)[0] = 0;
 
@@ -152,10 +151,10 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+    // Stamp the seed only; the Feature AttributeMatrix is resized once in operator() after the
+    // segmentation completes (matching the sibling EBSD/Scalar algorithms). Nothing reads the
+    // feature-level arrays while the flood fill runs.
     featureIdsRef[static_cast<usize>(seed)] = gnum;
-    const ShapeType tDims = {static_cast<usize>(gnum) + 1};
-    cellFeatureAM.resizeTuples(tDims); // This will resize the active array
   }
   return seed;
 }
