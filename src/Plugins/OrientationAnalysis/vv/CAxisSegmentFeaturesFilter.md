@@ -116,7 +116,7 @@ Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple m
 | `SIMPL Backwards Compatibility` | kept | DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; UUID + argument-key conversion only. |
 | *(retired)* `CAxisSegmentFeatures:Face` / `:All` / `:MaskFace` / `:MaskAll` | retired | Consumed the `segment_features_test_data.tar.gz` exemplar whose `CAxis_FeatureIds_*` arrays were generated from SIMPLNX output — a circular oracle (see provenance sidecar). Replaced by the Class 1 fixtures, which cover the same scheme × mask parameter cube with independent expected output. |
 
-All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (20/20 each, 2026-07-24). The shared-driver fix (D1) was regression-checked against the full `EBSDSegmentFeatures` (7/7) and `ScalarSegmentFeatures` (4/4) suites in both builds, including per-sibling masked-voxel-0 and all-cells-masked (`-87000`) regression pins.
+All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (20/20 each, 2026-07-24). The shared-driver fix (D1) was regression-checked against the full `EBSDSegmentFeatures` (8/8) and `ScalarSegmentFeatures` (5/5) suites in both builds, including per-sibling masked-voxel-0, all-cells-masked (`-87000`), and periodic-boundary-wrap regression pins.
 
 ## Exemplar archive
 

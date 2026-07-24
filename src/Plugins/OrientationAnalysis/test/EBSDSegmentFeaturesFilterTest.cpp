@@ -400,6 +400,75 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Masked Voxel 0 Seed V
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Boundary Wrap", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // Regression pin for the IsPeriodic parameter (previously a silent no-op in the shared
+  // SegmentFeatures driver). 4x1x1 line of pure rotations about x by Phi = [0, 30, 30, 2]
+  // degrees (Hexagonal_High): pairwise misorientations equal |dPhi|, so at tolerance 10 the
+  // non-periodic partition is {0} {1,2} {3}; periodic, the x boundary wraps and the end cells
+  // (misorientation 2 degrees) join: {0,3} {1,2}.
+  auto runFilter = [](bool isPeriodic) -> std::vector<int32> {
+    DataStructure dataStructure;
+    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeom->setDimensions({4, 1, 1});
+    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 4}, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 4}, {4}, cellAM->getId());
+    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 4}, {1}, cellAM->getId());
+    auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
+    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+
+    const std::vector<float32> phiDegrees = {0.0f, 30.0f, 30.0f, 2.0f};
+    for(usize cellIdx = 0; cellIdx < phiDegrees.size(); cellIdx++)
+    {
+      const float32 halfAngleRad = (phiDegrees[cellIdx] * 0.5f) * Constants::k_PiOver180F;
+      (*quatsArrayPtr)[cellIdx * 4 + 0] = std::sin(halfAngleRad);
+      (*quatsArrayPtr)[cellIdx * 4 + 1] = 0.0f;
+      (*quatsArrayPtr)[cellIdx * 4 + 2] = 0.0f;
+      (*quatsArrayPtr)[cellIdx * 4 + 3] = std::cos(halfAngleRad);
+      (*phasesArrayPtr)[cellIdx] = 1;
+    }
+    (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+
+    EBSDSegmentFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(10.0F));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Mask"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Geometry"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Quats"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Phases"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})).getDataStoreRef();
+    std::vector<int32> featureIds(featureIdsRef.getNumberOfTuples());
+    for(usize cellIdx = 0; cellIdx < featureIds.size(); cellIdx++)
+    {
+      featureIds[cellIdx] = featureIdsRef[cellIdx];
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    return featureIds;
+  };
+
+  REQUIRE(runFilter(false) == std::vector<int32>{1, 2, 2, 3});
+  REQUIRE(runFilter(true) == std::vector<int32>{1, 2, 2, 1});
+}
+
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Execute Error - All Cells Masked (-87000)", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
