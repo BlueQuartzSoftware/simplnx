@@ -233,6 +233,14 @@ void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::P
      << "Sample Physical Dimensions: " << (xStep * colCount) << " (W) x " << (yStep * rowCount) << " (H) microns"
      << "\n";
 
+  if constexpr(std::is_same_v<ReaderType, ebsdlib::CtfReader>)
+  {
+    if(reader.getZCells() > 1)
+    {
+      ss << "Num Slices (Z): " << reader.getZCells() << "    Z Step: " << (reader.getZStep() > 0.0F ? reader.getZStep() : 1.0F) << "\n";
+    }
+  }
+
   preflightUpdatedValues.push_back({"Scan Information", ss.str()});
 }
 

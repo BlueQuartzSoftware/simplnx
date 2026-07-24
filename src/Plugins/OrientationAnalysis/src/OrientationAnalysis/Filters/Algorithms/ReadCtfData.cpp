@@ -5,18 +5,24 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 
 #include <EbsdLib/IO/HKL/CtfConstants.h>
+#include <EbsdLib/IO/HKL/CtfPhase.h>
 #include <EbsdLib/Math/EbsdLibMath.h>
+
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
 
-using FloatVec3Type = std::vector<float>;
-
 // -----------------------------------------------------------------------------
-ReadCtfData::ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadCtfDataInputValues* inputValues)
+ReadCtfData::ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadCtfDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHandler(msgHandler)
 {
 }
 
@@ -24,171 +30,255 @@ ReadCtfData::ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHan
 ReadCtfData::~ReadCtfData() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ReadCtfData::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ReadCtfData::operator()()
 {
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading .ctf file '{}'", m_InputValues->InputFile.string()));
   ebsdlib::CtfReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
   if(err < 0)
   {
-    return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
+    // CtfReader does not set its error-code member on every failure path (the zero-step and
+    // zero-cells rejections only set the message), so fall back to the returned code.
+    const int32_t errorCode = reader.getErrorCode() < 0 ? reader.getErrorCode() : err;
+    return MakeErrorResult(errorCode, reader.getErrorMessage());
   }
 
-  const auto result = loadMaterialInfo(&reader);
-  if(result.first < 0)
+  Result<> result = loadMaterialInfo(&reader);
+  if(result.invalid())
   {
-    return MakeErrorResult(result.first, result.second);
+    return result;
   }
 
-  copyRawEbsdData(&reader);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
-  return {};
+  m_MessageHandler(IFilter::Message::Type::Info, "Copying cell data into the Image Geometry");
+  return copyRawEbsdData(&reader);
 }
 
 // -----------------------------------------------------------------------------
-std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(ebsdlib::CtfReader* reader) const
+Result<> ReadCtfData::loadMaterialInfo(ebsdlib::CtfReader* reader) const
 {
-  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
-
   const std::vector<ebsdlib::CtfPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
-    return {reader->getErrorCode(), reader->getErrorMessage()};
+    // A "Phases 0" header parses successfully (CtfReader's error code stays 0), but a file with no
+    // phase definitions carries no usable ensemble information, and every data row's phase value
+    // would then be out of range. Reject the file with a clear message instead. (Historical note:
+    // before this guard the early return here skipped the ensemble initialization below, and since
+    // Hexagonal_High is enum value 0, the zero-filled CrystalStructures applied the +30 degree
+    // hexagonal alignment to every point.)
+    return MakeErrorResult(-19600, fmt::format("The .ctf file '{}' declares no phases in its header. At least one phase definition is required.", m_InputValues->InputFile.string()));
   }
 
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
+  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
 
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::MaterialName));
   auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::LatticeConstants));
 
   const std::string k_InvalidPhase = "Invalid Phase";
+  const usize numTuples = crystalStructures.getNumberOfTuples();
 
-  // Initialize the zero'th element to unknowns. The other elements will
-  // be filled in based on values from the data file
-  crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-  materialNames[0] = k_InvalidPhase;
-
-  for(size_t i = 0; i < 6; i++)
+  // Initialize EVERY slot to the "Invalid Phase" defaults first. Slot 0 is always the invalid
+  // phase; CtfReader assigns phase indices sequentially (1..N) so every other slot is refilled
+  // by the loop below, but initializing them all keeps the defaults authoritative rather than
+  // relying on zero-initialized storage.
+  for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
-    latticeConstants.getDataStoreRef().setComponent(0, i, 0.0F);
+    crystalStructures[tupleIndex] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    materialNames[tupleIndex] = k_InvalidPhase;
+    for(usize i = 0; i < 6; i++)
+    {
+      latticeConstants.getDataStoreRef().setComponent(tupleIndex, i, 0.0F);
+    }
   }
 
   for(const ebsdlib::CtfPhase::Pointer& phase : phases)
   {
-    const int32_t phaseID = phase->getPhaseIndex();
+    const auto phaseID = static_cast<usize>(phase->getPhaseIndex());
+    // The ensemble arrays were sized at preflight from the same file's phase count, so an index at
+    // or above the tuple count can only mean the file gained a phase between preflight and execute.
+    if(phaseID >= numTuples)
+    {
+      return MakeErrorResult(
+          -19605, fmt::format("Phase index {} from the .ctf file is at or above the Ensemble Attribute Matrix count {}. The input file may have changed since preflight.", phaseID, numTuples));
+    }
     crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
-    const std::string materialName = phase->getMaterialName();
-    materialNames[phaseID] = materialName;
+    materialNames[phaseID] = phase->getMaterialName();
 
-    std::vector<float> lattConst = phase->getLatticeConstants();
-
-    for(size_t i = 0; i < 6; i++)
+    const std::vector<float32> lattConst = phase->getLatticeConstants();
+    for(usize i = 0; i < 6; i++)
     {
       latticeConstants.getDataStoreRef().setComponent(phaseID, i, lattConst[i]);
     }
   }
-  return {0, ""};
+  return {};
 }
 
 // -----------------------------------------------------------------------------
-void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
+Result<> ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
   const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
-  std::vector<size_t> cDims = {1};
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  const size_t totalCells = imageGeom.getNumberOfCells();
+  const usize totalCells = imageGeom.getNumberOfCells();
 
-  // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
-  std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
-
-  // Copy the Phase Array
+  // The Image Geometry was sized at preflight from the file's XCells/YCells/ZCells header keys.
+  // Every copy below reads totalCells elements out of the reader's buffers, so if the reader
+  // actually produced fewer elements (a file that changed between preflight and execute), the
+  // copies would read past the end of the reader's heap buffers. Guard against that.
+  if(reader->getNumberOfElements() < totalCells)
   {
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
-    int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
-    for(size_t i = 0; i < totalCells; i++)
+    return MakeErrorResult(-19603, fmt::format("The .ctf reader produced {} scan points but the Image Geometry created at preflight expects {}. The input file may have changed since preflight.",
+                                               reader->getNumberOfElements(), totalCells));
+  }
+
+  // A .ctf file's data section defines its own columns; a file missing one of the standard
+  // columns hands back a null buffer, which must be rejected rather than dereferenced.
+  auto fetchColumn = [&reader](const std::string& columnName, void*& ptr) -> Result<> {
+    ptr = reader->getPointerByName(columnName);
+    if(ptr == nullptr)
     {
+      return MakeErrorResult(-19601, fmt::format("The .ctf file's data section does not contain the required column '{}'.", columnName));
+    }
+    return {};
+  };
+
+  void* phaseColumnPtr = nullptr;
+  void* euler1Ptr = nullptr;
+  void* euler2Ptr = nullptr;
+  void* euler3Ptr = nullptr;
+  {
+    Result<> fetchResult = fetchColumn(ebsdlib::Ctf::Phase, phaseColumnPtr);
+    if(fetchResult.invalid())
+    {
+      return fetchResult;
+    }
+    fetchResult = fetchColumn(ebsdlib::Ctf::Euler1, euler1Ptr);
+    if(fetchResult.invalid())
+    {
+      return fetchResult;
+    }
+    fetchResult = fetchColumn(ebsdlib::Ctf::Euler2, euler2Ptr);
+    if(fetchResult.invalid())
+    {
+      return fetchResult;
+    }
+    fetchResult = fetchColumn(ebsdlib::Ctf::Euler3, euler3Ptr);
+    if(fetchResult.invalid())
+    {
+      return fetchResult;
+    }
+  }
+
+  // Copy the Phase column verbatim. Unlike EDAX .ang files, a phase value of 0 is meaningful in
+  // .ctf files (a "zero solutions" / unindexed point) and is preserved as-is; the legacy remap of
+  // phase<1 -> 1 was deliberately removed (PR #937).
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
+    const usize ensembleTupleCount = crystalStructures.getNumberOfTuples();
+
+    const auto* phasePtr = static_cast<const int32*>(phaseColumnPtr);
+    for(usize i = 0; i < totalCells; i++)
+    {
+      // The raw phase value indexes the ensemble arrays in the Euler loop below, so an
+      // out-of-range value (a corrupt file, or a phase column inconsistent with the header's
+      // phase count) would be an out-of-bounds read there. Reject it here.
+      if(phasePtr[i] < 0 || static_cast<usize>(phasePtr[i]) >= ensembleTupleCount)
+      {
+        return MakeErrorResult(
+            -19602, fmt::format("Scan point {} carries phase value {}, which is outside the valid range [0, {}] established by the file's phase definitions.", i, phasePtr[i], ensembleTupleCount - 1));
+      }
       targetArray[i] = phasePtr[i];
     }
   }
 
-  // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
+  // Condense the Euler Angles from 3 separate arrays into a single 3-component array, applying
+  // the optional EDAX hexagonal-alignment (+30 degrees on phi2) and degrees-to-radians
+  // conversions. Both use double-precision intermediates so the stored float32 values are the
+  // correctly-rounded results (this also matches DREAM3D 6.5.171 bit-for-bit).
   {
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
-    auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
+    // Read the phase values from the reader's buffer rather than the just-written Phases array:
+    // the copy above was verbatim and range-validated, and this avoids streaming a second
+    // DataStructure array (which may be out-of-core backed) through the loop.
+    const auto* cellPhases = static_cast<const int32*>(phaseColumnPtr);
 
-    const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler1));
-    const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler2));
-    const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler3));
-    cDims[0] = 3;
+    const auto* fComp0 = static_cast<const float32*>(euler1Ptr);
+    const auto* fComp1 = static_cast<const float32*>(euler2Ptr);
+    const auto* fComp2 = static_cast<const float32*>(euler3Ptr);
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
-    for(size_t i = 0; i < totalCells; i++)
+    for(usize i = 0; i < totalCells; i++)
     {
-      cellEulerAngles[3 * i] = fComp0[i];
-      cellEulerAngles[3 * i + 1] = fComp1[i];
-      cellEulerAngles[3 * i + 2] = fComp2[i];
+      float32 euler1 = fComp0[i];
+      float32 euler2 = fComp1[i];
+      float32 euler3 = fComp2[i];
+      // See the filter documentation for this correction factor: Oxford Instruments aligns the
+      // hexagonal crystal x-axis with [10-10] while DREAM3D-NX follows the EDAX/TSL convention
+      // of aligning it with [2-1-10], a 30 degree rotation about [0001] applied to phi2.
       if(crystalStructures[cellPhases[i]] == ebsdlib::CrystalStructure::Hexagonal_High && m_InputValues->EdaxHexagonalAlignment)
       {
-        cellEulerAngles[3 * i + 2] = cellEulerAngles[3 * i + 2] + 30.0F; // See the documentation for this correction factor
+        euler3 = static_cast<float32>(static_cast<float64>(euler3) + 30.0);
       }
-      // Now convert to radians if requested by the user
       if(m_InputValues->DegreesToRadians)
       {
-        cellEulerAngles[3 * i] = cellEulerAngles[3 * i] * ebsdlib::constants::k_PiOver180F;
-        cellEulerAngles[3 * i + 1] = cellEulerAngles[3 * i + 1] * ebsdlib::constants::k_PiOver180F;
-        cellEulerAngles[3 * i + 2] = cellEulerAngles[3 * i + 2] * ebsdlib::constants::k_PiOver180F;
+        euler1 = static_cast<float32>(static_cast<float64>(euler1) * ebsdlib::constants::k_PiOver180D);
+        euler2 = static_cast<float32>(static_cast<float64>(euler2) * ebsdlib::constants::k_PiOver180D);
+        euler3 = static_cast<float32>(static_cast<float64>(euler3) * ebsdlib::constants::k_PiOver180D);
       }
+      cellEulerAngles[3 * i] = euler1;
+      cellEulerAngles[3 * i + 1] = euler2;
+      cellEulerAngles[3 * i + 2] = euler3;
     }
   }
 
-  cDims[0] = 1;
+  if(m_ShouldCancel)
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Bands));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Bands));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    return {};
   }
 
+  // The remaining columns are copied verbatim.
+  const std::vector<std::pair<std::string, nx::core::DataType>> passthroughColumns = {
+      {ebsdlib::Ctf::Bands, DataType::int32}, {ebsdlib::Ctf::Error, DataType::int32}, {ebsdlib::Ctf::MAD, DataType::float32}, {ebsdlib::Ctf::BC, DataType::int32},
+      {ebsdlib::Ctf::BS, DataType::int32},    {ebsdlib::Ctf::X, DataType::float32},   {ebsdlib::Ctf::Y, DataType::float32},
+  };
+  for(const auto& [columnName, dataType] : passthroughColumns)
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Error));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Error));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    void* columnPtr = nullptr;
+    Result<> fetchResult = fetchColumn(columnName, columnPtr);
+    if(fetchResult.invalid())
+    {
+      return fetchResult;
+    }
+    const DataPath targetPath = cellAttributeMatrixPath.createChildPath(columnName);
+    if(dataType == DataType::int32)
+    {
+      const auto* sourcePtr = static_cast<const int32*>(columnPtr);
+      auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(targetPath);
+      std::copy(sourcePtr, sourcePtr + totalCells, targetArray.begin());
+    }
+    else
+    {
+      const auto* sourcePtr = static_cast<const float32*>(columnPtr);
+      auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(targetPath);
+      std::copy(sourcePtr, sourcePtr + totalCells, targetArray.begin());
+    }
   }
 
-  {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::MAD));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::MAD));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
-  }
-
-  {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BC));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::BC));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
-  }
-
-  {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BS));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::BS));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
-  }
-
-  {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::X));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::X));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
-  }
-
-  {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Y));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Y));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
-  }
+  return {};
 }
