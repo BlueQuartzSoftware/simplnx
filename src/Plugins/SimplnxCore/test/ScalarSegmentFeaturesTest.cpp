@@ -231,3 +231,44 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Masked Voxel 0 Seed Validation", 
   REQUIRE(dataStructure.getDataRefAs<UInt8Array>(DataPath({"Geometry", "CellFeatureData", "Active"})).getNumberOfTuples() == 3);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked (-87000)", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // Regression pin for the shared SegmentFeatures driver: with every cell masked out no seed
+  // exists, so the filter must fail with -87000. The pre-fix driver burst from the raw index 0
+  // and "succeeded" with one phantom, zero-cell feature.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
+  imageGeom->setDimensions({3, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 3}, {1}, cellAM->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 3}, {1}, cellAM->getId());
+  for(usize cellIdx = 0; cellIdx < 3; cellIdx++)
+  {
+    (*scalarArrayPtr)[cellIdx] = 5;
+    (*maskArrayPtr)[cellIdx] = false;
+  }
+
+  ScalarSegmentFeaturesFilter filter;
+  Arguments args;
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(DataPath({"Geometry"})));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int32>(1));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "ScalarValues"})));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Mask"})));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("CellFeatureData"));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -87000);
+}
