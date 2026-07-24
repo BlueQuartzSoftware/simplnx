@@ -1417,6 +1417,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[Si
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == fs::path("/test/path/output.dream3d"));
       CHECK(args.value<bool>(WriteDREAM3DFilter::k_WriteXdmf) == true);
+      CHECK(args.value<bool>(WriteDREAM3DFilter::k_UseCompression) == false);
     }
   }
 }
