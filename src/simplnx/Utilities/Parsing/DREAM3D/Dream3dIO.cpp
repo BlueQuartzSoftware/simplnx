@@ -2370,7 +2370,7 @@ Result<DREAM3D::FileData> DREAM3D::ReadFile(const nx::core::HDF5::FileIO& fileRe
   }
 
   auto dataStructure = ImportDataStructureFromFile(fileReader, preflight);
-  if(pipeline.invalid())
+  if(dataStructure.invalid())
   {
     return {{nonstd::make_unexpected(std::move(dataStructure.errors()))}, std::move(dataStructure.warnings())};
   }
