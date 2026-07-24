@@ -105,6 +105,31 @@
           "Flag": 2,
           "Geometry": {"Geometry_Type": 0, "Geometry_Type_Name": "ImageGeometry"},
           "Name": "TC4_Phase0"
+        },
+        {
+          "Attribute Matricies": [
+            {
+              "Data Arrays": [
+                {"Component Dimensions": [4], "Flag": 2, "Name": "Quats", "Object Type": "DataArray<float>", "Path": "/DataContainers/TC5_3D/CellData", "Tuple Dimensions": [1], "Version": 2},
+                {"Component Dimensions": [1], "Flag": 2, "Name": "Phases", "Object Type": "DataArray<int32_t>", "Path": "/DataContainers/TC5_3D/CellData", "Tuple Dimensions": [1], "Version": 2},
+                {"Component Dimensions": [1], "Flag": 2, "Name": "Mask", "Object Type": "DataArray<bool>", "Path": "/DataContainers/TC5_3D/CellData", "Tuple Dimensions": [1], "Version": 2}
+              ],
+              "Flag": 2,
+              "Name": "CellData",
+              "Type": 3
+            },
+            {
+              "Data Arrays": [
+                {"Component Dimensions": [1], "Flag": 2, "Name": "CrystalStructures", "Object Type": "DataArray<uint32_t>", "Path": "/DataContainers/TC5_3D/CellEnsembleData", "Tuple Dimensions": [1], "Version": 2}
+              ],
+              "Flag": 2,
+              "Name": "CellEnsembleData",
+              "Type": 11
+            }
+          ],
+          "Flag": 2,
+          "Geometry": {"Geometry_Type": 0, "Geometry_Type_Name": "ImageGeometry"},
+          "Name": "TC5_3D"
         }
       ],
       "Version": 6
@@ -175,6 +200,22 @@
     "UseGoodVoxels": 0
   },
   "5": {
+    "ActiveArrayName": "Active",
+    "CellFeatureAttributeMatrixName": "CellFeatureData",
+    "CellPhasesArrayPath": {"Data Container Name": "TC5_3D", "Attribute Matrix Name": "CellData", "Data Array Name": "Phases"},
+    "CrystalStructuresArrayPath": {"Data Container Name": "TC5_3D", "Attribute Matrix Name": "CellEnsembleData", "Data Array Name": "CrystalStructures"},
+    "FeatureIdsArrayName": "FeatureIds",
+    "FilterVersion": "6.5.171",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Segment Features (C-Axis Misalignment)",
+    "Filter_Name": "CAxisSegmentFeatures",
+    "Filter_Uuid": "{bff6be19-1219-5876-8838-1574ad29d965}",
+    "GoodVoxelsArrayPath": {"Data Container Name": "TC5_3D", "Attribute Matrix Name": "CellData", "Data Array Name": "Mask"},
+    "MisorientationTolerance": 10.0,
+    "QuatsArrayPath": {"Data Container Name": "TC5_3D", "Attribute Matrix Name": "CellData", "Data Array Name": "Quats"},
+    "UseGoodVoxels": 1
+  },
+  "6": {
     "FilterVersion": "6.5.171",
     "Filter_Enabled": true,
     "Filter_Human_Label": "Write DREAM.3D Data File",
@@ -186,7 +227,7 @@
   },
   "PipelineBuilder": {
     "Name": "CAxisSegmentFeatures Legacy 6.5.171 A/B",
-    "Number_Filters": 6,
+    "Number_Filters": 7,
     "Version": 6
   }
 }

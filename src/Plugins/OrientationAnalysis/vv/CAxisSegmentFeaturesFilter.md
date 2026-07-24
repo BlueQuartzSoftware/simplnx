@@ -19,7 +19,7 @@
 | Code paths enumerated  | 20 of 20 enumerated; 18 exercised (2 gaps: defensive mask-instantiation error, cancel-signal path).                                                                                                                                                                                            |
 | Tests today            | 20 test cases: 8 Class 1 analytical (chain, π-fold, neighbor-scheme, mask bool/uint8, phase separation, 3D linearization, Quats-outside-cell-AM, RectGrid), 2 Class 4 invariants (randomize non-identity/determinism, masked-zero preservation), 2 exemption pins (phase-0, masked non-hex), 3 execute-error, 4 preflight-error, 1 SIMPL 6.4/6.5 conversion (DYNAMIC_SECTION). |
 | Exemplar archive       | **None — fixtures inlined in the test source.** The filter's consumption of `segment_features_test_data.tar.gz` (circular oracle) is retired; the archive remains for the EBSD segmentation tests.                                                                                            |
-| Legacy comparison      | **Run** (2026-07-22, `vv/comparisons/CAxisSegmentFeaturesFilter/`) — all 4 shared-behavior fixtures match 6.5.171 at the segmentation-partition level with identical feature counts; bit-identical ids are unattainable because 6.5.171 always clock-randomizes FeatureIds (D2).              |
+| Legacy comparison      | **Run** (2026-07-22, rerun with TC5_3D 2026-07-24, `vv/comparisons/CAxisSegmentFeaturesFilter/`) — all 5 shared-behavior fixtures (incl. a 3×2×2 masked fixture covering the y/z stride branches) match 6.5.171 at the segmentation-partition level with identical feature counts; bit-identical ids are unattainable because 6.5.171 always clock-randomizes FeatureIds (D2). |
 | Bug flags              | D1, D4, D5 — all SIMPLNX defects, all **fixed this cycle** and pinned by tests. No legacy bug flags.                                                                                                                                                                                           |
 | V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review, tests (dual-build), legacy comparison, deviations, provenance, docs — complete. **Outstanding:** second-engineer review at PR (per sign-off convention).                                                                    |
 
@@ -116,7 +116,7 @@ Filter-level (preflight) paths — tolerance == 0 → `-655`, cell-array tuple m
 | `SIMPL Backwards Compatibility` | kept | DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; UUID + argument-key conversion only. |
 | *(retired)* `CAxisSegmentFeatures:Face` / `:All` / `:MaskFace` / `:MaskAll` | retired | Consumed the `segment_features_test_data.tar.gz` exemplar whose `CAxis_FeatureIds_*` arrays were generated from SIMPLNX output — a circular oracle (see provenance sidecar). Replaced by the Class 1 fixtures, which cover the same scheme × mask parameter cube with independent expected output. |
 
-All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (20/20 each, 2026-07-22). The shared-driver fix (D1) was regression-checked against `EBSDSegmentFeatures` (5/5) and `ScalarSegmentFeatures` (2/2) in both builds.
+All non-retired tests pass at the verified commit in **both** builds: in-core `NX-Com-Qt69-Vtk95-Rel` and OOC `simplnx-ooc-Rel` (20/20 each, 2026-07-24). The shared-driver fix (D1) was regression-checked against the full `EBSDSegmentFeatures` (7/7) and `ScalarSegmentFeatures` (4/4) suites in both builds, including per-sibling masked-voxel-0 and all-cells-masked (`-87000`) regression pins.
 
 ## Exemplar archive
 
@@ -126,7 +126,7 @@ All non-retired tests pass at the verified commit in **both** builds: in-core `N
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison run 2026-07-22 on four pure-Phi fixtures (chain, π-fold, bool mask, phase-0) through the official 6.5.171 PipelineRunner and nxrunner from one shared legacy-format input (`vv/comparisons/CAxisSegmentFeaturesFilter/`). All four match at the segmentation-partition level with identical feature counts.
+Comparison run 2026-07-22, extended with a 3-D fixture and fully rerun 2026-07-24, on five pure-Phi fixtures (chain, π-fold, bool mask, phase-0, and a 3×2×2 masked fixture covering the y/z stride branches) through the official 6.5.171 PipelineRunner and nxrunner from one shared legacy-format input (`vv/comparisons/CAxisSegmentFeaturesFilter/`). All five match at the segmentation-partition level with identical feature counts.
 
 - `CAxisSegmentFeaturesFilter-D1` — unvalidated first seed in SIMPLNX (post-#1466, pre-fix) could add a phantom feature or grow from a masked voxel — **fixed this cycle** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D2` — 6.5.171 always clock-randomizes FeatureIds (irreproducible); SIMPLNX is deterministic with opt-in randomization — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
