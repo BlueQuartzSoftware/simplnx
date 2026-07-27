@@ -361,8 +361,14 @@ Result<> WriteImage::operator()()
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
-    std::string indexStr = CreateIndexString(slice + m_InputValues.indexOffset, static_cast<usize>(m_InputValues.totalIndexDigits), m_InputValues.leadingDigitCharacter);
-    fs::path slicePath = parent / fmt::format("{}_{}{}", stem.string(), indexStr, ext.string());
+    // A single-slice volume writes exactly the user-specified file name; the index suffix is only
+    // appended when multiple slices are produced.
+    fs::path slicePath = parent / fmt::format("{}{}", stem.string(), ext.string());
+    if(sliceCount > 1)
+    {
+      std::string indexStr = CreateIndexString(slice + m_InputValues.indexOffset, static_cast<usize>(m_InputValues.totalIndexDigits), m_InputValues.leadingDigitCharacter);
+      slicePath = parent / fmt::format("{}_{}{}", stem.string(), indexStr, ext.string());
+    }
 
     auto atomicFileResult = AtomicFile::Create(slicePath);
     if(atomicFileResult.invalid())

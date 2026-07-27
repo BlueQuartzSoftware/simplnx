@@ -54,7 +54,18 @@ Result<> CAxisSegmentFeatures::operator()()
   for(usize cellIdx = 0; cellIdx < numCells; ++cellIdx)
   {
     int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
+    // Only consider valid ebsd phase values
+    if(currentPhaseIdx < 1)
+    {
+      continue;
+    }
+    // Only consider valid mask values
+    if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(cellIdx))
+    {
+      continue;
+    }
     const auto crystalStructureType = crystalStructures[currentPhaseIdx];
+
     if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
     {
       return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires all phases to be either Hexagonal-Low 6/m "

@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
+#include "SimplnxCore/Filters/ReadImageFilter.hpp"
 #include "SimplnxCore/Filters/ReadImageStackFilter.hpp"
 #include "SimplnxCore/Filters/WriteImageFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -123,6 +124,21 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   REQUIRE(count == 0);
 }
 
+// Reads a single written image file back into `readDs` as ImageGeom "ReadGeom". Single-slice writes
+// do not append an index to the file name, so tests read the file back directly with ReadImageFilter
+// instead of through a generated file list.
+void readBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
+{
+  ReadImageFilter reader;
+  Arguments rArgs;
+  rArgs.insertOrAssign(ReadImageFilter::k_FileName_Key, std::make_any<fs::path>(imagePath));
+  rArgs.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+  auto readerPreflight = reader.preflight(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+  auto readerExecute = reader.execute(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+}
+
 // Writes a single-slice scalar ramp of type T through the inline color-table path, then compares the
 // read-back RGB image tuple-by-tuple against an independent CreateColorMap -> RGB reference. The oracle
 // is the real CreateColorMap chain, so this asserts parity across every numeric input type.
@@ -208,27 +224,7 @@ void RunColorRoundtripForType()
 
   // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
   DataStructure readDs;
-  {
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = inlineDir.path().string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".tif";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto readerPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-    auto readerExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
-  }
+  readBackSingleImage(readDs, inlineDir.path() / "slice.tif");
 
   // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
@@ -237,7 +233,7 @@ void RunColorRoundtripForType()
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
 
-  // ReadImageStackFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
+  // ReadImageFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
   // the R,G,B components per pixel so the assertion is robust if a reader ever emits RGBA.
   const usize readComps = readArrayPtr->getNumberOfComponents();
   const usize numPixels = readStore.getNumberOfTuples();
@@ -409,6 +405,63 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Write Stack", "[SimplnxCore][WriteImag
 
     validateOutputFiles(imageDims[0], offset, tempDir.name(), tempDir.path());
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Single-slice write omits the index suffix", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  const fs::path outputPath = tempDir.path() / "single.tif";
+
+  WriteImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+  args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+  args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // The preflight example previews the exact single-slice file name (no index suffix).
+  bool foundExample = false;
+  for(const auto& value : preflightResult.outputValues)
+  {
+    if(value.name == "Example Output File")
+    {
+      foundExample = true;
+      REQUIRE(value.value == fs::absolute(outputPath).string());
+    }
+  }
+  REQUIRE(foundExample);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // The single slice is written with exactly the user-specified name and no other files appear.
+  REQUIRE(fs::exists(outputPath));
+  REQUIRE(!fs::exists(tempDir.path() / "single_000.tif"));
+  usize fileCount = 0;
+  for(const auto& entry : fs::directory_iterator(tempDir.path()))
+  {
+    fileCount++;
+  }
+  REQUIRE(fileCount == 1);
+  REQUIRE(fs::remove(outputPath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -728,25 +781,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-a
 
   // Reads a single-slice color image back from a directory and returns the pointer to the RGB array.
   auto readBackSlice = [&](const fs::path& dir, DataStructure& readDs) -> const UInt8Array* {
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = dir.string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".tif";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto rPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(rPreflight.outputActions);
-    auto rExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(rExecute.result);
+    readBackSingleImage(readDs, dir / "slice.tif");
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     return dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
   };
@@ -958,25 +993,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = tempDir.path().string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".png";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto readerPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-    auto readerExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+    readBackSingleImage(readDs, tempDir.path() / "slice.png");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
@@ -1085,25 +1102,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = tempDir.path().string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".tif";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto readerPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-    auto readerExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+    readBackSingleImage(readDs, tempDir.path() / "slice.tif");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
@@ -1293,25 +1292,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar pads the written image with 
     }
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = tempDir.path().string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".png";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto readerPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-    auto readerExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+    readBackSingleImage(readDs, tempDir.path() / "slice.png");
   };
 
   // Expected layout for 200x100 @ 0.5 µm/px:
@@ -1480,24 +1461,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar composes with flip and RGB i
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
   DataStructure readDs;
-  ReadImageStackFilter reader;
-  GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = tempDir.path().string();
-  fileList.startIndex = 0;
-  fileList.endIndex = 0;
-  fileList.incrementIndex = 1;
-  fileList.fileExtension = ".png";
-  fileList.filePrefix = "slice_";
-  fileList.fileSuffix = "";
-  fileList.paddingDigits = 3;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-  Arguments rArgs;
-  rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-  rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-  auto readerPreflight = reader.preflight(readDs, rArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-  auto readerExecute = reader.execute(readDs, rArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+  readBackSingleImage(readDs, tempDir.path() / "slice.png");
 
   REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
