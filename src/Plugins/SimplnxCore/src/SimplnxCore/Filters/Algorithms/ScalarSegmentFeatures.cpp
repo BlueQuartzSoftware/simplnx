@@ -210,11 +210,21 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Run the segmentation algorithm
-  execute(gridGeom);
+  Result<> segmentResult = execute(gridGeom);
+  if(segmentResult.invalid())
+  {
+    return segmentResult;
+  }
+  // A canceled run returns successfully with no feature count; do not misreport it below as
+  // "no Features were detected".
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures));
+    return MakeErrorResult(-87000, "No Features were detected: no Cell was eligible to seed a Feature. Every Cell is excluded by the Mask.");
   }
 
   // Resize the Feature Attribute Matrix

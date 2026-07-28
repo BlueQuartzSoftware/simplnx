@@ -29,9 +29,9 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
 
 /**
  * @class CAxisSegmentFeatures
- * @brief This filter segments the Features by grouping neighboring Cells that satisfy the C-axis misalignment tolerance, i.e., have misalignment angle less than the value set by the user.
+ * @brief Segmentation algorithm that groups neighboring Cells whose c-axis misalignment angle is within the user tolerance. Provides the seeding and grouping hooks for the shared
+ * SegmentFeatures flood-fill driver.
  */
-
 class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeatures : public SegmentFeatures
 {
 public:

@@ -1,0 +1,3 @@
+# Regenerable A/B comparison outputs — reproduce via ../pipelines (see comparison.md)
+*.dream3d
+*.xdmf

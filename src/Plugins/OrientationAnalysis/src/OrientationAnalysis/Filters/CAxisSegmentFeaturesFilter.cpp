@@ -3,19 +3,20 @@
 #include "OrientationAnalysis/Filters/Algorithms/CAxisSegmentFeatures.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Parameters/NumberParameter.hpp"
 
 using namespace nx::core;
 
@@ -60,7 +61,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
 
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "C-Axis Misorientation Tolerance (Degrees)",
                                                    "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
-  params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature Ids", "Specifies whether to randomize the feature ids", false));
+  params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature Ids", "Specifies whether to randomize the Feature Ids with a deterministic shuffle", false));
   params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
@@ -82,7 +83,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", "FeatureIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created feature attribute matrix", "Cell Feature Data"));
@@ -115,13 +116,12 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
 {
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   // Validate the tolerance != 0
   auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
-    return {MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
+    return {MakeErrorResult<OutputActions>(-655, "Misorientation Tolerance cannot equal zero.")};
   }
 
   // Validate the Grid Geometry
@@ -129,17 +129,17 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
-  auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
-  auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  auto cellFeatureAMPath = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
+  auto activeArrayPath = cellFeatureAMPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
   std::vector<DataPath> dataPaths;
 
   dataPaths.push_back(pQuatsArrayPathValue);
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
-  // Validate the GoodVoxels/Mask Array combination
-  bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
-  if(useGoodVoxels)
+  // The Mask array only participates in the tuple validation when it is in use
+  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
+  if(useMask)
   {
     dataPaths.push_back(filterArgs.value<DataPath>(k_MaskArrayPath_Key));
   }
@@ -150,12 +150,28 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
     return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  // Create the Cell Level FeatureIds array
+  // The cell-level arrays must have exactly one tuple per geometry cell; the check above only
+  // validates the arrays against each other, not against the geometry the flood fill walks.
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, quats.getIDataStore()->getTupleShape(), std::vector<usize>{1}, featureIdsPath);
+  if(quats.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  {
+    return {MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(), gridGeomPath.toString(),
+                                                             inputGridGeom->getNumberOfCells()))};
+  }
+
+  // Create the Cell Level FeatureIds array with the cell AttributeMatrix's tuple shape so the
+  // created array always matches the AttributeMatrix that hosts it. That AttributeMatrix must
+  // itself agree with the geometry, or FeatureIds would be smaller than the flood-fill walk.
+  const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
+  if(cellDataAM.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  {
+    return {MakeErrorResult<OutputActions>(-653, fmt::format("The geometry's cell AttributeMatrix '{}' has {} tuples but the selected geometry '{}' has {} cells.", inputCellDataPath.toString(),
+                                                             cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
+  }
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM.getShape(), std::vector<usize>{1}, featureIdsPath);
 
   // Create the Feature Attribute Matrix
-  auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellFeatureAttributeMatrixNameValue, std::vector<usize>{1});
+  auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellFeatureAMPath, std::vector<usize>{1});
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -182,7 +198,10 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  // Derive the FeatureIds path from the geometry's cell-data AttributeMatrix, exactly as
+  // preflightImpl created it (the Quats array is not required to live in that AttributeMatrix).
+  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
+  inputValues.FeatureIdsArrayPath = gridGeom.getCellDataPath().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));

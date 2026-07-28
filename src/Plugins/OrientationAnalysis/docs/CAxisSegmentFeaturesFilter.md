@@ -6,17 +6,27 @@ Reconstruction (Segmentation)
 
 ## Description
 
-This **Filter** segments the **Features** by grouping neighboring **Cells** that satisfy the *C-axis misalignment tolerance*, i.e., have misalignment angle less than the value set by the user. The *C-axis misalignment* refers to the angle between the <001> directions (C-axis in the hexagonal system) that is present between neighboring **Cells**.  The process by which the **Features** are identified is given below and is a standard *burn algorithm*.
+This **Filter** segments the **Features** by grouping neighboring **Cells** that satisfy the *c-axis misalignment tolerance*, i.e., have misalignment angle less than the value set by the user. The *c-axis misalignment* refers to the angle between the [0001] directions (the c-axis in the hexagonal system) that is present between neighboring **Cells**. Because the c-axis is a direction (not a vector), the misalignment is folded into [0°, 90°]: two nearly antiparallel c-axes are considered aligned. The process by which the **Features** are identified is given below and is a standard *burn algorithm*.
 
-1. Randomly select a **Cell**, add it to an empty list and set its *Feature Id* to the current **Feature**
-2. Compare the **Cell** to each of its six (6) face-sharing neighbors (i.e., calculate the c-axis misalignment with each neighbor)
+1. Select the next unassigned **Cell** in row-major order that is eligible to seed a **Feature** (not excluded by the mask and with a phase value greater than 0), add it to an empty list and set its *Feature Id* to the current **Feature**
+2. Compare the **Cell** to each of its neighbors as selected by the *Neighbor Scheme* parameter (i.e., calculate the c-axis misalignment with each neighbor)
 3. Add each neighbor **Cell** that has a C-axis misalignment below the user defined tolerance to the list created in 1. and set the *Feature Id* of the neighbor **Cell** to the current **Feature**
 4. Remove the current **Cell** from the list and move to the next **Cell** and repeat 2. and 3.; continue until no **Cells** are left in the list
-5. Increment the current **Feature** counter and repeat steps 1. through 4.; continue until no **Cells** remain unassigned in the dataset
+5. Increment the current **Feature** counter and repeat steps 1. through 4.; continue until no eligible **Cells** remain unassigned in the dataset
 
-The user has the option to *Use Mask Array*, which allows the user to set a boolean array for the **Cells** that remove **Cells** with a value of *false* from consideration in the above algorithm. This option is useful if the user has an array that either specifies the domain of the "sample" in the "image" or specifies if the orientation on the **Cell** is trusted/correct.
+The user has the option to *Use Mask Array*, which allows the user to set a boolean (or uint8) array for the **Cells** that removes **Cells** with a value of *false* from consideration in the above algorithm. This option is useful if the user has an array that either specifies the domain of the "sample" in the "image" or specifies if the orientation on the **Cell** is trusted/correct. Masked-out **Cells** and unindexed **Cells** (phase 0) never join a **Feature** and keep a *Feature Id* of 0.
 
-After all the **Features** have been identified, a **Feature Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
+After all the **Features** have been identified, a **Feature Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in the matrix (index 0 is reserved and never active).
+
+The input geometry may be either an **Image Geometry** or a **RectGrid Geometry**.
+
+### Hexagonal Crystal Structures Required
+
+The c-axis is only a physically meaningful unique axis for hexagonal Laue classes. Every **Cell** that can participate in the segmentation (phase > 0 and not excluded by the mask) must belong to an **Ensemble** whose crystal structure is *Hexagonal-Low (6/m)* or *Hexagonal-High (6/mmm)*; otherwise the filter fails with error `-8363`. A phase value with no corresponding entry in the *Crystal Structures* array produces error `-8364`. Unindexed **Cells** (phase 0) and masked-out **Cells** are exempt from this requirement, so datasets with unindexed points — or with a non-hexagonal phase that has been masked out — process normally.
+
+### Randomize Feature Ids
+
+When *Randomize Feature Ids* is enabled the final *Feature Ids* are relabeled with a deterministic (fixed-seed) random permutation, which improves visual contrast between neighboring **Features** when coloring by *Feature Id*. The segmentation itself is unchanged, and repeated runs produce identical output. (Legacy DREAM.3D 6.x always randomized with a clock-derived seed, so its labeling differed on every run; see the migration deviation notes in `vv/deviations/CAxisSegmentFeaturesFilter.md` of the simplnx source tree.)
 
 ### Neighbor Scheme
 
