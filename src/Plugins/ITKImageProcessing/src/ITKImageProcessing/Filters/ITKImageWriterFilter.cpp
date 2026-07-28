@@ -207,7 +207,7 @@ void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, con
     break;
   }
   case DataType::uint32: {
-    CopyTupleTyped<int32>(currentData, sliceData, nComp, index, indexNew);
+    CopyTupleTyped<uint32>(currentData, sliceData, nComp, index, indexNew);
     break;
   }
   case DataType::int64: {
@@ -215,7 +215,7 @@ void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, con
     break;
   }
   case DataType::uint64: {
-    CopyTupleTyped<int64>(currentData, sliceData, nComp, index, indexNew);
+    CopyTupleTyped<uint64>(currentData, sliceData, nComp, index, indexNew);
     break;
   }
   case DataType::float32: {
