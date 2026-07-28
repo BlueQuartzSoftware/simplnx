@@ -267,7 +267,11 @@ Result<> RequireMinNumNeighbors::operator()()
       {
         return {};
       }
-      CopyTupleFromArray(m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
+      auto copyResult = CopyTupleFromArray(m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
+      if(copyResult.invalid())
+      {
+        return copyResult;
+      }
     }
   }
 
@@ -282,7 +286,11 @@ Result<> RequireMinNumNeighbors::operator()()
 
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
   DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
-  nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel);
+  if(!nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel))
+  {
+    return MakeErrorResult(-55570, fmt::format("Failed to remove inactive feature tuples from feature group '{}'. Check that its arrays match the tuple count of '{}'.",
+                                               cellFeatureGroupPath.toString(), m_InputValues->NumNeighborsPath.toString()));
+  }
 
   return {};
 }
