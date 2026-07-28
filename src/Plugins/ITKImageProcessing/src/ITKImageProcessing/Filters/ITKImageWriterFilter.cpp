@@ -391,8 +391,8 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   }
 
   // Generate example filename for PreflightValues
-  const std::string indexStr = CreateIndexString(maxSlice, static_cast<usize>(totalDigits), fillChar);
-  const std::string exampleFileName = fmt::format("{}/{}_{}{}", fs::absolute(filePath).parent_path().string(), filePath.stem().string(), indexStr, filePath.extension().string());
+  const std::string indexStr = maxSlice == 1 ? "" : fmt::format("_{}", CreateIndexString(indexOffset, static_cast<usize>(totalDigits), fillChar));
+  const std::string exampleFileName = (fs::absolute(filePath).parent_path() / fmt::format("{}{}{}", filePath.stem().string(), indexStr, filePath.extension().string())).string();
 
   preflightUpdatedValues.push_back({"Example Output File", exampleFileName});
 
