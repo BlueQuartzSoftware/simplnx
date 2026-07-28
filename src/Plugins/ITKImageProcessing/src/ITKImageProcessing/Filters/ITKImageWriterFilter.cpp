@@ -402,8 +402,6 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   auto totalDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
   auto fillChar = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageArrayPath);
-
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored fastest to slowest i.e. X Y Z
   SizeVec3 dims = imageGeom.getDimensions();
