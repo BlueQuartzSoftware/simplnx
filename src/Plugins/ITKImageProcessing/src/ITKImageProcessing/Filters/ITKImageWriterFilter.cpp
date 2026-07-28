@@ -424,6 +424,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
 
   ITK::ImageGeomData newImageGeom(imageGeom);
 
+  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3 spacing = imageGeom.getSpacing();
+
   switch(plane)
   {
   case k_XYPlane: {
@@ -431,6 +434,8 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     usize dB = dims.getY();
 
     newImageGeom.dims = {dims.getX(), dims.getY(), 1};
+    newImageGeom.origin = {origin.getX(), origin.getY(), 0.0f};
+    newImageGeom.spacing = {spacing.getX(), spacing.getY(), 1.0f};
 
     for(usize slice = 0; slice < dims.getZ(); ++slice)
     {
@@ -459,6 +464,8 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     usize dB = dims.getX();
 
     newImageGeom.dims = {dims.getX(), dims.getZ(), 1};
+    newImageGeom.origin = {origin.getX(), origin.getZ(), 0.0f};
+    newImageGeom.spacing = {spacing.getX(), spacing.getZ(), 1.0f};
 
     for(usize slice = 0; slice < dims.getY(); ++slice)
     {
@@ -487,6 +494,8 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     usize dB = dims.getY();
 
     newImageGeom.dims = {dims.getY(), dims.getZ(), 1};
+    newImageGeom.origin = {origin.getY(), origin.getZ(), 0.0f};
+    newImageGeom.spacing = {spacing.getY(), spacing.getZ(), 1.0f};
 
     for(usize slice = 0; slice < dims.getX(); ++slice)
     {
