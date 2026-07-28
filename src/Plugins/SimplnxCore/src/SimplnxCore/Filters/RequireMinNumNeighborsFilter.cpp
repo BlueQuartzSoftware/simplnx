@@ -119,10 +119,8 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   std::vector<DataPath> dataArrayPaths;
 
-  ShapeType cDims = {1};
   auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
   dataArrayPaths.push_back(numNeighborsPath);
 
   if(applyToSinglePhase)
