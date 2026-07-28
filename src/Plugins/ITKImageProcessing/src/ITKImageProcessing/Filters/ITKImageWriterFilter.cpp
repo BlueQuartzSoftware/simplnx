@@ -424,6 +424,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
 
     for(usize slice = 0; slice < dims.getZ(); ++slice)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       for(usize axisA = 0; axisA < dA; ++axisA)
       {
         for(usize axisB = 0; axisB < dB; ++axisB)
@@ -448,6 +452,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
 
     for(usize slice = 0; slice < dims.getY(); ++slice)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       for(usize axisA = 0; axisA < dA; ++axisA)
       {
         for(usize axisB = 0; axisB < dB; ++axisB)
@@ -472,6 +480,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
 
     for(usize slice = 0; slice < dims.getX(); ++slice)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       for(usize axisA = 0; axisA < dA; ++axisA)
       {
         for(usize axisB = 0; axisB < dB; ++axisB)
