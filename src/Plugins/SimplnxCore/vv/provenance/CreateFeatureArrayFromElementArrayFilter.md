@@ -31,7 +31,7 @@ Three analytical fixtures were designed and hand-derived without executing any D
 - **AF-2** (single-component, inconsistent): 4 cells, `featureIds = [1,2,1,2]`, `values = [10.0, 20.0, 15.0, 20.0]` → expected output `[0.0, 15.0, 20.0]`, 1 warning (feature 1: first=10.0, last=15.0).
 - **AF-3** (3-component, consistent): 4 cells, `featureIds = [1,2,1,2]`, uint8 3-comp values `[[10,20,30],[40,50,60],[10,20,30],[40,50,60]]` → expected output `[[0,0,0],[10,20,30],[40,50,60]]`, 0 warnings.
 
-These derivations follow directly from the algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` lines 26–55 and are embedded as comments in the pending `AnalyticalFixtures` test cases in `test/CreateFeatureArrayFromElementArrayTest.cpp`.
+These derivations follow directly from the algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` lines 26–55 and are embedded as comments in the`AnalyticalFixtures` test cases in `test/CreateFeatureArrayFromElementArrayTest.cpp`.
 
 ---
 
