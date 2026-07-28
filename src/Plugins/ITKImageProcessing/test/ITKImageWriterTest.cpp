@@ -5,6 +5,8 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
@@ -17,6 +19,8 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include <itkImageFileReader.h>
 
 namespace fs = std::filesystem;
 
@@ -77,7 +81,209 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   }
 }
 
+template <typename PixelT>
+void CompareImageToExpected(const fs::path& filePath, const std::array<usize, 2>& expectedDimensions, const std::vector<PixelT>& expectedPixels)
+{
+  using ImageType = itk::Image<PixelT, 2>;
+  auto reader = itk::ImageFileReader<ImageType>::New();
+  reader->SetFileName(filePath.string());
+  REQUIRE_NOTHROW(reader->Update());
+
+  const auto& image = *reader->GetOutput();
+  const auto dimensions = image.GetLargestPossibleRegion().GetSize();
+  REQUIRE(dimensions[0] == expectedDimensions[0]);
+  REQUIRE(dimensions[1] == expectedDimensions[1]);
+
+  for(usize y = 0; y < expectedDimensions[1]; ++y)
+  {
+    for(usize x = 0; x < expectedDimensions[0]; ++x)
+    {
+      typename ImageType::IndexType index;
+      index[0] = static_cast<typename ImageType::IndexType::IndexValueType>(x);
+      index[1] = static_cast<typename ImageType::IndexType::IndexValueType>(y);
+      CHECK(image.GetPixel(index) == expectedPixels[(y * expectedDimensions[0]) + x]);
+    }
+  }
+}
+
 } // namespace
+
+TEMPLATE_TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel Order", "[ITKImageProcessing][ITKImageWriterFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32,
+                   float64)
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  // Class 1 oracle: the 3x2x2 fixture is value(x, y, z) = x + 10*y + 100*z.
+  DataStructure dataStructure;
+
+  const SizeVec3 imageDims = {3, 2, 2};
+  const ShapeType arrayDims(std::reverse_iterator(imageDims.end()), std::reverse_iterator(imageDims.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageDims);
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  auto* cellData = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, arrayDims, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+  auto* imageData = UnitTest::CreateTestDataArray<TestType>(dataStructure, "ImageData", arrayDims, {1}, cellData->getId());
+  auto& imageStore = imageData->getDataStoreRef();
+  for(usize z = 0; z < imageDims.getZ(); ++z)
+  {
+    for(usize y = 0; y < imageDims.getY(); ++y)
+    {
+      for(usize x = 0; x < imageDims.getX(); ++x)
+      {
+        imageStore[(z * 6) + (y * 3) + x] = static_cast<TestType>(x + (10 * y) + (100 * z));
+      }
+    }
+  }
+
+  const DataPath imageGeomPath({"ImageGeometry"});
+  const DataPath imageDataPath = imageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
+  const fs::path outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / CreateRandomDirName();
+
+  const auto writeAndCheck = [&](const DataPath& inputPath, ChoicesParameter::ValueType plane, const std::string& name, const std::string& extension, const std::array<usize, 2>& dimensions,
+                                 const auto& expectedSlices) {
+    ITKImageWriterFilter filter;
+    const fs::path outputPath = outputDir / name / fmt::format("slice{}", extension);
+    Arguments args;
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(imageGeomPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(plane));
+    args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    for(usize slice = 0; slice < expectedSlices.size(); slice++)
+    {
+      CompareImageToExpected(outputDir / name / fmt::format("slice_{:03d}{}", slice, extension), dimensions, expectedSlices[slice]);
+    }
+  };
+
+  // Rows are y/z respectively. The non-square XY plane makes an X/Y transpose observable.
+  const std::string extension = std::is_same_v<TestType, uint8> ? ".tif" : ".mha";
+  writeAndCheck(imageDataPath, ITKImageWriterFilter::k_XYPlane, "xy", extension, {3, 2}, std::vector<std::vector<TestType>>{{0, 1, 2, 10, 11, 12}, {100, 101, 102, 110, 111, 112}});
+  writeAndCheck(imageDataPath, ITKImageWriterFilter::k_XZPlane, "xz", extension, {3, 2}, std::vector<std::vector<TestType>>{{0, 1, 2, 100, 101, 102}, {10, 11, 12, 110, 111, 112}});
+  writeAndCheck(imageDataPath, ITKImageWriterFilter::k_YZPlane, "yz", extension, {2, 2}, std::vector<std::vector<TestType>>{{0, 10, 100, 110}, {1, 11, 101, 111}, {2, 12, 102, 112}});
+
+  std::error_code error;
+  fs::remove_all(outputDir, error);
+  REQUIRE_FALSE(error);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Fill Character Validation", "[ITKImageProcessing][ITKImageWriterFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageDims = {1, 1, 2};
+  const ShapeType arrayDims(std::reverse_iterator(imageDims.end()), std::reverse_iterator(imageDims.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageDims);
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  auto* cellData = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, arrayDims, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", arrayDims, {1}, cellData->getId());
+
+  ITKImageWriterFilter filter;
+  Arguments args;
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>("invalid_fill.tif"));
+  args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(ITKImageWriterFilter::k_XYPlane));
+  args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>(""));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -25601);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Dimension Mismatch Validation", "[ITKImageProcessing][ITKImageWriterFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions({1, 1, 2});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {1, 1, 1}, {1});
+
+  ITKImageWriterFilter filter;
+  Arguments args;
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(std::vector<std::string>{"ImageData"}));
+  args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>("dimension_mismatch.tif"));
+  args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(ITKImageWriterFilter::k_XYPlane));
+  args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -25600);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: 3D Image Single-File Output", "[ITKImageProcessing][ITKImageWriterFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageDims = {3, 1, 2};
+  const ShapeType arrayDims(std::reverse_iterator(imageDims.end()), std::reverse_iterator(imageDims.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageDims);
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  auto* cellData = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, arrayDims, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+  auto* imageData = UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", arrayDims, {1}, cellData->getId());
+  auto& imageStore = imageData->getDataStoreRef();
+  for(usize z = 0; z < imageDims.getZ(); ++z)
+  {
+    for(usize x = 0; x < imageDims.getX(); ++x)
+    {
+      imageStore[(z * 3) + x] = static_cast<uint8>(x + (100 * z));
+    }
+  }
+
+  const fs::path outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / CreateRandomDirName();
+  const fs::path outputPath = outputDir / "volume.mha";
+  ITKImageWriterFilter filter;
+  Arguments args;
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(ITKImageWriterFilter::k_XZPlane));
+  args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(fs::exists(outputPath));
+  CompareImageToExpected(outputPath, {3, 2}, std::vector<uint8>{0, 1, 2, 100, 101, 102});
+
+  std::error_code error;
+  fs::remove_all(outputDir, error);
+  REQUIRE_FALSE(error);
+}
 
 TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImageProcessing][ITKImageWriterFilter]")
 {
