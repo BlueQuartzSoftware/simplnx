@@ -41,6 +41,12 @@ namespace cxITKImageWriterFilter
 {
 using ArrayOptionsType = ITK::ScalarVectorPixelIdTypeList;
 
+bool IsValidFillCharacter(char fillCharacter)
+{
+  return fillCharacter != '{' && fillCharacter != '}' && fillCharacter != '\\' && fillCharacter != '/' && fillCharacter != ':' && fillCharacter != '*' && fillCharacter != '?' &&
+         fillCharacter != '"' && fillCharacter != '<' && fillCharacter != '>' && fillCharacter != '|';
+}
+
 bool Is2DFormat(const fs::path& fileName)
 {
   fs::path ext = fileName.extension();
@@ -358,6 +364,10 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   if(fillChar.size() != 1)
   {
     return {MakeErrorResult<OutputActions>(-25601, fmt::format("The fill character must contain exactly one character; received {} characters.", fillChar.size()))};
+  }
+  if(!cxITKImageWriterFilter::IsValidFillCharacter(fillChar.at(0)))
+  {
+    return {MakeErrorResult<OutputActions>(-25602, fmt::format("The fill character '{}' is not valid for format strings and file names.", fillChar))};
   }
 
   Result<OutputActions> resultOutputActions;
