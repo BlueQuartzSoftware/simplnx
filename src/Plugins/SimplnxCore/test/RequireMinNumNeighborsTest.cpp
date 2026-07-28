@@ -13,6 +13,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -23,7 +24,6 @@ using namespace nx::core::Constants;
 
 namespace
 {
-
 const std::vector<int32> k_NumberElements = {
     0,    1858, 152,   31,   70,   4183, 691,  8359, 646,  38,   124,  1064,  25,    34,   640,  1361, 74,   4014,  4,    129,  952,  2623,  17,   667,   6,     724,  3709,  344,  1149, 432,  114,
     439,  25,   64,    591,  1,    191,  6752, 374,  29,   32,   2695, 28,    44,    88,   231,  22,   412,  62,    180,  2371, 681,  753,   286,  1818,  50,    744,  648,   2464, 150,  277,  1303,
@@ -53,6 +53,93 @@ const std::vector<int32> k_NumberElements = {
     1417, 3294, 1410,  147,  5,    1787, 2368, 877,  2682, 880,  4646, 770,   4178,  72,   43,   211};
 
 } // namespace
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[SimplnxCore][RequireMinNumNeighborsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const bool singlePhase = GENERATE(false, true);
+  DYNAMIC_SECTION("ApplyToSinglePhase=" << singlePhase)
+  {
+    // Class 1 oracle: feature 1 occupies the two middle cells of [2, 1, 1, 3]
+    // and is rejected. Its left/right face-neighbor votes select features 2 and 3,
+    // yielding FeatureIds [1, 1, 2, 2] after inactive-feature removal remaps IDs.
+    DataStructure dataStructure;
+
+    const SizeVec3 imageSize = {4, 1, 1};
+    const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
+
+    auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeom->setDimensions(imageSize);
+    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+    auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+
+    auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
+    auto* copiedValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "CopiedValues", arraySize, {1}, cellAM->getId());
+    auto* ignoredValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "IgnoredValues", arraySize, {1}, cellAM->getId());
+    auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+    auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAM->getId());
+
+    const std::array<int32, 4> inputFeatureIds = {2, 1, 1, 3};
+    const std::array<int32, 4> inputCopiedValues = {20, 101, 102, 30};
+    const std::array<int32, 4> inputIgnoredValues = {200, 101, 102, 300};
+    const std::array<int32, 4> inputNumNeighbors = singlePhase ? std::array<int32, 4>{0, 0, 0, 3} : std::array<int32, 4>{0, 0, 3, 3};
+    const std::array<int32, 4> inputPhases = {0, 1, 2, 1};
+    for(usize i = 0; i < inputFeatureIds.size(); i++)
+    {
+      featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+      copiedValues->getDataStoreRef()[i] = inputCopiedValues[i];
+      ignoredValues->getDataStoreRef()[i] = inputIgnoredValues[i];
+      numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+      phases->getDataStoreRef()[i] = inputPhases[i];
+    }
+
+    RequireMinNumNeighborsFilter filter;
+    Arguments args;
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(singlePhase));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "Phases"})));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({"ImageGeometry", "CellData", "IgnoredValues"})}));
+
+    SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(filter.execute(dataStructure, args).result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+    const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
+    const auto& outputCopiedValues = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "CopiedValues"}));
+    const auto& outputIgnoredValues = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "IgnoredValues"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "Phases"})));
+    const auto& outputNumNeighbors = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}));
+    const auto& outputPhases = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "Phases"}));
+    const std::array<int32, 4> expectedFeatureIds = {1, 1, 2, 2};
+    const std::array<int32, 4> expectedCopiedValues = {20, 20, 30, 30};
+    const std::array<int32, 3> expectedNumNeighbors = singlePhase ? std::array<int32, 3>{0, 0, 3} : std::array<int32, 3>{0, 3, 3};
+    const std::array<int32, 3> expectedPhases = {0, 2, 1};
+    for(usize i = 0; i < expectedFeatureIds.size(); i++)
+    {
+      CHECK(outputFeatureIds[i] == expectedFeatureIds[i]);
+      CHECK(outputCopiedValues[i] == expectedCopiedValues[i]);
+      CHECK(outputIgnoredValues[i] == inputIgnoredValues[i]);
+      // Class 4 invariants: reassignment leaves no rejected IDs and IDs remain valid.
+      CHECK(outputFeatureIds[i] >= 0);
+      CHECK(outputFeatureIds[i] < 3);
+    }
+    REQUIRE(outputNumNeighbors.getNumberOfTuples() == expectedNumNeighbors.size());
+    REQUIRE(outputPhases.getNumberOfTuples() == expectedPhases.size());
+    for(usize i = 0; i < expectedNumNeighbors.size(); i++)
+    {
+      CHECK(outputNumNeighbors[i] == expectedNumNeighbors[i]);
+      CHECK(outputPhases[i] == expectedPhases[i]);
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
@@ -118,6 +205,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    CHECK(preflightResult.outputActions.warnings()[0].code == -5558);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -266,6 +355,212 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -252);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions({5, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAM->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -55571);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID out of range (-55567)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageSize = {4, 1, 1};
+  const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageSize);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
+  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  const std::array<int32, 4> inputFeatureIds = {1, 4, 2, 3};
+  const std::array<int32, 4> inputNumNeighbors = {0, 0, 3, 3};
+  for(usize i = 0; i < inputFeatureIds.size(); i++)
+  {
+    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+  }
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(2));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+
+  SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -55567);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageSize = {4, 1, 1};
+  const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageSize);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {3}, imageGeom->getId());
+
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
+  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {3}, {1}, featureAM->getId());
+  const std::array<int32, 4> inputFeatureIds = {-1, 1, 1, 2};
+  const std::array<int32, 3> inputNumNeighbors = {0, 3, 3};
+  for(usize i = 0; i < inputFeatureIds.size(); i++)
+  {
+    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+    if(i < inputNumNeighbors.size())
+    {
+      numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+    }
+  }
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(2));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+
+  SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
+  const std::array<int32, 4> expectedFeatureIds = {1, 1, 1, 2};
+  for(usize i = 0; i < expectedFeatureIds.size(); i++)
+  {
+    CHECK(outputFeatureIds[i] == expectedFeatureIds[i]);
+  }
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageSize = {4, 1, 1};
+  const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageSize);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
+  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAM->getId());
+  const std::array<int32, 4> inputFeatureIds = {2, 1, 1, 3};
+  const std::array<int32, 4> inputNumNeighbors = {0, 0, 3, 3};
+  const std::array<int32, 4> inputPhases = {0, 1, 2, 1};
+  for(usize i = 0; i < inputFeatureIds.size(); i++)
+  {
+    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+    phases->getDataStoreRef()[i] = inputPhases[i];
+  }
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(2));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(true));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(5));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "Phases"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+
+  SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -5555);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all features rejected (-55569)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageSize = {4, 1, 1};
+  const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageSize);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
+  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  const std::array<int32, 4> inputFeatureIds = {1, 2, 3, 1};
+  const std::array<int32, 4> inputNumNeighbors = {0, 0, 0, 0};
+  for(usize i = 0; i < inputFeatureIds.size(); i++)
+  {
+    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+  }
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+
+  SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -55569);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RequireMinNumNeighborsFilter][BackwardsCompatibility]")
