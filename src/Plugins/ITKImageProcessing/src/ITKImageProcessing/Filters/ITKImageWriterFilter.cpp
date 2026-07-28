@@ -355,9 +355,9 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
                                                                StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
   }
 
-  if(fillChar.size() > 1)
+  if(fillChar.size() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-25601, "The fill character should only be a single value.")};
+    return {MakeErrorResult<OutputActions>(-25601, fmt::format("The fill character must contain exactly one character; received {} characters.", fillChar.size()))};
   }
 
   Result<OutputActions> resultOutputActions;
