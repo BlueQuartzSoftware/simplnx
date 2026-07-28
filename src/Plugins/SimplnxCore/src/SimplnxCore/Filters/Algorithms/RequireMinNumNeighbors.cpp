@@ -148,7 +148,18 @@ Result<> RequireMinNumNeighbors::operator()()
   // Mark all features to be removed with a -1 value.
   for(usize i = 0; i < totalPoints; i++)
   {
-    int32 featureId = featureIds[i];
+    const int32 featureId = featureIds[i];
+
+    if(featureId < 0)
+    {
+      continue;
+    }
+
+    if(static_cast<usize>(featureId) >= totalFeatures)
+    {
+      return MakeErrorResult(-55567, fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}).", featureId, m_InputValues->FeatureIdsPath.toString(), totalFeatures));
+    }
+
     if(!activeObjects[featureId])
     {
       featureIds[i] = -1;
@@ -234,12 +245,6 @@ Result<> RequireMinNumNeighbors::operator()()
 
             // Reset the voteCount array to all zeros
             std::fill(voteCount.begin(), voteCount.end(), 0);
-          }
-          else if(featureName >= numFeatures)
-          {
-            std::string message = fmt::format("Error: Found a feature Id '{}' that is >= the number of features '{}' at voxel index X={},Y={},Z={}.", featureName, numFeatures, xIdx, yIdx, zIdx);
-            m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-            return MakeErrorResult(-55567, message);
           }
         }
       }
