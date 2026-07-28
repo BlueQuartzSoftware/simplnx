@@ -369,6 +369,11 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   {
     return {MakeErrorResult<OutputActions>(-25602, fmt::format("The fill character '{}' is not valid for format strings and file names.", fillChar))};
   }
+  if(!imageArray.getDataFormat().empty())
+  {
+    return {MakeErrorResult<OutputActions>(ITK::Constants::k_OutOfCoreDataNotSupported,
+                                           fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()))};
+  }
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
