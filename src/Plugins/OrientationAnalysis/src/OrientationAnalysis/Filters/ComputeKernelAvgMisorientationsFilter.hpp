@@ -9,7 +9,9 @@ namespace nx::core
 {
 /**
  * @class ComputeKernelAvgMisorientationsFilter
- * @brief This filter will ....
+ * @brief Computes the Kernel Average Misorientation (KAM) for each cell, averaging the
+ * misorientation between the cell and its kernel neighbors either within the cell's feature
+ * (per-grain, default) or across feature boundaries (per-voxel) per the Use Feature Ids option.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsFilter : public IFilter
 {
@@ -25,6 +27,7 @@ public:
 
   // Parameter Keys
   static constexpr StringLiteral k_KernelSize_Key = "kernel_size";
+  static constexpr StringLiteral k_UseFeatureIds_Key = "use_feature_ids";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";

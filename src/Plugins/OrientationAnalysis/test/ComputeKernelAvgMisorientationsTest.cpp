@@ -105,10 +105,11 @@ void SetCellQuat(FixtureData& td, usize cellIdx, const std::array<float32, 4>& q
   (*td.quats)[cellIdx * 4 + 3] = q[3];
 }
 
-Arguments BuildArgs(const std::vector<int32>& kernelRadius)
+Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds = true)
 {
   Arguments args;
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(kernelRadius));
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_UseFeatureIds_Key, std::make_any<bool>(useFeatureIds));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_CellPhasesName)));
@@ -359,6 +360,179 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   REQUIRE(kam[4] == 0.0f);
 
   UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode (use_feature_ids = false)", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Same 6x1x1 layout as the Multi-Feature Multi-Voxel fixture, but run with use_feature_ids =
+  // false (per-voxel KAM, issue #1613). In this mode a kernel neighbor contributes iff it is
+  // in-bounds AND featureIds[neighbor] > 0 AND cellPhases[neighbor] == cellPhases[focal]. The
+  // focal-validity gate (featureIds[focal] > 0 && cellPhases[focal] > 0) is unchanged.
+  //   cell x=0: featureId=1, phase=1, phi1=0   degrees
+  //   cell x=1: featureId=1, phase=1, phi1=10  degrees
+  //   cell x=2: featureId=2, phase=1, phi1=0   degrees
+  //   cell x=3: featureId=2, phase=1, phi1=20  degrees
+  //   cell x=4: featureId=0, phase=0, phi1=N/A (background)
+  //   cell x=5: featureId=1, phase=1, phi1=30  degrees
+  //
+  // Kernel radius {1,0,0}. Expected per-voxel KAM:
+  //   cell 0: neighbors {self=0, x=1(F1,P1)=10}                       -> avg 10/2  = 5.0
+  //   cell 1: neighbors {x=0(F1,P1)=10, self=0, x=2(F2,P1)=10}        -> avg 20/3 ~= 6.6667
+  //           (default per-grain mode gives 5.0 here - x=2 was skipped; this cell proves the mode differs)
+  //   cell 2: neighbors {x=1(F1,P1)=10, self=0, x=3(F2,P1)=20}        -> avg 30/3  = 10.0
+  //   cell 3: neighbors {x=2(F2,P1)=20, self=0}; x=4 SKIPPED (featureId=0) -> avg 20/2 = 10.0
+  //   cell 4: focal-invalid (featureId=0, phase=0)                    -> KAM = 0 exactly
+  //   cell 5: x=4 SKIPPED (featureId=0), {self=0}                     -> avg 0/1   = 0.0
+  //
+  // Exercises: cross-feature accumulation (cells 1, 2), featureId=0 neighbor exclusion in
+  // per-voxel mode (cells 3, 5), unchanged focal-invalid path (cell 4).
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(6, 1, 1);
+  // FeatureIds: [1, 1, 2, 2, 0, 1]
+  (*td.featureIds)[0] = 1;
+  (*td.featureIds)[1] = 1;
+  (*td.featureIds)[2] = 2;
+  (*td.featureIds)[3] = 2;
+  (*td.featureIds)[4] = 0;
+  (*td.featureIds)[5] = 1;
+  // CellPhases: [1, 1, 1, 1, 0, 1]
+  (*td.cellPhases)[0] = 1;
+  (*td.cellPhases)[1] = 1;
+  (*td.cellPhases)[2] = 1;
+  (*td.cellPhases)[3] = 1;
+  (*td.cellPhases)[4] = 0;
+  (*td.cellPhases)[5] = 1;
+  AnalyticalFixtures::SetCellQuat(td, 0, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetCellQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
+  AnalyticalFixtures::SetCellQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetCellQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(20.0f));
+  AnalyticalFixtures::SetCellQuat(td, 5, AnalyticalFixtures::QuatFromPhi1Deg(30.0f));
+
+  ComputeKernelAvgMisorientationsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0}, false);
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const std::array<float32, 6> expected = {5.0f, 20.0f / 3.0f, 10.0f, 10.0f, 0.0f, 0.0f};
+  for(usize i = 0; i < 6; ++i)
+  {
+    REQUIRE(kam[i] == Approx(expected[i]).margin(1e-3f));
+  }
+  REQUIRE(kam[4] == 0.0f);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode Two-Phase Gates", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // 5x1x1 image, every cell its own feature, two cubic phases. Verifies the per-voxel mode's
+  // neighbor gates: (a) different-phase neighbors are excluded, (b) featureId=0 neighbors are
+  // excluded, (c) a focal cell with featureId=0 is still forced to KAM=0 even when its phase > 0.
+  // CrystalStructures: index 0 = sentinel, index 1 = Cubic_High, index 2 = Cubic_High.
+  //   cell x=0: featureId=1, phase=1, phi1=0   degrees
+  //   cell x=1: featureId=2, phase=1, phi1=10  degrees
+  //   cell x=2: featureId=3, phase=2, phi1=20  degrees
+  //   cell x=3: featureId=4, phase=1, phi1=30  degrees
+  //   cell x=4: featureId=0, phase=1, phi1=40  degrees (invalid focal: featureId == 0)
+  //
+  // Kernel radius {1,0,0}, use_feature_ids = false. Expected KAM:
+  //   cell 0: {self=0, x=1(P1)=10}                                   -> 10/2 = 5.0
+  //           (per-grain mode would give 0.0 - every feature is a single cell)
+  //   cell 1: {x=0(P1)=10, self=0}; x=2 SKIPPED (phase 2 != 1)       -> 10/2 = 5.0
+  //   cell 2: {self=0}; x=1 and x=3 SKIPPED (phase 1 != 2)           -> 0/1  = 0.0
+  //   cell 3: {self=0}; x=2 SKIPPED (phase), x=4 SKIPPED (featureId=0) -> 0/1 = 0.0
+  //   cell 4: focal featureId == 0                                    -> KAM = 0 exactly
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(5, 1, 1, 3);
+  (*td.crystalStructures)[2] = 1u; // Cubic_High for phase 2
+  const std::array<int32, 5> featureIds = {1, 2, 3, 4, 0};
+  const std::array<int32, 5> phases = {1, 1, 2, 1, 1};
+  const std::array<float32, 5> phi1Deg = {0.0f, 10.0f, 20.0f, 30.0f, 40.0f};
+  for(usize i = 0; i < 5; ++i)
+  {
+    (*td.featureIds)[i] = featureIds[i];
+    (*td.cellPhases)[i] = phases[i];
+    AnalyticalFixtures::SetCellQuat(td, i, AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[i]));
+  }
+
+  ComputeKernelAvgMisorientationsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0}, false);
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const std::array<float32, 5> expected = {5.0f, 5.0f, 0.0f, 0.0f, 0.0f};
+  for(usize i = 0; i < 5; ++i)
+  {
+    REQUIRE(kam[i] == Approx(expected[i]).margin(1e-3f));
+  }
+  // The invalid focal cell takes the explicit KAM=0 short-circuit.
+  REQUIRE(kam[4] == 0.0f);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Mode Equivalence on Single Feature", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Invariant: on single-feature single-phase data, per-grain and per-voxel modes admit exactly
+  // the same neighbor set (every neighbor passes both gates), so the outputs must be identical
+  // bit-for-bit. 3x3x3 gradient fixture, phi1 = 2x + 3y + 4z degrees (max 18, well under the
+  // 45-degree cubic FZ bound), full 3D kernel {1,1,1}.
+  auto buildFixture = []() {
+    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 3);
+    for(usize z = 0; z < 3; ++z)
+    {
+      for(usize y = 0; y < 3; ++y)
+      {
+        for(usize x = 0; x < 3; ++x)
+        {
+          const usize idx = (z * 9) + (y * 3) + x;
+          const auto phi1 = static_cast<float32>(2 * x + 3 * y + 4 * z);
+          AnalyticalFixtures::SetCellQuat(td, idx, AnalyticalFixtures::QuatFromPhi1Deg(phi1));
+        }
+      }
+    }
+    return td;
+  };
+
+  AnalyticalFixtures::FixtureData tdPerGrain = buildFixture();
+  AnalyticalFixtures::FixtureData tdPerVoxel = buildFixture();
+
+  ComputeKernelAvgMisorientationsFilter filter;
+  auto runFilter = [&filter](AnalyticalFixtures::FixtureData& td, bool useFeatureIds) {
+    Arguments args = AnalyticalFixtures::BuildArgs({1, 1, 1}, useFeatureIds);
+    auto preflightResult = filter.preflight(td.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(td.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  };
+  runFilter(tdPerGrain, true);
+  runFilter(tdPerVoxel, false);
+
+  const auto& kamPerGrain = AnalyticalFixtures::GetOutputKAM(tdPerGrain.ds);
+  const auto& kamPerVoxel = AnalyticalFixtures::GetOutputKAM(tdPerVoxel.ds);
+  bool anyNonzero = false;
+  for(usize i = 0; i < tdPerGrain.totalCells; ++i)
+  {
+    REQUIRE(kamPerGrain[i] == kamPerVoxel[i]);
+    if(kamPerGrain[i] > 1e-4f)
+    {
+      anyNonzero = true;
+    }
+  }
+  REQUIRE(anyNonzero); // sanity: the fixture is non-trivial
+
+  UnitTest::CheckArraysInheritTupleDims(tdPerGrain.ds);
+  UnitTest::CheckArraysInheritTupleDims(tdPerVoxel.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")

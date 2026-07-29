@@ -15,6 +15,7 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 {
   VectorInt32Parameter::ValueType KernelSize;
+  bool UseFeatureIds = true;
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath QuatsArrayPath;
@@ -24,7 +25,12 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 };
 
 /**
- * @class
+ * @class ComputeKernelAvgMisorientations
+ * @brief Computes the Kernel Average Misorientation (KAM) for each cell of an Image Geometry.
+ * For each valid cell (featureId > 0 and phase > 0), the misorientation between the cell and
+ * every admitted neighbor in a user-sized kernel is averaged and stored in degrees. Neighbors
+ * are admitted per-grain (same feature id, the default) or per-voxel (featureId > 0 and same
+ * phase) depending on the UseFeatureIds input.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientations
 {
