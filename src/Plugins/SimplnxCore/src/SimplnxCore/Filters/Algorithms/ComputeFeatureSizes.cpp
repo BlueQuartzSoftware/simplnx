@@ -93,6 +93,12 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
+  // The worker reads featureIds concurrently across slices; per the project thread-safety policy a
+  // DataStore is only safe for concurrent access when it is resident in memory, so gate parallelization
+  // on that (an out-of-core store falls back to serial execution).
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&featureIds);
+  dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds, shouldCancel));
 
   if(shouldCancel)
@@ -142,6 +148,11 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * For these two cases the following code would BREAK, so do not enable.
      **/
 
+    // OPEN DESIGN QUESTION: this includes the flat dimension's spacing, matching the PR #1590
+    // "slab" convention used by ImageGeom::findElementSizes, but it diverges from legacy DREAM3D
+    // 6.5.171 (FindSizes::findSizesImage uses only the two non-flat resolutions) whenever the flat
+    // dimension's spacing != 1. See the "[2DFlatSpacing]" test case, which characterizes the
+    // divergence, and the ComputeFeatureSizesFilter V&V deviations entry.
     // Calculate the area of a single voxel
     const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
 
@@ -326,6 +337,11 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
+  // The worker reads featureIds concurrently across slices; gate parallelization on the store being
+  // resident in memory (see the ProcessImageGeom note; project thread-safety policy).
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&featureIds);
+  dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes, shouldCancel));
 
   if(shouldCancel)
@@ -344,13 +360,13 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
       // Use Kahan summation to determine overall volume
 
       // Attempt to recover low order into the value. The first instance is 0
-      const float64 value = featureVolumes[featureIdx] - featureCompensators[featureIdx];
+      const float64 value = localVolumes[featureIdx] - featureCompensators[featureIdx];
 
       // low order may be lost
-      const float64 volSum = localVolumes[featureIdx] + value;
+      const float64 volSum = featureVolumes[featureIdx] + value;
 
       // recover and cache low order
-      featureCompensators[featureIdx] = (volSum - localVolumes[featureIdx]) - value;
+      featureCompensators[featureIdx] = (volSum - featureVolumes[featureIdx]) - value;
 
       // store volumes
       featureVolumes[featureIdx] = volSum;
