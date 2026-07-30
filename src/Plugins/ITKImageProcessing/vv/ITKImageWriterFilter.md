@@ -103,7 +103,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 2 | Dimension-mismatch preflight error. | `Dimension Mismatch Validation` - a 1x1x1 array and 1x1x2 geometry return `-25600`. |
 | 3 | Empty fill-character validation. | `Fill Character Validation` - empty string returns `-25601`. |
 | 4 | Invalid fill-character validation. | `Fill Character Validation` - `{` and `/` return `-25602`. |
-| 5 | OOC input rejection. | *Not directly tested.* |
+| 5 | OOC input rejection. | *Not directly tested; not able to run on CI* |
 | 6 | Unsupported component-count rejection. | *Not directly tested.* |
 | 7 | Preflight example-output-file value, including unsuffixed single-file output. | *Not directly tested.* |
 | 8 | XY output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(1,2)` for all types, plus origin `(10,20)` for MetaImage output. |
@@ -111,7 +111,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 10 | YZ output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(2,4)` for all types, plus origin `(20,40)` for MetaImage output. |
 | 11 | All accepted scalar dispatch arms: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, and float64. | `Analytical Pixel Order` - TIFF pixels for uint8 and MetaImage pixels for every other type. |
 | 12 | RGBA dispatch arm. | `RGBA Image Output` - one uint8 RGBA pixel decodes as `(10,20,30,40)`. |
-| 13 | Cancellation between slices. | *Not directly tested.* |
+| 13 | Cancellation between slices. | *Not directly tested; requires cancel signal infrastructure* |
 | 14 | Filesystem/ITK write-failure propagation. | *Not directly tested; requires failure injection.* |
 | 15 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
 | 16 | Multi-file stack output. | `Write Stack`. |
