@@ -14,6 +14,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -103,59 +104,6 @@ struct WriteImageFunctor
   }
 };
 
-template <class T>
-Result<> CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize index, usize indexNew)
-{
-  const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
-  auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
-
-  return sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1);
-}
-
-Result<> CopyTuple(usize index, usize axisA, usize dB, usize axisB, const IDataStore& currentData, IDataStore& sliceData)
-{
-  usize indexNew = (axisA * dB) + axisB;
-
-  DataType type = currentData.getDataType();
-
-  switch(type)
-  {
-  case DataType::int8: {
-    return CopyTupleTyped<int8>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::uint8: {
-    return CopyTupleTyped<uint8>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::int16: {
-    return CopyTupleTyped<int16>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::uint16: {
-    return CopyTupleTyped<uint16>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::int32: {
-    return CopyTupleTyped<int32>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::uint32: {
-    return CopyTupleTyped<uint32>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::int64: {
-    return CopyTupleTyped<int64>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::uint64: {
-    return CopyTupleTyped<uint64>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::float32: {
-    return CopyTupleTyped<float32>(currentData, sliceData, index, indexNew);
-  }
-  case DataType::float64: {
-    return CopyTupleTyped<float64>(currentData, sliceData, index, indexNew);
-  }
-  default: {
-    throw std::runtime_error("ITKImageWriterFilter: Invalid DataType while attempting to copy tuples");
-  }
-  }
-}
-
 fs::path GenerateOutputFilePath(const fs::path& filePath, usize slice, usize maxSlice, int32 totalDigits, const std::string& fillChar)
 {
   std::stringstream ss;
@@ -187,6 +135,79 @@ Result<> SaveImageData(const fs::path& fileName, IDataStore& sliceData, const IT
   }
   return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName);
 }
+
+struct CopyXYSlicesFunctor
+{
+  template <class T>
+  Result<> operator()(usize dA, usize dB, usize slice, const IDataStore& currentData, IDataStore& sliceData) const
+  {
+    const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
+    auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
+
+    for(usize axisA = 0; axisA < dA; ++axisA)
+    {
+      for(usize axisB = 0; axisB < dB; ++axisB)
+      {
+        usize index = (slice * dA * dB) + (axisA * dB) + axisB;
+        usize indexNew = (axisA * dB) + axisB;
+        if(Result<> copyResult = sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1); copyResult.invalid())
+        {
+          return copyResult;
+        }
+      }
+    }
+
+    return {};
+  }
+};
+
+struct CopyXZSlicesFunctor
+{
+  template <class T>
+  Result<> operator()(usize dA, usize dB, usize slice, const SizeVec3& dims, const IDataStore& currentData, IDataStore& sliceData) const
+  {
+    const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
+    auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
+
+    for(usize axisA = 0; axisA < dA; ++axisA)
+    {
+      for(usize axisB = 0; axisB < dB; ++axisB)
+      {
+        usize index = (dims.getY() * axisA * dB) + (slice * dB) + axisB;
+        usize indexNew = (axisA * dB) + axisB;
+        if(Result<> copyResult = sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1); copyResult.invalid())
+        {
+          return copyResult;
+        }
+      }
+    }
+    return {};
+  }
+};
+
+struct CopyYZSlicesFunctor
+{
+  template <class T>
+  Result<> operator()(usize dA, usize dB, usize slice, const SizeVec3& dims, const IDataStore& currentData, IDataStore& sliceData) const
+  {
+    const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
+    auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
+
+    for(usize axisA = 0; axisA < dA; ++axisA)
+    {
+      for(usize axisB = 0; axisB < dB; ++axisB)
+      {
+        usize index = (dims.getX() * axisA * dB) + (axisB * dims.getX()) + slice;
+        usize indexNew = (axisA * dB) + axisB;
+        if(Result<> copyResult = sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1); copyResult.invalid())
+        {
+          return copyResult;
+        }
+      }
+    }
+    return {};
+  }
+};
 } // namespace cxITKImageWriterFilter
 
 namespace nx::core
@@ -355,6 +376,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   const IDataStore& currentData = imageArray.getIDataStoreRef();
 
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
+  DataType dataType = currentData.getDataType();
 
   ITK::ImageGeomData newImageGeom(imageGeom);
 
@@ -377,16 +399,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       {
         return {};
       }
-      for(usize axisA = 0; axisA < dA; ++axisA)
+      if(Result<> copyResult = ExecuteDataFunctionNoBool(cxITKImageWriterFilter::CopyXYSlicesFunctor{}, dataType, dA, dB, slice, currentData, *sliceData); copyResult.invalid())
       {
-        for(usize axisB = 0; axisB < dB; ++axisB)
-        {
-          usize index = (slice * dA * dB) + (axisA * dB) + axisB;
-          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, currentData, *sliceData); copyResult.invalid())
-          {
-            return copyResult;
-          }
-        }
+        return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getZ(), outputFilePath.string()));
@@ -412,16 +427,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       {
         return {};
       }
-      for(usize axisA = 0; axisA < dA; ++axisA)
+      if(Result<> copyResult = ExecuteDataFunctionNoBool(cxITKImageWriterFilter::CopyXZSlicesFunctor{}, dataType, dA, dB, slice, dims, currentData, *sliceData); copyResult.invalid())
       {
-        for(usize axisB = 0; axisB < dB; ++axisB)
-        {
-          usize index = (dims.getY() * axisA * dB) + (slice * dB) + axisB;
-          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, currentData, *sliceData); copyResult.invalid())
-          {
-            return copyResult;
-          }
-        }
+        return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getY(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getY(), outputFilePath.string()));
@@ -447,16 +455,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       {
         return {};
       }
-      for(usize axisA = 0; axisA < dA; ++axisA)
+      if(Result<> copyResult = ExecuteDataFunctionNoBool(cxITKImageWriterFilter::CopyYZSlicesFunctor{}, dataType, dA, dB, slice, dims, currentData, *sliceData); copyResult.invalid())
       {
-        for(usize axisB = 0; axisB < dB; ++axisB)
-        {
-          usize index = (dims.getX() * axisA * dB) + (axisB * dims.getX()) + slice;
-          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, currentData, *sliceData); copyResult.invalid())
-          {
-            return copyResult;
-          }
-        }
+        return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getX(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getX(), outputFilePath.string()));
