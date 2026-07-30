@@ -199,6 +199,13 @@ TEMPLATE_TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel O
       CompareImageToExpected(imagePath, dimensions, expectedSlices[slice]);
       CompareImageMetadata<TestType>(imagePath, expectedSpacing, expectedOrigin, extension != ".tif");
     }
+
+    usize outputFileCount = 0;
+    for([[maybe_unused]] const auto& entry : fs::directory_iterator(outputDir / name))
+    {
+      outputFileCount++;
+    }
+    REQUIRE(outputFileCount == expectedSlices.size());
   };
 
   // Rows are y/z respectively. The non-square XY plane makes an X/Y transpose observable.
