@@ -162,19 +162,10 @@ Result<> CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp,
   }
 }
 
-Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, int32 totalDigits, const std::string& fillChar)
+fs::path GenerateOutputFilePath(const fs::path& filePath, usize slice, usize maxSlice, int32 totalDigits, const std::string& fillChar)
 {
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
-
-  // If the parent path does not exist then try to create it.
-  if(!fs::exists(fs::absolute(filePath).parent_path()))
-  {
-    if(!fs::create_directories(fs::absolute(filePath).parent_path()))
-    {
-      return MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fs::absolute(filePath).string()));
-    }
-  }
 
   if(maxSlice != 1)
   {
@@ -182,7 +173,19 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
   }
   ss << filePath.extension().string();
 
-  auto fileName = fs::path(ss.str());
+  return fs::path(ss.str());
+}
+
+Result<> SaveImageData(const fs::path& fileName, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom)
+{
+  // If the parent path does not exist then try to create it.
+  if(!fs::exists(fileName.parent_path()))
+  {
+    if(!fs::create_directories(fileName.parent_path()))
+    {
+      return MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fileName.string()));
+    }
+  }
 
   if(sliceData.getNumberOfComponents() == 4)
   {
@@ -392,7 +395,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
+      const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
+      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getZ(), outputFilePath.string()));
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {
         return result;
@@ -425,7 +430,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), totalDigits, fillChar);
+      const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getY(), totalDigits, fillChar);
+      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getY(), outputFilePath.string()));
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {
         return result;
@@ -458,7 +465,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), totalDigits, fillChar);
+      const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getX(), totalDigits, fillChar);
+      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getX(), outputFilePath.string()));
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {
         return result;
