@@ -49,10 +49,11 @@ bool IsValidComponentSize(usize componentSize)
   return std::find(k_AllowedComponentSizes.begin(), k_AllowedComponentSizes.end(), componentSize) != k_AllowedComponentSizes.end();
 }
 
+// Rejects 0 - 31 ASCII control characters
 bool IsValidFillCharacter(char fillCharacter)
 {
-  return fillCharacter != '{' && fillCharacter != '}' && fillCharacter != '\\' && fillCharacter != '/' && fillCharacter != ':' && fillCharacter != '*' && fillCharacter != '?' &&
-         fillCharacter != '"' && fillCharacter != '<' && fillCharacter != '>' && fillCharacter != '|';
+  return !(fillCharacter >= 0 && fillCharacter <= 31) && fillCharacter != '{' && fillCharacter != '}' && fillCharacter != '\\' && fillCharacter != '/' && fillCharacter != ':' &&
+         fillCharacter != '*' && fillCharacter != '?' && fillCharacter != '"' && fillCharacter != '<' && fillCharacter != '>' && fillCharacter != '|';
 }
 
 bool Is2DFormat(const fs::path& fileName)

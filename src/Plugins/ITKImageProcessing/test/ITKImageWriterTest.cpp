@@ -249,6 +249,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Fill Character Validation",
   {
     checkInvalidFillCharacter("/", -25602);
   }
+  SECTION("ASCII control character")
+  {
+    checkInvalidFillCharacter("\n", -25602);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
