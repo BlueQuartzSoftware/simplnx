@@ -6,29 +6,29 @@
 | SIMPLNX UUID | `a181ee3e-1678-4133-b9c5-a9dd7bfec62f` |
 | DREAM3D 6.5.171 equivalent | `ITKImageWriter` (SIMPL UUID `11473711-f94d-5d96-b749-ec36a81ad338`) - `Source/Plugins/ITKImageProcessing/ITKImageProcessingFilters/ITKImageWriter.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | <engineer(s), date> |
+| Status | DRAFT |
+| Sign-off | Pending second-engineer review |
 
 ## At a glance
 
 | Aspect | Current state |
 |---|---|
-| Algorithm Relationship | Minor changes - same XY/XZ/YZ options; NX uses SIMPLNX stores, AtomicFile, and current ITK APIs. |
-| Oracle (confirmed) | Classes 1 + 4 - one 3x2x2 scalar fixture (`value(x,y,z)=x+10y+100z`) has same XY/XZ/YZ pixels for all ten accepted types; uint8 uses TIFF and the remaining types use MetaImage. |
-| Code paths enumerated | 17 of 18 branches exercised; only ITK write-failure propagation remains untested. |
-| Tests today | 6 test cases - 1 Class 1+4 Oracle, 2 preflight error path tests, 1 image format supports write as 1 file test, 1 stack writing test, 1 SIMPL backwards compatibility test |
+| Algorithm Relationship | Minor changes - same XY/XZ/YZ pixel extraction; NX uses SIMPLNX stores, AtomicFile, and current ITK APIs. Plane spacing and origin now follow the selected physical axes (D2). |
+| Oracle (confirmed) | Classes 1 + 4 - one 3x2x2 scalar fixture (`value(x,y,z)=x+10y+100z`) has same XY/XZ/YZ pixels for all ten accepted scalar types; it verifies selected-plane spacing for all types and origin for MetaImage output. uint8 uses TIFF and the remaining types use MetaImage. |
+| Code paths enumerated | 13 of 18 explicit paths exercised; OOC, unsupported-component, preview-value, cancellation, and write-failure paths remain untested. |
+| Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-file output test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
 | Exemplar archive | None - Class 1+4 oracle uses inline data |
-| Legacy comparison | Run against DREAM3D 6.5.171 with the inline test data for the Class 1+4 Oracle. Each slice matches exactly; D1 records filename formatting difference only. |
-| Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. |
-| V&V phase | Ready for review |
+| Legacy comparison | Run against DREAM3D 6.5.171 with the inline test data for the Class 1+4 Oracle. Decoded pixels match; D1 and D2 record filename-formatting and plane-metadata differences. |
+| Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, and selected-plane physical metadata. |
+| V&V phase | Regression tests and report amendments in progress |
 
 ## Summary
 
-ITKImageWriterFilter exports scalar ImageGeom cell data as an ITK image or a 2D image stack. A hand-derived non-square fixture verifies decoded pixel orientation independently of legacy, while the legacy comparison checks that migration preserves decoded output on the toy and production fixtures.
+ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image stack. A hand-derived non-square fixture verifies decoded pixel orientation and plane metadata independently of legacy, while the legacy comparison checks migration output on the toy and production fixtures.
 
 ## Algorithm Relationship
 
-**Minor changes.** Port-time changes are SIMPLNX DataStructure stores, AtomicFile writes, and current ITK APIs; the pixel comparisons show no output change from these substitutions.
+**Minor changes.** Port-time changes are SIMPLNX DataStructure stores, AtomicFile writes, and current ITK APIs. Scalar XY/XZ/YZ decoded pixels match the legacy behavior. The NX writer deliberately preserves the selected physical axes in XZ and YZ output spacing/origin; legacy output used identity 2D metadata (D2). The parameter set is unchanged, so `parametersVersion()` remains `2`; validation has been tightened without a parameter-schema change.
 
 **PR(s):**
 
@@ -53,6 +53,7 @@ ITKImageWriterFilter exports scalar ImageGeom cell data as an ITK image or a 2D 
 
 **2024**
 
+- [PR #1088](https://github.com/BlueQuartzSoftware/simplnx/pull/1088) ("Added versioning to filter parameters and json") - Adds filter and parameter versioning, including backwards-compatible parameter JSON reading.
 - [PR #1082](https://github.com/BlueQuartzSoftware/simplnx/pull/1082) ("SIMPLConversion header optimization") - Optimizes SIMPL-conversion headers.
 - [PR #941](https://github.com/BlueQuartzSoftware/simplnx/pull/941) ("Moved Result handling outside of AtomicFile") - Moves result handling outside AtomicFile.
 - [PR #934](https://github.com/BlueQuartzSoftware/simplnx/pull/934) ("BUG: Pipeline and Filter human facing label cleanup") - Cleans up human-facing labels.
@@ -86,36 +87,46 @@ ITKImageWriterFilter exports scalar ImageGeom cell data as an ITK image or a 2D 
 
 **Class:** 1 (Analytical) + 4 (Invariant).
 
-**Applied:** The 3x2x2 scalar fixture has `value(x,y,z)=x+10y+100z`; exact XY, XZ, and YZ pixel matrices are hand-derived and decoded for all ten accepted types. uint8 uses TIFF; the remaining types use MetaImage. File creation and decoded dimensions are companion invariants.
+**Applied:** The 3x2x2 scalar fixture has `value(x,y,z)=x+10y+100z`; exact XY, XZ, and YZ pixel matrices are hand-derived and decoded for all ten accepted types. Its non-uniform origin `(10,20,40)` and spacing `(1,2,4)` verify that each written plane has the correct two physical axes: spacing is decoded for every type and origin for MetaImage output. TIFF does not preserve ITK origin metadata. File creation and decoded dimensions are companion invariants.
 
-**Encoded:** `test/ITKImageWriterTest.cpp::ITKImageProcessing::ITKImageWriterFilter: Analytical TIFF Pixel Order` - templated over all ten accepted scalar types; all checks pass.
+**Encoded:** `test/ITKImageWriterTest.cpp::ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel Order` - templated over all ten accepted scalar types.
 
 **Second-engineer review:** pending second-engineer review.
 
 ## Code path coverage
 
-17 of 18 branches exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (533 lines).
+13 of 18 explicit paths exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (587 lines).
 
 | # | Path | Test case |
 |---|---|---|
-| 1 | Valid preflight. | `Analytical TIFF Pixel Order`, `Write Stack` |
+| 1 | Valid preflight. | `Analytical Pixel Order`, `Write Stack` |
 | 2 | Dimension-mismatch preflight error. | `Dimension Mismatch Validation` - a 1x1x1 array and 1x1x2 geometry return `-25600`. |
-| 3 | Fill-character validation, including empty input. | `Fill Character Validation` - empty string returns `-25601`. |
-| 4 | XY output for all accepted scalar types. | `Analytical TIFF Pixel Order` - same pixels; uint8 TIFF, other types MetaImage. |
-| 5 | XZ output for all accepted scalar types. | `Analytical TIFF Pixel Order` - same pixels; uint8 TIFF, other types MetaImage. |
-| 6 | YZ output for all accepted scalar types. | `Analytical TIFF Pixel Order` - same pixels; uint8 TIFF, other types MetaImage. |
-| 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 | All accepted scalar dispatch arms: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, and float64. | `Analytical TIFF Pixel Order` - same TIFF pixels for uint8 and MetaImage pixels for every other type. |
-| 17 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
-| 18 | Filesystem/ITK write failure. | *Not directly tested; requires failure injection.* |
+| 3 | Empty fill-character validation. | `Fill Character Validation` - empty string returns `-25601`. |
+| 4 | Invalid fill-character validation. | `Fill Character Validation` - `{` and `/` return `-25602`. |
+| 5 | OOC input rejection. | *Not directly tested.* |
+| 6 | Unsupported component-count rejection. | *Not directly tested.* |
+| 7 | Preflight example-output-file value, including unsuffixed single-file output. | *Not directly tested.* |
+| 8 | XY output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(1,2)` for all types, plus origin `(10,20)` for MetaImage output. |
+| 9 | XZ output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(1,4)` for all types, plus origin `(10,40)` for MetaImage output. |
+| 10 | YZ output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(2,4)` for all types, plus origin `(20,40)` for MetaImage output. |
+| 11 | All accepted scalar dispatch arms: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, and float64. | `Analytical Pixel Order` - TIFF pixels for uint8 and MetaImage pixels for every other type. |
+| 12 | RGBA dispatch arm. | `RGBA Image Output` - one uint8 RGBA pixel decodes as `(10,20,30,40)`. |
+| 13 | Cancellation between slices. | *Not directly tested.* |
+| 14 | Filesystem/ITK write-failure propagation. | *Not directly tested; requires failure injection.* |
+| 15 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
+| 16 | Multi-file stack output. | `Write Stack`. |
+| 17 | SIMPL JSON conversion with optional legacy parameters. | `SIMPL Backwards Compatibility`. |
+| 18 | Atomic-file commit after a successful ITK write. | Covered by successful output tests; no injected commit failure. |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |---|---|---|
-| `ITKImageProcessing::ITKImageWriterFilter: Analytical TIFF Pixel Order` | new-for-V&V | Tests Class 1+4 Oracle over all accepted types. |
-| `ITKImageProcessing::ITKImageWriterFilter: Fill Character Validation` | new-for-V&V | Empty fill character is rejected during preflight with error `-25601`. |
+| `ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel Order` | new-for-V&V | Tests Class 1+4 Oracle over all accepted scalar types, including decoded XY/XZ/YZ pixels, spacing, and MetaImage origin. |
+| `ITKImageProcessing::ITKImageWriterFilter: Fill Character Validation` | new-for-V&V | Empty fill character is rejected with `-25601`; format-control and path-separator characters are rejected with `-25602`. |
 | `ITKImageProcessing::ITKImageWriterFilter: Dimension Mismatch Validation` | new-for-V&V | Mismatched array and geometry input is rejected during preflight with error `-25600`. |
 | `ITKImageProcessing::ITKImageWriterFilter: 3D Image Single-File Output` | new-for-V&V | A 3x1x2 ImageGeom XZ plane writes an unsuffixed `.mha` file with exact decoded pixels. |
+| `ITKImageProcessing::ITKImageWriterFilter: RGBA Image Output` | new-for-V&V | A uint8 RGBA pixel is dispatched and decodes as `(10,20,30,40)`. |
 | `ITKImageProcessing::ITKImageWriterFilter: Write Stack` | kept | Checks that an image is written as an image stack of files. |
 | `ITKImageProcessing::ITKImageWriterFilter: SIMPL Backwards Compatibility` | kept | Covers SIMPL json backwards compatibility. |
 
@@ -126,5 +137,6 @@ No new exemplar archive was created for this V&V cycle: the Class 1 oracle is en
 ## Deviations from DREAM3D 6.5.171
 
 - `ITKImageWriterFilter-D1` - NX defaults to zero-padded slice indices while 6.5.171 does not - see `vv/deviations/ITKImageWriterFilter.md`.
+- `ITKImageWriterFilter-D2` - NX writes the selected plane's physical spacing and origin, while 6.5.171 used identity 2D metadata for XZ/YZ output - see `vv/deviations/ITKImageWriterFilter.md`.
 
 All pixels otherwise match: the analytical fixture has 2 XY, 2 XZ, and 3 YZ slices; Small IN100 has 117 XY, 201 XZ, and 189 YZ float32 TIFF slices.

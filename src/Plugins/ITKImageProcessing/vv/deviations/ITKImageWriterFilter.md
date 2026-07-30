@@ -19,3 +19,19 @@ Entries are referenced by stable ID (ITKImageWriterFilter-D<N>) from the V&V rep
 **Affected users:** Any workflow that consumes 2D image-stack filenames directly, rather than discovering them by pattern, can fail to find NX output after migration.
 
 **Recommendation:** Trust SIMPLNX. To retain the legacy filename shape, set *Index Offset* to `0` and *Total Number of Index Digits* to `1`.
+
+## ITKImageWriterFilter-D2
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ITKImageWriterFilter-D2` |
+| **Filter UUID** | `a181ee3e-1678-4133-b9c5-a9dd7bfec62f` |
+| **Status** | active |
+
+**Symptom:** For XZ and YZ stack output, NX writes the two selected physical axes as the 2D image spacing and origin. DREAM3D 6.5.171 writes identity spacing and zero origin for the newly created 2D image.
+
+**Root cause:** Library/API adaptation. NX constructs the temporary 2D geometry from the selected ImageGeom axes so that output metadata describes the written plane; the legacy implementation created a new 2D geometry with default metadata.
+
+**Affected users:** Workflows that consume XZ or YZ physical image metadata can observe different spacing and origin after migration.
+
+**Recommendation:** Trust SIMPLNX. The NX metadata preserves the source ImageGeom's physical coordinate system for the output plane.
