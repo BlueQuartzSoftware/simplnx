@@ -37,6 +37,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 - [PR #1626](https://github.com/BlueQuartzSoftware/simplnx/pull/1626) ("ENH: Various small doc, bug and enhancement fixes.") - Small documentation, bug, and enhancement fixes.
 - [PR #1585](https://github.com/BlueQuartzSoftware/simplnx/pull/1585) ("ENH: Add Image Reader/Writer that depend on Tiff and Stb libraries.") - Integrates TIFF/STB reader-writer support.
 - [PR #1576](https://github.com/BlueQuartzSoftware/simplnx/pull/1576) ("ENH: Improve error messages across the codebase") - Improves error messages.
+- [PR #1571](https://github.com/BlueQuartzSoftware/simplnx/pull/1571) ("DOC: Add standardized ChoicesParameter descriptions to filter docs") - Adds standardized output-plane choice descriptions.
 - [PR #1555](https://github.com/BlueQuartzSoftware/simplnx/pull/1555) ("ENH: Again require in-memory data for ITK filters") - Restores the ITK in-memory data requirement.
 - [PR #1490](https://github.com/BlueQuartzSoftware/simplnx/pull/1490) ("STY: Fix warnings about unintended slicing of object") - Removes object-slicing warnings.
 - [PR #1476](https://github.com/BlueQuartzSoftware/simplnx/pull/1476) ("BUG/ENH: Fix Backwards Pipeline Compatibility and Add Testing") - Fixes backward-pipeline compatibility.
@@ -55,11 +56,15 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 
 - [PR #1088](https://github.com/BlueQuartzSoftware/simplnx/pull/1088) ("Added versioning to filter parameters and json") - Adds filter and parameter versioning, including backwards-compatible parameter JSON reading.
 - [PR #1082](https://github.com/BlueQuartzSoftware/simplnx/pull/1082) ("SIMPLConversion header optimization") - Optimizes SIMPL-conversion headers.
+- [PR #975](https://github.com/BlueQuartzSoftware/simplnx/pull/975) ("DOC: Fix capitalization issue in the documentation for the GitHub link.") - Corrects GitHub link capitalization.
+- [PR #956](https://github.com/BlueQuartzSoftware/simplnx/pull/956) ("ENH: Rename Filters that start with Find/Generate/Calculate to Compute") - Updates documentation for standardized filter names.
 - [PR #941](https://github.com/BlueQuartzSoftware/simplnx/pull/941) ("Moved Result handling outside of AtomicFile") - Moves result handling outside AtomicFile.
 - [PR #934](https://github.com/BlueQuartzSoftware/simplnx/pull/934) ("BUG: Pipeline and Filter human facing label cleanup") - Cleans up human-facing labels.
 - [PR #931](https://github.com/BlueQuartzSoftware/simplnx/pull/931) ("ENH: All filter's class names end with \"Filter\".") - Applies the Filter class-name suffix.
 - [PR #918](https://github.com/BlueQuartzSoftware/simplnx/pull/918) ("BUG: Update ITK Image Writer to Use Atomic File API") - Migrates the writer to the AtomicFile API.
+- [PR #914](https://github.com/BlueQuartzSoftware/simplnx/pull/914) ("DOC: Update all doc files to have correct filter human name") - Corrects the documented filter human name.
 - [PR #874](https://github.com/BlueQuartzSoftware/simplnx/pull/874) ("ENH: Refactor the Parameter Keys to make them consistent and easy to learn") - Refactors parameter keys.
+- [PR #847](https://github.com/BlueQuartzSoftware/simplnx/pull/847) ("DOC: Link directly to the discussion page on GitHub.") - Updates the documentation discussion link.
 
 **2023**
 
@@ -67,7 +72,9 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 - [PR #790](https://github.com/BlueQuartzSoftware/simplnx/pull/790) ("ENH: Write Temp Files for All Writers") - Adds temporary-file writing for writers.
 - [PR #779](https://github.com/BlueQuartzSoftware/simplnx/pull/779) ("ENH: Implement SIMPL pipeline conversion") - Implements SIMPL pipeline conversion.
 - [PR #753](https://github.com/BlueQuartzSoftware/simplnx/pull/753) ("API: Standardize I/O Naming to Read/Write") - Standardizes I/O naming.
+- [PR #708](https://github.com/BlueQuartzSoftware/simplnx/pull/708) ("DOC: Update documentation files to allow Sphinx to generate html documentation") - Updates documentation for Sphinx generation.
 - [PR #703](https://github.com/BlueQuartzSoftware/simplnx/pull/703) ("ENH: Enable Out-of-Core functionality") - Adds OOC infrastructure compatibility.
+- [PR #673](https://github.com/BlueQuartzSoftware/simplnx/pull/673) ("ENH: Filter help text filled out. Docs updated with python section") - Adds filter help text and Python documentation.
 - [PR #671](https://github.com/BlueQuartzSoftware/simplnx/pull/671) ("API: Add C++ Class Name to All Default Tags") - Adds C++ class names to default tags.
 - [PR #593](https://github.com/BlueQuartzSoftware/simplnx/pull/593) ("ENH: Update ITK filters to follow naming and parameter layout conventions") - Aligns ITK filter naming and parameter layout.
 - [PR #575](https://github.com/BlueQuartzSoftware/simplnx/pull/575) ("BUG: Fix issue where ITKImageWriter is double looping over the Z dim") - Fixes double iteration over Z.
