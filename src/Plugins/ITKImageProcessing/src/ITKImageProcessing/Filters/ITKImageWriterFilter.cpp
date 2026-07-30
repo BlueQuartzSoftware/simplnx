@@ -40,6 +40,12 @@ using namespace nx::core;
 namespace cxITKImageWriterFilter
 {
 using ArrayOptionsType = ITK::ScalarVectorPixelIdTypeList;
+constexpr std::array<usize, 7> k_AllowedComponentSizes = {1, 2, 3, 4, 10, 11, 36};
+
+bool IsValidComponentSize(usize componentSize)
+{
+  return std::find(k_AllowedComponentSizes.begin(), k_AllowedComponentSizes.end(), componentSize) != k_AllowedComponentSizes.end();
+}
 
 bool IsValidFillCharacter(char fillCharacter)
 {
@@ -373,6 +379,12 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   {
     return {MakeErrorResult<OutputActions>(ITK::Constants::k_OutOfCoreDataNotSupported,
                                            fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()))};
+  }
+  const usize componentCount = imageArray.getNumberOfComponents();
+  if(!cxITKImageWriterFilter::IsValidComponentSize(componentCount))
+  {
+    return {MakeErrorResult<OutputActions>(
+        -21010, fmt::format("Input Array '{}' has {} components. Supported component counts are {}.", imageArrayPath.toString(), componentCount, cxITKImageWriterFilter::k_AllowedComponentSizes))};
   }
 
   Result<OutputActions> resultOutputActions;
