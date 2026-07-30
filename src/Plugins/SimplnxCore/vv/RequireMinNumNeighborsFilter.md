@@ -15,22 +15,22 @@
 |---|---|
 | Algorithm Relationship | **Minor changes** - the NX port retains the legacy selection, coarsening, and feature-removal while incorporating bug fixes and minor code improvements. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - two 4x1x1 fixtures check cell and compacted feature arrays. |
-| Code paths enumerated | 12 of 16 paths are assertion-covered; cancellation and defensive error paths are not covered. |
-| Tests today | 9 active test cases: analytical all/single-phase execution, three execute errors, negative-FeatureId reassignment, two preflight errors, Small IN100 regression test, and SIMPL conversion. |
+| Code paths enumerated | 13 of 17 paths are assertion-covered; cancellation and defensive error paths are not covered. |
+| Tests today | 10 active test cases: analytical all/single-phase execution, four execute errors, negative-FeatureId reassignment, two preflight errors, Small IN100 regression test, and SIMPL conversion. |
 | Exemplar archive | No V&V output archive is needed because the oracle is inline; the retained `6_5_test_data_1_v2.tar.gz` input archive supports only the Small IN100 regression test. |
-| Legacy comparison | **Run** - NX and DREAM3D 6.5.171 matched all five arrays for the oracle fixture. |
-| Bug flags | None |
+| Legacy comparison | **Run** - NX and DREAM3D 6.5.171 matched all five arrays for the valid all-phase oracle fixture; three negative-ID, invalid-input, or non-progress behaviors differ as documented in D1-D3. |
+| Bug flags | `RequireMinNumNeighborsFilter-D1`, `RequireMinNumNeighborsFilter-D2`, `RequireMinNumNeighborsFilter-D3` |
 | V&V phase | Ready for review |
 
 ## Summary
 
-`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their voxels from dominant valid face neighbors, and compacts feature-level arrays. Verification uses a hand-derived analytical fixture with invariants, focused error tests, a Small IN100 regression test, SIMPL conversion checks, and a DREAM3D 6.5.171 comparison. The analytical all-phase comparison is exactly matched; report status remains DRAFT for the outstanding gates listed below.
+`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their voxels from dominant valid face neighbors, and compacts feature-level arrays. Verification uses a hand-derived analytical fixture with invariants, focused error tests, a Small IN100 regression test, SIMPL conversion checks, and a DREAM3D 6.5.171 comparison. The valid analytical all-phase comparison matched exactly, while three legacy bugs affecting negative or out-of-range FeatureIds and stalled coarsening are corrected in SIMPLNX and documented as D1-D3.
 
 ## Algorithm Relationship
 
 *Classification:* Port | **Minor changes** | Rewrite | New filter
 
-*Evidence:* The NX algorithm retains the legacy `MinNeighbors` selection, voxel reassignment, and inactive-feature-removal. It replaces direct neighbor indexing with shared utilities and incorporates fixes for ignored arrays, data-array updates, and invalid feature IDs. During this V&V cycle, negative FeatureIds skip initial marking and enter the reassignment pass, while out-of-range IDs return `-55567` before they are used for `activeObjects` indexing.
+*Evidence:* The NX algorithm retains the legacy `MinNeighbors` selection, voxel reassignment, and inactive-feature-removal. It replaces direct neighbor indexing with shared utilities and incorporates fixes for ignored arrays, data-array updates, invalid feature IDs, and non-terminating coarsening. During this V&V cycle, negative FeatureIds skip initial marking and enter the reassignment pass, out-of-range IDs return `-55567` before they are used for `activeObjects` indexing, and an iteration that cannot fill any remaining negative cell returns `-55572`.
 
 *PR(s):*
 
@@ -85,9 +85,9 @@
 
 ## Code path coverage
 
-12 of 16 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
+13 of 17 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (296 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (312 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
 
 The filter selects features to retain, marks rejected-feature voxels, iteratively copies a dominant face neighbor into each rejected voxel, and removes inactive feature tuples.
 
@@ -105,10 +105,11 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 10 | Reassignment | Rejected voxel chooses the most frequent valid face-neighbor feature, including boundary-face rejection. | `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
 | 11 | Reassignment | Feature ID is outside the feature-array range - return `-55567` before it is used for indexing. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID out of range (-55567)` |
 | 12 | Reassignment | Negative Feature IDs skip initial marking and are reassigned from valid face neighbors. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned` |
-| 13 | Copy | A rejected voxel copies every nonignored cell-data tuple from its selected neighbor. | `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
-| 14 | Copy | A cell array with an out-of-range source or destination tuple returns `-55568`. | *Not directly tested. AttributeMatrix construction rejects mismatched tuple shapes before execution. Defensive check.* |
-| 15 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter` and `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
-| 16 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
+| 13 | Reassignment | Negative Feature IDs remain but an iteration finds no non-negative face neighbor to copy - return `-55572` instead of looping indefinitely. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)` |
+| 14 | Copy | A rejected voxel copies every nonignored cell-data tuple from its selected neighbor. | `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
+| 15 | Copy | A cell array with an out-of-range source or destination tuple returns `-55568`. | *Not directly tested. AttributeMatrix construction rejects mismatched tuple shapes before execution. Defensive check.* |
+| 16 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter` and `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
+| 17 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
 
 ## Test inventory
 
@@ -122,6 +123,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned` | new-for-V&V | Asserts a negative FeatureId is accepted and reassigned from its valid face neighbor. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)` | new-for-V&V | Asserts exact unavailable-phase error. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all features rejected (-55569)` | new-for-V&V | Asserts exact all-rejected error. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)` | new-for-V&V | Asserts that an all-negative cell region returns `-55572` without modifying FeatureIds instead of looping indefinitely; covers D3. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility` | kept | SIMPL json backwards compatibility check. |
 
 ## Exemplar archive
@@ -130,4 +132,10 @@ No new exemplar archive was created for this V&V cycle: the Class 1 oracle is en
 
 ## Deviations from DREAM3D 6.5.171
 
-No deviations observed. The all-phase analytical fixture compared FeatureIds, copied and ignored cell arrays, NumNeighbors, and Phases; DREAM3D 6.5.171 and NX matched all five arrays.
+The valid all-phase analytical fixture compared FeatureIds, copied and ignored cell arrays, NumNeighbors, and Phases; DREAM3D 6.5.171 and SIMPLNX matched all five arrays. Three user-visible differences occur for negative or out-of-range FeatureIds or a coarsening pass that cannot make progress:
+
+- `RequireMinNumNeighborsFilter-D1` - SIMPLNX safely accepts a negative FeatureId and reassigns it from a valid face neighbor; DREAM3D 6.5.171 uses the negative value as an out-of-bounds `activeObjects` index.
+- `RequireMinNumNeighborsFilter-D2` - SIMPLNX returns `-55567` for an out-of-range non-negative FeatureId before indexing; DREAM3D 6.5.171 uses the value as an out-of-bounds `activeObjects` index.
+- `RequireMinNumNeighborsFilter-D3` - SIMPLNX returns `-55572` when remaining negative cells have no non-negative face neighbor; DREAM3D 6.5.171 continues the coarsening loop indefinitely.
+
+See `vv/deviations/RequireMinNumNeighborsFilter.md` for root cause, affected users, and migration recommendations.
