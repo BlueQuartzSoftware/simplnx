@@ -211,7 +211,6 @@ Result<> RequireMinNumNeighbors::operator()()
   int32 current = 0;
   int32 most = 0;
   int64 neighborPoint = 0;
-  usize numFeatures = numNeighbors.getNumberOfTuples();
 
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
@@ -223,7 +222,7 @@ Result<> RequireMinNumNeighbors::operator()()
   int64 jStride = 0;
   int32 featureName = 0;
   int32 feature = 0;
-  std::vector<int32> voteCount(numFeatures + 1, 0);
+  std::vector<int32> voteCount(totalFeatures + 1, 0);
   std::vector<usize> badFeatureIdIndexes;
 
   while(counter != 0)
