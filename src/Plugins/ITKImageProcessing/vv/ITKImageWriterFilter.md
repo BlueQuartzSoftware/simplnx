@@ -113,7 +113,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 12 | RGBA dispatch arm. | `RGBA Image Output` - one uint8 RGBA pixel decodes as `(10,20,30,40)`. |
 | 13 | Cancellation between slices. | *Not directly tested; requires cancel signal infrastructure* |
 | 14 | Filesystem/ITK write-failure propagation. | *Not directly tested; requires failure injection.* |
-| 15 | Tuple-copy failure propagation. | *Not directly tested. This is a defensive check whose failure preconditions are excluded by construction: `sliceData` is created from the input store with the same tuple and component shapes, and preflight requires the input tuple dimensions to match the selected geometry.* |
+| 15 | Tuple-copy failure propagation. | *Not directly tested. This is a defensive check whose failure preconditions are excluded by construction: `sliceData` is created with the input store's data type and component shape and exactly the selected plane's tuple shape; preflight requires the input tuple dimensions to match the selected geometry, so the computed source and destination ranges are valid.* |
 | 16 | Single-slice output keeps the exact output name. | `Single Slice Keeps Exact Output Name` - `maxSlice == 1` suppresses the index suffix, and a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
 | 17 | Multi-file stack output. | `Write Stack`. |
 | 18 | SIMPL JSON conversion with optional legacy parameters. | `SIMPL Backwards Compatibility`. |

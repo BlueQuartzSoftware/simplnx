@@ -208,6 +208,15 @@ struct CopyYZSlicesFunctor
     return {};
   }
 };
+
+struct CreateDataStoreFunctor
+{
+  template <class T>
+  std::unique_ptr<IDataStore> operator()(const ShapeType& sliceShape, const ShapeType& cDims) const
+  {
+    return std::make_unique<DataStore<T>>(sliceShape, cDims, static_cast<T>(0));
+  }
+};
 } // namespace cxITKImageWriterFilter
 
 namespace nx::core
@@ -374,9 +383,8 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
 
   const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
   const IDataStore& currentData = imageArray.getIDataStoreRef();
-
-  std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
   DataType dataType = currentData.getDataType();
+  ShapeType cDims = currentData.getComponentShape();
 
   ITK::ImageGeomData newImageGeom(imageGeom);
 
@@ -392,6 +400,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     newImageGeom.dims = {dims.getX(), dims.getY(), 1};
     newImageGeom.origin = {origin.getX(), origin.getY(), 0.0f};
     newImageGeom.spacing = {spacing.getX(), spacing.getY(), 1.0f};
+
+    ShapeType sliceShape(std::reverse_iterator(newImageGeom.dims.end()), std::reverse_iterator(newImageGeom.dims.begin()));
+    std::unique_ptr<IDataStore> sliceData = ExecuteDataFunction(cxITKImageWriterFilter::CreateDataStoreFunctor{}, dataType, sliceShape, cDims);
 
     for(usize slice = 0; slice < dims.getZ(); ++slice)
     {
@@ -421,6 +432,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     newImageGeom.origin = {origin.getX(), origin.getZ(), 0.0f};
     newImageGeom.spacing = {spacing.getX(), spacing.getZ(), 1.0f};
 
+    ShapeType sliceShape(std::reverse_iterator(newImageGeom.dims.end()), std::reverse_iterator(newImageGeom.dims.begin()));
+    std::unique_ptr<IDataStore> sliceData = ExecuteDataFunction(cxITKImageWriterFilter::CreateDataStoreFunctor{}, dataType, sliceShape, cDims);
+
     for(usize slice = 0; slice < dims.getY(); ++slice)
     {
       if(shouldCancel)
@@ -448,6 +462,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
     newImageGeom.dims = {dims.getY(), dims.getZ(), 1};
     newImageGeom.origin = {origin.getY(), origin.getZ(), 0.0f};
     newImageGeom.spacing = {spacing.getY(), spacing.getZ(), 1.0f};
+
+    ShapeType sliceShape(std::reverse_iterator(newImageGeom.dims.end()), std::reverse_iterator(newImageGeom.dims.begin()));
+    std::unique_ptr<IDataStore> sliceData = ExecuteDataFunction(cxITKImageWriterFilter::CreateDataStoreFunctor{}, dataType, sliceShape, cDims);
 
     for(usize slice = 0; slice < dims.getX(); ++slice)
     {
