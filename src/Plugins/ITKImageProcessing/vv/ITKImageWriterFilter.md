@@ -16,7 +16,7 @@
 | Algorithm Relationship | Minor changes - same XY/XZ/YZ pixel extraction; NX uses SIMPLNX stores, AtomicFile, and current ITK APIs. Plane spacing and origin now follow the selected physical axes (D2). |
 | Oracle (confirmed) | Classes 1 + 4 - one 3x2x2 scalar fixture (`value(x,y,z)=x+10y+100z`) has same XY/XZ/YZ pixels for all ten accepted scalar types; it verifies selected-plane spacing for all types and origin for MetaImage output. uint8 uses TIFF and the remaining types use MetaImage. |
 | Code paths enumerated | 14 of 19 explicit paths exercised; OOC, unsupported-component, cancellation, write-failure, and defensive tuple-copy failure paths remain untested. |
-| Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-file output test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
+| Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-slice exact-name test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
 | Exemplar archive | None - Class 1+4 oracle uses inline data |
 | Legacy comparison | Run against DREAM3D 6.5.171 with the inline test data for the Class 1+4 Oracle. Decoded pixels match; D1 and D2 record filename-formatting and plane-metadata differences. |
 | Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, selected-plane physical metadata, and tuple-copy error propagation. |
@@ -95,7 +95,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 
 ## Code path coverage
 
-14 of 19 explicit paths exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (587 lines).
+14 of 19 explicit paths exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (511 lines).
 
 | # | Path | Test case |
 |---|---|---|
@@ -105,7 +105,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 4 | Invalid fill-character validation. | `Fill Character Validation` - `{` and `/` return `-25602`. |
 | 5 | OOC input rejection. | *Not directly tested; not able to run on CI* |
 | 6 | Unsupported component-count rejection. | *Not directly tested.* |
-| 7 | Preflight example-output-file value, including offset multi-slice and unsuffixed single-file output. | `Write Stack` and `3D Image Single-File Output`. |
+| 7 | Preflight example-output-file value, including offset multi-slice and unsuffixed single-slice output. | `Write Stack` and `Single Slice Keeps Exact Output Name`. |
 | 8 | XY output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(1,2)` for all types, plus origin `(10,20)` for MetaImage output. |
 | 9 | XZ output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(1,4)` for all types, plus origin `(10,40)` for MetaImage output. |
 | 10 | YZ output pixels and physical metadata. | `Analytical Pixel Order` - hand-derived pixels and spacing `(2,4)` for all types, plus origin `(20,40)` for MetaImage output. |
@@ -114,7 +114,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 13 | Cancellation between slices. | *Not directly tested; requires cancel signal infrastructure* |
 | 14 | Filesystem/ITK write-failure propagation. | *Not directly tested; requires failure injection.* |
 | 15 | Tuple-copy failure propagation. | *Not directly tested. This is a defensive check whose failure preconditions are excluded by construction: `sliceData` is created from the input store with the same tuple and component shapes, and preflight requires the input tuple dimensions to match the selected geometry.* |
-| 16 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
+| 16 | Single-slice output keeps the exact output name. | `Single Slice Keeps Exact Output Name` - `maxSlice == 1` suppresses the index suffix, and a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
 | 17 | Multi-file stack output. | `Write Stack`. |
 | 18 | SIMPL JSON conversion with optional legacy parameters. | `SIMPL Backwards Compatibility`. |
 | 19 | Atomic-file commit after a successful ITK write. | Covered by successful output tests; no injected commit failure. |
@@ -126,7 +126,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | `ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel Order` | new-for-V&V | Tests Class 1+4 Oracle over all accepted scalar types, including decoded XY/XZ/YZ pixels, spacing, and MetaImage origin. |
 | `ITKImageProcessing::ITKImageWriterFilter: Fill Character Validation` | new-for-V&V | Empty fill character is rejected with `-25601`; format-control and path-separator characters are rejected with `-25602`. |
 | `ITKImageProcessing::ITKImageWriterFilter: Dimension Mismatch Validation` | new-for-V&V | Mismatched array and geometry input is rejected during preflight with error `-25600`. |
-| `ITKImageProcessing::ITKImageWriterFilter: 3D Image Single-File Output` | new-for-V&V | A 3x1x2 ImageGeom XZ plane previews and writes an unsuffixed `.mha` file with exact decoded pixels. |
+| `ITKImageProcessing::ITKImageWriterFilter: Single Slice Keeps Exact Output Name` | new-for-V&V | A 3x1x2 ImageGeom XZ plane previews and writes an unsuffixed `.mha` file with exact decoded pixels. |
 | `ITKImageProcessing::ITKImageWriterFilter: RGBA Image Output` | new-for-V&V | A uint8 RGBA pixel is dispatched and decodes as `(10,20,30,40)`. |
 | `ITKImageProcessing::ITKImageWriterFilter: Write Stack` | kept | Checks that the preflight preview starts at the configured index offset and that the image is written as a stack of files. |
 | `ITKImageProcessing::ITKImageWriterFilter: SIMPL Backwards Compatibility` | kept | Covers SIMPL json backwards compatibility. |

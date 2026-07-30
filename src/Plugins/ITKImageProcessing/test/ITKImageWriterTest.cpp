@@ -295,7 +295,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Dimension Mismatch Validati
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: 3D Image Single-File Output", "[ITKImageProcessing][ITKImageWriterFilter]")
+TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Single Slice Keeps Exact Output Name", "[ITKImageProcessing][ITKImageWriterFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();

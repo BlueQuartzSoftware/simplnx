@@ -1,7 +1,6 @@
 #include "ITKImageWriterFilter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -19,9 +18,6 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <itkImageFileWriter.h>
-#include <itkImageSeriesWriter.h>
-#include <itkImportImageFilter.h>
-#include <itkNumericSeriesFileNames.h>
 
 #include <fmt/core.h>
 
@@ -56,16 +52,8 @@ bool IsValidFillCharacter(char fillCharacter)
          fillCharacter != '*' && fillCharacter != '?' && fillCharacter != '"' && fillCharacter != '<' && fillCharacter != '>' && fillCharacter != '|';
 }
 
-bool Is2DFormat(const fs::path& fileName)
-{
-  fs::path ext = fileName.extension();
-  auto supported2DExtensions = ITKImageProcessingPlugin::GetList2DSupportedFileExtensions();
-  auto iter = std::find(supported2DExtensions.cbegin(), supported2DExtensions.cend(), ext);
-  return iter != supported2DExtensions.cend();
-}
-
 template <typename PixelT, uint32 Dimensions>
-Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
+Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath)
 {
   auto atomicFileResult = AtomicFile::Create(filePath);
   if(atomicFileResult.invalid())
@@ -79,8 +67,6 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
     using ImageType = itk::Image<PixelT, Dimensions>;
     using FileWriterType = itk::ImageFileWriter<ImageType>;
     auto writer = FileWriterType::New();
-
-    // messanger(fmt::format("Saving {}", fileName));
 
     writer->SetInput(&image);
     writer->SetFileName(tempPath);
@@ -99,82 +85,21 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
   return {};
 }
 
-template <typename PixelT, uint32 Dimensions>
-Result<> WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
-{
-  // Create list of AtomicFiles
-  std::vector<Result<AtomicFile>> atomicFiles;
-  std::vector<std::string> fileNames;
-
-  for(uint64 index = indexOffset; index < (z_size - 1); index++)
-  {
-    atomicFiles.push_back(AtomicFile::Create(fs::absolute(fmt::format("{}/{}{:03d}{}", filePath.parent_path().string(), filePath.stem().string(), index, filePath.extension().string()))));
-    auto& atomicFileResult = atomicFiles.back();
-    if(atomicFileResult.invalid())
-    {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    fileNames.push_back(atomicFileResult.value().tempFilePath().string());
-  }
-
-  // generate all the files in that new directory
-  try
-  {
-    using InputImageType = itk::Image<PixelT, Dimensions>;
-    using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
-    using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
-    auto writer = SeriesWriterType::New();
-    writer->SetInput(&image);
-    writer->SetFileNames(fileNames);
-    writer->UseCompressionOn();
-    writer->Update();
-  } catch(const itk::ExceptionObject& err)
-  {
-    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
-  }
-
-  for(auto& atomicFile : atomicFiles)
-  {
-    Result<> commitResult = atomicFile.value().commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
-  }
-
-  return {};
-}
-
 template <class PixelT, uint32 Dimensions>
-Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, uint64 indexOffset)
+Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath)
 {
-  using ImageType = itk::Image<PixelT, Dimensions>;
-
   auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
 
   typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
-  if(Is2DFormat(filePath) && Dimensions == 3)
-  {
-    typename ImageType::SizeType size = image->GetLargestPossibleRegion().GetSize();
-    if(size[2] < 2)
-    {
-      return MakeErrorResult(-21012, "Image is 2D, not 3D.");
-    }
-
-    return WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
-  }
-  else
-  {
-    return WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
-  }
+  return WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
 }
 
 template <class InputT, class OutputT, uint32 Dimensions>
 struct WriteImageFunctor
 {
-  Result<> operator()(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, uint64 indexOffset) const
+  Result<> operator()(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath) const
   {
-    return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath, indexOffset);
+    return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath);
   }
 };
 
@@ -237,8 +162,7 @@ Result<> CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp,
   }
 }
 
-Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, uint64 indexOffset, int32 totalDigits,
-                       const std::string& fillChar)
+Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, int32 totalDigits, const std::string& fillChar)
 {
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
@@ -262,9 +186,9 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
 
   if(sliceData.getNumberOfComponents() == 4)
   {
-    return ITK::ArraySwitchFunc<WriteImageFunctor, RgbRgbaArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
+    return ITK::ArraySwitchFunc<WriteImageFunctor, RgbRgbaArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName);
   }
-  return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
+  return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName);
 }
 } // namespace cxITKImageWriterFilter
 
@@ -468,7 +392,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), indexOffset, totalDigits, fillChar);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
@@ -501,7 +425,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), indexOffset, totalDigits, fillChar);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
@@ -534,7 +458,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           }
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), indexOffset, totalDigits, fillChar);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
