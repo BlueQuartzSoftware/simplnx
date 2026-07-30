@@ -76,6 +76,16 @@ Result<> RequireMinNumNeighbors::operator()()
   }
   std::vector<DataPath> cellDataArrayPaths = result.value();
 
+  // FeatureIds controls whether a voxel has been reassigned, so it must always be
+  // updated even if it was included in the ignored-array selection. Keep it last
+  // so the other cell arrays read the original FeatureIds during tuple copying.
+  auto featureIdsIter = std::find(cellDataArrayPaths.begin(), cellDataArrayPaths.end(), m_InputValues->FeatureIdsPath);
+  if(featureIdsIter != cellDataArrayPaths.end())
+  {
+    cellDataArrayPaths.erase(featureIdsIter);
+  }
+  cellDataArrayPaths.push_back(m_InputValues->FeatureIdsPath);
+
   // Run the algorithm.
   // This was checked up in the execute function (which is called before this function),
   // so if we got this far then all should be good with the return. We might get
@@ -254,13 +264,6 @@ Result<> RequireMinNumNeighbors::operator()()
     m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
 
     // TODO: This can be parallelized much like NeighborOrientationCorrelation, just do not update the featureIds array during that section. Wait until everything is complete
-    // This next section finds the "FeatureIds" array and moves that array to the end of the list
-    auto featureIdsIter = std::find(cellDataArrayPaths.begin(), cellDataArrayPaths.end(), m_InputValues->FeatureIdsPath);
-    if(featureIdsIter != cellDataArrayPaths.end())
-    {
-      cellDataArrayPaths.erase(featureIdsIter);
-      cellDataArrayPaths.push_back(m_InputValues->FeatureIdsPath);
-    }
     for(const auto& cellArrayPath : cellDataArrayPaths)
     {
       if(m_ShouldCancel)
