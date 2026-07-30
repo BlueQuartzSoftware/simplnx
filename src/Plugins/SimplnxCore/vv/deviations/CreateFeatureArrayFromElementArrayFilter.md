@@ -28,7 +28,7 @@ Entries are referenced by stable ID (`CreateFeatureArrayFromElementArray-D<N>`) 
 1. Computes `maxValue = max(featureIds[:])` via `std::max_element`.
 2. If `maxValue < 0` → error -81880 (all-negative guard; SIMPL has undefined behavior in this case).
 3. If `maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples()`:
-   - Runs a shrink-protection loop over all AM children: if any child array has `getNumberOfTuples() > (maxValue + 1)` — meaning growing the AM to `maxValue + 1` would shrink that child — returns error -81881. This path requires a child array to have been independently resized above the AM's tuple count; no test fixture exercises it.
+   - Runs a shrink-protection loop over all AM children: if any child array has `getNumberOfTuples() > (maxValue + 1)` — meaning growing the AM to `maxValue + 1` would shrink that child — returns error -81881. Exercised by AF-5 (`test/CreateFeatureArrayFromElementArrayTest.cpp`).
    - **Resizes the AM** via `cellFeatureAttrMat.resizeTuples({maxValue + 1})`. This cascades to all AM children (`AttributeMatrix::resizeTuples` iterates `findAllChildrenOfType<IArray>()` and calls `array->resizeTuples(m_TupleShape)` on each), including the newly created output array.
 4. Runs the copy loop.
 
