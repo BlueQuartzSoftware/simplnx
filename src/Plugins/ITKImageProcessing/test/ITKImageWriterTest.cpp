@@ -82,6 +82,17 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   }
 }
 
+bool RequireExampleOutputFile(const IFilter::PreflightResult& preflightResult, const fs::path& expectedFilePath)
+{
+  return std::find_if(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [expectedFilePath](const IFilter::PreflightValue& value) {
+           if(value.name == "Example Output File")
+           {
+             return fs::path(value.value).lexically_normal() == fs::absolute(expectedFilePath).lexically_normal();
+           }
+           return false;
+         }) != preflightResult.outputValues.end();
+}
+
 template <typename PixelT>
 void CompareImageToExpected(const fs::path& filePath, const std::array<usize, 2>& expectedDimensions, const std::vector<PixelT>& expectedPixels)
 {
@@ -323,6 +334,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: 3D Image Single-File Output
 
   const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(RequireExampleOutputFile(preflightResult, outputPath));
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(fs::exists(outputPath));
@@ -442,6 +454,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(RequireExampleOutputFile(preflightResult, outputPath.parent_path() / "slice_100.tif"));
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
