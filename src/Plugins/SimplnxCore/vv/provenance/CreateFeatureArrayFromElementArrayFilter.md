@@ -10,7 +10,7 @@ This sidecar documents the oracle and archive strategy for `CreateFeatureArrayFr
 |---|---|
 | **Oracle class** | Class 1 (Analytical) primary + Class 4 (Invariant) companion |
 | **Oracle archive** | *None — Class 1 and Class 4 oracles require no exemplar archive; expected values are encoded as inline `REQUIRE` assertions in test source* |
-| **A/B comparison artifacts** | `/home/nyoung/Apps/DREAM3DNX-Dev/feature_from_element_vv/` — `generate_input.py`, `pipeline_simpl_{1,3}comp.json`, `pipeline_nx_{1,3}comp.d3dpipeline`, `compare_outputs.py`, `run_all.sh` |
+| **A/B comparison artifacts** | `OneDrive - feature_from_element_vv/` — `generate_input.py`, `pipeline_simpl_{1,3}comp.json`, `pipeline_nx_{1,3}comp.d3dpipeline`, `compare_outputs.py`, `run_all.sh` |
 | **A/B run date** | 2026-07-23 |
 | **A/B result** | PASS — bit-identical on 1-component float32 and 3-component uint8 fixtures |
 | **Regression input archive** | `6_5_test_data_1_v2.tar.gz` (shared across multiple SimplnxCore tests; not an oracle artifact for this filter) |

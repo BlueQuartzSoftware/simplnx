@@ -8,7 +8,50 @@ Entries are referenced by stable ID (`CreateFeatureArrayFromElementArray-D<N>`) 
 
 ## Headline
 
-**No deviations.** The empirical A/B comparison was run on 2026-07-23 using synthetic 8×1×1 fixtures with both 1-component (float32) and 3-component (uint8) cell arrays. SIMPL 6.5.171 and SIMPLNX produced **bit-identical output** matching the hand-derived Class 1 oracle on every fixture. No data deviations were found. No behavioral deviations were found — the warning count is identical (both implementations emit exactly one warning total per execution when any feature's cell values are inconsistent).
+**One behavioral deviation identified — SIMPLNX improvement over SIMPL.** The per-cell copy loop is a genuine port and produces bit-identical output for all inputs that SIMPL can process. The single deviation is that SIMPLNX handles the under-sized AM case (where `max(featureIds) + 1 > AM.tupleCount`) by resizing the AM to accommodate, whereas SIMPL errors in that case. All pipelines that succeeded in SIMPL will succeed identically in SIMPLNX.
+
+---
+
+## Known deviations
+
+### CreateFeatureArrayFromElementArray-D1 — AM under-sized: SIMPL errors; SIMPLNX resizes and succeeds
+
+**Severity:** Low for migration — this deviation only occurs in configurations that SIMPL could not process at all (error -5555). No SIMPL pipeline that previously succeeded can produce this condition, so there is no output difference for any pipeline that ran to completion in SIMPL.
+
+**SIMPL behavior** (`execute()`, lines 226–252):
+1. Reads `numFeatures = attributeMatrix.getNumberOfTuples()` — the pre-existing AM tuple count.
+2. Scans all cells for `largestFeature = max(featureIds[:])`.
+3. If `largestFeature >= numFeatures` → **error -5555** ("Attribute Matrix has N tuples but the input array has a Feature ID value of at least M"). No output is produced; the filter exits.
+4. Otherwise → `copyCellData<T>(..., numFeatures, ...)` creates a fresh `numFeatures`-tuple zero-initialized output array and fills it. AM tuple count is **never changed**.
+
+**SIMPLNX behavior** (`operator()()`, lines 84–112):
+1. Computes `maxValue = max(featureIds[:])` via `std::max_element`.
+2. If `maxValue < 0` → error -81880 (all-negative guard; SIMPL has undefined behavior in this case).
+3. If `maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples()`:
+   - Runs a shrink-protection loop — dead code in this branch because the outer condition guarantees all AM children have `getNumberOfTuples() == AM.tupleCount < maxValue + 1`, so the inner check `iArray->getNumberOfTuples() > (maxValue + 1)` can never fire.
+   - **Resizes the AM** via `cellFeatureAttrMat.resizeTuples({maxValue + 1})`. This cascades to all AM children (`AttributeMatrix::resizeTuples` iterates `findAllChildrenOfType<IArray>()` and calls `array->resizeTuples(m_TupleShape)` on each), including the newly created output array.
+4. Runs the copy loop.
+
+**Divergent outcomes by case:**
+
+| Case | Condition | SIMPL result | SIMPLNX result |
+|---|---|---|---|
+| **Exact match** | `max(featureIds) + 1 == AM.tupleCount` | SUCCESS — output has `AM.tupleCount` tuples | SUCCESS — resize block skipped; output has `AM.tupleCount` tuples (identical) |
+| **AM over-sized** | `max(featureIds) + 1 < AM.tupleCount` | SUCCESS — output has `AM.tupleCount` tuples; trailing feature slots zero-filled | SUCCESS — resize block skipped; output has `AM.tupleCount` tuples; trailing slots retain `"0"` fill from `CreateArrayAction` (identical) |
+| **AM under-sized** | `max(featureIds) + 1 > AM.tupleCount` | **ERROR -5555** — "Attribute Matrix has N tuples but Feature ID value is at least M" | **SUCCESS** — AM and all children (including output array) resized to `max(featureIds) + 1`; copy runs normally |
+
+**Why the A/B comparison missed this:**
+The synthetic fixture (`FeatureIds=[1,2,1,2,1,2,1,2]`, `max=2`) was paired with an AM of exactly 3 tuples — the Exact Match case. The AM under-sized case requires a pipeline configuration that SIMPL would have rejected at runtime, so it is not reachable from any SIMPL-generated test data.
+
+**Migration impact:** None. Any pipeline that completed successfully in SIMPL had `max(featureIds) < numFeatures` by definition, placing it in the Exact Match or AM over-sized case — both of which produce identical output in SIMPLNX. The AM under-sized case is a new capability in SIMPLNX.
+
+---
+
+### Note: All-negative FeatureIds — SIMPLNX improvement over SIMPL
+
+Documented for completeness; not a deviation that disadvantages SIMPLNX.
+
+If all feature IDs are negative, `maxValue < 0` → SIMPLNX returns clean error -81880. In SIMPL, `largestFeature` stays 0 (negative values never satisfy `m_FeatureIds[i] > largestFeature`); `mismatchedFeatures` stays false; `copyCellData()` is called; inside, `featureIdx` is negative and `fPtr + (numComp * featureIdx)` is a pointer before the start of the allocation — undefined behavior. SIMPLNX is strictly safer for this input.
 
 ---
 
@@ -16,13 +59,14 @@ Entries are referenced by stable ID (`CreateFeatureArrayFromElementArray-D<N>`) 
 
 | | |
 |---|---|
-| **Comparison type** | Runtime A/B (both implementations executed on identical input) |
+| **Comparison type** | Runtime A/B (both implementations executed on identical input) + static source analysis |
 | **Fixture** | Synthetic 8×1×1 image geometry; `FeatureIds=[1,2,1,2,1,2,1,2]`; `CellFloat` (float32, 1-comp): `[10,20,30,20,10,20,30,20]`; `CellRGB` (uint8, 3-comp): cells 0,2,4,6→`[10,20,30]/[70,80,90]` interleaved with cells 1,3,5,7→`[40,50,60]` |
+| **Fixture coverage** | Exact Match case (`max(featureIds)+1 == AM.tupleCount`). The AM under-sized case cannot be generated from a SIMPL pipeline, so no A/B fixture for it exists. |
 | **Tolerance** | Bit-identical (copy-only filter; no floating-point accumulation) |
-| **Comparison driver** | `/home/nyoung/Apps/DREAM3DNX-Dev/feature_from_element_vv/compare_outputs.py` |
+| **Comparison driver** | `feature_from_element_vv/compare_outputs.py` |
 | **Run date** | 2026-07-23 |
-| **SIMPL runner** | `/home/nyoung/Downloads/DREAM3D-6.5.171-Linux-x86_64/bin/PipelineRunner` |
-| **NX runner** | `/home/nyoung/Apps/DREAM3DNX-Dev/DREAM3D-Build/DREAM3DNX-Release-Linux-x64/Bin/nxrunner` |
+| **SIMPL runner** | `DREAM3D-6.5.171-Linux-x86_64/bin/PipelineRunner` |
+| **NX runner** | `DREAM3DNX-Release-Linux-x64/Bin/nxrunner` |
 
 ---
 
@@ -33,24 +77,10 @@ Entries are referenced by stable ID (`CreateFeatureArrayFromElementArray-D<N>`) 
 | 1-component float32 (`CellFloat → FeatureFloat`) | PASS | PASS | MATCH |
 | 3-component uint8 (`CellRGB → FeatureRGB`) | PASS | PASS | MATCH |
 
-**Oracle values (hand-derived, `FeatureFloat`):** `[0.0, 30.0, 20.0]`
-
-**Oracle values (hand-derived, `FeatureRGB`):** `[[0,0,0], [70,80,90], [40,50,60]]`
-
-**Warning count:** Both SIMPL 6.5.171 and SIMPLNX emitted exactly **one** warning per execution:
-```
-Elements from Feature 1 do not all have the same value. The last value copied into Feature 1 will be used
-```
-The SIMPL implementation uses a `bool warningThrown = false;` guard (equivalent to SIMPLNX's `result.warnings().empty()` guard) — warning behavior is identical, not a delta.
-
----
-
-## Known deviations
-
-**None.** No data deviations and no behavioral deviations between SIMPLNX and DREAM3D 6.5.171.
+**A/B result is complete for the relevant migration space.** All configurations that SIMPL can execute fall into the Exact Match or AM over-sized cases, where SIMPLNX output is bit-identical to SIMPL. D1 covers a configuration SIMPL could not produce output for, so no A/B comparison is possible or necessary for it.
 
 ---
 
 ## Migration recommendation
 
-**Trust SIMPLNX.** For any pipeline using `CreateFeatureArrayFromElementArray`, the output array values are bit-identical between SIMPLNX and DREAM3D 6.5.171 for the same inputs. Warning behavior (one warning total when any feature's cell values are inconsistent) is also identical. No migration action required.
+**No action required.** Any pipeline that ran successfully in SIMPL will produce bit-identical output in SIMPLNX. SIMPLNX additionally handles the AM under-sized case that SIMPL rejected with error -5555.

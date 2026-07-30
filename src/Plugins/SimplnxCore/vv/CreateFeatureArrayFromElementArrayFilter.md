@@ -7,24 +7,24 @@
 | DREAM3D 6.5.171 equivalent | `CreateFeatureArrayFromElementArray` (SIMPL UUID `94438019-21bb-5b61-a7c3-66974b9a34dc`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | **COMPLETE** |
-| Sign-off | *<pending>* |
+| Sign-off | *Nathan Young, 07-28-2026* |
 
 ## At a glance
 
 | Aspect | Current state |
 |---|---|
-| Algorithm Relationship | **Port** — line-by-line translation of SIMPL `CreateFeatureArrayFromElementArray`. UUID changed from SIMPL; legacy alias maintained via `FromSIMPLJson()` and SIMPL conversion fixtures. Five port-time deltas documented (Qt→std containers, EXECUTE_FUNCTION_TEMPLATE→ExecuteDataFunction, warning-count reduction to 1-per-execution, cancel check added, algorithm class extracted) — none change output data. |
+| Algorithm Relationship | **Port** — the per-cell copy loop is a line-by-line translation of SIMPL `CreateFeatureArrayFromElementArray`. UUID changed from SIMPL; legacy alias maintained via `FromSIMPLJson()` and SIMPL conversion fixtures. The sizing logic differs only in the AM under-sized case: SIMPL errors; SIMPLNX resizes and succeeds (see D1 in deviations). All pipelines that succeeded in SIMPL produce bit-identical output in SIMPLNX. |
 | Oracle | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — expected outputs hand-derived for 3-fixture AnalyticalFixtures suite (AF-1: single-component consistent, AF-2: single-component inconsistent/warning, AF-3: 3-component consistent). Class 4 invariants: output AM has exactly `max(featureIds)+1` tuples; output data type and component shape match input. Implemented as inline `REQUIRE` assertions in `test/CreateFeatureArrayFromElementArrayTest.cpp`. |
 | Code paths enumerated | **5 of 6** exercised; cancellation structurally present but not directly exercised by any test fixture. |
 | Tests today | **6 test cases** (2 regression + 1 SIMPL backwards-compat + 3 AnalyticalFixtures). **Circular-oracle flag**: existing regression tests compare SIMPLNX output against legacy-generated `CellFeatureData` arrays pre-existing in `6_5_test_data_1_v2.dream3d`; not a valid correctness oracle per policy. The 3 AnalyticalFixtures tests (AF-1, AF-2, AF-3) provide the independent Class 1 + Class 4 oracle. |
 | Exemplar archive | `6_5_test_data_1_v2.tar.gz` (SHA512 `585b51b…`) — shared input archive. Pre-existing `CellFeatureData` arrays within the dream3d are legacy-generated; serve only as regression baselines. No oracle-specific archive needed for Class 1 (oracle is inline assertions). |
-| Legacy comparison | **Complete (2026-07-23) — no deviations.** Empirical A/B comparison run on synthetic 8×1×1 fixtures (1-component float32 and 3-component uint8). SIMPL 6.5.171 and SIMPLNX produced bit-identical output matching the Class 1 oracle on both fixtures. Warning behavior is identical: both implementations emit exactly one warning per execution when any feature's cell values are inconsistent. See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md`. |
-| Bug flags | **None** identified during code analysis. Warning-count guard (`result.warnings().empty()`) is a minor UI behavior delta from SIMPL; output data is identical. |
-| V&V phase | **Complete.** Oracle designed (Class 1 + Class 4) and implemented; code-path analysis complete; Algorithm Relationship classified (Port); AnalyticalFixtures tests implemented (AF-1, AF-2, AF-3); legacy A/B comparison run (2026-07-23, no deviations). |
+| Legacy comparison | **Complete (2026-07-23) — one deviation identified, no migration impact.** Empirical A/B comparison on synthetic 8×1×1 fixtures: bit-identical. Static source analysis identified D1 (AM under-sized: SIMPL errors -5555; SIMPLNX resizes and succeeds). D1 is unreachable from any SIMPL pipeline that ran successfully, so output is bit-identical for the entire valid SIMPL migration space. See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md`. |
+| Bug flags | **None** |
+| V&V phase | **Complete.** Oracle designed (Class 1 + Class 4) and implemented; code-path analysis complete; Algorithm Relationship classified (Port); AnalyticalFixtures tests implemented (AF-1, AF-2, AF-3); legacy A/B comparison run (2026-07-23, bit-identical on full valid SIMPL migration space); one deviation (D1, SIMPLNX improvement) identified and documented. |
 
 ## Summary
 
-`CreateFeatureArrayFromElementArrayFilter` copies each element-level data array value to the feature-level entry identified by the corresponding FeatureId, using last-writer-wins semantics, and emits one warning if any cell's value for a feature differs from the first-seen value. The filter was verified analytically using a Class 1 hand-derived oracle on three small synthetic fixtures covering consistent, inconsistent, and multi-component cases (AF-1, AF-2, AF-3), plus Class 4 invariants on output shape and type. All six oracle assertions pass. The filter is a direct port of the SIMPL `CreateFeatureArrayFromElementArray` with no output-affecting changes; empirical A/B comparison (2026-07-23) confirmed bit-identical output against SIMPL 6.5.171 with no deviations.
+`CreateFeatureArrayFromElementArrayFilter` copies each element-level data array value to the feature-level entry identified by the corresponding FeatureId, using last-writer-wins semantics, and emits one warning if any cell's value for a feature differs from the first-seen value. The filter was verified analytically using a Class 1 hand-derived oracle on three small synthetic fixtures covering consistent, inconsistent, and multi-component cases (AF-1, AF-2, AF-3), plus Class 4 invariants on output shape and type. All six oracle assertions pass. The per-cell copy loop is a direct port of SIMPL `CreateFeatureArrayFromElementArray`; empirical A/B comparison (2026-07-23) confirmed bit-identical output for all inputs that SIMPL can process. One deviation exists (D1): SIMPLNX handles the AM under-sized case by resizing, whereas SIMPL errors with -5555. This deviation has no migration impact — it is unreachable from any pipeline that ran successfully in SIMPL.
 
 ## Algorithm Relationship
 
@@ -44,7 +44,7 @@
 
 - **#1301** — "ENH: Add missing algorithm classes to some filters": extracted algorithm class skeleton.
 - **#1544** — "ENH: Move Filter executeImpl() logic to Algorithm classes": finalized algorithm class with resize logic.
-- **#1278** — "BUG: Ensure FeatureId arrays are range checked against the Feature Attribute Matrix": FeatureId range validation added to preflight.
+- **#1278** — "BUG: Ensure FeatureId arrays are range checked against the Feature Attribute Matrix": Updated help text and default value for parameter.
 - **#1295** — "ENH: Add Fill Functionality to CreateArrayAction": output array initialized to `"0"` fill at creation; ensures feature-0 slot has a defined value when no cell maps to feature 0.
 
 ## Oracle
@@ -146,4 +146,4 @@ The algorithm has two phases: (a) output resize — scan `featureIds` for the ma
 
 See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md`.
 
-**Legacy comparison complete (2026-07-23) — no deviations.** Empirical A/B comparison was run on synthetic 8×1×1 fixtures with 1-component float32 and 3-component uint8 cell arrays. SIMPL 6.5.171 and SIMPLNX produced bit-identical output on both fixtures, matching the hand-derived Class 1 oracle exactly. Both implementations emitted exactly one warning per execution when any feature's cell values were inconsistent — no behavioral delta. See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md` for detailed results.
+**Legacy comparison complete (2026-07-23) — one deviation, no migration impact.** Empirical A/B comparison was bit-identical on the Exact Match fixture. Static source analysis identified one deviation (D1): SIMPLNX handles the AM under-sized case (`max(featureIds) + 1 > AM.tupleCount`) by resizing the AM to accommodate, while SIMPL errors with -5555. For the Exact Match and AM over-sized cases — the only cases reachable from a SIMPL pipeline that ran successfully — SIMPLNX output is bit-identical to SIMPL. See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md` for full analysis.

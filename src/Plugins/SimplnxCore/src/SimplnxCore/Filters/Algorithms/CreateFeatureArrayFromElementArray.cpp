@@ -83,12 +83,31 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
 
   // Resize the created array to the proper size
   const usize featureIdsMaxIdx = std::distance(featureIdsRef.begin(), std::max_element(featureIdsRef.cbegin(), featureIdsRef.cend()));
-  const usize maxValue = featureIdsRef[featureIdsMaxIdx];
+  const int32 maxValue = featureIdsRef[featureIdsMaxIdx];
+
+  // Validate no underflow
+  if(maxValue < 0)
+  {
+    return MakeErrorResult(-81880, "Invalid Input, Feature Ids Array must contain a positive value");
+  }
+
   auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
 
-  auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
-  createdArrayStore->resizeTuples(std::vector<usize>{maxValue + 1});
-  cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
+  // validate resize won't shrink child arrays
+  if(maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples())
+  {
+    for(const auto& childObject : cellFeatureAttrMat)
+    {
+      const auto* iArray = dynamic_cast<IArray*>(childObject.second.get());
+      if(iArray != nullptr && iArray->getNumberOfTuples() > (maxValue + 1))
+      {
+        return MakeErrorResult(-81881, fmt::format("Resizing would cause data loss in {}. Make sure all objects in {} have tuple counts equal to or less then the max Feature ID {}!",
+                                                   iArray->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), maxValue + 1));
+      }
+    }
+
+    cellFeatureAttrMat.resizeTuples(std::vector<usize>{static_cast<usize>(maxValue) + 1});
+  }
 
   return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsRef, createdArray, m_ShouldCancel);
 }
