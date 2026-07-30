@@ -11,31 +11,51 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_NoCoarseningProgress = -55572;
+constexpr int32 k_CopyDestinationTupleOutOfRange = -55568;
+constexpr int32 k_CopySourceTupleOutOfRange = -55573;
 
 Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
                             const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
 {
-  auto* voxelArray = dataStructure.getDataAs<IDataArray>(dataArrayPath);
-  auto arraySize = voxelArray->getSize();
-  for(const auto& featureIdIndex : badFeatureIdIndexes)
+  auto& voxelArray = dataStructure.getDataRefAs<IDataArray>(dataArrayPath);
+  const usize tupleCount = voxelArray.getNumberOfTuples();
+  const usize featureIdTupleCount = featureIds.getNumberOfTuples();
+  const usize neighborMapSize = neighbors.size();
+
+  for(const usize featureIdIndex : badFeatureIdIndexes)
   {
+    // Validate the destination before indexing featureIds or neighbors.
+    if(featureIdIndex >= tupleCount || featureIdIndex >= featureIdTupleCount || featureIdIndex >= neighborMapSize)
+    {
+      const std::string message =
+          fmt::format("Cannot copy into tuple index {} of array '{}'. The array contains {} tuples, the Feature Ids array contains {} tuples, and the neighbor map contains {} entries.",
+                      featureIdIndex, dataArrayPath.toString(), tupleCount, featureIdTupleCount, neighborMapSize);
+      mesgHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+      return MakeErrorResult(k_CopyDestinationTupleOutOfRange, message);
+    }
+
     const int32 featureName = featureIds.getValue(featureIdIndex);
     const int32 neighbor = neighbors[featureIdIndex];
 
-    if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds.getValue(neighbor) >= 0))
+    if(featureName >= 0 || neighbor < 0)
     {
-      const std::string message =
-          fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, dataArrayPath.toString(), arraySize);
-      mesgHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-      return MakeErrorResult(-55568, message);
+      continue;
     }
 
-    if(featureName < 0 && neighbor >= 0)
+    const usize neighborIndex = static_cast<usize>(neighbor);
+
+    // Validate the source before reading it or passing it to copyTuple().
+    if(neighborIndex >= tupleCount || neighborIndex >= featureIdTupleCount)
     {
-      if(const int32 fId = featureIds.getValue(neighbor); fId >= 0)
-      {
-        voxelArray->copyTuple(neighbor, featureIdIndex);
-      }
+      const std::string message = fmt::format("Cannot copy from tuple index {} to tuple index {} of array '{}'. The array contains {} tuples and the Feature Ids array contains {} tuples.",
+                                              neighborIndex, featureIdIndex, dataArrayPath.toString(), tupleCount, featureIdTupleCount);
+      mesgHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+      return MakeErrorResult(k_CopySourceTupleOutOfRange, message);
+    }
+
+    if(featureIds.getValue(neighborIndex) >= 0)
+    {
+      voxelArray.copyTuple(neighborIndex, featureIdIndex);
     }
   }
   return {};

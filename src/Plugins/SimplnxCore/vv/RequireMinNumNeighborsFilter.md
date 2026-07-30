@@ -15,7 +15,7 @@
 |---|---|
 | Algorithm Relationship | **Minor changes** - the NX port retains the legacy selection, coarsening, and feature-removal while incorporating bug fixes and minor code improvements. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - two 4x1x1 fixtures check cell and compacted feature arrays. |
-| Code paths enumerated | 13 of 17 paths are assertion-covered; cancellation and defensive error paths are not covered. |
+| Code paths enumerated | 13 of 18 paths are assertion-covered; cancellation and defensive error paths are not covered. |
 | Tests today | 10 active test cases: analytical all/single-phase execution, four execute errors, negative-FeatureId reassignment, two preflight errors, Small IN100 regression test, and SIMPL conversion. |
 | Exemplar archive | No V&V output archive is needed because the oracle is inline; the retained `6_5_test_data_1_v2.tar.gz` input archive supports only the Small IN100 regression test. |
 | Legacy comparison | **Run** - NX and DREAM3D 6.5.171 matched all five arrays for the valid all-phase oracle fixture; three negative-ID, invalid-input, or non-progress behaviors differ as documented in D1-D3. |
@@ -85,9 +85,9 @@
 
 ## Code path coverage
 
-13 of 17 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
+13 of 18 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (312 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (332 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
 
 The filter selects features to retain, marks rejected-feature voxels, iteratively copies a dominant face neighbor into each rejected voxel, and removes inactive feature tuples.
 
@@ -107,9 +107,10 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 12 | Reassignment | Negative Feature IDs skip initial marking and are reassigned from valid face neighbors. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned` |
 | 13 | Reassignment | Negative Feature IDs remain but an iteration finds no non-negative face neighbor to copy - return `-55572` instead of looping indefinitely. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)` |
 | 14 | Copy | A rejected voxel copies every nonignored cell-data tuple from its selected neighbor. | `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
-| 15 | Copy | A cell array with an out-of-range source or destination tuple returns `-55568`. | *Not directly tested. AttributeMatrix construction rejects mismatched tuple shapes before execution. Defensive check.* |
-| 16 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter` and `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
-| 17 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
+| 15 | Copy | A destination tuple index is outside the cell array, FeatureIds array, or neighbor map range - return `-55568` before indexing. | *Not directly tested. AttributeMatrix construction and the FeatureIds/Image Geometry tuple-count preflight reject mismatched tuple shapes before execution. Defensive check.* |
+| 16 | Copy | A source tuple index is outside the cell array or FeatureIds array range - return `-55573` before indexing. | *Not directly tested. Valid face-neighbor computation constrains source indexes to the Image Geometry cell range. Defensive check.* |
+| 17 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter` and `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` |
+| 18 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
 
 ## Test inventory
 
