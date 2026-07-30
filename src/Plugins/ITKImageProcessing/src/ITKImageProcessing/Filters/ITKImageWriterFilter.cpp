@@ -39,13 +39,6 @@ namespace cxITKImageWriterFilter
 using ArrayOptionsType = ITK::ScalarVectorPixelIdTypeList;
 using RgbRgbaArrayOptionsType = ITK::ArrayOptions<ITK::ArrayComponentOptions<true, false, true>, ITK::ArrayUseAllTypes>;
 
-constexpr std::array<usize, 7> k_AllowedComponentSizes = {1, 2, 3, 4, 10, 11, 36};
-
-bool IsValidComponentSize(usize componentSize)
-{
-  return std::find(k_AllowedComponentSizes.begin(), k_AllowedComponentSizes.end(), componentSize) != k_AllowedComponentSizes.end();
-}
-
 // Rejects 0 - 31 ASCII control characters
 bool IsValidFillCharacter(char fillCharacter)
 {
@@ -269,7 +262,7 @@ Parameters ITKImageWriterFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ITK::GetScalarPixelAllowedTypes()));
+                                                          nx::core::ITK::GetScalarPixelAllowedTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}, {2}, {3}, {4}, {10}, {11}, {36}}));
 
   return params;
 }
@@ -327,12 +320,6 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   {
     return {MakeErrorResult<OutputActions>(ITK::Constants::k_OutOfCoreDataNotSupported,
                                            fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()))};
-  }
-  const usize componentCount = imageArray.getNumberOfComponents();
-  if(!cxITKImageWriterFilter::IsValidComponentSize(componentCount))
-  {
-    return {MakeErrorResult<OutputActions>(
-        -21010, fmt::format("Input Array '{}' has {} components. Supported component counts are {}.", imageArrayPath.toString(), componentCount, cxITKImageWriterFilter::k_AllowedComponentSizes))};
   }
 
   Result<OutputActions> resultOutputActions;
