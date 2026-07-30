@@ -6,7 +6,7 @@ ITKImageProcessing (ITKImageProcessing)
 
 ## Description
 
-This **Filter** will save images based on an array that represents grayscale, RGB or ARGB color values. If the input array represents a 3D volume, the **Filter** will output a series of slices along one of the orthogonal axes.  The options are to produce XY slices along the Z axis, XZ slices along the Y axis or YZ slices along the X axis.
+This **Filter** will save images based on scalar, vector, RGB, or RGBA values. Supported component counts are 1, 2, 3, 4, 10, 11, and 36. If the input array represents a 3D volume, the **Filter** will output a series of slices along one of the orthogonal axes. The options are to produce XY slices along the Z axis, XZ slices along the Y axis or YZ slices along the X axis.
 
 The available output formats are determined by the installed ITK image I/O backends and the filename extension. TIFF, BMP, and PNG are common 2D choices; not every pixel type is supported by every format.
 

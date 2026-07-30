@@ -40,6 +40,8 @@ using namespace nx::core;
 namespace cxITKImageWriterFilter
 {
 using ArrayOptionsType = ITK::ScalarVectorPixelIdTypeList;
+using RgbRgbaArrayOptionsType = ITK::ArrayOptions<ITK::ArrayComponentOptions<true, false, true>, ITK::ArrayUseAllTypes>;
+
 constexpr std::array<usize, 7> k_AllowedComponentSizes = {1, 2, 3, 4, 10, 11, 36};
 
 bool IsValidComponentSize(usize componentSize)
@@ -267,6 +269,10 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
 
   auto fileName = fs::path(ss.str());
 
+  if(sliceData.getNumberOfComponents() == 4)
+  {
+    return ITK::ArraySwitchFunc<WriteImageFunctor, RgbRgbaArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
+  }
   return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
 }
 } // namespace cxITKImageWriterFilter
