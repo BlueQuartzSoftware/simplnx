@@ -179,7 +179,7 @@ struct WriteImageFunctor
 };
 
 template <class T>
-void CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize nComp, usize index, usize indexNew)
+Result<> CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize nComp, usize index, usize indexNew)
 {
   const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
   auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
@@ -190,10 +190,10 @@ void CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize 
   std::memcpy(destPtr, sourcePtr, currentData.getTypeSize() * nComp);
 #endif
 
-  sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1);
+  return sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1);
 }
 
-void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, const IDataStore& currentData, IDataStore& sliceData)
+Result<> CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, const IDataStore& currentData, IDataStore& sliceData)
 {
   usize indexNew = (axisA * dB) + axisB;
 
@@ -202,44 +202,34 @@ void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, con
   switch(type)
   {
   case DataType::int8: {
-    CopyTupleTyped<int8>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<int8>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::uint8: {
-    CopyTupleTyped<uint8>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<uint8>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::int16: {
-    CopyTupleTyped<int16>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<int16>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::uint16: {
-    CopyTupleTyped<uint16>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<uint16>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::int32: {
-    CopyTupleTyped<int32>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<int32>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::uint32: {
-    CopyTupleTyped<uint32>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<uint32>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::int64: {
-    CopyTupleTyped<int64>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<int64>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::uint64: {
-    CopyTupleTyped<uint64>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<uint64>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::float32: {
-    CopyTupleTyped<float32>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<float32>(currentData, sliceData, nComp, index, indexNew);
   }
   case DataType::float64: {
-    CopyTupleTyped<float64>(currentData, sliceData, nComp, index, indexNew);
-    break;
+    return CopyTupleTyped<float64>(currentData, sliceData, nComp, index, indexNew);
   }
   default: {
     throw std::runtime_error("ITKImageWriterFilter: Invalid DataType while attempting to copy tuples");
@@ -472,7 +462,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (slice * dA * dB) + (axisA * dB) + axisB;
-          cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData); copyResult.invalid())
+          {
+            return copyResult;
+          }
         }
       }
       Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), indexOffset, totalDigits, fillChar);
@@ -502,7 +495,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (dims.getY() * axisA * dB) + (slice * dB) + axisB;
-          cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData); copyResult.invalid())
+          {
+            return copyResult;
+          }
         }
       }
       Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), indexOffset, totalDigits, fillChar);
@@ -532,7 +528,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (dims.getX() * axisA * dB) + (axisB * dims.getX()) + slice;
-          cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          if(Result<> copyResult = cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData); copyResult.invalid())
+          {
+            return copyResult;
+          }
         }
       }
       Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), indexOffset, totalDigits, fillChar);

@@ -15,11 +15,11 @@
 |---|---|
 | Algorithm Relationship | Minor changes - same XY/XZ/YZ pixel extraction; NX uses SIMPLNX stores, AtomicFile, and current ITK APIs. Plane spacing and origin now follow the selected physical axes (D2). |
 | Oracle (confirmed) | Classes 1 + 4 - one 3x2x2 scalar fixture (`value(x,y,z)=x+10y+100z`) has same XY/XZ/YZ pixels for all ten accepted scalar types; it verifies selected-plane spacing for all types and origin for MetaImage output. uint8 uses TIFF and the remaining types use MetaImage. |
-| Code paths enumerated | 14 of 18 explicit paths exercised; OOC, unsupported-component, cancellation, and write-failure paths remain untested. |
+| Code paths enumerated | 14 of 19 explicit paths exercised; OOC, unsupported-component, cancellation, write-failure, and defensive tuple-copy failure paths remain untested. |
 | Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-file output test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
 | Exemplar archive | None - Class 1+4 oracle uses inline data |
 | Legacy comparison | Run against DREAM3D 6.5.171 with the inline test data for the Class 1+4 Oracle. Decoded pixels match; D1 and D2 record filename-formatting and plane-metadata differences. |
-| Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, and selected-plane physical metadata. |
+| Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, selected-plane physical metadata, and tuple-copy error propagation. |
 | V&V phase | Regression tests and report amendments in progress |
 
 ## Summary
@@ -95,7 +95,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 
 ## Code path coverage
 
-13 of 18 explicit paths exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (587 lines).
+14 of 19 explicit paths exercised. Source: `src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters/ITKImageWriterFilter.cpp` (587 lines).
 
 | # | Path | Test case |
 |---|---|---|
@@ -113,10 +113,11 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 | 12 | RGBA dispatch arm. | `RGBA Image Output` - one uint8 RGBA pixel decodes as `(10,20,30,40)`. |
 | 13 | Cancellation between slices. | *Not directly tested; requires cancel signal infrastructure* |
 | 14 | Filesystem/ITK write-failure propagation. | *Not directly tested; requires failure injection.* |
-| 15 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
-| 16 | Multi-file stack output. | `Write Stack`. |
-| 17 | SIMPL JSON conversion with optional legacy parameters. | `SIMPL Backwards Compatibility`. |
-| 18 | Atomic-file commit after a successful ITK write. | Covered by successful output tests; no injected commit failure. |
+| 15 | Tuple-copy failure propagation. | *Not directly tested. This is a defensive check whose failure preconditions are excluded by construction: `sliceData` is created from the input store with the same tuple and component shapes, and preflight requires the input tuple dimensions to match the selected geometry.* |
+| 16 | Single-file output for a non-2D format. | `3D Image Single-File Output` - a 3x1x2 ImageGeom XZ plane writes one unsuffixed MetaImage file with exact decoded pixels. |
+| 17 | Multi-file stack output. | `Write Stack`. |
+| 18 | SIMPL JSON conversion with optional legacy parameters. | `SIMPL Backwards Compatibility`. |
+| 19 | Atomic-file commit after a successful ITK write. | Covered by successful output tests; no injected commit failure. |
 
 ## Test inventory
 
