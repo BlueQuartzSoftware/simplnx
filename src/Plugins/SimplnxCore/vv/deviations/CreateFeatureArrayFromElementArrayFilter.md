@@ -28,7 +28,7 @@ Entries are referenced by stable ID (`CreateFeatureArrayFromElementArray-D<N>`) 
 1. Computes `maxValue = max(featureIds[:])` via `std::max_element`.
 2. If `maxValue < 0` → error -81880 (all-negative guard; SIMPL has undefined behavior in this case).
 3. If `maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples()`:
-   - Runs a shrink-protection loop — dead code in this branch because the outer condition guarantees all AM children have `getNumberOfTuples() == AM.tupleCount < maxValue + 1`, so the inner check `iArray->getNumberOfTuples() > (maxValue + 1)` can never fire.
+   - Runs a shrink-protection loop over all AM children: if any child array has `getNumberOfTuples() > (maxValue + 1)` — meaning growing the AM to `maxValue + 1` would shrink that child — returns error -81881. This path requires a child array to have been independently resized above the AM's tuple count; no test fixture exercises it.
    - **Resizes the AM** via `cellFeatureAttrMat.resizeTuples({maxValue + 1})`. This cascades to all AM children (`AttributeMatrix::resizeTuples` iterates `findAllChildrenOfType<IArray>()` and calls `array->resizeTuples(m_TupleShape)` on each), including the newly created output array.
 4. Runs the copy loop.
 
@@ -60,7 +60,7 @@ If all feature IDs are negative, `maxValue < 0` → SIMPLNX returns clean error 
 | | |
 |---|---|
 | **Comparison type** | Runtime A/B (both implementations executed on identical input) + static source analysis |
-| **Fixture** | Synthetic 8×1×1 image geometry; `FeatureIds=[1,2,1,2,1,2,1,2]`; `CellFloat` (float32, 1-comp): `[10,20,30,20,10,20,30,20]`; `CellRGB` (uint8, 3-comp): cells 0,2,4,6→`[10,20,30]/[70,80,90]` interleaved with cells 1,3,5,7→`[40,50,60]` |
+| **Fixture** | Synthetic 8×1×1 image geometry; `FeatureIds=[1,2,1,2,1,2,1,2]`; `CellFloat` (float32, 1-comp): `[10,20,30,20,10,20,30,20]`; `CellRGB` (uint8, 3-comp): `[[10,20,30],[40,50,60],[10,20,30],[40,50,60],[10,20,30],[40,50,60],[70,80,90],[40,50,60]]` |
 | **Fixture coverage** | Exact Match case (`max(featureIds)+1 == AM.tupleCount`). The AM under-sized case cannot be generated from a SIMPL pipeline, so no A/B fixture for it exists. |
 | **Tolerance** | Bit-identical (copy-only filter; no floating-point accumulation) |
 | **Comparison driver** | `feature_from_element_vv/compare_outputs.py` |

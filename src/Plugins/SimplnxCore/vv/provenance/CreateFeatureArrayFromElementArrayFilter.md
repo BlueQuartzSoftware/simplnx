@@ -31,7 +31,7 @@ Three analytical fixtures were designed and hand-derived without executing any D
 - **AF-2** (single-component, inconsistent): 4 cells, `featureIds = [1,2,1,2]`, `values = [10.0, 20.0, 15.0, 20.0]` → expected output `[0.0, 15.0, 20.0]`, 1 warning (feature 1: first=10.0, last=15.0).
 - **AF-3** (3-component, consistent): 4 cells, `featureIds = [1,2,1,2]`, uint8 3-comp values `[[10,20,30],[40,50,60],[10,20,30],[40,50,60]]` → expected output `[[0,0,0],[10,20,30],[40,50,60]]`, 0 warnings.
 
-These derivations follow directly from the algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` lines 26–55 and are embedded as comments in the`AnalyticalFixtures` test cases in `test/CreateFeatureArrayFromElementArrayTest.cpp`.
+These derivations follow directly from the algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` lines 25–56 and are embedded as comments in the `AnalyticalFixtures` test cases in `test/CreateFeatureArrayFromElementArrayTest.cpp`.
 
 ---
 
@@ -50,7 +50,7 @@ The oracle output is encoded entirely as inline `REQUIRE` assertions — there i
 | warning count == 1 (AF-2) | Class 4 invariant: `result.warnings().empty()` guard → exactly one warning |
 | `output[1] = [10,20,30]` (AF-3) | Class 1: both cells mapping to feature 1 have value [10,20,30] |
 | `output[2] = [40,50,60]` (AF-3) | Class 1: both cells mapping to feature 2 have value [40,50,60] |
-| Output AM shape = `{maxFeatureId + 1}` (all fixtures) | Class 4 invariant: `resizeTuples({maxValue + 1})` at line 91 |
+| Output AM shape = `{maxFeatureId + 1}` (all fixtures) | Class 4 invariant: `cellFeatureAttrMat.resizeTuples({maxValue + 1})` at line 109 |
 
 ---
 
@@ -75,4 +75,4 @@ The circular nature of these tests is mitigated for this specific filter because
 ## Second-engineer oracle review
 
 - **Reviewer:** Skipped
-- **Skip reason:** The oracle derivation is integer-indexed indirection arithmetic on 4–5 element fixtures — traceable by inspection to lines 26–55 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`. No domain expertise is required; the closed-form derivation is `output[featureId * C + comp] = input[lastCellIdxForFeature * C + comp]`. A wrong oracle would produce a test failure inconsistent with the SIMPL regression baseline, providing external cross-validation.
+- **Skip reason:** The oracle derivation is integer-indexed indirection arithmetic on 4–5 element fixtures — traceable by inspection to lines 25–56 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`. No domain expertise is required; the closed-form derivation is `output[featureId * C + comp] = input[lastCellIdxForFeature * C + comp]`. A wrong oracle would produce a test failure inconsistent with the SIMPL regression baseline, providing external cross-validation.

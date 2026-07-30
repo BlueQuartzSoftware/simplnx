@@ -3,6 +3,7 @@
 | | |
 |---|---|
 | Plugin | SimplnxCore |
+| SIMPLNX Human Name | Create Feature Array from Element Array |
 | SIMPLNX UUID | `50e1be47-b027-4f40-8f70-1283682ee3e7` |
 | DREAM3D 6.5.171 equivalent | `CreateFeatureArrayFromElementArray` (SIMPL UUID `94438019-21bb-5b61-a7c3-66974b9a34dc`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
@@ -15,8 +16,8 @@
 |---|---|
 | Algorithm Relationship | **Port** — the per-cell copy loop is a line-by-line translation of SIMPL `CreateFeatureArrayFromElementArray`. UUID changed from SIMPL; legacy alias maintained via `FromSIMPLJson()` and SIMPL conversion fixtures. The sizing logic differs only in the AM under-sized case: SIMPL errors; SIMPLNX resizes and succeeds (see D1 in deviations). All pipelines that succeeded in SIMPL produce bit-identical output in SIMPLNX. |
 | Oracle | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — expected outputs hand-derived for 3-fixture AnalyticalFixtures suite (AF-1: single-component consistent, AF-2: single-component inconsistent/warning, AF-3: 3-component consistent). Class 4 invariants: output AM has exactly `max(featureIds)+1` tuples; output data type and component shape match input. Implemented as inline `REQUIRE` assertions in `test/CreateFeatureArrayFromElementArrayTest.cpp`. |
-| Code paths enumerated | **5 of 6** exercised; cancellation structurally present but not directly exercised by any test fixture. |
-| Tests today | **6 test cases** (2 regression + 1 SIMPL backwards-compat + 3 AnalyticalFixtures). **Circular-oracle flag**: existing regression tests compare SIMPLNX output against legacy-generated `CellFeatureData` arrays pre-existing in `6_5_test_data_1_v2.dream3d`; not a valid correctness oracle per policy. The 3 AnalyticalFixtures tests (AF-1, AF-2, AF-3) provide the independent Class 1 + Class 4 oracle. |
+| Code paths enumerated | **8 of 9 paths exercised; 1 uncovered:** cancel check. Error paths -81880 and -81881 covered by AF-4 and AF-5. |
+| Tests today | **8 test cases** (2 regression + 1 SIMPL backwards-compat + 5 AnalyticalFixtures). **Circular-oracle flag**: existing regression tests compare SIMPLNX output against legacy-generated `CellFeatureData` arrays pre-existing in `6_5_test_data_1_v2.dream3d`; not a valid correctness oracle per policy. The 3 AnalyticalFixtures tests (AF-1, AF-2, AF-3) provide the independent Class 1 + Class 4 oracle. |
 | Exemplar archive | `6_5_test_data_1_v2.tar.gz` (SHA512 `585b51b…`) — shared input archive. Pre-existing `CellFeatureData` arrays within the dream3d are legacy-generated; serve only as regression baselines. No oracle-specific archive needed for Class 1 (oracle is inline assertions). |
 | Legacy comparison | **Complete (2026-07-23) — one deviation identified, no migration impact.** Empirical A/B comparison on synthetic 8×1×1 fixtures: bit-identical. Static source analysis identified D1 (AM under-sized: SIMPL errors -5555; SIMPLNX resizes and succeeds). D1 is unreachable from any SIMPL pipeline that ran successfully, so output is bit-identical for the entire valid SIMPL migration space. See `vv/deviations/CreateFeatureArrayFromElementArrayFilter.md`. |
 | Bug flags | **None** |
@@ -24,26 +25,26 @@
 
 ## Summary
 
-`CreateFeatureArrayFromElementArrayFilter` copies each element-level data array value to the feature-level entry identified by the corresponding FeatureId, using last-writer-wins semantics, and emits one warning if any cell's value for a feature differs from the first-seen value. The filter was verified analytically using a Class 1 hand-derived oracle on three small synthetic fixtures covering consistent, inconsistent, and multi-component cases (AF-1, AF-2, AF-3), plus Class 4 invariants on output shape and type. All six oracle assertions pass. The per-cell copy loop is a direct port of SIMPL `CreateFeatureArrayFromElementArray`; empirical A/B comparison (2026-07-23) confirmed bit-identical output for all inputs that SIMPL can process. One deviation exists (D1): SIMPLNX handles the AM under-sized case by resizing, whereas SIMPL errors with -5555. This deviation has no migration impact — it is unreachable from any pipeline that ran successfully in SIMPL.
+`CreateFeatureArrayFromElementArrayFilter` copies each element-level data array value to the feature-level entry identified by the corresponding FeatureId, using last-writer-wins semantics, and emits one warning if any cell's value for a feature differs from the first-seen value. The filter was verified analytically using a Class 1 hand-derived oracle on three small synthetic fixtures covering consistent, inconsistent, and multi-component cases (AF-1, AF-2, AF-3), plus Class 4 invariants on output shape and type. All oracle assertions pass. The per-cell copy loop is a direct port of SIMPL `CreateFeatureArrayFromElementArray`; empirical A/B comparison (2026-07-23) confirmed bit-identical output for all inputs that SIMPL can process. One deviation exists (D1): SIMPLNX handles the AM under-sized case by resizing, whereas SIMPL errors with -5555. This deviation has no migration impact — it is unreachable from any pipeline that ran successfully in SIMPL.
 
 ## Algorithm Relationship
 
 *Classification:* **Port**
 
-*Evidence:* The SIMPLNX algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` (95 lines) is a line-for-line translation of the SIMPL `CreateFeatureArrayFromElementArray` filter. Identical control flow: iterate over cell tuples, look up `featureIds[cellIdx]`, record first-seen tuple offset in `featureMap`, compare current value against first-seen per component, emit one warning on first mismatch, write current value to `createdDataStore[featureId * C + comp]` (last-writer-wins). The SIMPL UUID (`94438019-21bb-5b61-a7c3-66974b9a34dc`) differs from the SIMPLNX UUID (`50e1be47-b027-4f40-8f70-1283682ee3e7`) because the filter was re-UUID-ed during the SIMPL→SIMPLNX port; the legacy alias is maintained through `FromSIMPLJson()` and `test/simpl_conversion/6_5/CreateFeatureArrayFromElementArrayFilter.json`.
+*Evidence:* The SIMPLNX algorithm at `Algorithms/CreateFeatureArrayFromElementArray.cpp` (113 lines) is a line-for-line translation of the SIMPL `CreateFeatureArrayFromElementArray` filter. Identical control flow: iterate over cell tuples, look up `featureIds[cellIdx]`, record first-seen tuple offset in `featureMap`, compare current value against first-seen per component, emit one warning on first mismatch, write current value to `createdDataStore[featureId * C + comp]` (last-writer-wins). The SIMPL UUID (`94438019-21bb-5b61-a7c3-66974b9a34dc`) differs from the SIMPLNX UUID (`50e1be47-b027-4f40-8f70-1283682ee3e7`) because the filter was re-UUID-ed during the SIMPL→SIMPLNX port; the legacy alias is maintained through `FromSIMPLJson()` and `test/simpl_conversion/6_5/CreateFeatureArrayFromElementArrayFilter.json`.
 
 *Port-time deltas that do not change output data:*
 
-1. `QVector<int32_t>` + linear search → `std::map<int32, usize>` for `featureMap` — performance/API change; set-membership semantics and iteration order over cells unchanged.
+1. `QMap<int32_t, T*>` → `std::map<int32, usize>` for `featureMap` — both are O(log n) sorted associative containers; SIMPL maps feature ID to a raw source pointer, SIMPLNX maps it to a flat element index. Lookup semantics and iteration order over cells are unchanged.
 2. SIMPL `EXECUTE_FUNCTION_TEMPLATE` macro → `ExecuteDataFunction(CopyCellDataFunctor{}, ...)` dispatch — API modernization; identical runtime dispatch on element data type.
-3. Warning API: SIMPL used `notifyStatusMessage` guarded by `bool warningThrown = false;`; SIMPLNX uses `Result<>` warnings guarded by `result.warnings().empty()`. Both guards produce the same behavior: exactly **one** warning per execution when any feature's cell values are inconsistent. Confirmed by empirical A/B comparison (2026-07-23) — no behavioral delta.
+3. Warning API: SIMPL used `filter->setWarningCondition(-1000, ss)` guarded by `bool warningThrown = false;`; SIMPLNX uses `result.warnings().push_back(Warning{-1000, ...})` guarded by `result.warnings().empty()`. Both guards produce the same behavior: exactly **one** warning per execution when any feature's cell values are inconsistent. Confirmed by empirical A/B comparison (2026-07-23) — no behavioral delta.
 4. Algorithm class extracted from `executeImpl` into `Algorithms/CreateFeatureArrayFromElementArray.{hpp,cpp}` — code organization change only (PRs #1301 and #1544).
 5. Added `shouldCancel` check inside the per-cell loop — no output change (cancel path was absent in SIMPL).
 
 *Material PRs:*
 
-- **#1301** — "ENH: Add missing algorithm classes to some filters": extracted algorithm class skeleton.
-- **#1544** — "ENH: Move Filter executeImpl() logic to Algorithm classes": finalized algorithm class with resize logic.
+- **#1301** — "ENH: Move Execution to Algorithm Classes": extracted algorithm class skeleton.
+- **#1544** — "ENH: Move non-trivial Filter executeImpl() logic to Algorithm classes": finalized algorithm class with resize logic.
 - **#1278** — "BUG: Ensure FeatureId arrays are range checked against the Feature Attribute Matrix": Updated help text and default value for parameter.
 - **#1295** — "ENH: Add Fill Functionality to CreateArrayAction": output array initialized to `"0"` fill at creation; ensures feature-0 slot has a defined value when no cell maps to feature 0.
 
@@ -105,35 +106,40 @@ Expected output (uint8, 3 tuples): `[[0,0,0], [10,20,30], [40,50,60]]`. Expected
 
 *Encoded:* Implemented — `AnalyticalFixtures` TEST_CASEs in `test/CreateFeatureArrayFromElementArrayTest.cpp` (AF-1, AF-2, AF-3). Inline `REQUIRE` assertions match hand derivations above. Class 4 invariants (`getNumberOfTuples`, `getDataType`, `getNumberOfComponents`, `warnings().size()`) asserted in each fixture's Validation block.
 
-*Second-engineer review:* Skipped — the oracle is integer-indexed indirection arithmetic on 4–5 element fixtures. No mathematical ambiguity: the closed-form derivation is `output[featureId * C + comp] = input[cellIdx * C + comp]` (last-writer), traceable directly to lines 43–55 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`. Formal second-engineer review of this level of arithmetic was not justified.
+*Second-engineer review:* Skipped — the oracle is integer-indexed indirection arithmetic on 4–5 element fixtures. No mathematical ambiguity: the closed-form derivation is `output[featureId * C + comp] = input[cellIdx * C + comp]` (last-writer), traceable directly to lines 25–56 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`. Formal second-engineer review of this level of arithmetic was not justified.
 
 ## Code path coverage
 
-*5 of 6 paths covered; cancellation check not directly exercised.*
+*8 of 9 paths exercised; 1 uncovered (cancel check).*
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CreateFeatureArrayFromElementArray.cpp` (95 lines)
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CreateFeatureArrayFromElementArray.cpp` (113 lines)
 
-The algorithm has two phases: (a) output resize — scan `featureIds` for the max value and resize both the output array and the AttributeMatrix to `maxValue + 1` tuples; (b) per-cell copy loop — for each cell, index by `featureIds[cellIdx]` into the output array using last-writer-wins semantics.
+The algorithm has two phases: **(a) `operator()()` sizing and guard logic** — scan `featureIds` for `maxValue`; error on all-negative values; when `maxValue + 1 > AM.tupleCount`, enter the grow block (inner shrink-protection loop is dead code, always skipped) and call `cellFeatureAttrMat.resizeTuples({maxValue + 1})` which cascades to all AM children via `AttributeMatrix::resizeTuples`; otherwise skip the grow block entirely; **(b) `CopyCellDataFunctor` per-cell copy loop** — cancel check, `featureMap` first-encounter insertion, per-component value comparison with one-warning-only guard, last-writer-wins write.
 
 | # | Phase | Path | Test case |
 |---|---|---|---|
-| 1 | (a) Resize | `std::max_element` scan → `resizeTuples({maxValue + 1})` on both `createdArray` and `cellFeatureAttrMat` | AF-1 (3 tuples), AF-2 (3 tuples), AF-3 (3 tuples) — output AM has correct shape asserted via Class 4 invariant |
-| 2 | (b) Per-cell | First encounter for a `featureId`: insert into `featureMap`; write value to output | AF-1, AF-2, AF-3 (all feature IDs present in each fixture) |
-| 3 | (b) Per-cell | Subsequent encounter, values match first-seen: no warning emitted; write value (last-writer with same value = no-op in effect) | AF-1 (features 1 and 2), AF-3 (features 1 and 2) |
-| 4 | (b) Per-cell | Subsequent encounter, values differ from first-seen: one warning total (guarded by `result.warnings().empty()`); write current value (last-writer-wins) | AF-2 (feature 1: `10.0` vs `15.0`) |
-| 5 | (b) Per-cell | Multi-component inner loop: `totalCellArrayComponents > 1` — inner `for(cellCompIdx)` iterates C times per cell | AF-3 (C=3, uint8) |
-| 6 | (b) Per-cell | Cancel check: `if(shouldCancel) return {}` at top of per-cell loop | *Not directly tested. Cancel-signal injection not implemented in test fixtures; structurally covered by the `shouldCancel` atomic bool parameter.* |
+| 1 | (a) Guard | `maxValue < 0` (all feature IDs are negative) → `MakeErrorResult(-81880, ...)` | AF-4: `featureIds = [-1, -2, -1]`; preflight succeeds; execute returns error -81880 |
+| 2 | (a) Grow — shrink guard | `maxValue + 1 > AM.tupleCount` AND some AM child array has `getNumberOfTuples() > (maxValue + 1)` → `MakeErrorResult(-81881, ...)` — refuses to grow AM if doing so would shrink an independently oversized child | AF-5: Feature AM with 2 tuples; sibling child created directly with 5 tuples; `featureIds` max=3 → `maxValue+1=4`; outer fires (4>2), sibling check fires (5>4); execute returns error -81881 |
+| 3 | (a) Grow | `maxValue + 1 > AM.tupleCount`, shrink check passes → `cellFeatureAttrMat.resizeTuples({maxValue + 1})` cascades to all AM children including `createdArray` | AF-1 (AM 1→3), AF-2 (AM 1→3), AF-3 (AM 1→3) — all fixtures start with a 1-tuple AM; output `getNumberOfTuples()` asserted via Class 4 invariant |
+| 4 | (a) Skip | `maxValue + 1 <= AM.tupleCount` → grow block skipped | `Valid filter execution - 1 Component`, `Valid filter execution - 3 Component` — Small IN100 AM already correctly sized |
+| 5 | (b) Cancel | `if(shouldCancel) return {}` at top of per-cell loop | *Not tested. Cancel-signal injection not implemented in any test fixture.* |
+| 6 | (b) Per-cell | First encounter for a `featureId`: insert into `featureMap`; write value to output | AF-1, AF-2, AF-3 (all feature IDs present) |
+| 7 | (b) Per-cell | Subsequent encounter, values match first-seen: no warning emitted; write value | AF-1 (features 1 and 2), AF-3 (features 1 and 2) |
+| 8 | (b) Per-cell | Subsequent encounter, values differ: one warning total (guarded by `result.warnings().empty()`); write current value (last-writer-wins) | AF-2 (feature 1: `10.0` vs `15.0`) |
+| 9 | (b) Per-cell | Multi-component inner loop: `totalCellArrayComponents > 1` — inner `for(cellCompIdx)` iterates C times per cell | AF-3 (C=3, uint8) |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |---|---|---|
-| `Valid filter execution - 1 Component` | kept — regression | Loads Small IN100 via `6_5_test_data_1_v2.tar.gz`; runs filter on `CellData/ConfidenceIndex` (float32, 1-comp); compares output against `CellFeatureData/ConfidenceIndex` pre-existing in the dream3d file. **Circular-oracle flag**: `CellFeatureData/ConfidenceIndex` was generated by DREAM3D 6.5.x using the same-algorithm filter; comparison is legacy-output regression, not an independent oracle. Early-exit loop (breaks on first mismatch) instead of `CompareDataArrays` — all values compared only when all match, which is valid for the regression purpose. |
-| `Valid filter execution - 3 Component` | kept — regression | Same as above on `CellData/IPFColors` (uint8, 3-comp). Same circular-oracle flag applies. Exercises multi-component code path (path #5 in coverage table). |
+| `Valid filter execution - 1 Component` | kept — regression | Loads Small IN100 via `6_5_test_data_1_v2.tar.gz`; runs filter on `CellData/ConfidenceIndex` (float32, 1-comp); compares output against `CellFeatureData/ConfidenceIndex` pre-existing in the dream3d file. Exercises path #4 (skip-grow: AM already correctly sized). **Circular-oracle flag**: `CellFeatureData/ConfidenceIndex` was generated by DREAM3D 6.5.x using the same-algorithm filter; comparison is legacy-output regression, not an independent oracle. Early-exit loop (breaks on first mismatch) instead of `CompareDataArrays` — all values compared only when all match, which is valid for the regression purpose. |
+| `Valid filter execution - 3 Component` | kept — regression | Same as above on `CellData/IPFColors` (uint8, 3-comp). Same circular-oracle flag applies. Exercises paths #4 and #9 in the coverage table (skip-grow and multi-component). |
 | `SIMPL Backwards Compatibility` | kept | Verifies `FromSIMPLJson()` mapping from both 6.5 UUID (`94438019-21bb-5b61-a7c3-66974b9a34dc`) and 6.4 filter-name (`CreateFeatureArrayFromElementArray`) formats. 4 parameter assertions each variant. Passes at HEAD. |
-| `AnalyticalFixtures — AF-1` | implemented | Class 1 + Class 4 oracle; single-component float32, 5 cells, all consistent. Covers paths #1, #2, #3. Inline `REQUIRE` assertions per hand derivation in Oracle section. |
-| `AnalyticalFixtures — AF-2` | implemented | Class 1 + Class 4 oracle; single-component float32, 4 cells, feature-1 inconsistent. Covers paths #1, #2, #4; verifies `warnings().size() == 1`. Inline `REQUIRE` assertions. |
-| `AnalyticalFixtures — AF-3` | implemented | Class 1 + Class 4 oracle; 3-component uint8, 4 cells, all consistent. Covers paths #1, #2, #3, #5. Inline `REQUIRE` assertions per hand derivation. |
+| `AnalyticalFixtures — AF-1` | implemented | Class 1 + Class 4 oracle; single-component float32, 5 cells, all consistent. Covers paths #3, #6, #7. Inline `REQUIRE` assertions per hand derivation in Oracle section. |
+| `AnalyticalFixtures — AF-2` | implemented | Class 1 + Class 4 oracle; single-component float32, 4 cells, feature-1 inconsistent. Covers paths #3, #6, #8; verifies `warnings().size() == 1`. Inline `REQUIRE` assertions. |
+| `AnalyticalFixtures — AF-3` | implemented | Class 1 + Class 4 oracle; 3-component uint8, 4 cells, all consistent. Covers paths #3, #6, #7, #9. Inline `REQUIRE` assertions per hand derivation. |
+| `AnalyticalFixtures — AF-4` | implemented | Class 4 oracle (error invariant); `featureIds = [-1, -2, -1]`; preflight succeeds; execute returns error -81880. Covers path #1. |
+| `AnalyticalFixtures — AF-5` | implemented | Class 4 oracle (error invariant); Feature AM 2 tuples, sibling child created with 5 tuples, `featureIds` max=3; preflight succeeds; execute returns error -81881. Covers path #2. |
 
 ## Exemplar archive
 
