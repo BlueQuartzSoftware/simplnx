@@ -223,7 +223,6 @@ Result<> RequireMinNumNeighbors::operator()()
   int64 jStride = 0;
   int32 featureName = 0;
   int32 feature = 0;
-  int32 neighbor = 0;
   std::vector<int32> voteCount(numFeatures + 1, 0);
   std::vector<usize> badFeatureIdIndexes;
 
