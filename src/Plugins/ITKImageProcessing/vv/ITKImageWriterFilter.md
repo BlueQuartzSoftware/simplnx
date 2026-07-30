@@ -18,7 +18,7 @@
 | Code paths enumerated | 28 of 48 scoped logical paths exercised; 20 documented gaps cover unsupported inputs, defensive branches, progress and cancellation, untested vector component counts, injected write failures, and SIMPL conversion failure. |
 | Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-slice exact-name test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
 | Exemplar archive | None - Class 1+4 oracle uses inline data |
-| Legacy comparison | Run against DREAM3D 6.5.171 with the inline test data for the Class 1+4 Oracle. Decoded pixels match; D1 and D2 record filename-formatting and plane-metadata differences. |
+| Legacy comparison | Reproduced against DREAM3D 6.5.171 with a pipeline-generated copy of the inline oracle and the archived Small IN100 input. All 577 decoded slices match exactly per implementation; D1 and D2 record filename-formatting and plane-metadata differences. See `vv/provenance/ITKImageWriterFilter.md`. |
 | Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, selected-plane physical metadata, and tuple-copy error propagation. |
 | V&V phase | Regression tests and report amendments in progress |
 
@@ -167,9 +167,11 @@ Scope: one row represents one filter-controlled logical behavior or failure exit
 
 No new exemplar archive was created for this V&V cycle: the Class 1 oracle is encoded entirely as inline expected values in the test source.
 
+The oracle and DREAM3D 6.5.171 comparison provenance, including the legacy setup pipeline, paired writer pipelines, runner hashes, input hashes, zero-tolerance comparison method, and machine-readable results, is recorded in [`provenance/ITKImageWriterFilter.md`](provenance/ITKImageWriterFilter.md). Reproducible comparison artifacts and were uploaded to OneDrive on 2026-07-30.
+
 ## Deviations from DREAM3D 6.5.171
 
 - `ITKImageWriterFilter-D1` - NX defaults to zero-padded slice indices while 6.5.171 does not - see `vv/deviations/ITKImageWriterFilter.md`.
-- `ITKImageWriterFilter-D2` - NX writes the selected plane's physical spacing and origin, while 6.5.171 used identity 2D metadata for XZ/YZ output - see `vv/deviations/ITKImageWriterFilter.md`.
+- `ITKImageWriterFilter-D2` - NX writes the selected plane's physical spacing and origin, while 6.5.171 used identity 2D metadata for XY/XZ/YZ output - see `vv/deviations/ITKImageWriterFilter.md`.
 
-All pixels otherwise match: the analytical fixture has 2 XY, 2 XZ, and 3 YZ slices; Small IN100 has 117 XY, 201 XZ, and 189 YZ float32 TIFF slices.
+All pixels otherwise match exactly with zero tolerance: the analytical fixture has 2 XY, 2 XZ, and 3 YZ slices for each of ten scalar types; Small IN100 has 117 XY, 201 XZ, and 189 YZ float32 TIFF slices.

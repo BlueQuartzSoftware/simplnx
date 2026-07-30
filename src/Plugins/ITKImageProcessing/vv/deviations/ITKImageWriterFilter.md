@@ -28,10 +28,10 @@ Entries are referenced by stable ID (ITKImageWriterFilter-D<N>) from the V&V rep
 | **Filter UUID** | `a181ee3e-1678-4133-b9c5-a9dd7bfec62f` |
 | **Status** | active |
 
-**Symptom:** For XZ and YZ stack output, NX writes the two selected physical axes as the 2D image spacing and origin. DREAM3D 6.5.171 writes identity spacing and zero origin for the newly created 2D image.
+**Symptom:** For XY, XZ, and YZ stack output, NX writes the two selected physical axes as the 2D image spacing and origin. DREAM3D 6.5.171 writes identity spacing and zero origin for the newly created 2D image.
 
 **Root cause:** Library/API adaptation. NX constructs the temporary 2D geometry from the selected ImageGeom axes so that output metadata describes the written plane; the legacy implementation created a new 2D geometry with default metadata.
 
-**Affected users:** Workflows that consume XZ or YZ physical image metadata can observe different spacing and origin after migration.
+**Affected users:** Workflows that consume physical image metadata can observe different spacing and origin after migration when the selected source axes do not already have unit spacing and zero origin.
 
 **Recommendation:** Trust SIMPLNX. The NX metadata preserves the source ImageGeom's physical coordinate system for the output plane.
