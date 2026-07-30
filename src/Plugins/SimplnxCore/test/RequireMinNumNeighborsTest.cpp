@@ -6,9 +6,11 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
@@ -561,6 +563,58 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all featur
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -55569);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  const SizeVec3 imageSize = {4, 1, 1};
+  const ShapeType cellShape = {1, 1, 4};
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions(imageSize);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {2}, imageGeom->getId());
+
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIds = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
+
+  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>({2}, {1}, IDataAction::Mode::Execute);
+  auto* numNeighbors = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAM->getId());
+
+  featureIds->fill(-1);
+  numNeighbors->fill(0);
+  numNeighbors->getDataStoreRef()[1] = 5;
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(3));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  CHECK(executeResult.result.errors()[0].code == -55572);
+
+  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  {
+    CHECK((*featureIds)[i] == -1);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RequireMinNumNeighborsFilter][BackwardsCompatibility]")

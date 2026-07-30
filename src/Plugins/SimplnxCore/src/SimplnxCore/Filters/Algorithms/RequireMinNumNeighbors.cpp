@@ -10,6 +10,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_NoCoarseningProgress = -55572;
+
 Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
                             const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
 {
@@ -212,6 +214,7 @@ Result<> RequireMinNumNeighbors::operator()()
       return {};
     }
     counter = 0;
+    bool madeFill = false;
     badFeatureIdIndexes.clear();
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
@@ -248,6 +251,7 @@ Result<> RequireMinNumNeighbors::operator()()
                   {
                     most = current;
                     neighbors[voxelIndex] = neighborPoint;
+                    madeFill = true;
                   }
                 }
               }
@@ -262,6 +266,15 @@ Result<> RequireMinNumNeighbors::operator()()
 
     std::string message = fmt::format("{} voxels to update..", counter);
     m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+
+    if(counter != 0 && !madeFill)
+    {
+      return MakeErrorResult(
+          k_NoCoarseningProgress,
+          fmt::format("Unable to reassign {} cell(s) in Feature Ids array '{}' because none has a non-negative face neighbor. Ensure the array contains at least one cell assigned to a feature "
+                      "that meets the minimum-neighbor requirement.",
+                      counter, m_InputValues->FeatureIdsPath.toString()));
+    }
 
     // TODO: This can be parallelized much like NeighborOrientationCorrelation, just do not update the featureIds array during that section. Wait until everything is complete
     for(const auto& cellArrayPath : cellDataArrayPaths)
