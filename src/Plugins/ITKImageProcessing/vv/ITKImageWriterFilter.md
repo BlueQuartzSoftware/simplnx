@@ -6,8 +6,8 @@
 | SIMPLNX UUID | `a181ee3e-1678-4133-b9c5-a9dd7bfec62f` |
 | DREAM3D 6.5.171 equivalent | `ITKImageWriter` (SIMPL UUID `11473711-f94d-5d96-b749-ec36a81ad338`) - `Source/Plugins/ITKImageProcessing/ITKImageProcessingFilters/ITKImageWriter.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | DRAFT |
-| Sign-off | Pending second-engineer review |
+| Status | COMPLETE |
+| Sign-off | Jared Duffey, 07-31-2026 |
 
 ## At a glance
 
