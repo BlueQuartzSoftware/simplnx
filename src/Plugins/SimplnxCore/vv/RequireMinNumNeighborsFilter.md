@@ -87,7 +87,7 @@
 
 13 of 18 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (332 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (343 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
 
 The filter selects features to retain, marks rejected-feature voxels, iteratively copies a dominant face neighbor into each rejected voxel, and removes inactive feature tuples.
 
