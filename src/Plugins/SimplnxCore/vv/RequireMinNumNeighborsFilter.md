@@ -18,13 +18,13 @@
 | Code paths enumerated | 13 of 18 paths are assertion-covered; cancellation and defensive error paths are not covered. |
 | Tests today | 11 active test cases: two analytical oracle tests, four execute-error tests, negative-FeatureId reassignment, two preflight errors, the Small IN100 regression, and SIMPL 6.4/6.5 conversion; two stale disabled tests are retired. |
 | Exemplar archive | The inline oracle needs no output archive; retained input archive `6_5_test_data_1_v2.tar.gz` has SHA512 `585b51ba...3027d6c` and a provenance sidecar. |
-| Legacy comparison | **Run with stated limitation** - DREAM3D 6.5.171 and NX matched five arrays for `Analytical Oracle / ApplyToSinglePhase=0`; the discriminating 6x6x6 fixture has not been run through the legacy comparison. |
+| Legacy comparison | **Complete (2026-07-31)** - DREAM3D 6.5.171 and SIMPLNX were run on the 4x1x1 and 6x6x6 analytical fixtures in all-phases and single-phase modes; all 22 array comparisons and 2,646 exact values matched the independent expectations. |
 | Bug flags | `RequireMinNumNeighborsFilter-D1`, `RequireMinNumNeighborsFilter-D2`, `RequireMinNumNeighborsFilter-D3` |
 | V&V phase | Ready for review |
 
 ## Summary
 
-`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their cells from dominant valid face neighbors, and compacts feature-level arrays. Verification uses two independently derived analytical tests with Class 4 invariants, focused error tests, a Small IN100 regression, and SIMPL conversion checks. The 4x1x1 all-phase fixture matched DREAM3D 6.5.171 on five arrays; three legacy bugs affecting negative or out-of-range FeatureIds and stalled coarsening are corrected in SIMPLNX and documented as D1-D3, while legacy comparison of the stronger 6x6x6 fixture remains outstanding.
+`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their cells from dominant valid face neighbors, and compacts feature-level arrays. Verification uses two independently derived analytical tests with Class 4 invariants, focused error tests, a Small IN100 regression, and SIMPL conversion checks. Both analytical fixture families matched DREAM3D 6.5.171 in all-phases and single-phase modes; three legacy bugs affecting negative or out-of-range FeatureIds and stalled coarsening are corrected in SIMPLNX and documented as D1-D3.
 
 ## Algorithm Relationship
 
@@ -222,9 +222,9 @@ No archived array is used as the canonical correctness oracle for this filter.
 
 ## Deviations from DREAM3D 6.5.171
 
-The legacy comparison used the 4x1x1 `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle / ApplyToSinglePhase=0` input: `FeatureIds [2,1,1,3]`, `NumNeighbors [0,0,3,3]`, `Phases [0,1,2,1]`, threshold 2, copied values `[20,101,102,30]`, and ignored values `[200,101,102,300]`. DREAM3D 6.5.171 and SIMPLNX matched all five output arrays: `FeatureIds`, copied values, ignored values, `NumNeighbors`, and `Phases`.
+On 2026-07-31, DREAM3D 6.5.171 and SIMPLNX were run on the 4x1x1 and discriminating 6x6x6 analytical fixtures in both all-phases and single-phase modes. All 22 array comparisons and 2,646 exact values matched between the two implementations and the independent analytical expectations.
 
-That comparison does not discriminate traversal-order ties, multi-iteration convergence, all X/Y/Z face offsets, multi-component tuple copying, or same-input differences between phase modes. The inline 6x6x6 analytical fixture covers those behaviors in SIMPLNX, but it has not yet been run through the DREAM3D 6.5.171 comparison. This limitation does not make legacy output the oracle; correctness comes from the independent derivations above.
+The complete pipelines, shared inputs, outputs, logs, comparison tables, and checksums were uploaded to OneDrive on 2026-07-31 in `FilterVerification_RequireMinNumNeighborsFilter`. These valid fixtures do not trigger the D1-D3 error-condition deviations documented below.
 
 Three user-visible differences occur for negative or out-of-range FeatureIds or a coarsening pass that cannot make progress:
 
