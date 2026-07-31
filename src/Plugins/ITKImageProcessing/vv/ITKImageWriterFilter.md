@@ -167,7 +167,7 @@ Scope: one row represents one filter-controlled logical behavior or failure exit
 
 No new exemplar archive was created for this V&V cycle: the Class 1 oracle is encoded entirely as inline expected values in the test source.
 
-The oracle and DREAM3D 6.5.171 comparison provenance, including the legacy setup pipeline, paired writer pipelines, runner hashes, input hashes, zero-tolerance comparison method, and machine-readable results, is recorded in [`provenance/ITKImageWriterFilter.md`](provenance/ITKImageWriterFilter.md). Reproducible comparison artifacts and were uploaded to OneDrive on 2026-07-30.
+The oracle and DREAM3D 6.5.171 comparison was run on 2026-07-30. Its provenance includes the legacy setup pipeline, paired writer pipelines, runner hashes, input hashes, zero-tolerance comparison method, and machine-readable results. The reproducible comparison artifacts were uploaded to OneDrive on 2026-07-31.
 
 ## Deviations from DREAM3D 6.5.171
 
