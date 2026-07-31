@@ -6,8 +6,8 @@
 | SIMPLNX UUID | `a51c257a-ddc1-499a-9b21-f2d25a19d098` |
 | DREAM3D 6.5.171 equivalent | `FindCAxisLocations` (SIMPL UUID `68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e`) - `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindCAxisLocations.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE |
+| Sign-off | Jared Duffey, 07-31-2026 |
 
 ## At a glance
 
