@@ -275,8 +275,21 @@ Result<> RequireMinNumNeighbors::operator()()
               }
             }
 
-            // Reset the voteCount array to all zeros
-            std::fill(voteCount.begin(), voteCount.end(), 0);
+            // Reset the vote counts touched by this voxel
+            for(const auto& faceIndex : faceNeighborInternalIdx)
+            {
+              if(!isValidFaceNeighbor[faceIndex])
+              {
+                continue;
+              }
+
+              const int64 resetNeighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+              const int32 resetFeature = featureIds[resetNeighborPoint];
+              if(resetFeature >= 0)
+              {
+                voteCount[resetFeature] = 0;
+              }
+            }
           }
         }
       }
