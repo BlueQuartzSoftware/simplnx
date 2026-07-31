@@ -20,7 +20,7 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 | Code paths enumerated  | 7 of 8 paths exercised - only the filter cancelation path is untested |
 | Tests today            | 5 test cases - 1 test with Class 1 Oracle, 2 error path tests, 1 warning path test, 1 SIMPL json backwards compatibility test |
 | Exemplar archive       | None - removed test using circular oracle data from `caxis_data.tar.gz` |
-| Legacy comparison      | Run against DREAM3D 6.5.171 with the inline test data for the Class 1 Oracle. Result is bit-identical between 6.5.171 and NX for hexagonal phases. |
+| Legacy comparison      | Run 2026-07-31 against DREAM3D 6.5.171 using the 15 inline Class 1 fixtures and a shared serialized input. All 45 output float32 values were bit-identical, and the comparison artifacts were uploaded to OneDrive on 2026-07-31. |
 | Bug flags              | None |
 | V&V phase              | Ready for review |
 
@@ -100,7 +100,9 @@ No new exemplar archive was created for this V&V cycle: the Class 1 oracle is en
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison run on "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" between NX and 6.5.171 with bit-identical output for hexagonal phases. The legacy comparison used the inline data **"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"**: These inline quaternion values were encoded into a csv file. This was then read into a 6.5.171 pipeline with the `FindCAxisLocations` filter and wrote out to a DREAM3D file. The output of NX test was also run and written to a file. These outputs were then verified to have no differences by using `h5py` to read both files and compare the values.
+The comparison was run on 2026-07-31 using the 15 quaternion fixtures from `"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"`. DREAM3D 6.5.171 serialized the shared input immediately before running `FindCAxisLocations`; the NX Debug pipeline read that same file and ran `ComputeCAxisLocationsFilter`. Nine shared input DataArrays remained identical in both outputs. The target arrays had identical float32 shape `(15, 3)`, 0 of 45 differing float32 words, and a maximum absolute NX-versus-6.5.171 difference of `0.0`; both outputs also satisfied the analytical oracle at absolute tolerance `1e-7`.
+
+The CSV fixture, shared input, legacy and NX pipelines, output DREAM3D files, and comparison summary were uploaded to OneDrive on 2026-07-31.
 
 - D1 - non-hexagonal cells: NaN (NX) vs meaningless-but-finite computed value (6.5.171). NX intentional improvement; no legacy fix warranted.
 - D2 - no hexagonal phases present: hard error -3522 (NX) vs silent full execution (6.5.171).
