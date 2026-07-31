@@ -6,8 +6,8 @@
 | SIMPLNX UUID | `4ab5153f-6014-4e6d-bbd6-194068620389` |
 | DREAM3D 6.5.171 equivalent | `MinNeighbors` (SIMPL UUID `dab5de3c-5f81-5bb5-8490-73521e1183ea`) - `Source/Plugins/Processing/ProcessingFilters/MinNeighbors.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE |
+| Sign-off | Jared Duffey, 07-31-2026 |
 
 ## At a glance
 
