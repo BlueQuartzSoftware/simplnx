@@ -13,6 +13,14 @@
           "value": false,
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "color_weights": {
           "value": [
             0.21250000596046448,
@@ -23,6 +31,40 @@
         },
         "convert_to_gray_scale": {
           "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
           "version": 1
         },
         "exact_xy_dimensions": {
@@ -64,6 +106,10 @@
             0.0,
             0.0
           ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -226,7 +272,7 @@
           "value": "NumElements",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "save_element_sizes": {
           "value": false,
           "version": 1
@@ -431,11 +477,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/ImagesStack/Images.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1

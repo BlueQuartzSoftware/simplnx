@@ -5,11 +5,19 @@
   "pipeline": [
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/Import_ASCII_IPF.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1
@@ -244,6 +252,10 @@
           "value": "[Image Geometry]/Cell Data/Phases",
           "version": 1
         },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        },
         "crystal_structures_array_path": {
           "value": "[Image Geometry]/EnsembleAttributeMatrix/CrystalStructures",
           "version": 1
@@ -252,7 +264,7 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_dir": {
           "value": [
             0.0,

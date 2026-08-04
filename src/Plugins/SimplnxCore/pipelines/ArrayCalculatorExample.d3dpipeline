@@ -145,7 +145,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
           "version": 1
@@ -172,7 +172,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
           "version": 1
@@ -199,7 +199,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
           "version": 1
@@ -226,7 +226,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 9,
           "version": 1
@@ -253,7 +253,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
           "version": 1
@@ -280,7 +280,7 @@
           },
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
           "version": 1
@@ -295,11 +295,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/ArrayCalculatorExampleResults.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1

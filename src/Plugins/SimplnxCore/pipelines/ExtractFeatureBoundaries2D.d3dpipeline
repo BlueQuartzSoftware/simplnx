@@ -237,6 +237,10 @@
           "value": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
           "version": 1
         },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        },
         "crystal_structures_array_path": {
           "value": "fw-ar-IF1-avtr12-corr/Cell Ensemble Data/CrystalStructures",
           "version": 1
@@ -245,7 +249,7 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_dir": {
           "value": [
             0.0,
@@ -386,7 +390,7 @@
           "value": "NumElements",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "save_element_sizes": {
           "value": false,
           "version": 1
@@ -485,7 +489,7 @@
           "version": 1
         },
         "parameters_version": 1,
-        "z_value_choice": {
+        "z_value_choice_index": {
           "value": 1,
           "version": 1
         }

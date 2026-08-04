@@ -7,8 +7,7 @@
       "args": {
         "import_data_object": {
           "value": {
-            "data_paths": [
-            ],
+            "data_paths": [],
             "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d",
             "path_import_policy": 0
           },
@@ -80,11 +79,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1

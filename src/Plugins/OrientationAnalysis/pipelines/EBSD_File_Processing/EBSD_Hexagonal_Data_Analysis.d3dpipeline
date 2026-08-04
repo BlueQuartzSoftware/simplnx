@@ -195,6 +195,10 @@
           "value": "DataContainer/Cell Data/Phases",
           "version": 1
         },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        },
         "crystal_structures_array_path": {
           "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
           "version": 1
@@ -203,7 +207,7 @@
           "value": "DataContainer/Cell Data/Mask",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_dir": {
           "value": [
             0.0,
@@ -711,7 +715,43 @@
           "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "use_rodrigues_average": {
+          "value": true,
+          "version": 1
+        },
+        "use_vmf_average": {
+          "value": false,
+          "version": 1
+        },
+        "use_watson_average": {
+          "value": false,
+          "version": 1
+        },
+        "vmf_euler_array_name": {
+          "value": "vMF Avg EulerAngles",
+          "version": 1
+        },
+        "vmf_kappa_array_name": {
+          "value": "vMF Kappas",
+          "version": 1
+        },
+        "vmf_quat_array_name": {
+          "value": "vMF Avg Quats",
+          "version": 1
+        },
+        "watson_euler_array_name": {
+          "value": "Watson Avg EulerAngles",
+          "version": 1
+        },
+        "watson_kappa_array_name": {
+          "value": "Watson Kappas",
+          "version": 1
+        },
+        "watson_quat_array_name": {
+          "value": "Watson Avg Quats",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -812,11 +852,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/Examples/Combo-EBSD-osc_r0c0_CAxis.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1
