@@ -14,6 +14,22 @@ constexpr int32 k_NoCoarseningProgress = -55572;
 constexpr int32 k_CopyDestinationTupleOutOfRange = -55568;
 constexpr int32 k_CopySourceTupleOutOfRange = -55573;
 
+std::string ConvertDataPathsToString(const std::vector<DataPath>& paths)
+{
+  std::stringstream ss;
+  ss << "[";
+  for(usize i = 0; i < paths.size(); i++)
+  {
+    if(i != 0)
+    {
+      ss << ", ";
+    }
+    ss << paths[i].toString();
+  }
+  ss << "]";
+  return ss.str();
+}
+
 Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
                             const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
 {
@@ -189,7 +205,8 @@ Result<> RequireMinNumNeighbors::operator()()
 
     if(static_cast<usize>(featureId) >= totalFeatures)
     {
-      return MakeErrorResult(-55567, fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}).", featureId, m_InputValues->FeatureIdsPath.toString(), totalFeatures));
+      return MakeErrorResult(-55567, fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}). '{}' MAY HAVE BEEN MODIFIED.", featureId, m_InputValues->FeatureIdsPath.toString(),
+                                                 totalFeatures, ConvertDataPathsToString(cellDataArrayPaths)));
     }
 
     if(!activeObjects[featureId])
@@ -303,8 +320,8 @@ Result<> RequireMinNumNeighbors::operator()()
       return MakeErrorResult(
           k_NoCoarseningProgress,
           fmt::format("Unable to reassign {} cell(s) in Feature Ids array '{}' because none has a non-negative face neighbor. Ensure the array contains at least one cell assigned to a feature "
-                      "that meets the minimum-neighbor requirement.",
-                      counter, m_InputValues->FeatureIdsPath.toString()));
+                      "that meets the minimum-neighbor requirement. THE FOLLOWING ARRAYS MAY HAVE BEEN MODIFIED: '{}'",
+                      counter, m_InputValues->FeatureIdsPath.toString(), ConvertDataPathsToString(cellDataArrayPaths)));
     }
 
     // TODO: This can be parallelized much like NeighborOrientationCorrelation, just do not update the featureIds array during that section. Wait until everything is complete
@@ -317,6 +334,7 @@ Result<> RequireMinNumNeighbors::operator()()
       auto copyResult = CopyTupleFromArray(m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
       if(copyResult.invalid())
       {
+        copyResult.warnings().push_back({-55574, fmt::format("THE FOLLOWING ARRAYS MAY HAVE BEEN MODIFIED: '{}'", ConvertDataPathsToString(cellDataArrayPaths))});
         return copyResult;
       }
     }
@@ -335,8 +353,9 @@ Result<> RequireMinNumNeighbors::operator()()
   DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
   if(!nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel))
   {
-    return MakeErrorResult(-55570, fmt::format("Failed to remove inactive feature tuples from feature group '{}'. Check that its arrays match the tuple count of '{}'.",
-                                               cellFeatureGroupPath.toString(), m_InputValues->NumNeighborsPath.toString()));
+    return MakeErrorResult(
+        -55570, fmt::format("Failed to remove inactive feature tuples from feature group '{}'. Check that its arrays match the tuple count of '{}'. THE FOLLOWING ARRAYS MAY HAVE BEEN MODIFIED: '{}'",
+                            cellFeatureGroupPath.toString(), m_InputValues->NumNeighborsPath.toString(), ConvertDataPathsToString(cellDataArrayPaths)));
   }
 
   return {};
