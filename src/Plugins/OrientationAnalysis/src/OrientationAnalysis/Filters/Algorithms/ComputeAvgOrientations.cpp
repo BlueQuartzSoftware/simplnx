@@ -239,7 +239,7 @@ void ComputeAvgOrientations::sendThreadSafeProgressMessage(usize counter)
 
   auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_NumberOfFeatures)) * 100.0f);
   std::string ss = fmt::format("{}% Complete", progressInt);
-  m_MessageHandler(IFilter::Message::Type::Info, ss);
+  m_MessageHandler.sendInfoMessage(ss);
 
   m_InitialPoint = std::chrono::steady_clock::now();
 }

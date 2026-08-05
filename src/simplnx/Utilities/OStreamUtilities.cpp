@@ -53,7 +53,7 @@ struct PrintNeighborList
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(100 * static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
+          mesgHandler.sendInfoMessage(string);
           start = now;
           if(shouldCancel)
           {
@@ -92,7 +92,7 @@ struct PrintNeighborList
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
+          mesgHandler.sendInfoMessage(string);
           start = now;
           if(shouldCancel)
           {
@@ -222,7 +222,7 @@ Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStri
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       auto string = fmt::format("Processing {}: {}% completed", inputStringArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
+      mesgHandler.sendInfoMessage(string);
       start = now;
       if(shouldCancel)
       {
@@ -404,7 +404,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputFilePath = atomicFile.tempFilePath().string();
-    mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
+    mesgHandler.sendInfoMessage(fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
     // Scope file writer in code block to get around file lock on windows (enforce destructor order)
     {
@@ -440,7 +440,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
       }
       if(result.first < 0)
       {
-        mesgHandler(IFilter::Message::Type::Error, result.second);
+        mesgHandler.sendErrorMessage(result.second);
       }
     }
     if(shouldCancel)
@@ -471,7 +471,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                            const std::string& delimiter, bool includeIndex, bool includeHeaders, size_t componentsPerLine)
 {
-  mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
+  mesgHandler.sendInfoMessage(fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
 
   auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
   if(dataArray != nullptr)
@@ -583,7 +583,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       auto string = fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(tupleIndex) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
+      mesgHandler.sendInfoMessage(string);
       start = now;
       if(shouldCancel)
       {

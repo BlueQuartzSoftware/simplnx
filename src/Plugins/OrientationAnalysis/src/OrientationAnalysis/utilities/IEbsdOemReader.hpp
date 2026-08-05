@@ -60,7 +60,7 @@ public:
     int index = 0;
     for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
     {
-      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Importing Index {}", currentScanName)});
+      m_MessageHandler.sendInfoMessage(fmt::format("Importing Index {}", currentScanName));
 
       Result<> readResults = readData(currentScanName);
       if(readResults.invalid())

@@ -667,8 +667,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
     // progress, so stop instead of looping forever. Remaining -1 voxels are left unchanged.
     if(count != 0 && !madeAssignment)
     {
-      m_MessageHandler(
-          {IFilter::Message::Type::Warning, fmt::format("  {} bad-data voxel(s) could not be filled: they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
+      m_MessageHandler.sendWarningMessage(fmt::format("  {} bad-data voxel(s) could not be filled: they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration));
       break;
     }
 
@@ -696,7 +695,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
   }
 
   // Send final completion summary
-  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("  Completed in {} iteration{}", iteration, iteration == 1 ? "" : "s")});
+  m_MessageHandler.sendInfoMessage(fmt::format("  Completed in {} iteration{}", iteration, iteration == 1 ? "" : "s"));
 }
 
 // =============================================================================
@@ -764,19 +763,19 @@ Result<> FillBadData::operator()() const
   std::unordered_set<int64> smallRegions;             // Set of small region roots (unused currently)
 
   // Phase 1: Chunk-Sequential Connected Component Labeling
-  m_MessageHandler({IFilter::Message::Type::Info, "Phase 1/4: Labeling connected components..."});
+  m_MessageHandler.sendInfoMessage("Phase 1/4: Labeling connected components...");
   phaseOneCCL(featureIdsStore, unionFind, provisionalLabels, dims);
 
   // Phase 2: Global Resolution of equivalences
-  m_MessageHandler({IFilter::Message::Type::Info, "Phase 2/4: Resolving region equivalences..."});
+  m_MessageHandler.sendInfoMessage("Phase 2/4: Resolving region equivalences...");
   phaseTwoGlobalResolution(unionFind, smallRegions);
 
   // Phase 3: Relabeling based on region size classification
-  m_MessageHandler({IFilter::Message::Type::Info, "Phase 3/4: Classifying region sizes..."});
+  m_MessageHandler.sendInfoMessage("Phase 3/4: Classifying region sizes...");
   phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, provisionalLabels, smallRegions, unionFind, maxPhase);
 
   // Phase 4: Iterative morphological fill
-  m_MessageHandler({IFilter::Message::Type::Info, "Phase 4/4: Filling small defects..."});
+  m_MessageHandler.sendInfoMessage("Phase 4/4: Filling small defects...");
   phaseFourIterativeFill(featureIdsStore, dims, numFeatures);
 
   return {};

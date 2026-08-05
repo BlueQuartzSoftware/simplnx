@@ -247,7 +247,7 @@ Result<> KeepRemoveRankedFeatures::operator()()
 
   // Report the user's intent rather than the raw polarity. A message that says only "490 features
   // flagged true" is the kind that gets confirmed without actually being checked.
-  m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, summary});
+  m_MessageHandler.sendInfoMessage(summary);
 
   FeatureRemovalUtilities::RemovalArgs removalArgs;
   removalArgs.ImageGeometryPath = m_InputValues->ImageGeometryPath;

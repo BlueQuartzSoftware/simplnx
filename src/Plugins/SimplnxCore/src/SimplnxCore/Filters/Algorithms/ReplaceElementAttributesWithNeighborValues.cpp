@@ -184,7 +184,7 @@ struct ExecuteTemplate
         {
           progressInt = static_cast<int64>((static_cast<float32>(voxelIndex) / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
-          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32>(progressInt)});
+          messageHandler.sendProgressMessage(progressMessage, static_cast<int32>(progressInt));
           prog += progIncrement;
         }
       }
@@ -203,7 +203,7 @@ struct ExecuteTemplate
         {
           progressInt = static_cast<int64>((static_cast<float32>(voxelIndex) / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
-          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32>(progressInt)});
+          messageHandler.sendProgressMessage(progressMessage, static_cast<int32>(progressInt));
           prog = prog + progIncrement;
         }
 

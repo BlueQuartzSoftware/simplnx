@@ -95,7 +95,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       {
         return {};
       }
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
+      m_MessageHandler.sendInfoMessage(fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       float32 minDisorientation = std::numeric_limits<float32>::max();
       int64 slice = (dims[2] - 1) - iter;
@@ -217,7 +217,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   {
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
+      m_MessageHandler.sendInfoMessage(fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       float32 minDisorientation = std::numeric_limits<float32>::max();
       int64 slice = (dims[2] - 1) - iter;
@@ -359,7 +359,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
   for(int64_t slice = 0; slice < dims[2]; slice++)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Identifying Features: Slice {}/{} complete", slice, dims[2]));
+    m_MessageHandler.sendInfoMessage(fmt::format("Identifying Features: Slice {}/{} complete", slice, dims[2]));
 
     int64 startPoint = slice * dims[0] * dims[1];
     int64 endPoint = (slice + 1) * dims[0] * dims[1];

@@ -160,44 +160,6 @@ public:
      */
     void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2) const;
 
-    /**
-     * @brief Invokes the callback with a message.
-     * @param message The message to send
-     */
-    void operator()(const Message& message) const
-    {
-      sendMessage(message);
-    }
-
-    /**
-     * @brief Invokes the callback with an info message.
-     * @param message The message text
-     */
-    void operator()(std::string message) const
-    {
-      operator()(Message{Message::Type::Info, std::move(message)});
-    }
-
-    /**
-     * @brief Invokes the callback with a typed message.
-     * @param type The message type
-     * @param message The message text
-     */
-    void operator()(Message::Type type, std::string message) const
-    {
-      operator()(Message{type, std::move(message)});
-    }
-
-    /**
-     * @brief Invokes the callback with a progress message.
-     * @param type The message type
-     * @param message The message text
-     * @param progress The progress value
-     */
-    void operator()(Message::Type type, std::string message, int32 progress) const
-    {
-      operator()(ProgressMessage{type, std::move(message), progress});
-    }
     Callback m_Callback;
   };
 

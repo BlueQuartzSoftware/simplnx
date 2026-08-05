@@ -152,7 +152,7 @@ Result<> PadImageGeometry::operator()()
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
-    m_MessageHandler(fmt::format("Padding Volume || Copying Data Array {}", srcName));
+    m_MessageHandler.sendInfoMessage(fmt::format("Padding Volume || Copying Data Array {}", srcName));
     ExecuteParallelFunction<PadImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, m_InputValues, m_ShouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

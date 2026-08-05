@@ -308,7 +308,7 @@ public:
     auto now = std::chrono::steady_clock::now();
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
     {
-      m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, fmt::format("Nodes Completed: {}", m_Progcounter)});
+      m_MessageHandler.sendInfoMessage(fmt::format("Nodes Completed: {}", m_Progcounter));
       m_InitialTime = std::chrono::steady_clock::now();
     }
   }
@@ -320,7 +320,7 @@ public:
     auto now = std::chrono::steady_clock::now();
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
     {
-      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, progressMessage});
+      m_MessageHandler.sendInfoMessage(progressMessage);
       m_InitialTime = std::chrono::steady_clock::now();
     }
   }

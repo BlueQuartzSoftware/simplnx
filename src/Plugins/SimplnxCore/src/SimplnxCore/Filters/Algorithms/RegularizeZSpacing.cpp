@@ -195,7 +195,7 @@ Result<> RegularizeZSpacing::operator()()
     }
     const std::string srcName = oldDataArrayPtr->getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Copying Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
 
     ExecuteParallelFunction<RegularizeZSpacingArrayImpl>(oldDataArrayPtr->getDataType(), taskRunner, this, *oldDataArrayPtr, newDataArray, newToOldZPlane, sliceSize, m_ShouldCancel);
   }

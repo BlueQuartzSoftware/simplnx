@@ -71,7 +71,7 @@ IterativeClosestPoint::~IterativeClosestPoint() noexcept = default;
 // -----------------------------------------------------------------------------
 void IterativeClosestPoint::updateProgress(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ Result<> IterativeClosestPoint::operator()()
   using Adaptor = VertexGeomAdaptor<VertexGeom*>;
   const Adaptor adaptor(targetVertexGeom);
 
-  m_MessageHandler("Building kd-tree index...");
+  m_MessageHandler.sendInfoMessage("Building kd-tree index...");
 
   using KDtree = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float32, Adaptor>, Adaptor, 3>;
   KDtree index(3, adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(30));
@@ -177,7 +177,7 @@ Result<> IterativeClosestPoint::operator()()
     auto now = std::chrono::steady_clock::now();
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
-      m_MessageHandler(fmt::format("Performing Registration Iterations || {}% Completed", static_cast<int64>((static_cast<float>(i) / m_InputValues->NumIterations) * 100.0f)));
+      m_MessageHandler.sendInfoMessage(fmt::format("Performing Registration Iterations || {}% Completed", static_cast<int64>((static_cast<float>(i) / m_InputValues->NumIterations) * 100.0f)));
       start = now;
     }
   }

@@ -74,7 +74,7 @@ public:
         ss = fmt::format("{} : {}", m_MessagePrefix, progressStr);
       }
 
-      m_MessageHandler(nx::core::IFilter::Message::Type::Info, ss);
+      m_MessageHandler.sendInfoMessage(ss);
       m_StartTime = std::chrono::steady_clock::now();
     }
   }

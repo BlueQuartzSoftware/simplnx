@@ -807,7 +807,7 @@ const std::atomic_bool& ReadDeformKeyFileV12::getCancel()
 // -----------------------------------------------------------------------------
 void ReadDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 {
-  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
+  m_MessageHandler.sendInfoMessage(progressMessage);
 }
 
 // -----------------------------------------------------------------------------

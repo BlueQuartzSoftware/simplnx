@@ -47,14 +47,14 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   if(featAttrMat.getNumberOfTuples() < *maxFeatureId + 1)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
+    m_MessageHandler.sendInfoMessage("Increasing Number of tuples in target feature attribute matrix...");
     featAttrMat.resizeTuples(ShapeType{static_cast<usize>(*maxFeatureId + 1)});
   }
   MeshIndexType numFeatures = featAttrMat.getNumberOfTuples();
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Gathering unique vertices for {} triangles", numTriangles));
+  m_MessageHandler.sendInfoMessage(fmt::format("Gathering unique vertices for {} triangles", numTriangles));
 
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
@@ -74,7 +74,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing centroids for {} features", numFeatures));
+  m_MessageHandler.sendInfoMessage(fmt::format("Computing centroids for {} features", numFeatures));
 
   for(MeshIndexType i = 0; i < numFeatures; i++)
   {

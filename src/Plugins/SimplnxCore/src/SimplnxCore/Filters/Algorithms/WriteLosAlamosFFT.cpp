@@ -73,7 +73,7 @@ Result<> WriteLosAlamosFFT::operator()()
         usize index = (z * dims[0] * dims[1]) + (dims[0] * y) + x;
         if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
         {
-          m_MessageHandler(fmt::format("Writing in progress: {} of {} written. Percentage: {}%", index, total, static_cast<uint32>((static_cast<float64>(index) / total) * 100.0)));
+          m_MessageHandler.sendInfoMessage(fmt::format("Writing in progress: {} of {} written. Percentage: {}%", index, total, static_cast<uint32>((static_cast<float64>(index) / total) * 100.0)));
           start = std::chrono::steady_clock::now();
         }
 

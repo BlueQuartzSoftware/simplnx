@@ -134,7 +134,7 @@ Result<> ResampleImageGeom::operator()()
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    m_MessageHandler.sendInfoMessage(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
 
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel);
   }

@@ -175,7 +175,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   for(usize i = startSlice; i <= endSlice; i++)
   {
     const std::string& filePath = files[i];
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Importing: {}", filePath));
+    messageHandler.sendInfoMessage(fmt::format("Importing: {}", filePath));
 
     DataStructure importedDataStructure;
     {

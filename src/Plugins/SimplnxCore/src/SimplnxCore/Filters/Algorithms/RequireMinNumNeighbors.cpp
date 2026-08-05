@@ -46,7 +46,7 @@ Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataAr
       const std::string message =
           fmt::format("Cannot copy into tuple index {} of array '{}'. The array contains {} tuples, the Feature Ids array contains {} tuples, and the neighbor map contains {} entries.",
                       featureIdIndex, dataArrayPath.toString(), tupleCount, featureIdTupleCount, neighborMapSize);
-      mesgHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+      mesgHandler.sendInfoMessage(message);
       return MakeErrorResult(k_CopyDestinationTupleOutOfRange, message);
     }
 
@@ -65,7 +65,7 @@ Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataAr
     {
       const std::string message = fmt::format("Cannot copy from tuple index {} to tuple index {} of array '{}'. The array contains {} tuples and the Feature Ids array contains {} tuples.",
                                               neighborIndex, featureIdIndex, dataArrayPath.toString(), tupleCount, featureIdTupleCount);
-      mesgHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+      mesgHandler.sendInfoMessage(message);
       return MakeErrorResult(k_CopySourceTupleOutOfRange, message);
     }
 
@@ -191,7 +191,7 @@ Result<> RequireMinNumNeighbors::operator()()
     return {};
   }
   auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
-  m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
+  m_MessageHandler.sendInfoMessage(fmt::format("Removing {} features", numInactiveObjects));
 
   // Mark all features to be removed with a -1 value.
   for(usize i = 0; i < totalPoints; i++)
@@ -313,7 +313,7 @@ Result<> RequireMinNumNeighbors::operator()()
     }
 
     std::string message = fmt::format("{} voxels to update..", counter);
-    m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+    m_MessageHandler.sendInfoMessage(message);
 
     if(counter != 0 && !madeFill)
     {
@@ -349,7 +349,7 @@ Result<> RequireMinNumNeighbors::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
+  m_MessageHandler.sendInfoMessage(fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
   DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
   if(!nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel))
   {

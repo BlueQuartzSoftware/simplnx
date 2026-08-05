@@ -32,7 +32,7 @@ ReadCtfData::~ReadCtfData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadCtfData::operator()()
 {
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading .ctf file '{}'", m_InputValues->InputFile.string()));
+  m_MessageHandler.sendInfoMessage(fmt::format("Reading .ctf file '{}'", m_InputValues->InputFile.string()));
   ebsdlib::CtfReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
@@ -55,7 +55,7 @@ Result<> ReadCtfData::operator()()
     return {};
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Copying cell data into the Image Geometry");
+  m_MessageHandler.sendInfoMessage("Copying cell data into the Image Geometry");
   return copyRawEbsdData(&reader);
 }
 

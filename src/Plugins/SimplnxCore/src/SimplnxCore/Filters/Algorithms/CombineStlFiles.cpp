@@ -117,7 +117,7 @@ Result<> CombineStlFiles::operator()()
 
     fileListStrArray[currentIndex] = stlFilePath;
     activeArray[currentIndex] = 1;
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("({}/{}) Reading {}", currentIndex, paths.size(), stlFilePath));
+    m_MessageHandler.sendInfoMessage(fmt::format("({}/{}) Reading {}", currentIndex, paths.size(), stlFilePath));
     currentIndex++;
 
     ReadStlFileFilter stlFileReader;
@@ -171,7 +171,7 @@ Result<> CombineStlFiles::operator()()
   usize faceLabelOffset = 0;
   usize vertexLabelOffset = 0;
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving final triangle geometry data..."));
+  m_MessageHandler.sendInfoMessage(fmt::format("Moving final triangle geometry data..."));
 
   // Loop over each temp geometry and copy the data into the destination geometry
   for(auto* currentGeometry : stlGeometries)
