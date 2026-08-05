@@ -466,22 +466,25 @@ std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
 {
-  if(message.type == IFilter::Message::Type::Info || message.type == IFilter::Message::Type::Debug)
+  switch(message.type)
   {
+  case IFilter::Message::Type::Info:
+  case IFilter::Message::Type::Debug:
     sendFilterUpdateMessage(m_Index, message.message);
-  }
-  else if(message.type == IFilter::Message::Type::Progress)
-  {
-    const IFilter::ProgressMessage& progMessage = static_cast<const IFilter::ProgressMessage&>(message);
-    sendFilterProgressMessage(m_Index, progMessage.progress, message.message);
-  }
-  else if(message.type == IFilter::Message::Type::Error)
-  {
-    sendFilterFaultMessage(m_Index, nx::core::FaultState::Errors);
-  }
-  else if(message.type == IFilter::Message::Type::Warning)
-  {
+    break;
+  case IFilter::Message::Type::Progress:
+    sendFilterProgressMessage(m_Index, message.progress, message.message);
+    break;
+  case IFilter::Message::Type::Warning:
+    // The text is forwarded as well as the fault state, otherwise the reason for the warning is
+    // lost and observers only learn that *something* went wrong.
+    sendFilterUpdateMessage(m_Index, message.message);
     sendFilterFaultMessage(m_Index, nx::core::FaultState::Warnings);
+    break;
+  case IFilter::Message::Type::Error:
+    sendFilterUpdateMessage(m_Index, message.message);
+    sendFilterFaultMessage(m_Index, nx::core::FaultState::Errors);
+    break;
   }
 }
 

@@ -50,15 +50,21 @@ public:
 
     Type type = Type::Info;
     std::string message;
+
+    /**
+     * @brief Percent complete, clamped to [0, 100], for driving a progress bar. A value of -1 means
+     * this message carries no progress value. The human-readable form of the progress lives in
+     * `message`, which is already rendered by the sender; this field exists only for consumers that
+     * need a number.
+     */
+    int32 progress = -1;
   };
 
   /**
-   * @brief Extends Message to include progress information.
+   * @brief Retained as an alias so existing aggregate initializations keep compiling. Progress
+   * information now lives on Message itself.
    */
-  struct ProgressMessage : public Message
-  {
-    int32 progress = 0;
-  };
+  using ProgressMessage = Message;
 
   /**
    * @brief Handler for processing filter messages during execution.
@@ -68,15 +74,99 @@ public:
     using Callback = std::function<void(const Message&)>;
 
     /**
-     * @brief Invokes the callback with a message.
+     * @brief Sends a message.
      * @param message The message to send
      */
-    void operator()(const Message& message) const
+    void sendMessage(const Message& message) const
     {
       if(m_Callback)
       {
         m_Callback(message);
       }
+    }
+
+    /**
+     * @brief Sends a message of the given type.
+     * @param type The message type
+     * @param message The message text
+     */
+    void sendMessage(Message::Type type, std::string message) const
+    {
+      sendMessage(Message{type, std::move(message)});
+    }
+
+    /**
+     * @brief Sends an informational message.
+     * @param message The message text
+     */
+    void sendInfoMessage(std::string message) const
+    {
+      sendMessage(Message{Message::Type::Info, std::move(message)});
+    }
+
+    /**
+     * @brief Sends a debug message.
+     * @param message The message text
+     */
+    void sendDebugMessage(std::string message) const
+    {
+      sendMessage(Message{Message::Type::Debug, std::move(message)});
+    }
+
+    /**
+     * @brief Sends a warning message.
+     * @param message The message text
+     */
+    void sendWarningMessage(std::string message) const
+    {
+      sendMessage(Message{Message::Type::Warning, std::move(message)});
+    }
+
+    /**
+     * @brief Sends an error message.
+     * @param message The message text
+     */
+    void sendErrorMessage(std::string message) const
+    {
+      sendMessage(Message{Message::Type::Error, std::move(message)});
+    }
+
+    /**
+     * @brief Sends a progress message whose text has already been rendered by the caller. Prefer
+     * sendProgressCount() or sendProgressPercent(), which record what the sender intended to
+     * display; reach for this only when neither form fits.
+     * @param message The fully rendered message text
+     * @param percent Percent complete for the progress bar, clamped to [0, 100]
+     */
+    void sendProgressMessage(std::string message, int32 percent) const;
+
+    /**
+     * @brief Sends progress as a count of completed items, rendered as "<label>: <current>/<max>".
+     * Use this when the counts are meaningful to a user, e.g. tuples or slices.
+     * @param label Describes the work being done, with no trailing punctuation
+     * @param current Items completed so far
+     * @param max Total items
+     */
+    void sendProgressCount(std::string label, usize current, usize max) const;
+
+    /**
+     * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this when the
+     * counts are too large to be readable, where a percentage with a decimal place or two conveys
+     * more than the raw numbers would.
+     * @param label Describes the work being done, with no trailing punctuation
+     * @param current Items completed so far
+     * @param max Total items
+     * @param decimals Number of decimal places to display
+     */
+    void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2) const;
+
+    /**
+     * @brief Invokes the callback with a message.
+     * @param message The message to send
+     */
+    void operator()(const Message& message) const
+    {
+      sendMessage(message);
     }
 
     /**

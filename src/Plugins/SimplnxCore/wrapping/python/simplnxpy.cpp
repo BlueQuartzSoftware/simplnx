@@ -1490,24 +1490,34 @@ PYBIND11_MODULE(simplnx, mod)
 
   filterMessage.def(py::init<>());
   filterMessage.def(py::init<IFilter::Message::Type, const std::string&>());
+  filterMessage.def(py::init([](IFilter::Message::Type type, std::string message, int32 progress) { return IFilter::Message{type, std::move(message), progress}; }), "type"_a, "message"_a,
+                    "progress"_a);
   filterMessage.def_readwrite("type", &IFilter::Message::type);
   filterMessage.def_readwrite("message", &IFilter::Message::message);
+  filterMessage.def_readwrite("progress", &IFilter::Message::progress);
 
-  py::class_<IFilter::ProgressMessage, IFilter::Message> progressMessage(filter, "ProgressMessage");
-  progressMessage.def(py::init([](std::string message, int32 progress) {
-                        IFilter::ProgressMessage progressMessage_;
-                        progressMessage_.type = IFilter::Message::Type::Progress;
-                        progressMessage_.message = std::move(message);
-                        progressMessage_.progress = progress;
-                        return progressMessage_;
-                      }),
-                      "message"_a, "progress"_a);
-  progressMessage.def_readwrite("progress", &IFilter::ProgressMessage::progress);
+  // Progress information now lives on Message itself, so ProgressMessage is no longer a distinct
+  // type. This factory keeps the IFilter.ProgressMessage(message, progress) call shape working.
+  filter.def_static("ProgressMessage", [](std::string message, int32 progress) { return IFilter::Message{IFilter::Message::Type::Progress, std::move(message), progress}; }, "message"_a, "progress"_a);
 
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());
   messageHandler.def_readwrite("callback", &IFilter::MessageHandler::m_Callback);
-  messageHandler.def("__call__", [](const IFilter::MessageHandler& self, const IFilter::Message& message) { self(message); });
+  messageHandler.def("send_message", [](const IFilter::MessageHandler& self, const IFilter::Message& message) { self.sendMessage(message); }, "message"_a);
+  messageHandler.def("send_info_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendInfoMessage(std::move(message)); }, "message"_a);
+  messageHandler.def("send_debug_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendDebugMessage(std::move(message)); }, "message"_a);
+  messageHandler.def("send_warning_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendWarningMessage(std::move(message)); }, "message"_a);
+  messageHandler.def("send_error_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendErrorMessage(std::move(message)); }, "message"_a);
+  messageHandler.def(
+      "send_progress_message", [](const IFilter::MessageHandler& self, std::string message, int32 percent) { self.sendProgressMessage(std::move(message), percent); }, "message"_a, "percent"_a);
+  messageHandler.def(
+      "send_progress_count", [](const IFilter::MessageHandler& self, std::string label, usize current, usize max) { self.sendProgressCount(std::move(label), current, max); }, "label"_a, "current"_a,
+      "max"_a);
+  messageHandler.def(
+      "send_progress_percent",
+      [](const IFilter::MessageHandler& self, std::string label, usize current, usize max, int32 decimals) { self.sendProgressPercent(std::move(label), current, max, decimals); }, "label"_a,
+      "current"_a, "max"_a, "decimals"_a = 2);
+  messageHandler.def("__call__", [](const IFilter::MessageHandler& self, const IFilter::Message& message) { self.sendMessage(message); });
 
   py::class_<IFilter::PreflightValue> preflightValue(filter, "PreflightValue");
   preflightValue.def(py::init<>());
