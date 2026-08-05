@@ -612,7 +612,7 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
 
     auto& outputArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPaths[i]);
 
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), i + 1, outputArrayPaths.size())});
+    messageHandler.sendInfoMessage(fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), i + 1, outputArrayPaths.size()));
 
     taskRunner.execute(SplitDataArrayByTupleImpl<ArrayType>(inputArray, outputArray, inputTupleShapeOffset, shouldCancel, taskResult));
 
@@ -652,7 +652,7 @@ Result<> SplitNeighborListsByTupleImpl(DataStructure& dataStructure, const DataP
       return {};
     }
 
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Splitting neighbor list '{}' by tuple ({}/{})", inputArrayPath.toString(), i + 1, outputArrayPaths.size())});
+    messageHandler.sendInfoMessage(fmt::format("Splitting neighbor list '{}' by tuple ({}/{})", inputArrayPath.toString(), i + 1, outputArrayPaths.size()));
 
     auto& outputNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(outputArrayPaths[i]);
     taskRunner.execute(SplitNeighborListByTupleImpl(inputNeighborList, outputNeighborList, inputTupleOffset, shouldCancel, taskResult));

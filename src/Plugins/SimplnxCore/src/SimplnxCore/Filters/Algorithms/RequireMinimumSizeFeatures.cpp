@@ -101,7 +101,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
     }
   }
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
-  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+  m_MessageHandler.sendInfoMessage(message);
 
   // Cell IDs already use the shared compaction map. Skip another cell pass and compact only the feature-level arrays.
   Result<> removeResult = nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIdsStoreRef, currentFeatureCount, m_MessageHandler, m_ShouldCancel,

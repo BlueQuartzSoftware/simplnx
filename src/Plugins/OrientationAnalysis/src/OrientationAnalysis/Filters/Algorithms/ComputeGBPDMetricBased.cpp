@@ -392,7 +392,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
 
   // ------------------------------ generation of sampling points ----------------------------------
-  m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
+  m_MessageHandler.sendInfoMessage("Generating sampling points");
 
   // The golden-section spiral distributes points across the sphere.
   const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts;
@@ -602,7 +602,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, "Selecting triangles corresponding to Phase Of Interest");
+    m_MessageHandler.sendInfoMessage("Selecting triangles corresponding to Phase Of Interest");
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -666,7 +666,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
+    m_MessageHandler.sendInfoMessage(fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;

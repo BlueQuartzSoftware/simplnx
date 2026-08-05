@@ -160,7 +160,7 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
     int64 eulerCharacteristic = static_cast<int64>(uniqueVerts.size()) + numTriangles - static_cast<int64>(uniqueEdges.size());
     std::string message = fmt::format("Region: {} Euler Characteristic: {} = V:{} + F:{} - E:{}  ==> {}", regionIdx, eulerCharacteristic, uniqueVerts.size(), numTriangles, uniqueEdges.size(),
                                       eulerCharacteristics[regionIdx]);
-    m_MessageHandler(IFilter::Message::Type::Info, message);
+    m_MessageHandler.sendInfoMessage(message);
   } // End Region Loop
 #endif
 } // namespace nx::core::GeometryHelpers::Connectivity

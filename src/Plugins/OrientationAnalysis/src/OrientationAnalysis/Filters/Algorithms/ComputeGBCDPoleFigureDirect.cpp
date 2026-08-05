@@ -356,7 +356,7 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
   float32 yRes = 2.0f / static_cast<float32>(yPoints);
   float32 zRes = (xRes + yRes) / 2.0F;
 
-  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest)});
+  m_MessageHandler.sendInfoMessage(fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest));
 
   ParallelData2DAlgorithm dataAlg;
   dataAlg.setRange(0, xPoints, 0, yPoints);

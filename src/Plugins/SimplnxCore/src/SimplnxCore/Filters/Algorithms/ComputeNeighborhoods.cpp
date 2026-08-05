@@ -260,7 +260,7 @@ Result<> ComputeNeighborhoods::operator()()
     {
       avgDiameter /= static_cast<float32>(totalFeatures - 1);
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
+    m_MessageHandler.sendInfoMessage(fmt::format("Feature Average Diameter: '{}'", avgDiameter));
 
     for(usize i = 1; i < totalFeatures; i++)
     {

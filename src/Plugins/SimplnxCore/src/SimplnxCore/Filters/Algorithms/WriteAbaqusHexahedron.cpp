@@ -732,7 +732,7 @@ const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 
 void WriteAbaqusHexahedron::sendMessage(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 Result<> WriteAbaqusHexahedron::operator()()
@@ -785,7 +785,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 1/5) Complete");
 
   err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel());
   if(err < 0)
@@ -797,7 +797,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 2/5) Complete");
 
   err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->HourglassStiffness);
   if(err < 0)
@@ -809,7 +809,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 3/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 3/5) Complete");
 
   Result<> elsetResult = writeElset(this, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, maxGrainId, useOocAlgorithm, usesOutOfCoreStore, getCancel());
   if(elsetResult.invalid())
@@ -822,7 +822,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 4/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 4/5) Complete");
 
   err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
   if(err < 0)
@@ -834,7 +834,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 5/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 5/5) Complete");
 
   // Commits are atomic per file but are not one transaction for the file set.
   for(auto& file : fileList)

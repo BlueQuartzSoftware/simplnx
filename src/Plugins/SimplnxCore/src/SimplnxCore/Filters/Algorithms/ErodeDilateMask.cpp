@@ -102,7 +102,7 @@ Result<> ErodeDilateMask::operator()()
   // ---- Main iteration loop ----
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {}", iteration));
+    m_MessageHandler.sendInfoMessage(fmt::format("Iteration {}", iteration));
 
     // Re-initialize rolling window from the (potentially modified) store.
     // z=0 -> slot 1 (current), z=1 -> slot 2 (next).

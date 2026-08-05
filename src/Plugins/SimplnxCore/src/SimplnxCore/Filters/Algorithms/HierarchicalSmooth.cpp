@@ -784,11 +784,11 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
 
   if(rejectedCount > 0)
   {
-    messageHandler(IFilter::Message::Type::Warning, fmt::format("{} of {} nodes not smoothed due to excessive displacement", rejectedCount, vs.nodeSmooth.cols()));
+    messageHandler.sendWarningMessage(fmt::format("{} of {} nodes not smoothed due to excessive displacement", rejectedCount, vs.nodeSmooth.cols()));
   }
   else
   {
-    messageHandler(IFilter::Message::Type::Info, "All nodes smoothed successfully.");
+    messageHandler.sendInfoMessage("All nodes smoothed successfully.");
   }
 
   return {};
@@ -828,7 +828,7 @@ Result<> HierarchicalSmooth::operator()()
   IGeometry::MeshIndexType numVertices = triangleGeom.getNumberOfVertices();
   IGeometry::MeshIndexType numFaces = triangleGeom.getNumberOfFaces();
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Hierarchical Smooth: {} vertices, {} faces", numVertices, numFaces));
+  m_MessageHandler.sendInfoMessage(fmt::format("Hierarchical Smooth: {} vertices, {} faces", numVertices, numFaces));
 
   // Convert simplnx data to Eigen types
   // meshnode is 3 x N (each column is a vertex)
@@ -875,7 +875,7 @@ Result<> HierarchicalSmooth::operator()()
   }
 
   // Write smoothed vertices back to the triangle geometry
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing smoothed vertices back to geometry...");
+  m_MessageHandler.sendInfoMessage("Writing smoothed vertices back to geometry...");
   for(IGeometry::MeshIndexType i = 0; i < numVertices; i++)
   {
     verticesRef[3 * i + 0] = static_cast<float32>(vs.nodeSmooth(0, i));
