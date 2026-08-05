@@ -55,8 +55,7 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       const int32 progInt = static_cast<int32>((static_cast<float32>(k) / totalpoints) * 100.0f);
-      std::string message = fmt::format("Writing File {}%", progInt);
-      messageHandler.sendProgressMessage(message, progInt);
+      messageHandler.sendProgressMessage("Writing File", progInt);
       start = std::chrono::steady_clock::now();
     }
     if(shouldCancel)
