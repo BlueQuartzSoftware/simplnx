@@ -10,7 +10,7 @@ namespace nx::core
 /**
  * @class CopyFeatureArrayToElementArrayFilter
  * @brief This Filter copies the values associated with a Feature to all the Elements
- * that belong to that Feature. Xmdf visualization files write only the Element attributes,
+ * that belong to that Feature. Xdmf visualization files write only the Element attributes,
  * so if the user wants to display a spatial map of a Feature level attribute,
  * this Filter will transfer that information down to the Element level.
  */
@@ -27,7 +27,7 @@ public:
   CopyFeatureArrayToElementArrayFilter& operator=(CopyFeatureArrayToElementArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_paths";
+  static constexpr StringLiteral k_SelectedFeatureArrayPaths_Key = "selected_feature_array_paths";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_CreatedArraySuffix_Key = "created_array_suffix";
 

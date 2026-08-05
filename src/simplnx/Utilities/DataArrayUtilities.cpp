@@ -163,7 +163,6 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
 
   usize numFeatures = 0;
-  std::string sourceName;
 
   // Check if an Attribute Matrix was passed in
   auto* targetAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(sourceDataPath);
@@ -179,6 +178,12 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   }
 
   auto& featureIdsStore = featureIds.getDataStoreRef();
+  if(featureIdsStore.getNumberOfTuples() == 0)
+  {
+    // Nothing to validate (and minmax_element over an empty store would dereference end())
+    return {};
+  }
+
   auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsStore.begin(), featureIdsStore.end());
 
   if(!ignoreNegativeValues && *minFeatureId < 0)

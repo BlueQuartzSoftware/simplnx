@@ -21,14 +21,14 @@ struct SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayInputValues
 
 /**
  * @class CopyFeatureArrayToElementArray
- * @brief This algorithm implements support code for the CopyFeatureArrayToElementArrayFilter
+ * @brief Copies each selected Feature-level array down to the Element (cell) level: for every
+ * Element i, the created array's tuple is the source array's tuple at index FeatureIds[i].
  */
-
 class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArray
 {
 public:
   CopyFeatureArrayToElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                 CopyFeatureArrayToElementArrayInputValues* inputValues);
+                                 const CopyFeatureArrayToElementArrayInputValues* inputValues);
   ~CopyFeatureArrayToElementArray() noexcept;
 
   CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;
@@ -36,6 +36,10 @@ public:
   CopyFeatureArrayToElementArray& operator=(const CopyFeatureArrayToElementArray&) = delete;
   CopyFeatureArrayToElementArray& operator=(CopyFeatureArrayToElementArray&&) noexcept = delete;
 
+  /**
+   * @brief Runs the copy for every selected feature array.
+   * @return Invalid Result on FeatureIds range-validation failure (-5355 / -5351).
+   */
   Result<> operator()();
 
 private:
