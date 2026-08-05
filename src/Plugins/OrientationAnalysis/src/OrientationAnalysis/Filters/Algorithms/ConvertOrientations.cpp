@@ -110,7 +110,7 @@ void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
   }
 
   auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalPoints)) * 100.0f);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
+  m_MessageHandler.sendInfoMessage(fmt::format("Converting Orientations: {}% Complete", progressInt));
   m_InitialPoint = std::chrono::steady_clock::now();
 }
 
@@ -123,7 +123,7 @@ Result<> ConvertOrientations::operator()()
   size_t totalPoints = inputArray.getNumberOfTuples();
   m_TotalPoints = totalPoints;
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)],
+  m_MessageHandler.sendInfoMessage(fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)],
                                                              k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
 
   // Allow data-based parallelization; require both arrays resident in memory for out-of-core stores.

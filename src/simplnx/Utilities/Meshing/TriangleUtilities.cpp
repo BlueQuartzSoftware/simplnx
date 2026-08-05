@@ -95,7 +95,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler.sendInfoMessage(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
         start = std::chrono::steady_clock::now();
       }
 
@@ -253,7 +253,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler.sendInfoMessage(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
         start = std::chrono::steady_clock::now();
       }
 
@@ -422,7 +422,7 @@ Result<> MeshingUtilities::ValidateFeatureIdsAgainstSentinels(const Int32Abstrac
                                                               const IFilter::MessageHandler& mesgHandler)
 {
   const usize numTuples = featureIdsStore.getNumberOfTuples();
-  mesgHandler(fmt::format("Validating {} Feature Ids against internal sentinel values...", numTuples));
+  mesgHandler.sendInfoMessage(fmt::format("Validating {} Feature Ids against internal sentinel values...", numTuples));
 
   // Polled every k_CancelCheckInterval tuples rather than every tuple: at 512^3 (~134M tuples) this
   // loop is a full streaming pass under the out-of-core backend, and a per-tuple cancel check would

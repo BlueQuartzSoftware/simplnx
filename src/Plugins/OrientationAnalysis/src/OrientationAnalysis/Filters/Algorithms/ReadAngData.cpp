@@ -27,7 +27,7 @@ ReadAngData::~ReadAngData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadAngData::operator()()
 {
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading .ang file '{}'", m_InputValues->InputFile.string()));
+  m_MessageHandler.sendInfoMessage(fmt::format("Reading .ang file '{}'", m_InputValues->InputFile.string()));
   ebsdlib::AngReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
@@ -45,7 +45,7 @@ Result<> ReadAngData::operator()()
     return {};
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Copying cell data into the Image Geometry");
+  m_MessageHandler.sendInfoMessage("Copying cell data into the Image Geometry");
   return copyRawEbsdData(&reader);
 }
 

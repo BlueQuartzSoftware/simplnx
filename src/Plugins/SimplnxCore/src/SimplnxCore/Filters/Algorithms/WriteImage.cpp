@@ -360,7 +360,7 @@ Result<> WriteImage::operator()()
 
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
+    m_MessageHandler.sendInfoMessage(fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
     // A single-slice volume writes exactly the user-specified file name; the index suffix is only
     // appended when multiple slices are produced.
     fs::path slicePath = parent / fmt::format("{}{}", stem.string(), ext.string());

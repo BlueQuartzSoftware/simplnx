@@ -103,8 +103,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
           std::vector<DataPath> neighborListDataPaths = result.value();
           for(const auto& neighborListDataPath : neighborListDataPaths)
           {
-            messageHandler(
-                nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("NeighborList '{}' will be removed from the DataStructure.", neighborListDataPath.toString())});
+            messageHandler.sendInfoMessage(fmt::format("NeighborList '{}' will be removed from the DataStructure.", neighborListDataPath.toString()));
           }
         }
       }

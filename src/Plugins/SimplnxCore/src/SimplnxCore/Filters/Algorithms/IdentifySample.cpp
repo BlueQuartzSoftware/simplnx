@@ -240,7 +240,7 @@ struct IdentifySampleSliceBySliceFunctor
       {
         return;
       }
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
+      messageHandler.sendInfoMessage(fmt::format("Slice {}", fixedIdx));
 
       std::vector<bool> checked(planeDim1 * planeDim2, false);
       std::vector<bool> sample(planeDim1 * planeDim2, false);

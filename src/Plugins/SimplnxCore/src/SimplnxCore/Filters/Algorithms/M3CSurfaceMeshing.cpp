@@ -2560,7 +2560,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // means the output TriangleGeom is sized from the surviving count and never over-allocated.
   if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
-    messageHandler("Omitting bounding box skin faces...");
+    messageHandler.sendInfoMessage("Omitting bounding box skin faces...");
 
     // True when this triangle is a bounding-box wall face backed by background (i.e. its output
     // Face Labels would be {-1, 0}). M3C's single sequential pass over `triangles` (below) is the
@@ -2675,7 +2675,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   }
 
   // --- Stage 5: compact nodes and write the output TriangleGeom --------------
-  messageHandler("Writing surface mesh...");
+  messageHandler.sendInfoMessage("Writing surface mesh...");
   // Node-id compaction without a dense 7*numSites candidate->id map. A candidate's compacted id is simply
   // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
   // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
@@ -2766,7 +2766,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // exterior side (FaceLabel == -1) is skipped by the transfer functions.
   if(!inputValues->SelectedCellDataArrayPaths.empty() || !inputValues->SelectedFeatureDataArrayPaths.empty())
   {
-    messageHandler("Transferring attribute arrays to the mesh faces...");
+    messageHandler.sendInfoMessage("Transferring attribute arrays to the mesh faces...");
     std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
     for(usize i = 0; i < inputValues->SelectedCellDataArrayPaths.size(); i++)
     {
@@ -2809,13 +2809,13 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // so this pass (using triangle connectivity) makes the winding consistent with the FaceLabels.
   if(inputValues->RepairTriangleWinding)
   {
-    messageHandler("Generating connectivity and triangle neighbors...");
+    messageHandler.sendInfoMessage("Generating connectivity and triangle neighbors...");
     triangleGeom.findElementNeighbors(true);
     const auto optionalId = triangleGeom.getElementNeighborsId();
     if(optionalId.has_value())
     {
       const auto& connectivity = dataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
-      messageHandler("Repairing windings...");
+      messageHandler.sendInfoMessage("Repairing windings...");
       Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
                                                                        dataStructure.getDataAs<Int32Array>(inputValues->FaceLabelsDataPath)->getDataStoreRef(), shouldCancel, messageHandler);
       dataStructure.removeData(triangleGeom.getElementContainingVertId().value());
@@ -2932,7 +2932,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
 
   // Read FeatureIds directly from its DataStore (no full-array copy) into the padded working grid.
   // The FeatureId==0 renumbering happens on the working grid, never on the input array.
-  m_MessageHandler("Initializing working grid and ghost layer...");
+  m_MessageHandler.sendInfoMessage("Initializing working grid and ghost layer...");
   std::vector<int32> point(totalPoints + 1, 0);
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
@@ -2942,7 +2942,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   const NeighborAccessor neighbors{numSites, numSitesPerPlane, static_cast<int>(fileDim[0])};
 
   // 3 marching squares (top/back/left) per site; node types (7 candidate nodes/site) start Unused (0).
-  m_MessageHandler("Initializing candidate nodes and squares...");
+  m_MessageHandler.sendInfoMessage("Initializing candidate nodes and squares...");
   std::vector<Face> squares(static_cast<usize>(3) * numSites);
   std::vector<int8> nodeType(static_cast<usize>(7) * numSites, 0);
   initialize_squares(squares.data(), numSites);
@@ -2953,10 +2953,10 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   }
 
   // --- Stage 2: face edges ---------------------------------------------------
-  m_MessageHandler("Counting face edges...");
+  m_MessageHandler.sendInfoMessage("Counting face edges...");
   const int64 nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, numSites, m_ShouldCancel);
 
-  m_MessageHandler("Finding nodes and edges on each square...");
+  m_MessageHandler.sendInfoMessage("Finding nodes and edges on each square...");
   std::vector<Segment> fedges(static_cast<usize>(nFEdge < 0 ? 0 : nFEdge));
   get_nodes_fEdges(squares.data(), point.data(), neighbors, nodeType.data(), fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
@@ -2966,10 +2966,10 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   }
 
   // --- Stage 3: triangles ----------------------------------------------------
-  m_MessageHandler("Counting triangles...");
+  m_MessageHandler.sendInfoMessage("Counting triangles...");
   const int64 nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
-  m_MessageHandler("Generating triangles...");
+  m_MessageHandler.sendInfoMessage("Generating triangles...");
   std::vector<Triangle> triangles(static_cast<usize>(nTriangle < 0 ? 0 : nTriangle));
   std::vector<SiteId> mCubeID(static_cast<usize>(nTriangle < 0 ? 0 : nTriangle), 0);
   get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
@@ -3007,7 +3007,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
   const SiteId numSitesPerPlane = static_cast<SiteId>(fileDim[0] * fileDim[1]);
   const int xDim = static_cast<int>(fileDim[0]);
 
-  m_MessageHandler("Initializing working grid and ghost layer...");
+  m_MessageHandler.sendInfoMessage("Initializing working grid and ghost layer...");
   std::vector<int32> point(totalPoints + 1, 0);
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
@@ -3197,7 +3197,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
         const int64 sliceIdx = winBaseSite / numSitesPerPlane;
         if(sliceIdx % progressStep == 0)
         {
-          m_MessageHandler(fmt::format("Sweeping z-slices ({}): slice {} / {}", generate ? "pass 2, generating triangles" : "pass 1, counting", sliceIdx, totalSlices));
+          m_MessageHandler.sendInfoMessage(fmt::format("Sweeping z-slices ({}): slice {} / {}", generate ? "pass 2, generating triangles" : "pass 1, counting", sliceIdx, totalSlices));
         }
         const SiteId newLoSquare = 3 * (winBaseSite + numSitesPerPlane - 1);
         const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * numSitesPerPlane - 1), 3 * numSites);
@@ -3339,7 +3339,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
   if(!parallel)
   {
-    m_MessageHandler("Sweeping z-slices (pass 1: face edges + triangle count)...");
+    m_MessageHandler.sendInfoMessage("Sweeping z-slices (pass 1: face edges + triangle count)...");
     sweep(true, false);
     if(m_ShouldCancel)
     {
@@ -3348,7 +3348,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
     triangles.resize(static_cast<usize>(nTriangle < 0 ? 0 : nTriangle));
     mCubeID.resize(static_cast<usize>(nTriangle < 0 ? 0 : nTriangle), 0);
 
-    m_MessageHandler("Sweeping z-slices (pass 2: generating triangles)...");
+    m_MessageHandler.sendInfoMessage("Sweeping z-slices (pass 2: generating triangles)...");
     sweep(false, true);
   }
   else
@@ -3505,7 +3505,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
     std::vector<int64> triOffset(numCubes + 1, 0); // 1-based per-cube; pass 1 fills counts, then prefix -> offsets
 
-    m_MessageHandler("Sweeping z-slices (parallel pass 1: counting)...");
+    m_MessageHandler.sendInfoMessage("Sweeping z-slices (parallel pass 1: counting)...");
     {
       winBaseSite = 1;
       int64 eid = 0;
@@ -3539,7 +3539,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
     triangles.resize(static_cast<usize>(total));
     mCubeID.resize(static_cast<usize>(total), 0);
 
-    m_MessageHandler("Sweeping z-slices (parallel pass 2: generating triangles)...");
+    m_MessageHandler.sendInfoMessage("Sweeping z-slices (parallel pass 2: generating triangles)...");
     {
       winBaseSite = 1;
       int64 eid = 0;

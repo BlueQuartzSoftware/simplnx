@@ -35,7 +35,7 @@ public:
 protected:
   void sink_it_(const spdlog::details::log_msg& msg) override
   {
-    m_MessageHandler({IFilter::ProgressMessage::Type::Info, fmt::to_string(msg.payload)});
+    m_MessageHandler.sendInfoMessage(fmt::to_string(msg.payload));
   }
 
   void flush_() override

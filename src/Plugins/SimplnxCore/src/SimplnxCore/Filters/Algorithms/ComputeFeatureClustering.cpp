@@ -199,7 +199,7 @@ Result<> ComputeFeatureClustering::operator()()
     {
       if(i % 1000 == 0)
       {
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
+        m_MessageHandler.sendInfoMessage(fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
       }
 
       x = centroidsStore[3 * i];

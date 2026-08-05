@@ -357,7 +357,7 @@ const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 // -----------------------------------------------------------------------------
 void WriteAbaqusHexahedron::sendMessage(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------
@@ -397,7 +397,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList); // delete files
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 1/5) Complete");
 
   err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
   if(err < 0)
@@ -409,7 +409,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList); // delete files
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 2/5) Complete");
 
   err = writeSects(fileList[2].value().tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
@@ -421,7 +421,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList); // delete files
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 3/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 3/5) Complete");
 
   err = writeElset(this, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, getCancel()); // Element set file
   if(err < 0)
@@ -433,7 +433,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList); // delete files
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 4/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 4/5) Complete");
 
   err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix); // Master file
   if(err < 0)
@@ -445,7 +445,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList); // delete files
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 5/5) Complete");
+  m_MessageHandler.sendInfoMessage("Writing Sections (File 5/5) Complete");
 
   for(auto& file : fileList)
   {

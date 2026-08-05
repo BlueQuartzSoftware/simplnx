@@ -146,7 +146,7 @@ Result<> ReadImage::operator()()
 {
   const auto& inputFilePath = m_InputValues.inputFilePath;
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading image file: {}", inputFilePath.string()));
+  m_MessageHandler.sendInfoMessage(fmt::format("Reading image file: {}", inputFilePath.string()));
 
   auto imageIOResult = CreateImageIO(inputFilePath);
   if(imageIOResult.invalid())
@@ -267,7 +267,7 @@ Result<> ReadImage::operator()()
 
   if(m_InputValues.changeDataType && srcType != destType)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting pixel data from {} to {}", DataTypeToString(srcType), DataTypeToString(destType)));
+    m_MessageHandler.sendInfoMessage(fmt::format("Converting pixel data from {} to {}", DataTypeToString(srcType), DataTypeToString(destType)));
     auto convResult = ExecuteDataFunction(DispatchConversionFunctor{}, srcType, destType, imageArray, tempBuffer, window);
     if(convResult.invalid())
     {

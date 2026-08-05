@@ -196,7 +196,7 @@ ComputeKMedoids::~ComputeKMedoids() noexcept = default;
 // -----------------------------------------------------------------------------
 void ComputeKMedoids::updateProgress(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------

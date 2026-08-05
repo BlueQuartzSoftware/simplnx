@@ -80,7 +80,7 @@ Result<> RemoveFlaggedVertices::operator()()
   reducedVertexGeom.resizeVertexList(numVerticesToKeep);
   reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
 
-  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying vertices to reduced geometry")});
+  m_MessageHandler.sendInfoMessage(fmt::format("Copying vertices to reduced geometry"));
 
   size_t keepIndex = 0;
   // Loop over each vertex and only copy the vertices that were *NOT* flagged for removal
@@ -107,7 +107,7 @@ Result<> RemoveFlaggedVertices::operator()()
     const DataPath destinationPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(src.getName());
 
     auto& dest = m_DataStructure.getDataRefAs<IDataArray>(destinationPath);
-    m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
+    m_MessageHandler.sendInfoMessage(fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName()));
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
   }

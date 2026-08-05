@@ -29,7 +29,7 @@ ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 // -----------------------------------------------------------------------------
 void ComputeArrayHistogram::updateProgress(const std::string& progressMessage)
 {
-  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
+  m_MessageHandler.sendInfoMessage(progressMessage);
 }
 
 // -----------------------------------------------------------------------------

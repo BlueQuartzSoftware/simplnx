@@ -297,13 +297,13 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     if(i > prog)
     {
       const auto progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
+      m_MessageHandler.sendInfoMessage(fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
       prog += progIncrement;
     }
   }
 
   // Finalization pass - write outputs
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing interpolated results...");
+  m_MessageHandler.sendInfoMessage("Writing interpolated results...");
 
   for(usize a = 0; a < numInterpArrays; a++)
   {

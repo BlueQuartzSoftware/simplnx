@@ -460,7 +460,7 @@ Result<> SurfaceNets::operator()()
   // Skipped entirely when the option is off, because then no face was dropped.
   if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
-    m_MessageHandler("Removing vertices orphaned by omitted bounding box faces...");
+    m_MessageHandler.sendInfoMessage("Removing vertices orphaned by omitted bounding box faces...");
 
     auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
     const usize numFaceIndices = triangleCount * 3;
@@ -521,7 +521,7 @@ Result<> SurfaceNets::operator()()
   if(m_InputValues->RepairTriangleWinding)
   {
     // Generate Connectivity
-    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triangleGeom.findElementNeighbors(true);
     const auto optionalId = triangleGeom.getElementNeighborsId();
     if(!optionalId.has_value())
@@ -530,7 +530,7 @@ Result<> SurfaceNets::operator()()
     }
     const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-    m_MessageHandler("Repairing Windings...");
+    m_MessageHandler.sendInfoMessage("Repairing Windings...");
 
     windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
                                                             m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);

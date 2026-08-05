@@ -504,7 +504,7 @@ Result<> ExtractFeatureBoundaries2D::operator()()
   // Get the data type to dispatch to the correct template instantiation
   const DataType dataType = featureIdsArray.getDataType();
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Extracting feature boundaries...");
+  m_MessageHandler.sendInfoMessage("Extracting feature boundaries...");
 
   // Normally FeatureIds are int32 values, but this filter allows the use of any integer types.
   // Due to this, we need to use the `ExecuteDataFunction` design.

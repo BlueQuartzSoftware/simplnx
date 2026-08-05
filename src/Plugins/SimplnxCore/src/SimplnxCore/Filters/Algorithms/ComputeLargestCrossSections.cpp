@@ -83,7 +83,7 @@ Result<> ComputeLargestCrossSections::operator()()
     stride3 = inPlane1 * inPlane2;
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", outPlane));
+  m_MessageHandler.sendInfoMessage(fmt::format("Computing Cross Section for {} planes", outPlane));
 
   for(size_t i = 0; i < outPlane; i++)
   {

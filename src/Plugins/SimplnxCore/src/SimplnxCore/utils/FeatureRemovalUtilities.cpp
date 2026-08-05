@@ -197,7 +197,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
 
   MessageHelper messageHelper(messageHandler);
 
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+  messageHandler.sendInfoMessage(fmt::format("Beginning Feature Removal"));
 
   std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.FillRemovedFeatures);
   if(activeObjects.empty())
@@ -222,7 +222,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     do
     {
       count++;
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+      messageHandler.sendInfoMessage(fmt::format("Entering iteration number {}...", count));
       std::fill(neighbors.begin(), neighbors.end(), -1);
       shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
 
@@ -231,7 +231,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
         return {};
       }
 
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
+      messageHandler.sendInfoMessage(fmt::format("Filling bad voxels..."));
       std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(dataStructure, args.FeatureIdsArrayPath, args.IgnoredDataArrayPaths);
       FindVoxelArrays(featureIds, neighbors, voxelArrays, shouldCancel);
     } while(shouldLoop);
@@ -242,7 +242,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+  messageHandler.sendInfoMessage(fmt::format("Stripping excess inactive objects from model..."));
   if(!RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel))
   {
     return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", args.FeatureAttributeMatrixPath.toString()));

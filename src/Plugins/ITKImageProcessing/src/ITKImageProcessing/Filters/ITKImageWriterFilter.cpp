@@ -402,7 +402,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
-      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getZ(), outputFilePath.string()));
+      messageHandler.sendInfoMessage(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getZ(), outputFilePath.string()));
       Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {
@@ -433,7 +433,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getY(), totalDigits, fillChar);
-      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getY(), outputFilePath.string()));
+      messageHandler.sendInfoMessage(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getY(), outputFilePath.string()));
       Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {
@@ -464,7 +464,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
         return copyResult;
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getX(), totalDigits, fillChar);
-      messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getX(), outputFilePath.string()));
+      messageHandler.sendInfoMessage(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getX(), outputFilePath.string()));
       Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
       if(result.invalid())
       {

@@ -77,7 +77,7 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
       continue;
     }
 
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing file for phase '{}'", phase));
+    m_MessageHandler.sendInfoMessage(fmt::format("Writing file for phase '{}'", phase));
 
     const std::string absFilePath = fmt::format("{}/{}_Phase_{}{}", absPath, fName, phase, suffix);
 

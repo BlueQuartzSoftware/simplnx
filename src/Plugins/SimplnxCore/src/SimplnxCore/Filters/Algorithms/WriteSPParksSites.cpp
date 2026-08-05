@@ -56,7 +56,7 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
     {
       const int32 progInt = static_cast<int32>((static_cast<float32>(k) / totalpoints) * 100.0f);
       std::string message = fmt::format("Writing File {}%", progInt);
-      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
+      messageHandler.sendProgressMessage(message, progInt);
       start = std::chrono::steady_clock::now();
     }
     if(shouldCancel)
