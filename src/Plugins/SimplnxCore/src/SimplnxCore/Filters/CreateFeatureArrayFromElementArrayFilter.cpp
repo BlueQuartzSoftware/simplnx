@@ -87,27 +87,24 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
   const auto& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
   const IDataStore& selectedCellArrayStore = selectedCellArray.getIDataStoreRef();
 
-  Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
+  const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
 
-  // Get the target Attribute Matrix that the output array will be stored with
-  // the proper tuple shape
-  std::vector<usize> amTupleShape = {1ULL};
-  // First try getting the amPath as an AttributeMatrix
-  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
-  if(featureAttributeMatrixPtr != nullptr)
+  if(selectedCellArrayStore.getNumberOfTuples() != featureIdsArray.getNumberOfTuples())
   {
-    amTupleShape = featureAttributeMatrixPtr->getShape();
+    return MakePreflightErrorResult(-81883, fmt::format("Cell array '{}' has {} tuples but FeatureIds array '{}' has {} tuples; they must match.", pSelectedCellArrayPathValue.toString(),
+                                                        selectedCellArrayStore.getNumberOfTuples(), pFeatureIdsArrayPathValue.toString(), featureIdsArray.getNumberOfTuples()));
   }
 
+  Result<OutputActions> resultOutputActions;
+  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
   {
     DataType dataType = selectedCellArray.getDataType();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(),
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureAttributeMatrixPtr->getShape(), selectedCellArrayStore.getComponentShape(),
                                                                  pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -56,21 +56,13 @@ void testElementArray(const DataPath& cellDataPath)
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     DataPath exemplaryDataPath = smallIn100Group.createChildPath("CellFeatureData").createChildPath(cellDataPath.getTargetName());
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
     const DataArray<T>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedFeatureArrayPath));
     const DataArray<T>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedFeatureArrayPath);
-    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
 
-    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
-    {
-      auto oldVal = featureArrayExemplary[i];
-      auto newVal = createdFeatureArray[i];
-      if(oldVal != newVal)
-      {
-        REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
-        break;
-      }
-    }
+    UnitTest::CompareDataArrays<T>(featureArrayExemplary, createdFeatureArray);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -104,15 +96,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter e
   testElementArray<uint8>(cellDataPath);
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixtures — AF-1 single-component consistent", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-component consistent", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 1 (Analytical) + Class 4 (Invariant)
   // featureIds = [0, 1, 2, 1, 2]
   // cellValues (float32, 1-comp) = [5.0, 10.0, 20.0, 10.0, 20.0]
   // Hand derivation:
   //   feature 0: cell 0 only → output[0] = 5.0
-  //   feature 1: cell 1 (10.0) then cell 3 (10.0) — same, no warning → output[1] = 10.0
-  //   feature 2: cell 2 (20.0) then cell 4 (20.0) — same, no warning → output[2] = 20.0
+  //   feature 1: cell 1 (10.0) then cell 3 (10.0) -same, no warning → output[1] = 10.0
+  //   feature 2: cell 2 (20.0) then cell 4 (20.0) -same, no warning → output[2] = 20.0
   // Expected output: [5.0, 10.0, 20.0], 0 warnings
   DataStructure ds;
   // Creation
@@ -157,6 +149,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   {
     REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath));
     const auto& inputArray = ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath));
     const auto& outArray = ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
@@ -173,7 +166,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixtures — AF-2 single-component inconsistent",
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-component inconsistent",
           "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 1 (Analytical) + Class 4 (Invariant)
@@ -181,8 +174,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   // cellValues (float32, 1-comp) = [10.0, 20.0, 15.0, 20.0]
   // Hand derivation:
   //   feature 0: never written → 0.0 (CreateArrayAction fill="0")
-  //   feature 1: cell 0 (10.0) then cell 2 (15.0) — differ → one warning; last-writer → output[1] = 15.0
-  //   feature 2: cell 1 (20.0) then cell 3 (20.0) — same, no additional warning → output[2] = 20.0
+  //   feature 1: cell 0 (10.0) then cell 2 (15.0) -differ → one warning; last-writer → output[1] = 15.0
+  //   feature 2: cell 1 (20.0) then cell 3 (20.0) -same, no additional warning → output[2] = 20.0
   // Expected output: [0.0, 15.0, 20.0], exactly 1 warning
   DataStructure ds;
   // Creation
@@ -225,6 +218,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   {
     REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath));
     const auto& inputArray = ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath));
     const auto& outArray = ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
@@ -241,15 +235,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixtures — AF-3 three-component consistent", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-component consistent", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 1 (Analytical) + Class 4 (Invariant)
   // featureIds = [1, 2, 1, 2]
   // cellValues (uint8, 3-comp): cell0=[10,20,30], cell1=[40,50,60], cell2=[10,20,30], cell3=[40,50,60]
   // Hand derivation:
   //   feature 0: never written → [0, 0, 0]
-  //   feature 1: cell 0 [10,20,30] then cell 2 [10,20,30] — same per component → no warning → output[1] = [10, 20, 30]
-  //   feature 2: cell 1 [40,50,60] then cell 3 [40,50,60] — same per component → no warning → output[2] = [40, 50, 60]
+  //   feature 1: cell 0 [10,20,30] then cell 2 [10,20,30] -same per component → no warning → output[1] = [10, 20, 30]
+  //   feature 2: cell 1 [40,50,60] then cell 3 [40,50,60] -same per component → no warning → output[2] = [40, 50, 60]
   // Expected output: [[0,0,0], [10,20,30], [40,50,60]], 0 warnings
   DataStructure ds;
   // Creation
@@ -304,6 +298,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   {
     REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath));
     const auto& inputArray = ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath);
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(AnalyticalFixtures::k_OutputFeaturePath));
     const auto& outArray = ds.getDataRefAs<UInt8Array>(AnalyticalFixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
@@ -329,11 +324,11 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixtures — AF-4 error path all-negative featureIds",
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error path all-negative featureIds",
           "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
-  // featureIds = [-1, -2, -1] — all negative; std::max_element returns -1
+  // featureIds = [-1, -2, -1] -all negative; std::max_element returns -1
   // maxValue = -1 < 0 → MakeErrorResult(-81880, ...)
   // Expected: preflight succeeds; execute fails with error code -81880
   DataStructure ds;
@@ -372,7 +367,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixtures — AF-5 error path shrink-protection guard",
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error path shrink-protection guard",
           "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
@@ -390,7 +385,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
     auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroup->getId());
     auto* featureAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{2ULL}, topGroup->getId());
 
-    // Child array created directly with 5 tuples — more than AM.tupleCount=2 and more than maxValue+1=4
+    // Child array created directly with 5 tuples -more than AM.tupleCount=2 and more than maxValue+1=4
     auto* siblingArray = Float32Array::CreateWithStore<DataStore<float32>>(ds, k_SiblingArrayPath.getTargetName(), featureAM->getShape(), ShapeType{1ULL}, featureAM->getId());
     siblingArray->resizeTuples(ShapeType{5ULL});
 
@@ -422,6 +417,198 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AnalyticalFixt
     auto executeResult = filter.execute(ds, args);
     REQUIRE_FALSE(executeResult.result.valid());
     REQUIRE(executeResult.result.errors()[0].code == -81881);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in FeatureIds range (resize-grown tuple never written)",
+          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+{
+  // Oracle class: Class 1 (Analytical) + Class 4 (Invariant)
+  // featureIds = [0, 2, 0, 2] -feature 1 is in [0..max] but no cell maps to it
+  // cellValues (float32, 1-comp) = [5.0, 30.0, 5.0, 30.0]
+  // Feature AM starts with 1 tuple; resizeTuples grows to 3, adding indices 1 and 2.
+  // Hand derivation:
+  //   feature 0: cell 0 (5.0) then cell 2 (5.0) -same, no warning → output[0] = 5.0
+  //   feature 1: gap -grown by resizeTuples, never written; m_InitValue=0 (in-core DataStore<T>) → output[1] = 0.0
+  //   feature 2: cell 1 (30.0) then cell 3 (30.0) -same, no warning → output[2] = 30.0
+  // Expected output: [5.0, 0.0, 30.0], 0 warnings
+  DataStructure ds;
+  // Creation
+  {
+    auto* topGroup = DataGroup::Create(ds, AnalyticalFixtures::k_ParentDGName);
+    auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroup->getId());
+    AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroup->getId());
+
+    auto* fidsArray = Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_FeatureIdsPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+    (*fidsArray)[0] = 0;
+    (*fidsArray)[1] = 2;
+    (*fidsArray)[2] = 0;
+    (*fidsArray)[3] = 2;
+
+    auto* cellFloatArray = Float32Array::CreateWithStore<DataStore<float32>>(ds, AnalyticalFixtures::k_InputCellPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+    (*cellFloatArray)[0] = 5.0f;
+    (*cellFloatArray)[1] = 30.0f;
+    (*cellFloatArray)[2] = 5.0f;
+    (*cellFloatArray)[3] = 30.0f;
+  }
+
+  // Execution
+  {
+    CreateFeatureArrayFromElementArrayFilter filter;
+    Arguments args;
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_InputCellPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureIdsPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureAMPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(AnalyticalFixtures::k_OutputFeaturePath.getTargetName()));
+
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(executeResult.result.warnings().empty()); // Class 4: 0 warnings when all features are consistent
+  }
+
+  // Validation
+  {
+    REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath));
+    const auto& inputArray = ds.getDataRefAs<IDataArray>(AnalyticalFixtures::k_InputCellPath);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath));
+    const auto& outArray = ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_OutputFeaturePath);
+
+    // Class 4 invariants: shape, type, and component count
+    REQUIRE(outArray.getNumberOfTuples() == 3); // max(featureIds)+1 = 2+1 = 3
+    REQUIRE(outArray.getDataType() == inputArray.getDataType());
+    REQUIRE(outArray.getNumberOfComponents() == inputArray.getNumberOfComponents());
+
+    // Class 1 expected values (hand-derived)
+    REQUIRE(outArray[0] == 5.0f);  // feature 0: written by cells 0 and 2
+    REQUIRE(outArray[1] == 0.0f);  // feature 1: gap, grown by resizeTuples, never written; 0 from m_InitValue (in-core DataStore<T>)
+    REQUIRE(outArray[2] == 30.0f); // feature 2: written by cells 1 and 3
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-7 error path empty featureIds array",
+          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+{
+  // Oracle class: Class 4 (Invariant)
+  // featureIds = [] (0 tuples) -std::max_element on empty range returns end;
+  // accessing featureIdsRef[distance(begin,end)=0] on a 0-element store is UB without the guard.
+  // Expected: preflight succeeds; execute fails with error code -81882
+  DataStructure ds;
+  // Creation
+  {
+    auto* topGroup = DataGroup::Create(ds, AnalyticalFixtures::k_ParentDGName);
+    auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{0ULL}, topGroup->getId());
+    AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroup->getId());
+
+    Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_FeatureIdsPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+    Float32Array::CreateWithStore<DataStore<float32>>(ds, AnalyticalFixtures::k_InputCellPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+  }
+
+  // Execution
+  {
+    CreateFeatureArrayFromElementArrayFilter filter;
+    Arguments args;
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_InputCellPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureIdsPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureAMPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(AnalyticalFixtures::k_OutputFeaturePath.getTargetName()));
+
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE_FALSE(executeResult.result.valid());
+    REQUIRE(executeResult.result.errors()[0].code == -81882);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error path mixed negative and positive featureIds",
+          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+{
+  // Oracle class: Class 4 (Invariant)
+  // featureIds = [-1, 1, 2, -1] -maxValue=2 (positive) passes the old all-negative guard,
+  // but featureIdx=-1 in the copy loop converts to usize(UINT64_MAX) → OOB write without the min check.
+  // Expected: preflight succeeds; execute fails with error code -81880
+  DataStructure ds;
+  // Creation
+  {
+    auto* topGroup = DataGroup::Create(ds, AnalyticalFixtures::k_ParentDGName);
+    auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroup->getId());
+    AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroup->getId());
+
+    auto* fidsArray = Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_FeatureIdsPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+    (*fidsArray)[0] = -1;
+    (*fidsArray)[1] = 1;
+    (*fidsArray)[2] = 2;
+    (*fidsArray)[3] = -1;
+
+    auto* cellFloatArray = Float32Array::CreateWithStore<DataStore<float32>>(ds, AnalyticalFixtures::k_InputCellPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+    (*cellFloatArray)[0] = 1.0f;
+    (*cellFloatArray)[1] = 2.0f;
+    (*cellFloatArray)[2] = 3.0f;
+    (*cellFloatArray)[3] = 1.0f;
+  }
+
+  // Execution
+  {
+    CreateFeatureArrayFromElementArrayFilter filter;
+    Arguments args;
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_InputCellPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureIdsPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureAMPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(AnalyticalFixtures::k_OutputFeaturePath.getTargetName()));
+
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE_FALSE(executeResult.result.valid());
+    REQUIRE(executeResult.result.errors()[0].code == -81880);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error path featureIds tuple count mismatch",
+          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+{
+  // Oracle class: Class 4 (Invariant)
+  // cellArray: 4 tuples (in CellAM); featureIds: 2 tuples (in a separate smaller AM)
+  // Loop bound is cellArray.getNumberOfTuples()=4; featureIds[2] and featureIds[3] are OOB
+  // without the preflight check.
+  // Expected: preflight fails with error code -81883
+  DataStructure ds;
+  const DataPath k_SmallerAMPath = AnalyticalFixtures::k_ParentDGPath.createChildPath("SmallerAM");
+  const DataPath k_MismatchedFeatureIdsPath = k_SmallerAMPath.createChildPath(Constants::k_FeatureIds);
+
+  // Creation
+  {
+    auto* topGroup = DataGroup::Create(ds, AnalyticalFixtures::k_ParentDGName);
+    auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroup->getId());
+    auto* smallerAM = AttributeMatrix::Create(ds, k_SmallerAMPath.getTargetName(), ShapeType{2ULL}, topGroup->getId());
+    AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroup->getId());
+
+    auto* fidsArray = Int32Array::CreateWithStore<DataStore<int32>>(ds, k_MismatchedFeatureIdsPath.getTargetName(), smallerAM->getShape(), ShapeType{1ULL}, smallerAM->getId());
+    (*fidsArray)[0] = 1;
+    (*fidsArray)[1] = 2;
+
+    Float32Array::CreateWithStore<DataStore<float32>>(ds, AnalyticalFixtures::k_InputCellPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
+  }
+
+  // Execution
+  {
+    CreateFeatureArrayFromElementArrayFilter filter;
+    Arguments args;
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_InputCellPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_MismatchedFeatureIdsPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureAMPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(AnalyticalFixtures::k_OutputFeaturePath.getTargetName()));
+
+    auto preflightResult = filter.preflight(ds, args);
+    REQUIRE_FALSE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -81883);
   }
 }
 
