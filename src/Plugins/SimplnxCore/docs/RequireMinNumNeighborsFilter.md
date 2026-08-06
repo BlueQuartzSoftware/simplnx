@@ -6,24 +6,76 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** sets the minimum number of contiguous neighboring **Features** a **Feature** must have to remain in the structure. Entering zero results in nothing changing.  Entering a number larger than the maximum number of neighbors of any **Feature** generates an *error* (since all **Features** would be removed). The user needs to proceed conservatively here when choosing the value for the minimum to avoid accidentally exceeding the maximum. After **Features** are removed for not having enough neighbors, the remaining **Features** are *coarsened* iteratively, one **Cell** per iteration, until the gaps left by the removed **Features** are filled.  Effectively, this is an isotropic **Feature** growth in the regions around removed **Features**.
+This **Filter** removes **Features** that have fewer contiguous neighboring **Features** than the selected minimum. It uses a precomputed *Number of Neighbors* array, which is normally created by the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter**. **Feature** tuple 0 is retained as the background tuple.
 
-The **Filter** can be run in a mode where the minimum number of neighbors is applied to a single **Ensemble**.  The user can select to apply the minimum to one specific **Ensemble**.
+When *Apply to Single Phase Only* is disabled, the minimum is applied to every non-background **Feature**. When it is enabled, only **Features** belonging to the selected *Phase Index* are tested against the minimum; **Features** in other **Ensembles** remain active.
+
+Cells belonging to removed **Features**, along with cells that already have a negative Feature ID, are reassigned iteratively. During each pass, every unresolved **Cell** examines its valid face neighbors and selects a neighbor associated with the most frequently occurring non-negative Feature ID. Vote ties are resolved by the face-neighbor traversal order. Every currently fillable **Cell** is updated during the pass, so the process may fill many cells per iteration. This produces an isotropic, face-connected growth of retained **Features** into the regions left by removed **Features**.
+
+After coarsening completes, inactive feature tuples are removed from the feature **Attribute Matrix** and the remaining Feature IDs are remapped.
+
+## Required Geometry and Inputs
+
+- An **Image Geometry**.
+- A scalar `int32` *Cell Feature Ids* **Data Array** containing exactly one tuple per geometry **Cell**.
+- A scalar `int32` *Number of Neighbors* **Data Array** containing one tuple per **Feature**.
+- When *Apply to Single Phase Only* is enabled, a scalar `int32` *Feature Phases* **Data Array** with the same tuple count as *Number of Neighbors*.
+- Every non-negative Feature ID must be less than the number of tuples in the feature **Attribute Matrix**. Negative Feature IDs are treated as unresolved cells and are reassigned during coarsening.
+
+## Data Modified by the Filter
+
+This **Filter** operates in place and does not create a new geometry or output array.
+
+- *Cell Feature Ids* is always updated, even if it is included in *Cell Arrays to Ignore*.
+- Every other nonignored **Data Array** in the cell **Attribute Matrix** copies tuple values from the same selected face neighbor used to reassign the Feature ID.
+- Arrays selected by *Cell Arrays to Ignore* are not modified.
+- Feature arrays in the parent **Attribute Matrix** of *Number of Neighbors* are compacted to remove inactive feature tuples.
+- Feature `NeighborList` arrays are removed because their contents become invalid after the topology changes.
+
+## Validation and Failure Conditions
+
+- Preflight fails with `-55571` when *Cell Feature Ids* does not contain exactly one tuple per **Image Geometry** cell.
+- Preflight fails with `-252` when *Number of Neighbors* and the enabled *Feature Phases* array do not have matching tuple counts.
+- Execution fails with `-5555` when the selected *Phase Index* is not present in *Feature Phases*.
+- Execution fails with `-55569` when the selected minimum would reject every eligible non-background **Feature**.
+- Execution fails with `-55567` when a non-negative Feature ID is outside the feature tuple range.
+- Execution fails with `-55572` when unresolved cells remain but none has a non-negative face neighbor. This prevents the non-terminating coarsening behavior present in DREAM3D 6.5.171. Ensure that every negative or rejected region is face-connected to at least one retained **Feature**.
+
+Setting *Minimum Number Neighbors* to *0* retains all existing feature tuples, but negative Feature IDs may still be reassigned.
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
+Modifying Feature IDs changes the feature topology. Previously computed feature-level data may therefore be invalid even after its tuples are compacted. Rerun filters that compute feature data after this **Filter**.
 
 ## WARNING: NeighborList Removal
 
-If the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+If the feature **Attribute Matrix** contains any `NeighborList` arrays, those arrays are **REMOVED** because the lists are no longer valid. Rerun the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter** to recreate them.
 
 % Auto generated parameter table will be inserted here
 
+## Typical Workflow
+
+1. Run the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter** to create the *Number of Neighbors* array.
+2. Run this **Filter** with a conservative minimum that leaves at least one retained **Feature** connected to every rejected region.
+3. Rerun the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter** and any other filters that calculate feature-level data.
+
 ## Example Pipelines
 
-+ (02) Small IN100 Full Reconstruction
+- `(02) Small IN100 Full Reconstruction`
 
+## Differences from DREAM3D 6.5.171
+
+SIMPLNX safely handles three malformed or unresolved Feature ID conditions that can cause invalid memory access or non-termination in DREAM3D 6.5.171:
+
+- [D1: Negative Feature IDs with a valid face neighbor](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d1)
+- [D2: Non-negative Feature IDs outside the feature tuple range](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d2)
+- [D3: Coarsening cannot make progress](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d3)
+
+For valid, non-negative, in-range Feature IDs that can be fully coarsened, the verified SIMPLNX and DREAM3D 6.5.171 outputs match.
+
+## Related Filters
+
+- [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md)
 
 ## License & Copyright
 

@@ -19,6 +19,7 @@ namespace nx::core
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -252;
+constexpr int32 k_FeatureIdsTupleCountMismatch = -55571;
 
 } // namespace
 
@@ -119,10 +120,15 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   std::vector<DataPath> dataArrayPaths;
 
-  ShapeType cDims = {1};
   auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  {
+    return MakePreflightErrorResult(k_FeatureIdsTupleCountMismatch,
+                                    fmt::format("FeatureIds array '{}' contains {} tuples, but Image Geometry '{}' contains {} cells. Select a FeatureIds array that matches the Image Geometry.",
+                                                featureIdsPath.toString(), featureIds.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
+  }
 
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
   dataArrayPaths.push_back(numNeighborsPath);
 
   if(applyToSinglePhase)
