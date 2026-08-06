@@ -38,17 +38,11 @@ public:
 
   void operator()() const
   {
-    MessageHelper& messageHelper = m_Filter->getMessageHelper();
-
-    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
-
     T var = static_cast<T>(0);
-
-    std::string arrayName = m_DataArray.getName();
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      m_Filter->sendThreadSafeProgressMessage(1);
       if(m_Filter->getCancel())
       {
         return;
@@ -106,7 +100,7 @@ AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_boo
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -120,9 +114,16 @@ const std::atomic_bool& AlignSections::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-MessageHelper& AlignSections::getMessageHelper()
+const IFilter::MessageHandler& AlignSections::getMessageHandler() const
 {
-  return m_MessageHelper;
+  return m_MessageHandler;
+}
+
+// -----------------------------------------------------------------------------
+void AlignSections::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }
 
 // -----------------------------------------------------------------------------
@@ -146,6 +147,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
 
   // Now Adjust the actual DataArrays
   const std::vector<DataPath> selectedCellArrays = getSelectedDataPaths(imageGeometryPath);
+  m_Throttle.reset(selectedCellArrays.size() * udims[2], "Transferring cell data");
 
   ParallelTaskAlgorithm taskRunner;
 
@@ -156,7 +158,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       return {};
     }
 
-    m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
+    m_MessageHandler.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }

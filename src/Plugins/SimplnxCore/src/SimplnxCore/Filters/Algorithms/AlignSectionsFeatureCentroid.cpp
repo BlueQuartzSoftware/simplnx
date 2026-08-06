@@ -69,7 +69,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   std::vector<float> xCentroid(dims[2], 0.0f);
   std::vector<float> yCentroid(dims[2], 0.0f);
 
-  ThrottledMessenger throttledMessenger = getMessageHelper().createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(getMessageHandler());
   // Loop over the Z Direction
   for(size_t iter = 0; iter < dims[2]; iter++)
   {
@@ -77,7 +77,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+    throttledMessenger.updatePercent("Determining Shifts", iter, dims[2]);
 
     size_t count = 0;
     xCentroid[iter] = 0;
