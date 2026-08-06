@@ -346,6 +346,48 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:ConformingAttributePayload", "[Simplnx
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::ReadStlFileFilter:ShortFileWithAttributePayload", "[SimplnxCore][ReadStlFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32_t k_DeclaredTriangleCount = 10;
+  const size_t k_ActualTriangleCount = 5;
+  const uint16_t k_PayloadBytes = 100;
+  const DataPath triangleGeomDataPath({"[Triangle Geometry]"});
+
+  // A file that carries real attribute payload but whose header over-declares the triangle count.
+  // The reader tracks its own read offset, and that offset only stays correct if the skipped
+  // payload bytes are counted too. If they are not, the running offset lags far behind the real
+  // file position and the overrun is misreported as a triangle parse error instead of a file
+  // length error.
+  std::vector<StlTriangleSpec> triangleSpecs(k_ActualTriangleCount);
+  for(StlTriangleSpec& spec : triangleSpecs)
+  {
+    spec.attributeByteCount = k_PayloadBytes;
+    spec.payloadBytes = k_PayloadBytes;
+  }
+
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest" / "short_file_with_attribute_payload.stl";
+  WriteBinaryStlFile(inputFile, "Header over-declares the triangle count", k_DeclaredTriangleCount, triangleSpecs);
+
+  const uintmax_t expectedFileSize = StlConstants::k_StlFixedHeaderBytes + (k_ActualTriangleCount * (StlConstants::k_StlTriangleBytes + k_PayloadBytes));
+  REQUIRE(fs::file_size(inputFile) == expectedFileSize);
+
+  // There are spare bytes beyond the declared records, so the attribute counts are honored.
+  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
+  REQUIRE(stlFileCheck.error == 0);
+  REQUIRE(stlFileCheck.attributePayloadPresent == true);
+
+  DataStructure dataStructure;
+  auto executeResult = RunReadStlFileFilter(dataStructure, inputFile, triangleGeomDataPath);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+
+  // The reported position must be the real end of the data, which is only reachable when the
+  // payload bytes are included in the running offset.
+  REQUIRE(executeResult.result.errors().front().message.find(std::to_string(expectedFileSize)) != std::string::npos);
+}
+
 TEST_CASE("SimplnxCore::StlUtilities:SanityCheckFile", "[SimplnxCore][ReadStlFileFilter]")
 {
   const fs::path testDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest";

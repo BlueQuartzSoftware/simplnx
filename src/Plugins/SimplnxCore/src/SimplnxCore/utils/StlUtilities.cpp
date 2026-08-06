@@ -178,7 +178,7 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   const uintmax_t sizeWithoutPayload = StlConstants::k_StlFixedHeaderBytes + (static_cast<uintmax_t>(triCount) * StlConstants::k_StlTriangleBytes);
 
   // Only a file with bytes left over beyond the fixed size records has anywhere to put
-  // attribute payload. If the size matches exactly then every attribute byte count in the file
+  // attribute payload. If the size matches exactly, then every attribute byte count in the file
   // is something other than a length and must be ignored, no matter what any individual
   // triangle happens to contain. A file that is *smaller* than this is truncated; report no
   // payload so the reader does not seek, and let the read loop report the truncation precisely.

@@ -14,7 +14,6 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <utility>
 
 using namespace nx::core;
 
@@ -78,7 +77,14 @@ Result<> ReadStlFile::operator()()
   MessageHelper messageHelper(m_MessageHandler);
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
-  fpos_t pos;
+  // Track the read offset arithmetically rather than asking the C library for it every triangle.
+  // fpos_t is an opaque type that is only portably usable with fsetpos(): glibc makes it a struct
+  // whose offset lives in a reserved-identifier member, musl makes it an opaque byte array with no
+  // such member at all, and the 64 bit "tell" functions are spelled differently on every platform
+  // (ftello, ftello64, _ftelli64). Nothing here needs any of that. Every read below advances the
+  // offset by a known amount, so the offset can simply be computed, which is both exact and
+  // portable. It starts just past the header and triangle count that were skipped above.
+  uintmax_t fileOffset = StlConstants::k_StlFixedHeaderBytes;
 
   for(int32_t t = 0; t < triCount; ++t)
   {
@@ -87,22 +93,11 @@ Result<> ReadStlFile::operator()()
     {
       return {};
     }
-    // Get the current File Position
-    fgetpos(f, &pos);
-#if defined(__APPLE__) || defined(_WIN32)
-    if(pos >= stlFileSize)
-#else
-    if(pos.__pos >= stlFileSize)
-#endif
+    if(fileOffset >= stlFileSize)
     {
       std::string msg = fmt::format(
           "Trying to read at file position {} >= file size {}.\n  File Header: '{}'\n  Header Triangle Count: {}  Current Triangle: {}\n  The STL File does not conform to the STL file specification.",
-#if defined(__APPLE__) || defined(_WIN32)
-          pos,
-#else
-          pos.__pos,
-#endif
-          stlFileSize, stlFileCheck.header, triCount, t);
+          fileOffset, stlFileSize, stlFileCheck.header, triCount, t);
       return MakeErrorResult(StlConstants::k_StlFileLengthError, msg);
     }
 
@@ -122,12 +117,20 @@ Result<> ReadStlFile::operator()()
       std::string msg = fmt::format("Error reading Number of attributes for triangle '{}' from STL file '{}'. uint16 count was {} and should have been 1", t, stlFilePathStr, objsRead);
       return MakeErrorResult(StlConstants::k_AttributeParseError, msg);
     }
+    fileOffset += StlConstants::k_StlTriangleBytes;
+
     // The file size told us this file really does carry attribute payload bytes, so the count is
     // an actual length and the payload has to be skipped. When the flag is false the count is
     // vendor garbage (a packed color, for example) and seeking on it would desynchronize the read.
     if(attrByteCount > 0 && stlFileCheck.attributePayloadPresent)
     {
-      std::ignore = std::fseek(f, static_cast<long>(attrByteCount), SEEK_CUR); // Skip past the Triangle Attribute data since we don't know how to read it anyway
+      // Skip past the Triangle Attribute data since we don't know how to read it anyway
+      if(std::fseek(f, static_cast<long>(attrByteCount), SEEK_CUR) != 0)
+      {
+        std::string msg = fmt::format("Error seeking past the {} attribute bytes that follow triangle '{}' in STL file '{}'", attrByteCount, t, stlFilePathStr);
+        return MakeErrorResult(StlConstants::k_AttributeParseError, msg);
+      }
+      fileOffset += attrByteCount;
     }
 
     // Write the data into the actual geometry
