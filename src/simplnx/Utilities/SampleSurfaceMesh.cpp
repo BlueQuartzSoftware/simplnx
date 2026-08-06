@@ -96,7 +96,7 @@ class SampleSurfaceMeshImplByPoints
 {
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<FaceLabelsT>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, IDataArray& iPolyIds,
-                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper,
+                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel,
                                 std::atomic_bool& overflowHit)
   : m_Filter(filter)
   , m_Faces(faces)
@@ -106,7 +106,6 @@ public:
   , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
   , m_OverflowHit(overflowHit)
   {
   }
@@ -114,7 +113,6 @@ public:
 
   void checkPoints(const usize start, const usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
     {
@@ -148,8 +146,9 @@ public:
       // Send some feedback
       if(pointsVisited % 1000 == 0)
       {
-        progressMessenger.sendProgressMessage(
-            1000, [&](usize currentProgress, usize maxProgress) { return fmt::format("Feature {} | Points Completed: {} of {}", m_FeatureId, currentProgress, maxProgress); });
+        // The counter is shared across every feature, so the totals were already aggregate; only
+        // the per-worker feature id is dropped.
+        m_Filter->sendThreadSafeProgressMessage(1000);
       }
       // Check for the filter being canceled.
       if(m_ShouldCancel || m_OverflowHit)
@@ -173,7 +172,6 @@ private:
   AbstractDataStore<OutputT>& m_PolyIds;
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
   std::atomic_bool& m_OverflowHit;
 };
 
@@ -191,13 +189,13 @@ struct SampleSurfaceMeshFunctor
 {
   template <typename T>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const IDataArray& iFaceLabels, IDataArray& polyIds, const std::atomic_bool& shouldCancel,
-                      MessageHelper& messageHelper)
+                      const IFilter::MessageHandler& messageHandler)
   {
     const AbstractDataStore<T>& faceLabelsSM = dynamic_cast<const DataArray<T>&>(iFaceLabels).getDataStoreRef();
     // pull down faces
     const usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-    messageHelper.sendMessage("Counting number of Features...");
+    messageHandler.sendInfoMessage("Counting number of Features...");
 
     // walk through faces to see how many features there are
     T g1 = 0, g2 = 0;
@@ -226,7 +224,7 @@ struct SampleSurfaceMeshFunctor
     usize numFeatures = maxFeatureId + 1;
 
     std::vector<std::vector<T>> faceLists(numFeatures);
-    messageHelper.sendMessage("Counting number of triangle faces per feature ...");
+    messageHandler.sendInfoMessage("Counting number of triangle faces per feature ...");
 
     // traverse data to determine number of faces belonging to each feature
     for(usize i = 0; i < numFaces; i++)
@@ -249,7 +247,7 @@ struct SampleSurfaceMeshFunctor
       return {};
     }
 
-    messageHelper.sendMessage("Allocating triangle faces per feature ...");
+    messageHandler.sendInfoMessage("Allocating triangle faces per feature ...");
 
     // fill out lists with number of references to cells
     std::vector<int32> linkLoc(numFaces, 0);
@@ -287,16 +285,15 @@ struct SampleSurfaceMeshFunctor
       return {};
     }
 
-    messageHelper.sendMessage("Vertex Geometry generating sampling points");
+    messageHandler.sendInfoMessage("Vertex Geometry generating sampling points");
 
     // generate the list of sampling points from subclass
     std::vector<Point3Df> points = {};
     algorithm->generatePoints(points);
 
-    messageHelper.sendMessage("Sampling triangle geometry ...");
+    messageHandler.sendInfoMessage("Sampling triangle geometry ...");
 
-    ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-    progressMessageHelper.setMaxProgresss(points.size());
+    algorithm->resetProgress(points.size(), "Sampling triangle geometry");
 
     std::atomic_bool overflowHit(false);
 
@@ -319,7 +316,7 @@ struct SampleSurfaceMeshFunctor
         ParallelDataAlgorithm dataAlg;
         dataAlg.setRange(0, points.size());
         ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, algorithm, triangleGeom, faceLists[featureId], faceBBs, polyIds, points, featureId,
-                                                              shouldCancel, progressMessageHelper, overflowHit);
+                                                              shouldCancel, overflowHit);
       }
     }
 
@@ -330,7 +327,7 @@ struct SampleSurfaceMeshFunctor
                                          DataTypeToHumanString(GetDataType<T>()), DataTypeToHumanString(polyIds.getDataType()), maxFeatureId, DataTypeToHumanString(polyIds.getDataType())));
     }
 
-    messageHelper.sendMessage("Complete");
+    messageHandler.sendInfoMessage("Complete");
 
     return {};
   }
@@ -342,12 +339,31 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::at
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(m_MessageHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
 // -----------------------------------------------------------------------------
 SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
+
+// -----------------------------------------------------------------------------
+const IFilter::MessageHandler& SampleSurfaceMesh::getMessageHandler() const
+{
+  return m_MessageHandler;
+}
+
+// -----------------------------------------------------------------------------
+void SampleSurfaceMesh::resetProgress(usize maxProgress, std::string label)
+{
+  m_Throttle.reset(maxProgress, std::move(label));
+}
+
+// -----------------------------------------------------------------------------
+void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementCount(counter);
+}
 
 // -----------------------------------------------------------------------------
 Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
@@ -360,5 +376,5 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 
   // Face labels are always an integer type (the parameter is restricted to GetIntegerDataTypes()), so dispatch only
   // over the integer types.
-  return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHelper);
+  return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHandler);
 }
