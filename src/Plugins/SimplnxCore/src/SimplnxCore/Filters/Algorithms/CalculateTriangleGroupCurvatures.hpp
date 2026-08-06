@@ -40,7 +40,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/FeatureFaceCurvature.hpp"
 #include "SimplnxCore/SimplnxCore_export.hpp"
@@ -58,8 +58,7 @@ public:
   CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1,
                                    Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature,
                                    Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
-                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                   ProgressMessageHelper& progressMessageHelper);
+                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
   virtual ~CalculateTriangleGroupCurvatures();
 
@@ -85,6 +84,5 @@ private:
   Float64Array* m_SurfaceMeshTriangleCentroids;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace nx::core
