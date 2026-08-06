@@ -6,8 +6,10 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/simplnx_export.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -34,9 +36,21 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  MessageHelper& getMessageHelper();
+  /**
+   * @brief Thread-safe progress update. Safe to call from the parallel data-transfer workers.
+   * @param counter Slices completed since the previous call
+   */
+  void sendThreadSafeProgressMessage(usize counter);
 
 protected:
+  /**
+   * @brief Returns the message handler so a subclass can build its own throttle for the serial
+   * shift-finding loop. Subclasses get the handler rather than a shared throttle, because
+   * findShifts() runs on one thread.
+   * @return
+   */
+  const IFilter::MessageHandler& getMessageHandler() const;
+
   /**
    * @brief This method finds the slice to slice shifts and should be implemented by subclasses
    * @param xShifts
@@ -56,7 +70,8 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  MessageHelper m_MessageHelper;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core
