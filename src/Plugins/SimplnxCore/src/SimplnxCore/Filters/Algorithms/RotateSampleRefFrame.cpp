@@ -33,11 +33,6 @@ RotateSampleRefFrame::RotateSampleRefFrame(DataStructure& dataStructure, const I
 // -----------------------------------------------------------------------------
 RotateSampleRefFrame::~RotateSampleRefFrame() noexcept = default;
 
-// -----------------------------------------------------------------------------
-void RotateSampleRefFrame::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& RotateSampleRefFrame::getCancel()
