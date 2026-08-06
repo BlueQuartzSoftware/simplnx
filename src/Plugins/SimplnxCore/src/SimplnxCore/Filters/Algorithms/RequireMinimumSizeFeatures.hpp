@@ -6,11 +6,11 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <mutex>
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include <mutex>
 
 namespace nx::core
 {

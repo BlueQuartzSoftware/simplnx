@@ -163,7 +163,6 @@ void CalculateTriangleGroupCurvatures::operator()() const
     return;
   }
 
-
   // Instantiate a FindNRingNeighbors class to use during the loop
   auto& faceLabels = m_SurfaceMeshFaceLabels->getDataStoreRef();
   usize triangleIdOffset = m_TriangleIds[0] * 2;

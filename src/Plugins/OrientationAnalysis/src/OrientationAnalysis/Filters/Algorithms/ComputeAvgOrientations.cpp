@@ -2,8 +2,8 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Core/DirectionalStats.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -268,7 +268,6 @@ Result<> ComputeAvgOrientations::operator()()
   {
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
-
 
   // Warnings (e.g. dropped voxels/features) from each path are merged and returned together.
   Result<> finalResult;

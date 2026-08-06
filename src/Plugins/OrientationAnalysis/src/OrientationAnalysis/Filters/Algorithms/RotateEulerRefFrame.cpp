@@ -5,8 +5,8 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Orientation/AxisAngle.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -46,7 +46,6 @@ public:
     ebsdlib::OrientationMatrixDType om = ebsdlib::AxisAngleDType(m_RotationAxis[0], m_RotationAxis[1], m_RotationAxis[2], m_Angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
 
     OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
-
 
     usize counter = 0;
     usize counterIncrement = (end - start) / 100;

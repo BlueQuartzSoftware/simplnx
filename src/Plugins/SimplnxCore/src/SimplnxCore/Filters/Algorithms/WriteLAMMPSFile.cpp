@@ -55,7 +55,6 @@ Result<> WriteLAMMPSFile::operator()()
 
   const Int32AbstractDataStore& atomLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->AtomLabelsPath)->getDataStoreRef();
 
-
   m_MessageHandler.sendInfoMessage("Finding Max Atom Label...");
   int32 atomTypes = 0;
   for(usize i = 0; i < atomLabels.getNumberOfTuples(); i++)

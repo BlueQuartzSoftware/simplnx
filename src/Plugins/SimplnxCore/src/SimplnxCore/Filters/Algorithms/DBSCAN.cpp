@@ -732,8 +732,8 @@ class GDCF
 {
 public:
   GDCF() = delete;
-  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
-       ClusterUtilities::DistanceMetric distMetric)
+  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
+       const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
   : hyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)

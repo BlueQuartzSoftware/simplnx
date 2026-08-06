@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <unordered_map>
 #include <unordered_set>

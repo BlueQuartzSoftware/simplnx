@@ -126,8 +126,8 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
   if(const char* name = typeid(T).name(); nullptr != name && name[0] == 'l')
   {
     messageHandler.sendInfoMessage(fmt::format(
-            "You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32_t or uint32_t.",
-            typeid(T).name()));
+        "You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32_t or uint32_t.",
+        typeid(T).name()));
   }
   return "";
 }
