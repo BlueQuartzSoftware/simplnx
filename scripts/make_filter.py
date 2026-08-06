@@ -142,5 +142,5 @@ if __name__ == '__main__':
 
 # -----------------------------------------------------------------------------
 # Example invocation
-# python make_filter.py --plugin_dir /Users/mjackson/Workspace1/simplnx/src/Plugins/SimplnxCore --name "ReadNotesFile" --template_dir /Users/mjackson/Workspace1/simplnx/scripts
+# python make_filter.py --plugin_dir /Users/mjackson/Workspace6/simplnx/src/Plugins/SimplnxCore --name "ReadNotesFile" --template_dir /Users/mjackson/Workspace6/simplnx/scripts
 # -----------------------------------------------------------------------------

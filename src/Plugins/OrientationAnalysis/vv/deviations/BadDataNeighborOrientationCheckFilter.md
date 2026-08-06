@@ -96,7 +96,7 @@ The bug is documented as "Issue 2" in the engineer's V&V test archive README at 
 
 ### EbsdLib 2.4.1 CubicOps precision improvement (precision improvement; not a behavioral deviation in this filter's test data)
 
-SIMPLNX delegates misorientation math to `ebsdlib::LaueOps::calculateMisorientation` (EbsdLib 2.4.1+); legacy 6.5.171 delegates to `OrientationLib::CubicOps::getMisoQuat` (DREAM3D 6.5.x). The modern API recovers ~0.02° of precision for cubic misorientations that lie on a 4-fold, 3-fold, or 2-fold symmetry op (replacing the precision-fragile `acos(w)` near 1 with the numerically stable `2·atan2(|v|, w)` using explicit reduced-quaternion v components). The improvement is documented in the EbsdLib 2.4.1 release notes (commit `5c8c993` on `/Users/mjackson/Workspace9/EbsdLib`, 2026-05-29).
+SIMPLNX delegates misorientation math to `ebsdlib::LaueOps::calculateMisorientation` (EbsdLib 2.4.1+); legacy 6.5.171 delegates to `OrientationLib::CubicOps::getMisoQuat` (DREAM3D 6.5.x). The modern API recovers ~0.02° of precision for cubic misorientations that lie on a 4-fold, 3-fold, or 2-fold symmetry op (replacing the precision-fragile `acos(w)` near 1 with the numerically stable `2·atan2(|v|, w)` using explicit reduced-quaternion v components). The improvement is documented in the EbsdLib 2.4.1 release notes (commit `5c8c993` on `/Users/mjackson/Workspace6/EbsdLib`, 2026-05-29).
 
 **Not observed as a deviation in this filter** because the engineer's test fixtures do not include any voxel pair whose misorientation lands on a cubic sym op. The improvement is real and affects other downstream filters (see `ComputeFeatureFaceMisorientationFilter` V&V cycle's D4); for `BadDataNeighborOrientationCheck` specifically, this is a transparent dependency upgrade.
 
@@ -104,7 +104,7 @@ SIMPLNX delegates misorientation math to `ebsdlib::LaueOps::calculateMisorientat
 
 ## Comparison artifacts
 
-Verification fixtures + comparison results are at `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/bad_data_neighbor_orientation_check_v2/`:
+Verification fixtures + comparison results are at `/Users/mjackson/Workspace6/DREAM3D_Data/TestFiles/bad_data_neighbor_orientation_check_v2/`:
 
 - `case_*/case_*_*/case_*_*_cell_arrays.csv` — 27 CSV files, one per algorithmic case. Generated from engineer's hand-derived fixtures per `test_design.md`.
 - `case_*/case_*_*/6_5_case_*_*_input.json` — 27 legacy DREAM3D pipelines that generate v7.0 `.dream3d` input + run `BadDataNeighborOrientationCheck` + write output.

@@ -22,7 +22,7 @@
           "version": 1
         },
         "input_file": {
-          "value": "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Dbg/Bin/Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf",
+          "value": "Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf",
           "version": 1
         },
         "output_image_geometry_path": {

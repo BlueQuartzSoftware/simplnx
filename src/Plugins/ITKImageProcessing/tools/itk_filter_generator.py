@@ -1227,7 +1227,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
     for filter_name in FILTERS:
         if filter_name not in filters_to_process:
             continue
-        #print(f'cp /Users/mjackson/DREAM3D-Dev/DREAM3D_Plugins/ITKImageProcessing/Documentation/ITKImageProcessingFilters/ITK{filter_name}.md /Users/mjackson/Workspace1/simplnx/src/Plugins/ITKImageProcessing/docs/.')
+        #print(f'cp /Users/mjackson/DREAM3D-Dev/DREAM3D_Plugins/ITKImageProcessing/Documentation/ITKImageProcessingFilters/ITK{filter_name}.md /Users/mjackson/Workspace6/simplnx/src/Plugins/ITKImageProcessing/docs/.')
         write_filter(filter_name, json_dir, filter_output_dir, test_output_dir, header_template, source_template, docs_output_dir)
     
     # this will print out some code that will need to be included into the ITKImageProcessingPlugin.cpp file

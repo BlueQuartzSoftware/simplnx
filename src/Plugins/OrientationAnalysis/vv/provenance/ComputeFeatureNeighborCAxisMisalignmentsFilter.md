@@ -196,7 +196,7 @@ After the V&V cycle's source-inspection comparison + analytical Class 1 fixtures
 |--------|-------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | A      | `/Users/mjackson/Applications/DREAM3D.app/Contents/bin/PipelineRunner`                                                              | DREAM3D 6.5.171 official release — pre-fix, buggy                          |
 | B      | `/Users/mjackson/DREAM3D-Dev/DREAM3D-Build/D3D-Rel-Qt515-6_5_171/Bin/PipelineRunner`                                                | Local build of the DREAM3D 6.5.171 source with the surgical divisor fix applied — used to prove the root cause |
-| C      | `/Users/mjackson/Workspace9/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel-EbsdLib/Bin/nxrunner`                                               | SIMPLNX (post-fix), linked against EbsdLib 2.4.1 build                     |
+| C      | `/Users/mjackson/Workspace6/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel-EbsdLib/Bin/nxrunner`                                               | SIMPLNX (post-fix), linked against EbsdLib 2.4.1 build                     |
 
 **Input:** `input/build_input.py` generates `input/f6_realistic_microstructure.dream3d` — a legacy v7.0-format `.dream3d` file containing the realistic-microstructure fixture (10×10×1 ImageGeom, 6 features, mixed hex/non-hex phases, pure-Φ Bunge ZXZ rotations). The Python script is fully reproducible — anyone can re-derive the input.
 
