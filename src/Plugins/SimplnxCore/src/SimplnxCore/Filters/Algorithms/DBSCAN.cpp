@@ -165,6 +165,10 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
+        // grids and gridMap below are both sized by total cell count (occupied + empty):
+        // dims[0] * dims[1] * dims[2], where each dims[i] ~ (bounding box per-axis range) / (epsilon / sqrt(D)).
+        // grids is bit-packed (1 bit/cell); gridMap is usize/cell — both are live simultaneously.
+        // Small epsilon or active extreme outlier points on 3D data can make this allocation needlessly expensive.
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -324,6 +328,7 @@ public:
   {
     ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
+    messageHelper.sendMessage(" - Determining bounds...");
     // Load array bounds
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
@@ -372,6 +377,10 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
+        // grids and gridMap below are both sized by total cell count (occupied + empty):
+        // dims[0] * dims[1], where each dims[i] ~ (bounding box per-axis range) / (epsilon / sqrt(D)).
+        // grids is bit-packed (1 bit/cell); gridMap is usize/cell — both are live simultaneously.
+        // Small epsilon or active extreme outlier points on 3D data can make this allocation needlessly expensive.
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -637,12 +646,11 @@ struct ClusterForest
 
   usize findClusterRoot(usize gridId)
   {
-    if(clusterForestNodes[gridId].parent == gridId)
+    while(clusterForestNodes[gridId].parent != gridId)
     {
-      return gridId;
+      gridId = clusterForestNodes[gridId].parent;
     }
-
-    return findClusterRoot(clusterForestNodes[gridId].parent);
+    return gridId;
   }
 
   /**
@@ -747,31 +755,18 @@ public:
       break;
     }
     case DBSCAN::ParseOrder::Random: {
-      std::mt19937_64 gen(seed);
-      std::uniform_real_distribution<float64> dist(0, 1);
-
-      auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
-
-      //--- Shuffle elements by randomly exchanging each with one other.
-      for(usize i = 1; i < coreGridIds.size(); i++)
-      {
-        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
-
-        std::swap(coreGridIds[i], coreGridIds[r]);
-      }
-
-      break;
+      [[fallthrough]];
     }
     case DBSCAN::SeededRandom: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
-      auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
+      const auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
 
       //--- Shuffle elements by randomly exchanging each with one other.
       for(usize i = 1; i < coreGridIds.size(); i++)
       {
-        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
+        const auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
 
         std::swap(coreGridIds[i], coreGridIds[r]);
       }
@@ -970,7 +965,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   MessageHelper& m_MessageHelper;
 
-  // Uses Hoare's method for speed
+  // First-element pivot quicksort partition (two-pointer, Hoare-style).
+  // Worst case O(n^2) if occupancy values are already sorted ascending — unlikely on real spatial data.
   usize ProcessSection(std::vector<usize>& sorted, usize begin, usize end) const
   {
     const usize threshold = hyperGridBitMap.gridVoxels[sorted[begin]].size();
@@ -1019,6 +1015,10 @@ private:
   {
     for(usize pPointId : hyperGridBitMap.gridVoxels[pGridId])
     {
+      if(m_ShouldCancel)
+      {
+        return false;
+      }
       for(usize qPointId : hyperGridBitMap.gridVoxels[qGridId])
       {
         float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (HGBPT::Dimensions * pPointId), m_InputDataStore, (HGBPT::Dimensions * qPointId), HGBPT::Dimensions, m_DistMetric);
@@ -1074,16 +1074,12 @@ struct DBSCANFunctor
     {
       return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
     }
-    else if(inputArray.getNumberOfComponents() == 3)
+    if(inputArray.getNumberOfComponents() == 3)
     {
       return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
     }
-    else
-    {
-      return MakeErrorResult(-54060, fmt::format("Input array has {} components but only 2 or 3 are accepted.", inputArray.getNumberOfComponents()));
-    }
 
-    return {};
+    return MakeErrorResult(-54060, fmt::format("Input array has {} components but only 2 or 3 are accepted.", inputArray.getNumberOfComponents()));
   }
 };
 } // namespace
@@ -1133,7 +1129,7 @@ Result<> DBSCAN::operator()()
 
   messageHelper.sendMessage("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
-  int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
+  const int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
 
   return result;
