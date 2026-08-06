@@ -4,8 +4,8 @@
 #include "SimplnxCore/Filters/Algorithms/FindNRingNeighbors.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -97,7 +97,6 @@ Result<> FeatureFaceCurvature::operator()()
   {
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
-
 
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all

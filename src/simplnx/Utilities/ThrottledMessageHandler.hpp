@@ -150,7 +150,7 @@ public:
    * @param functor Callable of the form std::string func()
    */
   template <class CallableT>
-    requires std::is_invocable_r_v<std::string, CallableT>
+  requires std::is_invocable_r_v<std::string, CallableT>
   void queueMessage(CallableT&& functor)
   {
     if(!isReady())

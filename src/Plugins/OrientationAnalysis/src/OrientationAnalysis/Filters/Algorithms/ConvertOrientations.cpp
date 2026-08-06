@@ -114,8 +114,8 @@ Result<> ConvertOrientations::operator()()
   size_t totalPoints = inputArray.getNumberOfTuples();
   m_Throttle.reset(totalPoints, "Converting Orientations");
 
-  m_MessageHandler.sendInfoMessage(fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)],
-                                                             k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
+  m_MessageHandler.sendInfoMessage(
+      fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)], k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
 
   // Allow data-based parallelization; require both arrays resident in memory for out-of-core stores.
   ParallelDataAlgorithm parallelAlgorithm;

@@ -3,8 +3,8 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -390,7 +390,6 @@ Result<> ComputeGBCD::operator()()
   // call the sizeGBCD function with proper chunkSize and numMisoReps to get Bins array set up properly
   SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->GBCDRes);
   int32 totalGBCDBins = sizeGbcd.m_GbcdSizes[0] * sizeGbcd.m_GbcdSizes[1] * sizeGbcd.m_GbcdSizes[2] * sizeGbcd.m_GbcdSizes[3] * sizeGbcd.m_GbcdSizes[4] * 2;
-
 
   // create an array to hold the total face area for each phase and initialize the array to 0.0
   std::vector<double> totalFaceArea(totalPhases, 0.0);

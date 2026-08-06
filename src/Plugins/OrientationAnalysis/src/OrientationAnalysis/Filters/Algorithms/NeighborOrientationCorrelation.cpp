@@ -9,9 +9,9 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -174,7 +174,6 @@ Result<> NeighborOrientationCorrelation::operator()()
   std::array<int32, 6> neighborSimCount = {};
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
-
 
   ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 

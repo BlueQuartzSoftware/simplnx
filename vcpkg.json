@@ -39,9 +39,6 @@
     },
     {
       "name": "reproc"
-    },
-    {
-      "name": "spdlog"
     }
   ],
   "features": {

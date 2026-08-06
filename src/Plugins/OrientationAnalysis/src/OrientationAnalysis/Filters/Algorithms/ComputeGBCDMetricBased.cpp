@@ -484,8 +484,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler.sendInfoMessage(fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)",
-                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
+    m_MessageHandler.sendInfoMessage(
+        fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -551,7 +551,7 @@ Result<> ComputeGBCDMetricBased::operator()()
       return {};
     }
     m_MessageHandler.sendInfoMessage(fmt::format("Step 2/2: Computing Distribution Values at the Section of Interest ({}% completed)",
-                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
+                                                 static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;

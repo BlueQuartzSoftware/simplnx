@@ -5,7 +5,6 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -37,7 +36,7 @@ constexpr usize k_CancelCheckStride = 65536;
 struct RankAndFlagFunctor
 {
   template <typename T>
-  Result<> operator()(const IDataArray& rankingArray, const KeepRemoveRankedFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper,
+  Result<> operator()(const IDataArray& rankingArray, const KeepRemoveRankedFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       std::vector<bool>& flags, std::string& summary, std::vector<Warning>& warnings)
   {
     const auto& rankingRef = dynamic_cast<const DataArray<T>&>(rankingArray).getDataStoreRef();
@@ -62,7 +61,7 @@ struct RankAndFlagFunctor
     // out-of-core store. Pull them into a contiguous buffer with one sequential pass first, so each
     // chunk is faulted in once and fully consumed. Tuple 0 is the unused dummy feature and is
     // excluded, so values[i] belongs to feature id i + 1.
-    messageHelper.sendMessage(fmt::format("Reading {} ranking values...", numFeatures));
+    messageHandler.sendInfoMessage(fmt::format("Reading {} ranking values...", numFeatures));
     std::vector<T> values(numFeatures);
     for(usize i = 0; i < numFeatures; i++)
     {
@@ -98,7 +97,7 @@ struct RankAndFlagFunctor
     }
 
     // std::sort cannot be interrupted, so this is the last cancel opportunity before it runs.
-    messageHelper.sendMessage(fmt::format("Sorting {} Features by rank...", numFeatures));
+    messageHandler.sendInfoMessage(fmt::format("Sorting {} Features by rank...", numFeatures));
     std::vector<usize> order(numFeatures);
     std::iota(order.begin(), order.end(), 0);
 
@@ -228,9 +227,7 @@ Result<> KeepRemoveRankedFeatures::operator()()
   std::string summary;
   std::vector<Warning> warnings;
 
-  MessageHelper messageHelper(m_MessageHandler);
-
-  Result<> selectionResult = ExecuteDataFunction(RankAndFlagFunctor{}, rankingArray.getDataType(), rankingArray, m_InputValues, m_ShouldCancel, messageHelper, flags, summary, warnings);
+  Result<> selectionResult = ExecuteDataFunction(RankAndFlagFunctor{}, rankingArray.getDataType(), rankingArray, m_InputValues, m_ShouldCancel, m_MessageHandler, flags, summary, warnings);
 
   // Carry any warnings out on the failure path too. A tie warning is raised before the all flagged
   // check, and dropping it would hide the most useful diagnostic behind the error.

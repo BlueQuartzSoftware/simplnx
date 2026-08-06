@@ -7,10 +7,10 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <mutex>
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include <mutex>
 
 namespace nx::core
 {

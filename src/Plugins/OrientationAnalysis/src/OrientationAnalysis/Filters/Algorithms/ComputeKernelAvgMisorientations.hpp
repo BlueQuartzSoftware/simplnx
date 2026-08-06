@@ -7,8 +7,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <mutex>
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include <mutex>
 
 #include <chrono>
 

@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -59,7 +59,6 @@ public:
     // messenger values
     usize counter = 0;
     usize increment = std::max(static_cast<usize>(1), (zEnd - zStart) / 100);
-
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);

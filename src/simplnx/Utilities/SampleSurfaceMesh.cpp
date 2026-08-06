@@ -96,8 +96,7 @@ class SampleSurfaceMeshImplByPoints
 {
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<FaceLabelsT>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, IDataArray& iPolyIds,
-                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel,
-                                std::atomic_bool& overflowHit)
+                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, std::atomic_bool& overflowHit)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)

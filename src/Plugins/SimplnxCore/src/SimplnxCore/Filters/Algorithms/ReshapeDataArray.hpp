@@ -34,8 +34,8 @@ Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArr
 {
   auto& inputDataArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
   auto& outputDataArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPath);
-  messageHandler.sendInfoMessage(fmt::format("Reshaping data array '{}' from [{}] to [{}]...", inputArrayPath.toString(), fmt::join(inputDataArray.getTupleShape(), ","),
-                                                            fmt::join(outputDataArray.getTupleShape(), ",")));
+  messageHandler.sendInfoMessage(
+      fmt::format("Reshaping data array '{}' from [{}] to [{}]...", inputArrayPath.toString(), fmt::join(inputDataArray.getTupleShape(), ","), fmt::join(outputDataArray.getTupleShape(), ",")));
   usize tuplesToCopy = std::min(inputDataArray.getNumberOfTuples(), outputDataArray.getNumberOfTuples());
   auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, 0, 0, tuplesToCopy);
   if(result.invalid())
@@ -53,7 +53,7 @@ Result<> ReshapeNeighborListImpl(DataStructure& dataStructure, const DataPath& i
   auto& outputNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(outputArrayPath);
 
   messageHandler.sendInfoMessage(fmt::format("Reshaping neighbor list '{}' from [{}] to [{}]...", inputArrayPath.toString(), fmt::join(inputNeighborList.getTupleShape(), ","),
-                                                            fmt::join(outputNeighborList.getTupleShape(), ",")));
+                                             fmt::join(outputNeighborList.getTupleShape(), ",")));
   for(int32 listIdx = 0; listIdx < outputNeighborList.getNumberOfTuples(); ++listIdx)
   {
     if(listIdx < inputNeighborList.getNumberOfTuples())

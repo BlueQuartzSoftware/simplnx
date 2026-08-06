@@ -5,10 +5,10 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <tuple>
 
@@ -291,7 +291,6 @@ Result<> ComputeArrayHistogramByFeature::operator()()
   const auto& featureIdsStore = featureIdsArray.getDataStoreRef();
 
   usize numFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end()) + 1;
-
 
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
