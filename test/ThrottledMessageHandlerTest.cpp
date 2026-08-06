@@ -1,5 +1,5 @@
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <catch2/catch.hpp>
 

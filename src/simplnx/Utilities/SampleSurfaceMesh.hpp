@@ -10,8 +10,8 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <mutex>
 #include "simplnx/simplnx_export.hpp"
+#include <mutex>
 
 namespace nx::core
 {

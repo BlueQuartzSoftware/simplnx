@@ -7,8 +7,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <mutex>
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include <mutex>
 
 namespace nx::core
 {
