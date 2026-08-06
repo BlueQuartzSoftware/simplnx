@@ -38,7 +38,7 @@
 1. **Orientation library**: OrientationLib `DOrientTransformsType::{ax2om, eu2om, om2eu}` → EbsdLib `ebsdlib::{AxisAngleDType, EulerDType, OrientationMatrixDType}`. EbsdLib is the direct descendant of OrientationLib; same Rowenhorst-convention equations (`epsijk = +1`). No output change (confirmed by A/B).
 2. **Matrix math**: hand-rolled `MatrixMath::Multiply3x3with3x3D` + `Normalize3x3D` → Eigen row-major multiply + `colwise().normalized()`. Semantically identical column-wise normalization; legacy's per-entry `>1` clamp is unreachable except through rounding. No output change.
 3. **Degree→radian conversion precision**: legacy computes `float rotAngle = angle * pi / 180.0` in **float** before the double-precision transforms; SIMPLNX converts in **double**. ULP-level output difference only (see non-deviation N1).
-4. **Progress reporting + cancel checking**: legacy has neither; SIMPLNX adds `ProgressMessageHelper`/`ProgressMessenger` (throttled) and per-element `m_ShouldCancel` checks. UX-only.
+4. **Progress reporting + cancel checking**: legacy has neither; SIMPLNX adds throttled progress feedback and per-element `m_ShouldCancel` checks. UX-only.
 5. **Zero-axis preflight guard (SIMPLNX addition)**: preflight error `-96200` for a zero-length rotation axis, which previously NaN-corrupted the array silently in both codebases. Behavior change only for invalid input.
 
 *Material PRs since baseline:* none identified for this filter beyond routine EbsdLib version bumps and the progress-messaging framework migration.
@@ -97,4 +97,3 @@ No new exemplar archive was created for this V&V cycle: the Class 1 oracle is en
   - **N1 (precision)** — float vs double degree→radian conversion; ULP-level only.
   - **N2 (precision, representation)** — 0 vs 2π canonical representation at the exact wrap boundary (observed for input (π/2, π/4, ¾π) rotated z-90°). Same physical angle.
 **SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `Non-deviation`.
-

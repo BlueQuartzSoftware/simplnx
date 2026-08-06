@@ -77,7 +77,7 @@ output-preserving:
 4. **Conditional allocation:** `QVector<float> checkedfeaturevolumes(numfeatures, 0.0f)` always allocated
    → conditionally allocated only when `FindCheckedFeatures==true`. **No output change** (legacy zeros were never read when the flag was false).
 5. **Cancellation support:** added `m_ShouldCancel` check in the outer parent loop. (Legacy had no cancel support; A/B was run without cancel so this code path is not exercised by the comparison.)
-6. **Progress reporting:** added `ThrottledMessenger` per-parent progress. (Legacy emits one terminal "Complete" message; SIMPLNX emits per-parent updates. Affects logs only.)
+6. **Progress reporting:** added throttled per-parent progress feedback. (Legacy emits one terminal "Complete" message; SIMPLNX emits per-parent updates. Affects logs only.)
 
 Both implementations also behave the same way for the `FindCheckedFeatures=false`
 cases — **neither** writes the `CheckedFeatures` output array (it's omitted, not
