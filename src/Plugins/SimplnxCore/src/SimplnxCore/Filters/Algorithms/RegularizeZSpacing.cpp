@@ -115,6 +115,7 @@ RegularizeZSpacing::RegularizeZSpacing(DataStructure& dataStructure, const IFilt
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(msgHandler)
 {
 }
 
@@ -130,9 +131,6 @@ const std::atomic_bool& RegularizeZSpacing::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RegularizeZSpacing::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  m_ThrottledMessengerPtr = &throttledMessenger;
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
@@ -209,9 +207,6 @@ Result<> RegularizeZSpacing::operator()()
 void RegularizeZSpacing::sendThreadSafeProgressMessage(const std::string& message)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  if(nullptr != m_ThrottledMessengerPtr)
-  {
-    m_ThrottledMessengerPtr->sendThrottledMessage([&]() { return message; });
-  }
+  m_Throttle.trySendMessage(message);
 }
 } // namespace nx::core

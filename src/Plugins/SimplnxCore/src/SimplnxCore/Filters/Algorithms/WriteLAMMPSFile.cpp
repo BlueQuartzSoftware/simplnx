@@ -3,7 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fstream>
 
@@ -55,9 +55,8 @@ Result<> WriteLAMMPSFile::operator()()
 
   const Int32AbstractDataStore& atomLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->AtomLabelsPath)->getDataStoreRef();
 
-  MessageHelper messageHelper(m_MessageHandler);
 
-  messageHelper.sendMessage("Finding Max Atom Label...");
+  m_MessageHandler.sendInfoMessage("Finding Max Atom Label...");
   int32 atomTypes = 0;
   for(usize i = 0; i < atomLabels.getNumberOfTuples(); i++)
   {
@@ -80,7 +79,7 @@ Result<> WriteLAMMPSFile::operator()()
   float zMax = 0.0;
   int dummy = 0;
 
-  messageHelper.sendMessage("Finding Min/Max Vertices...");
+  m_MessageHandler.sendInfoMessage("Finding Min/Max Vertices...");
   for(usize i = 0; i < verts.getNumberOfTuples(); i++)
   {
     if(m_ShouldCancel)
@@ -114,7 +113,7 @@ Result<> WriteLAMMPSFile::operator()()
     }
   }
 
-  messageHelper.sendMessage("Writing File Metadata...");
+  m_MessageHandler.sendInfoMessage("Writing File Metadata...");
   file << "LAMMPS data file\n";
   file << "\n";
   file << fmt::format("{} atoms\n", static_cast<long long int>(verts.getNumberOfTuples()));
@@ -128,8 +127,8 @@ Result<> WriteLAMMPSFile::operator()()
   file << "Atoms\n";
   file << "\n";
 
-  messageHelper.sendMessage("Exporting Data...");
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  m_MessageHandler.sendInfoMessage("Exporting Data...");
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
   usize increment = numVerts / 1000;
@@ -141,7 +140,7 @@ Result<> WriteLAMMPSFile::operator()()
     }
     if(i % increment == 0)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(i, numVerts)); });
+      throttledMessenger.updatePercent("Exporting Data", i, numVerts);
     }
     // Write the positions to the output file
     file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", i + 1LL, atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2), dummy, dummy,

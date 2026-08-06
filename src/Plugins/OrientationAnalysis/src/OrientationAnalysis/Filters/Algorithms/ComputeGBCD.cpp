@@ -3,7 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
@@ -391,13 +391,12 @@ Result<> ComputeGBCD::operator()()
   SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->GBCDRes);
   int32 totalGBCDBins = sizeGbcd.m_GbcdSizes[0] * sizeGbcd.m_GbcdSizes[1] * sizeGbcd.m_GbcdSizes[2] * sizeGbcd.m_GbcdSizes[3] * sizeGbcd.m_GbcdSizes[4] * 2;
 
-  MessageHelper messageHelper(m_MessageHandler);
 
   // create an array to hold the total face area for each phase and initialize the array to 0.0
   std::vector<double> totalFaceArea(totalPhases, 0.0);
   auto startTime = std::chrono::steady_clock::now();
-  messageHelper.sendMessage("1/2 Starting GBCD Calculation and Summation Phase");
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  m_MessageHandler.sendInfoMessage("1/2 Starting GBCD Calculation and Summation Phase");
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 
   for(usize i = 0; i < totalFaces; i = i + triangleChunkSize)
   {
@@ -452,8 +451,10 @@ Result<> ComputeGBCD::operator()()
       }
     }
 
-    throttledMessenger.sendThrottledMessage([&]() {
-      auto currentTime = throttledMessenger.getLastTime();
+    // The functor form: the rate calculation reads the clock and advances startTime, so it must run
+    // only on the iterations that actually send.
+    throttledMessenger.queueMessage([&]() {
+      auto currentTime = std::chrono::steady_clock::now();
       const usize k_LastTriangleIndex = i + triangleChunkSize;
       float32 currentRate = static_cast<float32>(triangleChunkSize) / static_cast<float32>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count());
       uint64 estimatedTime = static_cast<uint64>(totalFaces - k_LastTriangleIndex) / currentRate;
@@ -462,7 +463,7 @@ Result<> ComputeGBCD::operator()()
     });
   }
 
-  messageHelper.sendMessage("2/2 Starting GBCD Normalization Phase");
+  m_MessageHandler.sendInfoMessage("2/2 Starting GBCD Normalization Phase");
 
   for(int32 i = 0; i < totalPhases; i++)
   {

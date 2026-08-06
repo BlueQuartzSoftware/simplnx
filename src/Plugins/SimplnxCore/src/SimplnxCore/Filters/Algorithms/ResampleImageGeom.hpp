@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <vector>
 
@@ -54,7 +54,7 @@ private:
   // Thread safe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
 
-  ThrottledMessenger* m_ThrottledMessengerPtr = nullptr;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

@@ -3,7 +3,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -22,7 +22,7 @@ public:
   using StoreType = AbstractDataStore<T>;
 
   ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_ShouldCancel(shouldCancel)
   , m_Source(source)
@@ -34,7 +34,6 @@ public:
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
   , m_Arrays(arrays)
-  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
 
@@ -80,7 +79,6 @@ public:
 
     const auto& sourceList = dynamic_cast<const NeighborListType&>(m_Source);
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -126,7 +124,7 @@ public:
         array6->setValue(i, val);
       }
 
-      progressMessenger.sendProgressMessage(1);
+      m_Filter->sendThreadSafeProgressMessage(1);
     }
   }
 
@@ -149,7 +147,6 @@ private:
   bool m_Summation = false;
 
   std::vector<IDataArray*>& m_Arrays;
-  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -160,11 +157,19 @@ ComputeNeighborListStatistics::ComputeNeighborListStatistics(DataStructure& data
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(msgHandler)
 {
 }
 
 // -----------------------------------------------------------------------------
 ComputeNeighborListStatistics::~ComputeNeighborListStatistics() noexcept = default;
+
+// -----------------------------------------------------------------------------
+void ComputeNeighborListStatistics::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
+}
 
 // -----------------------------------------------------------------------------
 Result<> ComputeNeighborListStatistics::operator()()
@@ -214,17 +219,14 @@ Result<> ComputeNeighborListStatistics::operator()()
     arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progresssMessageHelper = messageHelper.createProgressMessageHelper();
-  progresssMessageHelper.setMaxProgresss(numTuples);
-  progresssMessageHelper.setProgressMessageTemplate("Finding Statistics || {:.2f}% Completed");
+  m_Throttle.reset(numTuples, "Finding Statistics");
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
   ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->FindLength, m_InputValues->FindMin, m_InputValues->FindMax,
                                                                             m_InputValues->FindMean, m_InputValues->FindMedian, m_InputValues->FindStdDeviation, m_InputValues->FindSummation, arrays,
-                                                                            m_ShouldCancel, progresssMessageHelper);
+                                                                            m_ShouldCancel);
 
   return {};
 }

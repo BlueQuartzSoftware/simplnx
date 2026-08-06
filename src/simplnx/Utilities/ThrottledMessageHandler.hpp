@@ -11,10 +11,27 @@
 #include <condition_variable>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <type_traits>
 
 namespace nx::core
 {
+/**
+ * @brief Calculates percent complete. Prefer ThrottledMessageHandler::updatePercent(), which also
+ * drives the progress bar; this remains for messages whose text is assembled from more than a label
+ * and a percentage.
+ * @tparam T
+ * @param currentProgress
+ * @param max
+ * @return
+ */
+template <class T = float32>
+inline constexpr T CalculatePercentComplete(usize currentProgress, usize max)
+{
+  return static_cast<T>(static_cast<float32>(currentProgress) / static_cast<float32>(max) * 100.0f);
+}
+
 /**
  * @class ThrottledMessageHandler
  * @brief Rate-limits progress and status messages so a tight loop can report without measurable
@@ -69,12 +86,32 @@ public:
   void updateCount(usize currentProgress);
 
   /**
+   * @brief Reports absolute progress as a count, supplying the label and denominator at the call
+   * site so a simple loop needs no reset(). The label is a view, so a string literal costs nothing
+   * on the iterations that are dropped.
+   * @param label Describes the work being done, with no trailing punctuation
+   * @param currentProgress Items completed so far
+   * @param maxProgress Total items
+   */
+  void updateCount(std::string_view label, usize currentProgress, usize maxProgress);
+
+  /**
    * @brief Reports absolute progress as a percentage, rendered as "<label>: <percent>%". Use this
    * when the counts are too large to be readable.
    * @param currentProgress Items completed so far
    * @param decimals Number of decimal places to display
    */
   void updatePercent(usize currentProgress, int32 decimals = 2);
+
+  /**
+   * @brief Reports absolute progress as a percentage, supplying the label and denominator at the
+   * call site so a simple loop needs no reset().
+   * @param label Describes the work being done, with no trailing punctuation
+   * @param currentProgress Items completed so far
+   * @param maxProgress Total items
+   * @param decimals Number of decimal places to display
+   */
+  void updatePercent(std::string_view label, usize currentProgress, usize maxProgress, int32 decimals = 2);
 
   /**
    * @brief Reports progress as a count, accumulating into a running counter.
@@ -103,6 +140,24 @@ public:
       return;
     }
     m_MessageHandler.sendInfoMessage(fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  /**
+   * @brief Sends free-form throttled status text built by a functor. The overload above evaluates
+   * its arguments on every call and only defers the formatting; use this one when assembling the
+   * message is itself expensive or has a side effect, since the functor runs only when a message is
+   * due.
+   * @param functor Callable of the form std::string func()
+   */
+  template <class CallableT>
+    requires std::is_invocable_r_v<std::string, CallableT>
+  void queueMessage(CallableT&& functor)
+  {
+    if(!isReady())
+    {
+      return;
+    }
+    m_MessageHandler.sendInfoMessage(functor());
   }
 
   /**
