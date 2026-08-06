@@ -245,104 +245,212 @@ dataAlg.execute(::FilterNameImpl(object, argument));
 
 With out of core functionality on the way, it is now a requirement for each and every filter to have progress updates and checks for cancel. This section shows threadsafe progress updating and message structuring.
 
-### Serial Messaging API
+### Sending Messages
 
-Modern API offers a `MessageHelper` wrapper class that offers an object that has assorted helper functions, such as a throttled messenger.
-
-Include it with the following:
+Every filter's algorithm class holds a `const IFilter::MessageHandler& m_MessageHandler`. Send through
+it directly using the named methods, which say what kind of message you are sending:
 
 ```cpp
-#include "simplnx/Utilities/MessageHelper.hpp"
+m_MessageHandler.sendInfoMessage("Initializing working grid");
+m_MessageHandler.sendWarningMessage(fmt::format("Phase {} has an unknown crystal structure", phase));
+m_MessageHandler.sendErrorMessage("Could not open file");
+m_MessageHandler.sendDebugMessage("cache miss");
 ```
 
-You create it in the algorithms execution body like this
+These are sent immediately and are never dropped. Use them for section headers and one-time
+statements. **Do not call them from a loop** — an unthrottled message per iteration is expensive and
+floods the log.
+
+For a one-off progress report, pick the call that matches what you want the user to read:
 
 ```cpp
-MessageHelper messageHelper(m_MessageHandler);
+// counts, when the numbers mean something to a user:  "Reading slices: 3/200"
+m_MessageHandler.sendProgressCount("Reading slices", slice, totalSlices);
+
+// percentage, when the counts are too large to be readable:  "Analyzing voxels: 37.81%"
+m_MessageHandler.sendProgressPercent("Analyzing voxels", voxel, totalVoxels);
 ```
 
-To send a message immediately to the console, use the following syntax:
+Both also deliver the percentage as a separate numeric field, which is what drives the progress bar in
+DREAM3D-NX and the percent column in `nxrunner`. Choosing between them records your intent for whoever
+maintains the filter next, so prefer them over assembling the text yourself.
+
+### Throttled Messaging In A Loop
+
+`ThrottledMessageHandler` rate-limits messages so a tight loop can report without measurable cost. The
+loop body only reads an atomic flag, which is roughly 60x cheaper than reading the clock on every
+iteration, and the message is only formatted when one is actually due.
 
 ```cpp
-messageHelper.sendMessage("Header Here:");
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 ```
 
-In practice this should be used to print a section header for updates or a one-time message. **Avoid using this as a progress messenger in a loop since it can incur a significant compute-cost penalty in the form of excessive output OR brach check cost**
-
-For progress messaging a throttled messenger class is provided. To initialize it do the following:
+Create one in the algorithm's execution body. It emits at most one message per second by default:
 
 ```cpp
-ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+ThrottledMessageHandler throttle(m_MessageHandler);
+ThrottledMessageHandler throttle(m_MessageHandler, std::chrono::milliseconds(2000)); // or a custom interval
 ```
 
-The throttled messenger will print every 1000 milliseconds (1 second) by default, to change this initialize it as follows:
+Report progress with the same two intents as above, supplying the label and denominator at the call
+site:
 
 ```cpp
-ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger(static_cast<std::chrono::milliseconds>(number_in_milliseconds));
-```
-
-Then provide the statement to be printed wrapped in a lambda as follows:
-
-```cpp
-throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Your Message || {:.2f}% Complete", CalculatePercentComplete(current_position, max_position));
-```
-
-Here is a complete MRE:
-
-```cpp
-#include "simplnx/Utilities/MessageHelper.hpp"
-...
-/// -----------------------------------------------------------------------------
-Result<> SomeAlgorithmClass::operator()()
+for(usize i = 0; i < totalTuples; i++)
 {
-  // Create wrapper messing class
-  MessageHelper messageHelper(m_MessageHandler);
-
-  // Send Header
-  messageHelper.sendMessage("Parsing Input Data:");
-
-
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger(static_cast<std::chrono::milliseconds>(2000));
-  for(usize i = 0; i < 10000; i++)
+  if(m_ShouldCancel)
   {
-    // Do stuff
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Searching || {:.2f}% Complete", CalculatePercentComplete(i, 1000));
+    return {};
   }
+  // ... work ...
+  throttle.updateCount(" - Searching", i, totalTuples);    // " - Searching: 3400/10000"
+  throttle.updatePercent(" - Searching", i, totalTuples);  // " - Searching: 34.10%"
 }
 ```
 
-This would produce something similar to the following output
+For status text that is not a progress fraction, use `queueMessage()`. The format string is checked at
+compile time and the arguments are only formatted when a message is due:
+
+```cpp
+throttle.queueMessage("  Iteration {}: {} voxels remaining", iteration, count);
+```
+
+Note that `queueMessage()` evaluates its *arguments* on every call and defers only the formatting. If
+building the message is itself expensive, or has a side effect that must happen only when a message is
+sent, pass a functor instead so the whole body is deferred:
+
+```cpp
+throttle.queueMessage([&]() {
+  auto now = std::chrono::steady_clock::now();   // runs only when a message is due
+  lastReportTime = now;
+  return fmt::format("Processed {} triangles, est. {} remaining", count, estimate);
+});
+```
+
+If you cannot pass an absolute position — for example you only know how many items you just finished —
+set the denominator and label once, then accumulate:
+
+```cpp
+throttle.reset(totalTuples, "Converting Orientations");
+throttle.incrementCount(chunkSize);    // or incrementPercent(chunkSize)
+```
+
+Call `reset()` again between phases; it also reopens the gate so each phase reports immediately.
+
+Here is a complete example:
+
+```cpp
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+...
+// -----------------------------------------------------------------------------
+Result<> SomeAlgorithmClass::operator()()
+{
+  m_MessageHandler.sendInfoMessage("Parsing Input Data:");
+
+  ThrottledMessageHandler throttle(m_MessageHandler);
+  for(usize i = 0; i < 10000; i++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    // Do stuff
+    throttle.updatePercent(" - Searching", i, 10000);
+  }
+
+  return {};
+}
+```
+
+This produces output similar to the following:
 
 ```console
 Parsing Input Data:
- - Searching || 1.2% Complete
- - Searching || 15.7% Complete
- - Searching || 34.1% Complete
+ - Searching: 1.20%
+ - Searching: 15.70%
+ - Searching: 34.10%
 ```
 
 ### ThreadSafe Progress Messaging
 
-!!! THIS SECTION IS OUT OF DATE
+`ThrottledMessageHandler` is **not** internally thread-safe, and it owns a thread, so do not create one
+per worker. Once an algorithm starts its own parallel work, the algorithm owns a single throttle behind
+a mutex and exposes a thread-safe seam. Workers call the seam and never touch an
+`IFilter::MessageHandler` directly — a worker holding a message handler is a bug.
 
-This is an example that aims to reduce the number of times a mutex lock is called.
+In the algorithm header:
 
-> void updateThreadSafeProgress(size_t counter)  
-> {  
-> std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);  
->
-> m_ProgressCounter += counter;  
->
-> auto now = std::chrono::steady_clock::now();  
-> if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update  
-> {  
-> size_t progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / m_TotalElements) * 100.0);  
-> std::string progressMessage = "Calculating... ";  
-> m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});  
-> m_InitialTime = std::chrono::steady_clock::now();  
-> }  
-> }  
+```cpp
+class SomeAlgorithm
+{
+public:
+  /**
+   * @brief Thread-safe progress update. Safe to call from ParallelDataAlgorithm workers.
+   * @param counter Items completed since the previous call
+   */
+  void sendThreadSafeProgressMessage(usize counter);
 
-This function should avoid being called too many times in a thread as it would significantly slow it down.
+private:
+  const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;   // non-movable: initialise in the constructor
+};
+```
+
+In the source, initialise the throttle in the constructor's initialiser list, set the denominator
+before dispatch, and keep the seam to one line:
+
+```cpp
+SomeAlgorithm::SomeAlgorithm(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, ...)
+: m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
+{
+}
+
+void SomeAlgorithm::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementCount(counter);
+}
+
+Result<> SomeAlgorithm::operator()()
+{
+  m_Throttle.reset(totalElements, "Converting Orientations");
+
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, totalElements);
+  dataAlg.execute(SomeAlgorithmImpl(this, ...));   // the worker holds the algorithm pointer
+  return {};
+}
+```
+
+The worker then reports through the algorithm:
+
+```cpp
+void operator()(const Range& range) const
+{
+  for(usize i = range.min(); i < range.max(); i++)
+  {
+    // ... work ...
+    m_Filter->sendThreadSafeProgressMessage(1);
+  }
+}
+```
+
+Do not call the seam on every iteration of a very tight loop, because it takes the mutex each time.
+Pre-gate on a count so the lock is taken roughly a hundred times per worker instead:
+
+```cpp
+const usize progressIncrement = std::max(totalPoints / 100ULL, 1ULL);
+if(i % progressIncrement == 0)
+{
+  m_Filter->sendThreadSafeProgressMessage(progressIncrement);
+}
+```
+
+If each worker needs its own message text — for example when every worker handles a different data
+array — give the seam a `const std::string&` parameter and forward it to
+`m_Throttle.trySendMessage(message)` instead of accumulating a shared counter.
 
 ### Message Structuring
 
