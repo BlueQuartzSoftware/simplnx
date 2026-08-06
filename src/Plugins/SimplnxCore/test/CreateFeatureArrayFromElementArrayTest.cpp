@@ -166,8 +166,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-component inconsistent",
-          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-component inconsistent", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 1 (Analytical) + Class 4 (Invariant)
   // featureIds = [1, 2, 1, 2]
@@ -324,8 +323,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error path all-negative featureIds",
-          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error path all-negative featureIds", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
   // featureIds = [-1, -2, -1] -all negative; std::max_element returns -1
@@ -367,8 +365,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error pat
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error path shrink-protection guard",
-          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error path shrink-protection guard", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
   // Feature AM: 2 tuples; SiblingArray child created directly with 5 tuples (AM tuple count not cascaded)
@@ -490,8 +487,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-7 error path empty featureIds array",
-          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-7 error path empty featureIds array", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
   // featureIds = [] (0 tuples) -std::max_element on empty range returns end;
@@ -571,8 +567,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
   }
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error path featureIds tuple count mismatch",
-          "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error path featureIds tuple count mismatch", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
   // Oracle class: Class 4 (Invariant)
   // cellArray: 4 tuples (in CellAM); featureIds: 2 tuples (in a separate smaller AM)
