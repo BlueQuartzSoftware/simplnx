@@ -4,6 +4,9 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
+#include <mutex>
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -80,6 +83,12 @@ public:
    */
   Result<> operator()();
 
+  /**
+   * @brief Thread-safe progress update. Safe to call from the parallel per-array workers.
+   * @param message Fully rendered progress text for one array
+   */
+  void sendThreadSafeProgressMessage(const std::string& message);
+
 protected:
   /**
    * @brief Fills negative Feature IDs from face-neighbor majority votes.
@@ -113,6 +122,8 @@ private:
   const RequireMinimumSizeFeaturesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core
