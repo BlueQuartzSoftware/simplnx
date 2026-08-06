@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <vector>
 
@@ -148,10 +149,9 @@ private:
   Result<> computeVmfWatsonAverageScanline();
 
   // Thread safe Progress Message
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
   mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
   size_t m_NumberOfFeatures = 0;
-  size_t m_ProgressCounter = 0;
 };
 
 } // namespace nx::core

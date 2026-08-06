@@ -84,6 +84,41 @@ TEST_CASE("Simplnx::ThrottledMessageHandler::updatePercent reports decimals", "[
   REQUIRE(message.progress == 33);
 }
 
+TEST_CASE("Simplnx::ThrottledMessageHandler::Self-contained updateCount needs no reset", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  ThrottledMessageHandler throttle(handler, k_NeverFires);
+
+  // The label and bounds are supplied at the call site, so a loop needs no setup call. The label
+  // is a string_view so a literal costs no allocation on the iterations that are dropped.
+  throttle.updateCount("Processing tuples", 50, 200);
+
+  REQUIRE(recorder.size() == 1);
+  REQUIRE(recorder.at(0).type == IFilter::Message::Type::Progress);
+  REQUIRE(recorder.at(0).message == "Processing tuples: 50/200");
+  REQUIRE(recorder.at(0).progress == 25);
+
+  throttle.updateCount("Processing tuples", 60, 200);
+  REQUIRE(recorder.size() == 1);
+}
+
+TEST_CASE("Simplnx::ThrottledMessageHandler::Self-contained updatePercent needs no reset", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  ThrottledMessageHandler throttle(handler, k_NeverFires);
+
+  throttle.updatePercent("Analyzing voxels", 1, 3);
+  REQUIRE(recorder.size() == 1);
+  REQUIRE(recorder.at(0).message == "Analyzing voxels: 33.33%");
+  REQUIRE(recorder.at(0).progress == 33);
+
+  throttle.setReadyForTesting();
+  throttle.updatePercent("Analyzing voxels", 1, 3, 1);
+  REQUIRE(recorder.at(1).message == "Analyzing voxels: 33.3%");
+}
+
 TEST_CASE("Simplnx::ThrottledMessageHandler::Throttles until the gate reopens", "[Simplnx][ThrottledMessageHandler]")
 {
   MessageRecorder recorder;
@@ -183,6 +218,40 @@ TEST_CASE("Simplnx::ThrottledMessageHandler::queueMessage formats free-form stat
 
   throttle.queueMessage("Reading slice {} of {}", 4, 12);
   REQUIRE(recorder.size() == 1);
+}
+
+TEST_CASE("Simplnx::ThrottledMessageHandler::queueMessage defers a functor body entirely", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  ThrottledMessageHandler throttle(handler, k_NeverFires);
+
+  // The format-string form evaluates its arguments eagerly, so a caller whose message needs
+  // expensive work or a side effect passes a functor instead. The body must run only when a message
+  // is actually due.
+  usize invocations = 0;
+  auto build = [&invocations] {
+    invocations++;
+    return fmt::format("built {} time(s)", invocations);
+  };
+
+  throttle.queueMessage(build);
+  REQUIRE(recorder.size() == 1);
+  REQUIRE(invocations == 1);
+  REQUIRE(recorder.at(0).message == "built 1 time(s)");
+  REQUIRE(recorder.at(0).type == IFilter::Message::Type::Info);
+
+  // Dropped iterations must not run the body at all.
+  throttle.queueMessage(build);
+  throttle.queueMessage(build);
+  REQUIRE(recorder.size() == 1);
+  REQUIRE(invocations == 1);
+
+  throttle.setReadyForTesting();
+  throttle.queueMessage(build);
+  REQUIRE(recorder.size() == 2);
+  REQUIRE(invocations == 2);
+  REQUIRE(recorder.at(1).message == "built 2 time(s)");
 }
 
 TEST_CASE("Simplnx::ThrottledMessageHandler::trySendMessage sends pre-formatted text", "[Simplnx][ThrottledMessageHandler]")
