@@ -97,6 +97,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
+  KeepRemoveRankedFeaturesTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   M3CSurfaceMeshingTest.cpp

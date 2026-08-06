@@ -81,7 +81,13 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
   // Feature Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
 
-  resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+  // Only warn when there is actually something to remove. Warning unconditionally announced that
+  // NeighborLists would be removed and then listed none, which is noise on every preflight of every
+  // caller, and it silently defeats any test that asserts merely that the warning list is non-empty.
+  if(!featureNeighborListArrays.empty())
+  {
+    resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+  }
   return {};
 }
 
