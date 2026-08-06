@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -19,9 +19,9 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(ProgressMessageHelper& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
+  FindKernelAvgMisorientationsImpl(ComputeKernelAvgMisorientations* filter, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
                                    const std::atomic_bool& shouldCancel)
-  : m_ProgressMessageHelper(progressMessenger)
+  : m_Filter(filter)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
@@ -60,7 +60,6 @@ public:
     usize counter = 0;
     usize increment = std::max(static_cast<usize>(1), (zEnd - zStart) / 100);
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
@@ -69,7 +68,7 @@ public:
     {
       if(counter > increment)
       {
-        progressMessenger.sendProgressMessage(counter);
+        m_Filter->sendThreadSafeProgressMessage(counter);
         counter = 0;
       }
 
@@ -150,7 +149,7 @@ public:
         }
       }
     }
-    progressMessenger.sendProgressMessage(counter);
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
   void operator()(const Range3D& range) const
@@ -159,7 +158,7 @@ public:
   }
 
 private:
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ComputeKernelAvgMisorientations* m_Filter = nullptr;
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -175,6 +174,7 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -182,16 +182,19 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void ComputeKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
+}
+
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = imageGeom.getDimensions();
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-
-  progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
-  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
+  m_Throttle.reset(udims[2] * udims[1] * udims[0], "Finding Kernel Average Misorientations");
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
@@ -203,7 +206,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressMessageHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }

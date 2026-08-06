@@ -5,7 +5,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Orientation/AxisAngle.hpp>
@@ -28,12 +28,12 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, const FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  RotateEulerRefFrameImpl(RotateEulerRefFrame* filter, Float32Array& data, const FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel)
   : m_CellEulerAngles(data)
   , m_RotationAxis(rotAxis)
   , m_Angle(angle)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_Filter(filter)
   {
   }
   ~RotateEulerRefFrameImpl() = default;
@@ -47,7 +47,6 @@ public:
 
     OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     usize counter = 0;
     usize counterIncrement = (end - start) / 100;
@@ -59,7 +58,7 @@ public:
       }
       if(counter >= counterIncrement)
       {
-        progressMessenger.sendProgressMessage(counter);
+        m_Filter->sendThreadSafeProgressMessage(counter);
         counter = 0;
       }
 
@@ -72,7 +71,7 @@ public:
       m_CellEulerAngles[3 * i + 2] = eu[2];
       counter++;
     }
-    progressMessenger.sendProgressMessage(counter);
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
   void operator()(const Range& range) const
@@ -85,7 +84,7 @@ private:
   FloatVec3 m_RotationAxis;
   float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  RotateEulerRefFrame* m_Filter = nullptr;
 };
 } // namespace
 
@@ -93,6 +92,7 @@ private:
 RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 , m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
 {
@@ -102,6 +102,13 @@ RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFi
 RotateEulerRefFrame::~RotateEulerRefFrame() noexcept = default;
 
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void RotateEulerRefFrame::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
+}
+
 Result<> RotateEulerRefFrame::operator()()
 {
   if(m_ShouldCancel)
@@ -123,10 +130,7 @@ Result<> RotateEulerRefFrame::operator()()
   }
   axis = axis.normalize();
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("RotateEulerRefFrame: {:.2f}% complete");
+  m_Throttle.reset(totalElements, "RotateEulerRefFrame");
 
   // Data-based parallelization: each worker reads and writes only its own disjoint tuple range of the
   // in-place Euler array. Per the project thread-safety policy, concurrent DataStore access is unsafe for
@@ -137,7 +141,7 @@ Result<> RotateEulerRefFrame::operator()()
   IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&eulerAngles);
   dataAlg.requireArraysInMemory(algArrays);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressMessageHelper));
+  dataAlg.execute(RotateEulerRefFrameImpl(this, eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel));
   return {};
 }
 
