@@ -7,7 +7,6 @@
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include <array>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -21,8 +20,8 @@ struct SIMPLNXCORE_EXPORT ReadStlFileInputValues
   DataPath geometryPath;
   DataPath faceGroupPath;
   DataPath faceNormalsDataPath;
-  bool scaleOutput;
-  float32 scaleFactor;
+  bool scaleOutput = false;
+  float32 scaleFactor = 1.0F;
 };
 
 /**
@@ -31,7 +30,7 @@ struct SIMPLNXCORE_EXPORT ReadStlFileInputValues
 class SIMPLNXCORE_EXPORT ReadStlFile
 {
 public:
-  ReadStlFile(DataStructure& dataStructure, ReadStlFileInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadStlFileInputValues* inputValues);
   ~ReadStlFile() noexcept;
 
   ReadStlFile(const ReadStlFile&) = delete;
@@ -41,14 +40,9 @@ public:
 
   Result<> operator()();
 
-  /**
-   * @brief readFile Reads the .stl file
-   */
-  Result<> readFile();
-
 private:
   DataStructure& m_DataStructure;
-  const ReadStlFileInputValues& m_InputValues;
+  const ReadStlFileInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

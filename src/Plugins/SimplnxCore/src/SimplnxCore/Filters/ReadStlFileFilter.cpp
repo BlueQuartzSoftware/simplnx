@@ -119,22 +119,22 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   {
     return MakePreflightErrorResult(
         StlConstants::k_UnsupportedFileType,
-        fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
+        fmt::format("The Input STL File '{}' is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::FileOpenError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::HeaderParseError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
   }
 
   // Now get the number of Triangles according to the STL Header
   int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
-    return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file '{}'. Returned error code {}.", pStlFilePathValue.string(), numTriangles));
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
@@ -190,14 +190,19 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
-  Result<> result = ReadStlFile(dataStructure, inputValues, shouldCancel, messageHandler)();
+  Result<> result = ReadStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  if(result.invalid())
+  {
+    // The geometry is only partially populated, so do not go on to label its faces.
+    return result;
+  }
 
   // Create the Face Labels Array if the user asked for it.
   auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
   if(createFaceLabels)
   {
     auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
-    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(inputValues.geometryPath.createChildPath(faceMatrixName).createChildPath(faceLabelsName)).getDataStore();
+    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(inputValues.faceGroupPath.createChildPath(faceLabelsName)).getDataStore();
     usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
 
     for(usize idx = 0; idx < numTuples; idx++)
