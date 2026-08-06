@@ -28,6 +28,16 @@ enum class StlFileType : int
   FileOpenError = 2,
   HeaderParseError = 3
 };
+
+struct StlFileCheck
+{
+  int32_t error = 0;
+  std::string errorMessage;
+  std::string header;
+  int32_t numTriangles;
+  size_t fileSize;
+  bool useTriangleAttributeByteCount;
+};
 } // namespace StlConstants
 
 namespace StlUtilities
@@ -50,6 +60,14 @@ StlConstants::StlFileType DetermineStlFileType(const fs::path& path);
  * @return Number of triangle faces
  */
 int32_t NumFacesFromHeader(const fs::path& path);
+
+/**
+ * @brief This function will return whether or not the 2 byte Triangle attribute byte count
+ * value should be honored or not.
+ * @param path The path to the input STL file
+ * @return StlFileCheck struct
+ */
+StlConstants::StlFileCheck SanityCheckFile(const fs::path& path);
 
 /**
  * @brief A very basic function to convert a well behaved ASCII STL File into a binary STL file

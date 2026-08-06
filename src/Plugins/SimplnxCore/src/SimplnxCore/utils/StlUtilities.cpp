@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <fmt/format.h>
+
 using namespace nx::core;
 
 StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& path)
@@ -77,6 +79,66 @@ int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
 
   std::ignore = std::fclose(f);
   return triCount;
+}
+
+StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
+{
+  StlConstants::StlFileCheck stlFileCheck = {0, "", "", 0, 0, false};
+
+  uintmax_t fileSize = std::filesystem::file_size(path);
+
+  // Open File
+  FILE* f = std::fopen(path.string().c_str(), "rb");
+  if(nullptr == f)
+  {
+    return {StlConstants::k_ErrorOpeningFile, "Error opening file", "", 0, 0, false};
+  }
+
+  // Read the first 256 bytes of data, that should be enough, but I'm sure someone will write
+  // an ASCII STL File that contains a really long name which messes this up.
+  std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
+  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
+  {
+    std::ignore = std::fclose(f);
+    return {StlConstants::k_StlHeaderParseError, "STL File header parse error.", "", 0, 0, false};
+  }
+
+  int32_t triCount = 0;
+  // Read the number of triangles in the file.
+  if(std::fread(&triCount, sizeof(int32_t), 1, f) != 1)
+  {
+    std::ignore = std::fclose(f);
+    return {StlConstants::k_StlHeaderParseError, "Error reading the Triangle Count value from the file", "", 0, 0, false};
+  }
+
+  // Read a single Triangle and its attribute byte count.
+  constexpr size_t k_StlElementCount = 12;
+  std::array<float, k_StlElementCount> fileVert = {0.0f};
+  uint16_t attrByteCount = 0;
+  size_t t = 0;
+
+  size_t objsRead = std::fread(fileVert.data(), sizeof(float), k_StlElementCount, f); // Read the Triangle
+  if(k_StlElementCount != objsRead)
+  {
+    std::string msg = fmt::format("Error reading Triangle '{}'. Object Count was {} and should have been {}", t, objsRead, k_StlElementCount);
+    return {nx::core::StlConstants::k_TriangleParseError, msg, "", 0, 0, false};
+  }
+  // Read the Uint16 value. This value is supposed to represent the number of bytes following
+  // a triangle that are file- or vendor-specific metadata
+  // Lots of writers/vendors do NOT set this properly, which can cause problems.
+  objsRead = std::fread(&attrByteCount, sizeof(uint16_t), 1, f); // Read the Triangle Attribute Data length
+  if(objsRead != 1)
+  {
+    std::string msg = fmt::format("Error reading Number of attributes for triangle '{}'. uint16 count was {} and should have been 1", t, objsRead);
+    return {nx::core::StlConstants::k_AttributeParseError, msg, "", 0, 0, false};
+  }
+
+  std::ignore = std::fclose(f);
+
+  // Now calculate the file size IF we were to honor that attribute byte count
+  size_t estimatedFileSize = 84 + (triCount * 50) + (triCount * attrByteCount);
+
+  return {0, "", header, triCount, fileSize, fileSize == estimatedFileSize};
 }
 
 struct Triangle

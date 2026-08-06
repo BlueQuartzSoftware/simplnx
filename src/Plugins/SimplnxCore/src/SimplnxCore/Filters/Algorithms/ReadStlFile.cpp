@@ -66,15 +66,9 @@ bool IsVxElementsFile(const std::string& stlHeader)
 }
 } // End anonymous namespace
 
-ReadStlFile::ReadStlFile(DataStructure& dataStructure, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
-                         float32 scaleFactor, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+ReadStlFile::ReadStlFile(DataStructure& dataStructure, ReadStlFileInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
-, m_FilePath(std::move(stlFilePath))
-, m_GeometryDataPath(geometryPath)
-, m_FaceGroupPath(faceGroupPath)
-, m_FaceNormalsDataPath(faceNormalsDataPath)
-, m_ScaleOutput(scaleOutput)
-, m_ScaleFactor(scaleFactor)
+, m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
@@ -85,10 +79,16 @@ ReadStlFile::~ReadStlFile() noexcept = default;
 Result<> ReadStlFile::operator()()
 {
   std::error_code errorCode;
-  auto stlFileSize = std::filesystem::file_size(m_FilePath, errorCode);
+  auto stlFileSize = std::filesystem::file_size(m_InputValues.stlFilePath, errorCode);
+
+  StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(m_InputValues.stlFilePath);
+  if(stlFileCheck.error != 0)
+  {
+    return MakeErrorResult(stlFileCheck.error, stlFileCheck.errorMessage);
+  }
 
   // Open File
-  FILE* f = std::fopen(m_FilePath.string().c_str(), "rb");
+  FILE* f = std::fopen(m_InputValues.stlFilePath.string().c_str(), "rb");
   if(nullptr == f)
   {
     return MakeErrorResult(nx::core::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
@@ -102,16 +102,7 @@ Result<> ReadStlFile::operator()()
   {
     return MakeErrorResult(nx::core::StlConstants::k_StlHeaderParseError, "Error reading first 8 bytes of STL header. This can't be good.");
   }
-
-  // Look for the tell-tale signs that the file was written from Magics Materialise
-  // If the file was written by Magics as a "Color STL" file then the 2byte int
-  // values between each triangle will be NON-Zero which will screw up the reading.
-  // This NON-Zero value does NOT indicate a length but is some sort of color
-  // value encoded into the file. Instead of being normal like everyone else and
-  // using the STL spec they went off and did their own thing.
   std::string stlHeaderStr(stlHeader.data(), nx::core::StlConstants::k_STL_HEADER_LENGTH);
-
-  bool ignoreMetaSizeValue = (IsMagicsFile(stlHeaderStr) || IsVxElementsFile(stlHeaderStr) ? true : false);
 
   // Read the number of triangles in the file.
   if(std::fread(&triCount, sizeof(int32_t), 1, f) != 1)
@@ -119,7 +110,7 @@ Result<> ReadStlFile::operator()()
     return MakeErrorResult(nx::core::StlConstants::k_TriangleCountParseError, "Error reading number of triangles from file. This is bad.");
   }
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues.geometryPath);
 
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
@@ -130,7 +121,7 @@ Result<> ReadStlFile::operator()()
   SharedTriList& triangles = triangleGeom.getFaces()->getDataStoreRef();
   SharedVertList& nodes = triangleGeom.getVertices()->getDataStoreRef();
 
-  auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_FaceNormalsDataPath)->getDataStoreRef();
+  auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_InputValues.faceNormalsDataPath)->getDataStoreRef();
 
   // Read the triangles
   constexpr size_t k_StlElementCount = 12;
@@ -176,17 +167,17 @@ Result<> ReadStlFile::operator()()
       std::string msg = fmt::format("Error reading Triangle '{}'. Object Count was {} and should have been {}", t, objsRead, k_StlElementCount);
       return MakeErrorResult(nx::core::StlConstants::k_TriangleParseError, msg);
     }
-    // Read the Uint16 value that is supposed to represent the number of bytes following that are file/vendor specific metadata
-    // Lots of writers/vendors do NOT set this properly which can cause problems.
+    // Read the Uint16 value. This value is supposed to represent the number of bytes following
+    // a triangle that are file- or vendor-specific metadata
+    // Lots of writers/vendors do NOT set this properly, which can cause problems.
     objsRead = std::fread(&attr, sizeof(uint16_t), 1, f); // Read the Triangle Attribute Data length
     if(objsRead != 1)
     {
       std::string msg = fmt::format("Error reading Number of attributes for triangle '{}'. uint16 count was {} and should have been 1", t, objsRead);
       return MakeErrorResult(nx::core::StlConstants::k_AttributeParseError, msg);
     }
-    // If we are trying to follow along the STL Spec, skip the stated bytes unless
-    // we detected known Vendors that do not write proper STL Files.
-    if(attr > 0 && !ignoreMetaSizeValue)
+    // If we are essentially ignoring the STL binary spec.
+    if(attr > 0 && stlFileCheck.useTriangleAttributeByteCount)
     {
       std::ignore = std::fseek(f, static_cast<size_t>(attr), SEEK_CUR); // Skip past the Triangle Attribute data since we don't know how to read it anyway
     }
@@ -209,6 +200,6 @@ Result<> ReadStlFile::operator()()
     triangles[t * 3 + 2] = 3 * t + 2;
   }
 
-  return GeometryUtilities::EliminateDuplicateNodes(triangleGeom, m_ScaleOutput ? std::optional<float32>(m_ScaleFactor) : std::nullopt);
+  return GeometryUtilities::EliminateDuplicateNodes(triangleGeom, m_InputValues.scaleOutput ? std::optional<float32>(m_InputValues.scaleFactor) : std::nullopt);
   // The fileSentinel will ensure the FILE* is closed.
 }
