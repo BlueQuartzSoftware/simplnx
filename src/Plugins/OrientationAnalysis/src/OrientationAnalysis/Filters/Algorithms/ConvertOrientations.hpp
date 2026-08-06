@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -72,10 +73,8 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   // Thread safe Progress Message
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
   mutable std::mutex m_ProgressMessage_Mutex;
-  size_t m_TotalPoints = 0;
-  size_t m_ProgressCounter = 0;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

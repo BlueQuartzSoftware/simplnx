@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -92,6 +91,7 @@ ResampleImageGeom::ResampleImageGeom(DataStructure& dataStructure, const IFilter
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(msgHandler)
 {
 }
 
@@ -107,9 +107,6 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleImageGeom::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  m_ThrottledMessengerPtr = &throttledMessenger;
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
@@ -213,8 +210,5 @@ Result<> ResampleImageGeom::operator()()
 void ResampleImageGeom::sendThreadSafeProgressMessage(const std::string& message)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  if(nullptr != m_ThrottledMessengerPtr)
-  {
-    m_ThrottledMessengerPtr->sendThrottledMessage([&]() { return message; });
-  }
+  m_Throttle.trySendMessage(message);
 }

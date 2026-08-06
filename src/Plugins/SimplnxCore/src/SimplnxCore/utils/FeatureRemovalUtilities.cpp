@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 
@@ -13,9 +13,9 @@ using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(messageHandler);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -44,7 +44,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      throttledMessenger.updatePercent("Processing Image", zIdx, dims[2]);
       progressCounter = 0;
     }
     progressCounter++;
@@ -195,8 +195,6 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.ImageGeometryPath);
   auto& featureIds = dataStructure.getDataAs<Int32Array>(args.FeatureIdsArrayPath)->getDataStoreRef();
 
-  MessageHelper messageHelper(messageHandler);
-
   messageHandler.sendInfoMessage(fmt::format("Beginning Feature Removal"));
 
   std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.FillRemovedFeatures);
@@ -224,7 +222,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
       count++;
       messageHandler.sendInfoMessage(fmt::format("Entering iteration number {}...", count));
       std::fill(neighbors.begin(), neighbors.end(), -1);
-      shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
+      shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHandler);
 
       if(shouldCancel)
       {

@@ -49,6 +49,15 @@ void ThrottledMessageHandler::updateCount(usize currentProgress)
   m_MessageHandler.sendProgressCount(m_Label, currentProgress, m_MaxProgress);
 }
 
+void ThrottledMessageHandler::updateCount(std::string_view label, usize currentProgress, usize maxProgress)
+{
+  if(!isReady())
+  {
+    return;
+  }
+  m_MessageHandler.sendProgressCount(std::string(label), currentProgress, maxProgress);
+}
+
 void ThrottledMessageHandler::updatePercent(usize currentProgress, int32 decimals)
 {
   if(!isReady())
@@ -56,6 +65,15 @@ void ThrottledMessageHandler::updatePercent(usize currentProgress, int32 decimal
     return;
   }
   m_MessageHandler.sendProgressPercent(m_Label, currentProgress, m_MaxProgress, decimals);
+}
+
+void ThrottledMessageHandler::updatePercent(std::string_view label, usize currentProgress, usize maxProgress, int32 decimals)
+{
+  if(!isReady())
+  {
+    return;
+  }
+  m_MessageHandler.sendProgressPercent(std::string(label), currentProgress, maxProgress, decimals);
 }
 
 void ThrottledMessageHandler::incrementCount(usize delta)

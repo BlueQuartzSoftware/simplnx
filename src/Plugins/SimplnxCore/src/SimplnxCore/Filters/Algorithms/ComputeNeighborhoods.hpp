@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <mutex>
 
@@ -44,13 +44,20 @@ public:
 
   void updateNeighborHood(usize sourceIndex, usize targetIndex);
 
+  /**
+   * @brief Thread-safe progress update. Safe to call from ParallelDataAlgorithm workers.
+   * @param counter Items completed since the previous call
+   */
+  void sendThreadSafeProgressMessage(usize counter);
+
 private:
   DataStructure& m_DataStructure;
   const ComputeNeighborhoodsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   std::mutex m_Mutex;
-  MessageHelper m_MessageHelper;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
 };

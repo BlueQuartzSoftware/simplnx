@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <limits>
 
@@ -163,15 +163,14 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   // Per-feature average. Explicit NaN when no hex cells contributed (counts == 0); without this
   // guard, the division below would rely on IEEE 754 0/0 -> NaN, which is correct on every
   // platform we ship but fragile to FP-environment changes.
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Computing per-feature average {:.2f}% completed", CalculatePercentComplete(featureId, totalFeatures)); });
+    throttledMessenger.updatePercent("Computing per-feature average", featureId, totalFeatures);
 
     if(counts[featureId] == 0)
     {

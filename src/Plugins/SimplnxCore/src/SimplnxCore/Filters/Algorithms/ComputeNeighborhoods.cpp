@@ -9,7 +9,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <fmt/format.h>
@@ -69,14 +69,13 @@ class ComputeNeighborhoodsImpl
 {
 public:
   ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, const std::vector<float32>& radii, float32 binSize,
-                           const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+                           const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Centroids(centroids)
   , m_Bins(bins)
   , m_Radii(radii)
   , m_BinSize(binSize)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
 
@@ -97,13 +96,12 @@ public:
       binToFeatures[key].push_back(i);
     }
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize i = start; i < end; i++)
     {
       incCount++;
       if(incCount >= increment)
       {
-        progressMessenger.sendProgressMessage(incCount, [&](usize currentProgress, usize maxProgress) { return fmt::format("{}/{}", currentProgress, maxProgress); });
+        m_Filter->sendThreadSafeProgressMessage(incCount);
         incCount = 0;
       }
 
@@ -170,7 +168,7 @@ public:
         }
       }
     }
-    progressMessenger.sendProgressMessage(incCount);
+    m_Filter->sendThreadSafeProgressMessage(incCount);
   }
 
   void operator()(const Range& range) const
@@ -185,7 +183,6 @@ private:
   const std::vector<float32>& m_Radii;
   float32 m_BinSize;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -195,12 +192,19 @@ ComputeNeighborhoods::ComputeNeighborhoods(DataStructure& dataStructure, const I
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(m_MessageHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
 // -----------------------------------------------------------------------------
 ComputeNeighborhoods::~ComputeNeighborhoods() noexcept = default;
+
+// -----------------------------------------------------------------------------
+void ComputeNeighborhoods::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementCount(counter);
+}
 
 // -----------------------------------------------------------------------------
 void ComputeNeighborhoods::updateNeighborHood(usize sourceIndex, usize destIndex)
@@ -225,9 +229,7 @@ Result<> ComputeNeighborhoods::operator()()
     return {};
   }
 
-  ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalFeatures);
-  progressMessageHelper.setProgressMessageTemplate("Finding Feature Neighborhoods: {:.2f}%");
+  m_Throttle.reset(totalFeatures, "Finding Feature Neighborhoods");
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
@@ -301,7 +303,7 @@ Result<> ComputeNeighborhoods::operator()()
   IParallelAlgorithm::AlgorithmStores algStores;
   algStores.push_back(&centroids);
   parallelAlgorithm.requireStoresInMemory(algStores);
-  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radii, binSize, m_ShouldCancel, progressMessageHelper));
+  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radii, binSize, m_ShouldCancel));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);

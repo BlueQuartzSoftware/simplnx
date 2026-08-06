@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <chrono>
 #include <iomanip>
@@ -151,15 +151,15 @@ struct PrintDataArray
       tuplesPerLine = 1;
     }
 
-    MessageHelper messageHelper(mesgHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    ThrottledMessageHandler throttledMessenger(mesgHandler);
 
     usize numComps = inputDataArray.getNumberOfComponents();
+    // Hoisted so the per-iteration label costs nothing; updatePercent takes a view.
+    const std::string arrayName = "Processing " + inputDataArray.getName();
     int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
-      throttledMessenger.sendThrottledMessage(
-          [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
+      throttledMessenger.updatePercent(arrayName, tuple, numTuples, 0);
       if(shouldCancel)
       {
         return {};
