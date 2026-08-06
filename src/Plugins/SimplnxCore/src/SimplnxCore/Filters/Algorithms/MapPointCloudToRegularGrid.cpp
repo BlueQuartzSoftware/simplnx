@@ -113,11 +113,6 @@ MapPointCloudToRegularGrid::MapPointCloudToRegularGrid(DataStructure& dataStruct
 // -----------------------------------------------------------------------------
 MapPointCloudToRegularGrid::~MapPointCloudToRegularGrid() noexcept = default;
 
-// -----------------------------------------------------------------------------
-void MapPointCloudToRegularGrid::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& MapPointCloudToRegularGrid::getCancel()

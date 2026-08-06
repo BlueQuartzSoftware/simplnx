@@ -36,7 +36,6 @@ public:
   MapPointCloudToRegularGrid& operator=(MapPointCloudToRegularGrid&&) noexcept = delete;
 
   Result<> operator()();
-  void updateProgress(const std::string& message);
   const std::atomic_bool& getCancel();
 
 private:

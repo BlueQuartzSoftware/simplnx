@@ -60,6 +60,13 @@ public:
 
   const std::atomic_bool& getCancel();
   void updateProgress(const std::string& progMessage);
+
+  /**
+   * @brief Reports a warning encountered while parsing. Access shim for the parser helper, which
+   * cannot reach the message handler directly.
+   * @param message
+   */
+  void reportWarning(const std::string& message);
   FileCache& getCache();
 
 private:

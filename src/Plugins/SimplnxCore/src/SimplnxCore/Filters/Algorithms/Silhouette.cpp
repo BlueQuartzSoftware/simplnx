@@ -143,11 +143,6 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 // -----------------------------------------------------------------------------
 Silhouette::~Silhouette() noexcept = default;
 
-// -----------------------------------------------------------------------------
-void Silhouette::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& Silhouette::getCancel()
