@@ -119,7 +119,7 @@ Legacy DREAM3D 6.5.171 (and the patched local build of its source) uses the **bu
 The patched legacy build's purpose is **root-cause proof**. If every observed SIMPLNX-vs-6.5.171 difference disappears when the targeted changes are applied to the legacy code, those targeted changes are conclusively the cause. They are.
 
 **Comparison fixtures:**
-- `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_171_compute_avg_c_axis.dream3d` — official DREAM3D 6.5.171 release output
+- `/Users/mjackson/Workspace6/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_171_compute_avg_c_axis.dream3d` — official DREAM3D 6.5.171 release output
 - a second output file alongside it in `output_legacy/` — output of the surgically patched local build of the legacy source (pending re-run after the normalize fix)
 - `output_simplnx/simplnx_compute_avg_caxes.dream3d` — SIMPLNX output
 - Three-way diff report: `vv/comparisons/ComputeAvgCAxesFilter/results/three_way_comparison.txt`

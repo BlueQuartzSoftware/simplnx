@@ -66,7 +66,7 @@ Both invariants are encoded as a single helper (`namespace ClassFourInvariants` 
 
 N/A. This filter delegates misorientation math to `ebsdlib::LaueOps::calculateMisorientation`; the Rowenhorst 2015 paper-based verification of that math is part of EbsdLib's own V&V, not this filter's. This filter consumes that math transitively at the pinned EbsdLib version.
 
-**EbsdLib version pin:** EbsdLib 2.4.1 (commit `5c8c993` on `/Users/mjackson/Workspace9/EbsdLib`). Recorded here for traceability since SIMPLNX's misorientation results are coupled to this pin.
+**EbsdLib version pin:** EbsdLib 2.4.1 (commit `5c8c993` on `/Users/mjackson/Workspace6/EbsdLib`). Recorded here for traceability since SIMPLNX's misorientation results are coupled to this pin.
 
 ## Second-engineer oracle review
 

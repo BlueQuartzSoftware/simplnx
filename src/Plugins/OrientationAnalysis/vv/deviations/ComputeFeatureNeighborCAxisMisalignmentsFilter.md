@@ -10,7 +10,7 @@ The legacy A/B comparison was performed **empirically** on 2026-06-04 against th
 
 - **A:** DREAM3D 6.5.171 (official release, `/Users/mjackson/Applications/DREAM3D.app/Contents/bin/PipelineRunner`) — buggy.
 - **B:** A local build of the DREAM3D 6.5.171 source with the surgical divisor-bug fix applied (`/Users/mjackson/DREAM3D-Dev/DREAM3D-Build/D3D-Rel-Qt515-6_5_171/Bin/PipelineRunner`) — used only to prove the root cause — fixed.
-- **C:** SIMPLNX (post-fix, `/Users/mjackson/Workspace9/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel-EbsdLib/Bin/nxrunner`) — fixed.
+- **C:** SIMPLNX (post-fix, `/Users/mjackson/Workspace6/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel-EbsdLib/Bin/nxrunner`) — fixed.
 
 All three binaries were run on the same hand-built `.dream3d` input file containing the realistic-microstructure fixture (10×10×1 ImageGeom, 6 features, mixed hex/non-hex phases, pure-Φ Bunge ZXZ rotations matching the SIMPLNX test fixture). A/B test workspace and artifacts (input `.dream3d`, 3 output `.dream3d`, per-binary pipeline files, comparison script, run results) at `/Users/mjackson/Desktop/F6_AB_Test/`.
 

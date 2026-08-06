@@ -60,7 +60,7 @@ non-contiguous-included cases — these are the exact float32 representations).
 | Side | Build / source |
 |---|---|
 | Legacy (local rebuild) | Local build of the legacy DREAM3D 6.5 source (`tuks188/DREAM3D` `feature/770_Grouping_Density` sources pulled in). `FindGroupingDensity.{cpp,h}` placed at `Source/Plugins/Statistics/StatisticsFilters/`. |
-| SIMPLNX | `Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/nxrunner` (1.7.0 build 2026/05/07). Filter at `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeGroupingDensity.{hpp,cpp}` and `.../Filters/ComputeGroupingDensityFilter.{hpp,cpp}`. |
+| SIMPLNX | `Workspace6/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/nxrunner` (1.7.0 build 2026/05/07). Filter at `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeGroupingDensity.{hpp,cpp}` and `.../Filters/ComputeGroupingDensityFilter.{hpp,cpp}`. |
 
 ## Algorithmic deltas observed (none affect output)
 
