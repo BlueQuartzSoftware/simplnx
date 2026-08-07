@@ -459,6 +459,10 @@ auto BindFilter(py::handle scope, const Internals& internals)
       FilterT filterImp;
       return filterImp.uuid();
     });
+    filter.def_static("get_default_arguments", [&internals]() {
+      FilterT filterImp;
+      return ConvertArgsToDict(internals, filterImp.parameters(), filterImp.getDefaultArguments());
+    });
     filter.def_static(
         "execute",
         [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
