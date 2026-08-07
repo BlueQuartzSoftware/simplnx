@@ -87,7 +87,7 @@ def _encode_simple_value(value: Any) -> str:
     if _is_datapath(value):
         return _encode_datapath(value)
     if isinstance(value, pathlib.PurePath):
-        return repr(str(value))
+        return repr(value.as_posix())
     if isinstance(value, bool):
         return repr(value)
     if isinstance(value, float):
@@ -209,13 +209,10 @@ def _encode_calculator(name: str, value: Any, context: CodeGenContext) -> list[s
 def _encode_dream3d_import(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode Dream3dImportParameter.ImportData construction."""
     var = context.unique_name("import_data")
-    lines = [f"{var} = nx.Dream3dImportParameter.ImportData()"]
-    lines.append(f"{var}.file_path = {repr(str(value.file_path))}")
-    if hasattr(value, "data_paths") and value.data_paths:
-        paths_str = _encode_list([dp for dp in value.data_paths])
-        lines.append(f"{var}.data_paths = {paths_str}")
-    if hasattr(value, "import_policy") and _is_pybind11_enum(value.import_policy):
-        lines.append(f"{var}.import_policy = {_encode_enum(value.import_policy)}")
+    file_path = repr(value.file_path.as_posix())
+    path_import_policy = _encode_enum(value.path_import_policy)
+    paths_str = _encode_list(value.data_paths)
+    lines = [f"{var} = nx.Dream3dImportParameter.ImportData(file_path={file_path}, path_import_policy={path_import_policy}, data_paths={paths_str})"]
     lines.append(var)
     return lines
 
@@ -282,9 +279,9 @@ def _encode_oem_ebsd_scan(name: str, value: Any, context: CodeGenContext) -> lis
 
 
 def _encode_crop_geometry(name: str, value: Any, context: CodeGenContext) -> list[str]:
-    """Encode CropGeometryParameter.CropValues construction."""
+    """Encode CropGeometryParameter.ValueType construction."""
     var = context.unique_name("crop_values")
-    lines = [f"{var} = nx.CropGeometryParameter.CropValues()"]
+    lines = [f"{var} = nx.CropGeometryParameter.ValueType()"]
     if hasattr(value, "type") and _is_pybind11_enum(value.type):
         lines.append(f"{var}.type = {_encode_enum(value.type)}")
     for attr in ("is_2d", "crop_x", "crop_y", "crop_z"):
