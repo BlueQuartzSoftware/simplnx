@@ -199,9 +199,9 @@ if(SIMPLNX_PY_ENABLE_INSTALL)
     LIBRARY
       DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
   )
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py                                                                      
-    DESTINATION ${SIMPLNX_PY_INSTALL_DIR}                                                                                                   
-  )  
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py
+    DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
+  )
   if(SIMPLNX_PY_GENERATE_PYI)
     install(FILES $<TARGET_FILE_DIR:simplnx>/simplnx.pyi
       DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
@@ -215,10 +215,9 @@ endif()
 add_custom_target(CopySimplnxUtilities ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py"
-    "$<TARGET_FILE_DIR:simplnx>/simplnx_utilities.py"
+    "$<TARGET_FILE_DIR:simplnxpy>/simplnx_utilities.py"
   COMMENT "Copying simplnx_utilities.py to build output"
 )
-
 
 #-------------------------------------------------------------------------------
 # FUNCTION: simplnx_add_python_plugin
