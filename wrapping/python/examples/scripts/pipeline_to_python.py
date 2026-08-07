@@ -97,5 +97,21 @@ class PipelineConversionTest(unittest.TestCase):
         compile(code, "<generated_pipeline_thresholds>", "exec")
         print("Test 3 PASSED: threshold pipeline code compiles successfully")
 
+    def test_GenerateAllFilters(self):
+        WIDTH = 80
+
+        filter_list = nx.get_all_registered_filters()
+        for nxfilter_type in filter_list:
+            filter_name = nxfilter_type.name()
+            with self.subTest(nxfilter=filter_name):
+                print(f"======= Testing: {filter_name} ".ljust(WIDTH, "="))
+                pipeline = nx.Pipeline()
+                args = nxfilter_type.get_default_arguments()
+                pipeline.append(nxfilter_type(), args)
+                code = simplnx_utilities.generate_python_pipeline(pipeline)
+                print(code)
+                print("".ljust(WIDTH, "="))
+                compile(code, "<string>", "exec")
+
 if __name__ == "__main__":
     unittest.main()
