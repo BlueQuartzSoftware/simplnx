@@ -14,7 +14,9 @@ ThrottledMessageHandler::ThrottledMessageHandler(const IFilter::MessageHandler& 
     // once m_Stop is set, which ends the loop immediately rather than waiting out the interval.
     while(!m_ConditionVariable.wait_for(lock, m_Interval, [this] { return m_Stop; }))
     {
-      m_Ready.store(true, std::memory_order_relaxed);
+      // Opening the gate is a read-modify-write rather than a plain store so that it joins the
+      // release sequence headed by the previous winner's exchange. See isReady().
+      m_Ready.exchange(true, std::memory_order_acq_rel);
     }
   });
 }
@@ -37,7 +39,8 @@ void ThrottledMessageHandler::reset(usize maxProgress, std::string label)
   m_MaxProgress = maxProgress;
   m_Label = std::move(label);
   m_CurrentProgress = 0;
-  m_Ready.store(true, std::memory_order_relaxed);
+  // Read-modify-write for the same release-sequence reason as the timer thread's wake.
+  m_Ready.exchange(true, std::memory_order_acq_rel);
 }
 
 void ThrottledMessageHandler::updateCount(usize currentProgress)
@@ -107,17 +110,25 @@ void ThrottledMessageHandler::trySendMessage(std::string message)
 
 void ThrottledMessageHandler::setReadyForTesting()
 {
-  m_Ready.store(true, std::memory_order_relaxed);
+  m_Ready.exchange(true, std::memory_order_acq_rel);
 }
 
 bool ThrottledMessageHandler::isReady()
 {
   // The relaxed load keeps the hot path read-only. A bare exchange on every iteration would be an
-  // unconditional read-modify-write on a shared cache line, which measures 2.5x more expensive.
+  // unconditional read-modify-write on a shared cache line, which measures 2.5x more expensive. A
+  // stale read here only costs a dropped message, so it needs no ordering; the exchange below is
+  // what actually decides the winner and carries the synchronization.
   if(!m_Ready.load(std::memory_order_relaxed))
   {
     return false;
   }
-  return m_Ready.exchange(false, std::memory_order_relaxed);
+  // The exchange is the gate, not the load above: if several threads pass the load, the atomic's
+  // modification order lets exactly one of them read back true. acq_rel rather than relaxed so that
+  // successive winners are ordered with respect to each other. The winner's acquire pairs with the
+  // timer thread's release, and because the timer's wake is itself a read-modify-write it stays in
+  // the release sequence headed by the previous winner's exchange. That chains winner N before
+  // winner N+1, which matters because a MessageHandler callback is usually stateful.
+  return m_Ready.exchange(false, std::memory_order_acq_rel);
 }
 } // namespace nx::core

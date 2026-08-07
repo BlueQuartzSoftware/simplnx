@@ -44,6 +44,19 @@ inline constexpr T CalculatePercentComplete(usize currentProgress, usize max)
  * owning algorithm that takes the lock and forwards to this class; workers call the seam and never
  * touch an IFilter::MessageHandler directly.
  *
+ * The gate is not a substitute for that lock, and it is worth being precise about why. The gate
+ * alone does guarantee that at most one thread sends per interval, because the winner is decided by
+ * an atomic exchange rather than by the preceding load. What it does not do:
+ *
+ * 1. incrementCount() and incrementPercent() accumulate into a plain usize, and they do so before
+ *    the gate, so every call from every thread races there regardless of who ends up sending.
+ * 2. reset() writes m_Label and m_MaxProgress while other threads read them.
+ *
+ * The third hazard, that two successive winners on different threads had no ordering between them
+ * and so a stateful MessageHandler callback could race with itself, is handled here rather than by
+ * the caller: the gate uses acquire-release so that winner N happens before winner N+1. See
+ * isReady(). The seam's mutex is still required for 1 and 2.
+ *
  * The referenced IFilter::MessageHandler must outlive this instance.
  */
 class SIMPLNX_EXPORT ThrottledMessageHandler
