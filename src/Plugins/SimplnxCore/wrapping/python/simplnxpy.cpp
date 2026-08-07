@@ -6,6 +6,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
+#include <pybind11/operators.h>
 
 #include "SimplnxCore/Filters/CreateGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCoreFilterBinding.hpp"
@@ -672,6 +673,9 @@ PYBIND11_MODULE(simplnx, mod)
   uuid.def("__getitem__", [](const Uuid& self, usize i) { return static_cast<uint8>(self.data.at(i)); });
   uuid.def("__setitem__", [](Uuid& self, usize i, uint8 value) { self.data.at(i) = std::byte{value}; });
   uuid.def("__len__", [](const Uuid& self) { return self.data.size(); });
+  uuid.def(py::self == py::self);
+  uuid.def(py::self != py::self);
+  uuid.def(py::hash(py::self));
   uuid.def_property_readonly("bytes", [](const Uuid& self) { return py::bytes(reinterpret_cast<const char*>(self.data.data()), self.data.size()); });
 
   py::class_<AtomicBoolProxy, std::shared_ptr<AtomicBoolProxy>> atomicBool(mod, "AtomicBoolProxy");
