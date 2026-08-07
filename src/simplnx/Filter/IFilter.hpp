@@ -68,8 +68,12 @@ public:
 
   /**
    * @brief Handler for processing filter messages during execution.
+   *
+   * Exported in its own right because MSVC does not propagate __declspec(dllexport) from an
+   * enclosing class to a nested one. Without this the three out-of-line progress methods are
+   * missing from simplnx.dll and every plugin that calls one fails to link.
    */
-  struct MessageHandler
+  struct SIMPLNX_EXPORT MessageHandler
   {
     using Callback = std::function<void(const Message&)>;
 
