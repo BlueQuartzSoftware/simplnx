@@ -8,21 +8,25 @@ Usage:
     print(generate_python_pipeline(pipeline))
 """
 
-import importlib
 import pathlib
 from dataclasses import dataclass, field
 from typing import Any
 
 import simplnx as nx
+import orientationanalysis as nxor
+import itkimageprocessing as nxitk
+# Ensure filters are loaded even though the modules aren't used directly
+assert nxitk
+assert nxor
 
 # ---------------------------------------------------------------------------
 # Module alias map
 # ---------------------------------------------------------------------------
 
 MODULE_ALIASES: dict[str, str] = {
-    "simplnx": "nx",
-    "orientationanalysis": "nxor",
-    "itkimageprocessing": "nxitk",
+    "simplnx" : "nx",
+    "orientationanalysis" : "nxor",
+    "itkimageprocessing" : "nxitk",
 }
 
 # Canonical import ordering for generated scripts
@@ -53,8 +57,7 @@ class CodeGenContext:
 
 def _is_pybind11_enum(value: Any) -> bool:
     """Check if a value is a pybind11-bound enum."""
-    t = type(value)
-    return hasattr(t, "__members__") and hasattr(value, "name") and hasattr(value, "value")
+    return hasattr(type(value), "__members__") and hasattr(value, "name") and hasattr(value, "value")
 
 
 def _encode_enum(value: Any) -> str:
@@ -126,18 +129,18 @@ def _encode_list(values: list) -> str:
 # Codec functions — each encodes a specific parameter value type
 # ---------------------------------------------------------------------------
 
-def _encode_default(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_default(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Fallback encoder using repr() with special handling for DataPath and enums."""
     return [_encode_simple_value(value)]
 
 
-def _encode_array_threshold_set(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_array_threshold_set(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode ArrayThresholdSet construction."""
     lines: list[str] = []
     threshold_vars: list[str] = []
 
     for threshold in value.thresholds:
-        var = ctx.unique_name("threshold")
+        var = context.unique_name("threshold")
         threshold_vars.append(var)
         lines.append(f"{var} = nx.ArrayThreshold()")
         lines.append(f"{var}.array_path = {_encode_datapath(threshold.array_path)}")
@@ -150,7 +153,7 @@ def _encode_array_threshold_set(name: str, value: Any, ctx: CodeGenContext) -> l
         if threshold.union_op.name != "And":
             lines.append(f"{var}.union_op = {_encode_enum(threshold.union_op)}")
 
-    set_var = ctx.unique_name("threshold_set")
+    set_var = context.unique_name("threshold_set")
     lines.append(f"{set_var} = nx.ArrayThresholdSet()")
     lines.append(f"{set_var}.thresholds = [{', '.join(threshold_vars)}]")
     if value.inverted:
@@ -162,9 +165,9 @@ def _encode_array_threshold_set(name: str, value: Any, ctx: CodeGenContext) -> l
     return lines
 
 
-def _encode_generated_file_list(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_generated_file_list(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode GeneratedFileListParameter.ValueType construction."""
-    var = ctx.unique_name("file_list")
+    var = context.unique_name("file_list")
     lines = [f"{var} = nx.GeneratedFileListParameter.ValueType()"]
     lines.append(f"{var}.input_path = {repr(value.input_path)}")
     lines.append(f"{var}.ordering = {_encode_enum(value.ordering)}")
@@ -179,9 +182,9 @@ def _encode_generated_file_list(name: str, value: Any, ctx: CodeGenContext) -> l
     return lines
 
 
-def _encode_read_h5ebsd(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_read_h5ebsd(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode ReadH5EbsdFileParameter.ValueType construction."""
-    var = ctx.unique_name("h5ebsd_param")
+    var = context.unique_name("h5ebsd_param")
     lines = [f"{var} = nxor.ReadH5EbsdFileParameter.ValueType()"]
     lines.append(f"{var}.input_file_path = {repr(value.input_file_path)}")
     lines.append(f"{var}.start_slice = {repr(value.start_slice)}")
@@ -193,9 +196,9 @@ def _encode_read_h5ebsd(name: str, value: Any, ctx: CodeGenContext) -> list[str]
     return lines
 
 
-def _encode_calculator(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_calculator(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode CalculatorParameter.ValueType construction."""
-    var = ctx.unique_name("calc_param")
+    var = context.unique_name("calc_param")
     selected_group = _encode_datapath(value.selected_group) if _is_datapath(value.selected_group) else repr(value.selected_group)
     units = _encode_enum(value.units) if _is_pybind11_enum(value.units) else repr(value.units)
     lines = [f"{var} = nx.CalculatorParameter.ValueType({selected_group}, {repr(value.equation)}, {units})"]
@@ -203,9 +206,9 @@ def _encode_calculator(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
     return lines
 
 
-def _encode_dream3d_import(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_dream3d_import(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode Dream3dImportParameter.ImportData construction."""
-    var = ctx.unique_name("import_data")
+    var = context.unique_name("import_data")
     lines = [f"{var} = nx.Dream3dImportParameter.ImportData()"]
     lines.append(f"{var}.file_path = {repr(str(value.file_path))}")
     if hasattr(value, "data_paths") and value.data_paths:
@@ -217,9 +220,9 @@ def _encode_dream3d_import(name: str, value: Any, ctx: CodeGenContext) -> list[s
     return lines
 
 
-def _encode_read_hdf5_dataset(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_read_hdf5_dataset(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode ReadHDF5DatasetParameter.ValueType construction."""
-    var = ctx.unique_name("hdf5_param")
+    var = context.unique_name("hdf5_param")
     lines = [f"{var} = nx.ReadHDF5DatasetParameter.ValueType()"]
     lines.append(f"{var}.input_file = {repr(value.input_file)}")
     if hasattr(value, "parent") and value.parent is not None and _is_datapath(value.parent):
@@ -227,7 +230,7 @@ def _encode_read_hdf5_dataset(name: str, value: Any, ctx: CodeGenContext) -> lis
     if hasattr(value, "datasets"):
         dataset_lines = []
         for ds in value.datasets:
-            ds_var = ctx.unique_name("dataset_info")
+            ds_var = context.unique_name("dataset_info")
             lines.append(f"{ds_var} = nx.DatasetImportInfo()")
             lines.append(f"{ds_var}.data_set_path = {repr(ds.data_set_path)}")
             lines.append(f"{ds_var}.component_dimensions = {repr(ds.component_dimensions)}")
@@ -238,9 +241,9 @@ def _encode_read_hdf5_dataset(name: str, value: Any, ctx: CodeGenContext) -> lis
     return lines
 
 
-def _encode_read_csv_data(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_read_csv_data(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode ReadCSVData construction."""
-    var = ctx.unique_name("csv_data")
+    var = context.unique_name("csv_data")
     lines = [f"{var} = nx.ReadCSVData()"]
     lines.append(f"{var}.input_file_path = {repr(value.input_file_path)}")
     lines.append(f"{var}.start_import_row = {repr(value.start_import_row)}")
@@ -267,9 +270,9 @@ def _encode_read_csv_data(name: str, value: Any, ctx: CodeGenContext) -> list[st
     return lines
 
 
-def _encode_oem_ebsd_scan(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_oem_ebsd_scan(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode OEMEbsdScanSelectionParameter.ValueType construction."""
-    var = ctx.unique_name("oem_param")
+    var = context.unique_name("oem_param")
     lines = [f"{var} = nxor.OEMEbsdScanSelectionParameter.ValueType()"]
     lines.append(f"{var}.input_file_path = {repr(str(value.input_file_path))}")
     lines.append(f"{var}.stacking_order = {repr(value.stacking_order)}")
@@ -278,9 +281,9 @@ def _encode_oem_ebsd_scan(name: str, value: Any, ctx: CodeGenContext) -> list[st
     return lines
 
 
-def _encode_crop_geometry(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_crop_geometry(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode CropGeometryParameter.CropValues construction."""
-    var = ctx.unique_name("crop_values")
+    var = context.unique_name("crop_values")
     lines = [f"{var} = nx.CropGeometryParameter.CropValues()"]
     if hasattr(value, "type") and _is_pybind11_enum(value.type):
         lines.append(f"{var}.type = {_encode_enum(value.type)}")
@@ -295,7 +298,7 @@ def _encode_crop_geometry(name: str, value: Any, ctx: CodeGenContext) -> list[st
     return lines
 
 
-def _encode_dynamic_table(name: str, value: Any, ctx: CodeGenContext) -> list[str]:
+def _encode_dynamic_table(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode DynamicTableParameter values (2D list of floats)."""
     if len(value) == 1 and len(value[0]) <= 5:
         return [repr(value)]
@@ -304,33 +307,29 @@ def _encode_dynamic_table(name: str, value: Any, ctx: CodeGenContext) -> list[st
 
 
 # ---------------------------------------------------------------------------
-# Parameter UUID → codec mapping
+# Parameter UUID -> codec mapping
 # ---------------------------------------------------------------------------
 
-# Maps parameter type UUID → encoder function.
+# Maps parameter type UUID -> encoder function.
 # Parameters not in this map use _encode_default.
-_PARAMETER_CODECS: dict[str, Any] = {
-    "e93251bc-cdad-44c2-9332-58fe26aedfbe": _encode_array_threshold_set,    # ArrayThresholdsParameter
-    "aac15aa6-b367-508e-bf73-94ab6be0058b": _encode_generated_file_list,    # GeneratedFileListParameter
-    "fac15aa6-b367-508e-bf73-94ab6be0058b": _encode_read_h5ebsd,            # ReadH5EbsdFileParameter
-    "4f6d6a33-48da-427a-8b17-61e07d1d5b45": _encode_read_csv_data,          # ReadCSVFileParameter
-    "ba2d4937-dbec-5536-8c5c-c0a406e80f77": _encode_calculator,             # CalculatorParameter
-    "170a257d-5952-4854-9a91-4281cd06f4f5": _encode_dream3d_import,          # Dream3dImportParameter
-    "32e83e13-ee4c-494e-8bab-4e699df74a5a": _encode_read_hdf5_dataset,       # ReadHDF5DatasetParameter
-    "3935c833-aa51-4a58-81e9-3a51972c05ea": _encode_oem_ebsd_scan,           # OEMEbsdScanSelectionParameter
-    "32b03ebf-02a5-40c7-a41c-2380722caeb7": _encode_crop_geometry,           # CropGeometryParameter
-    "eea76f1a-fab9-4704-8da5-4c21057cf44e": _encode_dynamic_table,           # DynamicTableParameter
+_PARAMETER_CODECS: dict[nx.Uuid, Any] = {
+    nx.Uuid("e93251bc-cdad-44c2-9332-58fe26aedfbe") : _encode_array_threshold_set,     # ArrayThresholdsParameter
+    nx.Uuid("aac15aa6-b367-508e-bf73-94ab6be0058b") : _encode_generated_file_list,     # GeneratedFileListParameter
+    nx.Uuid("fac15aa6-b367-508e-bf73-94ab6be0058b") : _encode_read_h5ebsd,             # ReadH5EbsdFileParameter
+    nx.Uuid("4f6d6a33-48da-427a-8b17-61e07d1d5b45") : _encode_read_csv_data,           # ReadCSVFileParameter
+    nx.Uuid("ba2d4937-dbec-5536-8c5c-c0a406e80f77") : _encode_calculator,              # CalculatorParameter
+    nx.Uuid("170a257d-5952-4854-9a91-4281cd06f4f5") : _encode_dream3d_import,          # Dream3dImportParameter
+    nx.Uuid("32e83e13-ee4c-494e-8bab-4e699df74a5a") : _encode_read_hdf5_dataset,       # ReadHDF5DatasetParameter
+    nx.Uuid("3935c833-aa51-4a58-81e9-3a51972c05ea") : _encode_oem_ebsd_scan,           # OEMEbsdScanSelectionParameter
+    nx.Uuid("32b03ebf-02a5-40c7-a41c-2380722caeb7") : _encode_crop_geometry,           # CropGeometryParameter
+    nx.Uuid("eea76f1a-fab9-4704-8da5-4c21057cf44e") : _encode_dynamic_table,           # DynamicTableParameter
 }
 
 
-def _find_codec(param_uuid: str) -> Any:
+def _find_codec(param_uuid: nx.Uuid) -> Any:
     """Look up encoder function by parameter UUID, falling back to default."""
-    return _PARAMETER_CODECS.get(param_uuid.lower(), _encode_default)
+    return _PARAMETER_CODECS.get(param_uuid, _encode_default)
 
-
-# ---------------------------------------------------------------------------
-# Module resolution helpers
-# ---------------------------------------------------------------------------
 
 def _resolve_filter_module(filter_obj: Any) -> tuple[str, str, str]:
     """Return (module_name, module_alias, class_name) for a filter object."""
@@ -339,24 +338,20 @@ def _resolve_filter_module(filter_obj: Any) -> tuple[str, str, str]:
     alias = MODULE_ALIASES.get(module_name, module_name)
     return module_name, alias, class_name
 
-
-def _ensure_modules_loaded(filters: list) -> set[str]:
+def _get_needed_modules(filters: list) -> set[str]:
     """Import all plugin modules so their parameter types are registered.
 
     Returns the set of needed module names.
     """
     needed_modules: set[str] = {"simplnx"}
-    for pf in filters:
-        f = pf.get_filter()
+    for pipeline_filter in filters:
+        f = pipeline_filter.get_filter()
         mod_name, _, _ = _resolve_filter_module(f)
         needed_modules.add(mod_name)
 
-    for mod_name in needed_modules:
-        importlib.import_module(mod_name)
-
     return needed_modules
 
-
+ 
 def _build_import_lines(needed_modules: set[str]) -> list[str]:
     """Build import statements for the generated script."""
     import_lines = []
@@ -371,17 +366,14 @@ def _build_import_lines(needed_modules: set[str]) -> list[str]:
     return import_lines
 
 
-# ---------------------------------------------------------------------------
-# Single filter code generation
-# ---------------------------------------------------------------------------
-
-def _generate_filter_block(pf: Any, index: int, ctx: CodeGenContext) -> list[str]:
+def _generate_filter_block(pipeline_filter: nx.PipelineFilter, context: CodeGenContext) -> list[str]:
     """Generate code lines for a single PipelineFilter."""
-    f = pf.get_filter()
+    index = context.filter_index
+    f = pipeline_filter.get_filter()
     _, alias, class_name = _resolve_filter_module(f)
-    human_name = pf.human_name()
-    args = pf.get_args()
-    param_uuids = pf.get_parameter_uuids()
+    human_name = pipeline_filter.human_name()
+    args = pipeline_filter.get_args()
+    params = f.parameters()
 
     lines: list[str] = []
     lines.append(f"# Filter {index}: {human_name}")
@@ -391,9 +383,9 @@ def _generate_filter_block(pf: Any, index: int, ctx: CodeGenContext) -> list[str
 
     for arg_name in sorted(args.keys()):
         value = args[arg_name]
-        param_uuid = param_uuids.get(arg_name, "")
+        param_uuid = params[arg_name].uuid
         codec = _find_codec(param_uuid)
-        encoded = codec(arg_name, value, ctx)
+        encoded = codec(arg_name, value, context)
 
         if len(encoded) == 1:
             kwargs.append((arg_name, encoded[0]))
@@ -408,16 +400,49 @@ def _generate_filter_block(pf: Any, index: int, ctx: CodeGenContext) -> list[str
     for arg_name, expr in kwargs:
         lines.append(f"    {arg_name}={expr},")
     lines.append(")")
-    lines.append(f"check_filter_result({alias}.{class_name}, result)")
+    lines.append(f"simplnx_utilities.check_filter_result({alias}.{class_name}, result)")
 
     return lines
+
+def _generate_full(filters: list[nx.PipelineFilter]) -> str:
+    """Assemble imports + boilerplate + filter blocks + footer."""
+    context = CodeGenContext(filter_index=1)
+    sections: list[str] = []
+
+    needed_modules = _get_needed_modules(filters)
+    needed_modules.add("simplnx_utilities")
+
+    # Imports
+    sections.append("\n".join(_build_import_lines(needed_modules)))
+
+    # DataStructure creation
+    sections.append("\n\ndata_structure = nx.DataStructure()")
+
+    # Filter blocks
+    for pipeline_filter in filters:
+        block = _generate_filter_block(pipeline_filter, context)
+        sections.append("\n".join(block))
+        context.filter_index += 1
+
+    # Footer
+    sections.append('print("===> Pipeline Complete")')
+
+    return "\n\n".join(sections) + "\n"
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def generate_python_pipeline(pipeline: Any) -> str:
+def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult) -> None:
+  if len(result.warnings) != 0:
+    print(f'{filter.name()} ::  Warnings: {result.warnings}')
+  if len(result.errors) != 0:
+    print(f'{filter.name()} :: Errors: {result.errors}')
+    raise RuntimeError(result)
+  print(f"{filter.name()} :: No errors running the filter")
+
+def generate_python_pipeline(pipeline: nx.Pipeline) -> str:
     """Generate a full runnable Python script from a Pipeline object.
 
     Returns a string containing the complete script with imports,
@@ -427,57 +452,15 @@ def generate_python_pipeline(pipeline: Any) -> str:
     return _generate_full(filters)
 
 
-def generate_python_filters(filters: list) -> str:
+def generate_python_filters(filters: list[nx.PipelineFilter]) -> str:
     """Generate just the filter execution blocks for clipboard/UI use.
 
     No imports, DataStructure creation, or footer — just the filter blocks.
     """
-    _ensure_modules_loaded(filters)
-    ctx = CodeGenContext()
+    context = CodeGenContext(filter_index=1)
     blocks: list[str] = []
-    for i, pf in enumerate(filters):
-        ctx.filter_index = i + 1
-        block = _generate_filter_block(pf, i + 1, ctx)
+    for pipeline_filter in filters:
+        block = _generate_filter_block(pipeline_filter, context)
         blocks.append("\n".join(block))
+        context.filter_index += 1
     return "\n\n".join(blocks) + "\n"
-
-
-# ---------------------------------------------------------------------------
-# Internal: full script assembly
-# ---------------------------------------------------------------------------
-
-def _generate_full(filters: list) -> str:
-    """Assemble imports + boilerplate + filter blocks + footer."""
-    ctx = CodeGenContext()
-    sections: list[str] = []
-
-    needed_modules = _ensure_modules_loaded(filters)
-
-    # Imports
-    sections.append("\n".join(_build_import_lines(needed_modules)))
-
-    # check_filter_result helper
-    sections.append("\n".join([
-        "def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult) -> None:",
-        "  if len(result.warnings) != 0:",
-        "    print(f'{filter.name()} ::  Warnings: {result.warnings}')",
-        "  has_errors = len(result.errors) != 0",
-        "  if has_errors:",
-        "    print(f'{filter.name()} :: Errors: {result.errors}')",
-        "    raise RuntimeError(result)",
-        "  print(f\"{filter.name()} :: No errors running the filter\")",
-    ]))
-
-    # DataStructure creation
-    sections.append("\n\ndata_structure = nx.DataStructure()")
-
-    # Filter blocks
-    for i, pf in enumerate(filters):
-        ctx.filter_index = i + 1
-        block = _generate_filter_block(pf, i + 1, ctx)
-        sections.append("\n".join(block))
-
-    # Footer
-    sections.append('print("===> Pipeline Complete")')
-
-    return "\n\n".join(sections) + "\n"
