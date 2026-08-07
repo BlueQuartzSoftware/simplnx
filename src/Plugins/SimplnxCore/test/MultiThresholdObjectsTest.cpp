@@ -387,6 +387,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int", "[
     CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted);
     CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float", "[SimplnxCore][MultiThresholdObjectsFilter]")
@@ -422,6 +424,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float", 
     CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted);
     CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int Multi-Component", "[SimplnxCore][MultiThresholdObjectsFilter]")
@@ -458,6 +462,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int Mult
     CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted, componentIndex);
     CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted, componentIndex);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -604,8 +610,6 @@ void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    bool value = thresholdStore[i];
-    bool expected = ExpectedThresholdSet2Mask(i, inverted);
     REQUIRE(thresholdStore[i] == ExpectedThresholdSet2Mask(i, inverted));
   }
 }
@@ -722,6 +726,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Threshold Sets", "[SimplnxC
     RunThresholdSetTest(dataStructure, thresholdSet);
     CheckThresholdSet5(dataStructure, isInverted);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Invalid executions
@@ -1131,6 +1137,98 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array Data
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   auto* maskArray = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
+  REQUIRE(maskArray != nullptr);
   auto& maskStore = maskArray->getDataStoreRef();
   TestMaskOutputForInputType(maskStore, comparisonValue);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "MultiThresholdObjectsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "MultiThresholdObjectsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
+    }
+  }
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64,
+                   float32, float64)
+{
+  UnitTest::LoadPlugins();
+
+  MultiThresholdObjectsFilter filter;
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+
+  float64 trueValue = 25;
+  float64 falseValue = 10;
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setArrayPath(k_TestArrayIntPath);
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  threshold->setComparisonValue(3);
+  thresholdSet.setArrayThresholds({threshold});
+
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomTrueValue, std::make_any<bool>(true));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomTrueValue, std::make_any<float64>(trueValue));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomFalseValue, std::make_any<bool>(true));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomFalseValue, std::make_any<float64>(falseValue));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(GetDataType<TestType>()));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArray != nullptr);
+  auto& thresholdStore = thresholdArray->getDataStoreRef();
+
+  // Use tuple count constant in case the underlying data size changes.
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    if(i <= 3)
+    {
+      REQUIRE(thresholdStore[i] == falseValue);
+    }
+    else
+    {
+      REQUIRE(thresholdStore[i] == trueValue);
+    }
+  }
 }
