@@ -53,6 +53,7 @@ const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.
 
 void CheckClusterInvariants(const DataStructure& dataStructure, const DataPath& idsPath, const DataPath& amPath)
 {
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
   const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
 
   // Invariant 1: all IDs non-negative (0 = noise, >=1 = cluster label)
@@ -115,11 +116,13 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath));
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   const int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
   REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
 
   ::CheckClusterInvariants(dataStructure, k_GeneratedIdsPath, k_GeneratedAMPath);
@@ -183,12 +186,14 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath));
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   std::vector<usize> generatedBins = ::BinPoints(generatedIds);
   REQUIRE_FALSE(generatedBins.empty());
 
   REQUIRE(generatedBins.size() == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   const auto& exemplarIds = dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds);
   std::vector<usize> exemplarBins = ::BinPoints(exemplarIds);
   REQUIRE_FALSE(exemplarBins.empty());
@@ -325,11 +330,13 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath));
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
   REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -347,6 +354,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
   const DataPath k_FeatureAMPath{{"cluster_am"}};
 
   auto* pointsArr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
+  REQUIRE(pointsArr != nullptr);
   auto& pointsRef = pointsArr->getDataStoreRef();
   pointsRef[0] = 0.0f;
   pointsRef[1] = 0.0f; // P0 = (0, 0)
@@ -379,6 +387,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
     REQUIRE(executeResult.result.warnings()[0].code == -85640);
   }
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath));
   const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath);
   for(int32 id : clusterIds)
   {
@@ -442,6 +451,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath));
   const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath);
   REQUIRE(clusterIds[0] == 1); // P0 -> Cluster 1
   REQUIRE(clusterIds[1] == 1); // P1 -> Cluster 1

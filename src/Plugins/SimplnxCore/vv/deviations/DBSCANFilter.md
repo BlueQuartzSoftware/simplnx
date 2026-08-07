@@ -19,7 +19,7 @@ Entries are referenced by stable ID (`DBSCAN-D<N>`) from the V&V report and from
 
 **Symptom:** Sparse datasets where individual data points each have ≥ minPoints neighbors within ε (and would form clusters under traditional DBSCAN) may produce **more noise (cluster 0) points in SIMPLNX** if those neighborhoods span multiple grid cells with fewer than minPoints points per cell.
 
-**Confirmed (Phase 9, 2026-08-05):** DREAM3D 6.5.172 run on the 6 sklearn toy datasets confirms: legacy finds 6 clusters (ansio) and 11 clusters (varied) — matching sklearn — while SIMPLNX finds only 3 for both. The large-cluster sizes agree exactly ([87,166,169] for varied; ~[152,155,157] for ansio); only the micro-clusters (≤6 points each) are absent in SIMPLNX. Evidence: `dbscan_vv/phase9_comparison_results.json`.
+**Confirmed (Phase 9, 2026-08-05):** DREAM3D 6.5.172 run on the 6 sklearn toy datasets confirms: legacy finds 6 clusters (ansio) and 11 clusters (varied) — matching sklearn — while SIMPLNX finds only 3 for both. The large-cluster sizes agree for varied ([87,166,169] — exact three-way match); for ansio the large clusters are close but not identical (sklearn oracle: [152,155,157]; SIMPLNX: [153,156,161] — small boundary discrepancy also attributable to GDCF grid-cell vs. point-level core definition). Only the micro-clusters (≤6 points each) are absent in SIMPLNX. Evidence: `dbscan_vv/phase9_comparison_results.json`.
 
 **Root cause:** Algorithmic choice. SIMPLNX implements Grid-based DBSCAN (GDCF, Boonchoo et al. 2019). The core-object definition differs fundamentally:
 - **Legacy (traditional DBSCAN)**: A data point `p` is a *core point* if the ε-ball centered on `p` contains ≥ minPoints data points (inclusive of `p` itself). Cluster membership is point-centric.
@@ -72,7 +72,7 @@ The `Random` parse order in SIMPLNX uses a time-based seed (non-deterministic), 
 
 **Symptom:** SIMPL pipelines that explicitly set `use_precaching=true` or `use_precaching=false` will load in SIMPLNX without error, but the `use_precaching` value is silently ignored.
 
-**Root cause:** Algorithmic choice. The legacy filter offered a memory/time trade-off switch: `use_precaching=true` pre-loaded data for faster neighbor queries at the cost of additional memory. The GDCF rewrite (PR #1421) replaced the distance-computation strategy entirely with a grid-based bit-packed adjacency table, making the trade-off concept obsolete. The parameter was dropped in `parametersVersion() == 2`. The `FromSIMPLJson` converter (see `DBSCANFilter.cpp` lines 248–267) does not read `use_precaching` from SIMPL JSON, so old pipelines that set it will have it silently discarded.
+**Root cause:** Algorithmic choice. The legacy filter offered a memory/time trade-off switch: `use_precaching=true` pre-loaded data for faster neighbor queries at the cost of additional memory. The GDCF rewrite (PR #1421) replaced the distance-computation strategy entirely with a grid-based bit-packed adjacency table, making the trade-off concept obsolete. The parameter was dropped in `parametersVersion() == 2`. The `FromSIMPLJson` converter (see `DBSCANFilter.cpp`, starting at line 242) does not read `use_precaching` from SIMPL JSON, so old pipelines that set it will have it silently discarded.
 
 **Affected users:** Users converting SIMPL pipelines that explicitly set `use_precaching`. The converted pipeline will run correctly in SIMPLNX; only the parameter setting is lost.
 
@@ -89,10 +89,12 @@ The `Random` parse order in SIMPLNX uses a time-based seed (non-deterministic), 
 | **Legacy SIMPL UUID** | `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e` |
 | **Status** | active |
 
-**Symptom:** The parse order parameter was renamed from `init_type_index` (SIMPL / SIMPLNX v1) to `parse_order_index` (SIMPLNX v2). SIMPL pipelines using the old key name load correctly.
+**Symptom:** SIMPLNX pipelines saved prior to PR #1421 that contain the parameter key `init_type_index` will silently lose their parse-order setting when loaded in SIMPLNX v2. The filter loads without error, but the parse order silently falls back to `LowDensityFirst` (the default). SIMPL (6.4/6.5) pipelines are **not** affected — SIMPL never had an `init_type_index` parameter.
 
-**Root cause:** Algorithmic choice (parameter rename as part of rewrite). The SIMPL backward compatibility converter (`FromSIMPLJson`) reads the old `InitType` key (`init_type_index`) and maps it to the new `parse_order_index` key. The SIMPLNX parameter version migration (v1→v2 in `parametersVersion() == 2`) handles pipelines that already used the SIMPLNX key name `init_type_index` before the rename.
+**Root cause:** Algorithmic choice (parameter rename as part of rewrite). During PR #1421, the parameter key was renamed from `init_type_index` to `parse_order_index`. `parametersVersion()` returns `2` and its comment block describes an intended v1→v2 migration that would read the old key and map it to the new key — but `upgradeParametersImpl()` is **not implemented** in `DBSCANFilter`. As a result, any early SIMPLNX pipeline JSON containing `init_type_index` silently deserializes as the default `LowDensityFirst` value.
 
-**Affected users:** Users who hand-authored or scripted pipeline JSON using the old parameter key. The conversion is transparent and handled automatically.
+The `FromSIMPLJson` converter (`DBSCANFilter.cpp`, starting at line 242) is not affected: SIMPL 6.4 and 6.5 never had an `init_type_index` parameter, confirmed by `test/simpl_conversion/6_4/DBSCANFilter.json` and `test/simpl_conversion/6_5/DBSCANFilter.json`.
 
-**Recommendation:** Trust SIMPLNX. The conversion is handled automatically in both `FromSIMPLJson` (SIMPL pipelines) and the v1→v2 parameter migration (early SIMPLNX pipelines).
+**Affected users:** SIMPLNX pipeline authors who explicitly saved a pipeline with a non-default parse order (`Random` or `SeededRandom`) using the v1 key `init_type_index` before PR #1421. These pipelines will silently default to `LowDensityFirst` without warning. Users who used the default `LowDensityFirst` or who created pipelines after PR #1421 are unaffected.
+
+**Recommendation:** If you have early SIMPLNX pipelines that explicitly set a non-default parse order, verify the `parse_order_index` key is present in the pipeline JSON. Edit the pipeline to use `parse_order_index` if it still contains `init_type_index`.
