@@ -2,27 +2,31 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+
+#include <limits>
+#include <vector>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr auto k_NotSeen = std::numeric_limits<usize>::max();
+
 struct CopyCellDataFunctor
 {
   template <typename T>
-  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, int32 maxValue, const std::atomic_bool& shouldCancel)
   {
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
+    const usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
 
-    std::map<int32, usize> featureMap;
+    std::vector<usize> featureFirstCellOffset(static_cast<usize>(maxValue) + 1, k_NotSeen);
     Result<> result;
 
-    usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
+    const usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
     for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
       if(shouldCancel)
@@ -30,29 +34,25 @@ struct CopyCellDataFunctor
         return {};
       }
 
-      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-      int32 featureIdx = featureIds[cellTupleIdx];
+      const int32 featureIdx = featureIds[cellTupleIdx];
 
-      // Store the index of the first tuple with this feature identifier in the map
-      if(featureMap.find(featureIdx) == featureMap.end())
+      if(featureFirstCellOffset[featureIdx] == k_NotSeen)
       {
-        featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
+        featureFirstCellOffset[featureIdx] = totalCellArrayComponents * cellTupleIdx;
       }
 
-      // Check that the values at the current index match the value at the first index
-      usize firstInstanceCellTupleIdx = featureMap[featureIdx];
+      const usize firstInstanceCellTupleIdx = featureFirstCellOffset[featureIdx];
       for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
       {
-        T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
-        T currentCellVal = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        const T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
+        const T currentCellVal = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
         if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
         {
-          // The values are inconsistent with the first values for this feature identifier, so throw a warning
           result.warnings().push_back(
               Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
         }
 
-        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = currentCellVal;
       }
     }
 
@@ -83,13 +83,39 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
   auto* createdArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size
-  usize featureIdsMaxIdx = std::distance(featureIdsRef.begin(), std::max_element(featureIdsRef.cbegin(), featureIdsRef.cend()));
-  usize maxValue = featureIdsRef[featureIdsMaxIdx];
+  if(featureIdsRef.getNumberOfTuples() == 0)
+  {
+    return MakeErrorResult(-81882, "Invalid Input, Feature Ids Array must not be empty");
+  }
+
+  const auto [minIt, maxIt] = std::minmax_element(featureIdsRef.cbegin(), featureIdsRef.cend());
+  const int32 minValue = *minIt;
+  const int32 maxValue = *maxIt;
+
+  // Validate no negative feature IDs — a negative featureIdx in the copy loop converts to
+  // a huge usize index (int32 → usize wrapping), causing an out-of-bounds write
+  if(minValue < 0)
+  {
+    return MakeErrorResult(-81880, "Invalid Input, Feature Ids Array must not contain negative values");
+  }
+
   auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
 
-  auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
-  createdArrayStore->resizeTuples(std::vector<usize>{maxValue + 1});
-  cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
+  // validate resize won't shrink child arrays
+  if(maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples())
+  {
+    for(const auto& childObject : cellFeatureAttrMat)
+    {
+      const auto* iArray = dynamic_cast<IArray*>(childObject.second.get());
+      if(iArray != nullptr && iArray->getNumberOfTuples() > (maxValue + 1))
+      {
+        return MakeErrorResult(-81881, fmt::format("Resizing would cause data loss in {}. Make sure all objects in {} have tuple counts equal to or less then the max Feature ID {}!",
+                                                   iArray->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), maxValue + 1));
+      }
+    }
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsRef, createdArray, m_ShouldCancel);
+    cellFeatureAttrMat.resizeTuples(std::vector<usize>{static_cast<usize>(maxValue) + 1});
+  }
+
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsRef, createdArray, maxValue, m_ShouldCancel);
 }
