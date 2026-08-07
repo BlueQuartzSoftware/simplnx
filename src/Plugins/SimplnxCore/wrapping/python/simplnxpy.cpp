@@ -512,6 +512,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindVec2<int32>(mod, "IntVec2");
   BindVec2<float32>(mod, "FloatVec2");
+  BindVec2<usize>(mod, "SizeVec2");
 
   py::enum_<NumericType> numericType(mod, "NumericType");
   numericType.value("int8", NumericType::int8);
