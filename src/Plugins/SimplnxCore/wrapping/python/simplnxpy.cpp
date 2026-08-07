@@ -1735,6 +1735,27 @@ PYBIND11_MODULE(simplnx, mod)
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
   mod.def("convert_data_type_to_numeric_type", &ConvertDataTypeToNumericType);
 
+  mod.def("get_all_registered_filters", [internals]() {
+    std::vector<py::type> pyFilterList;
+
+    const FilterList* filterList = internals->getApp()->getFilterList();
+    if(filterList == nullptr)
+    {
+      throw std::runtime_error("The FilterList for simplnx does not exist");
+    }
+
+    FilterList::FilterContainerType filterHandles = filterList->getFilterHandles();
+
+    for(const FilterHandle& handle : filterHandles)
+    {
+      py::object filter_ = py::cast(filterList->createFilter(handle.getFilterId()));
+      py::type filterType = py::type::of(filter_);
+      pyFilterList.push_back(filterType);
+    }
+
+    return pyFilterList;
+  });
+
   mod.def("get_filters", [corePlugin]() {
     auto filterHandles = corePlugin->getFilterHandles();
     std::vector<py::type> filterList;
