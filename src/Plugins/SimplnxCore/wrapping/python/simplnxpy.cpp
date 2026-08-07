@@ -706,6 +706,7 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
   py::class_<IParameter> parameter(mod, "IParameter");
+  parameter.def_property_readonly("uuid", [](const IParameter& self) { return self.uuid(); });
 
   py::enum_<IParameter::Type> parameterType(parameter, "Type");
   parameterType.value("Value", IParameter::Type::Value);
@@ -719,6 +720,9 @@ PYBIND11_MODULE(simplnx, mod)
   parameter.def_property_readonly("version", &IParameter::getVersion);
 
   py::class_<Parameters> parameters(mod, "Parameters");
+  parameters.def("__len__", [](const Parameters& self) { return self.size(); });
+  parameters.def("__getitem__", [](const Parameters& self, std::string_view key) { return self.at(key); });
+  parameters.def("__iter__", [](Parameters& self) { return py::make_iterator(self.begin(), self.end()); });
 
   py::class_<Parameters::Separator> separator(parameters, "Separator");
   separator.def(py::init<>());
@@ -1564,6 +1568,7 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("name", &IFilter::name);
   filter.def("uuid", &IFilter::uuid);
   filter.def("human_name", &IFilter::humanName);
+  filter.def("parameters", &IFilter::parameters);
   filter.def("parameters_version", &IFilter::parametersVersion);
   filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
@@ -1632,21 +1637,6 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
   pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
-  pipelineFilter.def(
-      "get_parameter_uuids",
-      [](const PipelineFilter& self) {
-        py::dict uuidDict;
-        const Parameters& params = self.getParameters();
-        for(const auto& [name, value] : self.getArguments())
-        {
-          if(params.contains(name))
-          {
-            uuidDict[name.c_str()] = params.at(name).getRef().uuid().str();
-          }
-        }
-        return uuidDict;
-      },
-      "Returns a dict mapping argument names to their parameter type UUID strings");
   pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {

@@ -34,6 +34,53 @@
 #define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
 #define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
+namespace pybind11
+{
+namespace detail
+{
+template <>
+struct type_caster<nx::core::AnyParameter>
+{
+public:
+  /**
+   * This macro establishes the name 'AnyParameter' in
+   * function signatures and declares a local variable
+   * 'value' of type AnyParameter
+   */
+  PYBIND11_TYPE_CASTER(nx::core::AnyParameter, const_name("AnyParameter"));
+
+  /**
+   * Conversion part 1 (Python->C++): convert a PyObject into a AnyParameter
+   * instance or return false upon failure. The second argument
+   * indicates whether implicit conversions should be applied.
+   */
+  bool load(handle src, bool)
+  {
+    if(!isinstance<nx::core::IParameter>(src))
+    {
+      return false;
+    }
+
+    value = pybind11::cast<nx::core::IParameter*>(src)->clone();
+
+    return true;
+  }
+
+  /**
+   * Conversion part 2 (C++ -> Python): convert a AnyParameter instance into
+   * a Python object. The second and third arguments are used to
+   * indicate the return value policy and parent object (for
+   * ``return_value_policy::reference_internal``) and are generally
+   * ignored by implicit casters.
+   */
+  static handle cast(const nx::core::AnyParameter& src, return_value_policy /* policy */, handle /* parent */)
+  {
+    return pybind11::cast(src->clone()).release();
+  }
+};
+} // namespace detail
+} // namespace pybind11
+
 namespace nx::core::NxPybind
 {
 namespace py = pybind11;
