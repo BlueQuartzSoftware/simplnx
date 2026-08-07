@@ -8,7 +8,7 @@
 | DREAM3D 6.5.171 equivalent | `CreateFeatureArrayFromElementArray` (SIMPL UUID `94438019-21bb-5b61-a7c3-66974b9a34dc`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | **COMPLETE** |
-| Sign-off | *Nathan Young, 07-28-2026* |
+| Sign-off | *Nathan Young, 07-28-2026* — second engineer: *Michael Jackson &lt;mike.jackson@bluequartz.net&gt;, 08-07-2026* |
 
 ## At a glance
 
@@ -106,7 +106,7 @@ Expected output (uint8, 3 tuples): `[[0,0,0], [10,20,30], [40,50,60]]`. Expected
 
 *Encoded:* Implemented — `AnalyticalFixtures` TEST_CASEs in `test/CreateFeatureArrayFromElementArrayTest.cpp` (AF-1 through AF-9). `getNumberOfTuples`, `getDataType`, `getNumberOfComponents` asserted in the Validation block of AF-1/AF-2/AF-3/AF-6; `warnings().size()` asserted in the Execution block immediately after `filter.execute()`; execute error code invariants asserted in AF-4, AF-5, AF-7, and AF-8; preflight error code invariant asserted in AF-9.
 
-*Second-engineer review:* Skipped — the Class 1 oracle (AF-1/AF-2/AF-3) is integer-indexed indirection arithmetic on 4–5 element fixtures. No mathematical ambiguity: the closed-form derivation is `output[featureId * C + comp] = input[cellIdx * C + comp]` (last-writer), traceable directly to lines 25–56 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`. The Class 4 error-path invariants (AF-4/AF-5/AF-7/AF-8/AF-9) assert single integer error codes against structurally constructed fixtures; no arithmetic review is required. Formal second-engineer review was not justified for either oracle type.
+*Second-engineer review:* **Michael Jackson &lt;mike.jackson@bluequartz.net&gt;, 08-07-2026** — reviewed at PR #1695. Scope: the Class 1 hand derivations for AF-1/AF-2/AF-3/AF-6 against the closed form `output[featureId * C + comp] = input[cellIdx * C + comp]` (last-writer) at lines 25–56 of `Algorithms/CreateFeatureArrayFromElementArray.cpp`; the Class 4 invariant set; and the error-code mapping for AF-4/AF-5/AF-7/AF-8/AF-9 against the guards in the algorithm (-81880 `minValue < 0`, -81881 shrink protection, -81882 empty featureIds) and in `preflightImpl` (-81883 tuple-count mismatch). No oracle-design defects found; the derivations are independent of the SIMPLNX implementation and the fixture set covers the consistent, inconsistent, multi-component, resize-gap, and every error boundary.
 
 ## Code path coverage
 
