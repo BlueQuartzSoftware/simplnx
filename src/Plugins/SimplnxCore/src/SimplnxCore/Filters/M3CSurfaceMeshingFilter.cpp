@@ -59,6 +59,10 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
                                                 "If true, runs a winding-consistency repair pass after meshing. The M3C per-triangle winding heuristic does not "
                                                 "guarantee globally consistent normals, so this is recommended.",
                                                 true));
+  params.insert(std::make_unique<BoolParameter>(k_OmitBoundingBoxSkin_Key, "Omit Bounding Box Skin",
+                                                "Do not generate triangles that lie on the outer wall of the bounding box where the wall borders the background (Feature Id 0). Faces where the "
+                                                "wall caps a real Feature ARE still generated, so Features flush with the box stay closed.",
+                                                false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Image Geometry", "The complete path to the Image Geometry from which to create a Triangle Geometry",
@@ -96,7 +100,12 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType M3CSurfaceMeshingFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_OmitBoundingBoxSkin_Key = "omit_bounding_box_skin";
+  // Solution - set the value to false (preserves prior behavior);
+  //
 }
 
 //------------------------------------------------------------------------------
@@ -186,6 +195,7 @@ Result<> M3CSurfaceMeshingFilter::executeImpl(DataStructure& dataStructure, cons
   M3CSurfaceMeshingInputValues inputValues;
 
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
+  inputValues.OmitBoundingBoxSkin = filterArgs.value<bool>(k_OmitBoundingBoxSkin_Key);
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.SelectedCellDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);

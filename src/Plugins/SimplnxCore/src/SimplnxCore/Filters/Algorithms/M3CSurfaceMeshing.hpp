@@ -14,6 +14,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 {
   bool RepairTriangleWinding;
+  bool OmitBoundingBoxSkin;
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;

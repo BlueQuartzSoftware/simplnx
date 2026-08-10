@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -200,11 +202,30 @@ struct MeshResult
 };
 
 /**
+ * @brief Names the Cell Feature Ids parameter key for a surface mesher filter type. QuickSurfaceMesh
+ * and SurfaceNets both name it k_CellFeatureIdsArrayPath_Key, so that is the default; M3CSurfaceMeshingFilter
+ * names the same concept k_FeatureIdsArrayPath_Key, so it gets an explicit specialization below. This lets
+ * RunMesher stay a single shared implementation instead of forking per-mesher.
+ */
+template <class FilterT>
+struct FeatureIdsKeyTrait
+{
+  static constexpr auto Key = FilterT::k_CellFeatureIdsArrayPath_Key;
+};
+
+template <>
+struct FeatureIdsKeyTrait<M3CSurfaceMeshingFilter>
+{
+  static constexpr auto Key = M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key;
+};
+
+/**
  * @brief Runs a surface meshing filter (QuickSurfaceMeshFilter, SurfaceNetsFilter, or
  * M3CSurfaceMeshingFilter) on the given DataStructure, setting every argument that is common to
  * all three meshers, then invoking addExtraArgs to set the mesher-specific ones (e.g. Fix Problem
  * Voxels, smoothing options). Every mesher shares the same parameter key names for the arguments
- * set here, so callers only need to supply the pieces that differ.
+ * set here (feature ids excepted -- see FeatureIdsKeyTrait), so callers only need to supply the
+ * pieces that differ.
  * @param dataStructure Input DataStructure, e.g. from CreateCylinderInBox().
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
  * @param omitSkin Value for the Omit Bounding Box Skin parameter.
@@ -221,7 +242,7 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
   FilterT filter;
   Arguments args;
   args.insertOrAssign(FilterT::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(FilterT::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FeatureIdsKeyTrait<FilterT>::Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(FilterT::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
   args.insertOrAssign(FilterT::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
   args.insertOrAssign(FilterT::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomPath));

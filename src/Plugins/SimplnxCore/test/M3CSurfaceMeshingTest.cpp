@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "SurfaceMeshingTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -17,7 +18,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <cstdlib>
 #include <filesystem>
+#include <string>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -518,4 +521,121 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[Simplnx
   CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+// Temporarily sets (or clears) an environment variable for the lifetime of the object, restoring
+// whatever was there before on destruction. Used below to select M3C's sweep path, which is read
+// once from the environment at the top of M3CSurfaceMeshing::operator()().
+class ScopedEnvVar
+{
+public:
+  ScopedEnvVar(std::string name, const char* value)
+  : m_Name(std::move(name))
+  {
+    if(const char* previous = std::getenv(m_Name.c_str()); previous != nullptr)
+    {
+      m_HadPrevious = true;
+      m_PreviousValue = previous;
+    }
+    if(value != nullptr)
+    {
+      setenv(m_Name.c_str(), value, 1);
+    }
+    else
+    {
+      unsetenv(m_Name.c_str());
+    }
+  }
+
+  ~ScopedEnvVar()
+  {
+    if(m_HadPrevious)
+    {
+      setenv(m_Name.c_str(), m_PreviousValue.c_str(), 1);
+    }
+    else
+    {
+      unsetenv(m_Name.c_str());
+    }
+  }
+
+  ScopedEnvVar(const ScopedEnvVar&) = delete;
+  ScopedEnvVar(ScopedEnvVar&&) noexcept = delete;
+  ScopedEnvVar& operator=(const ScopedEnvVar&) = delete;
+  ScopedEnvVar& operator=(ScopedEnvVar&&) noexcept = delete;
+
+private:
+  std::string m_Name;
+  bool m_HadPrevious = false;
+  std::string m_PreviousValue;
+};
+
+const DataPath k_SweepPathTriGeomPath({"M3CSweepPathMesh"});
+
+// Runs the flush-with-bottom cylinder (Task 1's shared test dataset) through M3C with Omit Bounding
+// Box Skin enabled, forcing the sweep path selected by the two M3C_* environment variables (see
+// M3CSurfaceMeshing::operator()()). Passing false/false for both selects the default parallel
+// sliding-window path.
+SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool serial)
+{
+  const ScopedEnvVar wholeVolumeVar("M3C_WHOLE_VOLUME", wholeVolume ? "1" : nullptr);
+  const ScopedEnvVar serialVar("M3C_SERIAL", serial ? "1" : nullptr);
+  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, /*omitSkin*/ true, [](Arguments&) {});
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Omit Bounding Box Skin agrees across sweep paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // M3C's two serial paths (runEntireVolume and runWindowed(false)) are documented as byte-identical to
+  // each other, including the exact triangulation. The default parallel path (runWindowed(true)) is
+  // documented to produce byte-identical vertices, FaceLabels, and NodeTypes, but MAY legitimately
+  // triangulate the same interfaces differently (the legacy per-cube loop triangulation depends on
+  // cross-cube edge-flip propagation, which is inherently serial) -- so its Shared Faces List is not
+  // compared for exact equality here. Confirm those same guarantees still hold with Omit Bounding Box
+  // Skin enabled: the prune runs once, inside the shared finalizeMesh(), after all three paths have
+  // produced their triangles/mCubeID vectors, so it should not disturb this invariant either way.
+  SurfaceMeshingTest::MeshResult wholeVolumeResult = RunM3COmitSkinOnPath(/*wholeVolume*/ true, /*serial*/ false);
+  SurfaceMeshingTest::MeshResult serialWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ true);
+  SurfaceMeshingTest::MeshResult parallelWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ false);
+
+  REQUIRE_NOTHROW(wholeVolumeResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  REQUIRE_NOTHROW(serialWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  REQUIRE_NOTHROW(parallelWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  const auto& wholeVolumeGeom = wholeVolumeResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+  const auto& serialWindowedGeom = serialWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+  const auto& parallelWindowedGeom = parallelWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+
+  REQUIRE(wholeVolumeGeom.getNumberOfVertices() == serialWindowedGeom.getNumberOfVertices());
+  REQUIRE(wholeVolumeGeom.getNumberOfVertices() == parallelWindowedGeom.getNumberOfVertices());
+  REQUIRE(wholeVolumeGeom.getNumberOfFaces() == serialWindowedGeom.getNumberOfFaces());
+  REQUIRE(wholeVolumeGeom.getNumberOfFaces() == parallelWindowedGeom.getNumberOfFaces());
+
+  // Vertices (Shared Vertex List) must match exactly across all three paths.
+  UnitTest::CompareArrays<float32>(wholeVolumeGeom.getVertices(), serialWindowedGeom.getVertices());
+  UnitTest::CompareArrays<float32>(wholeVolumeGeom.getVertices(), parallelWindowedGeom.getVertices());
+
+  // Shared Faces List: only the two serial paths are guaranteed to match exactly (see comment above).
+  UnitTest::CompareArrays<IGeometry::MeshIndexType>(wholeVolumeGeom.getFaces(), serialWindowedGeom.getFaces());
+
+  // RunM3COmitSkinOnPath (via SurfaceMeshingTest::RunMesher) creates "FaceLabels" and "NodeTypes" --
+  // NOT the nx::core::UnitTest::k_Face_Labels ("Face Labels") / k_NodeTypeArrayName ("Node Type")
+  // constants used elsewhere in this file for the SIMPL-compatibility/exemplar tests.
+  const DataPath faceLabelsPath = wholeVolumeResult.FaceLabelsPath;
+  const DataPath nodeTypesPath = k_SweepPathTriGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+
+  // Face Labels must match exactly across all three paths.
+  UnitTest::CompareArrays<int32>(wholeVolumeResult.Structure.getDataAs<IArray>(faceLabelsPath), serialWindowedResult.Structure.getDataAs<IArray>(faceLabelsPath));
+  UnitTest::CompareArrays<int32>(wholeVolumeResult.Structure.getDataAs<IArray>(faceLabelsPath), parallelWindowedResult.Structure.getDataAs<IArray>(faceLabelsPath));
+
+  // Node Types must match exactly across all three paths.
+  UnitTest::CompareArrays<int8>(wholeVolumeResult.Structure.getDataAs<IArray>(nodeTypesPath), serialWindowedResult.Structure.getDataAs<IArray>(nodeTypesPath));
+  UnitTest::CompareArrays<int8>(wholeVolumeResult.Structure.getDataAs<IArray>(nodeTypesPath), parallelWindowedResult.Structure.getDataAs<IArray>(nodeTypesPath));
+
+  UnitTest::CheckArraysInheritTupleDims(wholeVolumeResult.Structure);
+  UnitTest::CheckArraysInheritTupleDims(serialWindowedResult.Structure);
+  UnitTest::CheckArraysInheritTupleDims(parallelWindowedResult.Structure);
 }

@@ -2535,13 +2535,60 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
 
+  // Omit Bounding Box Skin: drop faces whose output Face Labels would be {-1, 0}. In the
+  // internal representation that is one negative ghost label paired with maxGrainId, which
+  // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
+  // means the output TriangleGeom is sized from the surviving count and never over-allocated.
+  if(inputValues->OmitBoundingBoxSkin)
+  {
+    messageHandler("Omitting bounding box skin faces...");
+
+    const auto isBackgroundSkin = [maxGrainId](const Triangle& triangle) -> bool {
+      const int spinA = triangle.nSpin[0];
+      const int spinB = triangle.nSpin[1];
+      return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
+    };
+
+    int64 survivingCount = 0;
+    for(int64 i = 0; i < nTriangle; i++)
+    {
+      if(!isBackgroundSkin(triangles[static_cast<usize>(i)]))
+      {
+        triangles[static_cast<usize>(survivingCount)] = triangles[static_cast<usize>(i)];
+        mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
+        survivingCount++;
+      }
+    }
+    triangles.resize(static_cast<usize>(survivingCount));
+    mCubeID.resize(static_cast<usize>(survivingCount));
+
+    // Clear nodeType for candidates no longer referenced by any surviving triangle, so the
+    // existing "nodeType > 0" prefix-scan compaction below drops them from the vertex list.
+    std::vector<bool> isReferenced(nodeType.size(), false);
+    for(const auto& triangle : triangles)
+    {
+      isReferenced[static_cast<usize>(triangle.node_id[0])] = true;
+      isReferenced[static_cast<usize>(triangle.node_id[1])] = true;
+      isReferenced[static_cast<usize>(triangle.node_id[2])] = true;
+    }
+    for(usize i = 0; i < nodeType.size(); i++)
+    {
+      if(!isReferenced[i])
+      {
+        nodeType[i] = 0;
+      }
+    }
+  }
+
+  const int64 nTriangleFinal = static_cast<int64>(triangles.size());
+
   // Promote surface nodes to their exterior variant (+10). A triangle that borders the outside of the
   // volume has exactly one negative feature label (nSpin[0]*nSpin[1] < 0), so each of its nodes lies on
   // the volume boundary. This is the only output-relevant effect of the legacy triangle-side/inner-edge
   // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
   // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
   // has been removed.
-  for(int64 j = 0; j < nTriangle; j++)
+  for(int64 j = 0; j < nTriangleFinal; j++)
   {
     if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
     {
@@ -2604,15 +2651,15 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
   triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
-  triangleGeom.resizeFaceList(static_cast<usize>(nTriangle));
+  triangleGeom.resizeFaceList(static_cast<usize>(nTriangleFinal));
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nNodes)});
-  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangle)});
+  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangleFinal)});
 
   auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
   auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
   auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(inputValues->FaceLabelsDataPath).getDataStoreRef();
   auto& nodeTypesOut = dataStructure.getDataRefAs<Int8Array>(inputValues->NodeTypesDataPath).getDataStoreRef();
-  faceLabels.resizeTuples({static_cast<usize>(nTriangle)});
+  faceLabels.resizeTuples({static_cast<usize>(nTriangleFinal)});
   nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
 
   // Compact nodes: scatter coordinates + node types to their new (sequential) ids. Walking candidates
@@ -2638,7 +2685,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
 
   // Triangles: remap to compacted node ids and write the ordered FaceLabels.
-  for(int64 i = 0; i < nTriangle; i++)
+  for(int64 i = 0; i < nTriangleFinal; i++)
   {
     triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[0]));
     triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[1]));
@@ -2668,7 +2715,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
       AddFeatureTupleTransferInstance(dataStructure, inputValues->SelectedFeatureDataArrayPaths[i], inputValues->CreatedDataArrayPaths[numCellArrays + i], inputValues->FeatureIdsArrayPath, transfers);
     }
 
-    for(int64 i = 0; i < nTriangle; i++)
+    for(int64 i = 0; i < nTriangleFinal; i++)
     {
       // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
       // the feature in the same FaceLabels component.
