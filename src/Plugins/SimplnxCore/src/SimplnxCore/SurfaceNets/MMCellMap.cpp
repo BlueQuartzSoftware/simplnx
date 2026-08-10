@@ -139,7 +139,6 @@ bool MMCellMap::setCellVertices()
   // Set cell type and count cell vertices. There are no vertices in right, front,
   // top faces.
   size_t numVertices = 0;
-  int32 cellIndex[3] = {0, 0, 0};
   for(int k = 0; k < m_arraySize[2] - 1; k++)
   {
     for(int j = 0; j < m_arraySize[1] - 1; j++)
@@ -148,51 +147,8 @@ bool MMCellMap::setCellVertices()
       {
         Cell* pCell = getCell(i, j, k);
         int32_t cellLabels[8];
-
-        cellIndex[0] = i;
-        cellIndex[1] = j;
-        cellIndex[2] = k;
-        // Label[0]
-        cellLabels[0] = label(cellIndex);
-
-        // Label[1]
-        cellIndex[0] = i + 1;
-        cellLabels[1] = label(cellIndex);
-
-        // Label[2]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j + 1;
-        cellLabels[2] = label(cellIndex);
-
-        // Label[3]
-        cellIndex[0] = i;
-        cellIndex[1] = j + 1;
-        cellLabels[3] = label(cellIndex);
-
-        // Label[4]
-        cellIndex[0] = i;
-        cellIndex[1] = j;
-        cellIndex[2] = k + 1;
-        cellLabels[4] = label(cellIndex);
-
-        // Label[5]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j;
-        cellIndex[2] = k + 1;
-        cellLabels[5] = label(cellIndex);
-
-        // Label[6]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j + 1;
-        cellIndex[2] = k + 1;
-        cellLabels[6] = label(cellIndex);
-
-        // Label[7]
-        cellIndex[0] = i;
-        cellIndex[1] = j + 1;
-        cellIndex[2] = k + 1;
-        cellLabels[7] = label(cellIndex);
-
+        const int cornerCellIndex[3] = {i, j, k};
+        getCornerLabels(cornerCellIndex, cellLabels);
         pCell->flag.set(cellLabels);
         if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
         {
@@ -665,41 +621,87 @@ size_t MMCellMap::cellArrayIndex(int i, int j, int k) const
   return (ii + m_arraySize[0] * jj + m_arraySize[0] * m_arraySize[1] * kk);
 }
 
-void MMCellMap::getCellLabels(Cell* pCell, int32_t labels[8]) const
+void MMCellMap::getCornerLabels(const int cellIndex[3], int32_t labels[8]) const
 {
-  // Labels of cell's 8 corner vertices. This ordering is used when computing cell
-  // flags.
-  Cell* cellPtr = pCell;
-  usize vertIdx = cellPtr->vertexIndex;
-  labels[0] = label(m_VertexArray.at(vertIdx).cellIndex);
+  // The cell's 8 corners are the 8 voxels surrounding a grid corner, ordered
+  // left-to-right, back-to-front, bottom-to-top. Must match the gather in setCellVertices().
+  const int i = cellIndex[0];
+  const int j = cellIndex[1];
+  const int k = cellIndex[2];
 
-  cellPtr = pCell + 1;
-  vertIdx = cellPtr->vertexIndex;
-  labels[1] = label(m_VertexArray.at(vertIdx).cellIndex);
+  int32 corner[3] = {i, j, k};
+  labels[0] = label(corner);
 
-  cellPtr = (pCell + 1 + m_arraySize[0]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[2] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i + 1;
+  labels[1] = label(corner);
 
-  cellPtr = (pCell + m_arraySize[0]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[3] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i + 1;
+  corner[1] = j + 1;
+  labels[2] = label(corner);
 
-  cellPtr = (pCell + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[4] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i;
+  corner[1] = j + 1;
+  labels[3] = label(corner);
 
-  cellPtr = (pCell + 1 + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[5] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i;
+  corner[1] = j;
+  corner[2] = k + 1;
+  labels[4] = label(corner);
 
-  cellPtr = (pCell + 1 + m_arraySize[0] + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[6] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i + 1;
+  corner[1] = j;
+  corner[2] = k + 1;
+  labels[5] = label(corner);
 
-  cellPtr = (pCell + m_arraySize[0] + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[7] = label(m_VertexArray.at(vertIdx).cellIndex);
+  corner[0] = i + 1;
+  corner[1] = j + 1;
+  corner[2] = k + 1;
+  labels[6] = label(corner);
+
+  corner[0] = i;
+  corner[1] = j + 1;
+  corner[2] = k + 1;
+  labels[7] = label(corner);
+}
+
+int8_t MMCellMap::nodeType(const int cellIndex[3]) const
+{
+  int32_t labels[8];
+  getCornerLabels(cellIndex, labels);
+
+  // Distinct-label count with Padding counted as one member, exactly as QuickSurfaceMesh
+  // counts -1 as a member of its owner list.
+  int32_t distinct[8];
+  int numDistinct = 0;
+  bool hasPadding = false;
+  for(int idx = 0; idx < 8; idx++)
+  {
+    if(labels[idx] == MMSurfaceNet::ReservedLabel::Padding)
+    {
+      hasPadding = true;
+    }
+    bool alreadySeen = false;
+    for(int seenIdx = 0; seenIdx < numDistinct; seenIdx++)
+    {
+      if(distinct[seenIdx] == labels[idx])
+      {
+        alreadySeen = true;
+        break;
+      }
+    }
+    if(!alreadySeen)
+    {
+      distinct[numDistinct] = labels[idx];
+      numDistinct++;
+    }
+  }
+
+  int8_t result = static_cast<int8_t>(numDistinct > 4 ? 4 : numDistinct);
+  if(hasPadding)
+  {
+    result = static_cast<int8_t>(result + 10);
+  }
+  return result;
 }
 
 bool MMCellMap::isEdgeCrossing(size_t cellMapIndex, MMCellFlag::Edge edge) const

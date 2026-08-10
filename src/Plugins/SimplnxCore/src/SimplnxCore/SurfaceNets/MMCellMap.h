@@ -41,6 +41,11 @@ public:
 
   MMCellFlag::VertexType cellVertexType(size_t cellArrayIndex) const;
 
+  // Node type in the shared simplnx NodeType convention: min(distinct corner labels, 4),
+  // plus 10 when any corner is exterior padding. This is the same quantity QuickSurfaceMesh
+  // computes from its per-node owner list, over the same 8 surrounding voxels.
+  int8_t nodeType(const int cellIndex[3]) const;
+
   struct Vertex
   {
     int32_t cellIndex[3];
@@ -76,7 +81,7 @@ private:
 
   // Access cell map
   size_t cellArrayIndex(int i, int j, int k) const;
-  void getCellLabels(Cell* cell, int32_t labels[8]) const;
+  void getCornerLabels(const int cellIndex[3], int32_t labels[8]) const;
   bool isEdgeCrossing(size_t cellArrayIndex, MMCellFlag::Edge edge) const;
   void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], size_t quadNxArrayIndices[2]) const;
   void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]) const;

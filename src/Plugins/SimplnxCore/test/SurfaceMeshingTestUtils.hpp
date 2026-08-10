@@ -37,6 +37,7 @@ inline DataStructure CreateCylinderInBox(bool flushWithBottom)
   imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(0);
 
@@ -77,6 +78,7 @@ inline DataStructure CreateFullyIndexedPolycrystal()
   imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
 
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
@@ -111,6 +113,7 @@ inline DataStructure CreateAllBackground()
   imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(0);
 

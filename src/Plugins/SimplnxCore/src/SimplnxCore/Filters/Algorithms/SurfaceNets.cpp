@@ -18,18 +18,6 @@ using namespace nx::core;
 namespace
 {
 using LabelType = int32;
-constexpr inline int8 CalculatePadding(int8 value)
-{
-  return value + ((9 * static_cast<int8>(value < 10)) + 1);
-}
-
-inline void HandlePadding(std::array<size_t, 4> vertexIndices, AbstractDataStore<int8>& nodeTypes)
-{
-  nodeTypes.setValue(vertexIndices[0], CalculatePadding(nodeTypes.getValue(vertexIndices[0])));
-  nodeTypes.setValue(vertexIndices[1], CalculatePadding(nodeTypes.getValue(vertexIndices[1])));
-  nodeTypes.setValue(vertexIndices[2], CalculatePadding(nodeTypes.getValue(vertexIndices[2])));
-  nodeTypes.setValue(vertexIndices[3], CalculatePadding(nodeTypes.getValue(vertexIndices[3])));
-};
 
 struct VertexData
 {
@@ -159,8 +147,7 @@ Result<> SurfaceNets::operator()()
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
-    MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
+    nodeTypes[static_cast<usize>(vertIndex)] = cellMapPtr->nodeType(vertCellIndex.data());
   }
 
   usize triangleCount = 0;
@@ -173,26 +160,14 @@ Result<> SurfaceNets::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        HandlePadding(vertexIndices, nodeTypes);
-      }
       triangleCount += 2;
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        HandlePadding(vertexIndices, nodeTypes);
-      }
       triangleCount += 2;
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        HandlePadding(vertexIndices, nodeTypes);
-      }
       triangleCount += 2;
     }
   }

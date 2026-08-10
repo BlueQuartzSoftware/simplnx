@@ -150,6 +150,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SplitDataArrayByTupleTest.cpp
   SurfaceMeshingTestUtilsTest.cpp
   SurfaceNetsFaceLabelsTest.cpp
+  SurfaceNetsNodeTypesTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
