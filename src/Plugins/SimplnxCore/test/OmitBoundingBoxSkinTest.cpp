@@ -1,4 +1,5 @@
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
+#include "SimplnxCore/Filters/SurfaceNetsFilter.hpp"
 #include "SurfaceMeshingTestUtils.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -98,5 +99,69 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Omit Bounding Box Skin", "[Simpl
       REQUIRE(fullTypeByCoord.count(coord) == 1);
       REQUIRE(fullTypeByCoord[coord] == prunedTypesRef[i]);
     }
+  }
+}
+
+namespace
+{
+const DataPath k_SurfaceNetsTriangleGeomPath({"SurfaceNets"});
+
+SurfaceMeshingTest::MeshResult RunSurfaceNets(bool flushWithBottom, bool omitSkin)
+{
+  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(flushWithBottom), k_SurfaceNetsTriangleGeomPath, omitSkin, [](Arguments& args) {
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
+    args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
+  });
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Omit Bounding Box Skin", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  SECTION("Option off leaves the box skin over background in place")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, false);
+    REQUIRE(SurfaceMeshingTest::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  }
+
+  SECTION("Option on removes only the background skin and keeps the cylinder closed")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, true);
+    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    REQUIRE(labelPairs.count({-1, 0}) == 0);
+    REQUIRE(labelPairs.count({-1, 1}) == 1);
+    REQUIRE(labelPairs.count({0, 1}) == 1);
+
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
+    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  }
+
+  SECTION("Option on leaves no orphan vertices")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, true);
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
+    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+
+    std::set<usize> referencedVertices;
+    for(usize i = 0; i < triangleGeom.getNumberOfFaces() * 3; i++)
+    {
+      referencedVertices.insert(static_cast<usize>(facesRef[i]));
+    }
+    REQUIRE(referencedVertices.size() == triangleGeom.getNumberOfVertices());
+
+    const DataPath nodeTypesPath = meshResult.TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
+    const auto& nodeTypesRef = meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+    REQUIRE(nodeTypesRef.getNumberOfTuples() == triangleGeom.getNumberOfVertices());
+
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 }

@@ -13,6 +13,9 @@
 #include "SimplnxCore/SurfaceNets/MMGeometryOBJ.h"
 #include "SimplnxCore/SurfaceNets/MMSurfaceNet.h"
 
+#include <limits>
+#include <vector>
+
 using namespace nx::core;
 
 namespace
@@ -73,6 +76,21 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   triangleVtxIDs[3] = vData[0].VertexId;
   triangleVtxIDs[4] = vData[2].VertexId;
   triangleVtxIDs[5] = vData[3].VertexId;
+}
+
+/**
+ * @brief True when this quad is bounding-box wall backed by background and must be skipped.
+ * Called from both the counting pass and the emit pass -- they must agree exactly.
+ * Note this reads the RAW quadLabels, where MMSurfaceNet::Padding is still distinct from a
+ * real Feature Id 0. Do not call it after the Padding -> -1 remap.
+ */
+inline bool SkipPaddingQuad(bool omitBoundingBoxSkin, const std::array<LabelType, 2>& quadLabels)
+{
+  if(!omitBoundingBoxSkin)
+  {
+    return false;
+  }
+  return (quadLabels[0] == MMSurfaceNet::Padding && quadLabels[1] == 0) || (quadLabels[1] == MMSurfaceNet::Padding && quadLabels[0] == 0);
 }
 } // namespace
 // -----------------------------------------------------------------------------
@@ -160,15 +178,24 @@ Result<> SurfaceNets::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      triangleCount += 2;
+      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      {
+        triangleCount += 2;
+      }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      triangleCount += 2;
+      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      {
+        triangleCount += 2;
+      }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      triangleCount += 2;
+      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      {
+        triangleCount += 2;
+      }
     }
   }
 
@@ -213,7 +240,8 @@ Result<> SurfaceNets::operator()()
   {
     cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
     // Back-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -275,7 +303,8 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -335,7 +364,8 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-back edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -392,6 +422,70 @@ Result<> SurfaceNets::operator()()
         tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
+    }
+  }
+
+  // Dropping faces can orphan vertices, which come from the cell map before any triangle
+  // exists. Compact them so the vertex list, Node Types and vertex AttributeMatrix agree.
+  // Skipped entirely when the option is off, because then no face was dropped.
+  if(m_InputValues->OmitBoundingBoxSkin)
+  {
+    m_MessageHandler("Removing vertices orphaned by omitted bounding box faces...");
+
+    auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+    const usize numFaceIndices = triangleCount * 3;
+
+    // First pass: find which of the nodeCount vertices are actually referenced by a face.
+    std::vector<bool> isReferenced(nodeCount, false);
+    for(usize i = 0; i < numFaceIndices; i++)
+    {
+      isReferenced[static_cast<usize>(facesRef[i])] = true;
+    }
+
+    // Second pass: assign new indices in ascending order of OLD index (not order of first
+    // use in the face list). This guarantees newVertexIndex[oldIndex] <= oldIndex for every
+    // referenced vertex, which is what makes the in-place compaction below safe -- a
+    // destination slot is always at or before its source slot, so writing it never clobbers
+    // data that a later iteration still needs to read.
+    constexpr usize k_NotUsed = std::numeric_limits<usize>::max();
+    std::vector<usize> newVertexIndex(nodeCount, k_NotUsed);
+    usize survivingVertexCount = 0;
+    for(usize oldIndex = 0; oldIndex < nodeCount; oldIndex++)
+    {
+      if(isReferenced[oldIndex])
+      {
+        newVertexIndex[oldIndex] = survivingVertexCount;
+        survivingVertexCount++;
+      }
+    }
+
+    if(survivingVertexCount < nodeCount)
+    {
+      auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
+      // Compact in place. Safe because newVertexIndex[oldIndex] <= oldIndex (see above).
+      for(usize oldIndex = 0; oldIndex < nodeCount; oldIndex++)
+      {
+        const usize destIndex = newVertexIndex[oldIndex];
+        if(destIndex == k_NotUsed)
+        {
+          continue;
+        }
+        for(usize comp = 0; comp < 3; comp++)
+        {
+          verticesRef[destIndex * 3 + comp] = verticesRef[oldIndex * 3 + comp];
+        }
+        nodeTypes[destIndex] = nodeTypes[oldIndex];
+      }
+
+      // Remap the face indices to the compacted vertex ids.
+      for(usize i = 0; i < numFaceIndices; i++)
+      {
+        facesRef[i] = static_cast<IGeometry::MeshIndexType>(newVertexIndex[static_cast<usize>(facesRef[i])]);
+      }
+
+      triangleGeom.resizeVertexList(survivingVertexCount);
+      triangleGeom.getVertexAttributeMatrix()->resizeTuples({survivingVertexCount});
+      nodeTypes.resizeTuples({survivingVertexCount});
     }
   }
 

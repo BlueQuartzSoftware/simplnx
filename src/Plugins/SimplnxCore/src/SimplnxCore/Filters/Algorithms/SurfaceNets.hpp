@@ -14,6 +14,7 @@ struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
   bool ApplySmoothing;
   bool RepairTriangleWinding;
+  bool OmitBoundingBoxSkin;
   int32 SmoothingIterations;
   float32 MaxDistanceFromVoxel;
   float32 RelaxationFactor;
