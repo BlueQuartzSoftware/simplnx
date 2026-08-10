@@ -148,6 +148,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SliceTriangleGeometryTest.cpp
   SplitDataArrayByComponentTest.cpp
   SplitDataArrayByTupleTest.cpp
+  SurfaceMeshingTestUtilsTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
