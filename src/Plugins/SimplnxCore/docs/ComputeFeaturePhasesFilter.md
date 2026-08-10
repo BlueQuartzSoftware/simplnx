@@ -10,7 +10,7 @@ This **Filter** determines the **Ensemble** (phase) of each **Feature** by itera
 
 **Background feature:** Cells with `featureId == 0` are skipped. `featurePhases[0]` is never written and will always be `0`; downstream filters should not rely on its value.
 
-**Errors:** The filter halts with an error if any cell phase value is negative, or if the **Cell Phases** and **Feature Ids** arrays have different tuple counts.
+**Errors:** The filter halts with an error if a cell belonging to a valid **Feature** (`featureId > 0`) has a negative phase value, or if the **Cell Phases** and **Feature Ids** arrays have different tuple counts. Because background cells are skipped before the phase value is read, a negative phase on a cell with `featureId == 0` is ignored rather than reported.
 
 % Auto generated parameter table will be inserted here
 

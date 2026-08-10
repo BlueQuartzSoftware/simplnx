@@ -15,7 +15,7 @@ Entries use stable IDs (`ComputeFeaturePhasesFilter-D<N>`). D1, D2, and D3 are a
 | **Deviation ID** | `ComputeFeaturePhasesFilter-D1` |
 | **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` (SIMPL `6334ce16-cea5-5643-83b5-9573805873fa`) |
 | **Status** | active |
-| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip` |
+| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip`, `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zero` (zero-init contract) |
 
 **Symptom:** `featurePhases[0]` is always `0` in SIMPLNX; under 6.5.171 it is written with the phase of the last cell whose `featureId == 0`. Confirmed empirically in the 2026-07-10 comparison run (Case C: SIMPL writes `featurePhases[0] = 2`; SIMPLNX leaves it `0`).
 
@@ -34,7 +34,7 @@ Entries use stable IDs (`ComputeFeaturePhasesFilter-D<N>`). D1, D2, and D3 are a
 | **Deviation ID** | `ComputeFeaturePhasesFilter-D2` |
 | **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` (SIMPL `6334ce16-cea5-5643-83b5-9573805873fa`) |
 | **Status** | active |
-| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase` |
+| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase`, `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Negative Cell Phase On Background Cell` (guard scope) |
 
 **Symptom:** A cell phases array containing a negative value in a valid feature (not 0) causes an immediate error (`-61861`) in SIMPLNX. Under 6.5.171 the same input is processed silently.
 
