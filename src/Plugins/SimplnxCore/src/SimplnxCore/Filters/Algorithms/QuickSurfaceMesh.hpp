@@ -19,6 +19,7 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
   bool FixProblemVoxels;
   bool RepairTriangleWinding;
   bool GenerateTripleLines;
+  bool OmitBoundingBoxSkin;
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;

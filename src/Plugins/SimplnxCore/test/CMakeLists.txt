@@ -105,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
+  OmitBoundingBoxSkinTest.cpp
   PadImageGeometryTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp

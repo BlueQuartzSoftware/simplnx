@@ -233,6 +233,18 @@ void GetGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z,
   verts[nodeIndex + 2] = static_cast<QuickSurfaceMesh::VertexStore::value_type>(tmpCoords[2]);
 }
 
+/**
+ * @brief True when a bounding-box wall face backed by this Feature Id must be skipped.
+ * A wall face always gets Face Labels {-1, featureId}, so the {-1, 0} rule reduces to
+ * "the voxel behind the wall is background". Both the counting pass and the emit pass
+ * MUST call this same function -- if they disagree, node ids go unassigned and
+ * ownerLists is indexed out of bounds.
+ */
+inline bool SkipWallFace(bool omitBoundingBoxSkin, int32 featureId)
+{
+  return omitBoundingBoxSkin && featureId == 0;
+}
+
 // -----------------------------------------------------------------------------
 void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMesh::MeshIndexType v1, QuickSurfaceMesh::MeshIndexType v2, QuickSurfaceMesh::MeshIndexType v3,
                            QuickSurfaceMesh::MeshIndexType v4, QuickSurfaceMesh::MeshIndexType v5, QuickSurfaceMesh::MeshIndexType v6)
@@ -689,119 +701,131 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 
         if(i == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         if(j == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         if(k == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         if(i == (xP - 1))
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         else if(featureIds[point] != featureIds[neigh1])
         {
@@ -834,32 +858,35 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(j == (yP - 1))
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         else if(featureIds[point] != featureIds[neigh2])
         {
@@ -892,32 +919,35 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(k == (zP - 1))
         {
-          nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            nodeIds[nodeId1] = nodeCount;
-            nodeCount++;
+            nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId1] = nodeCount;
+              nodeCount++;
+            }
+            nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId2] = nodeCount;
+              nodeCount++;
+            }
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId3] = nodeCount;
+              nodeCount++;
+            }
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
+            {
+              nodeIds[nodeId4] = nodeCount;
+              nodeCount++;
+            }
+            triangleCount++;
+            triangleCount++;
           }
-          nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          if(nodeIds[nodeId2] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId2] = nodeCount;
-            nodeCount++;
-          }
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          if(nodeIds[nodeId3] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId3] = nodeCount;
-            nodeCount++;
-          }
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          if(nodeIds[nodeId4] == std::numeric_limits<size_t>::max())
-          {
-            nodeIds[nodeId4] = nodeCount;
-            nodeCount++;
-          }
-          triangleCount++;
-          triangleCount++;
         }
         else if(k < zP - 1 && featureIds[point] != featureIds[neigh3])
         {
@@ -1049,199 +1079,211 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
         if(i == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         if(j == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         if(k == 0)
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         if(i == (xP - 1)) // Takes care of the end of a Row...
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         else if(featureIds[point] != featureIds[neigh1])
         {
@@ -1309,52 +1351,55 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(j == (yP - 1)) // Takes care of the end of a column
         {
-          nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId4];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId3];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         else if(featureIds[point] != featureIds[neigh2])
         {
@@ -1421,52 +1466,55 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(k == (zP - 1)) // Takes care of the end of a Pillar
         {
-          nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
-
-          nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
-
-          nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
-
-          nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
+          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
+
+            nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
+
+            nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
+            ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+
+            nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
+            ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId2];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
+            triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
+            triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
+            faceLabelsStore[triangleIndex * 2] = -1;
+            faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
+
+            for(const auto& tupleTransferFunction : tupleTransferFunctions)
+            {
+              tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
+            }
+
+            triangleIndex++;
+
+            ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId1]].insert(-1);
+            ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId2]].insert(-1);
+            ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId3]].insert(-1);
+            ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
+            ownerLists[m_NodeIds[nodeId4]].insert(-1);
           }
-
-          triangleIndex++;
-
-          triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId2];
-          triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
-          triangle[triangleIndex * 3 + 2] = m_NodeIds[nodeId4];
-          faceLabelsStore[triangleIndex * 2] = -1;
-          faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
-
-          for(const auto& tupleTransferFunction : tupleTransferFunctions)
-          {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
-          }
-
-          triangleIndex++;
-
-          ownerLists[m_NodeIds[nodeId1]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId1]].insert(-1);
-          ownerLists[m_NodeIds[nodeId2]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId2]].insert(-1);
-          ownerLists[m_NodeIds[nodeId3]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId3]].insert(-1);
-          ownerLists[m_NodeIds[nodeId4]].insert(featureIds[point]);
-          ownerLists[m_NodeIds[nodeId4]].insert(-1);
         }
         else if(featureIds[point] != featureIds[neigh3])
         {

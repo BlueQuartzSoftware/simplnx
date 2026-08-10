@@ -2,12 +2,17 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <algorithm>
 #include <map>
+#include <set>
 #include <utility>
 
 namespace SurfaceMeshingTest
@@ -18,6 +23,10 @@ inline constexpr usize k_BoxDim = 12;
 inline constexpr usize k_CylinderRadius = 3;
 inline constexpr usize k_CylinderCenter = 6;
 inline constexpr usize k_CylinderTopZ = 8;
+
+// The ImageGeom/CellData/FeatureIds layout every builder in this file produces.
+inline const DataPath k_ImageGeomPath({"ImageGeom"});
+inline const DataPath k_FeatureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
 
 /**
  * @brief Builds a 12x12x12 ImageGeom holding a Z-axis cylinder (Feature Id 1) in a
@@ -177,5 +186,73 @@ inline bool IsWatertight(const TriangleGeom& triangleGeom)
 {
   const EdgeUseCounts counts = CountEdgeUses(triangleGeom);
   return counts.TotalEdges > 0 && counts.EdgesUsedOnce == 0 && counts.EdgesUsedMoreThanTwice == 0;
+}
+
+/**
+ * @brief Result of running a surface meshing filter: the DataStructure it produced, plus the
+ * paths to the created Triangle Geometry and its Face Labels array.
+ */
+struct MeshResult
+{
+  DataStructure Structure;
+  DataPath TriangleGeomPath;
+  DataPath FaceLabelsPath;
+};
+
+/**
+ * @brief Runs a surface meshing filter (QuickSurfaceMeshFilter, SurfaceNetsFilter, or
+ * M3CSurfaceMeshingFilter) on the given DataStructure, setting every argument that is common to
+ * all three meshers, then invoking addExtraArgs to set the mesher-specific ones (e.g. Fix Problem
+ * Voxels, smoothing options). Every mesher shares the same parameter key names for the arguments
+ * set here, so callers only need to supply the pieces that differ.
+ * @param dataStructure Input DataStructure, e.g. from CreateCylinderInBox().
+ * @param triangleGeomPath Path at which to create the Triangle Geometry.
+ * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
+ */
+template <class FilterT, class ExtraArgsFn>
+inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+{
+  MeshResult meshResult;
+  meshResult.Structure = std::move(dataStructure);
+  meshResult.TriangleGeomPath = triangleGeomPath;
+  meshResult.FaceLabelsPath = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
+
+  FilterT filter;
+  Arguments args;
+  args.insertOrAssign(FilterT::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(FilterT::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FilterT::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+  args.insertOrAssign(FilterT::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+  args.insertOrAssign(FilterT::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomPath));
+  args.insertOrAssign(FilterT::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insertOrAssign(FilterT::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
+  args.insertOrAssign(FilterT::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
+  args.insertOrAssign(FilterT::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
+  args.insertOrAssign(FilterT::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FilterT::k_OmitBoundingBoxSkin_Key, std::make_any<bool>(omitSkin));
+
+  addExtraArgs(args);
+
+  auto preflightResult = filter.preflight(meshResult.Structure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(meshResult.Structure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  return meshResult;
+}
+
+/**
+ * @brief Collects the distinct {comp0, comp1} Face Labels pairs present in a mesh result.
+ */
+inline std::set<std::pair<int32, int32>> CollectLabelPairs(const MeshResult& meshResult)
+{
+  const auto& faceLabelsRef = meshResult.Structure.getDataRefAs<Int32Array>(meshResult.FaceLabelsPath).getDataStoreRef();
+  std::set<std::pair<int32, int32>> labelPairs;
+  for(usize i = 0; i < faceLabelsRef.getNumberOfTuples(); i++)
+  {
+    labelPairs.insert({faceLabelsRef[i * 2], faceLabelsRef[i * 2 + 1]});
+  }
+  return labelPairs;
 }
 } // namespace SurfaceMeshingTest
