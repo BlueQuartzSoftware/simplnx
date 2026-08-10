@@ -68,8 +68,8 @@ This proves the filter feeds EbsdLib correctly and lands the result in the right
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *pending* — recommend an OA-domain engineer confirm the Triclinic closed-form derivations and the 22-quat Class-2 reuse.
-- **Date:** *pending*
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
 
 ## Reproduction
 

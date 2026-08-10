@@ -6,8 +6,8 @@
 | SIMPLNX UUID | 30759600-7c02-4650-b5ca-e7036d6b568e |
 | DREAM3D 6.5.171 equivalent | GenerateFaceIPFColoring (legacy SIMPL UUID `0a121e03-3922-5c29-962d-40d88653f4b6`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -20,7 +20,7 @@
 | Exemplar archive       | **None — analytical fixtures inlined.** The prior `Valid filter execution` test compared against a `SurfaceMeshFaceIPFColors` array baked into the shared `6_6_Small_IN100_GBCD.tar.gz`; that comparison was a circular oracle (filter's own pre-fix output) and is **retired**. |
 | Legacy comparison      | **Three-way binary run** (6.5.171 vs 6.5.172 vs SIMPLNX) on a hand-built legacy-native cubic/hex mesh + SIMPLNX-vs-baked on the 756,474-face real mesh. **2 deviations:** D1 (the #1635 bug — 6.5.171 wrong, fixed in both 6.5.172 and SIMPLNX) and D2 (EbsdLib hex basal hue: SIMPLNX green vs legacy blue). Cubic coloring identical across all three. |
 | Bug flags              | `…-D1` — wrong-phase Laue operator on the Phase-2 side (a 6.5.171 bug, fixed). `…-D2` — hex basal IPF hue differs between EbsdLib (NX, green) and legacy EbsdLib (blue); resolved as a library convention difference — EbsdLib is canonical (3.0.0 and 3.1.0 agree), legacy is the deviation, trust SIMPLNX. Affects all hex IPF coloring. |
-| V&V phase              | All phases complete: oracle chosen + applied before legacy comparison, fix applied, tests encode the oracle, deviation documented. Outstanding: second-engineer oracle review; optional before/after doc image. |
+| V&V phase              | All phases complete: oracle chosen + applied before legacy comparison, fix applied, tests encode the oracle, deviation documented. V&V signed off 2026-07-16 (Michael Jackson, technical authority). Outstanding: optional before/after doc image. |
 
 ## Summary
 
@@ -52,7 +52,7 @@
 
 *Caveat (surfaced by the legacy A/B):* the exact hex basal value `(0,255,0)` green is the **EbsdLib** assignment (canonical); legacy DREAM3D's older EbsdLib assigns the other basal corner (blue) to the same direction (deviation `-D2`). The convention-independent part of the oracle is the **red channel == 0** invariant (a basal direction is never the red c-axis corner), which both EbsdLib generations satisfy and which distinguishes the fixed hex result from the bug's cubic `<100>` red. The exact green is confirmed under **both EbsdLib 3.0.0 and 3.1.0** (the test passes unchanged on a from-source 3.1.0 build), so it is the canonical value, not a single-version artifact.
 
-*Second-engineer review:* *Pending — recommend an OA-domain engineer confirm the cubic `<100>`/`<111>` corner-primary derivations. (The D2 hex hue is resolved: EbsdLib is canonical and 3.0.0/3.1.0 agree on green; legacy blue is the deviation.)*
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

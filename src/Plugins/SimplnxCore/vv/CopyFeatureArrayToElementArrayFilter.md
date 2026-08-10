@@ -8,7 +8,7 @@
 | DREAM3D 6.5.171 equivalent  | `CopyFeatureArrayToElementArray` (SIMPLib CoreFilters) — SIMPL UUID `99836b75-144b-5126-b261-b411133b5e8a` |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                                              |
 | Status                      | COMPLETE |
-| Sign-off                    | *pending second-engineer review* |
+| Sign-off                    | Michael A. Jackson <mike.jackson@bluequartz.net> (V&V author). Second engineer: Nathan Young, 2026-07-28 (PR #1689 review). |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive      | None — all fixtures are in-memory `AnalyticalFixtures` built in test code; no `download_test_data()` archive required. |
 | Legacy comparison     | **Run 2026-07-23** (re-run after the kernel fast-path change). Bit-identical numeric output on the main fixture (float32, int32×3, bool). 3 deviations, all naming/validation semantics: D1 (output naming for converted pipelines), D2 (over-provisioned feature array accepted in NX, error -5555 in legacy), D3 (negative ids: silent out-of-bounds garbage in legacy, hard error -5355 in NX). |
 | Bug flags             | `CopyFeatureArrayToElementArrayFilter-D3` — legacy 6.5.171 silently produces undefined values for negative feature ids (unchecked out-of-bounds read). SIMPLNX behavior is correct. |
-| V&V phase             | Discovery, algorithm relationship, oracle design + reconciliation, algorithm review (fixes applied and re-verified), unit tests, legacy comparison, deviations, documentation — **complete**. Outstanding: second-engineer review of the oracle design and this report (requested at PR review). The OOC-build backend gap noted in *Tests today* needs a build-infrastructure decision and is tracked outside this report. |
+| V&V phase             | Discovery, algorithm relationship, oracle design + reconciliation, algorithm review (fixes applied and re-verified), unit tests, legacy comparison, deviations, documentation — **complete**. Second-engineer review of the oracle design and this report **signed off by Nathan Young, 2026-07-28** (PR #1689). The OOC-build backend gap noted in *Tests today* needs a build-infrastructure decision and is tracked outside this report. |
 
 ## Summary
 
@@ -58,7 +58,7 @@ Class 4 companion invariants: (a) every pair of cells with the same feature id h
 
 *Encoded:* `test/CopyFeatureArrayToElementArrayTest.cpp::"Analytical Oracle (Class 1)"` — 12+36+12 element-wise Class 1 assertions (AvgTemp_Cell, RGB_Cell, Active_Cell) with the derivation embedded as comments, plus the Class 4 piecewise-constancy invariant loop. All pass in both builds. A secondary hand-derived fixture lives in `"Over-provisioned Feature array accepted"` (6 assertions).
 
-*Second-engineer review:* pending — requested as part of PR review of the test changes.
+*Second-engineer review:* **Signed off by Nathan Young, 2026-07-28** (PR #1689) — covering the oracle design and the test changes. The V&V work was authored by Michael A. Jackson, so the review is independent of the author.
 
 ## Code path coverage
 

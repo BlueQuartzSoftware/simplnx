@@ -7,7 +7,7 @@
 | DREAM3D 6.5.171 equivalent | `FindSizes` — UUID `656f144c-a120-5c3b-bee5-06deab438588` |
 | Verified commit | *pending* |
 | Status | COMPLETE |
-| Sign-off | Nathan Young, June 10th, 2026 |
+| Sign-off | Nathan Young, June 10th, 2026. Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-07-28. |
 
 ## At a glance
 
@@ -51,7 +51,7 @@ Port-time additions not in DREAM3D 6.5.171:
 
 Negative tests use degenerate inputs (out-of-bounds FeatureId; degenerate dims) and assert an error result is returned.
 
-Second-engineer review pending: verify hand-derivations for all three fixtures and the tolerance choice (relative `1e-6` via Catch2 `Approx` — a few float32 ULPs of slack so the pins survive platform and TBB reduction-order differences).
+*Second-engineer review:* **Signed off by Michael A. Jackson, 2026-07-28** (PR #1638 review). Reviewed: the hand-derivations for all three fixtures and the tolerance choice (relative `1e-6` via Catch2 `Approx` — a few float32 ULPs of slack so the pins survive platform and TBB reduction-order differences). The V&V work was authored by Nathan Young, so the second-engineer review is independent of the author.
 
 ## Code path coverage
 

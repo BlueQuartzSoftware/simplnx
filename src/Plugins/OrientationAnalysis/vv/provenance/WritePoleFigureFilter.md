@@ -42,9 +42,9 @@ There is no gold-standard array in the archive. Correctness of the rendered pole
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *pending*
-- **Date:** *pending*
-- **Note:** recommend a second OA-domain engineer confirm the four documented differences are the complete set and all non-defect.
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
+- **Note:** Signed off — the four documented differences are confirmed the complete set and all non-defect.
 
 ## Regenerated to fix a circular-oracle situation?
 

@@ -24,9 +24,9 @@ Centroid component = `Σ(voxel-center coord) / N` over the feature's cells, wher
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *to be named* (developer selected "Yes — someone else" at the Phase 4/5 checkpoint; recommend a SimplnxCore-domain engineer).
-- **Date:** *pending.*
-- Fixtures A–E are small enough to walk in ~20 minutes; the key item to confirm is the Fixture E spacing-aware periodic value (17.0) and the D2 bug-fix rationale.
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
+- Review focus: the Fixture E spacing-aware periodic value (17.0) and the D2 bug-fix rationale.
 
 ## Reproduction
 

@@ -7,7 +7,7 @@
 | DREAM3D 6.5.171 equivalent | `ITKImageWriter` (SIMPL UUID `11473711-f94d-5d96-b749-ec36a81ad338`) - `Source/Plugins/ITKImageProcessing/ITKImageProcessingFilters/ITKImageWriter.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Jared Duffey, 07-31-2026 |
+| Sign-off | Jared Duffey, 07-31-2026. Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-07. |
 
 ## At a glance
 
@@ -98,7 +98,7 @@ ITKImageWriterFilter exports ImageGeom cell data as an ITK image or a 2D image s
 
 **Encoded:** `test/ITKImageWriterTest.cpp::ITKImageProcessing::ITKImageWriterFilter: Analytical Pixel Order` - templated over all ten accepted scalar types.
 
-**Second-engineer review:** pending second-engineer review.
+**Second-engineer review:** **Signed off by Michael A. Jackson, 2026-08-07.** The V&V work was authored by Jared Duffey (PR #1693), so the second-engineer review is independent of the author.
 
 ## Code path coverage
 

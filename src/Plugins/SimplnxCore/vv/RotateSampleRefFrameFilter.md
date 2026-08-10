@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Rotate Sample Reference Frame |
 | DREAM3D 6.5.171 equivalent | `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) — `Source/Plugins/Sampling/SamplingFilters/RotateSampleRefFrame.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                                                                                    |
 | Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. 1 deviation, on the *unsupported* arbitrary-rotation domain only.                                                                                                              |
 | Bug flags              | None. The single deviation (D1) is an intentional guard, not a bug.                                                                                                                                                                                                                                                        |
-| V&V phase              | Discovery, oracle design + reconciliation, algorithm review (2 fixed, 1 deferred = shared-utility `std::cout` cleanup), test rework, full-build validation (52/52 affected tests inc. ReadH5Ebsd/ITK), legacy A/B, docs — **complete**. Outstanding: OOC dual-build run, second-engineer oracle review, status → COMPLETE. |
+| V&V phase              | Discovery, oracle design + reconciliation, algorithm review (2 fixed, 1 deferred = shared-utility `std::cout` cleanup), test rework, full-build validation (52/52 affected tests inc. ReadH5Ebsd/ITK), legacy A/B, docs — **complete**. **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** Outstanding: OOC dual-build run. |
 
 ## Summary
 
@@ -43,7 +43,7 @@
 
 *Encoded:* `test/RotateSampleRefFrameTest.cpp` — `Class 1 - 180 about Z reverses a slice` (explicit expected array, both representations); `Class 1 - exact 90-degree permutation pins chirality` (hand-derived arrays for 90@X/Y/Z, distinguishing +90 from -90); `Class 1 - non-zero input origin` (transform-derived origin = absolute transformed min corner, plus keep-origin); `Class 1 - anisotropic spacing permutes with the axes`; `Class 1/4 - principal-90 rotations are lossless permutations` (9 rotations × 2 representations: exact dims + value bijection); `Class 4 - full-circle composition is identity`; `accepts 120-degree rotation about (111)`; `KeepInputGeometryOrigin controls output origin`; `slice-by-slice 180 about Y is a lossless per-slice flip`. 11 test cases, all pass (in-core).
 
-*Second-engineer review:* **Pending.**
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name         | Compute Feature Neighborhoods                                                                                           |
 | DREAM3D 6.5.171 equivalent | `FindNeighborhoods` (SIMPL UUID `697ed3de-db33-5dd1-a64b-04fb71e7d63e`) — `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.{h,cpp}` |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                 |
-| Status                     | READY FOR REVIEW                                                                                                         |
-| Sign-off                   | *<engineer(s), date>*                                                                                                    |
+| Status                     | COMPLETE — 2026-07-16                                                                                                    |
+| Sign-off                   | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16                                                              |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **None.** All oracles are inline analytical values. The legacy comparison used the shared `6_6_stats_test_v2.tar.gz` Small IN100 stats dataset as input only (not a unit-test exemplar for this filter).                                                                                          |
 | Legacy comparison      | **Run** on Small IN100 (`6_6_stats_test_v2.dream3d`, 620 features, mult=1) via 6.5.171 `PipelineRunner` vs `nxrunner`. After the fix, NX correlates **0.894** with legacy and finds **50.8%** as many neighbors — exactly the sphere/box volume ratio. One documented deviation (D1); phases removal (D2). |
 | Bug flags              | **NX regression found & fixed in this PR** (not a legacy bug): the prior NX rewrite (PR #1485) introduced a `÷2` factor and a global (vs per-feature) radius, making the default `mult=1` find ~37× fewer neighbors than legacy (mean 0.29 vs 10.93). Fixed by restoring a per-feature Euclidean radius. |
-| V&V phase              | Oracle chosen and encoded; SIMPLNX-vs-oracle reconciliation complete (bug fixed); legacy 6.5.171 comparison run and explained; docs updated. Outstanding: second-engineer oracle review; sign-off. |
+| V&V phase              | Oracle chosen and encoded; SIMPLNX-vs-oracle reconciliation complete (bug fixed); legacy 6.5.171 comparison run and explained; docs updated. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
 
 ## Summary
 
@@ -54,7 +54,7 @@
 
 *Encoded:* `test/ComputeNeighborhoodsTest.cpp::ComputeNeighborhoods_SyntheticOracle` (microns) and `::ComputeNeighborhoods_MultiplesAnalyticalOracle` (per-feature). All pass at the verified commit.
 
-*Second-engineer review:* *Pending — recommend reviewing the `MultiplesAnalyticalOracle` asymmetry fixture (it is the case that distinguishes per-feature from global radius).*
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

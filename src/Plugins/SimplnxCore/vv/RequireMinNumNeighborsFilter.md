@@ -7,7 +7,7 @@
 | DREAM3D 6.5.171 equivalent | `MinNeighbors` (SIMPL UUID `dab5de3c-5f81-5bb5-8490-73521e1183ea`) - `Source/Plugins/Processing/ProcessingFilters/MinNeighbors.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Jared Duffey, 07-31-2026 |
+| Sign-off | Jared Duffey, 07-31-2026. Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-07. |
 
 ## At a glance
 
@@ -20,7 +20,7 @@
 | Exemplar archive | The inline oracle needs no output archive; retained input archive `6_5_test_data_1_v2.tar.gz` has SHA512 `585b51ba...3027d6c` and a provenance sidecar. |
 | Legacy comparison | **Complete (2026-07-31)** - DREAM3D 6.5.171 and SIMPLNX were run on the 4x1x1 and 6x6x6 analytical fixtures in all-phases and single-phase modes; all 22 array comparisons and 2,646 exact values matched the independent expectations. |
 | Bug flags | `RequireMinNumNeighborsFilter-D1`, `RequireMinNumNeighborsFilter-D2`, `RequireMinNumNeighborsFilter-D3` |
-| V&V phase | Ready for review |
+| V&V phase | **COMPLETE.** All V&V phases complete; second-engineer review signed off by Michael A. Jackson, 2026-08-07. |
 
 ## Summary
 
@@ -149,7 +149,7 @@ Because feature 5 owns no cells, both modes have identical final cell arrays eve
 - `test/RequireMinNumNeighborsTest.cpp::"SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analytical Fixture"` - one common input executed in both phase modes; asserts 2,610 exact cell and feature values across six arrays, identical final cell `FeatureIds`, and inherited tuple dimensions.
 - Both test cases pass in the current in-core Debug build.
 
-*Second-engineer review:* pending second-engineer review.
+*Second-engineer review:* **Signed off by Michael A. Jackson, 2026-08-07.** The V&V work was authored by Jared Duffey (PR #1694), so the second-engineer review is independent of the author.
 
 ## Code path coverage
 

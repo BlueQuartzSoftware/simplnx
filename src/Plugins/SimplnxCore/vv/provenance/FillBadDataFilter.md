@@ -49,8 +49,9 @@ The archive contains two groups with different oracle classifications:
 
 ## Second-engineer review
 
-- **Reviewer:** *<pending>*
-- **Recommended:** Spot-check the hand-authored derivations for Test 11 (tie-breaking scan order) and Test 13 (StoreAsNewPhase phase assignment) before promoting V&V status to COMPLETE.
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
+- **Review focus:** the hand-authored derivations for Test 11 (tie-breaking scan order) and Test 13 (StoreAsNewPhase phase assignment).
 
 ## Regeneration note
 

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Read Oxford Instr. EBSD Data (.ctf) |
 | DREAM3D 6.5.171 equivalent | `ReadCtfData` (SIMPL UUID `d1df969c-0428-53c3-b61d-99ea2bb6da28`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ReadCtfData.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | pending second-engineer review |
+| Status | COMPLETE — all V&V phases complete; verified-correct against independent oracle; second-engineer sign-off recorded at PR review. |
+| Sign-off | Michael A. Jackson <mike.jackson@bluequartz.net> — 2026-07-24. Second engineer: Jared Duffey, 2026-07-28 (PR #1692 review). |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **None — retired `6_6_read_ctf_data_2.tar.gz`** (legacy-generated exemplar = forbidden oracle). `download_test_data()` entry removed from `test/CMakeLists.txt`; retirement documented in `vv/provenance/6_6_read_ctf_data_2.md`. Its production Cugrid scan lives on as an A/B fixture in the comparison working folder only. |
 | Legacy comparison      | **Run (2026-07-24) vs the official DREAM3D 6.5.171 release.** Four runs over three byte-identical input files: toy (2 conversion combos), Cugrid 550×400 production scan, 2×2×2 multi-slice toy. **All numeric outputs bit-identical** — 543,950 of the production scan's 660,000 Euler values match exactly (the 116,050 differing values are all the unindexed points' φ2), and the toy's double-precision-pinning angles match legacy bit-for-bit — except the unindexed-point family: Phases 0→1 remap (D1) and the consequent +30° on unindexed φ2 (D2). Three malformed-input fixtures demonstrated legacy segfaults/silent corruption vs SIMPLNX errors (D3). |
 | Bug flags              | Legacy: crash/UB on malformed files, **empirically confirmed** (two segfaults, one silent heap-dependent output) — D3. SIMPLNX (pre-pass): multi-slice `.ctf` silently truncated to slice 0 — D4, **fixed this pass** and pinned by the 3D test; latent OOB/null-deref twins of the legacy crashes existed in the NX copy path and were guarded this pass (−19600/−19601/−19602/−19603). |
-| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review (fixes applied), tests, legacy comparison, deviations, provenance, docs — **complete**. Tests pass 12/12 in both `simplnx-Rel` and `simplnx-ooc-Rel` (OOC caveat: that build's out-of-core backend registration is under separate investigation; its pass is reported as-run). Outstanding: second-engineer sign-off at PR review. |
+| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review (fixes applied), tests, legacy comparison, deviations, provenance, docs — **complete**. Tests pass 12/12 in both `simplnx-Rel` and `simplnx-ooc-Rel` (OOC caveat: that build's out-of-core backend registration is under separate investigation; its pass is reported as-run). Second-engineer sign-off completed at PR review (Jared Duffey, 2026-07-28, PR #1692). |
 
 ## Summary
 
@@ -67,7 +67,7 @@ Hand-authored toy `.ctf` fixtures live as string literals in the test source: a 
 
 All 12 pass in `simplnx-Rel` and `simplnx-ooc-Rel`. Reconciliation found zero SIMPLNX-vs-oracle discrepancies (the pre-identified fixes — 3D support, guards, double intermediates — were implemented before the first oracle run). Every fixed delta has a regression pin that fails against the pre-pass code: the guard error codes did not exist, the 3D dims assertion cannot pass against the z=1 hard-code, and — added after the adversarial review found the original angles blind to it — four Euler fixture values (7.125°, 3.375°, 6.75°, and 37.125° via the hex shift) whose correctly-rounded results differ between float32 arithmetic and the double-precision intermediates.
 
-*Second-engineer review:* skipped — documented reason: the filter's value-add is pure data plumbing plus two elementwise transforms whose expected values are mechanically derivable IEEE-754 roundings, leaving no design freedom for the author-bias failure mode the review guards against. See `vv/provenance/6_6_read_ctf_data_2.md`.
+*Second-engineer review:* **Signed off by Jared Duffey, 2026-07-28** (PR #1692 review). A dedicated oracle re-derivation was scoped as unnecessary — documented reason: the filter's value-add is pure data plumbing plus two elementwise transforms whose expected values are mechanically derivable IEEE-754 roundings, leaving no design freedom for the author-bias failure mode the review guards against. See `vv/provenance/6_6_read_ctf_data_2.md`. The V&V work was authored by Michael A. Jackson, so the PR review is independent of the author.
 
 ## Algorithm review
 

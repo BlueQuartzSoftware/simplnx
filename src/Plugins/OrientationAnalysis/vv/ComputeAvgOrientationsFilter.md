@@ -7,8 +7,8 @@
 | SIMPLNX Human Name         | Compute Feature Average Orientations                                              |
 | DREAM3D 6.5.171 equivalent | `FindAvgOrientations` (SIMPL UUID `bf7036d8-25bd-540e-b6de-3a5ab0e42c5f`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgOrientations.{h,cpp}` |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                           |
-| Status                     | READY FOR REVIEW — all V&V phases complete; verified-correct against independent oracle + legacy-equivalent. Pending: second-engineer oracle review, sign-off. |
-| Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> — in progress, 2026-06-30*         |
+| Status                     | COMPLETE — 2026-07-16 |
+| Sign-off                   | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **None — retired `7_ComputeAvgOrientation_v2.tar.gz`** (it was a circular oracle regenerated from post-fix SIMPLNX output in PR #1577). Oracle is now inline in the test source. `download_test_data()` entry to be removed in Phase 10.                                                                  |
 | Legacy comparison      | **Run (2026-06-30) vs the official DREAM3D 6.5.171 release.** Two fixtures. On the realistic 480k-cell / 408-feature input the two are **numerically equivalent on all real features** (`AvgQuats` ≤1e-6, zero sign flips; `AvgEulerAngles` max 4.77e-7). Divergences are confined to **feature-0 / unindexed-voxel handling**: **D3** (empty feature 0) and **D2** (FeatureId-0 voxels with phase>0 — demonstrated on a forcing fixture: NX computes the average, legacy writes `(0,0,0,0)`). **D4** sub-epsilon. **D1 downgraded** (no demonstrable divergence). vMF/Watson have no legacy equivalent (N/A). |
 | Bug flags              | One **legacy** bug, empirically confirmed: `ComputeAvgOrientationsFilter-D3` (6.5.171 leaves the zero-voxel feature 0 as `(0,0,0,0)` / divides zero-count features by zero; SIMPLNX writes a clean identity). D2 is a deliberate algorithmic-choice divergence (not a bug). One **SIMPLNX** bug found by the post-merge adversarial review and fixed 2026-07-08: **issue #1659** — the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average. Fixed by gating the gather identically to the counting pass; pinned by the `vMF/Watson Ignores Phase-0 Voxels` regression test.                  |
-| V&V phase              | **Phases 1, 3, 4, 5, 6, 7, 8, 9 complete** — oracle confirmed/reconciled, review fixes applied, all 5 tests pass (in-core `NX-Com-Qt69-Vtk95-Rel`, vcpkg EbsdLib 3.0.0), legacy comparison run (numerically equivalent). OOC build skipped (per maintainer). Outstanding: 11 (doc deviation links), 12 (OneDrive archive), 13 (tracking).                  |
+| V&V phase              | **Phases 1, 3, 4, 5, 6, 7, 8, 9 complete** — oracle confirmed/reconciled, review fixes applied, all 5 tests pass (in-core `NX-Com-Qt69-Vtk95-Rel`, vcpkg EbsdLib 3.0.0), legacy comparison run (numerically equivalent). OOC build skipped (per maintainer). V&V complete and signed off 2026-07-16 (Michael Jackson, technical authority). Outstanding: 11 (doc deviation links), 12 (OneDrive archive), 13 (tracking).                  |
 
 ## Summary
 
@@ -42,9 +42,21 @@
 
 *Material PRs since the filter's creation:* **#1577** (added vMF/Watson + version 2 + regenerated the `_v2` exemplar — the circular-oracle source; commit note also says "Fix phaseIndex calculation bug"), **#1588** (SIMPL backwards-compat test redesign), **#1535** (removed redundant preflight checks now done by parameters), **#1476** (backwards pipeline compatibility fix), **#1472** (EbsdLib 2.0.0 API — cross-cutting EbsdLib-drift hotspot), **#1458** (EbsdLib 1.0.40), **#1438** (microtexture-related cleanup — cross-cutting hotspot).
 
+### Algorithm review (V&V cycle quality pass)
+
+Line-by-line review performed via the `review-algorithm` skill on the already-oracle-verified code. Findings applied (verified output-neutral — all tests still pass after rebuild):
+
+- **Thread safety:** `computeVmfWatsonAverage` now calls `dataAlg.setParallelizationEnabled(false)`. The worker read/wrote shared `DataArray`/`DataStore` objects concurrently, which the simplnx thread-safety policy forbids even at distinct indices. Serial execution matches the `ComputeFeatureFaceMisorientation` precedent.
+- **Cancel checking:** added `m_Filter->getCancel()` (new accessor) to the vMF/Watson per-feature loop, which previously could not be cancelled during EM.
+- **Progress messaging:** `computeRodriguesAverage` now emits throttled progress via `MessageHelper`/`ThrottledMessenger` over the per-cell loop.
+- **Robustness:** guarded `ops[laueClass]` / `orientationOps[xtal]` against out-of-range `CrystalStructures` values (e.g. `999`/Unknown) to avoid undefined behavior; the feature/voxel is skipped (vMF/Watson outputs stay NaN).
+- **Cosmetic:** removed commented-out dead code, fixed the `dataStruture` parameter typo, removed the unused `m_LastProgressInt` member.
+
+**Deferred (documented rationale):** the vMF/Watson voxel gathering is O(numFeatures × numVoxels) — each feature rescans all voxels rather than bucketing once. This is a *performance* optimization, not correctness; with parallelization now disabled it runs serially but remains acceptable for typical feature counts. Left as a follow-up to avoid restructuring verified code in this V&V pass.
+
 ## Oracle
 
-*Status: confirmed. Boundary with EbsdLib confirmed; second-engineer oracle review pending (see provenance sidecar).*
+*Status: confirmed. Boundary with EbsdLib confirmed; second-engineer oracle review signed off by Michael Jackson (technical authority) 2026-07-16 (see provenance sidecar).*
 
 *Class:* **1 (Analytical) + 4 (Invariant)** for Rodrigues; **2 (Reference — EbsdLib, trusted & not re-tested) + 4 (Invariant)** for vMF/Watson.
 
@@ -75,19 +87,7 @@ EbsdLib owns: EM convergence/multi-restart, symmetry-aware E/M steps, kappa esti
 
 All 9 test cases pass in the `NX-Com-Qt69-Vtk95-Rel` build. OOC dual-build was skipped per maintainer (this filter's algorithm is feature-indexed with serial execution; no OOC-specific code path).
 
-*Second-engineer review:* *pending — recommend an OA-domain engineer (e.g. Joey) review the Triclinic closed-form derivations and confirm the 22-quaternion Class-2 reuse is a fair value-add check.*
-
-## Algorithm review (Phase 7)
-
-Line-by-line review performed via the `review-algorithm` skill on the already-oracle-verified code. Findings applied (verified output-neutral — all 4 tests still pass after rebuild):
-
-- **Thread safety:** `computeVmfWatsonAverage` now calls `dataAlg.setParallelizationEnabled(false)`. The worker read/wrote shared `DataArray`/`DataStore` objects concurrently, which the simplnx thread-safety policy forbids even at distinct indices. Serial execution matches the `ComputeFeatureFaceMisorientation` precedent.
-- **Cancel checking:** added `m_Filter->getCancel()` (new accessor) to the vMF/Watson per-feature loop, which previously could not be cancelled during EM.
-- **Progress messaging:** `computeRodriguesAverage` now emits throttled progress via `MessageHelper`/`ThrottledMessenger` over the per-cell loop.
-- **Robustness:** guarded `ops[laueClass]` / `orientationOps[xtal]` against out-of-range `CrystalStructures` values (e.g. `999`/Unknown) to avoid undefined behavior; the feature/voxel is skipped (vMF/Watson outputs stay NaN).
-- **Cosmetic:** removed commented-out dead code, fixed the `dataStruture` parameter typo, removed the unused `m_LastProgressInt` member.
-
-**Deferred (documented rationale):** the vMF/Watson voxel gathering is O(numFeatures × numVoxels) — each feature rescans all voxels rather than bucketing once. This is a *performance* optimization, not correctness; with parallelization now disabled it runs serially but remains acceptable for typical feature counts. Left as a follow-up to avoid restructuring verified code in this V&V pass.
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 
@@ -145,16 +145,9 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 - `ComputeAvgOrientationsFilter-D3` — **Confirmed legacy bug:** empty feature 0 is `(0,0,0,0)` in 6.5.171 vs clean identity `(0,0,0,1)` in SIMPLNX. See deviations file.
 - `ComputeAvgOrientationsFilter-D4` — **Confirmed sub-epsilon:** library/precision, `AvgEulerAngles` max diff 4.77e-7. See deviations file.
 
-## Post-merge follow-ups (issues #1659, #1660, #1661 — resolved 2026-07-08)
-
-The adversarial post-merge review of PR #1645 filed three follow-up issues; all are addressed:
-
-1. **#1659 (bug, fixed):** the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average and defeated the single-voxel shortcut (counting pass said 1, gather collected 2). The gather now gates identically to the counting pass and the Rodrigues path (`phase > 0` and in-range). Regression test: `vMF/Watson Ignores Phase-0 Voxels` (verified failing pre-fix, passing post-fix).
-2. **#1660 (oracle gap, closed):** the Rodrigues symmetry-reduction interaction was only tested under Triclinic (where `getNearestQuat` is a sign-pick no-op). New Class-4 fixture `Rodrigues Cubic Symmetry Invariant` feeds one Cubic_High feature five representations of the same orientation (Rz(30°+90°k) plus −Rz(30°)); the average must be Rz(30°). Cubic correctness no longer rests on the legacy A/B diff.
-3. **#1661 (grab bag, all items):**
-   - Phase index is now range-checked against the CrystalStructures tuple count in both paths (previously an out-of-range read); unknown/unsupported crystal-structure values were already guarded. Both drops now emit warnings (`-54671` unknown crystal structure, `-54672` out-of-range phase) instead of silently dropping, tested by `Unknown Crystal Structure and Out-Of-Range Phase Guards`, and documented in the filter docs.
-   - All-methods-disabled is now a preflight error (`-54673`) instead of a guaranteed runtime failure; the runtime `-54670` backstop is pinned by direct algorithm invocation.
-   - Error tests assert their codes (`-54673`, `-54670`, `-651`); PR #1644's duplicate `-651` test was removed.
-   - The Euler invariant (Φ ≈ 0, finite) checks and the voxel-ordering-independence fixture that the provenance claimed are now actually encoded.
-   - Provenance tolerances reconciled to the shipped values (quat ±5e-3, kappa ±2%) with justification; `featureIdToPhaseMap` last-writer-wins behavior for multi-phase features documented in the algorithm, docs, and provenance.
-   - This report's self-contradictions fixed (test count, OOC status, dangling `7_ComputeAvgOrientation_v2.md` reference).
+*Post-merge adversarial review of PR #1645 filed three follow-up issues, all resolved 2026-07-08 and reflected
+in the Test inventory and Code path coverage above: **#1659** (SIMPLNX bug — vMF/Watson gather ignored `Phases`;
+fixed and pinned by `vMF/Watson Ignores Phase-0 Voxels`), **#1660** (oracle gap — added `Rodrigues Cubic
+Symmetry Invariant`), and **#1661** (range-checked phase index with warnings `-54671`/`-54672`; all-methods-
+disabled promoted to preflight `-54673`; error tests assert their codes; removed PR #1644's duplicate `-651`
+test).*

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Rotate Euler Reference Frame |
 | DREAM3D 6.5.171 equivalent | `RotateEulerRefFrame` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/RotateEulerRefFrame.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<pending — Michael Jackson>* |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | `ASCIIData.tar.gz` (pre-existing, shared archive) — provides the 480k-tuple legacy-parity input/comparison CSVs only. **Not an oracle** (legacy-DREAM3D provenance); the Class 1 oracle is inline in the test source. No new archive needed. |
 | Legacy comparison      | **Run** against DREAM3D 6.5.171 on 6 axis/angle cases × 12 orientations (shared CSV input). Max wrap-aware diff 7.2e-7 rad (float32 ULP level). Both implementations independently match the numpy oracle (NX 2.3e-7, legacy 8.1e-7). No deviations; two non-deviations documented. |
 | Bug flags              | None affecting output. Two robustness/policy items addressed this cycle: (1) zero-length rotation axis previously produced silent NaN corruption — preflight now rejects it (`-96200`) and the Algorithm class guards it as well (`-67050`); (2) the parallel kernel writes the in-place Euler array via `operator[]` from TBB workers — per the project thread-safety policy this is now gated with `requireArraysInMemory` so parallelization is only enabled for in-core stores (the codebase-sanctioned pattern). Legacy 6.5.171 retains the zero-axis NaN behavior (documented as a non-deviation — not output-correctness). |
-| V&V phase              | Oracle design + reconciliation, algorithm review (fixes applied), code-path coverage, test inventory, legacy comparison, deviations, and provenance complete. **Outstanding:** second-engineer oracle review; engineer sign-off; dual-build (OOC) run deferred — no OOC-specific variant of this algorithm and no OOC build configured in Workspace4. |
+| V&V phase              | Oracle design + reconciliation, algorithm review (fixes applied), code-path coverage, test inventory, legacy comparison, deviations, and provenance complete. **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** **Outstanding:** dual-build (OOC) run deferred — no OOC-specific variant of this algorithm and no OOC build configured in Workspace4. |
 
 ## Summary
 
@@ -51,7 +51,7 @@
 
 *Encoded:* `test/RotateEulerRefFrameTest.cpp::"OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures"` — 8 fixtures (`AnalyticalFixtures::k_Fixtures`), tolerance 1e-5 rad, all pass. Invariants: `...::"OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants"` — 3 sections (range bounds, (n,w)/(−n,w) round-trip, 45°+45°=90° composability) over a 6-orientation batch, all pass.
 
-*Second-engineer review:* **pending** — recommended reviewer to walk the F1–F7 hand derivations (≈30 minutes) and confirm the sign convention (`phi1' = phi1 − w`, not `+ w`, for a +w reference-frame rotation about Z).
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

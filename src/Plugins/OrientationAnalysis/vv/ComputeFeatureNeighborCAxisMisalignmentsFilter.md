@@ -132,6 +132,8 @@ The exemplar **could not catch the divisor bug** because every feature in the da
 
 The retired archive was unique to this filter (no other filter test consumed it), so its `download_test_data` line in `test/CMakeLists.txt` was removed entirely.
 
+- **Provenance:** `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` — the canonical record of how the inlined data fixtures (including the 10×10×1 realistic microstructure) were designed and how the expected values were derived.
+
 ## Deviations from DREAM3D 6.5.171
 
 See `vv/deviations/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the canonical, ID-stable list:
@@ -143,7 +145,3 @@ See `vv/deviations/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the ca
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D6`** — Hexagonal_Low support gap (surfaced 2026-06-04). Legacy 6.5.171 restricts the hex-hex phase gate to Hex_High only; SIMPLNX correctly handles both Hex_High AND Hex_Low. Not observable on the F#6 fixture (no Hex_Low features), but a real behavior gap on wurtzite-class data.
 
 D3 (default output array name change from PR #1438) is documented as a non-deviation in the same file (user-facing migration noise, not a behavioral deviation).
-
-## Provenance
-
-See `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the canonical record of how the inlined data fixtures (including the 10×10×1 realistic microstructure) were designed and how the expected values were derived.

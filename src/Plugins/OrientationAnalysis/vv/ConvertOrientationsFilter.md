@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Convert Orientation Representation |
 | DREAM3D 6.5.171 equivalent | `ConvertOrientations` (SIMPL UUID `e5629880-98c4-5656-82b8-c9fe2b9744de`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ConvertOrientations.{h,cpp}`; mapped in `OrientationAnalysisLegacyUUIDMapping.hpp` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -23,7 +23,7 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 | Exemplar archive       | None — values are inline dispatch landmarks in the test source. Unknown-provenance `k_InitValues` **retired** and replaced by EbsdLib-3.0.0-derived values. These are a consistency check against EbsdLib's reference implementation for the transform math (not EbsdLib-independent); genuinely independent pins are the stereographic closed form and seed-0's Rowenhorst-2015 worked-example orientation. |
 | Legacy comparison      | **Run** (toy fixture, 6 shared eu→X conversions via 6.5.171 PipelineRunner vs nxrunner on byte-identical Euler input). Headline: 4 of 6 bit-identical; max \|Δ\| = **1.78e-6** (cubochoric), measured for eu→X only. 5 deviations: D1 library-generation precision (measured), D2 float64 scope, D3 Stereographic-added, D4 error-code surface, D5 dropped in-place Euler sanitization. See `comparisons/ConvertOrientationsFilter/results/comparison.md`. |
 | Bug flags              | **None.** Filter matches the independent oracle on all 56 dispatch pairs + stereographic; all 4 deviations are precision/scope/API, not bugs. |
-| V&V phase              | **Steps 1, 3, 4, 5, 6 (oracle pass), 7 (algorithm review + refactor), 8 (legacy A/B run + deviations) complete.** Algorithm review applied: dead code removed, cancel + thread-safe progress + `requireArraysInMemory` added (1032 assertions still pass). **Outstanding:** Step 10 doc review; second-engineer oracle review. OOC run intentionally skipped (single-algorithm filter, `requireArraysInMemory` applied). |
+| V&V phase              | **Steps 1, 3, 4, 5, 6 (oracle pass), 7 (algorithm review + refactor), 8 (legacy A/B run + deviations) complete.** Algorithm review applied: dead code removed, cancel + thread-safe progress + `requireArraysInMemory` added (1032 assertions still pass). **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** **Outstanding:** Step 10 doc review. OOC run intentionally skipped (single-algorithm filter, `requireArraysInMemory` applied). |
 
 For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrientationCheckFilter.md` and `src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md`.
 
@@ -64,7 +64,7 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 **Oracle-independence caveat (honest scope):** the `k_Ref` landmarks are generated from EbsdLib 3.0.0 — the same library the filter links — so with respect to the *transform math* the 8×8 dispatch test is a **consistency check against EbsdLib's reference implementation**, not an EbsdLib-independent one. What it independently verifies is the filter's own value-add: dispatch routing and per-tuple striding (a mis-wired switch or stride bug produces a detectably wrong number regardless of the landmark's provenance). Two elements are genuinely EbsdLib-independent: (1) the Stereographic path, checked against its closed form computed in-test with no EbsdLib call (Class 1); (2) seed-0, whose orientation is the Rowenhorst 2015 worked example — its quaternion matches EbsdLib `OrientationConverterTest`'s exemplar `{-0.2919894…, 0.319372, 0.1502762…, 0.8889099…}`, but the ultimate authority for that value is the paper's Table (Class 3), not the EbsdLib fixture. The transform math itself is verified inside EbsdLib's own `OrientationTest.cpp` / `OrientationTransformationTest.cpp` suite, which this V&V relies on rather than duplicates.
 
-*Second-engineer review:* *Pending.*
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 
