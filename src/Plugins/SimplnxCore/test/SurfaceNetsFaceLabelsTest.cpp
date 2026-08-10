@@ -63,11 +63,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Face Label conventions", "[SimplnxCor
   const std::set<std::pair<int32, int32>> labelPairs = RunAndCollectLabelPairs();
 
   // The cylinder wall separates background (0) from the cylinder (1).
-  REQUIRE(labelPairs.count({0, 1}) == 1);
+  CHECK(labelPairs.count({0, 1}) == 1);
   // The box wall backed by background must be distinguishable from a feature cap.
-  REQUIRE(labelPairs.count({-1, 0}) == 1);
+  CHECK(labelPairs.count({-1, 0}) == 1);
   // The cylinder's bottom cap: box wall backed by the cylinder.
-  REQUIRE(labelPairs.count({-1, 1}) == 1);
+  CHECK(labelPairs.count({-1, 1}) == 1);
   // The buggy {-1,-1} pair must not appear.
-  REQUIRE(labelPairs.count({-1, -1}) == 0);
+  CHECK(labelPairs.count({-1, -1}) == 0);
 }
