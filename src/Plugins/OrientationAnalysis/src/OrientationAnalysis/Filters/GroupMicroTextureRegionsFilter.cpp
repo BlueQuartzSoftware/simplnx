@@ -58,7 +58,7 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_UseRunningAverage_Key, "Group C-Axes With Running Average", "Group C-Axes With Running Average", true));
-  params.insert(std::make_unique<Float32Parameter>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 20.0f));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
 

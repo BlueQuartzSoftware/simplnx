@@ -1,102 +1,97 @@
 # Deviations from DREAM3D 6.5.171: GroupMicroTextureRegionsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`Source/Plugins/Reconstruction/ReconstructionFilters/GroupMicroTextureRegions.{h,cpp}`, which inherits from `GroupFeatures` base).
+This file lists every behavioral difference between the released SIMPLNX filter and its DREAM3D legacy equivalent (`Source/Plugins/Reconstruction/ReconstructionFilters/GroupMicroTextureRegions.{h,cpp}`, which inherits from the `GroupFeatures` base). It describes the **current state of the shipped code**, not the development history of either implementation.
 
 Entries are referenced by stable ID (`GroupMicroTextureRegionsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Root-cause confirmation used a surgically patched local build of the legacy source that mirrors the SIMPLNX design fixes onto the legacy codebase — a 2025-10-23 fix titled `BUG: GroupMicrotextureRegions bug fixes, expose as usable filter`. Contact the DREAM3D team for the legacy-parity patch.
+**Which legacy build is the reference.** In DREAM3D 6.5.171 this filter is *unregistered* — it is listed in `_PrivateFilters`, so `ADD_SIMPL_FILTER(... FALSE)` emits no `fm->addFilterFactory()` call and the filter cannot be instantiated from the GUI or from a pipeline file. The same is true of every other tagged 6.x release. The filter **is** public and runnable in **DREAM3D 6.6.379**, which is therefore the legacy build used for all behavioral comparisons recorded here. The algorithm in 6.6.379 is unchanged from 6.5.171 apart from the EbsdLib math-API migration, so these entries describe the 6.5.171 algorithm as well; they simply could not have been observed there. See the *Availability across DREAM3D versions* section of the V&V report.
 
 ---
 
 ## GroupMicroTextureRegionsFilter-D1
 
-| Field           | Value                                                              |
-|-----------------|--------------------------------------------------------------------|
-| **Deviation ID** | `GroupMicroTextureRegionsFilter-D1`                               |
-| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                            |
-| **Status**       | active (fix landed 2026-06-11 on `vv/group_microtexture_regions`) |
+| Field            | Value                                             |
+|------------------|---------------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D1`               |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`            |
+| **Status**       | closed — no deviation                             |
 
-**Symptom:** Prior to 2026-06-11, running the filter with `UseNonContiguousNeighbors=false` (the documented and default mode) always returned error `-99345` with message `"There was an error getting the Non-contiguous neighborlist from the DataStructure"`. The filter was effectively unusable except via the non-default `UseNonContiguousNeighbors=true` path.
-
-**Root cause:** Bug. In `GroupMicroTextureRegions::execute()` (algorithm class), the null-pointer guard on `nonContigNeighListPtr` was placed *outside* the conditional that populates the pointer:
-
-```cpp
-NeighborList<int32>* nonContigNeighListPtr = nullptr;
-if(m_InputValues->UseNonContiguousNeighbors)
-{
-  nonContigNeighListPtr = m_DataStructure.getDataAs<NeighborList<int32>>(...);
-}
-if(nullptr == nonContigNeighListPtr)   // <-- always triggers when UseNonContiguousNeighbors=false
-{
-  return MakeErrorResult(-99345, "...");
-}
-```
-
-Legacy 6.5.171 `GroupFeatures::execute()` gates the *use* of `nonContigNeighList` behind `if(m_UseNonContiguousNeighbors)`, not the existence check — so legacy handles the default-mode case correctly. The SIMPLNX port preserved the use-site guard but introduced an unconditional existence check.
-
-**Fix:** Moved the null check inside the `if(m_InputValues->UseNonContiguousNeighbors)` block, so it only fires when the user opted into the non-contiguous-neighbor path and the data store does not have the requested array. Pinned by `OrientationAnalysis::GroupMicroTextureRegionsFilter: Regression — runs in default UseNonContiguousNeighbors=false mode`.
-
-**Affected users:** Anyone who tried to run the filter before 2026-06-11 in its documented default mode. (Realistically: nobody, given the filter was shipped behind a `[.][UNIMPLEMENTED][!mayfail]` test and a preflight warning that it is "untested, unverified, unvalidated".)
-
-**Recommendation:** Trust SIMPLNX post-fix. The pre-fix SIMPLNX output was an unconditional error; no real-world results were produced from the broken code path.
+Reserved ID, retained so cross-references do not dangle. The released SIMPLNX filter matches legacy behaviour for both settings of `UseNonContiguousNeighbors`: the non-contiguous neighbor list is required only when the user opts into it, and the *use* of that list is gated the same way legacy `GroupFeatures::execute()` gates it. No migration impact.
 
 ---
 
 ## GroupMicroTextureRegionsFilter-D2
 
-| Field           | Value                                                              |
-|-----------------|--------------------------------------------------------------------|
-| **Deviation ID** | `GroupMicroTextureRegionsFilter-D2`                               |
-| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                            |
-| **Status**       | active (fix landed 2026-06-11 on `vv/group_microtexture_regions`) |
+| Field            | Value                                                        |
+|------------------|--------------------------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D2`                          |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                       |
+| **Status**       | active — intentional design difference                       |
 
-**Symptom:** Prior to 2026-06-11, SIMPLNX never randomized parent IDs even though the seed-array machinery, the `UseSeed` parameter, and the `SeedValue` parameter were all present. Legacy 6.5.171 randomizes parent IDs by default with a clock-derived seed (irreproducible). Output parent IDs from SIMPLNX were therefore monotonically assigned in BFS-walk order (1, 2, 3, …); output from 6.5.171 was the same equivalence classes under a random permutation.
+**Deviation:** Parent-ID *labelling* differs. Legacy always randomizes parent IDs, using a clock-derived seed, and offers the user no control over it; consecutive legacy runs on identical input therefore produce different parent-ID values. SIMPLNX exposes a `RandomizeParentIds` parameter that **defaults to `false`**, so by default parent IDs are assigned sequentially in BFS-discovery order and are reproducible run to run.
 
-**Root cause:** Bug. In `GroupMicroTextureRegions::operator()` (algorithm class), the `RandomizeFeatureIds` call was a commented-out block annotated `// !!! COMMENT OUT FOR DEMONSTRATION !!!`. The seed-array output was still written, but the randomization step was a no-op. Additionally, the algorithm's RNG (`m_Generator`) was initialized with `std::mt19937::default_seed` rather than `m_InputValues->SeedValue`, so the user-supplied seed never reached the seed-selection loop in `getSeed()`.
+**What is and is not affected:** the *grouping* is identical — the partition of features into regions, the number of regions, and which features share a region all match. Only the integer label attached to each region differs. Output is permutation-equivalent, never bit-identical, unless randomization is disabled on the SIMPLNX side and the comparison is made on the partition rather than on raw values.
 
-**Fix:** Adopted the patched-legacy design (the 2025-10-23 fix applied to a local build of the legacy source): added a new user parameter `RandomizeParentIds` (default `false`, so default behaviour is reproducible parent-id assignment). Restored a `randomizeParentIds(totalPoints, totalParentIds)` helper that performs a Fisher-Yates shuffle using `m_Generator` already seeded by `operator()`. Fixed the `operator()` RNG initialization to use `m_InputValues->SeedValue`. `parametersVersion()` bumped from 1 to 2 to flag the new parameter for SIMPL-conversion JSON.
+**SIMPLNX options:**
 
-**Affected users:** Anyone migrating a pipeline from 6.5.171 that depended on randomized parent IDs (e.g., feeding the parent IDs straight into a color-mapped visualization where adjacent groups should not share the same color by accident). Post-fix:
-- `RandomizeParentIds=false` (default) → reproducible parent IDs, suitable for diff testing and exemplar comparisons.
-- `RandomizeParentIds=true, UseSeed=false` → 6.5.171-like behaviour (clock-derived seed, irreproducible).
-- `RandomizeParentIds=true, UseSeed=true, SeedValue=<n>` → reproducible randomization for users who want both shuffled IDs *and* run-to-run reproducibility.
+- `RandomizeParentIds=false` (default) → reproducible sequential parent IDs. Suitable for diff testing and exemplar comparison.
+- `RandomizeParentIds=true, UseSeed=false` → legacy-like behaviour: shuffled IDs from a nondeterministic seed.
+- `RandomizeParentIds=true, UseSeed=true, SeedValue=<n>` → shuffled IDs that are still reproducible.
 
-**Recommendation:** Trust SIMPLNX. The pre-fix SIMPLNX output was deterministic but unintentionally so; the post-fix output gives users explicit control over both randomization and seed.
+**Why it matters downstream:** parent IDs are frequently fed straight into a color map. Sequential IDs mean adjacent regions get adjacent colors, which can make neighbouring regions hard to distinguish; that is precisely what legacy's unconditional shuffle was for. Users who relied on that visual behaviour should set `RandomizeParentIds=true`.
+
+**A secondary, unavoidable consequence:** legacy constructs a fresh RNG inside `getSeed()` on every call (`SIMPL_RANDOMNG_NEW()`), whereas SIMPLNX uses a single class-level generator seeded once. The order in which unparented features are selected as region seeds therefore differs between the two implementations. This does not change the resulting partition — the grouping criterion is symmetric and the neighbor graph is fixed — but it does change which region is discovered first, and hence the sequential labels under `RandomizeParentIds=false`.
+
+**Recommendation:** Trust SIMPLNX. Compare partitions (equivalence classes), not parent-ID values, when validating against a legacy run.
 
 ---
 
 ## GroupMicroTextureRegionsFilter-D3
 
-| Field           | Value                                                                 |
-|-----------------|-----------------------------------------------------------------------|
-| **Deviation ID** | `GroupMicroTextureRegionsFilter-D3`                                  |
-| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                               |
-| **Status**       | active (legacy bug; corrected in original 2024-01-08 SIMPLNX port)   |
+| Field            | Value                                                                          |
+|------------------|--------------------------------------------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D3`                                            |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                                         |
+| **Status**       | active — legacy bug, present in all legacy releases including DREAM3D 6.6.379   |
 
-**Symptom:** On legacy DREAM3D 6.5.171 with `UseRunningAverage=true`, the filter produces *no* feature groupings — every feature receives a unique parent ID equal to its own iteration index. SIMPLNX with `UseRunningAverage=true` produces the expected grouping behaviour.
+**Deviation:** With `UseRunningAverage=true`, legacy validates the crystal structure of only **one** of the two features under consideration; SIMPLNX validates **both**. Consequently, on data containing more than one Laue class, legacy can place a non-hexagonal feature and a hexagonal feature in the same microtexture region. SIMPLNX cannot.
 
-**Root cause:** Bug in 6.5.171 `determineGrouping`. The local `uint32_t phase1` is declared with default value 0 and only assigned inside the `if(!m_UseRunningAverage)` branch:
+**Mechanism.** The acceptance test in `determineGrouping` is:
 
 ```cpp
-uint32_t phase1 = 0, phase2 = 0;
-...
-if(!m_UseRunningAverage)
-{
-  ...
-  phase1 = m_CrystalStructures[m_FeaturePhases[referenceFeature]];   // <-- only here
-  ...
-}
-phase2 = m_CrystalStructures[m_FeaturePhases[neighborFeature]];
-if(phase1 == phase2 && (phase1 == Ebsd::CrystalStructure::Hexagonal_High))   // <-- phase1=0 when UseRunningAverage=true
-{
-  ...
-}
+if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Hexagonal_High))
 ```
 
-When `UseRunningAverage=true`, `phase1` stays at 0; the subsequent `phase1 == Hexagonal_High` check fails for every candidate; no grouping ever occurs. Bug introduced upstream on 2014-01-30 by J. Tucker (commit `7e49e52f362005e44ea9bf21b7a717277b2af04e` in the original DREAM3D repository) and never caught.
+In legacy, `phase1` (the reference feature's crystal structure) is assigned only inside the `if(!m_UseRunningAverage)` branch, so with the running average enabled it retains its initial value of `0`. Because `Hexagonal_High` is itself `0`:
 
-**Fix in SIMPLNX:** The 2024-01-08 initial port (`ca6d0aa`) corrected the bug by assigning `phase1` outside the conditional, before the Hex_High check. The same fix was *deliberately applied to a local build of the legacy source* (2025-10-23) — confirmed by inspecting the pre-fix legacy source, which still has the buggy `phase1` declaration. The legacy-side fix renames the variable to `phase1Xtal`, hoists the assignment out of the `if(!m_UseRunningAverage)` block, and ships with a developer comment that explicitly names the J. Tucker 2014-01-30 introduction as the bug source. The 6.5.171 release line was never patched.
+```cpp
+// EbsdLib EbsdConstants.h (legacy) / EbsdLibConstants.h (modern)
+const unsigned int Hexagonal_High = 0;  //!< Hexagonal-High 6/mmm
+const unsigned int Cubic_High     = 1;
+```
 
-**Affected users:** Anyone running 6.5.171 with `UseRunningAverage=true` saw degenerate output (one group per feature) without warning. Users migrating that workflow to SIMPLNX will see *real* groupings for the first time, and downstream filters that consumed the degenerate output may behave differently.
+the test does not fail — it degenerates from *"are both features hexagonal-high?"* to *"is the candidate feature hexagonal-high?"*:
 
-**Recommendation:** Trust SIMPLNX. The 6.5.171 result with `UseRunningAverage=true` was mathematically incorrect; SIMPLNX produces the result the filter has always claimed to produce.
+```
+phase1 == phase2 && phase1 == Hexagonal_High
+  ->  0 == phase2 && 0 == 0
+  ->  phase2 == Hexagonal_High
+```
+
+That is a strictly **weaker** condition than the intended one, so the legacy defect can only ever *add* grouping; it can never prevent grouping that should occur. SIMPLNX assigns both `phase1` and `phase2` unconditionally, restoring the intended two-sided check.
+
+**Observable scope.** None on single-phase hexagonal data — the ordinary MTR case — where the two conditions are equivalent and legacy and SIMPLNX agree exactly. The deviation appears only when a feature whose Laue class is *not* Hexagonal_High touches one that is. Two distinct *phases* that both resolve to Hexagonal_High (e.g. primary alpha and transformed beta) group together in **both** implementations; that is intended behaviour and was confirmed in external review.
+
+**Measured on DREAM3D 6.6.379** (`CAxisTolerance = 10°`, hand-built legacy fixtures):
+
+| Fixture | legacy `UseRunningAverage=false` | legacy `UseRunningAverage=true` | SIMPLNX (either) |
+|---|---|---|---|
+| 5 hexagonal features, pure-Bunge Φ = 0/5/60/63/25°, chain neighbours F1–F2–F3–F4, F5 isolated | 3 groups: {F1,F2} {F3,F4} {F5} | 3 groups: {F1,F2} {F3,F4} {F5} | 3 groups: {F1,F2} {F3,F4} {F5} |
+| Same, but the hexagonal phase is ensemble index 2 and a Cubic_High phase occupies index 1 | 3 groups (unchanged) | 3 groups (unchanged) | 3 groups (unchanged) |
+| 20 independent touching pairs, each one Cubic_High feature + one Hexagonal_High feature, c-axes exactly aligned | 0 / 20 pairs merged | **19 / 20 pairs merged** | 0 / 20 pairs merged |
+
+The first two rows establish that grouping is unaffected on hexagonal data regardless of which ensemble index the hexagonal phase occupies. The third isolates the deviation. (19 rather than roughly half of 20 because `getSeed()` scans forward from a random start index, so the lower-indexed cubic member of each pair is usually reached first and becomes the region seed.)
+
+**Affected users:** Anyone running legacy `UseRunningAverage=true` on a scan that contains a non-hexagonal indexed phase adjacent to the hexagonal phase of interest. Users whose scans contain a single hexagonal phase — or several phases all of which are hexagonal — are unaffected and their historical results are correct.
+
+**Recommendation:** Trust SIMPLNX. Migrating an existing legacy MTR pipeline should produce the same regions unless the scan contains a genuinely non-hexagonal phase touching the hexagonal one, in which case SIMPLNX will correctly decline merges that legacy made.

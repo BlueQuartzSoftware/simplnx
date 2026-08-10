@@ -393,12 +393,21 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   using namespace AnalyticalFixtures;
 
   // 3 real features on a chain F1 -- F2 -- F3. F1 c-axis at Phi=0, F2 at Phi=8, F3 at Phi=20.
-  //   - F1 -- F2 : 8 deg  -- under 10 deg tolerance -> GROUP
-  //   - F2 -- F3 : 12 deg -- over 10 deg tolerance using F2's c-axis (since UseRunningAverage=false,
-  //                          the algorithm compares each candidate to the BFS seed's c-axis, but
-  //                          inside the BFS walk over already-grouped features, comparison is from
-  //                          THAT feature's c-axis, not the original seed's) -> DO NOT BRIDGE
+  //
+  // With UseRunningAverage=false, determineGrouping() computes the reference c-axis from its
+  // referenceFeature argument, which execute() supplies as groupList[j] -- the current BFS frontier
+  // feature, NOT the seed and NOT a running average. (The local is named firstFeature, but groupList
+  // grows as neighbors are accepted, so it advances past the seed.) Grouping is therefore the
+  // transitive closure of the pairwise-tolerance relation along neighbor chains.
+  //
+  //   - F1 -- F2 : 8 deg,  compared from F1's c-axis -- under 10 deg tolerance -> GROUP
+  //   - F2 -- F3 : 12 deg, compared from F2's c-axis -- over 10 deg tolerance  -> DO NOT BRIDGE
+  //
   // Expected: 2 distinct groups -> {F1, F2}, {F3}.
+  //
+  // This expectation is independent of which feature getSeed() happens to pick first (it draws
+  // randomly among unparented features). Seeding at F1, F2, or F3 all produce the same partition,
+  // because the only bridging edge (F2--F3) exceeds tolerance when evaluated from either end.
   FixtureData td = CreateScaffold(/*numFeatures=*/4);
 
   SetAvgQuat(td, 1, QuatFromPhiDeg(0.0f));
@@ -428,11 +437,11 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Regression — runs in default UseNonContiguousNeighbors=false mode", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Regression]")
+TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Default contiguous-only neighbor mode", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Class4]")
 {
-  // Pins the defect-A fix: prior to the fix, execute() unconditionally returned error -99345 when
-  // UseNonContiguousNeighbors=false because the null-pointer guard on the non-contiguous list was
-  // outside the if-block that populated it. Filter could not run in its primary mode.
+  // Covers the default configuration: UseNonContiguousNeighbors=false, so only the contiguous
+  // neighbor list drives the BFS walk and the non-contiguous list is neither required nor read.
+  // This is the mode most users run, and it must preflight and execute cleanly.
   using namespace AnalyticalFixtures;
 
   FixtureData td = CreateScaffold(/*numFeatures=*/3);
