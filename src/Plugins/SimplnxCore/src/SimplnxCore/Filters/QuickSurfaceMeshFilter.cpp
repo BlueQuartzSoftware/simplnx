@@ -104,7 +104,12 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
 {
-  return 2;
+  return 3;
+  // Version 2 -> 3
+  // Change 1:
+  // Added - k_OmitBoundingBoxSkin_Key = "omit_bounding_box_skin";
+  // Solution - set the value to false (preserves prior behavior);
+  //
   // Version 1 -> 2
   // Change 1:
   // Added - k_RepairTriangleWinding_Key = "repair_triangle_winding";
