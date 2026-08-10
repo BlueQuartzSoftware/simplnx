@@ -246,13 +246,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
@@ -306,13 +308,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -364,13 +368,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -411,15 +417,6 @@ Result<> SurfaceNets::operator()()
         tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
-    }
-  }
-
-  // Now run through the FaceLabels to make them consistent with Quick Surface Mesh
-  for(usize tIdx = 0; tIdx < triangleCount * 2; tIdx++)
-  {
-    if(faceLabels[tIdx] == 0)
-    {
-      faceLabels[tIdx] = -1;
     }
   }
 
