@@ -8,6 +8,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <set>
+
 using namespace nx::core;
 
 TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingTestUtils]")
@@ -96,6 +98,54 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     REQUIRE(counts.TotalEdges == 6);
     REQUIRE(counts.EdgesUsedTwice == 6);
     REQUIRE(counts.EdgesUsedOnce == 0);
+  }
+
+  SECTION("CreateFullyIndexedPolycrystal has no background and eight distinct Features")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"})));
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"}));
+    REQUIRE(imageGeom.getDimensions() == SizeVec3{12, 12, 12});
+
+    const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+
+    std::set<int32> distinctFeatures;
+    for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
+    {
+      distinctFeatures.insert(featureIdsRef[i]);
+    }
+
+    REQUIRE(distinctFeatures.size() == 8);
+    REQUIRE(distinctFeatures.count(0) == 0);
+    REQUIRE(distinctFeatures.count(1) == 1);
+    REQUIRE(distinctFeatures.count(2) == 1);
+    REQUIRE(distinctFeatures.count(3) == 1);
+    REQUIRE(distinctFeatures.count(4) == 1);
+    REQUIRE(distinctFeatures.count(5) == 1);
+    REQUIRE(distinctFeatures.count(6) == 1);
+    REQUIRE(distinctFeatures.count(7) == 1);
+    REQUIRE(distinctFeatures.count(8) == 1);
+  }
+
+  SECTION("CreateAllBackground is entirely Feature Id 0")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"})));
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"}));
+    REQUIRE(imageGeom.getDimensions() == SizeVec3{12, 12, 12});
+
+    const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+
+    for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
+    {
+      REQUIRE(featureIdsRef[i] == 0);
+    }
   }
 
   UnitTest::CheckArraysInheritTupleDims(DataStructure{});
