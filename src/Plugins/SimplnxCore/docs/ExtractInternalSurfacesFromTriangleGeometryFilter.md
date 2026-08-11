@@ -22,7 +22,9 @@ With the **Node Type Range** criterion, the user must supply a "Node Type" **Ver
 | 14 | Quadruple Point on the outer surface of the bounding box |
 
 The value is the number of distinct Features meeting at the node, capped at 4, plus 10 when
-the node lies on the bounding box wall.
+the node lies on the bounding box wall. The region outside the volume counts as one of those
+owners, which is why an ordinary vertex on the wall between the exterior and a single Feature
+is `12` — two owners, one of them the exterior — rather than `11`.
 
 This **Filter** removes any **Triangle** that contains only **Vertices** whose node Id values fall outside the minimum and maximum that the user sets.
 

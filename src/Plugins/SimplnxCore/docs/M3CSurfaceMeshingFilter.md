@@ -40,7 +40,10 @@ modeling and simulation workflows.
 ### Node Types
 
 The **Node Types** array uses the same convention as the Surface Nets **Filter**. Interior values
-denote how many **Features** meet at the vertex; the exterior (volume-boundary) variants add 10.
+denote how many **Features** meet at the vertex, capped at 4; the exterior (volume-boundary)
+variants add 10. The region outside the volume counts as one of those owners, which is why an
+ordinary vertex on the wall between the exterior and a single Feature is `12` — two owners, one
+of them the exterior — rather than `11`.
 
 | Node Type | Meaning |
 |-----------|---------|
@@ -81,6 +84,12 @@ has no effect — every boundary Feature already needs its wall cap to stay clos
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
 where an internal boundary meets the box wall.
+
+If every voxel in the volume is background (Feature Id 0), every face is a background-backed
+wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
+and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
+success, not an error, because the input is legal — it simply contains no internal interface
+and no Feature to cap.
 
 **Note:** M3C's candidate-node generation always produces a handful of node entries near the
 volume boundary that no triangle references, even with the option disabled — these orphan

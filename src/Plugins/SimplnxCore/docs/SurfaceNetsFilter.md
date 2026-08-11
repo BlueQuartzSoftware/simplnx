@@ -42,7 +42,7 @@ SurfaceNets output **with** the built-in smoothing operation applied.
 
 ## Node Types
 
-During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. This filter uses the same convention as the Create Surface Mesh (QuickMesh) and Create Surface Mesh (M3C) **Filters**: the value is the number of distinct **Features** meeting at the node, capped at 4, plus 10 when the node lies on the outer surface of the bounding box.
+During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. This filter uses the same convention as the Create Surface Mesh (QuickMesh) and Create Surface Mesh (M3C) **Filters**: the value is the number of distinct **Features** meeting at the node, capped at 4, plus 10 when the node lies on the outer surface of the bounding box. The region outside the volume counts as one of those owners, which is why an ordinary vertex on the wall between the exterior and a single Feature is `12` — two owners, one of them the exterior — rather than `11`.
 
 | Id Value | Node Type |
 |----------|-----------|
@@ -104,6 +104,12 @@ has no effect — every boundary Feature already needs its wall cap to stay clos
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
 where an internal boundary meets the box wall.
+
+If every voxel in the volume is background (Feature Id 0), every face is a background-backed
+wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
+and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
+success, not an error, because the input is legal — it simply contains no internal interface
+and no Feature to cap.
 
 % Auto generated parameter table will be inserted here
 
