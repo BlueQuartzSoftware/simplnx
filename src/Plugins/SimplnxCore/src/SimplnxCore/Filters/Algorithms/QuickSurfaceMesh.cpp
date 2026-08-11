@@ -488,6 +488,16 @@ Result<> QuickSurfaceMesh::operator()()
   }
 #endif
 
+  // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+  // legitimately produces an empty mesh. Report it rather than returning silently. Guarded on
+  // windingResult still being valid so a genuine winding-repair error is never discarded.
+  if(m_InputValues->OmitBoundingBoxSkin && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
+  {
+    return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
+                                                     "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
+                                                     m_InputValues->TriangleGeometryPath.toString(), m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples()));
+  }
+
   return windingResult;
 }
 

@@ -220,26 +220,17 @@ struct FeatureIdsKeyTrait<M3CSurfaceMeshingFilter>
 };
 
 /**
- * @brief Runs a surface meshing filter (QuickSurfaceMeshFilter, SurfaceNetsFilter, or
- * M3CSurfaceMeshingFilter) on the given DataStructure, setting every argument that is common to
- * all three meshers, then invoking addExtraArgs to set the mesher-specific ones (e.g. Fix Problem
- * Voxels, smoothing options). Every mesher shares the same parameter key names for the arguments
- * set here (feature ids excepted -- see FeatureIdsKeyTrait), so callers only need to supply the
- * pieces that differ.
- * @param dataStructure Input DataStructure, e.g. from CreateCylinderInBox().
+ * @brief Builds the Arguments common to every surface mesher (QuickSurfaceMeshFilter,
+ * SurfaceNetsFilter, M3CSurfaceMeshingFilter), then invokes addExtraArgs to set the
+ * mesher-specific ones (e.g. Fix Problem Voxels, smoothing options). Shared by RunMesher and
+ * RunMesherRaw so the argument list is defined exactly once.
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
  * @param omitSkin Value for the Omit Bounding Box Skin parameter.
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
  */
 template <class FilterT, class ExtraArgsFn>
-inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
 {
-  MeshResult meshResult;
-  meshResult.Structure = std::move(dataStructure);
-  meshResult.TriangleGeomPath = triangleGeomPath;
-  meshResult.FaceLabelsPath = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-
-  FilterT filter;
   Arguments args;
   args.insertOrAssign(FilterT::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(FeatureIdsKeyTrait<FilterT>::Key, std::make_any<DataPath>(k_FeatureIdsPath));
@@ -254,6 +245,32 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
   args.insertOrAssign(FilterT::k_OmitBoundingBoxSkin_Key, std::make_any<bool>(omitSkin));
 
   addExtraArgs(args);
+  return args;
+}
+
+/**
+ * @brief Runs a surface meshing filter (QuickSurfaceMeshFilter, SurfaceNetsFilter, or
+ * M3CSurfaceMeshingFilter) on the given DataStructure, setting every argument that is common to
+ * all three meshers, then invoking addExtraArgs to set the mesher-specific ones (e.g. Fix Problem
+ * Voxels, smoothing options). Every mesher shares the same parameter key names for the arguments
+ * set here (feature ids excepted -- see FeatureIdsKeyTrait), so callers only need to supply the
+ * pieces that differ. Asserts both preflight and execute succeed; for cases that legitimately
+ * warn or fail (e.g. an all-background input), use RunMesherRaw instead.
+ * @param dataStructure Input DataStructure, e.g. from CreateCylinderInBox().
+ * @param triangleGeomPath Path at which to create the Triangle Geometry.
+ * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
+ */
+template <class FilterT, class ExtraArgsFn>
+inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+{
+  MeshResult meshResult;
+  meshResult.Structure = std::move(dataStructure);
+  meshResult.TriangleGeomPath = triangleGeomPath;
+  meshResult.FaceLabelsPath = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
+
+  FilterT filter;
+  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs);
 
   auto preflightResult = filter.preflight(meshResult.Structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -261,6 +278,29 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   return meshResult;
+}
+
+/**
+ * @brief Like RunMesher, but operates on a caller-owned DataStructure (by reference, so the
+ * caller keeps it around for inspection) and returns the execute Result<> unchecked instead of
+ * asserting validity. This lets degenerate-input tests (e.g. an all-background volume) assert on
+ * warnings/errors instead of aborting via SIMPLNX_RESULT_REQUIRE_VALID. Preflight is still
+ * asserted valid, since a preflight failure here would mean the test itself is set up wrong, not
+ * the runtime condition under test.
+ * @param dataStructure Input DataStructure, e.g. from CreateAllBackground(). Modified in place.
+ * @param triangleGeomPath Path at which to create the Triangle Geometry.
+ * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
+ */
+template <class FilterT, class ExtraArgsFn>
+inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+{
+  FilterT filter;
+  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  return filter.execute(dataStructure, args).result;
 }
 
 /**

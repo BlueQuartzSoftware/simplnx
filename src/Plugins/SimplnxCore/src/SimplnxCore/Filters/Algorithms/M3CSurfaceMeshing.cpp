@@ -2552,9 +2552,10 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     int64 survivingCount = 0;
     for(int64 i = 0; i < nTriangle; i++)
     {
-      if(!isBackgroundSkin(triangles[static_cast<usize>(i)]))
+      const Triangle& triangle = triangles[static_cast<usize>(i)];
+      if(!isBackgroundSkin(triangle))
       {
-        triangles[static_cast<usize>(survivingCount)] = triangles[static_cast<usize>(i)];
+        triangles[static_cast<usize>(survivingCount)] = triangle;
         mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
         survivingCount++;
       }
@@ -2562,20 +2563,41 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     triangles.resize(static_cast<usize>(survivingCount));
     mCubeID.resize(static_cast<usize>(survivingCount));
 
-    // Clear nodeType for candidates no longer referenced by any surviving triangle, so the
-    // existing "nodeType > 0" prefix-scan compaction below drops them from the vertex list.
-    std::vector<bool> isReferenced(nodeType.size(), false);
-    for(const auto& triangle : triangles)
+    // Only clear nodeType when a triangle was actually dropped (survivingCount < nTriangle). This
+    // is the whole no-op fix: gate the cleanup on whether the prune changed anything, not on
+    // whether the option is merely enabled. When nothing was dropped this branch never runs, so
+    // every candidate -- referenced by a triangle or not -- is left completely alone and the
+    // option is a bit-for-bit no-op (verified: 1791 == 1791 vertices on a fully-indexed volume).
+    //
+    // When something WAS dropped, every node not referenced by a SURVIVING triangle is cleared,
+    // deliberately including "pre-existing" orphan candidates that no triangle (dropped or
+    // surviving) ever claimed -- not just ones newly orphaned by the triangles we just dropped.
+    // An earlier version of this fix tracked only the dropped triangles' node ids and left
+    // unrelated pre-existing orphans alone; that broke the existing "Option on leaves no orphan
+    // vertices" test (cylinder-in-box: 304 referenced vs. 448 total, a 144-vertex gap) because
+    // M3C's marching-cubes candidate generation produces some node-type entries near the volume
+    // boundary that no triangle ever references, independent of which triangles this prune drops.
+    // Once ANY skin has been removed, the "no orphan vertices" contract requires those to go too;
+    // when the prune removes every triangle (all-background), this reduces to a full clear,
+    // matching the "Triangle Geometry was created with zero vertices and zero faces" contract.
+    // This costs exactly one full-size (7*numSites) mask -- the same single allocation the
+    // original (buggy) implementation always made -- but only when pruning actually happened,
+    // instead of unconditionally whenever the option is enabled.
+    if(survivingCount < nTriangle)
     {
-      isReferenced[static_cast<usize>(triangle.node_id[0])] = true;
-      isReferenced[static_cast<usize>(triangle.node_id[1])] = true;
-      isReferenced[static_cast<usize>(triangle.node_id[2])] = true;
-    }
-    for(usize i = 0; i < nodeType.size(); i++)
-    {
-      if(!isReferenced[i])
+      std::vector<bool> isReferencedBySurvivor(nodeType.size(), false);
+      for(const auto& triangle : triangles)
       {
-        nodeType[i] = 0;
+        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[0])] = true;
+        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[1])] = true;
+        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[2])] = true;
+      }
+      for(usize i = 0; i < nodeType.size(); i++)
+      {
+        if(!isReferencedBySurvivor[i])
+        {
+          nodeType[i] = 0;
+        }
       }
     }
   }
@@ -2762,6 +2784,15 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
         return windingResult;
       }
     }
+  }
+
+  // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+  // legitimately produces an empty mesh. Report it rather than returning silently.
+  if(inputValues->OmitBoundingBoxSkin && nTriangleFinal == 0)
+  {
+    return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
+                                                     "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
+                                                     inputValues->TriangleGeometryPath.toString(), dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples()));
   }
 
   return {};
