@@ -134,7 +134,6 @@ constexpr ExemplarDataType k_ExemplarDataErodeZ1{16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeZ2{4, 1, 1, 2, 2, 1, 2, 2, 1, 1, 5, 2, 2, 6, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
 constexpr ExemplarDataType k_ExemplarDataErodeZ2{16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 26, 11, 12, 29, 30, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
-
 DataStructure CreateTestData()
 {
   DataStructure dataStructure;
@@ -240,12 +239,12 @@ void CheckDilateOutput(const DataStructure& dataStructure, const DirectionType& 
   ExemplarDataType exemplarData;
   bool only1Iteration = iterations == 1;
 
-  if (directions == k_XDir)
+  if(directions == k_XDir)
   {
     exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateX1 : k_ExemplarFeatureIdsDilateX2;
     exemplarData = only1Iteration ? k_ExemplarDataDilateX1 : k_ExemplarDataDilateX2;
   }
-  else if (directions == k_XYDir)
+  else if(directions == k_XYDir)
   {
     exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateXY1 : k_ExemplarFeatureIdsDilateXY2;
     exemplarData = only1Iteration ? k_ExemplarDataDilateXY1 : k_ExemplarDataDilateXY2;
