@@ -17,10 +17,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -118,10 +118,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -218,10 +218,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -317,10 +317,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
