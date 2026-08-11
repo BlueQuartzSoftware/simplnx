@@ -227,9 +227,11 @@ struct FeatureIdsKeyTrait<M3CSurfaceMeshingFilter>
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
  * @param omitSkin Value for the Omit Bounding Box Skin parameter.
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
+ * @param repairWinding Value for the Repair Triangle Winding parameter. Defaults to false (matching
+ * every pre-existing call site); pass true to exercise the shipped default configuration instead.
  */
 template <class FilterT, class ExtraArgsFn>
-inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs, bool repairWinding = false)
 {
   Arguments args;
   args.insertOrAssign(FilterT::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -241,7 +243,7 @@ inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin
   args.insertOrAssign(FilterT::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
   args.insertOrAssign(FilterT::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
   args.insertOrAssign(FilterT::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
-  args.insertOrAssign(FilterT::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FilterT::k_RepairTriangleWinding_Key, std::make_any<bool>(repairWinding));
   args.insertOrAssign(FilterT::k_OmitBoundingBoxSkin_Key, std::make_any<bool>(omitSkin));
 
   addExtraArgs(args);
@@ -291,12 +293,14 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
  * @param omitSkin Value for the Omit Bounding Box Skin parameter.
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
+ * @param repairWinding Value for the Repair Triangle Winding parameter. Defaults to false (matching
+ * every pre-existing call site); pass true to exercise the shipped default configuration instead.
  */
 template <class FilterT, class ExtraArgsFn>
-inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs, bool repairWinding = false)
 {
   FilterT filter;
-  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs);
+  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs, repairWinding);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

@@ -4,6 +4,7 @@
 #include "SurfaceMeshingTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -222,7 +223,10 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
     args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
     args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
     args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+    // Copy Face Labels along into the extracted geometry too, so the "both code paths agree" claim
+    // below can be checked array-for-array rather than just by counting faces and vertices.
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key,
+                        std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{faceLabelsPath}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -243,6 +247,13 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 
   REQUIRE(extractedGeom.getNumberOfFaces() == directGeom.getNumberOfFaces());
   REQUIRE(extractedGeom.getNumberOfVertices() == directGeom.getNumberOfVertices());
+
+  // The two paths must agree exactly, not just on counts: compare the Face Labels array copied
+  // into the extracted geometry against the one QuickSurfaceMesh produced directly.
+  const DataPath extractedFaceLabelsPath = extractedPath.createChildPath("Face Data").createChildPath(faceLabelsPath.getTargetName());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath));
+  REQUIRE_NOTHROW(directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
+  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath), directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

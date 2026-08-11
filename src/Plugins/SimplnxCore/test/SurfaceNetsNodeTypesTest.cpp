@@ -12,6 +12,8 @@
 
 #include <map>
 #include <set>
+#include <sstream>
+#include <tuple>
 
 using namespace nx::core;
 
@@ -142,26 +144,38 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   const auto& qsmGeom = quickMeshStructure.getDataRefAs<TriangleGeom>(quickMeshPath);
   REQUIRE(snGeom.getNumberOfVertices() == qsmGeom.getNumberOfVertices());
 
+  const auto& snVertsRef = snGeom.getVertices()->getDataStoreRef();
+  const auto& qsmVertsRef = qsmGeom.getVertices()->getDataStoreRef();
   const auto& snTypesRef = surfaceNetsStructure.getDataRefAs<Int8Array>(surfaceNetsPath.createChildPath("Vertex Data").createChildPath("NodeTypes")).getDataStoreRef();
   const auto& qsmTypesRef = quickMeshStructure.getDataRefAs<Int8Array>(quickMeshPath.createChildPath("Vertex Data").createChildPath("NodeTypes")).getDataStoreRef();
 
-  // Compare as histograms: the two meshers number their nodes in different orders, but a
-  // corner-for-corner equivalence implies identical value counts.
-  std::map<int8, usize> snHistogram;
-  std::map<int8, usize> qsmHistogram;
-  for(usize i = 0; i < snTypesRef.getNumberOfTuples(); i++)
-  {
-    snHistogram[snTypesRef[i]]++;
-  }
+  // Exact, corner-for-corner comparison: the two meshers number their nodes in different orders
+  // (a histogram comparison alone would pass under a permutation of values across corners), so key
+  // QuickSurfaceMesh's vertices by coordinate and require every SurfaceNets vertex at the same
+  // coordinate to carry the identical Node Type value. This is the check that proves the
+  // equivalence argument in the design spec rather than trusting it.
+  std::map<std::tuple<float32, float32, float32>, int8> qsmTypeByCoord;
   for(usize i = 0; i < qsmTypesRef.getNumberOfTuples(); i++)
   {
-    qsmHistogram[qsmTypesRef[i]]++;
+    qsmTypeByCoord[{qsmVertsRef[i * 3], qsmVertsRef[i * 3 + 1], qsmVertsRef[i * 3 + 2]}] = qsmTypesRef[i];
   }
 
-  for(const auto& [value, count] : qsmHistogram)
+  usize mismatchCount = 0;
+  std::ostringstream firstMismatch;
+  for(usize i = 0; i < snTypesRef.getNumberOfTuples(); i++)
   {
-    INFO("Node Type " << static_cast<int32>(value) << ": QuickSurfaceMesh has " << count << ", SurfaceNets has " << snHistogram[value]);
-    REQUIRE(snHistogram[value] == count);
+    const std::tuple<float32, float32, float32> coord = {snVertsRef[i * 3], snVertsRef[i * 3 + 1], snVertsRef[i * 3 + 2]};
+    REQUIRE(qsmTypeByCoord.count(coord) == 1);
+    if(qsmTypeByCoord[coord] != snTypesRef[i])
+    {
+      if(mismatchCount == 0)
+      {
+        firstMismatch << "(" << std::get<0>(coord) << ", " << std::get<1>(coord) << ", " << std::get<2>(coord) << "): QuickSurfaceMesh=" << static_cast<int32>(qsmTypeByCoord[coord])
+                      << " SurfaceNets=" << static_cast<int32>(snTypesRef[i]);
+      }
+      mismatchCount++;
+    }
   }
-  REQUIRE(snHistogram.size() == qsmHistogram.size());
+  INFO("Total mismatching vertices: " << mismatchCount << " / " << snTypesRef.getNumberOfTuples() << (mismatchCount > 0 ? (" -- first mismatch at " + firstMismatch.str()) : std::string{}));
+  REQUIRE(mismatchCount == 0);
 }

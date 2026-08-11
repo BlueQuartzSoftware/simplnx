@@ -268,25 +268,29 @@ namespace
 // Triangle Geometry paths and mesher-specific extra args as the RunQuickSurfaceMesh /
 // RunSurfaceNets / RunM3C wrappers above, so degenerate cases can inspect the execute Result<>
 // (e.g. warnings) instead of asserting validity and aborting.
-Result<> RunQuickSurfaceMeshRaw(DataStructure& dataStructure, bool omitSkin)
+Result<> RunQuickSurfaceMeshRaw(DataStructure& dataStructure, bool omitSkin, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<QuickSurfaceMeshFilter>(dataStructure, k_TriangleGeomPath, omitSkin,
-                                                                  [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+  return SurfaceMeshingTest::RunMesherRaw<QuickSurfaceMeshFilter>(
+      dataStructure, k_TriangleGeomPath, omitSkin, [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); }, repairWinding);
 }
 
-Result<> RunSurfaceNetsRaw(DataStructure& dataStructure, bool omitSkin)
+Result<> RunSurfaceNetsRaw(DataStructure& dataStructure, bool omitSkin, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<SurfaceNetsFilter>(dataStructure, k_SurfaceNetsTriangleGeomPath, omitSkin, [](Arguments& args) {
-    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
-    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
-    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
-    args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
-  });
+  return SurfaceMeshingTest::RunMesherRaw<SurfaceNetsFilter>(
+      dataStructure, k_SurfaceNetsTriangleGeomPath, omitSkin,
+      [](Arguments& args) {
+        args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+        args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+        args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
+        args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
+      },
+      repairWinding);
 }
 
-Result<> RunM3CRaw(DataStructure& dataStructure, bool omitSkin)
+Result<> RunM3CRaw(DataStructure& dataStructure, bool omitSkin, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<M3CSurfaceMeshingFilter>(dataStructure, k_M3CTriangleGeomPath, omitSkin, [](Arguments&) {});
+  return SurfaceMeshingTest::RunMesherRaw<M3CSurfaceMeshingFilter>(
+      dataStructure, k_M3CTriangleGeomPath, omitSkin, [](Arguments&) {}, repairWinding);
 }
 } // namespace
 
@@ -322,6 +326,14 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
 
+    // Node Types are untouched by M3C's orphan-cleanup discontinuity, but this is the only no-op
+    // test that checks all three meshers, so it is the natural place to cover the array for all of
+    // them rather than just Face Labels/Faces/Vertices.
+    const DataPath nodeTypesPath = k_TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+
     UnitTest::CheckArraysInheritTupleDims(offStructure);
     UnitTest::CheckArraysInheritTupleDims(onStructure);
   }
@@ -348,6 +360,11 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "
     REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+
+    const DataPath nodeTypesPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
 
     UnitTest::CheckArraysInheritTupleDims(offStructure);
     UnitTest::CheckArraysInheritTupleDims(onStructure);
@@ -376,6 +393,15 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
 
+    // M3C's orphan-cleanup is the one code path in the whole feature that has a discontinuity
+    // (see M3CSurfaceMeshing.cpp:2566): it is gated on whether the prune actually dropped anything,
+    // not on the option flag alone. This fully-indexed input drops nothing, so Node Types must
+    // still match exactly here.
+    const DataPath nodeTypesPath = k_M3CTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+
     UnitTest::CheckArraysInheritTupleDims(offStructure);
     UnitTest::CheckArraysInheritTupleDims(onStructure);
   }
@@ -385,57 +411,127 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-  const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, true);
+  SECTION("Repair Triangle Winding off")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, true);
 
-  // Success with a warning, not an error: the data is legal, just entirely background.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
-  REQUIRE(executeResult.warnings().size() == 1);
-  REQUIRE(executeResult.warnings()[0].code == -56340);
+    // Success with a warning, not an error: the data is legal, just entirely background.
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
 
-  // The geometry still exists, just empty.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
-  REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-  REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+    // The geometry still exists, just empty.
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  // Repair Triangle Winding defaults to true on all three meshers, so this is the configuration
+  // shipped users actually get. It exercises the windingResult.valid() guard (QuickSurfaceMesh.cpp)
+  // and proves findElementNeighbors()/RepairTriangleWinding() are safe to run on a 0-face/0-vertex
+  // geometry: the contract (success, one warning, zero faces, zero vertices) must still hold.
+  SECTION("Repair Triangle Winding on (shipped default)")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, true, /*repairWinding*/ true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume (SurfaceNets)", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-  const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, true);
+  SECTION("Repair Triangle Winding off")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, true);
 
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
-  REQUIRE(executeResult.warnings().size() == 1);
-  REQUIRE(executeResult.warnings()[0].code == -56340);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
-  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
-  REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-  REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  // See the QuickSurfaceMesh test case above for why this configuration matters: Repair Triangle
+  // Winding defaults to true, and this proves the warning contract holds there too (guard at
+  // SurfaceNets.cpp).
+  SECTION("Repair Triangle Winding on (shipped default)")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, true, /*repairWinding*/ true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume (M3CSurfaceMeshing)", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-  const Result<> executeResult = RunM3CRaw(dataStructure, true);
+  SECTION("Repair Triangle Winding off")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunM3CRaw(dataStructure, true);
 
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
-  REQUIRE(executeResult.warnings().size() == 1);
-  REQUIRE(executeResult.warnings()[0].code == -56340);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
-  REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-  REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  // See the QuickSurfaceMesh test case above for why this configuration matters. M3C does not
+  // route through the shared windingResult.valid() guard the same way, but it still must honor
+  // the same warning contract when Repair Triangle Winding is left at its shipped default of true.
+  SECTION("Repair Triangle Winding on (shipped default)")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    const Result<> executeResult = RunM3CRaw(dataStructure, true, /*repairWinding*/ true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == -56340);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }

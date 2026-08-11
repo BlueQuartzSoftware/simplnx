@@ -287,35 +287,40 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
 // This is the minimal deterministic regression for the null-neighbor crash in treat_anomaly.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Checkerboard Saddle", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(((x + y + z) & 1U) + 1); }, "M3CSurfaceMeshingFilterTest_Checkerboard.dream3d");
+  RunM3COnToy(
+      8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(((x + y + z) & 1U) + 1); }, "M3CSurfaceMeshingFilterTest_Checkerboard.dream3d");
 }
 
 // 8-label octant pattern (1 + x%2 + 2*(y%2) + 4*(z%2)): a repeating 2x2x2 of 8 distinct labels, so
 // squares present 4 distinct corners (quad points, get_square_index == 19) plus triple configs.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Octant Quad Points", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(1 + (x & 1U) + 2 * (y & 1U) + 4 * (z & 1U)); }, "M3CSurfaceMeshingFilterTest_Octant.dream3d");
+  RunM3COnToy(
+      8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(1 + (x & 1U) + 2 * (y & 1U) + 4 * (z & 1U)); }, "M3CSurfaceMeshingFilterTest_Octant.dream3d");
 }
 
 // Three regions meeting along a vertical line (L-shaped split) => triple lines
 // (get_square_index in {7,11,13,14}) plus ordinary binary interfaces.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Triple Line", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  RunM3COnToy(8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (x < 4) ? 1 : ((y < 4) ? 2 : 3); }, "M3CSurfaceMeshingFilterTest_TripleLine.dream3d");
+  RunM3COnToy(
+      8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (x < 4) ? 1 : ((y < 4) ? 2 : 3); }, "M3CSurfaceMeshingFilterTest_TripleLine.dream3d");
 }
 
 // Single isolated interior voxel in a uniform matrix: the four neighboring squares are [B,A,A,A]
 // rotations, exercising get_square_index in {3,6,9,12} (the single-corner binary configurations).
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Single Voxel Inclusion", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return (x == 4 && y == 4 && z == 4) ? 2 : 1; }, "M3CSurfaceMeshingFilterTest_Inclusion.dream3d");
+  RunM3COnToy(
+      8, 8, 8, [](usize x, usize y, usize z) -> int32 { return (x == 4 && y == 4 && z == 4) ? 2 : 1; }, "M3CSurfaceMeshingFilterTest_Inclusion.dream3d");
 }
 
 // Interleaved 3-label tiling (rows "1 2" / "3 1"): squares [1,2,1,3] and [2,1,3,1] have all edges
 // differing with exactly one diagonal equal, exercising get_square_index 17 and 18.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Interleaved Diagonal", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  RunM3COnToy(8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (y % 2 == 0) ? ((x % 2 == 0) ? 1 : 2) : ((x % 2 == 0) ? 3 : 1); }, "M3CSurfaceMeshingFilterTest_Interleaved.dream3d");
+  RunM3COnToy(
+      8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (y % 2 == 0) ? ((x % 2 == 0) ? 1 : 2) : ((x % 2 == 0) ? 3 : 1); }, "M3CSurfaceMeshingFilterTest_Interleaved.dream3d");
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][M3CSurfaceMeshingFilter][BackwardsCompatibility]")
@@ -525,6 +530,32 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[Simplnx
 
 namespace
 {
+// Portable environment-variable mutators. POSIX declares setenv()/unsetenv(), but MSVC does not,
+// so plain std::getenv() is used for reads everywhere else in this repo while writes need this
+// shim. MSVC's _putenv_s() removes a variable when given an empty string, which is the closest
+// portable equivalent to unsetenv().
+#ifdef _WIN32
+void SetEnvVar(const std::string& name, const char* value)
+{
+  _putenv_s(name.c_str(), value != nullptr ? value : "");
+}
+
+void UnsetEnvVar(const std::string& name)
+{
+  _putenv_s(name.c_str(), "");
+}
+#else
+void SetEnvVar(const std::string& name, const char* value)
+{
+  ::setenv(name.c_str(), value, 1);
+}
+
+void UnsetEnvVar(const std::string& name)
+{
+  ::unsetenv(name.c_str());
+}
+#endif
+
 // Temporarily sets (or clears) an environment variable for the lifetime of the object, restoring
 // whatever was there before on destruction. Used below to select M3C's sweep path, which is read
 // once from the environment at the top of M3CSurfaceMeshing::operator()().
@@ -541,11 +572,11 @@ public:
     }
     if(value != nullptr)
     {
-      setenv(m_Name.c_str(), value, 1);
+      SetEnvVar(m_Name, value);
     }
     else
     {
-      unsetenv(m_Name.c_str());
+      UnsetEnvVar(m_Name);
     }
   }
 
@@ -553,11 +584,11 @@ public:
   {
     if(m_HadPrevious)
     {
-      setenv(m_Name.c_str(), m_PreviousValue.c_str(), 1);
+      SetEnvVar(m_Name, m_PreviousValue.c_str());
     }
     else
     {
-      unsetenv(m_Name.c_str());
+      UnsetEnvVar(m_Name);
     }
   }
 

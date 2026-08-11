@@ -65,10 +65,24 @@ Each triangle has a 2-component **Face Labels** array that holds the Feature Id 
 
 This filter should be used in place of the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) filter.
 
-### Required Input Sources
+## Changed Behavior for Existing Pipelines
 
-- **Image Geometry** -- the labeled volume to mesh, from an image/volume reader or an upstream processing filter.
-- **Cell Feature Ids** -- the per-Cell integer label array that defines the regions to wrap, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+Two defects in this filter's output were fixed as part of adding the **Omit Bounding Box Skin**
+option below. Both fixes apply unconditionally -- they are not gated by that new option -- so any
+pipeline that already used this **Filter** will see different (corrected) output the next time it
+runs, with no parameter change on the user's part:
+
+- **Face Labels**: a face between the exterior and Feature Id 0 is now reported as `{-1, 0}`.
+  Previously it was reported as `{-1, -1}`. Likewise, a face between Feature Id 0 and another
+  Feature `k` is now `{0, k}`; previously it was reported as `{-1, k}`.
+- **Node Types**: values were previously a junction-face-crossing count in the range `0`-`6`, with
+  exterior-node variants offset inconsistently. They now follow the shared convention described
+  above (`2`/`3`/`4` for interior nodes, `12`/`13`/`14` on the bounding box wall), matching Create
+  Surface Mesh (QuickMesh) and Create Surface Mesh (M3C).
+
+If you hand-tuned a Node Type range parameter against this **Filter**'s old values, or if you
+compare newly generated output against previously stored SurfaceNets results, re-check it against
+the tables above.
 
 ## Comparison of Surface Meshing Filters
 
