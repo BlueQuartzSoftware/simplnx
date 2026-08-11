@@ -50,89 +50,89 @@ constexpr DirectionType k_ZDir{false, false, true};
 using ExemplarDataType = std::array<int32, 32>;
 // Exemplar Dilate data for A/B testing
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateX1{0, 0, 1, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateX1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateX1{0, 0, 2, 3, 4, 5, 6, 7, 8, 10, 10, 10, 13, 13, 14, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateX2{0, 0, 0, 2, 2, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateX2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateX2{0, 0, 0, 3, 4, 5, 6, 7, 10, 10, 10, 10, 13, 13, 14, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXY1{0, 0, 1, 2, 0, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXY1{0, 0, 2, 3, 0, 5, 10, 7, 8, 13, 10, 10, 13, 13, 14, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXY2{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 0, 0, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXY2{0, 0, 10, 3, 0, 13, 10, 10, 13, 13, 10, 10, 13, 13, 14, 14, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 31, 31, 28, 31, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXYZ1{0, 0, 1, 2, 0, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 0, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXYZ1{0, 0, 2, 3, 0, 5, 10, 7, 8, 13, 10, 10, 13, 13, 14, 31, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 10, 31, 28, 13, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXYZ2{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 3, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXYZ2{0, 0, 10, 3, 0, 13, 10, 10, 13, 13, 10, 10, 13, 13, 14, 31, 0, 0, 18, 19, 0, 21, 10, 31, 24, 13, 10, 31, 13, 13, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXZ1{0, 0, 1, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXZ1{0, 0, 2, 3, 4, 5, 6, 7, 8, 10, 10, 10, 13, 13, 14, 31, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 10, 27, 28, 13, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXZ2{0, 0, 0, 2, 2, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 3, 3, 3, 3, 5, 0, 0, 0, 0, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateXZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateXZ2{0, 0, 0, 3, 4, 5, 6, 7, 10, 10, 10, 10, 13, 13, 14, 31, 0, 0, 18, 19, 20, 21, 22, 23, 24, 10, 10, 10, 13, 13, 31, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateY1{0, 1, 1, 2, 0, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateY1{0, 1, 2, 3, 0, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateY2{0, 1, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0, 3, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateY2{0, 1, 10, 3, 0, 13, 10, 7, 0, 13, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateYZ1{0, 1, 1, 2, 0, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 0, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateYZ1{0, 1, 2, 3, 0, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 10, 31, 28, 13, 14, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateYZ2{0, 1, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 4, 4, 0, 3, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateYZ2{0, 1, 10, 3, 0, 13, 10, 7, 0, 13, 10, 31, 12, 13, 14, 31, 0, 17, 18, 19, 0, 21, 10, 31, 24, 13, 10, 31, 28, 13, 14, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateZ1{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 31, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 10, 27, 28, 13, 14, 31};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsDilateZ2{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
-constexpr ExemplarDataType k_ExemplarDataDilateZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataDilateZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 31, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 10, 27, 28, 13, 14, 31};
 
 // Exemplar Erode data for A/B testing
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeX1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 6};
-constexpr ExemplarDataType k_ExemplarDataErodeX1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeX1{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 11, 12, 12, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 30};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeX2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 6};
-constexpr ExemplarDataType k_ExemplarDataErodeX2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeX2{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 11, 12, 12, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 30};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXY1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
-constexpr ExemplarDataType k_ExemplarDataErodeXY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXY1{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11, 12, 9, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 27};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXY2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
-constexpr ExemplarDataType k_ExemplarDataErodeXY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXY2{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11, 12, 9, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 27};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXYZ1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeXYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXYZ1{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11, 12, 9, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXYZ2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeXYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXYZ2{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11, 12, 9, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXZ1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeXZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXZ1{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 11, 12, 12, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXZ2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeXZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeXZ2{1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 11, 12, 12, 15, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeY1{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
-constexpr ExemplarDataType k_ExemplarDataErodeY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeY1{4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 27};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeY2{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
-constexpr ExemplarDataType k_ExemplarDataErodeY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeY2{4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 27};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeYZ1{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeYZ1{4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 30, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeYZ2{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeYZ2{4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 30, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeZ1{4, 1, 1, 2, 2, 1, 2, 2, 1, 1, 5, 2, 2, 6, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeZ1{16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 26, 11, 12, 29, 30, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 constexpr ExemplarDataType k_ExemplarFeatureIdsErodeZ2{4, 1, 1, 2, 2, 1, 2, 2, 1, 1, 5, 2, 2, 6, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-constexpr ExemplarDataType k_ExemplarDataErodeZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+constexpr ExemplarDataType k_ExemplarDataErodeZ2{16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 26, 11, 12, 29, 30, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
 
 
 DataStructure CreateTestData()
@@ -225,7 +225,7 @@ void CheckOutput(const Int32AbstractDataStore& featureIds, const Int32AbstractDa
   REQUIRE(dataStore.size() == exemplarData.size());
 
   for(usize i = 0; i < dataStore.size(); i++)
-  { 
+  {
     REQUIRE(dataStore[i] == exemplarData[i]);
     REQUIRE(featureIds[i] == exemplarFeatureIds[i]);
   }
