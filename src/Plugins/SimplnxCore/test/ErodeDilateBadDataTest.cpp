@@ -37,7 +37,103 @@ const ShapeType k_TupleShape{4, 4, 2};
 const usize k_NumTuples = 32;
 const DataPath k_DataPath({::k_ImageGeometry, ::k_CellData, k_MiscData});
 const DataPath k_ImageFeatureIdsPath({::k_ImageGeometry, ::k_CellData, k_FeatureIds});
-} // namespace
+
+using DirectionType = std::array<bool, 3>;
+constexpr DirectionType k_XDir{true, false, false};
+constexpr DirectionType k_XYDir{true, true, false};
+constexpr DirectionType k_XYZDir{true, true, true};
+constexpr DirectionType k_XZDir{true, false, true};
+constexpr DirectionType k_YDir{false, true, false};
+constexpr DirectionType k_YZDir{false, true, true};
+constexpr DirectionType k_ZDir{false, false, true};
+
+using ExemplarDataType = std::array<int32, 32>;
+// Exemplar Dilate data for A/B testing
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateX1{0, 0, 1, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateX1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateX2{0, 0, 0, 2, 2, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateX2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXY1{0, 0, 1, 2, 0, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXY2{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 0, 0, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXYZ1{0, 0, 1, 2, 0, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 0, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXYZ2{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 3, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXZ1{0, 0, 1, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateXZ2{0, 0, 0, 2, 2, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 3, 3, 3, 3, 5, 0, 0, 0, 0, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateXZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateY1{0, 1, 1, 2, 0, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateY2{0, 1, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0, 3, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateYZ1{0, 1, 1, 2, 0, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 0, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateYZ2{0, 1, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 4, 4, 0, 3, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateZ1{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsDilateZ2{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 4, 4, 4, 3, 3, 3, 3, 5, 5, 0, 5, 5, 0, 0, 0};
+constexpr ExemplarDataType k_ExemplarDataDilateZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+// Exemplar Erode data for A/B testing
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeX1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 6};
+constexpr ExemplarDataType k_ExemplarDataErodeX1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeX2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 6};
+constexpr ExemplarDataType k_ExemplarDataErodeX2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXY1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
+constexpr ExemplarDataType k_ExemplarDataErodeXY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXY2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
+constexpr ExemplarDataType k_ExemplarDataErodeXY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXYZ1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeXYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXYZ2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeXYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXZ1{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeXZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeXZ2{1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeXZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeY1{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
+constexpr ExemplarDataType k_ExemplarDataErodeY1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeY2{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 5};
+constexpr ExemplarDataType k_ExemplarDataErodeY2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeYZ1{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeYZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeYZ2{2, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeYZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeZ1{4, 1, 1, 2, 2, 1, 2, 2, 1, 1, 5, 2, 2, 6, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeZ1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+constexpr ExemplarDataType k_ExemplarFeatureIdsErodeZ2{4, 1, 1, 2, 2, 1, 2, 2, 1, 1, 5, 2, 2, 6, 6, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+constexpr ExemplarDataType k_ExemplarDataErodeZ2{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
 
 DataStructure CreateTestData()
 {
@@ -106,585 +202,137 @@ DataStructure CreateTestData()
   return dataStructure;
 }
 
-// Erode 1
-void CheckDataErode1XYZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
+void CheckPathIgnored(const DataStructure& dataStructure)
 {
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+  DataStructure exemplarStructure = CreateTestData();
+  DataPath ignoredPath({k_ImageGeometry, k_CellData, k_MiscData});
 
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1YZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+  const auto* dataArray = dataStructure.getDataAs<Int32Array>(ignoredPath);
+  const auto* exemplarArray = exemplarStructure.getDataAs<Int32Array>(ignoredPath);
 
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1Z(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
+  const auto& dataStore = dataArray->getDataStoreRef();
+  const auto& exemplarStore = exemplarArray->getDataStoreRef();
 
-  for(usize i = 0; i < dataStore.size(); i++)
+  const usize size = dataStore.size();
+  for(usize i = 0; i < size; i++)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1XZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1X(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1XY(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode1Y(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    REQUIRE(dataStore[i] == exemplarStore[i]);
   }
 }
 
-void CheckDataErode1(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore, const std::array<bool, 3>& dir)
+void CheckOutput(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore, const ExemplarDataType& exemplarFeatureIds, const ExemplarDataType& exemplarData)
 {
-  if(dir[0])
-  {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataErode1XYZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode1XY(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataErode1XZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode1X(featureIds, dataStore);
-      }
-    }
+  REQUIRE(dataStore.size() == exemplarData.size());
+
+  for(usize i = 0; i < dataStore.size(); i++)
+  { 
+    REQUIRE(dataStore[i] == exemplarData[i]);
+    REQUIRE(featureIds[i] == exemplarFeatureIds[i]);
   }
-  // Not X
+}
+
+void CheckDilateOutput(const DataStructure& dataStructure, const DirectionType& directions, int32 iterations)
+{
+  const Int32AbstractDataStore& featureIds = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
+  const Int32AbstractDataStore& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
+
+  ExemplarDataType exemplarFeatureIds;
+  ExemplarDataType exemplarData;
+  bool only1Iteration = iterations == 1;
+
+  if (directions == k_XDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateX1 : k_ExemplarFeatureIdsDilateX2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateX1 : k_ExemplarDataDilateX2;
+  }
+  else if (directions == k_XYDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateXY1 : k_ExemplarFeatureIdsDilateXY2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateXY1 : k_ExemplarDataDilateXY2;
+  }
+  else if(directions == k_XYZDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateXYZ1 : k_ExemplarFeatureIdsDilateXYZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateXYZ1 : k_ExemplarDataDilateXYZ2;
+  }
+  else if(directions == k_XZDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateXZ1 : k_ExemplarFeatureIdsDilateXZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateXZ1 : k_ExemplarDataDilateXZ2;
+  }
+  else if(directions == k_YDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateY1 : k_ExemplarFeatureIdsDilateY2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateY1 : k_ExemplarDataDilateY2;
+  }
+  else if(directions == k_YZDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateYZ1 : k_ExemplarFeatureIdsDilateYZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateYZ1 : k_ExemplarDataDilateYZ2;
+  }
+  else if(directions == k_ZDir)
+  {
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsDilateZ1 : k_ExemplarFeatureIdsDilateZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataDilateZ1 : k_ExemplarDataDilateZ2;
+  }
   else
   {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataErode1YZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode1Y(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataErode1Z(featureIds, dataStore);
-      }
-      else
-      {
-        REQUIRE(false);
-      }
-    }
-  }
-}
-
-// Erode 2
-void CheckDataErode2XYZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2YZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2Z(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2XY(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2X(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2XZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataErode2Y(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 11, 12, 9, 6, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 15};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 3, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6, 6, 3};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-
-void CheckDataErode2(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore, const std::array<bool, 3>& dir)
-{
-  if(dir[0])
-  {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataErode2XYZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode2XY(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataErode2XZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode2X(featureIds, dataStore);
-      }
-    }
-  }
-  // Not X
-  else
-  {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataErode2YZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataErode2Y(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataErode2Z(featureIds, dataStore);
-      }
-      else
-      {
-        REQUIRE(false);
-      }
-    }
-  }
-}
-
-void CheckDataErode(Int32Array& featureIdsArray, Int32Array& dataArray, int32 numIterations, const std::array<bool, 3>& directions)
-{
-  const auto& featureIds = featureIdsArray.getDataStoreRef();
-  const auto& dataStore = dataArray.getDataStoreRef();
-
-  // Close up 0 features
-  switch(numIterations)
-  {
-  case 1:
-    CheckDataErode1(featureIds, dataStore, directions);
-    break;
-  case 2:
-    CheckDataErode2(featureIds, dataStore, directions);
-    break;
-  default:
     REQUIRE(false);
   }
+
+  CheckOutput(featureIds, dataStore, exemplarFeatureIds, exemplarData);
 }
 
-// Dilate
-void CheckDataDilate1XYZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
+void CheckErodeOutput(const DataStructure& dataStructure, const DirectionType& directions, int32 iterations)
 {
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
+  const Int32AbstractDataStore& featureIds = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
+  const Int32AbstractDataStore& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
 
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate1XY(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
+  ExemplarDataType exemplarFeatureIds;
+  ExemplarDataType exemplarData;
+  bool only1Iteration = iterations == 1;
 
-  for(usize i = 0; i < dataStore.size(); i++)
+  if(directions == k_XDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeX1 : k_ExemplarFeatureIdsErodeX2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeX1 : k_ExemplarDataErodeX2;
   }
-}
-void CheckDataDilate1XZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  else if(directions == k_XYDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeXY1 : k_ExemplarFeatureIdsErodeXY2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeXY1 : k_ExemplarDataErodeXY2;
   }
-}
-void CheckDataDilate1X(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  else if(directions == k_XYZDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeXYZ1 : k_ExemplarFeatureIdsErodeXYZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeXYZ1 : k_ExemplarDataErodeXYZ2;
   }
-}
-void CheckDataDilate1YZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  else if(directions == k_XZDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeXZ1 : k_ExemplarFeatureIdsErodeXZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeXZ1 : k_ExemplarDataErodeXZ2;
   }
-}
-void CheckDataDilate1Y(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  else if(directions == k_YDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeY1 : k_ExemplarFeatureIdsErodeY2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeY1 : k_ExemplarDataErodeY2;
   }
-}
-void CheckDataDilate1Z(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 2, 3, 4, 5, 10, 7, 8, 13, 10, 11, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 1, 2, 2, 1, 0, 2, 1, 0, 0, 2, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 3, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  else if(directions == k_YZDir)
   {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeYZ1 : k_ExemplarFeatureIdsErodeYZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeYZ1 : k_ExemplarDataErodeYZ2;
   }
-}
-
-void CheckDataDilate1(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore, const std::array<bool, 3>& dir)
-{
-  if(dir[0])
+  else if(directions == k_ZDir)
   {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataDilate1XYZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate1XY(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataDilate1XZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate1X(featureIds, dataStore);
-      }
-    }
+    exemplarFeatureIds = only1Iteration ? k_ExemplarFeatureIdsErodeZ1 : k_ExemplarFeatureIdsErodeZ2;
+    exemplarData = only1Iteration ? k_ExemplarDataErodeZ1 : k_ExemplarDataErodeZ2;
   }
-  // Not X
   else
   {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataDilate1YZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate1Y(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataDilate1Z(featureIds, dataStore);
-      }
-      else
-      {
-        REQUIRE(false);
-      }
-    }
-  }
-}
-
-void CheckDataDilate2XYZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2XY(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2XZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2X(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2YZ(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2Y(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-void CheckDataDilate2Z(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore)
-{
-  std::vector<int32> exemplarData{0, 1, 10, 3, 4, 13, 10, 7, 8, 13, 10, 31, 12, 13, 14, 31, 16, 17, 18, 19, 20, 21, 22, 31, 24, 25, 26, 31, 28, 29, 30, 31};
-  std::vector<int32> exemplarFeatures{0, 1, 0, 2, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 4, 4, 4, 4, 3, 3, 3, 0, 5, 5, 5, 0, 5, 6, 6, 0};
-
-  for(usize i = 0; i < dataStore.size(); i++)
-  {
-    REQUIRE(dataStore[i] == exemplarData[i]);
-    REQUIRE(featureIds[i] == exemplarFeatures[i]);
-  }
-}
-
-void CheckDataDilate2(const Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& dataStore, const std::array<bool, 3>& dir)
-{
-  if(dir[0])
-  {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataDilate2XYZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate2XY(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataDilate2XZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate2X(featureIds, dataStore);
-      }
-    }
-  }
-  // Not X
-  else
-  {
-    if(dir[1])
-    {
-      if(dir[2])
-      {
-        CheckDataDilate2YZ(featureIds, dataStore);
-      }
-      else
-      {
-        CheckDataDilate2Y(featureIds, dataStore);
-      }
-    }
-    // Not Y
-    else
-    {
-      if(dir[2])
-      {
-        CheckDataDilate2Z(featureIds, dataStore);
-      }
-      else
-      {
-        REQUIRE(false);
-      }
-    }
-  }
-}
-
-void CheckDataDilate(const Int32Array& featureIdsArray, const Int32Array& dataArray, usize numIterations, const std::array<bool, 3>& dir)
-{
-  const auto& featureIds = featureIdsArray.getDataStoreRef();
-  const auto& dataStore = dataArray.getDataStoreRef();
-
-  // Expand 0 features
-  switch(numIterations)
-  {
-  case 1:
-    CheckDataDilate1(featureIds, dataStore, dir);
-    break;
-  case 2:
-    CheckDataDilate2(featureIds, dataStore, dir);
-    break;
-  default:
     REQUIRE(false);
   }
+
+  CheckOutput(featureIds, dataStore, exemplarFeatureIds, exemplarData);
 }
 
 void RunFilter(DataStructure& dataStructure, ChoicesParameter::ValueType operation, int32 numIterations, const std::array<bool, 3>& directions, const DataPath& geometryPath,
@@ -711,6 +359,53 @@ void RunFilter(DataStructure& dataStructure, ChoicesParameter::ValueType operati
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
+} // namespace
+
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDilateBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
+
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  {
+    const ErodeDilateBadDataFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Erode));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(2));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+
+// Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+
+  const std::string k_ExemplarDataContainerName("Exemplar Bad Data Erode");
+  const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
@@ -732,10 +427,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded", "[SimplnxCore
   }
 
   RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
-  auto& dataArray = dataStructure.getDataRefAs<Int32Array>(k_DataPath);
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath);
-
-  CheckDataErode(featureIdsArray, dataArray, numIterations, directions);
+  CheckErodeOutput(dataStructure, directions, numIterations);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) Expanded", "[SimplnxCore][ErodeDilateBadDataFilter]")
@@ -758,22 +450,19 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) Expanded", "[SimplnxCor
   }
 
   RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
-  auto& dataArray = dataStructure.getDataRefAs<Int32Array>(k_DataPath);
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath);
-
-  CheckDataDilate(featureIdsArray, dataArray, numIterations, directions);
+  CheckDilateOutput(dataStructure, directions, numIterations);
 }
 
-TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) No Dimensions", "[SimplnxCore][ErodeDilateBadDataFilter]")
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
-  std::array<bool, 3> directions = {false, false, false};
+  std::array<bool, 3> directions = {true, true, true};
   int32 operation = GENERATE(0, 1);
-  int32 numIterations = GENERATE(1, 2);
+  int32 numIterations = 1;
 
-  DataPath imageGeomPath({k_ImageGeometry});
+  DataPath ignoredPath({k_ImageGeometry, k_CellData, k_MiscData});
 
   const ErodeDilateBadDataFilter filter;
   Arguments args;
@@ -785,18 +474,17 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) No Dimensions", "[Simpl
   args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
-
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.setDimensions(SizeVec3{0, 0, 0});
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{ignoredPath}));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  CheckPathIgnored(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) No Direction", "[SimplnxCore][ErodeDilateBadDataFilter]")
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Direction", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -820,7 +508,42 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) No Direction", "[Simpln
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -14601);
+}
+
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][ErodeDilateBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateTestData();
+  std::array<bool, 3> directions = {true, true, true};
+  int32 operation = 0;
+  int32 numIterations = 1;
+  DataPath geomPath({k_ImageGeometry});
+
+  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(geomPath);
+  imageGeom->setDimensions(SizeVec3());
+
+  const ErodeDilateBadDataFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(numIterations));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(directions[0]));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -14602);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateBadDataFilter][BackwardsCompatibility]")
