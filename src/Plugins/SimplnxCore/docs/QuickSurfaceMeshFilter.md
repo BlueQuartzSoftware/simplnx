@@ -83,6 +83,24 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 
 **Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.
 
+### Omitting the Bounding Box Skin
+
+By default this filter generates triangles covering all six outer walls of the Image
+Geometry's bounding box. These faces are artifacts of where the volume was cropped rather
+than real interfaces, and they receive a Face Label of `-1` on the exterior side.
+
+Enabling **Omit Bounding Box Skin** suppresses a wall face when the voxel behind it is
+background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
+that cap a *real* Feature are still generated, because that cut plane is the only possible
+closure for a Feature flush with the box. A cylinder sitting flush with the box floor
+therefore comes out as a closed surface with no surrounding box.
+
+On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
+has no effect — every boundary Feature already needs its wall cap to stay closed.
+
+Because the test is per-face rather than per-vertex, no triangles are lost along the rim
+where an internal boundary meets the box wall.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

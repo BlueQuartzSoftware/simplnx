@@ -42,25 +42,20 @@ SurfaceNets output **with** the built-in smoothing operation applied.
 
 ## Node Types
 
-During the meshing process, each vertex (node) is assigned a "Node Type" value ranging from 0 to 6. The value is an internal representation from the Surface Nets algorithm. The values are roughly equivalent to the Node Types from the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) algorithm but are not strictly the same.
+During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. This filter uses the same convention as the Create Surface Mesh (QuickMesh) and Create Surface Mesh (M3C) **Filters**: the value is the number of distinct **Features** meeting at the node, capped at 4, plus 10 when the node lies on the outer surface of the bounding box.
 
-- Node Type = 0: A node that has ONLY 2 features connected to it.
-- Node Type = 2: A node that has 3 features connected to it, such as a **triple line** (the edge where exactly three features meet).
-- Node Type = 3-6: Nodes that have 4 or more features connected to them.
-
-| Node Type | Example Image                                |
-|-----------|----------------------------------------------|
-| 0 | ![Node Type 0](Images/SurfaceNets_NodeType_0.png)|
-| 2 |  ![Node Type 2](Images/SurfaceNets_NodeType_2.png)|
-| 3 |  ![Node Type 3](Images/SurfaceNets_NodeType_3.png)|
-| 4 | ![Node Type 4](Images/SurfaceNets_NodeType_4.png)|
-| 6 |  ![Node Type 6](Images/SurfaceNets_NodeType_6.png)|
+| Id Value | Node Type |
+|----------|-----------|
+| 2 | Normal **Vertex** |
+| 3 | Triple Line |
+| 4 | Quadruple Point (four or more Features meet) |
+| 12 | Normal **Vertex** on the outer surface of the bounding box |
+| 13 | Triple Line on the outer surface of the bounding box |
+| 14 | Quadruple Point on the outer surface of the bounding box |
 
 ### Exterior or Boundary Nodes
 
-Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume has a value of 12.
-
-![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
+Nodes that appear on the outer surface of the bounding box have Node Type values starting at 12 and going up from there. For instance, a triple line that is also on the exterior of the volume has a value of 13.
 
 ### Exterior or Boundary Triangles
 
@@ -91,6 +86,24 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 | Status | Deprecated | Recommended default | Specialized / legacy-compatible |
 
 **Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.
+
+### Omitting the Bounding Box Skin
+
+By default this filter generates triangles covering all six outer walls of the Image
+Geometry's bounding box. These faces are artifacts of where the volume was cropped rather
+than real interfaces, and they receive a Face Label of `-1` on the exterior side.
+
+Enabling **Omit Bounding Box Skin** suppresses a wall face when the voxel behind it is
+background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
+that cap a *real* Feature are still generated, because that cut plane is the only possible
+closure for a Feature flush with the box. A cylinder sitting flush with the box floor
+therefore comes out as a closed surface with no surrounding box.
+
+On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
+has no effect — every boundary Feature already needs its wall cap to stay closed.
+
+Because the test is per-face rather than per-vertex, no triangles are lost along the rim
+where an internal boundary meets the box wall.
 
 % Auto generated parameter table will be inserted here
 
