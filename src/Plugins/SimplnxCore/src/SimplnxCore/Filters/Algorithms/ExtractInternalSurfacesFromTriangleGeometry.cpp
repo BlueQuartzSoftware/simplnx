@@ -73,7 +73,34 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   auto numVerts = triangleGeom.getNumberOfVertices();
   auto numTris = triangleGeom.getNumberOfFaces();
 
-  auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath);
+  using MeshIndexType = IGeometry::MeshIndexType;
+
+  // Only the array the selected criterion needs is read.
+  const Int8AbstractDataStore* nodeTypesPtr = nullptr;
+  const Int32AbstractDataStore* faceLabelsPtr = nullptr;
+  if(m_InputValues->CriterionMode == 0)
+  {
+    nodeTypesPtr = &m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath).getDataStoreRef();
+  }
+  else
+  {
+    faceLabelsPtr = &m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStoreRef();
+  }
+
+  // True when this triangle belongs to the extracted internal surface.
+  const auto isInternalTriangle = [&](MeshIndexType triIndex, MeshIndexType v0Index, MeshIndexType v1Index, MeshIndexType v2Index) -> bool {
+    if(m_InputValues->CriterionMode == 0)
+    {
+      const auto& nodeTypes = *nodeTypesPtr;
+      return (nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
+             (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]);
+    }
+    // Face Labels mode: drop only the bounding box wall backed by background.
+    const auto& faceLabels = *faceLabelsPtr;
+    const int32 labelA = faceLabels[triIndex * 2];
+    const int32 labelB = faceLabels[triIndex * 2 + 1];
+    return !((labelA == -1 && labelB == 0) || (labelB == -1 && labelA == 0));
+  };
 
   auto internalVerticesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedVertexListName);
   internalTriangleGeom.setVertices(*m_DataStructure.getDataAs<Float32Array>(internalVerticesPath));
@@ -85,8 +112,6 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   // int64 prog = 1;
   // int64 progressInt = 0;
   // int64 counter = 0;
-  using MeshIndexType = IGeometry::MeshIndexType;
-
   const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
 
   std::vector<MeshIndexType> vertNewIndex(numVerts, notSeen);
@@ -100,11 +125,9 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
     MeshIndexType v0Index = triangles[3 * triIndex + 0];
     MeshIndexType v1Index = triangles[3 * triIndex + 1];
     MeshIndexType v2Index = triangles[3 * triIndex + 2];
-    // Check if the NodeType is either 2, 3, 4
-    if((nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
-       (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]))
+    if(isInternalTriangle(triIndex, v0Index, v1Index, v2Index))
     {
-      // All Nodes are the correct type
+      // This triangle belongs to the extracted internal surface
       triNewIndex[triIndex] = currentNewTriIndex;
       currentNewTriIndex++; // increment the index into which this triangle would be place in the new triangle array
       // Now figure out if we have seen each vertex
