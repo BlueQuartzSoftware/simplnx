@@ -49,6 +49,5 @@ Previously an open question ("could not distinguish correct per-direction gating
 
 ## What would need to happen to extend this further
 
-Everything listed in the prior revision of this file has been done: legacy binary obtained and run, SIMPLNX output compared element-wise against legacy output, and the neighbor-selection/tie-break logic diffed directly against legacy source. Remaining follow-up (not gating, see V&V report):
+Everything listed in the prior revision of this file has been done: legacy binary obtained and run, SIMPLNX output compared element-wise against legacy output, and the neighbor-selection/tie-break logic diffed directly against legacy source. The zero-dimensions preflight path (`-14602`), also previously listed here as uncovered, is now reached and correctly asserted by the `No Dimensions` test (fixed on this branch — see V&V report Code path coverage). Remaining follow-up (not gating, see V&V report):
 1. The legacy A/B comparison in this pass was a manual/one-time verification (pipeline JSONs run through `PipelineRunner.exe`, output diffed via `h5py`), not wired into automated CI. Consider checking in the legacy `.dream3d` input/output pairs as an exemplar archive and adding an automated Class 2 comparison test (matching the pattern used by `FillBadDataFilter`'s `FillBadData_SmallIN100` test), so this verification re-runs on every CI build instead of relying on this document.
-2. Zero-dimensions preflight path (`-14602`) is still not reached by any test — unrelated to this pass's fixes, see V&V report Code path coverage.
