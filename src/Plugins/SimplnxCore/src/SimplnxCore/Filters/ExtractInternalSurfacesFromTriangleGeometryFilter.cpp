@@ -104,7 +104,7 @@ IFilter::VersionType ExtractInternalSurfacesFromTriangleGeometryFilter::paramete
   return 2;
   // Version 1 -> 2
   // Change 1:
-  // Added - k_CriterionMode_Key = "internal_surface_criterion";
+  // Added - k_CriterionMode_Key = "internal_surface_criterion_index";
   // Solution - set the value to 0 (Node Type Range, preserves prior behavior);
   // Change 2:
   // Added - k_FaceLabelsPath_Key = "face_labels_path";
