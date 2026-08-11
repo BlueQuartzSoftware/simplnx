@@ -21,8 +21,8 @@ using namespace nx::core;
 
 namespace
 {
-int32 k_NoDirections_Error = -14601;
-int32 k_NoGeometryDimensions = -14602;
+constexpr int32 k_NoDirectionsError = -14601;
+constexpr int32 k_NoGeometryDimensions = -14602;
 } // namespace
 
 namespace nx::core
@@ -117,14 +117,14 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   if(!xDirOn && !yDirOn && !zDirOn)
   {
-    return {MakeErrorResult<OutputActions>(k_NoDirections_Error, "ErodeDilateBadData requires at least one direction to operate over")};
+    return {MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
   }
 
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   auto dims = imageGeom.getDimensions();
-  if(dims[0] == 0 && dims[1] == 0 && dims[2] == 0)
+  if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
-    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensions, "ErodeDilateBadData requires that the ImageGeom have its dimensions set")};
+    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensions, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
   }
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
