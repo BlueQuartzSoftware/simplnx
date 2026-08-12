@@ -42,6 +42,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -61,6 +62,11 @@ const fs::path k_ExportFilename2 = "export2.dream3d";
 const fs::path k_MultiExportFilename1 = "multi_export1.dream3d";
 const fs::path k_MultiExportFilename2 = "multi_export2.dream3d";
 const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
+// Each TEST_CASE runs as a separate ctest process, so tests that write a file must each use
+// their own filename to avoid cross-process races under parallel ctest.
+const fs::path k_ValidParamsFilename = "write_dream3d_valid_params.dream3d";
+const fs::path k_PipelineComboFilename = "write_dream3d_pipeline_combos.dream3d";
+const fs::path k_FileDataFilename = "write_dream3d_file_data.dream3d";
 
 constexpr StringLiteral k_CellData = "Cell Data";
 constexpr StringLiteral k_DataContainer = "Data Container";
@@ -79,6 +85,8 @@ constexpr StringLiteral k_ZBounds = "Z Bounds";
 constexpr StringLiteral k_DynamicListArray = "DynamicList";
 constexpr StringLiteral k_NeighborList = "NeighborList";
 constexpr StringLiteral k_StringArray = "String Array";
+constexpr StringLiteral k_VertexData = "Vertex Data";
+constexpr StringLiteral k_VertexValues = "Vertex Values";
 constexpr StringLiteral k_VertexList = "Vertices";
 constexpr StringLiteral k_Edges = "Edges";
 constexpr StringLiteral k_Faces = "Faces";
@@ -127,7 +135,7 @@ fs::path GetDataDir(const Application& app)
   return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
-fs::path GetIODataPath()
+fs::path GetTestFilePath(const fs::path& filename)
 {
   auto app = Application::Instance();
   if(app == nullptr)
@@ -135,12 +143,32 @@ fs::path GetIODataPath()
     throw std::runtime_error("nx::core::Application instance not found");
   }
 
-  return GetDataDir(*app) / Constants::k_Dream3dFilename;
+  return GetDataDir(*app) / filename;
 }
 
-fs::path GetXdmfPath()
+fs::path GetIODataPath()
 {
-  fs::path filePath = GetIODataPath();
+  return GetTestFilePath(Constants::k_Dream3dFilename);
+}
+
+fs::path GetValidParamsFilePath()
+{
+  return GetTestFilePath(Constants::k_ValidParamsFilename);
+}
+
+fs::path GetPipelineComboFilePath()
+{
+  return GetTestFilePath(Constants::k_PipelineComboFilename);
+}
+
+fs::path GetFileDataFilePath()
+{
+  return GetTestFilePath(Constants::k_FileDataFilename);
+}
+
+fs::path GetXdmfPath(const fs::path& dream3dPath)
+{
+  fs::path filePath = dream3dPath;
   filePath.replace_extension(".xdmf");
   return filePath;
 }
@@ -409,11 +437,19 @@ void CheckTestDataStructure(const DataStructure& dataStructure)
   const auto* triGeom = dataStructure.getDataAs<TriangleGeom>(DataPath({Constants::k_TriangleGeom}));
   CheckGeom2D(triGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId());
 
+  DataPath vertexDataPath = DataPath({Constants::k_TriangleGeom}).createChildPath(Constants::k_VertexData);
+  const auto* triVertexMatrix = dataStructure.getDataAs<AttributeMatrix>(vertexDataPath);
+  REQUIRE(triVertexMatrix != nullptr);
+  REQUIRE(triGeom->getVertexAttributeMatrixId() == triVertexMatrix->getId());
+  const auto* vertexValuesArray = dataStructure.getDataAs<Float32Array>(vertexDataPath.createChildPath(Constants::k_VertexValues));
+  REQUIRE(vertexValuesArray != nullptr);
+  CheckDataStore<float32>(vertexValuesArray->getDataStoreRef(), 1);
+
   const auto* hexGeom = dataStructure.getDataAs<HexahedralGeom>(DataPath({Constants::k_HexGeom}));
-  CheckGeom3D(hexGeom, vertexArray->getId(), edgeArray->getId(), hexaArray->getId(), polyArray->getId());
+  CheckGeom3D(hexGeom, vertexArray->getId(), edgeArray->getId(), quadArray->getId(), hexaArray->getId());
 
   const auto* tetraGeom = dataStructure.getDataAs<TetrahedralGeom>(DataPath({Constants::k_TetrahedralGeom}));
-  CheckGeom3D(tetraGeom, vertexArray->getId(), edgeArray->getId(), tetraArray->getId(), polyArray->getId());
+  CheckGeom3D(tetraGeom, vertexArray->getId(), edgeArray->getId(), faceArray->getId(), tetraArray->getId());
 
   // Image Geom
   DataPath imageGeomPath({Constants::k_ImageGeom});
@@ -437,12 +473,15 @@ void CheckTestDataStructure(const DataStructure& dataStructure)
   DataPath xPath = rectGridGeomPath.createChildPath(Constants::k_XBounds);
   const auto* xBoundsArray = dataStructure.getDataAs<Float32Array>(xPath);
   REQUIRE(xBoundsArray != nullptr);
+  REQUIRE(xBoundsArray->getNumberOfTuples() == Constants::k_TupleShape[0] + 1);
   DataPath yPath = rectGridGeomPath.createChildPath(Constants::k_YBounds);
   const auto* yBoundsArray = dataStructure.getDataAs<Float32Array>(yPath);
   REQUIRE(yBoundsArray != nullptr);
+  REQUIRE(yBoundsArray->getNumberOfTuples() == Constants::k_TupleShape[1] + 1);
   DataPath zPath = rectGridGeomPath.createChildPath(Constants::k_ZBounds);
   const auto* zBoundsArray = dataStructure.getDataAs<Float32Array>(zPath);
   REQUIRE(zBoundsArray != nullptr);
+  REQUIRE(zBoundsArray->getNumberOfTuples() == Constants::k_TupleShape[2] + 1);
   REQUIRE(rectGrid->getXBoundsId() == xBoundsArray->getId());
   REQUIRE(rectGrid->getYBoundsId() == yBoundsArray->getId());
   REQUIRE(rectGrid->getZBoundsId() == zBoundsArray->getId());
@@ -496,6 +535,7 @@ DataStructure CreateTestDataStructure()
 
   auto polyhedra = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* polyhedraArray = IGeometry::SharedFaceList::Create(dataStructure, Constants::k_Polyhedra, polyhedra, dataGroup->getId());
+  REQUIRE(polyhedraArray != nullptr);
   FillDataStore<uint64>(*polyhedra.get());
 
   auto quadStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
@@ -536,16 +576,17 @@ DataStructure CreateTestDataStructure()
   // RectGrid Data
   auto* rectGridGeom = RectGridGeom::Create(dataStructure, Constants::k_RectGridGeom);
   REQUIRE(rectGridGeom != nullptr);
-  ShapeType xShape{Constants::k_TupleShape[0]};
+  // N cells along a dimension require N+1 bounds values
+  ShapeType xShape{Constants::k_TupleShape[0] + 1};
   ShapeType componentBounds{1};
   auto xBounds = std::make_shared<Float32DataStore>(xShape, componentBounds, 0.0f);
   auto* xBoundsArray = Float32Array::Create(dataStructure, Constants::k_XBounds, xBounds, rectGridGeom->getId());
   FillDataStore<float32>(*xBounds.get());
-  ShapeType yShape{Constants::k_TupleShape[1]};
+  ShapeType yShape{Constants::k_TupleShape[1] + 1};
   auto yBounds = std::make_shared<Float32DataStore>(yShape, componentBounds, 0.0f);
   auto* yBoundsArray = Float32Array::Create(dataStructure, Constants::k_YBounds, yBounds, rectGridGeom->getId());
   FillDataStore<float32>(*yBounds.get());
-  ShapeType zShape{Constants::k_TupleShape[1]};
+  ShapeType zShape{Constants::k_TupleShape[2] + 1};
   auto zBounds = std::make_shared<Float32DataStore>(zShape, componentBounds, 0.0f);
   auto* zBoundsArray = Float32Array::Create(dataStructure, Constants::k_ZBounds, zBounds, rectGridGeom->getId());
   FillDataStore<float32>(*zBounds.get());
@@ -571,10 +612,20 @@ DataStructure CreateTestDataStructure()
   auto* triangleGeom = Create2DGeom<TriangleGeom>(dataStructure, Constants::k_TriangleGeom, *vertexArray, *edgesArray, *trianglesArray);
   REQUIRE(triangleGeom != nullptr);
 
-  // 3D Geometries
-  auto* hexGeom = Create3DGeom<HexahedralGeom>(dataStructure, Constants::k_HexGeom, *vertexArray, *edgesArray, *hexArray, *polyhedraArray);
+  // Vertex data on a node geometry so the xdmf writer emits node-centered attribute references
+  auto* vertexMatrix = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, Constants::k_TupleShape, triangleGeom->getId());
+  REQUIRE(vertexMatrix != nullptr);
+  triangleGeom->setVertexAttributeMatrix(*vertexMatrix);
+  auto vertexValues = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{1}, 0.0f);
+  auto* vertexValuesArray = Float32Array::Create(dataStructure, Constants::k_VertexValues, vertexValues, vertexMatrix->getId());
+  REQUIRE(vertexValuesArray != nullptr);
+  FillDataStore<float32>(*vertexValues.get());
+
+  // 3D Geometries. Hexahedra have quad faces (4 vertices) and 8-vertex cells; tetrahedra have
+  // triangle faces (3 vertices) and 4-vertex cells.
+  auto* hexGeom = Create3DGeom<HexahedralGeom>(dataStructure, Constants::k_HexGeom, *vertexArray, *edgesArray, *quadArray, *hexArray);
   REQUIRE(hexGeom != nullptr);
-  auto* tetrahedralGeom = Create3DGeom<TetrahedralGeom>(dataStructure, Constants::k_TetrahedralGeom, *vertexArray, *edgesArray, *tetraArray, *polyhedraArray);
+  auto* tetrahedralGeom = Create3DGeom<TetrahedralGeom>(dataStructure, Constants::k_TetrahedralGeom, *vertexArray, *edgesArray, *trianglesArray, *tetraArray);
   REQUIRE(tetrahedralGeom != nullptr);
 
   return dataStructure;
@@ -866,7 +917,8 @@ TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDRE
   UnitTest::LoadPlugins();
   std::lock_guard<std::mutex> lock(m_DataMutex);
 
-  DataStructure dataStructure = CreateTestDataStructure();
+  // Both sections only exercise preflight parameter guards, so no data is required.
+  DataStructure dataStructure;
   Arguments args;
   WriteDREAM3DFilter filter;
 
@@ -893,6 +945,8 @@ TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDRE
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
@@ -900,12 +954,14 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
   UnitTest::LoadPlugins();
   std::lock_guard<std::mutex> lock(m_DataMutex);
 
+  const fs::path exportFilePath = GetValidParamsFilePath();
+
   {
     DataStructure dataStructure = CreateTestDataStructure();
     Arguments args;
     WriteDREAM3DFilter filter;
 
-    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(GetIODataPath()));
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(exportFilePath));
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(false));
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
@@ -919,24 +975,46 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
   }
 
   // Check that the output file exists
-  REQUIRE(fs::exists(GetIODataPath()));
+  REQUIRE(fs::exists(exportFilePath));
 
   // Check that the file can be read back in and that the imported DataStructure matches expected values.
   {
-    auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
+    auto fileReader = HDF5::FileIO::ReadFile(exportFilePath);
     auto fileResult = DREAM3D::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 
     auto [pipeline, dataStructureRead] = fileResult.value();
 
     CheckTestDataStructure(dataStructureRead);
+    UnitTest::CheckArraysInheritTupleDims(dataStructureRead);
   }
 }
 
-void CheckXdmfFile()
+void CheckXdmfFile(const fs::path& dream3dPath)
 {
-  auto filepath = GetXdmfPath();
+  auto filepath = GetXdmfPath(dream3dPath);
   REQUIRE(fs::exists(filepath));
+
+  // Every heavy-data reference in the sidecar must point into the .dream3d file that was
+  // written; a reference built from any other token (e.g. a geometry name) cannot be
+  // resolved by ParaView/VisIt.
+  const std::string expectedPrefix = dream3dPath.filename().string() + ":/DataStructure/";
+  std::ifstream xdmfFile(filepath);
+  REQUIRE(xdmfFile.good());
+  usize referenceCount = 0;
+  std::string line;
+  while(std::getline(xdmfFile, line))
+  {
+    const usize refPos = line.find(":/DataStructure/");
+    if(refPos == std::string::npos)
+    {
+      continue;
+    }
+    referenceCount++;
+    const usize start = line.find_first_not_of(" \t");
+    REQUIRE(line.compare(start, expectedPrefix.size(), expectedPrefix) == 0);
+  }
+  REQUIRE(referenceCount > 0);
 }
 
 TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
@@ -947,13 +1025,42 @@ TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations", "[ReadDREAM3DFilter]
   bool writeXdmf = GENERATE(true, false);
   Pipeline exportPipeline = GENERATE(CreateExportPipeline(), Pipeline());
 
-  auto writeResult = DREAM3D::WriteFile(GetIODataPath(), CreateTestDataStructure(), exportPipeline, writeXdmf);
+  const fs::path exportFilePath = GetPipelineComboFilePath();
+  DataStructure dataStructure = CreateTestDataStructure();
+  auto writeResult = DREAM3D::WriteFile(exportFilePath, dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   if(writeXdmf)
   {
-    CheckXdmfFile();
+    CheckXdmfFile(exportFilePath);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("WriteDREAM3D:FileData Overload", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  const fs::path exportFilePath = GetFileDataFilePath();
+
+  // Write through the exported FileData overload so its pipeline/DataStructure ordering stays covered.
+  {
+    auto fileWriter = HDF5::FileIO::WriteFile(exportFilePath);
+    REQUIRE(fileWriter.isValid());
+    auto writeResult = DREAM3D::WriteFile(fileWriter, CreateFileData());
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  auto fileReader = HDF5::FileIO::ReadFile(exportFilePath);
+  auto fileResult = DREAM3D::ReadFile(fileReader);
+  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+
+  auto [pipeline, dataStructure] = fileResult.value();
+  REQUIRE(pipeline.size() == CreateExportPipeline().size());
+  CheckTestDataStructure(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
@@ -964,13 +1071,13 @@ TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]"
   bool writeXdmf = GENERATE(true, false);
   Pipeline exportPipeline = GENERATE(CreateExportPipeline(), Pipeline());
 
-  auto writeResult = DREAM3D::WriteFile(fs::path(), CreateTestDataStructure(), exportPipeline, writeXdmf);
+  // The write fails before any file (or .xdmf sidecar) can be produced; there is no
+  // target path whose sidecar could be checked.
+  DataStructure dataStructure = CreateTestDataStructure();
+  auto writeResult = DREAM3D::WriteFile(fs::path(), dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
 
-  if(writeXdmf)
-  {
-    CheckXdmfFile();
-  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
@@ -987,7 +1094,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
 
     if(writeXdmf)
     {
-      CheckXdmfFile();
+      CheckXdmfFile(GetIODataPath());
     }
   }
 
