@@ -61,15 +61,15 @@ Because of these array allocations, this **Filter** can consume large amounts of
 
 The values for the *Node Type* array can take one of the following values:
 
-    namespace SurfaceMesh {
+    namespace nx::core {
       namespace NodeType {
-        const int8_t Unused = -1;
-        const int8_t Default = 2;
-        const int8_t TriplePoint = 3;
-        const int8_t QuadPoint = 4;
-        const int8_t SurfaceDefault = 12;
-        const int8_t SurfaceTriplePoint = 13;
-        const int8_t SurfaceQuadPoint = 14;
+        inline constexpr int8_t Unused = 0;
+        inline constexpr int8_t Default = 2;
+        inline constexpr int8_t TriplePoint = 3;
+        inline constexpr int8_t QuadPoint = 4;
+        inline constexpr int8_t SurfaceDefault = 12;
+        inline constexpr int8_t SurfaceTriplePoint = 13;
+        inline constexpr int8_t SurfaceQuadPoint = 14;
       }
     }
 

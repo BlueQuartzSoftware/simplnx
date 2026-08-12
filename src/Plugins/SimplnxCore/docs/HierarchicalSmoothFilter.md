@@ -54,10 +54,10 @@ where `I` is the identity matrix, `L` is the reduced graph Laplacian, `y_origina
 The algorithm uses **interval bisection** to find the optimal `epsilon`:
 
 
-1. Start at `epsilon = 0.5`.
-2. Compute a numerical derivative of the objective function (the total Laplacian residual energy).
-3. If the derivative is near zero (flat region), the current `epsilon` is not in the active tradeoff zone. Halve `epsilon` and try again.
-4. Repeat until either a significant slope is found or the iteration limit is reached.
+1. Start at `epsilon = 0.5`, with a step size of `epsilon / 2`.
+2. Compute a numerical derivative (slope) of the objective function (the total Laplacian residual energy) at the current `epsilon`.
+3. If the slope's magnitude is still significant, step `epsilon` up or down (in the direction that reduces the slope) by the current step size, then halve the step size.
+4. Repeat until the slope's magnitude falls below the convergence threshold (a flat region — the optimal `epsilon` has been found) or the iteration limit is reached.
 
 The **Max Bisection Iterations** parameter controls how many halvings are attempted. The default value of **53** comes from `log2(10^16) ~ 53`, which is the number of bisection steps needed to resolve a double-precision floating point value to machine epsilon. In practice, the search often converges in far fewer iterations because it terminates early once a significant slope is detected.
 

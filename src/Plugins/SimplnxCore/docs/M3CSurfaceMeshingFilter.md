@@ -97,9 +97,11 @@ does not. This is not a universal guarantee of watertightness for arbitrary inpu
 
 If every voxel in the volume is background (Feature Id 0), every face is a background-backed
 wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
-and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
-success, not an error, because the input is legal — it simply contains no internal interface
-and no Feature to cap.
+and creates the **Triangle Geometry** with zero faces. Unlike Create Surface Mesh (QuickMesh) and
+Surface Nets, this is **not** zero vertices for M3C: as described in the note below, M3C's
+candidate-node generation leaves a handful of pre-existing orphan vertices that the option's
+pruning does not clear, so they remain in the output. This is treated as success, not an error,
+because the input is legal — it simply contains no internal interface and no Feature to cap.
 
 ### Feature Id Validation
 
