@@ -14,6 +14,12 @@ This **Filter** applies hierarchical smoothing to a triangle surface mesh repres
 
 This hierarchical approach preserves the topology of the grain boundary network while producing smooth surfaces. The smoothing parameter is optimized via interval bisection to balance smoothness against displacement from the original mesh.
 
+Because every stage above is driven by the Node Type value, smoothing a mesh produced by Create
+Surface Mesh (Surface Nets) now behaves differently than it did previously: that **Filter**'s Node
+Types were corrected to follow the `2`/`3`/`4`/`12`/`13`/`14` convention this **Filter** expects,
+so vertices that were previously misclassified (and therefore held fixed or smoothed in the wrong
+stage) are now classified correctly. This is a correction, not a regression.
+
 Nodes that are displaced beyond the error threshold (a multiple of a reference edge length) are rejected and reset to their original positions.
 
 ## Algorithm Overview

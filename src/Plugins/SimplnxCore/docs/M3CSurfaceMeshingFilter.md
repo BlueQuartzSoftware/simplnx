@@ -80,10 +80,20 @@ closure for a Feature flush with the box. A cylinder sitting flush with the box 
 therefore comes out as a closed surface with no surrounding box.
 
 On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
-has no effect — every boundary Feature already needs its wall cap to stay closed.
+has no effect — every boundary Feature already needs its wall cap to stay closed. Rather than
+silently doing nothing, the **Filter** reports this with a warning (code `-56342`): the option was
+enabled but removed zero faces because the input has no background voxels for it to act on.
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
-where an internal boundary meets the box wall.
+where an internal boundary meets the box wall. With the option **off**, wherever an internal
+Feature-Feature boundary meets the bounding box wall, three faces share that edge: the internal
+boundary quad and the two wall quads on either side of it — a non-manifold T-junction that is
+inherent to including the full box skin. With the option **on**, the background-backed wall quad
+on that edge is dropped, leaving exactly two faces sharing it, which is manifold. The option
+therefore does not merely remove unwanted geometry: in the configurations exercised by this
+**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall, and a
+**Feature** occupying a box corner), enabling it produces a watertight mesh where leaving it off
+does not. This is not a universal guarantee of watertightness for arbitrary input.
 
 If every voxel in the volume is background (Feature Id 0), every face is a background-backed
 wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
@@ -91,14 +101,25 @@ and creates the **Triangle Geometry** with zero vertices and zero faces; this is
 success, not an error, because the input is legal — it simply contains no internal interface
 and no Feature to cap.
 
+### Feature Id Validation
+
+Independently of the **Bounding Box Skin** setting, this **Filter** always rejects a **Feature
+Ids** array that contains a negative value or a value equal to `INT32_MAX`, because both collide
+with sentinel values M3C's algorithm uses internally to represent ghost cells and the outside of
+the volume. A **Feature Id** must therefore be in the range `0` to `INT32_MAX - 1`. A rejected
+value produces an error (code `-56343`) naming the offending value, its tuple index, and the
+array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
+as issue #1705), not a fix for it.
+
 **Note:** M3C's candidate-node generation always produces a handful of node entries near the
-volume boundary that no triangle references, even with the option disabled — these orphan
-vertices are present in stock M3C output. When the **Bounding Box Skin** option's **Background-Backed Walls Only** mode is enabled *and* at
-least one wall face is actually pruned, M3C also clears those pre-existing orphan vertices, so
-the output has no unreferenced vertices at all. When the option removes nothing (for example on
-a fully-indexed volume), it remains a strict no-op and the orphans are left untouched. As a
-result, enabling the option on data with any background-backed wall face can reduce the vertex
-count by more than the number of removed faces alone would suggest.
+volume boundary that no triangle references, even with the option disabled — these pre-existing
+orphan vertices are present in stock M3C output regardless of the **Bounding Box Skin** setting
+(tracked as issue #1706). The **Bounding Box Skin** option's **Background-Backed Walls Only** mode
+does not touch them: it clears only the vertices that its own pruning orphans (vertices that were
+referenced exclusively by a dropped wall face), and leaves every pre-existing orphan exactly as it
+was. Consequently, on an all-background volume the pruned output is zero faces with those
+pre-existing orphan vertices still present — which is why the `-56340` warning above reports the
+remaining vertex count rather than assuming it is zero.
 
 ### Notes and Limitations
 

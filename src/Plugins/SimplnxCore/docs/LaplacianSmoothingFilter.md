@@ -75,10 +75,14 @@ The values for the *Node Type* array can take one of the following values:
 
 If your surface mesh is lacking a `Node Type` array, you can create a DataArray inside the Vertex Data Attribute Matrix. The type should be "int8" with an initialization value of 3. This will allow **all** nodes to move.
 
-### Required Input Sources
+Any Node Type value not listed above (including `0`/`Unused`) leaves that vertex's lambda at `0.0`,
+so the vertex does not move. Smoothing a mesh produced by Create Surface Mesh (Surface Nets) now
+behaves differently than it did previously, because that **Filter**'s Node Types were corrected to
+follow this convention: most vertices in a Surface Nets mesh were previously pinned in place
+because their Node Type value did not match any of the cases above. This is a correction, not a
+regression — those vertices are now free to move as their Node Type intends.
 
-- **Triangle Geometry** -- the surface mesh to smooth, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
-- **Node Type** -- the per-vertex node classification array, produced by the same surface-meshing filter that created the geometry.
+For more information on surface meshing, visit the tutorial.
 
 % Auto generated parameter table will be inserted here
 

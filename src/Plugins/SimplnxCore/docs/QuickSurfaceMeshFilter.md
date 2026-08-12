@@ -36,6 +36,11 @@ If a triangle borders the outer volume rather than a real Feature (i.e., the cel
 
 A *Node Type* vertex array is produced classifying each vertex by its mesh role:
 
+The value is the number of distinct **Features** meeting at the node, capped at 4, plus 10 when the
+node lies on the outer surface of the bounding box. The region outside the volume counts as one of
+those owners, which is why an ordinary vertex on the wall between the exterior and a single Feature
+is `12` — two owners, one of them the exterior — rather than `11`.
+
 | Value | Description |
 |-------|-------------|
 | 2 | Vertex on the interior of a grain face |
@@ -45,7 +50,11 @@ A *Node Type* vertex array is produced classifying each vertex by its mesh role:
 | 13 | Vertex on the exterior of the mesh, on a triple line |
 | 14 | Vertex on the exterior of the mesh, on a quadruple point |
 
-![NodeType = 2](Images/QuickMesh_NodeType_2.png)
+When the **Bounding Box Skin** option below prunes wall faces, the Node Type of every surviving
+vertex is unchanged from the value it had in the full (unpruned) mesh; this is asserted by a unit
+test. Create Surface Mesh (M3C) offers no such guarantee.
+
+### Exterior or Boundary Triangles
 
 *Node Type 2 -- interior face vertex.*
 
@@ -96,16 +105,36 @@ closure for a Feature flush with the box. A cylinder sitting flush with the box 
 therefore comes out as a closed surface with no surrounding box.
 
 On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
-has no effect — every boundary Feature already needs its wall cap to stay closed.
+has no effect — every boundary Feature already needs its wall cap to stay closed. Rather than
+silently doing nothing, the **Filter** reports this with a warning (code `-56342`): the option was
+enabled but removed zero faces because the input has no background voxels for it to act on.
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
-where an internal boundary meets the box wall.
+where an internal boundary meets the box wall. With the option **off**, wherever an internal
+Feature-Feature boundary meets the bounding box wall, three faces share that edge: the internal
+boundary quad and the two wall quads on either side of it — a non-manifold T-junction that is
+inherent to including the full box skin. With the option **on**, the background-backed wall quad
+on that edge is dropped, leaving exactly two faces sharing it, which is manifold. The option
+therefore does not merely remove unwanted geometry: in the configurations exercised by this
+**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall, and a
+**Feature** occupying a box corner), enabling it produces a watertight mesh where leaving it off
+does not. This is not a universal guarantee of watertightness for arbitrary input.
 
 If every voxel in the volume is background (Feature Id 0), every face is a background-backed
 wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
 and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
 success, not an error, because the input is legal — it simply contains no internal interface
 and no Feature to cap.
+
+### Feature Id Validation
+
+Independently of the **Bounding Box Skin** setting, this **Filter** always rejects a **Feature
+Ids** array that contains a negative value, because negative values collide with an internal
+ghost/exterior sentinel convention. A **Feature Id** must therefore be `>= 0` (this **Filter**,
+unlike Create Surface Mesh (Surface Nets) and Create Surface Mesh (M3C), does not additionally
+reject `INT32_MAX`). A rejected value produces an error (code `-56343`) naming the offending value,
+its tuple index, and the array's **Data Path**. This is a mitigation for the underlying
+sentinel-collision design (tracked as issue #1705), not a fix for it.
 
 % Auto generated parameter table will be inserted here
 

@@ -79,10 +79,16 @@ runs, with no parameter change on the user's part:
   exterior-node variants offset inconsistently. They now follow the shared convention described
   above (`2`/`3`/`4` for interior nodes, `12`/`13`/`14` on the bounding box wall), matching Create
   Surface Mesh (QuickMesh) and Create Surface Mesh (M3C).
+- **Vertex Z coordinate on anisotropic spacing**: the half-voxel offset this **Filter** applies when
+  relocating each vertex used the **Y** spacing for the Z component instead of the **Z** spacing.
+  Every vertex's Z coordinate was wrong on any **Image Geometry** with anisotropic spacing (Z
+  spacing different from Y spacing); it is correct now. Volumes with isotropic spacing (all three
+  spacing values equal) were unaffected and see no change from this fix.
 
-If you hand-tuned a Node Type range parameter against this **Filter**'s old values, or if you
-compare newly generated output against previously stored SurfaceNets results, re-check it against
-the tables above.
+If you hand-tuned a Node Type range parameter against this **Filter**'s old values, if you rely on
+smoothing **Filters** (Laplacian Smoothing, Hierarchical Smoothing) downstream that read Node
+Types, or if you compare newly generated output against previously stored SurfaceNets results
+generated on anisotropic-spacing data, re-check it against the corrected behavior above.
 
 ## Comparison of Surface Meshing Filters
 
@@ -114,16 +120,36 @@ closure for a Feature flush with the box. A cylinder sitting flush with the box 
 therefore comes out as a closed surface with no surrounding box.
 
 On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
-has no effect — every boundary Feature already needs its wall cap to stay closed.
+has no effect — every boundary Feature already needs its wall cap to stay closed. Rather than
+silently doing nothing, the **Filter** reports this with a warning (code `-56342`): the option was
+enabled but removed zero faces because the input has no background voxels for it to act on.
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
-where an internal boundary meets the box wall.
+where an internal boundary meets the box wall. With the option **off**, wherever an internal
+Feature-Feature boundary meets the bounding box wall, three faces share that edge: the internal
+boundary quad and the two wall quads on either side of it — a non-manifold T-junction that is
+inherent to including the full box skin. With the option **on**, the background-backed wall quad
+on that edge is dropped, leaving exactly two faces sharing it, which is manifold. The option
+therefore does not merely remove unwanted geometry: in the configurations exercised by this
+**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall, and a
+**Feature** occupying a box corner), enabling it produces a watertight mesh where leaving it off
+does not. This is not a universal guarantee of watertightness for arbitrary input.
 
 If every voxel in the volume is background (Feature Id 0), every face is a background-backed
 wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
 and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
 success, not an error, because the input is legal — it simply contains no internal interface
 and no Feature to cap.
+
+### Feature Id Validation
+
+Independently of the **Bounding Box Skin** setting, this **Filter** always rejects a **Feature
+Ids** array that contains a negative value or a value equal to `INT32_MAX`, because both collide
+with sentinel values this **Filter**'s underlying `MMSurfaceNet` implementation uses internally to
+mark padding. A **Feature Id** must therefore be in the range `0` to `INT32_MAX - 1`. A rejected
+value produces an error (code `-56343`) naming the offending value, its tuple index, and the
+array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
+as issue #1705), not a fix for it.
 
 % Auto generated parameter table will be inserted here
 
