@@ -161,7 +161,7 @@ Result<> SurfaceNets::operator()()
   {
     cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
-    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
+    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());

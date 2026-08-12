@@ -1,6 +1,8 @@
 #include "SimplnxCore/Filters/SurfaceNetsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "SurfaceMeshingTestUtils.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -12,6 +14,44 @@
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Anisotropic spacing places Z correctly", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  // Regression test for a bug where the Z half-voxel relocation offset used voxelSize[1] (Y
+  // spacing) instead of voxelSize[2] (Z spacing). On isotropic data (the exemplar dataset used
+  // by the other SurfaceNetsFilter tests above) voxelSize[1] == voxelSize[2], so the bug is
+  // invisible there. Y and Z spacing are chosen sharply different here (1.0 vs 4.0) so a
+  // Y-for-Z substitution is unmistakable in the resulting mesh's Z bounding box.
+  UnitTest::LoadPlugins();
+
+  const FloatVec3 k_Spacing = {0.25F, 1.0F, 4.0F};
+  DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(/*flushWithBottom=*/true, k_Spacing);
+  const DataPath k_TriangleGeomPath({"SurfaceNets"});
+
+  SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(std::move(dataStructure), k_TriangleGeomPath, false, [](Arguments& args) {
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
+    args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
+  });
+
+  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+  const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+  const auto boundingBox = triangleGeom.getBoundingBox();
+
+  // The cylinder is flush with the box's bottom Z wall, and the box's top Z wall is pure
+  // background over its full X/Y extent, so the mesh's Z bounding box exactly spans the box:
+  // [0, dimZ * spacingZ]. With the bug (Y spacing substituted for Z spacing), every vertex's Z
+  // is shifted by 0.5*(spacingZ - spacingY) = 1.5, moving both bounds to [1.5, 49.5].
+  const float32 k_ExpectedMinZ = 0.0F;
+  const float32 k_ExpectedMaxZ = static_cast<float32>(SurfaceMeshingTest::k_BoxDim) * k_Spacing[2];
+  const float32 k_Tolerance = 1.0e-4F;
+
+  REQUIRE_THAT(boundingBox.getMinPoint()[2], Catch::Matchers::WithinAbs(k_ExpectedMinZ, k_Tolerance));
+  REQUIRE_THAT(boundingBox.getMaxPoint()[2], Catch::Matchers::WithinAbs(k_ExpectedMaxZ, k_Tolerance));
+
+  UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+}
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsFilter]")
 {

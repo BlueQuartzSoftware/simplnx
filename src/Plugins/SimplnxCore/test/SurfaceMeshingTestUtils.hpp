@@ -35,16 +35,18 @@ inline const DataPath k_FeatureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
  * background of Feature Id 0. The cylinder is always inset from the four X/Y walls and
  * from the top; flushWithBottom controls whether it touches the z == 0 wall.
  * @param flushWithBottom When true the cylinder spans z = 0..8, otherwise z = 2..8.
+ * @param spacing ImageGeom voxel spacing. Defaults to {1,1,1} (isotropic) so existing callers
+ * are unaffected; pass an anisotropic value to exercise axis-specific spacing bugs.
  * @return A DataStructure containing ImageGeom/CellData/FeatureIds.
  */
-inline DataStructure CreateCylinderInBox(bool flushWithBottom)
+inline DataStructure CreateCylinderInBox(bool flushWithBottom, FloatVec3 spacing = {1.0F, 1.0F, 1.0F})
 {
   DataStructure dataStructure;
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   const std::vector<usize> dims = {k_BoxDim, k_BoxDim, k_BoxDim};
   imageGeomPtr->setDimensions(dims);
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeomPtr->setSpacing(spacing);
   imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
