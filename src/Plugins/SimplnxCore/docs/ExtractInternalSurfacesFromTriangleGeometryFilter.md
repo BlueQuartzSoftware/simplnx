@@ -41,8 +41,8 @@ box wall will come out open.
 **Face Labels** instead discards only the faces whose Face Labels are `{-1, 0}`: the
 bounding box wall where it borders the background. Faces where the wall caps a real Feature
 are kept, so Features flush with the box stay closed, and no rim is eroded. This is the
-same rule as the **Omit Bounding Box Skin** option on the surface meshing filters, and is
-the better choice for meshes that already exist.
+same rule as the **Bounding Box Skin** option's **Background-Backed Walls Only** mode on the
+surface meshing filters, and is the better choice for meshes that already exist.
 
 % Auto generated parameter table will be inserted here
 

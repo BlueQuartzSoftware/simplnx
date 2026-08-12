@@ -36,6 +36,8 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     }
     // The cylinder axis voxel is Feature 1 at z == 4.
     REQUIRE(featureIdsRef[(4 * 12 * 12) + (6 * 12) + 6] == 1);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateCylinderInBox flush touches the z == 0 plane")
@@ -47,6 +49,8 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     REQUIRE(featureIdsRef[(0 * 12 * 12) + (6 * 12) + 6] == 1);
     // Still inset from the x/y walls.
     REQUIRE(featureIdsRef[(0 * 12 * 12) + (6 * 12) + 0] == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("IsWatertight rejects an open mesh and accepts a closed one")
@@ -98,6 +102,8 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     REQUIRE(counts.TotalEdges == 6);
     REQUIRE(counts.EdgesUsedTwice == 6);
     REQUIRE(counts.EdgesUsedOnce == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateFullyIndexedPolycrystal has no background and eight distinct Features")
@@ -128,6 +134,8 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     REQUIRE(distinctFeatures.count(6) == 1);
     REQUIRE(distinctFeatures.count(7) == 1);
     REQUIRE(distinctFeatures.count(8) == 1);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateAllBackground is entirely Feature Id 0")
@@ -146,7 +154,7 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     {
       REQUIRE(featureIdsRef[i] == 0);
     }
-  }
 
-  UnitTest::CheckArraysInheritTupleDims(DataStructure{});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }

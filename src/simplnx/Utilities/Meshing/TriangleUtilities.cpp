@@ -403,16 +403,16 @@ void MeshingUtilities::CalculateNormalsImpl::operator()(const nx::core::Range& r
 Result<> MeshingUtilities::MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices)
 {
   return MakeWarningVoidResult(k_EmptyMeshAfterSkinRemovalWarning,
-                               fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no internal "
-                                           "interface and no Feature to cap. The Triangle Geometry now has 0 faces and {} vertices remaining.",
+                               fmt::format("The 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 "
+                                           "(background), so there is no internal interface and no Feature to cap. The Triangle Geometry now has 0 faces and {} vertices remaining.",
                                            triangleGeomPath.toString(), numCells, numVertices));
 }
 
 Result<> MeshingUtilities::MakeNoFacesPrunedWarning(const DataPath& triangleGeomPath)
 {
   return MakeWarningVoidResult(k_NoFacesPrunedWarning,
-                               fmt::format("'Omit Bounding Box Skin' removed 0 faces of geometry '{}' because the input volume contains no background (Feature Id 0) voxels. There is nothing "
-                                           "for this option to prune on this input; the output is identical to leaving it off.",
+                               fmt::format("The 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode removed 0 faces of geometry '{}' because the input volume contains no background "
+                                           "(Feature Id 0) voxels. There is nothing for this option to prune on this input; the output is identical to leaving it off.",
                                            triangleGeomPath.toString()));
 }
 

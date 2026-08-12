@@ -605,8 +605,8 @@ private:
 
 const DataPath k_SweepPathTriGeomPath({"M3CSweepPathMesh"});
 
-// Runs the flush-with-bottom cylinder (Task 1's shared test dataset) through M3C with Omit Bounding
-// Box Skin enabled, forcing the sweep path selected by the two M3C_* environment variables (see
+// Runs the flush-with-bottom cylinder (Task 1's shared test dataset) through M3C with the Bounding
+// Box Skin option's 'Background-Backed Walls Only' mode enabled, forcing the sweep path selected by the two M3C_* environment variables (see
 // M3CSurfaceMeshing::operator()()). Passing false/false for both selects the default parallel
 // sliding-window path.
 SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool serial)
@@ -617,7 +617,7 @@ SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool seria
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Omit Bounding Box Skin agrees across sweep paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across sweep paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -626,9 +626,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Omit Bounding Box Skin agrees a
   // documented to produce byte-identical vertices, FaceLabels, and NodeTypes, but MAY legitimately
   // triangulate the same interfaces differently (the legacy per-cube loop triangulation depends on
   // cross-cube edge-flip propagation, which is inherently serial) -- so its Shared Faces List is not
-  // compared for exact equality here. Confirm those same guarantees still hold with Omit Bounding Box
-  // Skin enabled: the prune runs once, inside the shared finalizeMesh(), after all three paths have
-  // produced their triangles/mCubeID vectors, so it should not disturb this invariant either way.
+  // compared for exact equality here. Confirm those same guarantees still hold with the Bounding Box
+  // Skin option's 'Background-Backed Walls Only' mode enabled: the prune runs once, inside the shared
+  // finalizeMesh(), after all three paths have produced their triangles/mCubeID vectors, so it should
+  // not disturb this invariant either way.
   SurfaceMeshingTest::MeshResult wholeVolumeResult = RunM3COmitSkinOnPath(/*wholeVolume*/ true, /*serial*/ false);
   SurfaceMeshingTest::MeshResult serialWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ true);
   SurfaceMeshingTest::MeshResult parallelWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ false);

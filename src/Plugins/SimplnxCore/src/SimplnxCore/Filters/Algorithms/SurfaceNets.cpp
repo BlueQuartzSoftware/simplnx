@@ -183,9 +183,9 @@ Result<> SurfaceNets::operator()()
   }
 
   usize triangleCount = 0;
-  // Counts quads suppressed by 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
-  // in this counting pass. Always 0 when the mode is Off. Lets the caller warn when the option is on but
-  // pruned nothing.
+  // Counts quads suppressed by the Bounding Box Skin option's 'Background-Backed Walls Only' mode
+  // (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) in this counting pass. Always 0 when the mode is
+  // Off. Lets the caller warn when the option is on but pruned nothing.
   usize suppressedFaceCount = 0;
   std::array<usize, 2> quadNxArrayIndices = {0, 0};
   // First Pass through to just count the number of triangles:
@@ -472,42 +472,39 @@ Result<> SurfaceNets::operator()()
       isReferenced[static_cast<usize>(facesRef[i])] = true;
     }
 
-    // Second pass: assign new indices in ascending order of OLD index (not order of first
-    // use in the face list). This guarantees newVertexIndex[oldIndex] <= oldIndex for every
-    // referenced vertex, which is what makes the in-place compaction below safe -- a
-    // destination slot is always at or before its source slot, so writing it never clobbers
-    // data that a later iteration still needs to read.
+    // Second pass: assign each referenced vertex's new index and copy its data in the same
+    // step, walking in ascending order of OLD index (not order of first use in the face
+    // list). Assigning destIndex from a running counter as oldIndex ascends guarantees
+    // newVertexIndex[oldIndex] <= oldIndex for every referenced vertex, which is what makes
+    // the in-place copy below safe -- a destination slot is always at or before its source
+    // slot, so writing it never clobbers data that a later iteration still needs to read.
+    // The two passes this replaces (assign-then-copy) walked all nodeCount vertices twice for
+    // no benefit, since the copy consumes newVertexIndex[oldIndex] immediately after it is
+    // assigned.
     constexpr usize k_NotUsed = std::numeric_limits<usize>::max();
     std::vector<usize> newVertexIndex(nodeCount, k_NotUsed);
     usize survivingVertexCount = 0;
+    auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
     for(usize oldIndex = 0; oldIndex < nodeCount; oldIndex++)
     {
-      if(isReferenced[oldIndex])
+      if(!isReferenced[oldIndex])
       {
-        newVertexIndex[oldIndex] = survivingVertexCount;
-        survivingVertexCount++;
+        continue;
       }
+      const usize destIndex = survivingVertexCount;
+      newVertexIndex[oldIndex] = destIndex;
+      for(usize comp = 0; comp < 3; comp++)
+      {
+        verticesRef[destIndex * 3 + comp] = verticesRef[oldIndex * 3 + comp];
+      }
+      nodeTypes[destIndex] = nodeTypes[oldIndex];
+      survivingVertexCount++;
     }
 
     if(survivingVertexCount < nodeCount)
     {
-      auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
-      // Compact in place. Safe because newVertexIndex[oldIndex] <= oldIndex (see above).
-      for(usize oldIndex = 0; oldIndex < nodeCount; oldIndex++)
-      {
-        const usize destIndex = newVertexIndex[oldIndex];
-        if(destIndex == k_NotUsed)
-        {
-          continue;
-        }
-        for(usize comp = 0; comp < 3; comp++)
-        {
-          verticesRef[destIndex * 3 + comp] = verticesRef[oldIndex * 3 + comp];
-        }
-        nodeTypes[destIndex] = nodeTypes[oldIndex];
-      }
-
-      // Remap the face indices to the compacted vertex ids.
+      // Remap the face indices to the compacted vertex ids. Must run after the copy loop
+      // above (it reads the pre-remap face indices to look up newVertexIndex).
       for(usize i = 0; i < numFaceIndices; i++)
       {
         facesRef[i] = static_cast<IGeometry::MeshIndexType>(newVertexIndex[static_cast<usize>(facesRef[i])]);

@@ -73,8 +73,8 @@ By default this filter generates triangles covering all six outer walls of the I
 Geometry's bounding box. These faces are artifacts of where the volume was cropped rather
 than real interfaces, and they receive a Face Label of `-1` on the exterior side.
 
-Enabling **Omit Bounding Box Skin** suppresses a wall face when the voxel behind it is
-background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
+Enabling the **Bounding Box Skin** option's **Background-Backed Walls Only** mode suppresses a
+wall face when the voxel behind it is background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
 that cap a *real* Feature are still generated, because that cut plane is the only possible
 closure for a Feature flush with the box. A cylinder sitting flush with the box floor
 therefore comes out as a closed surface with no surrounding box.
@@ -93,7 +93,7 @@ and no Feature to cap.
 
 **Note:** M3C's candidate-node generation always produces a handful of node entries near the
 volume boundary that no triangle references, even with the option disabled — these orphan
-vertices are present in stock M3C output. When **Omit Bounding Box Skin** is enabled *and* at
+vertices are present in stock M3C output. When the **Bounding Box Skin** option's **Background-Backed Walls Only** mode is enabled *and* at
 least one wall face is actually pruned, M3C also clears those pre-existing orphan vertices, so
 the output has no unreferenced vertices at all. When the option removes nothing (for example on
 a fully-indexed volume), it remains a strict no-op and the orphans are left untouched. As a

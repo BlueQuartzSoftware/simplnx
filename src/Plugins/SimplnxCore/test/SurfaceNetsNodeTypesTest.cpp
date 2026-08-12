@@ -19,37 +19,28 @@ using namespace nx::core;
 
 namespace
 {
-const DataPath k_ImageGeomPath({"ImageGeom"});
-const DataPath k_FeatureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
+const DataPath k_SurfaceNetsTriangleGeomPath({"SurfaceNets"});
+const DataPath k_QuickMeshTriangleGeomPath({"QuickMesh"});
 
-// Returns the set of distinct Node Type values produced by SurfaceNets on the flush cylinder.
-std::set<int8> RunSurfaceNetsNodeTypes()
+// Runs SurfaceNets on the flush cylinder, using the shared mesher-agnostic RunMesher helper (see
+// SurfaceMeshingTestUtils.hpp) so the argument list is defined in one place instead of duplicated
+// per test file.
+SurfaceMeshingTest::MeshResult RunSurfaceNetsForNodeTypes()
 {
-  DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(true);
-  const DataPath triangleGeomPath({"SurfaceNets"});
+  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SurfaceNetsTriangleGeomPath, false, [](Arguments& args) {
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
+    args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
+  });
+}
 
-  SurfaceNetsFilter filter;
-  Arguments args;
-  args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-  args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-  args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomPath));
-  args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
-  args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
-  args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
-  args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
-  args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
-  args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  const DataPath nodeTypesPath = triangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-  const auto& nodeTypesRef = dataStructure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+// Returns the set of distinct Node Type values present in meshResult's Vertex Data/NodeTypes array.
+std::set<int8> CollectNodeTypeValues(const SurfaceMeshingTest::MeshResult& meshResult)
+{
+  const DataPath nodeTypesPath = meshResult.TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
+  const auto& nodeTypesRef = meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
 
   std::set<int8> distinctValues;
   for(usize i = 0; i < nodeTypesRef.getNumberOfTuples(); i++)
@@ -64,7 +55,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
 {
   UnitTest::LoadPlugins();
 
-  const std::set<int8> distinctValues = RunSurfaceNetsNodeTypes();
+  SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNetsForNodeTypes();
+  const std::set<int8> distinctValues = CollectNodeTypeValues(meshResult);
 
   // Only the shared convention values may appear: 2/3/4 interior, 12/13/14 on the box wall.
   const std::set<int8> allowedValues = {NodeType::Default, NodeType::TriplePoint, NodeType::QuadPoint, NodeType::SurfaceDefault, NodeType::SurfaceTriplePoint, NodeType::SurfaceQuadPoint};
@@ -80,6 +72,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
 
   // 0 must never appear -- it means NodeType::Unused.
   REQUIRE(distinctValues.count(0) == 0);
+
+  UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMesh", "[SimplnxCore][SurfaceNetsFilter]")
@@ -90,64 +84,27 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   // both derive the node type from the same 8 surrounding voxels. With smoothing disabled
   // the values must agree corner-for-corner. This is the check that proves the equivalence
   // argument in the design spec rather than trusting it.
-  DataStructure surfaceNetsStructure = SurfaceMeshingTest::CreateCylinderInBox(true);
-  DataStructure quickMeshStructure = SurfaceMeshingTest::CreateCylinderInBox(true);
-
-  const DataPath surfaceNetsPath({"SurfaceNets"});
-  const DataPath quickMeshPath({"QuickMesh"});
-
-  {
-    SurfaceNetsFilter filter;
-    Arguments args;
-    args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-    args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-    args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(surfaceNetsPath));
-    args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
-    args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
-    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
-    args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
-
-    auto preflightResult = filter.preflight(surfaceNetsStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(surfaceNetsStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
-
-  {
-    QuickSurfaceMeshFilter filter;
-    Arguments args;
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(quickMeshPath));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
-
-    auto preflightResult = filter.preflight(quickMeshStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(quickMeshStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
+  SurfaceMeshingTest::MeshResult surfaceNetsResult = RunSurfaceNetsForNodeTypes();
+  SurfaceMeshingTest::MeshResult quickMeshResult =
+      SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, false,
+                                                            [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 
   // Both meshers should produce the same number of nodes, since both emit one per grid
   // corner where two or more Features meet.
-  const auto& snGeom = surfaceNetsStructure.getDataRefAs<TriangleGeom>(surfaceNetsPath);
-  const auto& qsmGeom = quickMeshStructure.getDataRefAs<TriangleGeom>(quickMeshPath);
+  REQUIRE_NOTHROW(surfaceNetsResult.Structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
+  REQUIRE_NOTHROW(quickMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath));
+  const auto& snGeom = surfaceNetsResult.Structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
+  const auto& qsmGeom = quickMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath);
   REQUIRE(snGeom.getNumberOfVertices() == qsmGeom.getNumberOfVertices());
 
   const auto& snVertsRef = snGeom.getVertices()->getDataStoreRef();
   const auto& qsmVertsRef = qsmGeom.getVertices()->getDataStoreRef();
-  const auto& snTypesRef = surfaceNetsStructure.getDataRefAs<Int8Array>(surfaceNetsPath.createChildPath("Vertex Data").createChildPath("NodeTypes")).getDataStoreRef();
-  const auto& qsmTypesRef = quickMeshStructure.getDataRefAs<Int8Array>(quickMeshPath.createChildPath("Vertex Data").createChildPath("NodeTypes")).getDataStoreRef();
+  const DataPath snNodeTypesPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+  const DataPath qsmNodeTypesPath = k_QuickMeshTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
+  REQUIRE_NOTHROW(surfaceNetsResult.Structure.getDataRefAs<Int8Array>(snNodeTypesPath));
+  REQUIRE_NOTHROW(quickMeshResult.Structure.getDataRefAs<Int8Array>(qsmNodeTypesPath));
+  const auto& snTypesRef = surfaceNetsResult.Structure.getDataRefAs<Int8Array>(snNodeTypesPath).getDataStoreRef();
+  const auto& qsmTypesRef = quickMeshResult.Structure.getDataRefAs<Int8Array>(qsmNodeTypesPath).getDataStoreRef();
 
   // Exact, corner-for-corner comparison: the two meshers number their nodes in different orders
   // (a histogram comparison alone would pass under a permutation of values across corners), so key
@@ -178,4 +135,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   }
   INFO("Total mismatching vertices: " << mismatchCount << " / " << snTypesRef.getNumberOfTuples() << (mismatchCount > 0 ? (" -- first mismatch at " + firstMismatch.str()) : std::string{}));
   REQUIRE(mismatchCount == 0);
+
+  UnitTest::CheckArraysInheritTupleDims(surfaceNetsResult.Structure);
+  UnitTest::CheckArraysInheritTupleDims(quickMeshResult.Structure);
 }

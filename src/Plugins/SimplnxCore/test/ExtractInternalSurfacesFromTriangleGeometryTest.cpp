@@ -191,7 +191,7 @@ namespace
 {
 // Meshes the flush cylinder from SurfaceMeshingTestUtils with QuickSurfaceMesh, leaving Fix
 // Problem Voxels off so the mesh is deterministic. omitSkin selects whether QuickSurfaceMesh's own
-// Omit Bounding Box Skin option runs, so the same helper can build both the "full" mesh (skin left
+// Bounding Box Skin option runs, so the same helper can build both the "full" mesh (skin left
 // on, to be pruned by this filter) and the "direct" oracle mesh (skin already omitted by the mesher).
 const DataPath k_QuickMeshPath({"QuickMesh"});
 

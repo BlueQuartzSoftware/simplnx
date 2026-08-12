@@ -67,7 +67,7 @@ This filter should be used in place of the [Create Surface Mesh (QuickMesh)](Qui
 
 ## Changed Behavior for Existing Pipelines
 
-Two defects in this filter's output were fixed as part of adding the **Omit Bounding Box Skin**
+Two defects in this filter's output were fixed as part of adding the **Bounding Box Skin**
 option below. Both fixes apply unconditionally -- they are not gated by that new option -- so any
 pipeline that already used this **Filter** will see different (corrected) output the next time it
 runs, with no parameter change on the user's part:
@@ -107,8 +107,8 @@ By default this filter generates triangles covering all six outer walls of the I
 Geometry's bounding box. These faces are artifacts of where the volume was cropped rather
 than real interfaces, and they receive a Face Label of `-1` on the exterior side.
 
-Enabling **Omit Bounding Box Skin** suppresses a wall face when the voxel behind it is
-background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
+Enabling the **Bounding Box Skin** option's **Background-Backed Walls Only** mode suppresses a
+wall face when the voxel behind it is background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
 that cap a *real* Feature are still generated, because that cut plane is the only possible
 closure for a Feature flush with the box. A cylinder sitting flush with the box floor
 therefore comes out as a closed surface with no surrounding box.

@@ -2537,10 +2537,10 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // Faces suppressed by the prune below. Stays 0 when the mode is Off, or when the mode is on but
   // nothing matched. Read after the winding-repair pass to decide which (if either) of the two
-  // Omit Bounding Box Skin warnings to emit.
+  // Bounding Box Skin warnings to emit.
   int64 numFacesPruned = 0;
 
-  // Omit Bounding Box Skin: drop faces whose output Face Labels would be {-1, 0}. In the
+  // Bounding Box Skin option, 'Background-Backed Walls Only' mode: drop faces whose output Face Labels would be {-1, 0}. In the
   // internal representation that is one negative ghost label paired with maxGrainId, which
   // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
   // means the output TriangleGeom is sized from the surviving count and never over-allocated.

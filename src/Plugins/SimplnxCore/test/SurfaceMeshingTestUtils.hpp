@@ -318,6 +318,7 @@ inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& trian
  */
 inline std::set<std::pair<int32, int32>> CollectLabelPairs(const MeshResult& meshResult)
 {
+  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int32Array>(meshResult.FaceLabelsPath));
   const auto& faceLabelsRef = meshResult.Structure.getDataRefAs<Int32Array>(meshResult.FaceLabelsPath).getDataStoreRef();
   std::set<std::pair<int32, int32>> labelPairs;
   for(usize i = 0; i < faceLabelsRef.getNumberOfTuples(); i++)

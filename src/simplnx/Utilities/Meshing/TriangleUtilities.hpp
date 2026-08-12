@@ -25,16 +25,18 @@ inline constexpr ChoicesParameter::ValueType k_BackgroundBackedWallsOnly = 1;
 namespace nx::core::MeshingUtilities
 {
 /**
- * @brief Warning emitted when 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
- * removes every face of the mesh -- i.e. the input is entirely background (Feature Id 0), so there is no
- * internal interface and no Feature to cap any box wall. Shared verbatim by QuickSurfaceMesh, SurfaceNets,
- * and M3CSurfaceMeshing so the warning text and code are defined exactly once. See MakeEmptyMeshWarning().
+ * @brief Warning emitted when the 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode
+ * (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) removes every face of the mesh -- i.e. the input is
+ * entirely background (Feature Id 0), so there is no internal interface and no Feature to cap any box
+ * wall. Shared verbatim by QuickSurfaceMesh, SurfaceNets, and M3CSurfaceMeshing so the warning text and
+ * code are defined exactly once. See MakeEmptyMeshWarning().
  */
 inline constexpr int32 k_EmptyMeshAfterSkinRemovalWarning = -56340;
 
 /**
- * @brief Warning emitted when 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
- * is enabled but suppressed zero faces -- i.e. the input volume contains no background (Feature Id 0)
+ * @brief Warning emitted when the 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode
+ * (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) is enabled but suppressed zero faces -- i.e. the
+ * input volume contains no background (Feature Id 0)
  * voxels, so the option had nothing to prune and the output is identical to leaving it off. This is the
  * most common dataset shape in practice, so silent no-feedback behavior here is not acceptable. See
  * MakeNoFacesPrunedWarning().

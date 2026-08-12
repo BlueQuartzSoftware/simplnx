@@ -31,7 +31,7 @@ SurfaceMeshingTest::MeshResult RunQuickSurfaceMesh(bool flushWithBottom, bool om
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Omit Bounding Box Skin", "[SimplnxCore][QuickSurfaceMeshFilter]")
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -121,7 +121,7 @@ SurfaceMeshingTest::MeshResult RunSurfaceNets(bool flushWithBottom, bool omitSki
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::SurfaceNetsFilter: Omit Bounding Box Skin", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Bounding Box Skin", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -180,7 +180,7 @@ SurfaceMeshingTest::MeshResult RunM3C(bool flushWithBottom, bool omitSkin)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Omit Bounding Box Skin", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -337,7 +337,7 @@ Result<> RunM3CRaw(DataStructure& dataStructure, bool omitSkin, bool repairWindi
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -450,7 +450,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "
   }
 }
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns when nothing is pruned", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -489,7 +489,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns when nothing is pruned", "[
   }
 }
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume", "[SimplnxCore][QuickSurfaceMeshFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -534,7 +534,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
   }
 }
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume (SurfaceNets)", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (SurfaceNets)", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -576,7 +576,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
   }
 }
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume (M3CSurfaceMeshing)", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3CSurfaceMeshing)", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -638,7 +638,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
   }
 }
 
-TEST_CASE("SimplnxCore::Omit Bounding Box Skin mesher inputs reject Feature Id sentinel collisions", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentinel collisions", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -723,5 +723,170 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin mesher inputs reject Feature Id s
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find(std::to_string(std::numeric_limits<int32>::max())) != std::string::npos);
     REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label pairs", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // The three meshers legitimately produce different geometry -- different vertex counts,
+  // triangle counts, and tessellations -- so those are NOT compared here. What must agree is the
+  // *semantic* result: which Feature-pair interfaces exist. CollectLabelPairs gives exactly that
+  // set, independent of mesh topology, which is why it (rather than raw array/geometry equality)
+  // is the right comparison across three independently-implemented meshers. CreateCylinderInBox(true)
+  // (via flushWithBottom=true below) is used so both the {-1, 1} cap (cylinder flush with the box
+  // floor) and the {0, 1} interior interface (cylinder side away from the floor) are present to compare,
+  // alongside the {-1, 0} background skin.
+  //
+  // Watertightness is only asserted for the "on" mode. With the mode off, a per-voxel-face
+  // boundary quad and the vertical wall quad next to it can share an edge with a THIRD quad from
+  // the neighboring (differently-labeled) voxel's own boundary quad -- a pre-existing T-junction
+  // at any point an internal boundary meets the box wall, independent of this option. "On" mode
+  // drops that neighboring background-backed quad, leaving exactly 2 quads at the edge, which is
+  // precisely the closure this option exists to provide (see the per-mesher "Option on removes
+  // only the background skin and keeps the cylinder closed" cases above).
+  auto checkAgreement = [](bool omitSkin) {
+    SurfaceMeshingTest::MeshResult qsmResult = RunQuickSurfaceMesh(true, omitSkin);
+    SurfaceMeshingTest::MeshResult snResult = RunSurfaceNets(true, omitSkin);
+    SurfaceMeshingTest::MeshResult m3cResult = RunM3C(true, omitSkin);
+
+    const auto qsmLabelPairs = SurfaceMeshingTest::CollectLabelPairs(qsmResult);
+    const auto snLabelPairs = SurfaceMeshingTest::CollectLabelPairs(snResult);
+    const auto m3cLabelPairs = SurfaceMeshingTest::CollectLabelPairs(m3cResult);
+
+    CHECK(qsmLabelPairs == snLabelPairs);
+    CHECK(qsmLabelPairs == m3cLabelPairs);
+
+    REQUIRE_NOTHROW(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath));
+    REQUIRE_NOTHROW(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath));
+    REQUIRE_NOTHROW(m3cResult.Structure.getDataRefAs<TriangleGeom>(m3cResult.TriangleGeomPath));
+    if(omitSkin)
+    {
+      CHECK(SurfaceMeshingTest::IsWatertight(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath)));
+      CHECK(SurfaceMeshingTest::IsWatertight(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath)));
+      CHECK(SurfaceMeshingTest::IsWatertight(m3cResult.Structure.getDataRefAs<TriangleGeom>(m3cResult.TriangleGeomPath)));
+    }
+
+    UnitTest::CheckArraysInheritTupleDims(qsmResult.Structure);
+    UnitTest::CheckArraysInheritTupleDims(snResult.Structure);
+    UnitTest::CheckArraysInheritTupleDims(m3cResult.Structure);
+  };
+
+  SECTION("Bounding Box Skin mode off")
+  {
+    checkAgreement(false);
+  }
+
+  SECTION("Bounding Box Skin mode on (Background-Backed Walls Only)")
+  {
+    checkAgreement(true);
+  }
+}
+
+namespace
+{
+// Builds a 12x12x12 ImageGeom where a single Feature (Id 1) occupies a corner block touching the
+// x==0, y==0, AND z==0 walls simultaneously, so three suppressed wall planes meet at a right-angle
+// corner. CreateCylinderInBox only ever touches one wall (the floor) at a time, so this is built
+// directly rather than forcing that helper into a shape it was not designed for.
+DataStructure CreateCornerFeatureInBox()
+{
+  DataStructure dataStructure;
+  constexpr usize k_CornerExtent = 3;
+
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
+  const std::vector<usize> dims = {SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim};
+  imageGeomPtr->setDimensions(dims);
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAMPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  featureIdsPtr->fill(0);
+
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
+  for(usize z = 0; z < k_CornerExtent; z++)
+  {
+    for(usize y = 0; y < k_CornerExtent; y++)
+    {
+      for(usize x = 0; x < k_CornerExtent; x++)
+      {
+        featureIdsRef[(z * SurfaceMeshingTest::k_BoxDim * SurfaceMeshingTest::k_BoxDim) + (y * SurfaceMeshingTest::k_BoxDim) + x] = 1;
+      }
+    }
+  }
+
+  return dataStructure;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // The feature's whole justification is that a Feature flush with the box stays closed. Every
+  // other test in this file only exercises a single flush face (CreateCylinderInBox's floor). A
+  // per-face suppression rule could still fail where two or three suppressed wall planes meet at a
+  // right angle -- which only happens at a corner -- so this is the test that would catch it.
+  SECTION("QuickSurfaceMesh")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(
+        CreateCornerFeatureInBox(), k_TriangleGeomPath, true, [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    CHECK(labelPairs.count({-1, 1}) == 1);
+    CHECK(labelPairs.count({0, 1}) == 1);
+    CHECK(labelPairs.count({-1, 0}) == 0);
+
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
+    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
+    INFO("QuickSurfaceMesh corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
+                                                                      << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
+    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  }
+
+  SECTION("SurfaceNets")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(CreateCornerFeatureInBox(), k_SurfaceNetsTriangleGeomPath, true, [](Arguments& args) {
+      args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+      args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+      args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
+      args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
+    });
+    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    CHECK(labelPairs.count({-1, 1}) == 1);
+    CHECK(labelPairs.count({0, 1}) == 1);
+    CHECK(labelPairs.count({-1, 0}) == 0);
+
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
+    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
+    INFO("SurfaceNets corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
+                                                                 << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
+    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  }
+
+  SECTION("M3CSurfaceMeshing")
+  {
+    SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(CreateCornerFeatureInBox(), k_M3CTriangleGeomPath, true, [](Arguments&) {});
+    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    CHECK(labelPairs.count({-1, 1}) == 1);
+    CHECK(labelPairs.count({0, 1}) == 1);
+    CHECK(labelPairs.count({-1, 0}) == 0);
+
+    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
+    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
+    INFO("M3CSurfaceMeshing corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
+                                                                       << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
+    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+
+    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 }
