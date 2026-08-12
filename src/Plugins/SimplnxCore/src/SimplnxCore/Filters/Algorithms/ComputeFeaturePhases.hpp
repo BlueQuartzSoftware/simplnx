@@ -9,17 +9,6 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ComputeFeaturePhasesInputValues inputValues;
-  inputValues.CellFeaturesAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(cell_features_attribute_matrix_path);
-  inputValues.CellPhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(cell_phases_array_path);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(feature_ids_path);
-  inputValues.FeaturePhasesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(feature_phases_array_name);
-  return ComputeFeaturePhases(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
