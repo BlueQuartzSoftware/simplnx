@@ -2539,11 +2539,15 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // internal representation that is one negative ghost label paired with maxGrainId, which
   // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
   // means the output TriangleGeom is sized from the surviving count and never over-allocated.
-  if(inputValues->OmitBoundingBoxSkin)
+  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
     messageHandler("Omitting bounding box skin faces...");
 
-    const auto isBackgroundSkin = [maxGrainId](const Triangle& triangle) -> bool {
+    // True when this triangle is a bounding-box wall face backed by background (i.e. its output
+    // Face Labels would be {-1, 0}). M3C's single sequential pass over `triangles` (below) is the
+    // only place this predicate is evaluated, so -- unlike QuickSurfaceMesh's SkipWallFace and
+    // SurfaceNets' SkipPaddingQuad -- there is no second pass it must stay in agreement with.
+    const auto SkipBackgroundSkinFace = [maxGrainId](const Triangle& triangle) -> bool {
       const int spinA = triangle.nSpin[0];
       const int spinB = triangle.nSpin[1];
       return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
@@ -2553,7 +2557,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     for(int64 i = 0; i < nTriangle; i++)
     {
       const Triangle& triangle = triangles[static_cast<usize>(i)];
-      if(!isBackgroundSkin(triangle))
+      if(!SkipBackgroundSkinFace(triangle))
       {
         triangles[static_cast<usize>(survivingCount)] = triangle;
         mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
@@ -2788,7 +2792,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
   // legitimately produces an empty mesh. Report it rather than returning silently.
-  if(inputValues->OmitBoundingBoxSkin && nTriangleFinal == 0)
+  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && nTriangleFinal == 0)
   {
     return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
                                                      "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",

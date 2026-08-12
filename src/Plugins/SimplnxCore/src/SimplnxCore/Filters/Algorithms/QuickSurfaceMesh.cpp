@@ -239,10 +239,13 @@ void GetGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z,
  * "the voxel behind the wall is background". Both the counting pass and the emit pass
  * MUST call this same function -- if they disagree, node ids go unassigned and
  * ownerLists is indexed out of bounds.
+ * Takes the store and index (rather than the already-read Feature Id) so the mode check
+ * short-circuits before touching the DataStore on the default (mode == Off) path, which the
+ * counting pass otherwise runs for every boundary voxel even when the option is disabled.
  */
-inline bool SkipWallFace(bool omitBoundingBoxSkin, int32 featureId)
+inline bool SkipWallFace(ChoicesParameter::ValueType mode, const Int32AbstractDataStore& featureIds, usize point)
 {
-  return omitBoundingBoxSkin && featureId == 0;
+  return mode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && featureIds[point] == 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -491,7 +494,7 @@ Result<> QuickSurfaceMesh::operator()()
   // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
   // legitimately produces an empty mesh. Report it rather than returning silently. Guarded on
   // windingResult still being valid so a genuine winding-repair error is never discarded.
-  if(m_InputValues->OmitBoundingBoxSkin && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
   {
     return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
                                                      "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
@@ -711,7 +714,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 
         if(i == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -743,7 +746,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(j == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -775,7 +778,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(k == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -807,7 +810,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(i == (xP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -868,7 +871,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(j == (yP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -929,7 +932,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(k == (zP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -1089,7 +1092,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
         if(i == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
@@ -1141,7 +1144,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(j == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
@@ -1193,7 +1196,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(k == 0)
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
@@ -1245,7 +1248,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(i == (xP - 1)) // Takes care of the end of a Row...
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
@@ -1361,7 +1364,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(j == (yP - 1)) // Takes care of the end of a column
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
             ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
@@ -1476,7 +1479,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
         }
         if(k == (zP - 1)) // Takes care of the end of a Pillar
         {
-          if(!::SkipWallFace(m_InputValues->OmitBoundingBoxSkin, featureIds[point]))
+          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
           {
             nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));

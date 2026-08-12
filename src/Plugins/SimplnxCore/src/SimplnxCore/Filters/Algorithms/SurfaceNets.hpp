@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace nx::core
@@ -14,7 +15,7 @@ struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
   bool ApplySmoothing;
   bool RepairTriangleWinding;
-  bool OmitBoundingBoxSkin;
+  ChoicesParameter::ValueType BoundingBoxSkinMode;
   int32 SmoothingIterations;
   float32 MaxDistanceFromVoxel;
   float32 RelaxationFactor;

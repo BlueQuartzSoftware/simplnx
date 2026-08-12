@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 #include <random>
@@ -19,7 +20,7 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
   bool FixProblemVoxels;
   bool RepairTriangleWinding;
   bool GenerateTripleLines;
-  bool OmitBoundingBoxSkin;
+  ChoicesParameter::ValueType BoundingBoxSkinMode;
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;

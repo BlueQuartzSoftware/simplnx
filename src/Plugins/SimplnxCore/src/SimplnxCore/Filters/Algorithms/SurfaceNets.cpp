@@ -84,9 +84,9 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
  * Note this reads the RAW quadLabels, where MMSurfaceNet::Padding is still distinct from a
  * real Feature Id 0. Do not call it after the Padding -> -1 remap.
  */
-inline bool SkipPaddingQuad(bool omitBoundingBoxSkin, const std::array<LabelType, 2>& quadLabels)
+inline bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelType, 2>& quadLabels)
 {
-  if(!omitBoundingBoxSkin)
+  if(mode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
     return false;
   }
@@ -178,21 +178,21 @@ Result<> SurfaceNets::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
         triangleCount += 2;
       }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
         triangleCount += 2;
       }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
         triangleCount += 2;
       }
@@ -241,7 +241,7 @@ Result<> SurfaceNets::operator()()
     cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
     // Back-bottom edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -304,7 +304,7 @@ Result<> SurfaceNets::operator()()
 
     // Left-bottom edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -365,7 +365,7 @@ Result<> SurfaceNets::operator()()
 
     // Left-back edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !::SkipPaddingQuad(m_InputValues->OmitBoundingBoxSkin, quadLabels))
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -428,7 +428,7 @@ Result<> SurfaceNets::operator()()
   // Dropping faces can orphan vertices, which come from the cell map before any triangle
   // exists. Compact them so the vertex list, Node Types and vertex AttributeMatrix agree.
   // Skipped entirely when the option is off, because then no face was dropped.
-  if(m_InputValues->OmitBoundingBoxSkin)
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
     m_MessageHandler("Removing vertices orphaned by omitted bounding box faces...");
 
@@ -516,7 +516,7 @@ Result<> SurfaceNets::operator()()
   // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
   // legitimately produces an empty mesh. Report it rather than returning silently. Guarded on
   // windingResult still being valid so a genuine winding-repair error is never discarded.
-  if(m_InputValues->OmitBoundingBoxSkin && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
   {
     return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
                                                      "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",

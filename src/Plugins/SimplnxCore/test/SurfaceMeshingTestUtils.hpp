@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -212,13 +213,13 @@ struct MeshResult
 template <class FilterT>
 struct FeatureIdsKeyTrait
 {
-  static constexpr auto Key = FilterT::k_CellFeatureIdsArrayPath_Key;
+  static constexpr auto k_Key = FilterT::k_CellFeatureIdsArrayPath_Key;
 };
 
 template <>
 struct FeatureIdsKeyTrait<M3CSurfaceMeshingFilter>
 {
-  static constexpr auto Key = M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key;
+  static constexpr auto k_Key = M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key;
 };
 
 /**
@@ -227,17 +228,18 @@ struct FeatureIdsKeyTrait<M3CSurfaceMeshingFilter>
  * mesher-specific ones (e.g. Fix Problem Voxels, smoothing options). Shared by RunMesher and
  * RunMesherRaw so the argument list is defined exactly once.
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
- * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param boundingBoxSkinMode Value for the Bounding Box Skin parameter (a BoundingBoxSkinMode
+ * value; ChoicesParameter::ValueType so bool literals from pre-existing call sites still convert).
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
  * @param repairWinding Value for the Repair Triangle Winding parameter. Defaults to false (matching
  * every pre-existing call site); pass true to exercise the shipped default configuration instead.
  */
 template <class FilterT, class ExtraArgsFn>
-inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs, bool repairWinding = false)
+inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs, bool repairWinding = false)
 {
   Arguments args;
   args.insertOrAssign(FilterT::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(FeatureIdsKeyTrait<FilterT>::Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FeatureIdsKeyTrait<FilterT>::k_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(FilterT::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
   args.insertOrAssign(FilterT::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
   args.insertOrAssign(FilterT::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomPath));
@@ -246,7 +248,7 @@ inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin
   args.insertOrAssign(FilterT::k_FaceDataGroupName_Key, std::make_any<std::string>("Face Data"));
   args.insertOrAssign(FilterT::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
   args.insertOrAssign(FilterT::k_RepairTriangleWinding_Key, std::make_any<bool>(repairWinding));
-  args.insertOrAssign(FilterT::k_OmitBoundingBoxSkin_Key, std::make_any<bool>(omitSkin));
+  args.insertOrAssign(FilterT::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(boundingBoxSkinMode));
 
   addExtraArgs(args);
   return args;
@@ -262,11 +264,12 @@ inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, bool omitSkin
  * warn or fail (e.g. an all-background input), use RunMesherRaw instead.
  * @param dataStructure Input DataStructure, e.g. from CreateCylinderInBox().
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
- * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param boundingBoxSkinMode Value for the Bounding Box Skin parameter (a BoundingBoxSkinMode
+ * value; ChoicesParameter::ValueType so bool literals from pre-existing call sites still convert).
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
  */
 template <class FilterT, class ExtraArgsFn>
-inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs)
+inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs)
 {
   MeshResult meshResult;
   meshResult.Structure = std::move(dataStructure);
@@ -274,7 +277,7 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
   meshResult.FaceLabelsPath = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
 
   FilterT filter;
-  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs);
+  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, boundingBoxSkinMode, addExtraArgs);
 
   auto preflightResult = filter.preflight(meshResult.Structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -293,16 +296,17 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
  * the runtime condition under test.
  * @param dataStructure Input DataStructure, e.g. from CreateAllBackground(). Modified in place.
  * @param triangleGeomPath Path at which to create the Triangle Geometry.
- * @param omitSkin Value for the Omit Bounding Box Skin parameter.
+ * @param boundingBoxSkinMode Value for the Bounding Box Skin parameter (a BoundingBoxSkinMode
+ * value; ChoicesParameter::ValueType so bool literals from pre-existing call sites still convert).
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
  * @param repairWinding Value for the Repair Triangle Winding parameter. Defaults to false (matching
  * every pre-existing call site); pass true to exercise the shipped default configuration instead.
  */
 template <class FilterT, class ExtraArgsFn>
-inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, bool omitSkin, ExtraArgsFn addExtraArgs, bool repairWinding = false)
+inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs, bool repairWinding = false)
 {
   FilterT filter;
-  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, omitSkin, addExtraArgs, repairWinding);
+  Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, boundingBoxSkinMode, addExtraArgs, repairWinding);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

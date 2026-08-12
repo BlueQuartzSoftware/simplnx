@@ -5,6 +5,21 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+
+namespace nx::core
+{
+/**
+ * @brief Shared values for the "Bounding Box Skin" ChoicesParameter used by QuickSurfaceMeshFilter,
+ * SurfaceNetsFilter, and M3CSurfaceMeshingFilter. Named here (rather than as bare literals) so a
+ * future third mode can be added without every `== 1` comparison needing to be rediscovered.
+ */
+namespace BoundingBoxSkinMode
+{
+inline constexpr ChoicesParameter::ValueType k_Off = 0;
+inline constexpr ChoicesParameter::ValueType k_BackgroundBackedWallsOnly = 1;
+} // namespace BoundingBoxSkinMode
+} // namespace nx::core
 
 namespace nx::core::MeshingUtilities
 {

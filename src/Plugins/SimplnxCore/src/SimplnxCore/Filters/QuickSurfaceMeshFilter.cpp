@@ -10,11 +10,13 @@
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -62,10 +64,12 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
   params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent",
                                                 "If true, attempts to repair the windings for the mesh. This may not be possible. See help page.", true));
-  params.insert(std::make_unique<BoolParameter>(k_OmitBoundingBoxSkin_Key, "Omit Bounding Box Skin",
-                                                "Do not generate triangles that lie on the outer wall of the bounding box where the wall borders the background (Feature Id 0). Faces where the "
-                                                "wall caps a real Feature ARE still generated, so Features flush with the box stay closed.",
-                                                false));
+  params.insert(std::make_unique<ChoicesParameter>(k_BoundingBoxSkinMode_Key, "Bounding Box Skin",
+                                                   "Controls how triangles are generated on the outer wall of the bounding box. 'Off' generates the "
+                                                   "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
+                                                   "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
+                                                   "Features flush with the box stay closed.",
+                                                   BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
   // params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
@@ -107,8 +111,8 @@ IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
   return 3;
   // Version 2 -> 3
   // Change 1:
-  // Added - k_OmitBoundingBoxSkin_Key = "omit_bounding_box_skin";
-  // Solution - set the value to false (preserves prior behavior);
+  // Added - k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
+  // Solution - set the value to 0 (BoundingBoxSkinMode::k_Off, preserves prior behavior);
   //
   // Version 1 -> 2
   // Change 1:
@@ -220,7 +224,7 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   // inputValues.GenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   inputValues.FixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
-  inputValues.OmitBoundingBoxSkin = filterArgs.value<bool>(k_OmitBoundingBoxSkin_Key);
+  inputValues.BoundingBoxSkinMode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);
 
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
