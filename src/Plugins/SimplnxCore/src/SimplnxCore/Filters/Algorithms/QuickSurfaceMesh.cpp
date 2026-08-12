@@ -344,6 +344,19 @@ QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> QuickSurfaceMesh::operator()()
 {
+  // Reject Feature Ids that collide with this algorithm's hard-coded exterior Face Label (-1) and
+  // owner-set marker: a negative Feature Id would be silently misinterpreted downstream. This is a
+  // mitigation for the underlying sentinel-collision design, not a fix -- see simplnx#1705. Run here
+  // (execute), not preflight: a full-volume scan is too expensive to repeat on every GUI parameter edit.
+  {
+    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/false);
+    if(sentinelCheck.invalid())
+    {
+      return sentinelCheck;
+    }
+  }
+
   // Get the ImageGeometry
   auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
@@ -363,6 +376,7 @@ Result<> QuickSurfaceMesh::operator()()
 
   MeshIndexType nodeCount = 0;
   MeshIndexType triangleCount = 0;
+  MeshIndexType suppressedFaceCount = 0;
 
   if(m_InputValues->FixProblemVoxels)
   {
@@ -373,7 +387,7 @@ Result<> QuickSurfaceMesh::operator()()
     return {};
   }
 
-  determineActiveNodes(nodeIds, nodeCount, triangleCount);
+  determineActiveNodes(nodeIds, nodeCount, triangleCount, suppressedFaceCount);
   if(m_ShouldCancel)
   {
     return {};
@@ -491,14 +505,22 @@ Result<> QuickSurfaceMesh::operator()()
   }
 #endif
 
-  // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
-  // legitimately produces an empty mesh. Report it rather than returning silently. Guarded on
-  // windingResult still being valid so a genuine winding-repair error is never discarded.
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
+  // Guarded on windingResult still being valid so a genuine winding-repair error is never discarded.
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
-    return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
-                                                     "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
-                                                     m_InputValues->TriangleGeometryPath.toString(), m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples()));
+    // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+    // legitimately produces an empty mesh. Report it rather than returning silently.
+    if(triangleGeom.getNumberOfFaces() == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                    triangleGeom.getNumberOfVertices());
+    }
+    // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
+    // the user otherwise gets byte-identical output with no feedback that the option had no effect.
+    if(suppressedFaceCount == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+    }
   }
 
   return windingResult;
@@ -676,7 +698,7 @@ void QuickSurfaceMesh::correctProblemVoxels()
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount)
+void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount, MeshIndexType& suppressedFaceCount)
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
 
@@ -714,7 +736,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 
         if(i == 0)
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -746,7 +772,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(j == 0)
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -778,7 +808,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(k == 0)
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -810,7 +844,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(i == (xP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -871,7 +909,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(j == (yP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())
@@ -932,7 +974,11 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
         }
         if(k == (zP - 1))
         {
-          if(!::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          if(::SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
+          {
+            suppressedFaceCount++;
+          }
+          else
           {
             nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
             if(nodeIds[nodeId1] == std::numeric_limits<size_t>::max())

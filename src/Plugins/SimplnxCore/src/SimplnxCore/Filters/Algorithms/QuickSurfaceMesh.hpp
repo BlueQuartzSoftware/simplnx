@@ -61,8 +61,11 @@ public:
    * @param m_NodeIds
    * @param nodeCount
    * @param triangleCount
+   * @param suppressedFaceCount Incremented once per bounding-box wall face that 'Omit Bounding Box
+   * Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) suppresses. Always 0 when the mode is
+   * Off. Lets the caller warn when the option is on but pruned nothing.
    */
-  void determineActiveNodes(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount);
+  void determineActiveNodes(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount, MeshIndexType& suppressedFaceCount);
 
   /**
    * @brief

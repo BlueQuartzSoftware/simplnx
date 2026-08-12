@@ -2535,6 +2535,11 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
 
+  // Faces suppressed by the prune below. Stays 0 when the mode is Off, or when the mode is on but
+  // nothing matched. Read after the winding-repair pass to decide which (if either) of the two
+  // Omit Bounding Box Skin warnings to emit.
+  int64 numFacesPruned = 0;
+
   // Omit Bounding Box Skin: drop faces whose output Face Labels would be {-1, 0}. In the
   // internal representation that is one negative ghost label paired with maxGrainId, which
   // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
@@ -2554,10 +2559,20 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     };
 
     int64 survivingCount = 0;
+    // node_id values touched by a DROPPED triangle, recorded before the in-place compaction below
+    // overwrites them. Used to narrow the nodeType clear (see below) to exactly the nodes the prune
+    // itself orphaned, at a cost of O(3 * droppedCount) instead of a second full 7*numSites mask.
+    std::vector<SiteId> droppedNodeIds;
     for(int64 i = 0; i < nTriangle; i++)
     {
       const Triangle& triangle = triangles[static_cast<usize>(i)];
-      if(!SkipBackgroundSkinFace(triangle))
+      if(SkipBackgroundSkinFace(triangle))
+      {
+        droppedNodeIds.push_back(triangle.node_id[0]);
+        droppedNodeIds.push_back(triangle.node_id[1]);
+        droppedNodeIds.push_back(triangle.node_id[2]);
+      }
+      else
       {
         triangles[static_cast<usize>(survivingCount)] = triangle;
         mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
@@ -2566,41 +2581,34 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
     triangles.resize(static_cast<usize>(survivingCount));
     mCubeID.resize(static_cast<usize>(survivingCount));
+    numFacesPruned = nTriangle - survivingCount;
 
-    // Only clear nodeType when a triangle was actually dropped (survivingCount < nTriangle). This
-    // is the whole no-op fix: gate the cleanup on whether the prune changed anything, not on
-    // whether the option is merely enabled. When nothing was dropped this branch never runs, so
-    // every candidate -- referenced by a triangle or not -- is left completely alone and the
-    // option is a bit-for-bit no-op (verified: 1791 == 1791 vertices on a fully-indexed volume).
-    //
-    // When something WAS dropped, every node not referenced by a SURVIVING triangle is cleared,
-    // deliberately including "pre-existing" orphan candidates that no triangle (dropped or
-    // surviving) ever claimed -- not just ones newly orphaned by the triangles we just dropped.
-    // An earlier version of this fix tracked only the dropped triangles' node ids and left
-    // unrelated pre-existing orphans alone; that broke the existing "Option on leaves no orphan
-    // vertices" test (cylinder-in-box: 304 referenced vs. 448 total, a 144-vertex gap) because
-    // M3C's marching-cubes candidate generation produces some node-type entries near the volume
-    // boundary that no triangle ever references, independent of which triangles this prune drops.
-    // Once ANY skin has been removed, the "no orphan vertices" contract requires those to go too;
-    // when the prune removes every triangle (all-background), this reduces to a full clear,
-    // matching the "Triangle Geometry was created with zero vertices and zero faces" contract.
-    // This costs exactly one full-size (7*numSites) mask -- the same single allocation the
-    // original (buggy) implementation always made -- but only when pruning actually happened,
-    // instead of unconditionally whenever the option is enabled.
-    if(survivingCount < nTriangle)
+    // Clear nodeType only for nodes the prune itself orphaned: referenced by a DROPPED triangle and
+    // by no SURVIVING triangle. Nodes referenced only by survivors are left untouched, and
+    // "pre-existing" candidates that no triangle -- dropped or surviving -- ever referenced are left
+    // exactly as they were; the option no longer sweeps up orphan candidates it had no hand in creating.
+    if(!droppedNodeIds.empty())
     {
-      std::vector<bool> isReferencedBySurvivor(nodeType.size(), false);
+      std::sort(droppedNodeIds.begin(), droppedNodeIds.end());
+      droppedNodeIds.erase(std::unique(droppedNodeIds.begin(), droppedNodeIds.end()), droppedNodeIds.end());
+
+      std::vector<bool> referencedBySurvivor(droppedNodeIds.size(), false);
       for(const auto& triangle : triangles)
       {
-        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[0])] = true;
-        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[1])] = true;
-        isReferencedBySurvivor[static_cast<usize>(triangle.node_id[2])] = true;
-      }
-      for(usize i = 0; i < nodeType.size(); i++)
-      {
-        if(!isReferencedBySurvivor[i])
+        for(const SiteId nodeId : triangle.node_id)
         {
-          nodeType[i] = 0;
+          const auto it = std::lower_bound(droppedNodeIds.begin(), droppedNodeIds.end(), nodeId);
+          if(it != droppedNodeIds.end() && *it == nodeId)
+          {
+            referencedBySurvivor[static_cast<usize>(it - droppedNodeIds.begin())] = true;
+          }
+        }
+      }
+      for(usize i = 0; i < droppedNodeIds.size(); i++)
+      {
+        if(!referencedBySurvivor[i])
+        {
+          nodeType[static_cast<usize>(droppedNodeIds[i])] = 0;
         }
       }
     }
@@ -2790,13 +2798,24 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
-  // legitimately produces an empty mesh. Report it rather than returning silently.
-  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && nTriangleFinal == 0)
+  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
-    return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
-                                                     "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
-                                                     inputValues->TriangleGeometryPath.toString(), dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples()));
+    // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+    // legitimately produces an empty mesh. Report it rather than returning silently. Unlike
+    // QuickSurfaceMesh/SurfaceNets, M3C's narrowed orphan-node clearing (see above) can leave
+    // pre-existing candidate nodes in the output even when every face is dropped, so nNodes here
+    // is not necessarily zero.
+    if(nTriangleFinal == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(inputValues->TriangleGeometryPath, dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                    static_cast<usize>(nNodes));
+    }
+    // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
+    // the user otherwise gets byte-identical output with no feedback that the option had no effect.
+    if(numFacesPruned == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(inputValues->TriangleGeometryPath);
+    }
   }
 
   return {};
@@ -2831,6 +2850,21 @@ Result<> M3CSurfaceMeshing::operator()()
   //   M3C_SERIAL=1        -> runWindowed(false): serial sliding window (same tessellation as legacy)
   //   M3C_WHOLE_VOLUME=1  -> runEntireVolume():  serial whole-volume (O(volume) memory)
   // Both serial paths are byte-identical to each other.
+
+  // Reject Feature Ids that collide with this algorithm's internal sentinel space: maxGrainId+1 is
+  // signed overflow (undefined behavior) when INT32_MAX is present, and negative Feature Ids collide
+  // with M3C's nSpin < 0 ghost convention. This is a mitigation for the underlying sentinel-collision
+  // design, not a fix -- see simplnx#1705. Run here (execute), not preflight: a full-volume scan is
+  // too expensive to repeat on every GUI parameter edit.
+  {
+    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true);
+    if(sentinelCheck.invalid())
+    {
+      return sentinelCheck;
+    }
+  }
+
   if(const char* wholeVol = std::getenv("M3C_WHOLE_VOLUME"); wholeVol != nullptr && std::string_view(wholeVol) == "1")
   {
     return runEntireVolume();

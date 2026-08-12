@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -23,6 +24,67 @@ inline constexpr ChoicesParameter::ValueType k_BackgroundBackedWallsOnly = 1;
 
 namespace nx::core::MeshingUtilities
 {
+/**
+ * @brief Warning emitted when 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+ * removes every face of the mesh -- i.e. the input is entirely background (Feature Id 0), so there is no
+ * internal interface and no Feature to cap any box wall. Shared verbatim by QuickSurfaceMesh, SurfaceNets,
+ * and M3CSurfaceMeshing so the warning text and code are defined exactly once. See MakeEmptyMeshWarning().
+ */
+inline constexpr int32 k_EmptyMeshAfterSkinRemovalWarning = -56340;
+
+/**
+ * @brief Warning emitted when 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+ * is enabled but suppressed zero faces -- i.e. the input volume contains no background (Feature Id 0)
+ * voxels, so the option had nothing to prune and the output is identical to leaving it off. This is the
+ * most common dataset shape in practice, so silent no-feedback behavior here is not acceptable. See
+ * MakeNoFacesPrunedWarning().
+ */
+inline constexpr int32 k_NoFacesPrunedWarning = -56342;
+
+/**
+ * @brief Error emitted when a Feature Ids array contains a value that collides with a mesher's internal
+ * "not a real Feature" sentinel space (see ValidateFeatureIdsAgainstSentinels()). This is a mitigation
+ * for the underlying sentinel-collision design, not a fix for it -- the architectural issue is tracked
+ * separately as simplnx#1705.
+ */
+inline constexpr int32 k_InvalidFeatureIdError = -56343;
+
+/**
+ * @brief Builds the warning Result for k_EmptyMeshAfterSkinRemovalWarning (see its docs above).
+ * The vertex count is reported rather than assumed to be zero: QuickSurfaceMesh and SurfaceNets
+ * both reach zero vertices in this case, but M3CSurfaceMeshing's marching-cubes candidate generation
+ * can leave a handful of pre-existing candidate nodes that no triangle -- dropped or surviving --
+ * ever referenced, so its vertex count here is not necessarily zero.
+ * @param triangleGeomPath Path to the (now-empty, or near-empty) Triangle Geometry, named in the message.
+ * @param numCells Number of Feature Id cells in the input, named in the message.
+ * @param numVertices Number of vertices remaining in the Triangle Geometry after the prune.
+ */
+SIMPLNX_EXPORT Result<> MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices);
+
+/**
+ * @brief Builds the warning Result for k_NoFacesPrunedWarning (see its docs above).
+ * @param triangleGeomPath Path to the Triangle Geometry, named in the message.
+ */
+SIMPLNX_EXPORT Result<> MakeNoFacesPrunedWarning(const DataPath& triangleGeomPath);
+
+/**
+ * @brief Validates that no value in a Feature Ids array collides with a mesher's internal "not a real
+ * Feature" sentinel space (e.g. SurfaceNets' MMSurfaceNet::Padding == INT32_MAX, M3CSurfaceMeshing's
+ * maxGrainId+1 overflow and nSpin < 0 ghost convention, QuickSurfaceMesh's hard-coded -1 exterior Face
+ * Label). This is a mitigation, not a fix, for that design -- the architectural issue is tracked
+ * separately as simplnx#1705.
+ *
+ * Call this from an algorithm's execute entry point, never from preflight: a full-volume scan (e.g.
+ * ~134M reads at 512^3) is too expensive to repeat on every GUI parameter edit.
+ * @param featureIdsStore The Feature Ids to validate.
+ * @param featureIdsPath Path to the array, named in the error message so the user can locate it.
+ * @param rejectMaxInt32 When true, also reject a Feature Id of exactly INT32_MAX (SurfaceNets and
+ * M3CSurfaceMeshing both need this; QuickSurfaceMesh only collides on negative values, so it passes false).
+ * @returns An invalid Result<> naming the offending value, its tuple index, and featureIdsPath on the
+ * first rejected value found; an empty valid Result<> otherwise.
+ */
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsAgainstSentinels(const Int32AbstractDataStore& featureIdsStore, const DataPath& featureIdsPath, bool rejectMaxInt32);
+
 namespace detail
 {
 inline static constexpr usize k_00 = 0;

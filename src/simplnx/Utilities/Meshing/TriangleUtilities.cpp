@@ -399,3 +399,44 @@ void MeshingUtilities::CalculateNormalsImpl::operator()(const nx::core::Range& r
 {
   generate(range.min(), range.max());
 }
+
+Result<> MeshingUtilities::MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices)
+{
+  return MakeWarningVoidResult(k_EmptyMeshAfterSkinRemovalWarning,
+                               fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no internal "
+                                           "interface and no Feature to cap. The Triangle Geometry now has 0 faces and {} vertices remaining.",
+                                           triangleGeomPath.toString(), numCells, numVertices));
+}
+
+Result<> MeshingUtilities::MakeNoFacesPrunedWarning(const DataPath& triangleGeomPath)
+{
+  return MakeWarningVoidResult(k_NoFacesPrunedWarning,
+                               fmt::format("'Omit Bounding Box Skin' removed 0 faces of geometry '{}' because the input volume contains no background (Feature Id 0) voxels. There is nothing "
+                                           "for this option to prune on this input; the output is identical to leaving it off.",
+                                           triangleGeomPath.toString()));
+}
+
+Result<> MeshingUtilities::ValidateFeatureIdsAgainstSentinels(const Int32AbstractDataStore& featureIdsStore, const DataPath& featureIdsPath, bool rejectMaxInt32)
+{
+  const usize numTuples = featureIdsStore.getNumberOfTuples();
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const int32 featureId = featureIdsStore[i];
+    if(featureId < 0)
+    {
+      return MakeErrorResult(k_InvalidFeatureIdError, fmt::format("Feature Ids array '{}' contains a negative value ({}) at tuple index {}. This mesher reserves negative Feature Ids for an "
+                                                                  "internal ghost/exterior sentinel convention; relabel this input so every Feature Id is >= 0. (Mitigation for the "
+                                                                  "sentinel-collision design tracked separately as simplnx#1705.)",
+                                                                  featureIdsPath.toString(), featureId, i));
+    }
+    if(rejectMaxInt32 && featureId == std::numeric_limits<int32>::max())
+    {
+      return MakeErrorResult(k_InvalidFeatureIdError, fmt::format("Feature Ids array '{}' contains the value {} at tuple index {}, which collides with an internal 'outside the volume' "
+                                                                  "sentinel used by this mesher. Relabel this input so no Feature Id equals INT32_MAX. (Mitigation for the sentinel-collision "
+                                                                  "design tracked separately as simplnx#1705.)",
+                                                                  featureIdsPath.toString(), featureId, i));
+    }
+  }
+
+  return {};
+}

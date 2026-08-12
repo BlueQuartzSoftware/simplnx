@@ -114,6 +114,20 @@ const std::atomic_bool& SurfaceNets::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SurfaceNets::operator()()
 {
+  // Reject Feature Ids that collide with MMSurfaceNet::Padding (INT32_MAX), the sentinel this
+  // algorithm uses for "outside the volume" throughout MMCellMap: a real Feature Id of INT32_MAX
+  // would be silently treated as exterior. This is a mitigation for the underlying
+  // sentinel-collision design, not a fix -- see simplnx#1705. Run here (execute), not preflight: a
+  // full-volume scan is too expensive to repeat on every GUI parameter edit.
+  {
+    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true);
+    if(sentinelCheck.invalid())
+    {
+      return sentinelCheck;
+    }
+  }
+
   // Get the ImageGeometry
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
 
@@ -169,6 +183,10 @@ Result<> SurfaceNets::operator()()
   }
 
   usize triangleCount = 0;
+  // Counts quads suppressed by 'Omit Bounding Box Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  // in this counting pass. Always 0 when the mode is Off. Lets the caller warn when the option is on but
+  // pruned nothing.
+  usize suppressedFaceCount = 0;
   std::array<usize, 2> quadNxArrayIndices = {0, 0};
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
@@ -178,21 +196,33 @@ Result<> SurfaceNets::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      {
+        suppressedFaceCount++;
+      }
+      else
       {
         triangleCount += 2;
       }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      {
+        suppressedFaceCount++;
+      }
+      else
       {
         triangleCount += 2;
       }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(!::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      {
+        suppressedFaceCount++;
+      }
+      else
       {
         triangleCount += 2;
       }
@@ -513,14 +543,22 @@ Result<> SurfaceNets::operator()()
     m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
   }
 
-  // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
-  // legitimately produces an empty mesh. Report it rather than returning silently. Guarded on
-  // windingResult still being valid so a genuine winding-repair error is never discarded.
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid() && triangleGeom.getNumberOfFaces() == 0)
+  // Guarded on windingResult still being valid so a genuine winding-repair error is never discarded.
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
-    return MakeWarningVoidResult(-56340, fmt::format("'Omit Bounding Box Skin' removed every face of geometry '{}'. All {} cells of the input have Feature Id 0 (background), so there is no "
-                                                     "internal interface and no Feature to cap. The Triangle Geometry was created with zero vertices and zero faces.",
-                                                     m_InputValues->TriangleGeometryPath.toString(), m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples()));
+    // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+    // legitimately produces an empty mesh. Report it rather than returning silently.
+    if(triangleGeom.getNumberOfFaces() == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                    triangleGeom.getNumberOfVertices());
+    }
+    // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
+    // the user otherwise gets byte-identical output with no feedback that the option had no effect.
+    if(suppressedFaceCount == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+    }
   }
 
   return windingResult;

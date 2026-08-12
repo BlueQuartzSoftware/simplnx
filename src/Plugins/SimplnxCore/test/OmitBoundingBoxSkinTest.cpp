@@ -7,11 +7,14 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <limits>
 #include <map>
 #include <set>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -203,21 +206,61 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Omit Bounding Box Skin", "[Simp
     UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 
-  SECTION("Option on leaves no orphan vertices")
+  // M3C's marching-cubes candidate generation can leave some "pre-existing" candidate nodes that no
+  // triangle -- dropped or surviving -- ever references, independent of the skin-omit option (see
+  // M3CSurfaceMeshing.cpp finalizeMesh). So the option cannot promise zero orphan vertices overall;
+  // what it promises is that it never CREATES a new orphan beyond nodes the prune itself touched.
+  // Verify that by coordinate: every vertex unreferenced in the pruned mesh must also have been
+  // unreferenced in the full (un-pruned) mesh at the same coordinate.
+  SECTION("Option on leaves no vertex newly orphaned by the prune")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, true);
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+    SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, false);
+    SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, true);
 
-    std::set<usize> referenced;
-    for(usize i = 0; i < triangleGeom.getNumberOfFaces() * 3; i++)
+    const auto isReferencedByCoord = [](const TriangleGeom& triangleGeom) {
+      const auto& vertsRef = triangleGeom.getVertices()->getDataStoreRef();
+      const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+
+      std::set<usize> referencedIndices;
+      for(usize i = 0; i < triangleGeom.getNumberOfFaces() * 3; i++)
+      {
+        referencedIndices.insert(static_cast<usize>(facesRef[i]));
+      }
+
+      std::map<std::tuple<float32, float32, float32>, bool> result;
+      for(usize v = 0; v < triangleGeom.getNumberOfVertices(); v++)
+      {
+        const std::tuple<float32, float32, float32> coord = {vertsRef[v * 3], vertsRef[v * 3 + 1], vertsRef[v * 3 + 2]};
+        result[coord] = referencedIndices.count(v) > 0;
+      }
+      return result;
+    };
+
+    REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto fullReferenced = isReferencedByCoord(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto prunedReferenced = isReferencedByCoord(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+
+    usize newlyOrphanedCount = 0;
+    for(const auto& [coord, isReferencedInPruned] : prunedReferenced)
     {
-      referenced.insert(static_cast<usize>(facesRef[i]));
+      if(isReferencedInPruned)
+      {
+        continue;
+      }
+      // A vertex that survives the prune unreferenced must have also been unreferenced pre-prune.
+      REQUIRE(fullReferenced.count(coord) == 1);
+      if(fullReferenced.at(coord))
+      {
+        newlyOrphanedCount++;
+      }
     }
-    REQUIRE(referenced.size() == triangleGeom.getNumberOfVertices());
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    INFO("Vertices newly orphaned by the prune (must be 0): " << newlyOrphanedCount);
+    REQUIRE(newlyOrphanedCount == 0);
+
+    UnitTest::CheckArraysInheritTupleDims(fullMesh.Structure);
+    UnitTest::CheckArraysInheritTupleDims(prunedMesh.Structure);
   }
 }
 
@@ -407,6 +450,45 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin is a no-op without background", "
   }
 }
 
+TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns when nothing is pruned", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // A fully-indexed volume has no Feature Id 0, so the option suppresses zero faces. That is the
+  // most common dataset shape in practice, and byte-identical output with no feedback is not
+  // acceptable -- the user cannot tell the option had no effect. This is the companion to the
+  // all-background case (which suppresses every face); the two warnings must never fire together.
+  SECTION("QuickSurfaceMesh")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+  }
+
+  SECTION("SurfaceNets")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+  }
+
+  SECTION("M3CSurfaceMeshing")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    const Result<> executeResult = RunM3CRaw(dataStructure, true);
+
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(executeResult.warnings().size() == 1);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+  }
+}
+
 TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
@@ -419,7 +501,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
     // Success with a warning, not an error: the data is legal, just entirely background.
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     // The geometry still exists, just empty.
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
@@ -441,7 +523,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
@@ -463,7 +545,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
@@ -483,7 +565,7 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
@@ -498,6 +580,26 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 {
   UnitTest::LoadPlugins();
 
+  // Unlike QuickSurfaceMesh/SurfaceNets, M3C does not necessarily reach zero vertices here: its
+  // marching-cubes candidate generation can leave "pre-existing" candidate nodes that no triangle
+  // ever references, independent of the skin-omit option (see M3CSurfaceMeshing.cpp finalizeMesh).
+  // When the option prunes every face (as it does on an all-background volume), the narrowed
+  // orphan-node clearing leaves exactly those pre-existing orphans behind. Measure that count from
+  // the un-pruned (option off) mesh of the same input rather than assuming any particular number.
+  DataStructure offStructure = SurfaceMeshingTest::CreateAllBackground();
+  const Result<> offResult = RunM3CRaw(offStructure, false);
+  SIMPLNX_RESULT_REQUIRE_VALID(offResult);
+  REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+  const auto& offGeom = offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
+  const auto& offFacesRef = offGeom.getFaces()->getDataStoreRef();
+  std::set<usize> offReferencedVertices;
+  for(usize i = 0; i < offGeom.getNumberOfFaces() * 3; i++)
+  {
+    offReferencedVertices.insert(static_cast<usize>(offFacesRef[i]));
+  }
+  const usize preExistingOrphanCount = offGeom.getNumberOfVertices() - offReferencedVertices.size();
+  INFO("Pre-existing orphan vertex count measured from the un-pruned mesh: " << preExistingOrphanCount);
+
   SECTION("Repair Triangle Winding off")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
@@ -505,12 +607,12 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == preExistingOrphanCount);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -525,13 +627,101 @@ TEST_CASE("SimplnxCore::Omit Bounding Box Skin warns on an all-background volume
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == -56340);
+    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
+    REQUIRE(triangleGeom.getNumberOfVertices() == preExistingOrphanCount);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::Omit Bounding Box Skin mesher inputs reject Feature Id sentinel collisions", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // These validations are unconditional (not gated on the Bounding Box Skin mode), so each SECTION
+  // below leaves the option off to prove that. This is a mitigation for the sentinel-collision
+  // design described in simplnx#1705, not a fix for it.
+  SECTION("QuickSurfaceMesh rejects a negative Feature Id")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    featureIdsRef[0] = -7;
+
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, false);
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().size() == 1);
+    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    INFO(executeResult.errors()[0].message);
+    REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+  }
+
+  SECTION("SurfaceNets rejects a negative Feature Id")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    featureIdsRef[0] = -7;
+
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, false);
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().size() == 1);
+    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    INFO(executeResult.errors()[0].message);
+    REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+  }
+
+  SECTION("SurfaceNets rejects a Feature Id of INT32_MAX")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    featureIdsRef[0] = std::numeric_limits<int32>::max();
+
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, false);
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().size() == 1);
+    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    INFO(executeResult.errors()[0].message);
+    REQUIRE(executeResult.errors()[0].message.find(std::to_string(std::numeric_limits<int32>::max())) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+  }
+
+  SECTION("M3CSurfaceMeshing rejects a negative Feature Id")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    featureIdsRef[0] = -7;
+
+    const Result<> executeResult = RunM3CRaw(dataStructure, false);
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().size() == 1);
+    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    INFO(executeResult.errors()[0].message);
+    REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+  }
+
+  SECTION("M3CSurfaceMeshing rejects a Feature Id of INT32_MAX")
+  {
+    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    featureIdsRef[0] = std::numeric_limits<int32>::max();
+
+    const Result<> executeResult = RunM3CRaw(dataStructure, false);
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().size() == 1);
+    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    INFO(executeResult.errors()[0].message);
+    REQUIRE(executeResult.errors()[0].message.find(std::to_string(std::numeric_limits<int32>::max())) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 }
