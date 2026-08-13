@@ -153,11 +153,8 @@ struct ExecuteThresholdHelper
   }
 };
 
-void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, int32_t& err, bool replaceInput)
+void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, bool replaceInput)
 {
-  // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultVector.getNumberOfTuples();
-
   nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue.getComparisonType();
   nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue.getComparisonValue();
   nx::core::IArrayThreshold::UnionOperator unionOperator = comparisonValue.getUnionOperator();
@@ -179,8 +176,7 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray);
 }
 
-template <typename T>
-void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultVector, int32_t& err, bool replaceInput,
+void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, bool replaceInput,
                   const std::atomic_bool& shouldCancel)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
@@ -202,12 +198,12 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      ThresholdSet(*comparisonSet, dataStructure, tempResultStore, err, !firstValueFound, shouldCancel);
+      ThresholdSet(*comparisonSet, dataStructure, tempResultStore, !firstValueFound, shouldCancel);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      ThresholdValue(*comparisonValue, dataStructure, tempResultStore, err, !firstValueFound);
+      ThresholdValue(*comparisonValue, dataStructure, tempResultStore, !firstValueFound);
       firstValueFound = true;
     }
   }
@@ -219,7 +215,7 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
 struct ThresholdSetFunctor
 {
   template <typename T>
-  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, T trueValue, T falseValue,
+  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, bool replaceInput, T trueValue, T falseValue,
                   const std::atomic_bool& shouldCancel)
   {
     if(shouldCancel)
@@ -280,7 +276,7 @@ Result<> MultiThresholdObjects::operator()()
     return {};
   }
 
-  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound, trueValue, falseValue,
+  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), !firstValueFound, trueValue, falseValue,
                       m_ShouldCancel);
 
   return {};
