@@ -2,181 +2,16 @@
 
 #include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
+#include "SimplnxCore/utils/FeatureRemovalUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
-#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
-{
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-
-  SizeVec3 uDims = imageGeom.getDimensions();
-
-  std::array<int64, 3> dims = {
-      static_cast<int64>(uDims[0]),
-      static_cast<int64>(uDims[1]),
-      static_cast<int64>(uDims[2]),
-  };
-
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
-
-  bool shouldLoop = false;
-
-  auto progressIncrement = dims[2] / 100;
-  usize progressCounter = 0;
-  int32 featureName;
-  int64 kStride, jStride;
-  for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
-  {
-    if(shouldCancel)
-    {
-      return false;
-    }
-
-    if(progressCounter > progressIncrement)
-    {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
-      progressCounter = 0;
-    }
-    progressCounter++;
-
-    kStride = dims[0] * dims[1] * zIdx;
-    for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
-    {
-      jStride = dims[0] * yIdx;
-      for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
-      {
-        int64 voxelIndex = kStride + jStride + xIdx;
-        featureName = featureIds[voxelIndex];
-        if(featureName > 0)
-        {
-          continue;
-        }
-        shouldLoop = true;
-        int32 current;
-        int32 most = 0;
-        std::vector<int32> numHits(6, 0);
-        std::vector<int32> discoveredFeatures = {};
-        discoveredFeatures.reserve(6);
-        // Loop over the 6 face neighbors of the voxel
-        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndex : faceNeighborInternalIdx)
-        {
-          if(!isValidFaceNeighbor[faceIndex])
-          {
-            continue;
-          }
-
-          int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-          int32 feature = featureIds[neighborPoint];
-          if(feature >= 0)
-          {
-            bool found = false;
-            for(usize featIndex = 0; featIndex < discoveredFeatures.size(); featIndex++)
-            {
-              if(discoveredFeatures[featIndex] == feature)
-              {
-                found = true;
-                numHits[featIndex]++;
-                current = numHits[featIndex];
-                if(current > most)
-                {
-                  most = current;
-                  storageArray[voxelIndex] = static_cast<int32>(neighborPoint);
-                }
-                break;
-              }
-            }
-            if(!found)
-            {
-              discoveredFeatures.push_back(feature);
-            }
-          }
-        }
-      }
-    }
-  }
-  return shouldLoop;
-}
-
-std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_ptr<MaskCompareUtilities::MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
-{
-  bool good = false;
-  usize totalPoints = featureIds.getNumberOfTuples();
-  usize totalFeatures = flaggedFeatures->getNumberOfTuples();
-  std::vector<bool> activeObjects(totalFeatures, true);
-  for(usize i = 1; i < totalFeatures; i++)
-  {
-    if(!flaggedFeatures->isTrue(i))
-    {
-      good = true;
-    }
-    else
-    {
-      activeObjects[i] = false;
-    }
-  }
-  if(!good)
-  {
-    return {};
-  }
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    if(activeObjects[featureIds[i]])
-    {
-      continue;
-    }
-
-    if(fillRemovedFeatures)
-    {
-      featureIds[i] = -1;
-    }
-    else
-    {
-      featureIds[i] = 0;
-    }
-  }
-  return activeObjects;
-}
-
-void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
-{
-  const usize totalPoints = featureIds.getNumberOfTuples();
-
-  int32 featureName, neighbor;
-  for(usize j = 0; j < totalPoints; j++)
-  {
-    if(shouldCancel)
-    {
-      return;
-    }
-
-    featureName = featureIds[j];
-    neighbor = neighbors[j];
-    if(neighbor >= 0)
-    {
-      if(featureName < 0 && featureIds[neighbor] >= 0)
-      {
-        for(const auto& voxelArray : voxelArrays)
-        {
-          voxelArray->copyTuple(neighbor, j);
-        }
-      }
-    }
-  }
-}
 
 class RunCropImageGeometryImpl
 {
@@ -259,8 +94,6 @@ const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> flaggedFeatures = nullptr;
@@ -279,8 +112,6 @@ Result<> RemoveFlaggedFeatures::operator()()
   {
     return {};
   }
-
-  MessageHelper messageHelper(m_MessageHandler);
 
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
@@ -360,53 +191,22 @@ Result<> RemoveFlaggedFeatures::operator()()
   // Valid values Functionality::Remove and Functionality::ExtractThenRemove
   if(function != Functionality::Extract)
   {
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
-
-    std::vector<int32> neighbors((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()), -1);
-    std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
-    if(activeObjects.empty())
+    // Adapt the MaskCompare into a plain flag vector for the shared removal routine.
+    const usize totalFeatures = flaggedFeatures->getNumberOfTuples();
+    std::vector<bool> flagVector(totalFeatures, false);
+    for(usize i = 1; i < totalFeatures; i++)
     {
-      return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
+      flagVector[i] = flaggedFeatures->isTrue(i);
     }
 
-    if(getCancel())
-    {
-      return {};
-    }
+    FeatureRemovalUtilities::RemovalArgs removalArgs;
+    removalArgs.ImageGeometryPath = m_InputValues->ImageGeometryPath;
+    removalArgs.FeatureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+    removalArgs.FeatureAttributeMatrixPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
+    removalArgs.IgnoredDataArrayPaths = m_InputValues->IgnoredDataArrayPaths;
+    removalArgs.FillRemovedFeatures = m_InputValues->FillRemovedFeatures;
 
-    if(m_InputValues->FillRemovedFeatures)
-    {
-      bool shouldLoop;
-      usize count = 0;
-      do
-      {
-        count++;
-        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
-        std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), messageHelper);
-
-        if(getCancel())
-        {
-          return {};
-        }
-
-        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
-        std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
-        FindVoxelArrays(featureIds, neighbors, voxelArrays, getCancel());
-      } while(shouldLoop);
-    }
-
-    if(getCancel())
-    {
-      return {};
-    }
-
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
-    DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
-    if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler, m_ShouldCancel))
-    {
-      return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", featureGroupPath.toString()));
-    }
+    return FeatureRemovalUtilities::removeFlaggedFeatures(m_DataStructure, flagVector, removalArgs, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};

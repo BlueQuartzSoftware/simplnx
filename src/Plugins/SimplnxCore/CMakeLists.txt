@@ -94,6 +94,7 @@ set(FilterList
   InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
+  KeepRemoveRankedFeaturesFilter
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   M3CSurfaceMeshingFilter
@@ -263,6 +264,7 @@ set(AlgorithmList
   InterpolatePointCloudToRegularGrid
   IterativeClosestPoint
   InterpolatePointCloudToRegularGrid
+  KeepRemoveRankedFeatures
   LabelTriangleGeometry
   LaplacianSmoothing
   M3CSurfaceMeshing
@@ -395,6 +397,8 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nifti1.h"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellMap.cpp"
