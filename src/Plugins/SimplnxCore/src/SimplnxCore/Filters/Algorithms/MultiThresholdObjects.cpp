@@ -29,16 +29,16 @@ void InsertThreshold(AbstractDataStore<bool>& currentVector, nx::core::IArrayThr
     // invert the current comparison if necessary
     if(inverse)
     {
-      newVector[i] = !newVector[i];
+      newVector.setValue(i, !newVector.getValue(i));
     }
 
     if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      currentVector[i] = (currentVector[i] || newVector[i]);
+      currentVector.setValue(i, currentVector.getValue(i) || newVector.getValue(i));
     }
-    else if(!currentVector[i] || !newVector[i])
+    else if(!currentVector.getValue(i) || !newVector.getValue(i))
     {
-      currentVector[i] = false;
+      currentVector.setValue(i, false);
     }
   }
 }
