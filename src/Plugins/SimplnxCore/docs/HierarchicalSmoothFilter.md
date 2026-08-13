@@ -59,7 +59,7 @@ The algorithm uses **interval bisection** to find the optimal `epsilon`:
 3. If the slope's magnitude is still significant, step `epsilon` up or down (in the direction that reduces the slope) by the current step size, then halve the step size.
 4. Repeat until the slope's magnitude falls below the convergence threshold (a flat region — the optimal `epsilon` has been found) or the iteration limit is reached.
 
-The **Max Bisection Iterations** parameter controls how many halvings are attempted. The default value of **53** comes from `log2(10^16) ~ 53`, which is the number of bisection steps needed to resolve a double-precision floating point value to machine epsilon. In practice, the search often converges in far fewer iterations because it terminates early once a significant slope is detected.
+The **Max Bisection Iterations** parameter controls how many halvings are attempted. The default value of **53** comes from `log2(10^16) ~ 53`, which is the number of bisection steps needed to resolve a double-precision floating point value to machine epsilon. In practice, the search often converges in far fewer iterations because it stops as soon as the slope flattens out below the convergence threshold, well before the iteration limit is reached.
 
 **Practical guidance:**
 

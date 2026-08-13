@@ -2558,11 +2558,26 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
       return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
     };
 
+    // Count how many triangles will be dropped before allocating droppedNodeIds: pushing onto an
+    // unreserved vector here causes dozens of reallocations (and a transient ~1.5x peak) on a
+    // representative dataset. This adds a second pass over `triangles`, but it only evaluates the
+    // same boolean predicate the compaction loop below already does -- no allocation -- so it is
+    // negligible next to the reallocations it avoids.
+    int64 numToDrop = 0;
+    for(int64 i = 0; i < nTriangle; i++)
+    {
+      if(SkipBackgroundSkinFace(triangles[static_cast<usize>(i)]))
+      {
+        numToDrop++;
+      }
+    }
+
     int64 survivingCount = 0;
     // node_id values touched by a DROPPED triangle, recorded before the in-place compaction below
     // overwrites them. Used to narrow the nodeType clear (see below) to exactly the nodes the prune
     // itself orphaned, at a cost of O(3 * droppedCount) instead of a second full 7*numSites mask.
     std::vector<SiteId> droppedNodeIds;
+    droppedNodeIds.reserve(static_cast<usize>(3 * numToDrop));
     for(int64 i = 0; i < nTriangle; i++)
     {
       const Triangle& triangle = triangles[static_cast<usize>(i)];
@@ -2608,7 +2623,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
       {
         if(!referencedBySurvivor[i])
         {
-          nodeType[static_cast<usize>(droppedNodeIds[i])] = 0;
+          nodeType[static_cast<usize>(droppedNodeIds[i])] = M3CNodeType::k_Unused;
         }
       }
     }
@@ -2858,7 +2873,7 @@ Result<> M3CSurfaceMeshing::operator()()
   // too expensive to repeat on every GUI parameter edit.
   {
     const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true);
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true, m_ShouldCancel, m_MessageHandler);
     if(sentinelCheck.invalid())
     {
       return sentinelCheck;

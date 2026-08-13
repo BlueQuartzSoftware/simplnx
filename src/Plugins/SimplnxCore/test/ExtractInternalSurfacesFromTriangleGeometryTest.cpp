@@ -10,6 +10,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -195,9 +196,9 @@ namespace
 // on, to be pruned by this filter) and the "direct" oracle mesh (skin already omitted by the mesher).
 const DataPath k_QuickMeshPath({"QuickMesh"});
 
-SurfaceMeshingTest::MeshResult RunQuickSurfaceMeshForExtraction(bool omitSkin)
+SurfaceMeshingTest::MeshResult RunQuickSurfaceMeshForExtraction(ChoicesParameter::ValueType boundingBoxSkinMode)
 {
-  return SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshPath, omitSkin,
+  return SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshPath, boundingBoxSkinMode,
                                                                [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 }
 } // namespace
@@ -208,7 +209,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 
   // Mesh the flush cylinder WITHOUT omitting the skin, then strip it with the Face Labels
   // criterion. The result must match what QuickSurfaceMesh produces with the option ON.
-  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(false);
+  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
   DataStructure dataStructure = std::move(fullMeshResult.Structure);
   const DataPath faceLabelsPath = fullMeshResult.FaceLabelsPath;
 
@@ -242,7 +243,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 
   // Same face and vertex counts as meshing with QuickSurfaceMesh's own option turned on directly:
   // both code paths must agree on what "internal" means.
-  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(true);
+  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
   const auto& directGeom = directMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshPath);
 
   REQUIRE(extractedGeom.getNumberOfFaces() == directGeom.getNumberOfFaces());
@@ -262,7 +263,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 {
   UnitTest::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(false);
+  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
   DataStructure dataStructure = std::move(meshResult.Structure);
 
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;

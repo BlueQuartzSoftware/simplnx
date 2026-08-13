@@ -80,9 +80,13 @@ closure for a Feature flush with the box. A cylinder sitting flush with the box 
 therefore comes out as a closed surface with no surrounding box.
 
 On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
-has no effect — every boundary Feature already needs its wall cap to stay closed. Rather than
-silently doing nothing, the **Filter** reports this with a warning (code `-56342`): the option was
-enabled but removed zero faces because the input has no background voxels for it to act on.
+has no effect — every boundary Feature already needs its wall cap to stay closed. The same warning
+also fires on a volume whose background is fully enclosed as interior porosity: no bounding-box
+wall voxel is background-backed even though the volume is full of Feature Id 0 internally, so the
+option again drops nothing. Rather than silently doing nothing, the **Filter** reports this with a
+warning (code `-56342`): no bounding-box **wall** face is backed by background, so the option has
+nothing to prune on this input. The warning says nothing about whether the volume contains
+background elsewhere — only that none of it borders a wall.
 
 Because the test is per-face rather than per-vertex, no triangles are lost along the rim
 where an internal boundary meets the box wall. With the option **off**, wherever an internal
@@ -91,9 +95,10 @@ boundary quad and the two wall quads on either side of it — a non-manifold T-j
 inherent to including the full box skin. With the option **on**, the background-backed wall quad
 on that edge is dropped, leaving exactly two faces sharing it, which is manifold. The option
 therefore does not merely remove unwanted geometry: in the configurations exercised by this
-**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall, and a
-**Feature** occupying a box corner), enabling it produces a watertight mesh where leaving it off
-does not. This is not a universal guarantee of watertightness for arbitrary input.
+**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall) and by
+a separate corner-Feature test (a **Feature** occupying a box corner where three suppressed wall
+planes meet), enabling it produces a watertight mesh where leaving it off does not. This is not a
+universal guarantee of watertightness for arbitrary input.
 
 If every voxel in the volume is background (Feature Id 0), every face is a background-backed
 wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)

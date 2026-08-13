@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -28,7 +29,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Anisotropic spacing places Z correctl
   DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(/*flushWithBottom=*/true, k_Spacing);
   const DataPath k_TriangleGeomPath({"SurfaceNets"});
 
-  SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(std::move(dataStructure), k_TriangleGeomPath, false, [](Arguments& args) {
+  SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(std::move(dataStructure), k_TriangleGeomPath, BoundingBoxSkinMode::k_Off, [](Arguments& args) {
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));

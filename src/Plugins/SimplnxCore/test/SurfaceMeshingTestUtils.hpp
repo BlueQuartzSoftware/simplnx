@@ -134,6 +134,49 @@ inline DataStructure CreateAllBackground()
   return dataStructure;
 }
 
+/**
+ * @brief Builds a 12x12x12 ImageGeom where Feature Id 1 fills the entire volume EXCEPT for a small
+ * interior pocket of Feature Id 0 (background), fully enclosed away from all six bounding-box walls
+ * (interior porosity). Every wall voxel is Feature 1, so no bounding-box wall face is
+ * background-backed: omitting the bounding box skin must prune zero faces and warn (code -56342),
+ * even though the volume is full of Feature Id 0 internally. This is the counterexample that
+ * distinguishes "no wall face is background-backed" from "the volume has no background voxels" --
+ * CreateFullyIndexedPolycrystal() covers the latter, this covers the former without the latter.
+ */
+inline DataStructure CreateEnclosedPorosity()
+{
+  DataStructure dataStructure;
+
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
+  const std::vector<usize> dims = {k_BoxDim, k_BoxDim, k_BoxDim};
+  imageGeomPtr->setDimensions(dims);
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAMPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  featureIdsPtr->fill(1);
+
+  // A 4x4x4 pocket of background centered in the box, at least two voxels inset from every wall on
+  // every axis so it can never be mistaken for a wall-adjacent (and therefore prunable) voxel.
+  constexpr usize k_PocketMin = 4;
+  constexpr usize k_PocketMax = 7;
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
+  for(usize z = k_PocketMin; z <= k_PocketMax; z++)
+  {
+    for(usize y = k_PocketMin; y <= k_PocketMax; y++)
+    {
+      for(usize x = k_PocketMin; x <= k_PocketMax; x++)
+      {
+        featureIdsRef[(z * k_BoxDim * k_BoxDim) + (y * k_BoxDim) + x] = 0;
+      }
+    }
+  }
+
+  return dataStructure;
+}
+
 struct EdgeUseCounts
 {
   usize TotalEdges = 0;

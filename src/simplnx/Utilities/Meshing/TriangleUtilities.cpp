@@ -411,16 +411,30 @@ Result<> MeshingUtilities::MakeEmptyMeshWarning(const DataPath& triangleGeomPath
 Result<> MeshingUtilities::MakeNoFacesPrunedWarning(const DataPath& triangleGeomPath)
 {
   return MakeWarningVoidResult(k_NoFacesPrunedWarning,
-                               fmt::format("The 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode removed 0 faces of geometry '{}' because the input volume contains no background "
-                                           "(Feature Id 0) voxels. There is nothing for this option to prune on this input; the output is identical to leaving it off.",
+                               fmt::format("The 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode removed 0 faces of geometry '{}': no bounding-box wall face is backed by "
+                                           "background (Feature Id 0). This says nothing about the volume's interior -- a volume whose background is fully enclosed as interior porosity "
+                                           "reaches this same warning, because none of that background borders a wall. There is nothing for this option to prune on this input; the output "
+                                           "is identical to leaving it off.",
                                            triangleGeomPath.toString()));
 }
 
-Result<> MeshingUtilities::ValidateFeatureIdsAgainstSentinels(const Int32AbstractDataStore& featureIdsStore, const DataPath& featureIdsPath, bool rejectMaxInt32)
+Result<> MeshingUtilities::ValidateFeatureIdsAgainstSentinels(const Int32AbstractDataStore& featureIdsStore, const DataPath& featureIdsPath, bool rejectMaxInt32, const std::atomic_bool& shouldCancel,
+                                                              const IFilter::MessageHandler& mesgHandler)
 {
   const usize numTuples = featureIdsStore.getNumberOfTuples();
+  mesgHandler(fmt::format("Validating {} Feature Ids against internal sentinel values...", numTuples));
+
+  // Polled every k_CancelCheckInterval tuples rather than every tuple: at 512^3 (~134M tuples) this
+  // loop is a full streaming pass under the out-of-core backend, and a per-tuple cancel check would
+  // add overhead to what is otherwise a tight, uncontested read loop.
+  constexpr usize k_CancelCheckInterval = 1'000'000;
   for(usize i = 0; i < numTuples; i++)
   {
+    if(i % k_CancelCheckInterval == 0 && shouldCancel)
+    {
+      return {};
+    }
+
     const int32 featureId = featureIdsStore[i];
     if(featureId < 0)
     {

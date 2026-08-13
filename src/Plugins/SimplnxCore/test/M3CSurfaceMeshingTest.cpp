@@ -15,6 +15,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -613,7 +614,8 @@ SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool seria
 {
   const ScopedEnvVar wholeVolumeVar("M3C_WHOLE_VOLUME", wholeVolume ? "1" : nullptr);
   const ScopedEnvVar serialVar("M3C_SERIAL", serial ? "1" : nullptr);
-  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, /*omitSkin*/ true, [](Arguments&) {});
+  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly,
+                                                                [](Arguments&) {});
 }
 } // namespace
 

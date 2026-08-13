@@ -350,7 +350,7 @@ Result<> QuickSurfaceMesh::operator()()
   // (execute), not preflight: a full-volume scan is too expensive to repeat on every GUI parameter edit.
   {
     const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/false);
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/false, m_ShouldCancel, m_MessageHandler);
     if(sentinelCheck.invalid())
     {
       return sentinelCheck;
