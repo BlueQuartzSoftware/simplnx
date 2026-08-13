@@ -119,22 +119,22 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   {
     return MakePreflightErrorResult(
         StlConstants::k_UnsupportedFileType,
-        fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
+        fmt::format("The Input STL File '{}' is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::FileOpenError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::HeaderParseError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
   }
 
   // Now get the number of Triangles according to the STL Header
   int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
-    return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file '{}'. Returned error code {}.", pStlFilePathValue.string(), numTriangles));
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
@@ -179,29 +179,30 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
-  auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  auto vertexMatrixName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  ReadStlFileInputValues inputValues;
+
+  inputValues.stlFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
+  inputValues.geometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto faceMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
-  auto faceNormalsName = filterArgs.value<std::string>(k_FaceNormalsName_Key);
-
-  auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(faceMatrixName);
-
-  auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(faceNormalsName);
-
-  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
-  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
-
-  auto scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
-  auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
+  inputValues.faceGroupPath = inputValues.geometryPath.createChildPath(faceMatrixName);
+  inputValues.faceNormalsDataPath = inputValues.faceGroupPath.createChildPath(filterArgs.value<std::string>(k_FaceNormalsName_Key));
+  inputValues.scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
+  inputValues.scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
-  Result<> result = ReadStlFile(dataStructure, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel, messageHandler)();
+  Result<> result = ReadStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  if(result.invalid())
+  {
+    // The geometry is only partially populated, so do not go on to label its faces.
+    return result;
+  }
 
   // Create the Face Labels Array if the user asked for it.
+  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
   if(createFaceLabels)
   {
-    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(pTriangleGeometryPath.createChildPath(faceMatrixName).createChildPath(faceLabelsName)).getDataStore();
+    auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
+    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(inputValues.faceGroupPath.createChildPath(faceLabelsName)).getDataStore();
     usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
 
     for(usize idx = 0; idx < numTuples; idx++)
