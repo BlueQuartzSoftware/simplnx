@@ -30,10 +30,13 @@ const DataPath k_ThresholdArrayPath = k_ImageCellDataName.createChildPath(k_Thre
 
 const DataPath k_MismatchingTuplesArrayPath({"MismatchingTuplesArray"});
 
-constexpr int8 k_TupleCount = 5;
+constexpr int8 k_TupleCount = 8;
 constexpr int8 k_MultiComponentCount = 3;
 
 constexpr float64 k_FloatValueIncrement = 0.01;
+
+constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{0, 0, 0, 0, 0, 1, 1, 1};
+constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{0, 1, 0, 0, 0, 0, 0, 0};
 
 constexpr int32 InputIntValue(int32 index)
 {
@@ -353,6 +356,46 @@ float64 GetOutOfBoundsMaximumValue()
   return static_cast<float64>(std::numeric_limits<T>::max()) * 2;
 }
 } // namespace
+
+void CheckExemplar(const DataStructure& dataStructure, const std::array<bool, k_TupleCount>& exemplarMask)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    REQUIRE(thresholdStore[i] == exemplarMask[i]);
+  }
+}
+
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Exemplar Single Thresholds: Int", "[SimplnxCore][MultiThresholdObjectsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateTestDataStructure();
+  const DataPath targetArray = k_TestArrayIntPath;
+  double thresholdValue = 4.0;
+  bool isInverted = false;
+
+  RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
+  CheckExemplar(dataStructure, k_ExemplarInt4);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Exemplar Single Thresholds: Float", "[SimplnxCore][MultiThresholdObjectsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateTestDataStructure();
+  const DataPath targetArray = k_TestArrayFloatPath;
+  double thresholdValue = 0.02;
+  bool isInverted = false;
+
+  RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
+  CheckExemplar(dataStructure, k_ExemplarFloat02);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
@@ -1041,7 +1084,16 @@ void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonV
   for(usize i = 0; i < count; i++)
   {
     int8 targetValue = (i < comparisonValue) ? 1 : 0;
-    REQUIRE(mask[i] == targetValue);
+    REQUIRE(static_cast<bool>(mask[i]) == targetValue);
+  }
+}
+void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+{
+  usize count = mask.size();
+  for(usize i = 0; i < count; i++)
+  {
+    int8 targetValue = (static_cast<bool>(i) < comparisonValue) ? 1 : 0;
+    REQUIRE(static_cast<bool>(mask[i]) == targetValue);
   }
 }
 
@@ -1053,6 +1105,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array Data
 
   float64 comparisonValue = 3.0;
   DataPath matrixPath({k_ImageGeometry, k_CellData});
+  bool isBoolInput = false;
 
   // Shared filter setup
   MultiThresholdObjectsFilter filter;
@@ -1121,8 +1174,10 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array Data
   SECTION("Boolean")
   {
     threshold->setArrayPath(matrixPath.createChildPath("bool"));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     comparisonValue = 0.9;
+    threshold->setComparisonValue(comparisonValue);
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    isBoolInput = true;
   }
 
   args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
@@ -1139,7 +1194,15 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array Data
   auto* maskArray = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
   REQUIRE(maskArray != nullptr);
   auto& maskStore = maskArray->getDataStoreRef();
-  TestMaskOutputForInputType(maskStore, comparisonValue);
+  // Bool input
+  if(isBoolInput)
+  {
+    TestMaskOutputForBoolInputType(maskStore, comparisonValue);
+  }
+  else
+  {
+    TestMaskOutputForInputType(maskStore, comparisonValue);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1191,12 +1254,13 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
 
   float64 trueValue = 25;
   float64 falseValue = 10;
+  const int32 comparisonValue = 3;
 
   ArrayThresholdSet thresholdSet;
   auto threshold = std::make_shared<ArrayThreshold>();
   threshold->setArrayPath(k_TestArrayIntPath);
   threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(3);
+  threshold->setComparisonValue(comparisonValue);
   thresholdSet.setArrayThresholds({threshold});
 
   args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
@@ -1215,6 +1279,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
   auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
   REQUIRE(thresholdArray != nullptr);
   auto& thresholdStore = thresholdArray->getDataStoreRef();
@@ -1222,7 +1288,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   // Use tuple count constant in case the underlying data size changes.
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    if(i <= 3)
+    if(i <= comparisonValue)
     {
       REQUIRE(thresholdStore[i] == falseValue);
     }
