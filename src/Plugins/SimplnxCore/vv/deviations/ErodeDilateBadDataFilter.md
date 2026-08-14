@@ -19,7 +19,7 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 **Fix:** `Algorithms/ErodeDilateBadData.cpp:64-80` — `adjustValidNeighbors` now takes the per-voxel `isValidFaceNeighbor` boolean array (the actual validity gate consumed by the vote/mark loop) and ANDs each of the 6 entries against the correct axis flag, using the named `VoxelNeighbors<Image3D>` constants rather than raw indices. It is now called at `:162-163`, immediately after `computeValidFaceNeighbors`, for every bad-data voxel.
 
 **Verification:**
-- All 28 `k_ExemplarFeatureIds*`/`k_ExemplarData*` (Misc) constants in `ErodeDilateBadDataTest.cpp` were rewritten to be direction-discriminating (previously byte-identical across all 7 combos for a given operation/iteration count) and hand-traced against the fixture geometry.
+- All 28 `k_ExemplarFeatureIds*`/`k_ExemplarData*` (Misc) constants in `ErodeDilateBadDataTest.cpp` were regenerated from genuine DREAM3D 6.5.171 binary output (they were previously byte-identical across all 7 combos for a given operation/iteration count, which is what masked the bug). They are legacy output, not a hand derivation — a Class 2 oracle.
 - Independently corroborated against genuine DREAM3D 6.5.171 output: 28/28 combinations (7 directions × 2 operations × 2 iteration counts) match exactly, both `FeatureIds` and `Misc` — see V&V report Oracle section for the run details.
 - `(Erode) Expanded` / `(Dilate) Expanded` (28 GENERATE runs total): pass.
 
@@ -39,7 +39,9 @@ Vote-count-based, using `[-Z,-Y,-X,+X,+Y,+Z]` scan order; a later neighbor's vot
 
 ### Legacy tie-break language says "chosen randomly"; SIMPLNX is deterministic
 
-The SIMPLNX filter markdown (`docs/ErodeDilateBadDataFilter.md`), carried over from legacy documentation, states that erode ties are broken "randomly." Both the legacy *source* (`ErodeDilateBadData.cpp`, `Source/Plugins/Processing/ProcessingFilters/`) and the legacy *binary* output are fully deterministic — same first-processed-wins scan order as SIMPLNX, no RNG involved anywhere in the algorithm. "Randomly" in the legacy docs is inaccurate documentation language, not a behavioral characteristic; SIMPLNX's determinism is not a deviation. (Legacy source is now available for direct comparison — this was previously only inferable.)
+The SIMPLNX filter markdown (`docs/ErodeDilateBadDataFilter.md`), carried over from legacy documentation, stated that erode ties are broken "randomly." Both the legacy *source* (`ErodeDilateBadData.cpp`, `Source/Plugins/Processing/ProcessingFilters/`) and the legacy *binary* output are fully deterministic — same first-processed-wins scan order as SIMPLNX, no RNG involved anywhere in the algorithm. "Randomly" in the legacy docs is inaccurate documentation language, not a behavioral characteristic; SIMPLNX's determinism is not a deviation. (Legacy source is now available for direct comparison — this was previously only inferable.)
+
+**The user-facing doc has now been corrected** to describe the actual behavior: the six face neighbors are visited in the fixed order `[-Z,-Y,-X,+X,+Y,+Z]` and a later neighbor must have a strictly greater count to displace the leader, so the earliest tied neighbor in that scan order wins. The same edit documents the two preflight errors (`-14601` no directions enabled, `-14602` zero-length geometry dimension) and the effect of the direction restrictions.
 
 ## Per-direction code-path coverage
 

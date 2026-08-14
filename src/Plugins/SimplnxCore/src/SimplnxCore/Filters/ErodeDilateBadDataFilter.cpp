@@ -22,7 +22,7 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_NoDirectionsError = -14601;
-constexpr int32 k_NoGeometryDimensions = -14602;
+constexpr int32 k_NoGeometryDimensionsError = -14602;
 } // namespace
 
 namespace nx::core
@@ -124,7 +124,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto dims = imageGeom.getDimensions();
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
-    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensions, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
+    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensionsError, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
   }
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "

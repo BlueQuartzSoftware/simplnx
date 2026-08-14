@@ -133,7 +133,7 @@ Result<> ErodeDilateBadData::operator()()
 
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::vector<int32> featureCount(numFeatures + 1, 0);
 
@@ -224,6 +224,7 @@ Result<> ErodeDilateBadData::operator()()
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
     taskRunner.execute(ErodeDilateBadDataTransferDataImpl(totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    taskRunner.wait(); // Redundant while parallelization is disabled, but keeps the "transfer is complete" invariant local.
   }
 
   return {};
