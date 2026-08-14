@@ -12,6 +12,58 @@ using namespace nx::core;
 
 namespace
 {
+bool CheckEquality(float64 a, float64 b)
+{
+  // Allow tolerance for casting values to floating point precision.
+  return std::fabs(a - b) < std::numeric_limits<float32>::epsilon();
+}
+
+/**
+ * @brief The OperatorLess struct replaces std::less for accuracy between floating-point numbers.
+ * Approximately equal values are not determined less than or greater than the other.
+ */
+struct OperatorGreater
+{
+  bool operator()(float64 value1, float64 value2)
+  {
+    return (value1 > value2) && !CheckEquality(value1, value2);
+  }
+};
+
+/**
+ * @brief The OperatorLess struct replaces std::less for accuracy between floating-point numbers.
+ * Approximately equal values are not determined less than or greater than the other.
+ */
+struct OperatorLess
+{
+  bool operator()(float64 value1, float64 value2)
+  {
+    return (value1 < value2) && !CheckEquality(value1, value2);
+  }
+};
+
+/**
+ * @brief The OperatorEqual struct replaces std::equal_to for accuracy between floating-point numbers.
+ */
+struct OperatorEqual
+{
+  bool operator()(float64 value1, float64 value2)
+  {
+    return CheckEquality(value1, value2);
+  }
+};
+
+/**
+ * @brief The Operator_Equality struct replaces std::not_equal_to for accuracy between floating-point numbers.
+ */
+struct OperatorNotEqual
+{
+  bool operator()(float64 value1, float64 value2)
+  {
+    return !CheckEquality(value1, value2);
+  }
+};
+
 /**
  * @brief InsertThreshold is used by ThresholdSets to apply their values to the parent collection using the appropriate union operator and
  * inversion of true/false values.
@@ -26,20 +78,28 @@ void InsertThreshold(AbstractDataStore<bool>& currentVector, nx::core::IArrayThr
 
   for(usize i = 0; i < numItems; i++)
   {
-    // invert the current comparison if necessary
+    // Store values to avoid repeated access calls
+    bool currentValue = currentVector.getValue(i);
+    bool newValue = newVector.getValue(i);
+
+    // Invert the new value if necessary before applying to the parent values.
     if(inverse)
     {
-      newVector.setValue(i, !newVector.getValue(i));
+      newValue = !newValue;
     }
 
+    // Determine output value
     if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      currentVector.setValue(i, currentVector.getValue(i) || newVector.getValue(i));
+      currentValue = currentValue || newValue;
     }
-    else if(!currentVector.getValue(i) || !newVector.getValue(i))
+    else
     {
-      currentVector.setValue(i, false);
+      currentValue = currentValue && newValue;
     }
+
+    // Apply updated value
+    currentVector.setValue(i, currentValue);
   }
 }
 
@@ -81,13 +141,12 @@ public:
   template <class CompT, class T>
   void filterDataWithComparision(const AbstractDataStore<T>& inputStore)
   {
-    size_t numTuples = inputStore.getNumberOfTuples();
-    T value = static_cast<T>(m_ComparisonValue);
-    for(size_t tupleIndex = 0; tupleIndex < numTuples; ++tupleIndex)
+    usize numTuples = inputStore.getNumberOfTuples();
+    for(usize tupleIndex = 0; tupleIndex < numTuples; ++tupleIndex)
     {
-      T inputValue = inputStore.getComponentValue(tupleIndex, m_ComponentIndex);
+      auto inputValue = static_cast<ArrayThreshold::ComparisonValue>(inputStore.getComponentValue(tupleIndex, m_ComponentIndex));
       bool currentOutputValue = m_Output.getValue(tupleIndex); // This should only be a single component
-      bool comparison = CompT{}(inputValue, value);
+      bool comparison = CompT{}(inputValue, m_ComparisonValue);
       if(m_Invert)
       {
         comparison = !comparison;
@@ -113,19 +172,19 @@ public:
   {
     if(m_ComparisonOperator == ArrayThreshold::ComparisonType::LessThan)
     {
-      filterDataWithComparision<std::less<>, T>(input);
+      filterDataWithComparision<OperatorLess, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::GreaterThan)
     {
-      filterDataWithComparision<std::greater<>, T>(input);
+      filterDataWithComparision<OperatorGreater, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_Equal)
     {
-      filterDataWithComparision<std::equal_to<>, T>(input);
+      filterDataWithComparision<OperatorEqual, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_NotEqual)
     {
-      filterDataWithComparision<std::not_equal_to<>, T>(input);
+      filterDataWithComparision<OperatorNotEqual, T>(input);
     }
     else
     {
