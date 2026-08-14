@@ -40,6 +40,15 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
+namespace nx::core
+{
+// Concept that checks if T is an instance of Result<T>
+template <class T>
+concept IsResult = requires(T x) {
+  { Result{x} } -> std::same_as<T>;
+};
+} // namespace nx::core
+
 #define SIMPLNX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
   for(const auto& warning : (result).warnings())                                                                                                                                                       \
   {                                                                                                                                                                                                    \
@@ -54,12 +63,20 @@ using namespace nx::core;
   }
 
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
-  SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE((result).valid());
+  do                                                                                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    const IsResult auto NX_TEST_RESULT = (result);                                                                                                                                                     \
+    SIMPLNX_RESULT_CATCH_PRINT(NX_TEST_RESULT);                                                                                                                                                        \
+    REQUIRE(NX_TEST_RESULT.valid());                                                                                                                                                                   \
+  } while(false);
 
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
-  SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE((result).invalid());
+  do                                                                                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    const IsResult auto NX_TEST_RESULT = (result);                                                                                                                                                     \
+    SIMPLNX_RESULT_CATCH_PRINT(NX_TEST_RESULT);                                                                                                                                                        \
+    REQUIRE(NX_TEST_RESULT.invalid());                                                                                                                                                                 \
+  } while(false);
 
 namespace nx::core
 {
