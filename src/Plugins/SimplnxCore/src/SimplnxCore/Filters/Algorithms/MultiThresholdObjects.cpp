@@ -235,14 +235,12 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray);
 }
 
-void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, bool replaceInput,
-                  const std::atomic_bool& shouldCancel)
+void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, bool replaceInput, const std::atomic_bool& shouldCancel)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultVector.getNumberOfTuples();
   auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<bool>({totalTuples}, {1}, IDataAction::Mode::Execute);
   AbstractDataStore<bool>& tempResultStore = *tempResultStorePtr.get();
-  tempResultStore.fill(false);
 
   bool firstValueFound = false;
 
@@ -274,8 +272,7 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
 struct ThresholdSetFunctor
 {
   template <typename T>
-  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, bool replaceInput, T trueValue, T falseValue,
-                  const std::atomic_bool& shouldCancel)
+  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, T trueValue, T falseValue, const std::atomic_bool& shouldCancel)
   {
     if(shouldCancel)
     {
@@ -288,11 +285,12 @@ struct ThresholdSetFunctor
     usize totalTuples = outputDataStore.getNumberOfTuples();
     auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<bool>({totalTuples}, {1}, IDataAction::Mode::Execute);
     AbstractDataStore<bool>& tempResultStore = *tempResultStorePtr.get();
-    ThresholdSet(inputComparisonSet, dataStructure, tempResultStore, err, replaceInput, shouldCancel);
+    bool replaceInput = true;
+    ThresholdSet(inputComparisonSet, dataStructure, tempResultStore, replaceInput, shouldCancel);
 
     for(size_t i = 0; i < totalTuples; i++)
     {
-      outputDataStore[i] = tempResultStore[i] ? trueValue : falseValue;
+      outputDataStore.setValue(i, tempResultStore.getValue(i) ? trueValue : falseValue);
     }
   }
 };
@@ -325,7 +323,6 @@ Result<> MultiThresholdObjects::operator()()
   float64 trueValue = useCustomTrueValue ? customTrueValue : 1.0;
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;
 
-  bool firstValueFound = false;
   DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).replaceName(maskArrayName);
   int32_t err = 0;
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
@@ -335,8 +332,7 @@ Result<> MultiThresholdObjects::operator()()
     return {};
   }
 
-  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), !firstValueFound, trueValue, falseValue,
-                      m_ShouldCancel);
+  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), trueValue, falseValue, m_ShouldCancel);
 
   return {};
 }
