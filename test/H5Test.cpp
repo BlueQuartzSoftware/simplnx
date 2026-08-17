@@ -1472,10 +1472,10 @@ TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[sim
   REQUIRE(replacement.isValid());
 }
 
-TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][HDF5]")
+TEST_CASE("HDF5 ApiLock serializes access via SIMPLNX_H5SUPPORT_MUTEX_LOCK", "[simplnx][HDF5]")
 {
 #ifdef H5Support_USE_MUTEX
-  // Each thread increments one shared counter under H5SUPPORT_MUTEX_LOCK().
+  // Each thread increments one shared counter under SIMPLNX_H5SUPPORT_MUTEX_LOCK().
   // The exact total proves that one shared ApiLock protects every update.
   constexpr int k_Threads = 8;
   constexpr int k_Iters = 20000;
@@ -1487,7 +1487,7 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
     workers.emplace_back([&counter]() {
       for(int i = 0; i < k_Iters; ++i)
       {
-        H5SUPPORT_MUTEX_LOCK();
+        SIMPLNX_H5SUPPORT_MUTEX_LOCK();
         ++counter;
       }
     });
@@ -1498,6 +1498,6 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
   }
   REQUIRE(counter == k_Threads * k_Iters);
 #else
-  SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
+  SUCCEED("H5Support_USE_MUTEX disabled; SIMPLNX_H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
 #endif
 }
