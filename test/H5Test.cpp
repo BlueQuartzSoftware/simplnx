@@ -1224,7 +1224,7 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
     workers.emplace_back([&counter]() {
       for(int i = 0; i < k_Iters; ++i)
       {
-        H5SUPPORT_MUTEX_LOCK();
+        SIMPLNX_H5SUPPORT_MUTEX_LOCK();
         ++counter;
       }
     });
@@ -1235,6 +1235,6 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
   }
   REQUIRE(counter == k_Threads * k_Iters);
 #else
-  SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
+  SUCCEED("H5Support_USE_MUTEX disabled; SIMPLNX_H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
 #endif
 }

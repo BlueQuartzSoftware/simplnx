@@ -18,14 +18,13 @@
 #include <string>
 #include <vector>
 
-#ifdef H5Support_USE_MUTEX
-#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
-#else
-#define H5SUPPORT_MUTEX_LOCK()
-#endif
 
-// Defined in CMake
-// #define H5_USE_110_API
+
+#ifdef H5Support_USE_MUTEX
+#define SIMPLNX_H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
+#else
+#define SIMPLNX_H5SUPPORT_MUTEX_LOCK()
+#endif
 
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \

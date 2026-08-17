@@ -3,9 +3,11 @@
 #include <cstring>
 #include <iostream>
 
+
+
 bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
 {
-  H5SUPPORT_MUTEX_LOCK()
+  SIMPLNX_H5SUPPORT_MUTEX_LOCK()
 
   bool isGroup = true;
   herr_t error = -1;
@@ -35,7 +37,7 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
 
 std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
 {
-  H5SUPPORT_MUTEX_LOCK()
+  SIMPLNX_H5SUPPORT_MUTEX_LOCK()
 
   size_t nameSize = 1 + H5Iget_name(locationId, nullptr, 0);
   std::vector<char> objectName(nameSize, 0);
@@ -52,7 +54,7 @@ std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
 
 hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
 {
-  H5SUPPORT_MUTEX_LOCK()
+  SIMPLNX_H5SUPPORT_MUTEX_LOCK()
 
   herr_t error = 0;
   herr_t returnError = 0;
@@ -148,7 +150,7 @@ std::string nx::core::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
 
 std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
 {
-  H5SUPPORT_MUTEX_LOCK()
+  SIMPLNX_H5SUPPORT_MUTEX_LOCK()
 
   if(dataTypeIdentifier == H5T_STRING)
   {
