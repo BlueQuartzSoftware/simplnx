@@ -62,13 +62,18 @@ all three enabled the Filter uses all six face neighbors (*-Z, -Y, -X, +X, +Y, +
 example, restricts the operation to the four in-plane neighbors so that bad data grows or shrinks only within each XY
 slice.
 
+### Number of Iterations
+
+The *Number of Iterations* parameter must be at least *1*; any value below *1* fails preflight.
+
 ### Preflight Errors
 
-The Filter refuses to run in two cases:
+The Filter refuses to run in three cases:
 
 - **-14601**: all three of *X Direction*, *Y Direction*, and *Z Direction* are disabled. At least one direction is
   required, otherwise there are no neighbors to erode or dilate across.
 - **-14602**: the selected **Image Geometry** has a dimension of *0* **Cells**. All three dimensions must be non-zero.
+- **-14603**: *Number of Iterations* is less than *1*. A non-positive iteration count would leave the data unchanged.
 
 ## WARNING: Feature Data Will Become Invalid
 

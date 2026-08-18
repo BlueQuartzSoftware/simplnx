@@ -23,6 +23,7 @@ namespace
 {
 constexpr int32 k_NoDirectionsError = -14601;
 constexpr int32 k_NoGeometryDimensionsError = -14602;
+constexpr int32 k_InvalidNumIterationsError = -14603;
 } // namespace
 
 namespace nx::core
@@ -102,6 +103,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pOperationValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
+  auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   auto xDirOn = filterArgs.value<bool>(k_XDirOn_Key);
@@ -118,6 +120,14 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   if(!xDirOn && !yDirOn && !zDirOn)
   {
     return {MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
+  }
+
+  // DREAM3D 6.5.171 rejected a non-positive iteration count here (ErodeDilateBadData.cpp:141-146, error -5555). The port
+  // dropped the check and silently no-opped instead, since the iteration loop simply never executes. Guard restored 2026-08-19.
+  if(pNumIterationsValue < 1)
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidNumIterationsError,
+                                           fmt::format("ErodeDilateBadData requires a positive 'Number of Iterations'. The supplied value was {}. Set it to 1 or greater.", pNumIterationsValue))};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
