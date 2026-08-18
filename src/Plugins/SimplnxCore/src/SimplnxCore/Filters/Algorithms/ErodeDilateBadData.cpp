@@ -16,10 +16,9 @@ public:
   ErodeDilateBadDataTransferDataImpl() = delete;
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
-  : m_FilterAlg(filterAlg)
-  , m_TotalPoints(totalPoints)
+  ErodeDilateBadDataTransferDataImpl(usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighbors,
+                                     const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+  : m_TotalPoints(totalPoints)
   , m_Operation(operation)
   , m_Neighbors(neighbors)
   , m_DataArrayPtr(dataArrayPtr)
@@ -54,14 +53,31 @@ public:
   }
 
 private:
-  ErodeDilateBadData* m_FilterAlg = nullptr;
   usize m_TotalPoints = 0;
   ChoicesParameter::ValueType m_Operation = 0;
-  std::vector<int64> m_Neighbors;
+  const std::vector<int64>& m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
 };
+
+/**
+ * @brief Masks out face neighbors whose axis has been disabled via the X/Y/Z Direction parameters.
+ * Indices follow the VoxelNeighbors<Image3D> ordering: [-Z,-Y,-X,+X,+Y,+Z].
+ * @param isValidFaceNeighbor Per-voxel face-neighbor validity, already computed from geometry boundary.
+ * @param xDir Whether the X direction is enabled.
+ * @param yDir Whether the Y direction is enabled.
+ * @param zDir Whether the Z direction is enabled.
+ */
+void adjustValidNeighbors(std::array<bool, VoxelNeighbors<Image3D>::k_FaceNeighborCount>& isValidFaceNeighbor, bool xDir, bool yDir, bool zDir)
+{
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] && zDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] && zDir;
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -110,6 +126,11 @@ Result<> ErodeDilateBadData::operator()()
     }
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+
+  // Build up a list of the DataArrays that we are going to operate on.
+  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
@@ -120,6 +141,12 @@ Result<> ErodeDilateBadData::operator()()
   {
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
+      // Check if the algorithm should cancel
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       const int64 zStride = dims[0] * dims[1] * zIdx;
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
@@ -132,7 +159,8 @@ Result<> ErodeDilateBadData::operator()()
           {
             int32 most = 0;
             // Loop over the 6 face neighbors of the voxel
-            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            adjustValidNeighbors(isValidFaceNeighbor, m_InputValues->XDirOn, m_InputValues->YDirOn, m_InputValues->ZDirOn);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -177,11 +205,6 @@ Result<> ErodeDilateBadData::operator()()
       }
     }
 
-    // Build up a list of the DataArrays that we are going to operate on.
-    const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
-
-    MessageHelper messageHelper(m_MessageHandler);
-
     ParallelTaskAlgorithm taskRunner;
     taskRunner.setParallelizationEnabled(true);
     for(const auto& voxelArray : voxelArrays)
@@ -193,14 +216,15 @@ Result<> ErodeDilateBadData::operator()()
         continue;
       }
 
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
+      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    taskRunner.wait(); // Redundant while parallelization is disabled, but keeps the "transfer is complete" invariant local.
   }
 
   return {};

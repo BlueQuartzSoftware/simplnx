@@ -23,15 +23,16 @@ Cell neighboring a *bad* **Cell** will be changed to *0*.
 
 If the *bad* data is *eroded*, the Filter shrinks the
 bad data by one **Cell** in an iterative sequence for a user defined number of iterations. During the *erode* process
-the *Feature Id* of the *bad* **Cell** is changed from *0* to the *Feature Id* of the majority of its neighbors. If
-there is a tie between two *Feature Ids*, then one of the *Feature Ids*, chosen randomly, will be assigned to the *bad*
-**Cell**.
+the *Feature Id* of the *bad* **Cell** is changed from *0* to the *Feature Id* of the majority of its neighbors.
+
+Ties are broken deterministically, not randomly. The Filter visits the six face neighbors in the fixed order
+*-Z, -Y, -X, +X, +Y, +Z*, and a later neighbor must have a strictly greater count than the current leader to replace it.
+When two or more *Feature Ids* are tied for the majority, the one belonging to the earliest neighbor in that scan order
+is assigned. The same input therefore always produces the same output.
 
 | Before Erosion                       | After Erosion                        |
 |--------------------------------------|--------------------------------------|
 | ![](Images/ErodeDilateBadData_1.png) | ![](Images/ErodeDilateBadData_3.png) |
-
-`
 
 Goals a user might be trying to accomplish with this Filter include:
 
@@ -53,6 +54,21 @@ The *Operation* parameter selects which morphological operation to apply:
 
 - **Dilate [0]**: Grows bad data regions by one **Cell** per iteration. Any **Cell** neighboring a bad **Cell** has its *Feature Id* changed to 0.
 - **Erode [1]**: Shrinks bad data regions by one **Cell** per iteration. Each bad **Cell** is assigned the *Feature Id* of the majority of its neighbors.
+
+### Direction Restrictions
+
+The *X Direction*, *Y Direction*, and *Z Direction* parameters control which of the six face neighbors participate. With
+all three enabled the Filter uses all six face neighbors (*-Z, -Y, -X, +X, +Y, +Z*); disabling *Z Direction*, for
+example, restricts the operation to the four in-plane neighbors so that bad data grows or shrinks only within each XY
+slice.
+
+### Preflight Errors
+
+The Filter refuses to run in two cases:
+
+- **-14601**: all three of *X Direction*, *Y Direction*, and *Z Direction* are disabled. At least one direction is
+  required, otherwise there are no neighbors to erode or dilate across.
+- **-14602**: the selected **Image Geometry** has a dimension of *0* **Cells**. All three dimensions must be non-zero.
 
 ## WARNING: Feature Data Will Become Invalid
 
