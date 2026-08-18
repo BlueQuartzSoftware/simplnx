@@ -662,7 +662,7 @@ struct ClusterForest
     }
   }
 
-  usize findClusterRoot(usize gridId)
+  usize findClusterRoot(usize gridId) const
   {
     while(clusterForestNodes[gridId].parent != gridId)
     {
@@ -678,7 +678,7 @@ struct ClusterForest
    * @param qGridId a valid grid id
    * @return bool if true they are in the same cluster
    */
-  bool infer(usize pGridId, usize qGridId)
+  bool infer(usize pGridId, usize qGridId) const
   {
     return findClusterRoot(pGridId) == findClusterRoot(qGridId);
   }
@@ -1038,7 +1038,7 @@ private:
     }
   }
 
-  bool canMerge(usize pGridId, usize qGridId)
+  bool canMerge(usize pGridId, usize qGridId) const
   {
     for(usize pPointId : hyperGridBitMap.gridVoxels[pGridId])
     {
