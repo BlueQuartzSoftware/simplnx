@@ -92,6 +92,15 @@ Result<> ErodeDilateCoordinationNumber::operator()()
 
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
+      // Check if the algorithm should cancel. This is the only interruption point in the
+      // sweep: with Loop == true and a low CoordinationNumber the while() loop can iterate
+      // without bound, so the check has to run at the outer sweep level rather than only
+      // once before the loop.
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       const int64 zStride = dims[0] * dims[1] * zIdx;
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
