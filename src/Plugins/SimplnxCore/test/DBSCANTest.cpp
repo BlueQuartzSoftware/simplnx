@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -76,7 +77,8 @@ void CheckClusterInvariants(const DataStructure& dataStructure, const DataPath& 
   }
 
   // Invariant 3: AM tuple count equals maxId + 1
-  REQUIRE(static_cast<usize>(maxId + 1) == dataStructure.getDataAs<AttributeMatrix>(amPath)->getNumberOfTuples());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(amPath));
+  REQUIRE(static_cast<usize>(maxId + 1) == dataStructure.getDataRefAs<AttributeMatrix>(amPath).getNumberOfTuples());
 }
 
 void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds)
@@ -120,7 +122,8 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   const int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
-  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath));
+  REQUIRE(maxVal == dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath).getNumberOfTuples());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
@@ -186,12 +189,24 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
+  // ParseOrder::Random draws a time-based seed inside the filter, so the shuffle differs on every
+  // run. Report the seed the run actually used; without it a failure below is not reproducible.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(DataPath{{"seed_array"}}));
+  const uint64 usedSeed = dataStructure.getDataRefAs<UInt64Array>(DataPath{{"seed_array"}})[0];
+  INFO(fmt::format("Parse order {} ran with seed {}", randomType, usedSeed));
+  if(randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom))
+  {
+    // SeededRandom must round-trip the user-supplied seed unchanged
+    REQUIRE(usedSeed == k_Seed);
+  }
+
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath));
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   std::vector<usize> generatedBins = ::BinPoints(generatedIds);
   REQUIRE_FALSE(generatedBins.empty());
 
-  REQUIRE(generatedBins.size() == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath));
+  REQUIRE(generatedBins.size() == dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath).getNumberOfTuples());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   const auto& exemplarIds = dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds);
@@ -334,7 +349,8 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
-  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath));
+  REQUIRE(maxVal == dataStructure.getDataRefAs<AttributeMatrix>(k_GeneratedAMPath).getNumberOfTuples());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
@@ -393,7 +409,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
   {
     REQUIRE(id == 0);
   }
-  REQUIRE(dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath)->getNumberOfTuples() == 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath));
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath).getNumberOfTuples() == 1);
 
   ::CheckClusterInvariants(dataStructure, k_ClusterIdsPath, k_FeatureAMPath);
 
@@ -404,7 +421,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
 {
   // Class 1 oracle: 3 points, P2 masked out.
   // epsilon=1.0, minPoints=2 -> cell side = 1.0/sqrt(2) ~= 0.707.
-  // Active points P0=(0.0, 0.0) and P1=(0.1, 0.0) share the only grid cell (1x1 grid) -> core grid -> Cluster 1.
+  // Active points P0=(0.0, 0.0) and P1=(0.1, 0.0) both land in grid cell 0 -> 2 points >= minPoints -> core grid -> Cluster 1.
   // P2=(0.0, 0.1) is masked -> excluded from binning -> stays cluster ID 0.
   // Expected: cluster_ids = [1, 1, 0], AM has 2 tuples.
   DataStructure dataStructure;
@@ -456,7 +473,76 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
   REQUIRE(clusterIds[0] == 1); // P0 -> Cluster 1
   REQUIRE(clusterIds[1] == 1); // P1 -> Cluster 1
   REQUIRE(clusterIds[2] == 0); // P2 masked -> noise
-  REQUIRE(dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath)->getNumberOfTuples() == 2);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath));
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath).getNumberOfTuples() == 2);
+
+  ::CheckClusterInvariants(dataStructure, k_ClusterIdsPath, k_FeatureAMPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[SimplnxCore][DBSCAN]")
+{
+  // Class 1 oracle: same 3 points as F2, but every point is masked off.
+  // With no active point there are no grid bounds to derive, so no grid cell can be occupied and no
+  // core grid can exist. This pins the contract for that case; before the bounds guard was added,
+  // the grid dimensions were computed by casting NaN to usize, which is undefined behavior.
+  // Expected: warning -85640, all cluster IDs = 0, AM has 1 tuple.
+  DataStructure dataStructure;
+
+  const DataPath k_PointsPath{{"points"}};
+  const DataPath k_MaskPath{{"mask"}};
+  const DataPath k_ClusterIdsPath{{"cluster_ids"}};
+  const DataPath k_FeatureAMPath{{"cluster_am"}};
+
+  auto* pointsArr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {3}, {2});
+  REQUIRE(pointsArr != nullptr);
+  auto& pointsRef = pointsArr->getDataStoreRef();
+  pointsRef[0] = 0.0f;
+  pointsRef[1] = 0.0f; // P0 = (0.0, 0.0)
+  pointsRef[2] = 0.1f;
+  pointsRef[3] = 0.0f; // P1 = (0.1, 0.0)
+  pointsRef[4] = 0.0f;
+  pointsRef[5] = 0.1f; // P2 = (0.0, 0.1)
+
+  auto* maskArr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {3}, {1});
+  REQUIRE(maskArr != nullptr);
+  auto& maskRef = maskArr->getDataStoreRef();
+  maskRef[0] = 0;
+  maskRef[1] = 0;
+  maskRef[2] = 0;
+
+  {
+    DBSCANFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(1.0f));
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(2));
+    args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskPath));
+    args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_PointsPath));
+    args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("cluster_ids"));
+    args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto executeResult = filter.execute(dataStructure, args);
+    // Nothing to cluster -> warning, not error and not a crash
+    REQUIRE(executeResult.result.valid());
+    REQUIRE_FALSE(executeResult.result.warnings().empty());
+    REQUIRE(executeResult.result.warnings()[0].code == -85640);
+  }
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath));
+  const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath);
+  for(int32 id : clusterIds)
+  {
+    REQUIRE(id == 0);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath));
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath).getNumberOfTuples() == 1);
 
   ::CheckClusterInvariants(dataStructure, k_ClusterIdsPath, k_FeatureAMPath);
 

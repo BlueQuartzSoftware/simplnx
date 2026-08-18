@@ -16,11 +16,11 @@
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Rewrite** — SIMPLNX implements GDCF (Grid-based DBSCAN, Boonchoo et al. 2019, DOI 10.1016/j.patcog.2019.01.034) in place of the traditional point-by-point DBSCAN in legacy DREAM3D. UUID changed from `c2d4f1e8` to `763dad44` (legacy UUID retained via SIMPL mapper). |
 | Oracle (confirmed)     | **Class 2 (Reference — scikit-learn 1.7.1 DBSCAN) primary + Class 4 (Invariant) companion.** Input data independently generated from deterministic sklearn scripts in `dbscan_vv/dbscan_data_proj/`. Phase 6 reconciliation complete: 4/6 datasets exact match; 2 deviations (ansio, varied) fully explained by DBSCAN-D1 (GDCF vs. traditional DBSCAN). See Phase 5 + Phase 6. |
-| Code paths enumerated  | 17 paths identified from code review — see Code path coverage table. Current tests cover approximately 10/17; uncovered paths noted in table.                                                                                                                               |
-| Tests today            | 10 TEST_CASEs: 6×2D dataset tests (each running LDF + Random + SeededRandom), 1×3D LDF test, 1 SIMPL backwards-compat test, 2 analytical fixtures (F1: no-clusters warning, F2: mask exclusion). 2D tests and 3D test use regression exemplars from `dbscan_test.tar.gz`; F1/F2 are self-contained inline data. |
+| Code paths enumerated  | 18 paths identified from code review — see Code path coverage table. Current tests cover approximately 12/18; uncovered paths noted in table.                                                                                                                               |
+| Tests today            | 11 TEST_CASEs: 6×2D dataset tests (each running LDF + Random + SeededRandom), 1×3D LDF test, 1 SIMPL backwards-compat test, 3 analytical fixtures (F1: no-clusters warning, F2: mask exclusion, F3: all points masked). 2D tests and 3D test use regression exemplars from `dbscan_test.tar.gz`; F1–F3 are self-contained inline data. |
 | Exemplar archive       | **`dbscan_test.tar.gz` — promoted to regression fixtures (Phase 6/10).** Originally circular oracle; independently verified via Class 2 sklearn oracle (Phase 6). LDF arrays now pin verified-correct SIMPLNX output. See provenance sidecar. |
 | Legacy comparison      | **Complete (Phase 9, 2026-08-05).** DREAM3D 6.5.172 run via `dbscan_vv/phase9_ab_test.py`. Results in `dbscan_vv/phase9_comparison_results.json`. 4/6 datasets: exact three-way match (legacy = sklearn = SIMPLNX). 2 deviations (ansio, varied): legacy matches sklearn cluster count (6 and 11 respectively); SIMPLNX finds fewer clusters (3 for both) — confirms DBSCAN-D1. Minor implementation differences between legacy and sklearn for sparse datasets (±1–3 boundary points, same cluster count) are within tolerance and do not affect deviation classification. |
-| Bug flags              | ✅ Circular oracle resolved (Phase 6) — `dbscan_test.tar.gz` LDF arrays promoted to regression fixtures; Class 2 sklearn oracle confirms correctness. 2 expected GDCF deviations (ansio, varied) documented as DBSCAN-D1. No SIMPLNX bugs found.                            |
+| Bug flags              | ✅ Circular oracle resolved (Phase 6) — `dbscan_test.tar.gz` LDF arrays promoted to regression fixtures; Class 2 sklearn oracle confirms correctness. 2 expected GDCF deviations (ansio, varied) documented as DBSCAN-D1. **1 SIMPLNX bug found and fixed during V&V:** `ParseOrder::Random` fed the user-supplied seed to the shuffle instead of the documented time-based seed, making "Random" a silent duplicate of "Seeded Random" (see Phase 7). **1 robustness defect found and fixed:** an all-false mask left the grid bounds NaN and those NaNs were cast to `usize` while computing grid dimensions (undefined behavior). |
 | V&V phase              | Phases 1–13 complete. Pending second-engineer oracle sign-off before COMPLETE status.                                                                                                                                                                                      |
 
 ## Summary
@@ -84,10 +84,11 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | 2  | (a) Grid 3D   | Input has 3 components → `HyperGridBitMap3D` path in `DBSCANFunctor`                                                                  | `3D Test (LowDensityFirst)`                                           |
 | 3  | (a) Grid err  | Input has other component count → error `-54060`                                                                                       | *Not directly tested. Preflight rejects via `AllowedComponentShapes{{2},{3}}`.* |
 | 4  | (a) Mask=true | Masked points skipped in binning and bounds                                                                                            | **F2** (`Analytical Fixture F2 - Mask Exclusion`, added Phase 8) |
+| 4b | (a) Mask all false | No point passes the mask → bounds stay NaN → early return leaves the grid empty → warning `-85640`                              | **F3** (`Analytical Fixture F3 - All Points Masked`, added during Phase 7 fix) |
 | 5  | (b) No cores  | All grids have <minPoints → warning `-85640`, no labeling                                                                              | **F1** (`Analytical Fixture F1 - No Clusters Warning`, added Phase 8) |
 | 6  | (b) LDF sort  | Parse order = LowDensityFirst → QuickSort core grids ascending by occupancy                                                            | All 2D LDF tests and 3D test                                          |
-| 7  | (b) Random    | Parse order = Random → Fisher-Yates shuffle with time-based seed                                                                       | `Random` variant of all 2D tests                                      |
-| 8  | (b) SeededRnd | Parse order = SeededRandom → Fisher-Yates shuffle with user-supplied seed                                                              | `SeededRandom` variant of all 2D tests                                |
+| 7  | (b) Random    | Parse order = Random → shuffle with time-based seed (non-deterministic run to run)                                                      | `Random` variant of all 2D tests. Compares cluster count + cluster-size multiset only; the seed actually used is read back from the seed array and reported via `INFO` so a failure is reproducible. |
+| 8  | (b) SeededRnd | Parse order = SeededRandom → shuffle with user-supplied seed                                                                           | `SeededRandom` variant of all 2D tests; also asserts the seed array round-trips the user seed unchanged |
 | 9  | (c) Same clus | NeighborGridQuery returns already-merged grid → `clusterForest.infer()` true → skip                                                   | All 2D/3D tests (implicit on multi-grid clusters)                     |
 | 10 | (c) Unvisited border | Neighbor grid is border AND self-parent → merge to current core parent                                                         | All 2D/3D tests (implicit)                                            |
 | 11 | (c) Core merge | Neighbor grid is core (or visited border) → add to mergeLRC vector → union-find merge                                                | All 2D/3D tests (implicit on touching clusters)                       |
@@ -112,7 +113,8 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | `SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility` | kept | Validates `FromSIMPLJson` conversion for both 6.4 and 6.5 SIMPL pipeline fixtures. No algorithmic execution — parameters only. |
 | `SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning` | added Phase 8 | Class 1 oracle. 4 corner points, ε=0.1, minPts=5. Covers code path #5 (warning -85640). Self-contained inline data. |
 | `SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion` | added Phase 8 | Class 1 oracle. 3 points, P2 masked. Covers code path #4 (mask=true). Self-contained inline data. |
-| Class 4 invariant assertions | added Phase 8 | `CheckClusterInvariants()` hooked into `LDFTestCase2D` and `RandomTestCase2D` — covers all 18 2D test runs. 3D test has inline AM tuple check but not the full helper. |
+| `SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked` | added during Phase 7 fix | Class 1 oracle. Same 3 points as F2 with every point masked off. Covers code path #4b and pins the all-false-mask contract (warning `-85640`, all IDs 0, AM 1 tuple) that the NaN-bounds guard makes architecture-independent. Self-contained inline data. |
+| Class 4 invariant assertions | added Phase 8 | `CheckClusterInvariants()` hooked into `LDFTestCase2D` and `RandomTestCase2D` — covers all 18 2D test runs — and into F1/F2/F3. 3D test has inline AM tuple check but not the full helper. |
 
 ## Exemplar archive
 
@@ -301,17 +303,24 @@ This phase closes the circularity by running the same sklearn 1.7.1 library that
 
 ## Phase 7 — Algorithm Review
 
-**Status: Partially complete — formal review skill not invoked; key candidates inspected inline during Phase 1/8 work.**
+**Status: Complete.**
 
-*Pre-noted candidates reviewed*:
-- `QuickSortGrids` — `begin >= end` guard confirmed present (line 1002). Size-1 array (begin=0, end=0) returns immediately. **No bug.**
-- `findClusterRoot` — recursive with no depth limit. Degenerate long-chain inputs (many clusters chained) could stack overflow. **Deferred — W1 in session notes. No fix in this pass.**
-- Cancel checks — confirmed present at multiple points in `cluster()` and `label()` loops.
-- Progress messaging — `ThrottledMessenger`/`MessageHelper` used throughout.
+*Findings and dispositions*:
 
-*Formal `review-algorithm` skill invocation deferred* — no blocking issues found from inline inspection. Pre-noted items were examined against source; only the `findClusterRoot` recursion depth item remains unresolved and was explicitly deferred.
+- **`ParseOrder::Random` used the user seed — BUG, FIXED.** `DBSCANFilter::executeImpl` computed a time-based seed for the seed-provenance array but passed `filterArgs.value(k_SeedValue_Key)` into `DBSCANInputValues::Seed`. Because `k_SeedValue_Key` is only exposed in the GUI for `SeededRandom`, `Random` silently ran with the default seed `5489` on every invocation — making it a duplicate of `SeededRandom` rather than the non-deterministic order that `docs/DBSCANFilter.md` has always described. Fixed by passing the resolved `seed` through. This is a documented-behavior-vs-implementation defect, not a deviation from legacy, so it is recorded here rather than as a `DBSCAN-D<N>` entry.
+- **`findClusterRoot` recursion — FIXED.** Converted from unbounded recursion to an iterative parent walk, removing the stack-overflow risk on long parent chains.
+- **`QuickSortGrids` recursion — FIXED.** The `begin >= end` guard was already correct, but the double recursion reached O(n) stack depth when core-grid occupancies are already sorted ascending. It now recurses into the smaller partition and loops on the larger, capping depth at O(log n). Output ordering is unchanged — the two partitions are disjoint, so the order they are processed in cannot affect the result — and the LDF regression fixtures still match exactly.
+- **All-false mask left bounds NaN — FIXED.** With no active point every bound stayed `quiet_NaN`, and `static_cast<usize>(NaN)` was then used to compute the grid dimensions, which is undefined behavior. Measured behavior differed by architecture (arm64 saturates to 0; x86-64 yields `INT64_MIN`); in both cases the resulting dimensions happened to produce an empty grid and the correct `-85640` warning, so no incorrect output was ever produced and this was never observed as a crash. Now guarded explicitly, with an added message naming the mask as the cause, and pinned by analytical fixture F3.
+- **`canMerge` cancel check** — added. It returns `false` on cancel; both call sites re-check `m_ShouldCancel` on the next iteration and discard results, so the early `false` cannot corrupt output.
+- **Cancel checks** — confirmed present in `cluster()`, the expansion loop, `label()`, and both `HyperGridBitMap` constructors.
+- **Progress messaging** — `ThrottledMessenger`/`MessageHelper` used throughout; a missing `" - Determining bounds..."` message was added to the 2D path for parity with 3D.
+- **`ProcessSection` partition bounds** — the unguarded `front++`/`back--` scan loops are safe: the pivot value at `sorted[begin]` halts the first forward scan, and after each swap positions `back + 1` and `front - 1` act as sentinels. `ProcessSection` also always returns a value strictly less than `end`, which is what makes the partition recursion terminate. Verified by inspection; no bounds guard needed.
+- **`Minimum Points` parameter help text** — reworded to state that it is a per-grid-cell occupancy threshold rather than a count of neighbors within Epsilon. Deviation DBSCAN-D1 names the old wording as a cause of user surprise, so the wording is now aligned with the algorithm.
 
----
+*Deferred (not addressed in this pass)*:
+
+- The shuffle used for `Random`/`SeededRandom` is a biased hand-rolled Fisher-Yates: it draws `r` from `[0, size - 2]` (so the last index is never selected as a partner) over the full range rather than `[0, i]`, and it uses `uniform_real_distribution` + `floor` instead of `uniform_int_distribution`. `std::shuffle` would be both correct and simpler, but it changes the grid order produced for a given seed, and therefore changes `SeededRandom` cluster-ID numbering. That is a user-visible reproducibility change and warrants its own deviation entry, so it is left for a follow-up.
+- `RunAlgorithm` skips the labeling step whenever `cluster()` returns any warning, using "has warnings" as a proxy for "the cluster forest is ill-formed". That is correct today because `-85640` is the only warning `cluster()` can emit, but it will silently suppress labeling if a second, unrelated warning is ever added. Worth replacing with an explicit signal.
 
 ## Phase 8 — Unit Test Review & Implementation
 
@@ -335,7 +344,7 @@ Code paths newly covered: path #4 (mask=true), path #5 (no core grids warning).
 
 ### Setup
 
-- **Legacy runner**: DREAM3D 6.5.172 PipelineRunner at `/home/nyoung/DREAM3D-Dev/DREAM3D-Build/D3D-Rel-Develop/Bin/PipelineRunner` (DREAM3DReview plugin confirmed loaded — filter UUID `{c2d4f1e8-2b04-5d82-b90f-2191e8f4262e}`)
+- **Legacy runner**: DREAM3D 6.5.172 `PipelineRunner` from a local legacy proof build (DREAM3DReview plugin confirmed loaded — filter UUID `{c2d4f1e8-2b04-5d82-b90f-2191e8f4262e}`)
 - **Script**: `dbscan_vv/phase9_ab_test.py`
 - **Input**: `dbscan_vv/6_5_input.dream3d` — 6.5-format HDF5 created from same sklearn `.txt` files used in Phase 6 (500 points × 2 components each dataset, float32, Vertex AttributeMatrix)
 - **Pipeline**: `dbscan_vv/dbscan_6_5_pipeline.json` — DataContainerReader → 6× DBSCAN → DataContainerWriter
@@ -401,7 +410,7 @@ Changes made to `src/Plugins/SimplnxCore/docs/DBSCANFilter.md`:
 
 **Status: Complete (2026-08-05).**
 
-All V&V working artifacts are stored in `dbscan_vv/` (relative to the simplnx repo root's parent directory at `/home/nyoung/Apps/DREAM3DNX-Dev/dbscan_vv/`):
+All V&V working artifacts are stored in the `dbscan_vv/` working folder outside the repository (see the referenced work file noted on the PR):
 
 | File | Purpose |
 |---|---|

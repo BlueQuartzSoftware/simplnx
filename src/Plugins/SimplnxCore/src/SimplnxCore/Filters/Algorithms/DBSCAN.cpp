@@ -143,6 +143,15 @@ public:
       bounds[5] = std::isnan(bounds[5]) ? zVal : std::max(bounds[5], zVal);
     }
 
+    // Every bound is still NaN only when no point passed the mask. Bailing out here leaves
+    // gridVoxels empty, which cluster() reports as the "no clusters detected" warning. Falling
+    // through instead would cast NaN to usize while computing dims, which is undefined behavior.
+    if(std::isnan(bounds[0]))
+    {
+      messageHelper.sendMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
+      return;
+    }
+
     // Grid Info - DO NOT MODIFY - basis for algorithm
     float32 sideLength = epsilon / std::sqrt(Dimensions);
     std::array<float32, 3> spacing = {sideLength, sideLength, sideLength};
@@ -357,6 +366,15 @@ public:
       bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
     }
 
+    // Every bound is still NaN only when no point passed the mask. Bailing out here leaves
+    // gridVoxels empty, which cluster() reports as the "no clusters detected" warning. Falling
+    // through instead would cast NaN to usize while computing dims, which is undefined behavior.
+    if(std::isnan(bounds[0]))
+    {
+      messageHelper.sendMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
+      return;
+    }
+
     // Grid Info - DO NOT MODIFY - basis for algorithm
     float32 sideLength = epsilon / std::sqrt(Dimensions);
     std::array<float32, 2> spacing = {sideLength, sideLength};
@@ -380,7 +398,7 @@ public:
         // grids and gridMap below are both sized by total cell count (occupied + empty):
         // dims[0] * dims[1], where each dims[i] ~ (bounding box per-axis range) / (epsilon / sqrt(D)).
         // grids is bit-packed (1 bit/cell); gridMap is usize/cell — both are live simultaneously.
-        // Small epsilon or active extreme outlier points on 3D data can make this allocation needlessly expensive.
+        // Small epsilon or active extreme outlier points can make this allocation needlessly expensive.
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -754,10 +772,10 @@ public:
       QuickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
       break;
     }
-    case DBSCAN::ParseOrder::Random: {
-      [[fallthrough]];
-    }
-    case DBSCAN::SeededRandom: {
+    // Random and SeededRandom shuffle identically; they differ only in where the seed comes
+    // from, which the filter resolves before handing the seed to this method.
+    case DBSCAN::ParseOrder::Random:
+    case DBSCAN::ParseOrder::SeededRandom: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
@@ -999,16 +1017,25 @@ private:
 
   void QuickSortGrids(std::vector<usize>& sorted, usize begin, usize end) const
   {
-    if(begin >= end)
+    // The two partitions are disjoint, so the order they are processed in does not change the
+    // final ordering. Recursing into the smaller partition and looping on the larger one caps
+    // stack depth at O(log n) instead of the O(n) a plain double recursion reaches when the
+    // occupancy values are already sorted ascending.
+    while(begin < end)
     {
-      return;
+      usize next = ProcessSection(sorted, begin, end);
+
+      if((next - begin) < (end - (next + 1)))
+      {
+        QuickSortGrids(sorted, begin, next);
+        begin = next + 1;
+      }
+      else
+      {
+        QuickSortGrids(sorted, next + 1, end);
+        end = next;
+      }
     }
-
-    usize next = ProcessSection(sorted, begin, end);
-
-    // Recurse
-    QuickSortGrids(sorted, begin, next);
-    QuickSortGrids(sorted, next + 1, end);
   }
 
   bool canMerge(usize pGridId, usize qGridId)
@@ -1130,7 +1157,7 @@ Result<> DBSCAN::operator()()
   messageHelper.sendMessage("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   const int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
-  m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
+  m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAM).resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
 
   return result;
 }

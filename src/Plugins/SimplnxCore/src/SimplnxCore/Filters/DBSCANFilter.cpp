@@ -77,8 +77,11 @@ Parameters DBSCANFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32Parameter>(
       k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried (i.e., the maximum acceptable distance between points to be considered `connected`)", 0.0001f));
-  params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points",
-                                                 "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
+  params.insert(std::make_unique<Int32Parameter>(
+      k_MinPoints_Key, "Minimum Points",
+      "The minimum number of points that must fall inside a single grid cell (side length = Epsilon / sqrt(Dimensions)) for that cell to seed a cluster. Note this is a per-grid-cell occupancy "
+      "threshold, not a count of neighbors within Epsilon of an individual point. See the 'Known Differences from Traditional DBSCAN' section of the documentation",
+      2));
   params.insert(
       std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
                                          ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
