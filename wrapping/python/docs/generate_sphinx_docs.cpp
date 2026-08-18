@@ -664,10 +664,8 @@ void GeneratePythonRstFiles()
       return;
     }
 
-    rstStream << plugName << " Filter API"
-              << "\n";
-    rstStream << GenerateUnderline(plugName.size(), '=') << "============="
-              << "\n\n";
+    rstStream << plugName << " Filter API" << "\n";
+    rstStream << GenerateUnderline(plugName.size(), '=') << "=============" << "\n\n";
 
     rstStream << "   This is the documentation for all filters included in the " << plugName << " module. These filters can"
               << " be used by importing the appropriate module. Each filter is contained in the module:\n\n"

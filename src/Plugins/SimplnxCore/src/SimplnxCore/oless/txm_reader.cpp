@@ -161,8 +161,7 @@ void printStreamInfo(POLE::Storage* storage, const std::string& name, const std:
   }
   else
   {
-    std::cout << fullname << "\t DIRECTORY"
-              << "\n";
+    std::cout << fullname << "\t DIRECTORY" << "\n";
   }
 }
 
@@ -207,8 +206,7 @@ void ReadImages(StoragePtrType storage)
   std::cout << path << "\t" << NoOfImages << "\n";
 
   int numImageGroups = std::ceil(static_cast<float>(NoOfImages) / 100.0f);
-  std::cout << "numImageGroups:"
-            << "\t" << numImageGroups << "\n";
+  std::cout << "numImageGroups:" << "\t" << numImageGroups << "\n";
 
   size_t bitsPerPixel = 0;
   if(DataType == FLOAT_TYPE)

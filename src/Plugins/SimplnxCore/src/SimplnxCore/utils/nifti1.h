@@ -992,8 +992,8 @@ typedef struct nifti1_extension nifti1_extension;
 
 #undef XYZT_TO_SPACE
 #undef XYZT_TO_TIME
-#define XYZT_TO_SPACE(xyzt) ((xyzt)&0x07)
-#define XYZT_TO_TIME(xyzt) ((xyzt)&0x38)
+#define XYZT_TO_SPACE(xyzt) ((xyzt) & 0x07)
+#define XYZT_TO_TIME(xyzt) ((xyzt) & 0x38)
 
 #undef SPACE_TIME_TO_XYZT
 #define SPACE_TIME_TO_XYZT(ss, tt) ((((char)(ss)) & 0x07) | (((char)(tt)) & 0x38))

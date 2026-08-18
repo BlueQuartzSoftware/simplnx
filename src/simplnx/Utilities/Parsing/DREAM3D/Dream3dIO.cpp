@@ -139,24 +139,15 @@ void WriteGeomXdmf(std::ostream& out, const ImageGeom& imageGeom, std::string_vi
 
   std::array<int64, 3> volDims = {static_cast<int64>(dims.getX()), static_cast<int64>(dims.getY()), static_cast<int64>(dims.getZ())};
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
-      << "\n";
-  out << R"(    <Topology TopologyType="3DCoRectMesh" Dimensions=")" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"ORIGIN_DXDYDZ\">"
-      << "\n";
-  out << "      <!-- Origin  Z, Y, X -->"
-      << "\n";
-  out << R"(      <DataItem Format="XML" Dimensions="3">)" << origin[2] << " " << origin[1] << " " << origin[0] << "</DataItem>"
-      << "\n";
-  out << "      <!-- DxDyDz (Spacing/Spacing) Z, Y, X -->"
-      << "\n";
-  out << R"(      <DataItem Format="XML" Dimensions="3">)" << spacing[2] << " " << spacing[1] << " " << spacing[0] << "</DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)" << "\n";
+  out << R"(    <Topology TopologyType="3DCoRectMesh" Dimensions=")" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>" << "\n";
+  out << "    <Geometry Type=\"ORIGIN_DXDYDZ\">" << "\n";
+  out << "      <!-- Origin  Z, Y, X -->" << "\n";
+  out << R"(      <DataItem Format="XML" Dimensions="3">)" << origin[2] << " " << origin[1] << " " << origin[0] << "</DataItem>" << "\n";
+  out << "      <!-- DxDyDz (Spacing/Spacing) Z, Y, X -->" << "\n";
+  out << R"(      <DataItem Format="XML" Dimensions="3">)" << spacing[2] << " " << spacing[1] << " " << spacing[0] << "</DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const RectGridGeom& rectGridGeom, std::string_view hdf5FilePath)
@@ -177,31 +168,20 @@ void WriteGeomXdmf(std::ostream& out, const RectGridGeom& rectGridGeom, std::str
 
   std::array<int64, 3> volDims = {static_cast<int64>(dims.getX()), static_cast<int64>(dims.getY()), static_cast<int64>(dims.getZ())};
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
-      << "\n";
-  out << "    <Topology TopologyType=\"3DRectMesh\" Dimensions=\"" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"VxVyVz\">"
-      << "\n";
-  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << xBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)" << "\n";
+  out << "    <Topology TopologyType=\"3DRectMesh\" Dimensions=\"" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>" << "\n";
+  out << "    <Geometry Type=\"VxVyVz\">" << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << xBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "      " << hdf5FilePath << ":/DataStructure/" << xBoundsPath.toString() << "\n";
-  out << "    </DataItem>"
-      << "\n";
-  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << yBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "    </DataItem>" << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << yBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "      " << hdf5FilePath << ":/DataStructure/" << yBoundsPath.toString() << "\n";
-  out << "    </DataItem>"
-      << "\n";
-  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << zBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "    </DataItem>" << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << zBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "      " << hdf5FilePath << ":/DataStructure/" << zBoundsPath.toString() << "\n";
-  out << "    </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
+  out << "    </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const VertexGeom& vertexGeom, std::string_view hdf5FilePath)
@@ -216,33 +196,21 @@ void WriteGeomXdmf(std::ostream& out, const VertexGeom& vertexGeom, std::string_
 
   DataPath geomPath = vertexGeom.getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)" << "\n";
 
-  out << R"(    <Topology TopologyType="Polyvertex" NumberOfElements=")" << numVerts << "\">"
-      << "\n";
-  out << R"(      <DataItem Format="HDF" NumberType="Int" Dimensions=")" << numVerts << "\">"
-      << "\n";
-  out << "        " << hdf5FilePath << ":/DataStructure/" << geomPath.toString() << "/_VertexIndices"
-      << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
+  out << R"(    <Topology TopologyType="Polyvertex" NumberOfElements=")" << numVerts << "\">" << "\n";
+  out << R"(      <DataItem Format="HDF" NumberType="Int" Dimensions=")" << numVerts << "\">" << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << geomPath.toString() << "/_VertexIndices" << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
 
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << R"(      <DataItem Format="HDF"  Dimensions=")" << numVerts << R"( 3" NumberType="Float" Precision="4">)"
-      << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << R"(      <DataItem Format="HDF"  Dimensions=")" << numVerts << R"( 3" NumberType="Float" Precision="4">)" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const EdgeGeom& edgeGeom, std::string_view hdf5FilePath)
@@ -258,30 +226,19 @@ void WriteGeomXdmf(std::ostream& out, const EdgeGeom& edgeGeom, std::string_view
   DataPath edgesPath = edgeGeom.getEdgesRef().getDataPaths().at(0);
   DataPath verticesPath = edgeGeom.getVerticesRef().getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
-      << "\n";
-  out << "    <Topology TopologyType=\"Polyline\" NodesPerElement=\"2\" NumberOfElements=\"" << numEdges << "\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numEdges << " 2\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">" << "\n";
+  out << "    <Topology TopologyType=\"Polyline\" NodesPerElement=\"2\" NumberOfElements=\"" << numEdges << "\">" << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numEdges << " 2\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << edgesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const TriangleGeom& triangleGeom, std::string_view hdf5FilePath)
@@ -297,30 +254,19 @@ void WriteGeomXdmf(std::ostream& out, const TriangleGeom& triangleGeom, std::str
   DataPath facesPath = triangleGeom.getFacesRef().getDataPaths().at(0);
   DataPath verticesPath = triangleGeom.getVerticesRef().getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
-      << "\n";
-  out << "    <Topology TopologyType=\"Triangle\" NumberOfElements=\"" << numFaces << "\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 3\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">" << "\n";
+  out << "    <Topology TopologyType=\"Triangle\" NumberOfElements=\"" << numFaces << "\">" << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 3\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << facesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const QuadGeom& quadGeom, std::string_view hdf5FilePath)
@@ -335,30 +281,19 @@ void WriteGeomXdmf(std::ostream& out, const QuadGeom& quadGeom, std::string_view
   DataPath facesPath = quadGeom.getFacesRef().getDataPaths().at(0);
   DataPath verticesPath = quadGeom.getVerticesRef().getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
-      << "\n";
-  out << "    <Topology TopologyType=\"Quadrilateral\" NumberOfElements=\"" << numFaces << "\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 4\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">" << "\n";
+  out << "    <Topology TopologyType=\"Quadrilateral\" NumberOfElements=\"" << numFaces << "\">" << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << facesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const TetrahedralGeom& tetrahedralGeom, std::string_view hdf5FilePath)
@@ -373,30 +308,19 @@ void WriteGeomXdmf(std::ostream& out, const TetrahedralGeom& tetrahedralGeom, st
   DataPath polyhedraPath = tetrahedralGeom.getPolyhedraRef().getDataPaths().at(0);
   DataPath verticesPath = tetrahedralGeom.getVerticesRef().getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
-      << "\n";
-  out << "    <Topology TopologyType=\"Tetrahedron\" NumberOfElements=\"" << numPolyhedra << "\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 4\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">" << "\n";
+  out << "    <Topology TopologyType=\"Tetrahedron\" NumberOfElements=\"" << numPolyhedra << "\">" << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << polyhedraPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteGeomXdmf(std::ostream& out, const HexahedralGeom& hexhedralGeom, std::string_view hdf5FilePath)
@@ -411,50 +335,33 @@ void WriteGeomXdmf(std::ostream& out, const HexahedralGeom& hexhedralGeom, std::
   DataPath polyhedraPath = hexhedralGeom.getPolyhedraRef().getDataPaths().at(0);
   DataPath verticesPath = hexhedralGeom.getVerticesRef().getDataPaths().at(0);
 
-  out << "  <!-- *************** START OF " << name << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
-      << "\n";
-  out << "    <Topology TopologyType=\"Hexahedron\" NumberOfElements=\"" << numPolyhedra << "\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 8\">"
-      << "\n";
+  out << "  <!-- *************** START OF " << name << " *************** -->" << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">" << "\n";
+  out << "    <Topology TopologyType=\"Hexahedron\" NumberOfElements=\"" << numPolyhedra << "\">" << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 8\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << polyhedraPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Topology>" << "\n";
+  out << "    <Geometry Type=\"XYZ\">" << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">" << "\n";
   out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
+  out << "      </DataItem>" << "\n";
+  out << "    </Geometry>" << "\n";
+  out << "" << "\n";
 }
 
 void WriteXdmfHeader(std::ostream& out)
 {
-  out << "<?xml version=\"1.0\"?>"
-      << "\n";
-  out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\"[]>"
-      << "\n";
-  out << "<Xdmf xmlns:xi=\"http://www.w3.org/2003/XInclude\" Version=\"2.2\">"
-      << "\n";
-  out << " <Domain>"
-      << "\n";
+  out << "<?xml version=\"1.0\"?>" << "\n";
+  out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\"[]>" << "\n";
+  out << "<Xdmf xmlns:xi=\"http://www.w3.org/2003/XInclude\" Version=\"2.2\">" << "\n";
+  out << " <Domain>" << "\n";
 }
 
 void WriteXdmfFooter(std::ostream& xdmf)
 {
-  xdmf << " </Domain>"
-       << "\n";
-  xdmf << "</Xdmf>"
-       << "\n";
+  xdmf << " </Domain>" << "\n";
+  xdmf << "</Xdmf>" << "\n";
 }
 
 std::string GetXdmfArrayType(usize numComp)
@@ -502,18 +409,13 @@ void WriteXdmfAttributeDataHelper(std::ostream& out, usize numComp, std::string_
   {
     out << "    <Attribute Name=\"" << arrayName << "\" ";
     out << "AttributeType=\"" << attrType << "\" ";
-    out << "Center=\"" << centering << "\">"
-        << "\n";
+    out << "Center=\"" << centering << "\">" << "\n";
     // Open the <DataItem> Tag
     out << R"(      <DataItem Format="HDF" Dimensions=")" << dimStr << "\" ";
-    out << "NumberType=\"" << xdmfTypeName << "\" "
-        << "Precision=\"" << precision << "\" >"
-        << "\n";
+    out << "NumberType=\"" << xdmfTypeName << "\" " << "Precision=\"" << precision << "\" >" << "\n";
     out << "        " << hdf5DatasetPath << "\n";
-    out << "      </DataItem>"
-        << "\n";
-    out << "    </Attribute>"
-        << "\n";
+    out << "      </DataItem>" << "\n";
+    out << "    </Attribute>" << "\n";
   }
   else if(numComp == 2 || numComp == 6)
   {
@@ -521,77 +423,48 @@ void WriteXdmfAttributeDataHelper(std::ostream& out, usize numComp, std::string_
     out << "    <Attribute Name=\"" << arrayName << " (Feature 0)\" ";
     out << "AttributeType=\"" << attrType << "\" ";
 
-    out << "Center=\"" << centering << "\">"
-        << "\n";
+    out << "Center=\"" << centering << "\">" << "\n";
     // Open the <DataItem> Tag
     out << R"(      <DataItem ItemType="HyperSlab" Dimensions=")" << dimStrHalf << "\" ";
-    out << "Type=\"HyperSlab\" "
-        << "Name=\"" << arrayName << " (Feature 0)\" >"
-        << "\n";
-    out << "        <DataItem Dimensions=\"3 2\" "
-        << "Format=\"XML\" >"
-        << "\n";
-    out << "          0        0"
-        << "\n";
-    out << "          1        1"
-        << "\n";
-    out << "          " << dimStrHalf << " </DataItem>"
-        << "\n";
+    out << "Type=\"HyperSlab\" " << "Name=\"" << arrayName << " (Feature 0)\" >" << "\n";
+    out << "        <DataItem Dimensions=\"3 2\" " << "Format=\"XML\" >" << "\n";
+    out << "          0        0" << "\n";
+    out << "          1        1" << "\n";
+    out << "          " << dimStrHalf << " </DataItem>" << "\n";
     out << "\n";
-    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" "
-        << "NumberType=\"" << xdmfTypeName << "\" "
-        << "Precision=\"" << precision << "\" >"
-        << "\n";
+    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" " << "NumberType=\"" << xdmfTypeName << "\" " << "Precision=\"" << precision << "\" >" << "\n";
 
     out << "        " << hdf5DatasetPath << "\n";
-    out << "        </DataItem>"
-        << "\n";
-    out << "      </DataItem>"
-        << "\n";
-    out << "    </Attribute>"
-        << "\n"
+    out << "        </DataItem>" << "\n";
+    out << "      </DataItem>" << "\n";
+    out << "    </Attribute>" << "\n"
         << "\n";
 
     // Second Slab
     out << "    <Attribute Name=\"" << arrayName << " (Feature 1)\" ";
     out << "AttributeType=\"" << attrType << "\" ";
 
-    out << "Center=\"" << centering << "\">"
-        << "\n";
+    out << "Center=\"" << centering << "\">" << "\n";
     // Open the <DataItem> Tag
     out << R"(      <DataItem ItemType="HyperSlab" Dimensions=")" << dimStrHalf << "\" ";
-    out << "Type=\"HyperSlab\" "
-        << "Name=\"" << arrayName << " (Feature 1)\" >"
-        << "\n";
-    out << "        <DataItem Dimensions=\"3 2\" "
-        << "Format=\"XML\" >"
-        << "\n";
+    out << "Type=\"HyperSlab\" " << "Name=\"" << arrayName << " (Feature 1)\" >" << "\n";
+    out << "        <DataItem Dimensions=\"3 2\" " << "Format=\"XML\" >" << "\n";
     out << "          0        " << (numComp / 2) << "\n";
-    out << "          1        1"
-        << "\n";
-    out << "          " << dimStrHalf << " </DataItem>"
-        << "\n";
+    out << "          1        1" << "\n";
+    out << "          " << dimStrHalf << " </DataItem>" << "\n";
     out << "\n";
-    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" "
-        << "NumberType=\"" << xdmfTypeName << "\" "
-        << "Precision=\"" << precision << "\" >"
-        << "\n";
+    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" " << "NumberType=\"" << xdmfTypeName << "\" " << "Precision=\"" << precision << "\" >" << "\n";
     out << "        " << hdf5DatasetPath << "\n";
-    out << "        </DataItem>"
-        << "\n";
-    out << "      </DataItem>"
-        << "\n";
-    out << "    </Attribute>"
-        << "\n";
+    out << "        </DataItem>" << "\n";
+    out << "      </DataItem>" << "\n";
+    out << "    </Attribute>" << "\n";
   }
 }
 
 void WriteXdmfGeomFooter(std::ostream& xdmf, std::string_view geomName)
 {
-  xdmf << "  </Grid>"
-       << "\n";
-  xdmf << "  <!-- *************** END OF " << geomName << " *************** -->"
-       << "\n";
+  xdmf << "  </Grid>" << "\n";
+  xdmf << "  <!-- *************** END OF " << geomName << " *************** -->" << "\n";
 }
 
 void WriteXdmfAttributeMatrix(std::ostream& out, const AttributeMatrix& attributeMatrix, std::string_view geomName, std::string_view hdf5FilePath, std::string_view centering)

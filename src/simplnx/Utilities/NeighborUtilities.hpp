@@ -363,17 +363,13 @@ namespace ImageDimensionalUtilities
 
 template <typename FT>
 concept FrameCellFunction = requires(FT f, int64 x, int64 y, int64 z) {
-                              {
-                                f(x, y, z)
-                                } -> std::same_as<void>;
-                            };
+  { f(x, y, z) } -> std::same_as<void>;
+};
 
 template <typename FT>
 concept FaceCellFunction = requires(FT f, int64 x, int64 y, int64 z, const std::vector<FaceNeighborType>& validNeighbors) {
-                             {
-                               f(x, y, z, validNeighbors)
-                               } -> std::same_as<void>;
-                           };
+  { f(x, y, z, validNeighbors) } -> std::same_as<void>;
+};
 
 /**
  * Process Corners:
