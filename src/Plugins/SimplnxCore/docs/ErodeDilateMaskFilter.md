@@ -15,6 +15,8 @@ turn on/off the erosion or dilation in specific directions (X, Y or Z).
 
 This filter will ONLY change the _Mask_ data array and not any of the other data arrays in the same attribute matrix.
 
+The *Number of Iterations* must be at least 1; values below 1 fail preflight.
+
 The example images below were generated **AFTER** the execution of the filter and essentially any black pixel is where the **Mask** was false and any other color is where the **Mask** is true. (The colors are the typical IPF Colors using a <001> reference direction)
 
 | Before Dilatation                      | After Dilation                       |
