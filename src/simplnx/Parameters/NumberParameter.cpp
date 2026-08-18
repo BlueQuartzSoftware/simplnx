@@ -1,5 +1,6 @@
 #include "NumberParameter.hpp"
 
+#include "simplnx/Common/NumericBounds.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 
 #include <fmt/core.h>
@@ -136,18 +137,18 @@ Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterCon
       {
         return {static_cast<T>(0)};
       }
-      if(tmp > std::numeric_limits<T>::max())
+      if(ExceedsMaxOf<T>(tmp))
       {
         return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
       }
     }
     else
     {
-      if(tmp < std::numeric_limits<T>::lowest())
+      if(ExceedsLowestOf<T>(tmp))
       {
         return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will underflow when converting to expected type. json '{}'", json.dump()));
       }
-      if(tmp > std::numeric_limits<T>::max())
+      if(ExceedsMaxOf<T>(tmp))
       {
         return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
       }
