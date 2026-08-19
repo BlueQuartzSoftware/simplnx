@@ -1094,11 +1094,16 @@ TEST_CASE("WriteDREAM3DFilter:Unwritable DataObject Type", "[ReadDREAM3DFilter][
   UnitTest::LoadPlugins();
   std::lock_guard<std::mutex> lock(m_DataMutex);
 
-  // GridMontage has a fully implemented GridMontageIO class, but that class is never registered
-  // by HDF5::DataIOManager::addCoreFactories(), so DataStructureWriter cannot resolve a factory
-  // for it and fails with error -5. This test pins that capability boundary, and covers the
-  // "DREAM3D::WriteFile returned invalid -> the AtomicFile is never committed" path: the write
-  // must fail *and* leave no file behind at the destination path.
+  // The subject of this test is the write-failure contract, not GridMontage: when
+  // DREAM3D::WriteFile returns invalid, the AtomicFile must never be committed, so the write
+  // fails *and* leaves no file behind at the destination path.
+  //
+  // GridMontage is merely a convenient way to reach that path. Its GridMontageIO class is never
+  // registered by HDF5::DataIOManager::addCoreFactories(), so DataStructureWriter cannot resolve
+  // a factory for it and fails with error -5. That is current behavior only: montage support in
+  // SIMPLNX is an open design question, and this test deliberately makes no claim about how
+  // montages ought to behave. If montages later become writable, re-point this test at another
+  // unwritable type rather than deleting it -- the write-failure contract still needs coverage.
   const fs::path exportFilePath = GetUnwritableTypeFilePath();
   std::error_code removeError;
   fs::remove(exportFilePath, removeError);
