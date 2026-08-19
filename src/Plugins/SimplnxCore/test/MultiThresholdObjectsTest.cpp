@@ -35,6 +35,14 @@ constexpr int8 k_MultiComponentCount = 3;
 
 constexpr float64 k_FloatValueIncrement = 0.01;
 
+// The "Valid Execution, Mask DataType" test thresholds the float fixture (InputFloatValue(i) == (i + 1) *
+// k_FloatValueIncrement) with GreaterThan. Tuple i is true exactly when i >= k_MaskTypeFirstTrueTuple, so the
+// comparison value is derived from the split rather than the other way around.
+constexpr usize k_MaskTypeFirstTrueTuple = 5;
+constexpr float64 k_MaskTypeComparisonValue = k_MaskTypeFirstTrueTuple * k_FloatValueIncrement;
+static_assert(k_MaskTypeFirstTrueTuple > 0 && k_MaskTypeFirstTrueTuple < static_cast<usize>(k_TupleCount),
+              "The comparison value must split the fixture so both the false and true branches are exercised");
+
 constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{0, 0, 0, 0, 0, 1, 1, 1};
 constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{0, 1, 0, 0, 0, 0, 0, 0};
 
@@ -57,7 +65,7 @@ DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
   // Create two test arrays, a float array and a int array
-  // Set up geometry for tuples, a cuboid with dimensions 20, 10, 1
+  // Set up geometry for tuples, a cuboid with dimensions k_TupleCount, 1, 1
   ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
   std::vector<usize> dims = {k_TupleCount, 1, 1};
   image->setDimensions(dims);
@@ -78,9 +86,9 @@ DataStructure CreateTestDataStructure()
 
   usize numComponents = multiComponentData->getNumberOfComponents();
 
-  // Fill the float array with {.01,.02,.03,.04,.05}
-  // Fill the int array with { 0,1,2,3,4}
-  // Fill multi-component array with {{0, 0, 0}, {1, -1, 1}, {-2, 2, -2}, {3, -3, 3}, {-4, 4, -4}}
+  // Fill the float array with {.01,.02,.03,.04,.05,.06,.07,.08}
+  // Fill the int array with {0,1,2,3,4,5,6,7}
+  // Fill multi-component array with {{0, 0, 0}, {1, -1, 1}, {-2, 2, -2}, {3, -3, 3}, {-4, 4, -4}, {5, -5, 5}, {-6, 6, -6}, {7, -7, 7}}
   for(usize i = 0; i < k_TupleCount; i++)
   {
     (*data)[i] = InputFloatValue(i); // float array
@@ -109,7 +117,7 @@ DataStructure CreateTestDataStructure2()
 {
   DataStructure dataStructure;
   // Create two test arrays, a float array and a int array
-  // Set up geometry for tuples, a cuboid with dimensions 20, 10, 1
+  // Set up geometry for tuples, a cuboid with dimensions k_TupleCount, 1, 1
   ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
   std::vector<usize> dims = {k_TupleCount, 1, 1};
   image->setDimensions(dims);
@@ -217,19 +225,23 @@ bool ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType comparisonTyp
 {
   bool expected = false;
 
+  // The filter truncates the comparison value to the input array's type and compares in that type, matching
+  // legacy DREAM3D. A threshold of 5.5 against an int32 array therefore compares against 5.
+  const int32 comparisonValue = static_cast<int32>(thresholdValue);
+
   switch(comparisonType)
   {
   case ArrayThreshold::ComparisonType::GreaterThan:
-    expected = InputIntValue(i) > thresholdValue;
+    expected = InputIntValue(i) > comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::LessThan:
-    expected = InputIntValue(i) < thresholdValue;
+    expected = InputIntValue(i) < comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_Equal:
-    expected = InputIntValue(i) == thresholdValue;
+    expected = InputIntValue(i) == comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_NotEqual:
-    expected = InputIntValue(i) != thresholdValue;
+    expected = InputIntValue(i) != comparisonValue;
     break;
   }
 
@@ -258,19 +270,25 @@ bool ExpectedFloatSingleComponentMask(ArrayThreshold::ComparisonType comparisonT
 {
   bool expected = false;
 
+  // The target array is a Float32Array and the filter truncates the comparison value to the array's type
+  // before comparing, so the oracle rounds both operands through float32 the same way. Comparing the raw
+  // float64 values instead would diverge on exact-equality thresholds such as 0.03.
+  const float32 inputValue = static_cast<float32>(InputFloatValue(i));
+  const float32 comparisonValue = static_cast<float32>(thresholdValue);
+
   switch(comparisonType)
   {
   case ArrayThreshold::ComparisonType::GreaterThan:
-    expected = InputFloatValue(i) > thresholdValue;
+    expected = inputValue > comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::LessThan:
-    expected = InputFloatValue(i) < thresholdValue;
+    expected = inputValue < comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_Equal:
-    expected = InputFloatValue(i) == thresholdValue;
+    expected = inputValue == comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_NotEqual:
-    expected = InputFloatValue(i) != thresholdValue;
+    expected = inputValue != comparisonValue;
     break;
   }
 
@@ -299,19 +317,22 @@ bool ExpectedIntMultiComponentMask(ArrayThreshold::ComparisonType comparisonType
 {
   bool expected = false;
 
+  // Same comparison-value truncation as the single-component int oracle above.
+  const int32 comparisonValue = static_cast<int32>(thresholdValue);
+
   switch(comparisonType)
   {
   case ArrayThreshold::ComparisonType::GreaterThan:
-    expected = InputIntComponentValue(i, componentIndex) > thresholdValue;
+    expected = InputIntComponentValue(i, componentIndex) > comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::LessThan:
-    expected = InputIntComponentValue(i, componentIndex) < thresholdValue;
+    expected = InputIntComponentValue(i, componentIndex) < comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_Equal:
-    expected = InputIntComponentValue(i, componentIndex) == thresholdValue;
+    expected = InputIntComponentValue(i, componentIndex) == comparisonValue;
     break;
   case ArrayThreshold::ComparisonType::Operator_NotEqual:
-    expected = InputIntComponentValue(i, componentIndex) != thresholdValue;
+    expected = InputIntComponentValue(i, componentIndex) != comparisonValue;
     break;
   }
 
@@ -422,12 +443,10 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int", "[
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
     CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
-    CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, !isInverted);
   }
   SECTION("ArrayThreshold: !=")
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
-    CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted);
     CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
 
@@ -459,12 +478,10 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float", 
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
     CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
-    CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, !isInverted);
   }
   SECTION("ArrayThreshold: !=")
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
-    CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted);
     CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
 
@@ -497,12 +514,10 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int Mult
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted, componentIndex);
-    CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, !isInverted, componentIndex);
   }
   SECTION("ArrayThreshold: !=")
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted, componentIndex);
-    CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, !isInverted, componentIndex);
     CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted, componentIndex);
   }
 
@@ -631,6 +646,47 @@ ArrayThresholdSet CreateThresholdSet5()
   return thresholdSet;
 }
 
+/**
+ * @brief Creates a ThresholdSet whose children mix a leaf ArrayThreshold with a sibling nested ArrayThresholdSet.
+ *
+ * This is the shape that triggered MultiThresholdObjectsFilter-D1, where the mask came back all-false
+ * regardless of input. Every other CreateThresholdSet* helper passes either all leaves or all nested sets, so
+ * this shape had no in-repo coverage.
+ */
+ArrayThresholdSet CreateThresholdSet6()
+{
+  ArrayThresholdSet thresholdSet;
+
+  // Threshold: Int > 2
+  auto leafThreshold = CreateArrayThreshold(k_TestArrayIntPath, ArrayThreshold::ComparisonType::GreaterThan, 2.0, false, 0, ArrayThreshold::UnionOperator::And);
+  auto nestedSet = std::make_shared<ArrayThresholdSet>(CreateThresholdSet2());
+
+  thresholdSet.setArrayThresholds({leafThreshold, nestedSet});
+
+  return thresholdSet;
+}
+
+/**
+ * @brief Creates a ThresholdSet mixing a leaf ArrayThreshold with a sibling *inverted* nested ArrayThresholdSet.
+ *
+ * This is the shape that triggered MultiThresholdObjectsFilter-D2, where inversion of a nested set reversed
+ * the tuple order instead of flipping each tuple's value.
+ */
+ArrayThresholdSet CreateThresholdSet7()
+{
+  ArrayThresholdSet thresholdSet;
+
+  // Threshold: Int > 2
+  auto leafThreshold = CreateArrayThreshold(k_TestArrayIntPath, ArrayThreshold::ComparisonType::GreaterThan, 2.0, false, 0, ArrayThreshold::UnionOperator::And);
+  auto nestedSet = std::make_shared<ArrayThresholdSet>(CreateThresholdSet2());
+  nestedSet->setUnionOperator(ArrayThreshold::UnionOperator::Or);
+  nestedSet->setInverted(true);
+
+  thresholdSet.setArrayThresholds({leafThreshold, nestedSet});
+
+  return thresholdSet;
+}
+
 void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
@@ -723,6 +779,53 @@ void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
   }
 }
 
+void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    // The leaf is the first child, so it seeds the set's accumulator; the nested set then combines with its
+    // own And union operator.
+    bool expectedLeaf = ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType::GreaterThan, i, 2.0, false);
+    bool expectedNested = ExpectedThresholdSet2Mask(i, false);
+
+    bool expected = expectedLeaf && expectedNested;
+    if(inverted)
+    {
+      expected = !expected;
+    }
+
+    REQUIRE(thresholdStore[i] == expected);
+  }
+}
+
+void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    bool expectedLeaf = ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType::GreaterThan, i, 2.0, false);
+    // The nested set is inverted, which must flip each tuple's value rather than reverse the tuple order.
+    bool expectedNested = ExpectedThresholdSet2Mask(i, true);
+
+    bool expected = expectedLeaf || expectedNested;
+    if(inverted)
+    {
+      expected = !expected;
+    }
+
+    REQUIRE(thresholdStore[i] == expected);
+  }
+}
+
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Threshold Sets", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
   UnitTest::LoadPlugins();
@@ -768,6 +871,26 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Threshold Sets", "[SimplnxC
     thresholdSet.setInverted(isInverted);
     RunThresholdSetTest(dataStructure, thresholdSet);
     CheckThresholdSet5(dataStructure, isInverted);
+  }
+
+  // Regression coverage for MultiThresholdObjectsFilter-D1: a set mixing a leaf threshold with a sibling
+  // nested set produced an all-false mask regardless of input.
+  SECTION("ArraySet 6: leaf + nested set")
+  {
+    auto thresholdSet = CreateThresholdSet6();
+    thresholdSet.setInverted(isInverted);
+    RunThresholdSetTest(dataStructure, thresholdSet);
+    CheckThresholdSet6(dataStructure, isInverted);
+  }
+
+  // Regression coverage for MultiThresholdObjectsFilter-D2: an inverted nested set reversed the tuple order
+  // instead of flipping each tuple's value.
+  SECTION("ArraySet 7: leaf + inverted nested set")
+  {
+    auto thresholdSet = CreateThresholdSet7();
+    thresholdSet.setInverted(isInverted);
+    RunThresholdSetTest(dataStructure, thresholdSet);
+    CheckThresholdSet7(dataStructure, isInverted);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -954,10 +1077,11 @@ void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresho
 
   auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
-  // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
+  // Tuples below k_MaskTypeFirstTrueTuple are false and the rest are true. The split is taken from the
+  // fixture constants so that changing k_TupleCount cannot silently make one of the two branches unreachable.
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    if(i < 5)
+    if(i < k_MaskTypeFirstTrueTuple)
     {
       REQUIRE(thresholdStore[i] == static_cast<T>(0));
     }
@@ -996,7 +1120,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Mask DataType", 
   auto threshold = std::make_shared<ArrayThreshold>();
   threshold->setArrayPath(k_TestArrayFloatPath);
   threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(0.05);
+  threshold->setComparisonValue(k_MaskTypeComparisonValue);
   thresholdSet.setArrayThresholds({threshold});
 
   args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));

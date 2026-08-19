@@ -6,64 +6,12 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <algorithm>
+#include <functional>
 
 using namespace nx::core;
 
 namespace
 {
-bool CheckEquality(float64 a, float64 b)
-{
-  // Allow tolerance for casting values to floating point precision.
-  return std::fabs(a - b) < std::numeric_limits<float32>::epsilon();
-}
-
-/**
- * @brief The OperatorLess struct replaces std::less for accuracy between floating-point numbers.
- * Approximately equal values are not determined less than or greater than the other.
- */
-struct OperatorGreater
-{
-  bool operator()(float64 value1, float64 value2)
-  {
-    return (value1 > value2) && !CheckEquality(value1, value2);
-  }
-};
-
-/**
- * @brief The OperatorLess struct replaces std::less for accuracy between floating-point numbers.
- * Approximately equal values are not determined less than or greater than the other.
- */
-struct OperatorLess
-{
-  bool operator()(float64 value1, float64 value2)
-  {
-    return (value1 < value2) && !CheckEquality(value1, value2);
-  }
-};
-
-/**
- * @brief The OperatorEqual struct replaces std::equal_to for accuracy between floating-point numbers.
- */
-struct OperatorEqual
-{
-  bool operator()(float64 value1, float64 value2)
-  {
-    return CheckEquality(value1, value2);
-  }
-};
-
-/**
- * @brief The Operator_Equality struct replaces std::not_equal_to for accuracy between floating-point numbers.
- */
-struct OperatorNotEqual
-{
-  bool operator()(float64 value1, float64 value2)
-  {
-    return !CheckEquality(value1, value2);
-  }
-};
-
 /**
  * @brief InsertThreshold is used by ThresholdSets to apply their values to the parent collection using the appropriate union operator and
  * inversion of true/false values.
@@ -72,34 +20,26 @@ struct OperatorNotEqual
  * @param newVector
  * @param inverse
  */
-void InsertThreshold(AbstractDataStore<bool>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, AbstractDataStore<bool>& newVector, bool inverse)
+void InsertThreshold(AbstractDataStore<bool>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, const AbstractDataStore<bool>& newVector, bool inverse)
 {
   usize numItems = currentVector.getNumberOfTuples();
 
-  for(usize i = 0; i < numItems; i++)
+  // Both the union operator and the inversion flag are the same for every tuple, so branch on the union
+  // operator once here rather than once per element. Comparing the incoming value against 'inverse'
+  // flips it when inversion is requested without a branch inside the loop.
+  if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
   {
-    // Store values to avoid repeated access calls
-    bool currentValue = currentVector.getValue(i);
-    bool newValue = newVector.getValue(i);
-
-    // Invert the new value if necessary before applying to the parent values.
-    if(inverse)
+    for(usize i = 0; i < numItems; i++)
     {
-      newValue = !newValue;
+      currentVector.setValue(i, currentVector.getValue(i) || (newVector.getValue(i) != inverse));
     }
-
-    // Determine output value
-    if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
+  }
+  else
+  {
+    for(usize i = 0; i < numItems; i++)
     {
-      currentValue = currentValue || newValue;
+      currentVector.setValue(i, currentVector.getValue(i) && (newVector.getValue(i) != inverse));
     }
-    else
-    {
-      currentValue = currentValue && newValue;
-    }
-
-    // Apply updated value
-    currentVector.setValue(i, currentValue);
   }
 }
 
@@ -110,7 +50,7 @@ void InsertThreshold(AbstractDataStore<bool>& currentVector, nx::core::IArrayThr
  * @param inputThresholdStore Resulting output for the target array threshold.
  * @param replaceInput The first threshold in every set has its output applied to the output regardless of union operator.
  */
-void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, AbstractDataStore<bool>& outputResultStore, AbstractDataStore<bool>& inputThresholdStore, bool replaceInput)
+void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, AbstractDataStore<bool>& outputResultStore, const AbstractDataStore<bool>& inputThresholdStore, bool replaceInput)
 {
   auto unionOperator = arrayThreshold.getUnionOperator();
   bool inverse = arrayThreshold.isInverted();
@@ -142,11 +82,15 @@ public:
   void filterDataWithComparision(const AbstractDataStore<T>& inputStore)
   {
     usize numTuples = inputStore.getNumberOfTuples();
+    // The comparison value is truncated to the input array's type and the comparison is performed in that
+    // type. This matches legacy DREAM3D (SIMPL ThresholdFilterHelper), where a threshold of 5.5 against an
+    // int32 array compares against 5, and keeps 64-bit integer comparisons exact.
+    const T comparisonValue = static_cast<T>(m_ComparisonValue);
     for(usize tupleIndex = 0; tupleIndex < numTuples; ++tupleIndex)
     {
-      auto inputValue = static_cast<ArrayThreshold::ComparisonValue>(inputStore.getComponentValue(tupleIndex, m_ComponentIndex));
+      T inputValue = inputStore.getComponentValue(tupleIndex, m_ComponentIndex);
       bool currentOutputValue = m_Output.getValue(tupleIndex); // This should only be a single component
-      bool comparison = CompT{}(inputValue, m_ComparisonValue);
+      bool comparison = CompT{}(inputValue, comparisonValue);
       if(m_Invert)
       {
         comparison = !comparison;
@@ -172,19 +116,19 @@ public:
   {
     if(m_ComparisonOperator == ArrayThreshold::ComparisonType::LessThan)
     {
-      filterDataWithComparision<OperatorLess, T>(input);
+      filterDataWithComparision<std::less<>, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::GreaterThan)
     {
-      filterDataWithComparision<OperatorGreater, T>(input);
+      filterDataWithComparision<std::greater<>, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_Equal)
     {
-      filterDataWithComparision<OperatorEqual, T>(input);
+      filterDataWithComparision<std::equal_to<>, T>(input);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_NotEqual)
     {
-      filterDataWithComparision<OperatorNotEqual, T>(input);
+      filterDataWithComparision<std::not_equal_to<>, T>(input);
     }
     else
     {
@@ -235,12 +179,25 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray);
 }
 
-void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<bool>& outputResultVector, bool replaceInput, const std::atomic_bool& shouldCancel)
+/**
+ * @brief Combines every child of a ThresholdSet into a single boolean result and returns it.
+ *
+ * The returned store holds the set's *inner* combination only; the set's own union operator and inversion
+ * flag are applied by whoever consumes the result, so that the top-level set and nested sets are handled
+ * identically. One store is allocated per nesting level and released as the recursion unwinds.
+ *
+ * @param inputComparisonSet Threshold set whose children should be combined.
+ * @param dataStructure DataStructure holding the input arrays.
+ * @param totalTuples Number of tuples in the mask being built.
+ * @param shouldCancel Cancel flag checked between thresholds.
+ * @return Store holding the combined result for this set.
+ */
+std::shared_ptr<AbstractDataStore<bool>> ComputeThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, usize totalTuples, const std::atomic_bool& shouldCancel)
 {
-  // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultVector.getNumberOfTuples();
-  auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<bool>({totalTuples}, {1}, IDataAction::Mode::Execute);
-  AbstractDataStore<bool>& tempResultStore = *tempResultStorePtr.get();
+  // The first threshold in a set is applied with a forced Or against this accumulator, so it must start FALSE.
+  auto resultStorePtr = DataStoreUtilities::CreateDataStore<bool>({totalTuples}, {1}, IDataAction::Mode::Execute);
+  AbstractDataStore<bool>& resultStore = *resultStorePtr.get();
+  resultStore.fill(false);
 
   bool firstValueFound = false;
 
@@ -249,24 +206,28 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
   {
     if(shouldCancel)
     {
-      return;
+      return resultStorePtr;
     }
 
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      ThresholdSet(*comparisonSet, dataStructure, tempResultStore, !firstValueFound, shouldCancel);
+      auto childResultStorePtr = ComputeThresholdSet(*comparisonSet, dataStructure, totalTuples, shouldCancel);
+      if(shouldCancel)
+      {
+        return resultStorePtr;
+      }
+      ApplyThresholdValues(*comparisonSet, resultStore, *childResultStorePtr.get(), !firstValueFound);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      ThresholdValue(*comparisonValue, dataStructure, tempResultStore, !firstValueFound);
+      ThresholdValue(*comparisonValue, dataStructure, resultStore, !firstValueFound);
       firstValueFound = true;
     }
   }
 
-  // Apply resulting values to output
-  ApplyThresholdValues(inputComparisonSet, outputResultVector, tempResultStore, replaceInput);
+  return resultStorePtr;
 }
 
 struct ThresholdSetFunctor
@@ -283,14 +244,15 @@ struct ThresholdSetFunctor
     // was essentially done in the preflight part.
     auto& outputDataStore = outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize totalTuples = outputDataStore.getNumberOfTuples();
-    auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<bool>({totalTuples}, {1}, IDataAction::Mode::Execute);
-    AbstractDataStore<bool>& tempResultStore = *tempResultStorePtr.get();
-    bool replaceInput = true;
-    ThresholdSet(inputComparisonSet, dataStructure, tempResultStore, replaceInput, shouldCancel);
+    auto resultStorePtr = ComputeThresholdSet(inputComparisonSet, dataStructure, totalTuples, shouldCancel);
+    const AbstractDataStore<bool>& resultStore = *resultStorePtr.get();
 
-    for(size_t i = 0; i < totalTuples; i++)
+    // The top-level set's own inversion flag is applied here, mirroring what ApplyThresholdValues does for a
+    // nested set, while the boolean result is converted to the requested mask type.
+    const bool inverse = inputComparisonSet.isInverted();
+    for(usize i = 0; i < totalTuples; i++)
     {
-      outputDataStore.setValue(i, tempResultStore.getValue(i) ? trueValue : falseValue);
+      outputDataStore.setValue(i, (resultStore.getValue(i) != inverse) ? trueValue : falseValue);
     }
   }
 };
@@ -324,8 +286,6 @@ Result<> MultiThresholdObjects::operator()()
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;
 
   DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).replaceName(maskArrayName);
-  int32_t err = 0;
-  ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
 
   if(m_ShouldCancel)
   {
