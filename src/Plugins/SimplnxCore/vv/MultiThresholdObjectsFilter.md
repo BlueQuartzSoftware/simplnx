@@ -82,7 +82,7 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 **25 of 26 paths exercised.** Row 13 is a permanent, acceptable gap and the only one remaining. Row 25 was the gap that let `MultiThresholdObjectsFilter-D1` ship; it is now covered — see `vv/deviations/MultiThresholdObjectsFilter.md`.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` (~300 lines), plus 7 preflight-only paths in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` (~320 lines), plus 7 preflight-only paths in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp`.
 
 Two logical stages: **(a) preflight** validates the threshold set / mask-type / custom-value configuration and stages the output `CreateArrayAction`; **(b) algorithm** recursively evaluates the `ArrayThresholdSet` tree into an internal `bool` mask (per-array comparison combined inline by `ThresholdFilterHelper`, which selects an AND / OR / replace loop once per threshold, then `InsertThreshold`/`ApplyThresholdValues` for cross-node combination) and writes the result into the typed mask array via `ThresholdSetFunctor`, substituting `trueValue`/`falseValue` at that final write.
 
