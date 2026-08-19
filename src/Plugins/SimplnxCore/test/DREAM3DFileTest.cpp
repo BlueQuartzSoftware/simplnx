@@ -63,8 +63,9 @@ const fs::path k_ExportFilename2 = "export2.dream3d";
 const fs::path k_MultiExportFilename1 = "multi_export1.dream3d";
 const fs::path k_MultiExportFilename2 = "multi_export2.dream3d";
 const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
-// Each TEST_CASE runs as a separate ctest process, so tests that write a file must each use
-// their own filename to avoid cross-process races under parallel ctest.
+// Each TEST_CASE runs as a separate ctest process. Giving every file-writing case its own
+// output filename keeps them independent, so one case can never observe or clobber a file
+// another one wrote, and each can assert on its own output in isolation.
 const fs::path k_ValidParamsFilename = "write_dream3d_valid_params.dream3d";
 const fs::path k_PipelineComboFilename = "write_dream3d_pipeline_combos.dream3d";
 const fs::path k_FileDataFilename = "write_dream3d_file_data.dream3d";
