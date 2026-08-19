@@ -1,0 +1,44 @@
+{
+  "PipelineBuilder": {
+    "Name": "Multi Threshold Objects nested-set conversion fixture",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Multi Threshold Objects (Advanced)",
+    "Filter_Name": "MultiThresholdObjects2",
+    "Filter_Uuid": "{686d5393-2b02-5c86-b887-dd81a8ae80f2}",
+    "SelectedThresholds": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Thresholds": [
+        {
+          "Union Operator": 0,
+          "Attribute Array Name": "Int32",
+          "Comparison Operator": 1,
+          "Comparison Value": 20.0
+        },
+        {
+          "Union Operator": 0,
+          "Invert Comparison": true,
+          "Comparison Values": [
+            {
+              "Union Operator": 1,
+              "Attribute Array Name": "Float32",
+              "Comparison Operator": 0,
+              "Comparison Value": 0.8
+            },
+            {
+              "Union Operator": 1,
+              "Attribute Array Name": "Int32",
+              "Comparison Operator": 2,
+              "Comparison Value": 55.0
+            }
+          ]
+        }
+      ]
+    },
+    "DestinationArrayName": "TestName"
+  }
+}

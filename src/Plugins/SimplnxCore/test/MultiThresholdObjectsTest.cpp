@@ -1331,6 +1331,65 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Input Array Data
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Nested Set Conversion", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
+  // nested set, with the nested set's children joined by Or:
+  //
+  //   Int32 > 20 AND NOT( Float32 < 0.8 OR Int32 == 55 )
+  //
+  // The conversion used to flatten the nested set into the parent list and drop every union operator, which
+  // silently turned this into a four-way AND over the leaves. Both the nesting and the Or must survive.
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "MultiThresholdObjectsFilter_Nested.json";
+
+  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+  REQUIRE(pipelineResult.valid());
+
+  auto& pipeline = pipelineResult.value();
+  REQUIRE(pipeline.size() == 1);
+
+  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(pipelineFilter != nullptr);
+
+  const Arguments args = pipelineFilter->getArguments();
+  auto thresholds = args.value<ArrayThresholdSet>(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key);
+
+  auto topLevel = thresholds.getArrayThresholds();
+  REQUIRE(topLevel.size() == 2);
+
+  // Child 0: the leaf. SIMPL encodes GreaterThan as 1 and SIMPLNX as 0, so the operator must be swapped.
+  auto leaf = std::dynamic_pointer_cast<ArrayThreshold>(topLevel[0]);
+  REQUIRE(leaf != nullptr);
+  CHECK(leaf->getComparisonType() == ArrayThreshold::ComparisonType::GreaterThan);
+  CHECK(leaf->getComparisonValue() == 20.0);
+  CHECK(leaf->getArrayPath() == DataPath({"DataContainer", "CellData", "Int32"}));
+
+  // Child 1: the nested set must still be a set, still inverted, and still hold both of its own children.
+  auto nestedSet = std::dynamic_pointer_cast<ArrayThresholdSet>(topLevel[1]);
+  REQUIRE(nestedSet != nullptr);
+  CHECK(nestedSet->isInverted());
+  CHECK(nestedSet->getUnionOperator() == IArrayThreshold::UnionOperator::And);
+
+  auto nestedChildren = nestedSet->getArrayThresholds();
+  REQUIRE(nestedChildren.size() == 2);
+
+  auto nestedFirst = std::dynamic_pointer_cast<ArrayThreshold>(nestedChildren[0]);
+  REQUIRE(nestedFirst != nullptr);
+  CHECK(nestedFirst->getComparisonType() == ArrayThreshold::ComparisonType::LessThan);
+  CHECK(nestedFirst->getComparisonValue() == 0.8);
+
+  // The Or joining the nested set's children is the part the old flattening pass discarded.
+  auto nestedSecond = std::dynamic_pointer_cast<ArrayThreshold>(nestedChildren[1]);
+  REQUIRE(nestedSecond != nullptr);
+  CHECK(nestedSecond->getComparisonType() == ArrayThreshold::ComparisonType::Operator_Equal);
+  CHECK(nestedSecond->getComparisonValue() == 55.0);
+  CHECK(nestedSecond->getUnionOperator() == IArrayThreshold::UnionOperator::Or);
+}
+
 TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
