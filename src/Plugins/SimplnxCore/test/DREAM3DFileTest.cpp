@@ -23,6 +23,7 @@
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
+#include "simplnx/DataStructure/Montage/GridMontage.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
@@ -67,6 +68,7 @@ const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
 const fs::path k_ValidParamsFilename = "write_dream3d_valid_params.dream3d";
 const fs::path k_PipelineComboFilename = "write_dream3d_pipeline_combos.dream3d";
 const fs::path k_FileDataFilename = "write_dream3d_file_data.dream3d";
+const fs::path k_UnwritableTypeFilename = "write_dream3d_unwritable_type.dream3d";
 
 constexpr StringLiteral k_CellData = "Cell Data";
 constexpr StringLiteral k_DataContainer = "Data Container";
@@ -120,6 +122,7 @@ constexpr StringLiteral k_Group3Name = "Third-Level";
 constexpr StringLiteral k_AttributeMatrixName = "AttributeMatrix";
 constexpr StringLiteral k_ArrayName = "Test-Array";
 constexpr StringLiteral k_Array2Name = "Test-Array2";
+constexpr StringLiteral k_GridMontageName = "GridMontage";
 
 constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
 constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM3D-NX File";
@@ -164,6 +167,11 @@ fs::path GetPipelineComboFilePath()
 fs::path GetFileDataFilePath()
 {
   return GetTestFilePath(Constants::k_FileDataFilename);
+}
+
+fs::path GetUnwritableTypeFilePath()
+{
+  return GetTestFilePath(Constants::k_UnwritableTypeFilename);
 }
 
 fs::path GetXdmfPath(const fs::path& dream3dPath)
@@ -1076,6 +1084,46 @@ TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]"
   DataStructure dataStructure = CreateTestDataStructure();
   auto writeResult = DREAM3D::WriteFile(fs::path(), dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("WriteDREAM3DFilter:Unwritable DataObject Type", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  // GridMontage has a fully implemented GridMontageIO class, but that class is never registered
+  // by HDF5::DataIOManager::addCoreFactories(), so DataStructureWriter cannot resolve a factory
+  // for it and fails with error -5. This test pins that capability boundary, and covers the
+  // "DREAM3D::WriteFile returned invalid -> the AtomicFile is never committed" path: the write
+  // must fail *and* leave no file behind at the destination path.
+  const fs::path exportFilePath = GetUnwritableTypeFilePath();
+  std::error_code removeError;
+  fs::remove(exportFilePath, removeError);
+  REQUIRE_FALSE(fs::exists(exportFilePath));
+
+  DataStructure dataStructure;
+  REQUIRE(GridMontage::Create(dataStructure, DataNames::k_GridMontageName) != nullptr);
+
+  Arguments args;
+  WriteDREAM3DFilter filter;
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(exportFilePath));
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
+
+  // Preflight does not inspect DataObject types, so it must still succeed.
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -5);
+
+  // The AtomicFile must not have been committed.
+  REQUIRE_FALSE(fs::exists(exportFilePath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
