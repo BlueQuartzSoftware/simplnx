@@ -53,7 +53,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D1` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | fixed by this PR |
+| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1688; documented for users of prior SIMPLNX releases) |
 
 **Symptom:** On `develop`, an `ArrayThresholdSet` whose children mix at least one leaf `ArrayThreshold` with at least one nested `ArrayThresholdSet` (e.g. `AB2`: `{leaf: Int32 > 20, nestedSet: (Float32 < 0.60 OR Int32 == 55)}`) produced an all-false mask, regardless of input data. Quantified on the `AB2` fixture: **38 of 100 tuples wrong** (all forced false) vs. legacy `Threshold Objects (Advanced)` and the numpy oracle.
 
@@ -73,7 +73,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D2` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | fixed by this PR |
+| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1688; documented for users of prior SIMPLNX releases) |
 
 **Symptom:** On `develop`, a leaf combined with an inverted nested set (`AB3`: `{leaf: Int32 < 80, invertedNestedSet: NOT(Int32 > 30 AND Float32 < 0.95)}`) produced incorrect mask output. Quantified on the `AB3` fixture: **51 of 100 values differ** vs. legacy `Threshold Objects (Advanced)` and the numpy oracle. `AB3`'s shape overlaps with `D1`'s mixed-leaf/nested-set trigger, so this result is not a clean isolation of the inversion defect alone — both mechanisms plausibly contribute to the discrepancy.
 
@@ -107,8 +107,10 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 
 ## Outstanding comparison work
 
-Both legacy filters have now been run separately on representative configurations (`AB1` vs. `Threshold Objects`; `AB2`/`AB3` vs. `Threshold Objects (Advanced)`), satisfying this filter's Rewrite-classification requirement that functional equivalence be independently confirmed against both predecessors, not just one. Remaining lower-priority gaps:
+Both legacy filters have now been run separately on representative configurations (`AB1` vs. `Threshold Objects`; `AB2`/`AB3` vs. `Threshold Objects (Advanced)`), satisfying this filter's Rewrite-classification requirement that functional equivalence be independently confirmed against both predecessors, not just one.
 
-1. **Custom TRUE/FALSE mask output values** (`#669` addition) — not exercised by `AB1`–`AB3`. Compare with it left at legacy defaults first, then with custom values set.
-2. **Default mask output `DataType`** — SIMPLNX defaults to `uint8` (`#1502`); confirm what each legacy filter's default was and whether migration guidance is needed for pipelines that relied on the default rather than explicitly setting it.
-3. **A broader configuration sweep** beyond the three representative `AB1`–`AB3` shapes (e.g., deeper nesting, mixed AND/OR at multiple levels) is optional given the strong quantitative match already obtained at both 100-tuple and 50M-tuple scale, but would further reduce residual risk before COMPLETE status.
+The following configurations were **not** run against legacy. All three were reviewed at second-engineer sign-off (2026-08-19) and **accepted as residual risk** rather than treated as blocking gates: each is covered by the Class 1 analytical oracle in the in-repo test suite, and none touches the comparison or set-combination logic that `AB1`–`AB3` exercise.
+
+1. **Custom TRUE/FALSE mask output values** (`#669` addition) — not exercised by `AB1`–`AB3`. Covered analytically by `Valid Execution - Custom Values` (10 mask types). The custom values are substituted at the final typed write only; they cannot affect the boolean combination that produced the mask.
+2. **Default mask output `DataType`** — SIMPLNX defaults to `uint8` (`#1502`); what each legacy filter defaulted to has not been confirmed. Affects migration guidance for pipelines that relied on the default rather than setting it explicitly, not correctness of the mask itself. `Valid Execution, Mask DataType` covers all 10 non-boolean output types analytically.
+3. **A broader configuration sweep** beyond the three representative `AB1`–`AB3` shapes (e.g. deeper nesting, mixed AND/OR at multiple levels) — optional given the exact match already obtained at both 100-tuple and 50M-tuple scale, and given that `Valid Threshold Sets` now enumerates seven set shapes including both mixed leaf/nested-set forms.
