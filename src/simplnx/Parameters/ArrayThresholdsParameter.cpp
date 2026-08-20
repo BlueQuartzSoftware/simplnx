@@ -209,21 +209,6 @@ bool isArrayThreshold(const nlohmann::json& json)
   return !json.contains(k_ThresholdValuesKey);
 }
 
-ArrayThreshold::ComparisonType invertComparison(ArrayThreshold::ComparisonType comparison)
-{
-  switch(comparison)
-  {
-  case ArrayThreshold::ComparisonType::GreaterThan:
-    return ArrayThreshold::ComparisonType::LessThan;
-  case ArrayThreshold::ComparisonType::LessThan:
-    return ArrayThreshold::ComparisonType::GreaterThan;
-  case ArrayThreshold::ComparisonType::Operator_Equal:
-    return ArrayThreshold::ComparisonType::Operator_NotEqual;
-  default:
-    return comparison;
-  }
-}
-
 std::shared_ptr<ArrayThreshold> convertArrayThreshold(const DataPath& amPath, const nlohmann::json& json)
 {
   auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(json[k_ComparisonOperatorKey].get<int32>());
@@ -239,50 +224,16 @@ std::shared_ptr<ArrayThreshold> convertArrayThreshold(const DataPath& amPath, co
   auto daName = json[k_DataArrayNameKey].get<std::string>();
   auto daPath = amPath.createChildPath(daName);
 
+  // SIMPL and SIMPLNX agree on the union operator encoding (And = 0, Or = 1), so it carries over directly.
+  // The first threshold of a set has its union operator ignored by both implementations.
+  auto unionOperator = static_cast<IArrayThreshold::UnionOperator>(json.value(k_UnionOperatorKey.view(), 0));
+
   auto value = std::make_shared<ArrayThreshold>();
   value->setArrayPath(daPath);
   value->setComparisonType(comparisonType);
   value->setComparisonValue(comparisonValue);
+  value->setUnionOperator(unionOperator);
   return value;
-}
-
-std::vector<std::shared_ptr<ArrayThreshold>> flattenSetThreshold(const std::shared_ptr<ArrayThresholdSet>& thresholdSet, bool parentInverted = false)
-{
-  std::vector<std::shared_ptr<ArrayThreshold>> flattenedArrays;
-  auto thresholds = thresholdSet->getArrayThresholds();
-  if(thresholds.empty())
-  {
-    return {};
-  }
-
-  bool inverted = thresholdSet->isInverted();
-  if(parentInverted)
-  {
-    inverted = !inverted;
-  }
-  auto unionOperator = thresholdSet->getUnionOperator();
-
-  for(const auto& threshold : thresholds)
-  {
-    if(auto set = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold); set != nullptr)
-    {
-      auto flattened = flattenSetThreshold(set, inverted);
-      flattenedArrays.insert(flattenedArrays.end(), flattened.begin(), flattened.end());
-    }
-    else
-    {
-      auto arrayThreshold = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      if(inverted)
-      {
-        auto comparisonType = invertComparison(arrayThreshold->getComparisonType());
-        arrayThreshold->setComparisonType(comparisonType);
-        arrayThreshold->setUnionOperator(unionOperator);
-      }
-      flattenedArrays.push_back(arrayThreshold);
-    }
-  }
-
-  return flattenedArrays;
 }
 
 std::shared_ptr<ArrayThresholdSet> convertSetThreshold(const DataPath& amPath, const nlohmann::json& json)
@@ -340,9 +291,9 @@ Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> Compariso
     }
     else
     {
-      auto arrayThresholdSet = convertSetThreshold(amPath, iter);
-      auto flattenedThresholds = flattenSetThreshold(arrayThresholdSet);
-      thresholdSet.insert(thresholdSet.end(), flattenedThresholds.begin(), flattenedThresholds.end());
+      // Preserve the nested set. SIMPLNX evaluates ArrayThresholdSet trees directly, so flattening here
+      // would discard the AND/OR grouping the legacy pipeline encoded.
+      thresholdSet.push_back(convertSetThreshold(amPath, iter));
     }
   }
 

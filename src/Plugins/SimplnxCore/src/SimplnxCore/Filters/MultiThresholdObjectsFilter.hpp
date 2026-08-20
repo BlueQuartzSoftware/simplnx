@@ -37,7 +37,6 @@ public:
 
   enum ErrorCodes : int64
   {
-    UnequalComponents = -4001,
     UnequalTuples = -4002,
     CustomTrueWithBoolean = -4003,
     CustomFalseWithBoolean = -4004,

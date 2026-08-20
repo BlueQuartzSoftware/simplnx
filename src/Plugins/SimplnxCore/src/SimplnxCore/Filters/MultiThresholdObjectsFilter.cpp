@@ -164,7 +164,6 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 
   // Check for same number of tuples and components
   usize numTuples = dataArray.getNumberOfTuples();
-  usize numComponents = dataArray.getNumberOfComponents();
   for(const auto& dataPath : thresholdPaths)
   {
     const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
@@ -173,13 +172,6 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
     {
       auto errorMessage = fmt::format("Data Arrays do not have same equal number of tuples. '{}:{}' and '{}:{}'", firstDataPath.toString(), numTuples, dataPath.toString(), currentNumTuples);
       return MakePreflightErrorResult(to_underlying(ErrorCodes::UnequalTuples), errorMessage);
-    }
-    usize currentNumComponents = currentDataArray.getNumberOfComponents();
-    if(currentNumComponents != numComponents)
-    {
-      auto errorMessage =
-          fmt::format("Data Arrays do not have same equal number of components. '{}:{}' and '{}:{}'", firstDataPath.toString(), numComponents, dataPath.toString(), currentNumComponents);
-      return MakePreflightErrorResult(to_underlying(ErrorCodes::UnequalComponents), errorMessage);
     }
   }
 
@@ -223,8 +215,8 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   }
 
   // Create the output boolean array
-  auto action =
-      std::make_unique<CreateArrayAction>(maskArrayType, dataArray.getIDataStoreRef().getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray.getDataFormat());
+  const auto& dataStore = dataArray.getIDataStoreRef();
+  auto action = std::make_unique<CreateArrayAction>(maskArrayType, dataStore.getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray.getDataFormat());
 
   OutputActions actions;
   actions.appendAction(std::move(action));
