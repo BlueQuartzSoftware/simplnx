@@ -111,9 +111,28 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
     return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
+  // validateNumberOfTuples() only checks that the selected arrays AGREE on their tuple count, so a
+  // Feature AttributeMatrix with zero tuples satisfies it. That input is malformed - a Feature array
+  // always carries at least the index-0 "unassigned" Feature - and it is also unsafe: with Apply
+  // Phase by Phase on, the algorithm derives its phase-loop bound from
+  // *std::max_element(phases.begin(), phases.end()), and std::max_element returns end() on an empty
+  // range, so the dereference reads one past the array. Reject it here instead.
+  const auto& centroidsArray = dataStructure.getDataRefAs<IDataArray>(pCentroidsArrayPathValue);
+  if(centroidsArray.getNumberOfTuples() == 0)
+  {
+    return {MakeErrorResult<OutputActions>(-7461, fmt::format("The selected Feature arrays must contain at least one tuple, but '{}' contains {} tuples. Feature arrays carry the unassigned Feature "
+                                                              "at index 0, so a tuple count of zero means no Feature data has been computed for this geometry.",
+                                                              pCentroidsArrayPathValue.toString(), centroidsArray.getNumberOfTuples()))};
+  }
+
   const auto& surfaceFeaturesMaskArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceFeaturesArrayPathValue);
-  auto action =
-      std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1}, pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
+  // The output is explicitly initialized to false. Both algorithm paths begin with their own
+  // fill(false), but a degenerate geometry with a dimension of 0 satisfies neither the 3D nor the
+  // 2D dispatch test, so neither fill runs. Without a fill value here the DataStore is allocated
+  // with `new bool[n]` and left indeterminate, which would hand the user a garbage mask on that
+  // path. DREAM3D 6.5.171 passed an explicit `false` init value for the same reason.
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1},
+                                                    pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "false");
   resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

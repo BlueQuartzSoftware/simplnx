@@ -220,47 +220,63 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 
   std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f};
 
+  const FloatVec3 imageSpacing = imageGeometry.getSpacing();
+
+  // The 2D path drops the flat axis and reduces the bounding box to a rectangle over the two
+  // remaining in-plane axes. Everything that is indexed by axis therefore has to be remapped from
+  // the flat axis onto the two in-plane axes: the origin, the point count, the spacing, and the
+  // centroid component (centroidShift0/centroidShift1) used for both the box shrink and the
+  // classification. Note that the three checks below are deliberately independent (not chained
+  // with 'else if') so that on a degenerate geometry with more than one flat axis the winning axis
+  // is unchanged by the spacing fix: the last matching check still decides, exactly as before.
   float32 xOrigin = 0.0f;
   float32 yOrigin = 0.0f;
   int32 xPoints = 0;
   int32 yPoints = 0;
-  FloatVec3 spacing;
+  float32 xSpacing = 0.0f;
+  float32 ySpacing = 0.0f;
 
   usize centroidShift0 = 0;
   usize centroidShift1 = 1;
 
   if(imageDimensions[0] == 1)
   {
+    // X is the flat axis, so the in-plane axes are Y and Z
     xPoints = static_cast<int32>(imageDimensions[1]);
     yPoints = static_cast<int32>(imageDimensions[2]);
     xOrigin = imageOrigin[1];
     yOrigin = imageOrigin[2];
-    spacing = imageGeometry.getSpacing();
+    xSpacing = imageSpacing[1];
+    ySpacing = imageSpacing[2];
     centroidShift0 = 1;
     centroidShift1 = 2;
   }
   if(imageDimensions[1] == 1)
   {
+    // Y is the flat axis, so the in-plane axes are X and Z
     xPoints = static_cast<int32>(imageDimensions[0]);
     yPoints = static_cast<int32>(imageDimensions[2]);
     xOrigin = imageOrigin[0];
     yOrigin = imageOrigin[2];
-    spacing = imageGeometry.getSpacing();
+    xSpacing = imageSpacing[0];
+    ySpacing = imageSpacing[2];
     centroidShift0 = 0;
     centroidShift1 = 2;
   }
   if(imageDimensions[2] == 1)
   {
+    // Z is the flat axis, so the in-plane axes are X and Y
     xPoints = static_cast<int32>(imageDimensions[0]);
     yPoints = static_cast<int32>(imageDimensions[1]);
     xOrigin = imageOrigin[0];
     yOrigin = imageOrigin[1];
-    spacing = imageGeometry.getSpacing();
+    xSpacing = imageSpacing[0];
+    ySpacing = imageSpacing[1];
     centroidShift0 = 0;
     centroidShift1 = 1;
   }
 
-  std::vector<float32> boundBox = {xOrigin, xOrigin + static_cast<float32>(xPoints) * spacing[0], yOrigin, yOrigin + static_cast<float32>(yPoints) * spacing[1], 0.0f, 0.0f};
+  std::vector<float32> boundBox = {xOrigin, xOrigin + static_cast<float32>(xPoints) * xSpacing, yOrigin, yOrigin + static_cast<float32>(yPoints) * ySpacing, 0.0f, 0.0f};
 
   for(usize i = 1; i < size; i++)
   {
@@ -317,19 +333,22 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   }
   for(usize j = 1; j < size; j++)
   {
-    if(centroidsStore[3 * j] <= boundBox[0])
+    // The bounding box is expressed in the two in-plane axes, so the classification has to compare
+    // the same two centroid components that the shrink loop above used. Comparing the raw X and Y
+    // components would be wrong for every slab whose flat axis is not Z.
+    if(centroidsStore[3 * j + centroidShift0] <= boundBox[0])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j] >= boundBox[1])
+    if(centroidsStore[3 * j + centroidShift0] >= boundBox[1])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j + 1] <= boundBox[2])
+    if(centroidsStore[3 * j + centroidShift1] <= boundBox[2])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j + 1] >= boundBox[3])
+    if(centroidsStore[3 * j + centroidShift1] >= boundBox[3])
     {
       biasedFeaturesStore[j] = true;
     }
