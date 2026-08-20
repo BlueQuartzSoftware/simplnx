@@ -153,6 +153,7 @@ set(FilterList
   TriangleNormalFilter
   UncertainRegularGridSampleSurfaceMeshFilter
   VerifyTriangleWindingFilter
+  VoxelizePointCloudFilter
   WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
   WriteAvizoRectilinearCoordinateFilter
@@ -323,6 +324,7 @@ set(AlgorithmList
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
   VerifyTriangleWinding
+  VoxelizePointCloud
   WriteAbaqusHexahedron
   WriteASCIIData
   WriteAvizoRectilinearCoordinate
