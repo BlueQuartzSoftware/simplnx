@@ -377,29 +377,40 @@ void ComputeShapes::findMoments2D()
   size_t numfeatures = centroids.getNumberOfTuples();
 
   size_t xPoints = 0, yPoints = 0;
-  FloatVec3 spacing = imageGeom.getSpacing();
-
+  // The two axes that lie in the plane of the slab. The flat axis is excluded,
+  // so the in-plane spacing, origin and Centroids components must all be read
+  // through these indices; assuming X and Y produces garbage for slabs whose
+  // flat axis is X or Y. The tests are sequential rather than mutually
+  // exclusive so that the last match wins, which keeps the axis assignment
+  // consistent with the xPoints/yPoints assignment for degenerate geometries
+  // that are flat along more than one axis.
+  size_t inPlaneAxis0 = 0;
+  size_t inPlaneAxis1 = 1;
   if(imageGeom.getNumXCells() == 1)
   {
     xPoints = imageGeom.getNumYCells();
     yPoints = imageGeom.getNumZCells();
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 1;
+    inPlaneAxis1 = 2;
   }
   if(imageGeom.getNumYCells() == 1)
   {
     xPoints = imageGeom.getNumXCells();
     yPoints = imageGeom.getNumZCells();
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 0;
+    inPlaneAxis1 = 2;
   }
   if(imageGeom.getNumZCells() == 1)
   {
     xPoints = imageGeom.getNumXCells();
     yPoints = imageGeom.getNumYCells();
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 0;
+    inPlaneAxis1 = 1;
   }
 
-  float modXRes = spacing[0] * m_ScaleFactor;
-  float modYRes = spacing[1] * m_ScaleFactor;
+  FloatVec3 spacing = imageGeom.getSpacing();
+  float modXRes = spacing[inPlaneAxis0] * m_ScaleFactor;
+  float modYRes = spacing[inPlaneAxis1] * m_ScaleFactor;
 
   FloatVec3 origin = imageGeom.getOrigin();
 
@@ -420,20 +431,27 @@ void ComputeShapes::findMoments2D()
     for(size_t xPoint = 0; xPoint < xPoints; xPoint++)
     {
       int32_t gnum = featureIds[yStride + xPoint];
-      float x = static_cast<float>(xPoint * modXRes) + (origin[0] * static_cast<float>(m_ScaleFactor));
-      float y = static_cast<float>(yPoint * modYRes) + (origin[1] * static_cast<float>(m_ScaleFactor));
+      // Sample the voxel CENTER, matching the 3D branch and, more importantly,
+      // matching ComputeFeatureCentroids, which averages voxel centers to
+      // produce the Centroids these offsets are measured against. Sampling the
+      // voxel corner instead leaves a half-voxel bias in every offset, which
+      // inflates the diagonal moments and makes the off-diagonal moment
+      // non-zero even for an axis-aligned feature. Expression order matches
+      // ImageGeom::getCoordsf() exactly: idx * spacing + origin + 0.5f * spacing.
+      float x = (static_cast<float>(xPoint) * spacing[inPlaneAxis0] + origin[inPlaneAxis0] + 0.5f * spacing[inPlaneAxis0]) * static_cast<float>(m_ScaleFactor);
+      float y = (static_cast<float>(yPoint) * spacing[inPlaneAxis1] + origin[inPlaneAxis1] + 0.5f * spacing[inPlaneAxis1]) * static_cast<float>(m_ScaleFactor);
       float x1 = x + (modXRes / 4.0f);
       float x2 = x - (modXRes / 4.0f);
       float y1 = y + (modYRes / 4.0f);
       float y2 = y - (modYRes / 4.0f);
-      float xdist1 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist1 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist2 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist2 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist3 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist3 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist4 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist4 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist1 = (x1 - (centroids[gnum * 3 + inPlaneAxis0] * static_cast<float>(m_ScaleFactor)));
+      float ydist1 = (y1 - (centroids[gnum * 3 + inPlaneAxis1] * static_cast<float>(m_ScaleFactor)));
+      float xdist2 = (x1 - (centroids[gnum * 3 + inPlaneAxis0] * static_cast<float>(m_ScaleFactor)));
+      float ydist2 = (y2 - (centroids[gnum * 3 + inPlaneAxis1] * static_cast<float>(m_ScaleFactor)));
+      float xdist3 = (x2 - (centroids[gnum * 3 + inPlaneAxis0] * static_cast<float>(m_ScaleFactor)));
+      float ydist3 = (y1 - (centroids[gnum * 3 + inPlaneAxis1] * static_cast<float>(m_ScaleFactor)));
+      float xdist4 = (x2 - (centroids[gnum * 3 + inPlaneAxis0] * static_cast<float>(m_ScaleFactor)));
+      float ydist4 = (y2 - (centroids[gnum * 3 + inPlaneAxis1] * static_cast<float>(m_ScaleFactor)));
       xx = ((ydist1) * (ydist1)) + ((ydist2) * (ydist2)) + ((ydist3) * (ydist3)) + ((ydist4) * (ydist4));
       yy = ((xdist1) * (xdist1)) + ((xdist2) * (xdist2)) + ((xdist3) * (xdist3)) + ((xdist4) * (xdist4));
       xy = ((xdist1) * (ydist1)) + ((xdist2) * (ydist2)) + ((xdist3) * (ydist3)) + ((xdist4) * (ydist4));
@@ -444,7 +462,7 @@ void ComputeShapes::findMoments2D()
     }
   }
   double konst1 = static_cast<double>((modXRes / 2.0f) * (modYRes / 2.0f));
-  double konst2 = static_cast<double>(spacing[0] * spacing[1]);
+  double konst2 = static_cast<double>(spacing[inPlaneAxis0] * spacing[inPlaneAxis1]);
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
     if(m_ShouldCancel)
@@ -470,6 +488,7 @@ void ComputeShapes::findAxes()
   auto& aspectRatios = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
 
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  const auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
 
   size_t numfeatures = centroids.getNumberOfTuples();
   constexpr double multiplier = 1.0 / (4.0 * std::numbers::pi);
@@ -478,6 +497,20 @@ void ComputeShapes::findAxes()
     if(m_ShouldCancel)
     {
       return;
+    }
+
+    // A feature id that no cell references has an identically zero moment
+    // matrix, so every axis quantity derived from it is meaningless: the
+    // (A*A*A*A)/(B*C) division below would be 0/0 and produce NaN. Write zeros
+    // instead, matching the zero-initialized state of the output arrays.
+    if(volumes[featureId] == 0.0f)
+    {
+      axisLengths[3 * featureId] = 0.0f;
+      axisLengths[3 * featureId + 1] = 0.0f;
+      axisLengths[3 * featureId + 2] = 0.0f;
+      aspectRatios[2 * featureId] = 0.0f;
+      aspectRatios[2 * featureId + 1] = 0.0f;
+      continue;
     }
 
     double r1 = m_FeatureEigenVals[3 * featureId];
@@ -526,20 +559,27 @@ void ComputeShapes::findAxes2D()
   size_t numfeatures = centroids.getNumberOfTuples();
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  FloatVec3 spacing;
-
+  // The two in-plane axes, chosen exactly as in findMoments2D so that the two
+  // routines agree on which spacings the moments were built from.
+  size_t inPlaneAxis0 = 0;
+  size_t inPlaneAxis1 = 1;
   if(imageGeom.getNumXCells() == 1)
   {
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 1;
+    inPlaneAxis1 = 2;
   }
   if(imageGeom.getNumYCells() == 1)
   {
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 0;
+    inPlaneAxis1 = 2;
   }
   if(imageGeom.getNumZCells() == 1)
   {
-    spacing = imageGeom.getSpacing();
+    inPlaneAxis0 = 0;
+    inPlaneAxis1 = 1;
   }
+
+  FloatVec3 spacing = imageGeom.getSpacing();
 
   double preterm = 4.0 / std::numbers::pi;
   preterm = std::pow(preterm, 0.25);
@@ -549,6 +589,19 @@ void ComputeShapes::findAxes2D()
     if(m_ShouldCancel)
     {
       return;
+    }
+
+    // A feature id that no cell references has an identically zero moment
+    // matrix; the fallback below would hand back the ratio of two spacings as
+    // an aspect ratio for it. Write zeros instead.
+    if(volumes[i] == 0.0f)
+    {
+      axisLengths[3 * i] = 0.0f;
+      axisLengths[3 * i + 1] = 0.0f;
+      axisLengths[3 * i + 2] = 0.0f;
+      aspectRatios[2 * i] = 0.0f;
+      aspectRatios[2 * i + 1] = 0.0f;
+      continue;
     }
 
     Ixx = m_FeatureMoments[i * 6 + 0];
@@ -562,13 +615,13 @@ void ComputeShapes::findAxes2D()
       float tempScale2 = 1.0f;
       if(Ixx >= Iyy)
       {
-        tempScale1 = spacing[0];
-        tempScale2 = spacing[1];
+        tempScale1 = spacing[inPlaneAxis0];
+        tempScale2 = spacing[inPlaneAxis1];
       }
       if(Ixx < Iyy)
       {
-        tempScale1 = spacing[1];
-        tempScale2 = spacing[0];
+        tempScale1 = spacing[inPlaneAxis1];
+        tempScale2 = spacing[inPlaneAxis0];
       }
       axisLengths[3 * i] = volumes[i] / tempScale1;
       axisLengths[3 * i + 1] = volumes[i] / tempScale2;
@@ -594,6 +647,7 @@ void ComputeShapes::findAxes2D()
 void ComputeShapes::findAxisEulers()
 {
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  const auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
   auto& axisEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
 
   size_t numfeatures = centroids.getNumberOfTuples();
@@ -602,6 +656,17 @@ void ComputeShapes::findAxisEulers()
     if(m_ShouldCancel)
     {
       return;
+    }
+
+    // A feature id that no cell references has no principal axes at all; the
+    // eigenvectors of its identically zero moment matrix are an arbitrary
+    // basis, which would be reported as an arbitrary non-zero orientation.
+    if(volumes[featureId] == 0.0f)
+    {
+      axisEulerAngles[3 * featureId] = 0.0f;
+      axisEulerAngles[3 * featureId + 1] = 0.0f;
+      axisEulerAngles[3 * featureId + 2] = 0.0f;
+      continue;
     }
 
     // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
@@ -652,7 +717,9 @@ void ComputeShapes::findAxisEulers2D()
     {
       if(Ixx > Iyy)
       {
-        axisEulerAngles[3 * featureId] = nx::core::numbers::pi / 180.0F;
+        // The in-plane long axis is the local Y axis, i.e. 90 degrees from the
+        // local X axis.
+        axisEulerAngles[3 * featureId] = static_cast<float32>(nx::core::numbers::pi / 2.0);
         axisEulerAngles[3 * featureId + 1] = 0.0f;
         axisEulerAngles[3 * featureId + 2] = 0.0f;
         continue;
