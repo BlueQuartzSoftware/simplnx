@@ -19,12 +19,14 @@ class ComputeDistanceMapImpl
   DataStructure& m_DataStructure;
   const ComputeEuclideanDistMapInputValues& m_InputValues;
   std::vector<int64>& m_NearestNeighbors;
+  const std::atomic_bool& m_ShouldCancel;
 
 public:
-  ComputeDistanceMapImpl(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues, std::vector<int64>& nearestNeighbors)
+  ComputeDistanceMapImpl(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues, std::vector<int64>& nearestNeighbors, const std::atomic_bool& shouldCancel)
   : m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_NearestNeighbors(nearestNeighbors)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -125,6 +127,17 @@ public:
 
       for(int64_t z = 0; z < zpoints; ++z)
       {
+        // Check if the algorithm should cancel. The sweep runs once per Z slab per propagation
+        // pass, and the pass count grows with the largest distance in the volume, so this is the
+        // dominant cost of a long run (the seed scan in findDistanceMap() carries its own check).
+        // Cancelling here leaves the output arrays partially written (the -1 fill plus whatever
+        // distances earlier passes committed) and the filter still reports success, matching the
+        // rest of SimplnxCore.
+        if(m_ShouldCancel)
+        {
+          return;
+        }
+
         zStride = z * zBlock;
         mask[0] = mask[5] = 1;
         if(z == 0)
@@ -268,7 +281,7 @@ ComputeEuclideanDistMap::~ComputeEuclideanDistMap() noexcept = default;
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues)
+void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues, const std::atomic_bool& shouldCancel)
 {
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;
@@ -317,10 +330,28 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
+  // The seed scan below visits every cell once and probes six face neighbours per cell, so on a
+  // production volume it costs about as much as one propagation pass and must also be cancellable.
+  // The check fires at each Z-slab boundary, tracked by a running index so the per-cell cost is a
+  // single integer compare rather than a modulo.
+  const int64 cellsPerZSlab = dims[0] * dims[1];
+  int64 nextCancelCheckIndex = 0;
+
   // This entire loop finds all 3 kinds of grain boundaries,
   // Feature Boundaries, Triple Junctions, QuadPoints
   for(int64 voxelIndex = 0; voxelIndex < totalVoxels; ++voxelIndex)
   {
+    // Cancelling here returns before any distance propagation runs, so the outputs keep the -1
+    // fill plus whatever 0 seed markers were written so far, and the filter still reports success.
+    if(voxelIndex == nextCancelCheckIndex)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      nextCancelCheckIndex += cellsPerZSlab;
+    }
+
     feature = featureIdsStore[voxelIndex];
     if(feature > 0) // Ignore FeatureId = 0
     {
@@ -416,11 +447,11 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   {
     if(inputValues->CalcManhattanDist)
     {
-      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::FeatureBoundary>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::FeatureBoundary>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
     else
     {
-      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::FeatureBoundary>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::FeatureBoundary>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
   }
 
@@ -428,11 +459,11 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   {
     if(inputValues->CalcManhattanDist)
     {
-      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::TripleJunction>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::TripleJunction>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
     else
     {
-      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::TripleJunction>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::TripleJunction>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
   }
 
@@ -440,11 +471,11 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   {
     if(inputValues->CalcManhattanDist)
     {
-      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::QuadPoint>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<int32, ComputeEuclideanDistMap::MapType::QuadPoint>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
     else
     {
-      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::QuadPoint>(dataStructure, *inputValues, nearestNeighbors));
+      taskRunner.execute(ComputeDistanceMapImpl<float32, ComputeEuclideanDistMap::MapType::QuadPoint>(dataStructure, *inputValues, nearestNeighbors, shouldCancel));
     }
   }
   // Wait for tasks to complete
@@ -462,11 +493,11 @@ Result<> ComputeEuclideanDistMap::operator()()
 {
   if(m_InputValues->CalcManhattanDist)
   {
-    findDistanceMap<int32>(m_DataStructure, m_InputValues);
+    findDistanceMap<int32>(m_DataStructure, m_InputValues, m_ShouldCancel);
   }
   else
   {
-    findDistanceMap<float32>(m_DataStructure, m_InputValues);
+    findDistanceMap<float32>(m_DataStructure, m_InputValues, m_ShouldCancel);
   }
 
   return {};

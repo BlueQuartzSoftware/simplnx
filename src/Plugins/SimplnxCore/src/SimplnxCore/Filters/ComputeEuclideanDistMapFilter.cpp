@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -131,10 +132,23 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 
   if(!pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
   {
-    return {MakeErrorResult<OutputActions>(
-        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
-                            "Distance to Quadruple Points.",
-                            pFeatureIdsArrayPathValue.toString()))};
+    return {MakeErrorResult<OutputActions>(-12802, fmt::format("No output was requested for Cell Feature Ids '{}'. At least one of 'Calculate Distance to Boundaries', 'Calculate Distance to Triple "
+                                                               "Lines' or 'Calculate Distance to Quadruple Points' must be enabled.",
+                                                               pFeatureIdsArrayPathValue.toString()))};
+  }
+
+  // The propagation phase sizes its scratch arrays from the Cell Feature Ids tuple count but
+  // iterates the selected geometry's cell count, so a mismatch reads and writes out of bounds.
+  const auto pSelectedImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeometryPathValue);
+  const usize numGeometryCells = selectedImageGeom.getNumberOfCells();
+  const usize numFeatureIdsTuples = cellDataArray->getNumberOfTuples();
+  if(numFeatureIdsTuples != numGeometryCells)
+  {
+    const SizeVec3 geomDims = selectedImageGeom.getDimensions();
+    return {MakeErrorResult<OutputActions>(-12803, fmt::format("Cell Feature Ids '{}' has {} tuples but the selected Image Geometry '{}' has {} cells ({}x{}x{}). The two must match.",
+                                                               pFeatureIdsArrayPathValue.toString(), numFeatureIdsTuples, pSelectedImageGeometryPathValue.toString(), numGeometryCells, geomDims[0],
+                                                               geomDims[1], geomDims[2]))};
   }
 
   // Create the GBDistancesArray

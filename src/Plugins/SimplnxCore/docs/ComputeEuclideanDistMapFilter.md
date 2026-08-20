@@ -6,19 +6,54 @@ Statistics (Morphological)
 
 ## Description
 
-This **Filter** calculates the distance of each **Cell** from the nearest **Feature** boundary, **triple line** and/or **quadruple point**.  The following algorithm explains the process:
+This **Filter** measures how far each **Cell** is from the nearest **Feature** boundary, **triple line** and/or **quadruple point**, and writes one output array per requested category.
 
-1. Find the **Feature** that owns each **Cell** and its six face-face neighbors of each **Cell**
-2. For all **Cells** that have *at least 2* different neighbors, set their *GBEuclideanDistance* to *0*.  For all **Cells** that have *at least 3* different neighbors, set their *TJEuclideanDistance* to *0*.  For all **Cells** that have *at least 4* different neighbors, set their *QPEuclideanDistance* to *0*
-3. For each of the three *EuclideanDistace* maps, iteratively "grow" out from the **Cells** identified to have a distance of *0* by the following sub-steps:
+### Step 1 — mark the boundary Cells (the *seeds*)
 
-- Determine the **Cells** that neighbor a **Cell** of distance *0* in the current map.
-- Assign a distance of *1* to those **Cells** and track the *0* **Cell** neighbor internally as their *nearest neighbor*
-- Repeat previous two sub-steps, increasing the distances by *1* each iteration, until no **Cells** remain without a distance assigned.
+For every **Cell** whose *Feature Id* is greater than zero, the **Filter** collects the *distinct* **Feature Ids** of its six face-face neighbours that differ from the **Cell**'s own **Feature Id**. Call that count `n`. Neighbours outside the volume are not counted, but **Feature Id 0 is counted as a distinct neighbouring Feature** — a **Cell** on the edge of the *bad data* region is therefore a boundary **Cell**.
 
-    *Note:* the distances calculated at this point are "city-block" distances and not "shortest distance" distances. The nearest neighbor information is used internally by the algorithm but is not saved as an output array.
+| Condition | The Cell is a seed for |
+|---|---|
+| `n >= 1` | *Boundary Distances* |
+| `n >= 2` | *Triple Line Distances* |
+| `n >= 3` | *Quadruple Point Distances* |
 
-4. If the option *Calculate Manhattan Distance* is *false*, then the "city-block" distances are overwritten with the *Euclidean Distance* from the **Cell** to its internally tracked *nearest neighbor* **Cell** and stored in a *float* array instead of an *integer* array.
+Every seed's distance is set to *0*. Because the thresholds nest, the quadruple-point seeds are a subset of the triple-line seeds, which are a subset of the boundary seeds.
+
+### Step 2 — grow outward from the seeds
+
+Each requested map is then grown independently, one *layer* at a time. In each pass, every **Cell** that does not yet have a distance and whose *Feature Id* is greater than zero looks at its six face neighbours; if any of them already has a distance, the **Cell** adopts that neighbour's *nearest seed* and is assigned the current pass number as its distance. Passes continue until no further **Cell** can be assigned.
+
+Propagation only travels through **Cells** whose *Feature Id* is greater than zero, and it crosses **Feature** boundaries freely — the distance is measured to the nearest *boundary*, not within a single **Feature**.
+
+### Step 3 — convert to distance
+
+- If *Output arrays are Manhattan distance (int32)* is **on**, the pass numbers from Step 2 are the output. These are "city-block" (6-connected graph) distances measured in **Cells**, not in physical units, and they ignore the **Geometry**'s spacing.
+
+- If it is **off**, each **Cell**'s pass number is replaced by the straight-line physical distance — using the **Geometry**'s spacing — from the **Cell** to the *nearest seed it was assigned in Step 2*, and the result is stored as `float32`.
+
+> **Important:** the `float32` output is **not** a Euclidean distance transform. It is the straight-line distance to *the one seed the layer-by-layer growth happened to hand the **Cell***, and when several neighbours are available in the same pass the **Filter** takes the last one it examines, in the fixed order
+>
+> `+Z` beats `+Y` beats `+X` beats `-X` beats `-Y` beats `-Z`.
+>
+> That choice is a tie-break, not a search for the closest boundary, so the reported distance is always **greater than or equal to** the true distance to the nearest seed, and it can be strictly greater. A worked example: on a 10x6x1 **Image Geometry** with spacing `(1, 2, 1)` and two **Features** stacked in *Y*, the corner **Cell** `(0, 0, 0)` is reported as `4.0` even though a boundary seed sits `2.0` away, because the tie-break preferred the `+Y` neighbour over the `+X` one. If you need a true nearest-boundary distance, do not use the `float32` output of this **Filter**.
+>
+> The same tie-break is present in the *Manhattan* output, but it cannot change any value there: every neighbour available in a given pass carries the same pass number, so only the *identity* of the recorded seed differs, and that identity is not written out.
+
+### The `-1` fill value
+
+Both output types are pre-filled with `-1`, and an element keeps that value when the **Filter** never assigns it a distance. That happens in two cases:
+
+1. The **Cell**'s *Feature Id* is less than or equal to zero (*bad data*). Such **Cells** are excluded from Step 1 and Step 2 entirely.
+2. The requested category has no seeds at all, or the **Cell** cannot reach one by travelling through **Cells** with a positive *Feature Id*. A single-**Feature** volume has no boundary seeds, so *every* element of every map stays `-1`; a volume with no quadruple points leaves the whole *Quadruple Point Distances* array at `-1`.
+
+`-1` therefore means "no distance was computed here", and downstream **Filters** must not treat it as a distance of one **Cell**.
+
+### Behaviour notes
+
+- At least one of the three category options must be enabled; the **Filter** reports an error if all three are off.
+- A given category's output does not depend on which of the other two categories are also requested.
+- The *nearest seed* bookkeeping is internal and is not saved as an output array.
 
 % Auto generated parameter table will be inserted here
 
