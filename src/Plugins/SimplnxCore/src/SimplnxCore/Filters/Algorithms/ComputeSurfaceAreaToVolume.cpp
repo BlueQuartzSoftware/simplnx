@@ -123,19 +123,25 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
           //
           int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
+          // Note that a FeatureId of 0 is an ordinary *differing* id here: a face shared with a
+          // "bad data" voxel counts toward the surface area exactly like a face shared with a
+          // different Feature. Faces on the outer boundary of the geometry were skipped above and
+          // never contribute, so a Feature touching the sample edge under-reports its area.
           if(featureIdsStoreRef[neighborIndex] != currentFeatureId)
           {
-            if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // XY face shared
+            // The area of the shared face is the product of the two spacings that span the face's
+            // plane. The +/-Z neighbor shares the XY face, +/-Y shares the XZ face, +/-X the YZ face.
+            if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // -Z / +Z neighbor: XY face shared
             {
               onSurface = onSurface + spacing[0] * spacing[1];
             }
-            if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4) // YZ face shared
+            if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4) // -Y / +Y neighbor: XZ face shared
+            {
+              onSurface = onSurface + spacing[0] * spacing[2];
+            }
+            if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3) // -X / +X neighbor: YZ face shared
             {
               onSurface = onSurface + spacing[1] * spacing[2];
-            }
-            if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3) // XZ face shared
-            {
-              onSurface = onSurface + spacing[2] * spacing[0];
             }
           }
         }
@@ -145,8 +151,11 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
     }
   }
 
-  const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
-  for(usize i = 1; i < numFeatures; i++)
+  // Sphericity (Wadell 1935) is pi^(1/3) * (6 V)^(2/3) / A. The exponents must be the exact
+  // rational values: the truncated decimals 0.333333f / 0.66666f that this filter shipped with
+  // biased the result by up to ~4e-5 relative.
+  const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 1.0f / 3.0f);
+  for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
   {
     float featureVolume = voxelVol * numCells[i];
     surfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
@@ -160,7 +169,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
     for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {
       float featureVolume = voxelVol * numCells[i];
-      sphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 0.66666f)) / featureSurfaceArea[i];
+      sphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 2.0f / 3.0f)) / featureSurfaceArea[i];
     }
   }
 

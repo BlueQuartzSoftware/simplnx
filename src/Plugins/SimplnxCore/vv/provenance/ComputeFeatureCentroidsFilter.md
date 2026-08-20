@@ -6,7 +6,7 @@
 
 The prior test `SimplnxCore::ComputeFeatureCentroidsFilter` compared a freshly computed `Centroids NX` array against a **sibling `Centroids` array in the same `6_6_stats_test_v2.dream3d` file**. That reference array was itself produced by an earlier DREAM3D run, making the check a **consistency-with-self / circular oracle** (see `docs/vv_templates/oracle_classes.md` "What is NOT an oracle"). It was **retired** and replaced by the analytical fixtures below.
 
-- `6_6_stats_test_v2.tar.gz` — the centroids test no longer consumes it. The `download_test_data()` entry stays in `test/CMakeLists.txt` because five other tests still use it (`ComputeEuclideanDistMap`, `ComputeSurfaceAreaToVolume`, `ComputeFeatureNeighbors`, `ComputeFeatureSizes`, `ComputeFeaturePhases`).
+- `6_6_stats_test_v2.tar.gz` — the centroids test no longer consumes it. The `download_test_data()` entry stays in `test/CMakeLists.txt` because other tests still use it (`ComputeEuclideanDistMap` and `ComputeFeatureNeighbors` in SimplnxCore; `ComputeShapes`, `ComputeSchmids` and `AlignSectionsMutualInformation` in OrientationAnalysis). `ComputeSurfaceAreaToVolume` was on this list until its own V&V cycle (2026-08-20) retired its use of the archive.
 - `6_6_find_feature_centroids.tar.gz` — **kept**; used by `ExtractComponentAsArray` and `WriteAbaqusHexahedron` tests (the retroactive report's "orphan" claim was incorrect).
 
 ## Canonical oracle output (Class 1 — hand derivation)

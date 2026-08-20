@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -113,6 +114,22 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
                                                         "located in the cell feature attribute matrix of the selected geometry",
                                                         pNumCellsArrayPathValue.toString()));
   }
+  // The algorithm walks the ImageGeom's cell extents and indexes FeatureIds with the resulting flat
+  // index, so a FeatureIds selection whose tuple count does not cover the geometry is read out of
+  // bounds. Nothing forces the selection to come from the geometry's own cell AttributeMatrix, so
+  // this cross-check has to be made explicitly.
+  auto pInputImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pInputImageGeometryPathValue);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numGeometryCells = imageGeom.getNumberOfCells();
+  const usize numFeatureIdsTuples = featureIdsArray.getNumberOfTuples();
+  if(numFeatureIdsTuples != numGeometryCells)
+  {
+    return MakePreflightErrorResult(-12803, fmt::format("The selected Feature Ids array '{}' has {} tuples, but the selected Image Geometry '{}' has {} cells. The Feature Ids array must have exactly "
+                                                        "one tuple per cell of the selected geometry.",
+                                                        pFeatureIdsArrayPathValue.toString(), numFeatureIdsTuples, pInputImageGeometryPathValue.toString(), numGeometryCells));
+  }
+
   ShapeType tupleShape = cellFeatureData->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
