@@ -17,6 +17,13 @@ AllowShortFunctionsOnASingleLine: false
 # AlwaysBreakAfterReturnType: None
 # AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
+# This is necessary for clang-format 19. See https://github.com/llvm/llvm-project/issues/94184
+AttributeMacros:
+  - SIMPLNX_EXPORT
+  - SIMPLNXCORE_EXPORT
+  - ORIENTATIONANALYSIS_EXPORT
+  - ITKIMAGEPROCESSING_EXPORT
+  - SIMPLNX_TEMPLATE_EXPORT
 # BinPackArguments: true
 # BinPackParameters: true
 BraceWrapping:

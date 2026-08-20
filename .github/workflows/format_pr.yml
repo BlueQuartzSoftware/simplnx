@@ -16,15 +16,20 @@ jobs:
           fetch-depth: 2
       - name: Add Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Install clang-format-19
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang-format-19
+          clang-format-19 --version
       - name: Check Formatting
         id: check_format
         continue-on-error: true
         run: |
-          python3 scripts/clang_format.py --format-version 18 --commits HEAD^ HEAD
+          python3 scripts/clang_format.py --format-version 19 --commits HEAD^ HEAD
       - name: Apply Formatting
         if: steps.check_format.outcome != 'success'
         run: |
-          python3 scripts/clang_format.py --format-version 18 --modify --commits HEAD^ HEAD
+          python3 scripts/clang_format.py --format-version 19 --modify --commits HEAD^ HEAD
       - name: Add Suggestions
         if: steps.check_format.outcome != 'success'
         uses: reviewdog/action-suggester@v1
