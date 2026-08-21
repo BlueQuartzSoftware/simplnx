@@ -19,8 +19,12 @@
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <limits>
 #include <string>
 
 using namespace nx::core;
@@ -66,6 +70,97 @@ void CheckMeshIntegrity(DataStructure& dataStructure, const DataPath& triGeomPat
   for(usize i = 0; i < numVertices; i++)
   {
     REQUIRE(nodeTypeStore[i] > 0);
+  }
+
+  // A face separates exactly two DISTINCT regions. (-1,-1) would mean a face between two cells that
+  // are both outside the volume, which is the signature of the ghost shell being triangulated
+  // against itself; (a,a) would mean a face inside a single feature.
+  for(usize i = 0; i < numTriangles; i++)
+  {
+    const int32 labelA = faceLabelStore[i * 2 + 0];
+    const int32 labelB = faceLabelStore[i * 2 + 1];
+    INFO("triangle " << i << " has FaceLabels (" << labelA << ", " << labelB << ")");
+    REQUIRE(labelA != labelB);
+    REQUIRE_FALSE((labelA == -1 && labelB == -1));
+  }
+}
+
+/**
+ * @brief Asserts that the mesh lies within the source volume, and that its exterior surface lies ON
+ * the volume boundary.
+ *
+ * These are first-principles properties of a surface mesh of a gridded volume, derived from the
+ * input geometry alone - no golden file is involved, so they validate the mesher rather than merely
+ * pinning whatever it last produced.
+ *
+ * The bound is inclusive: a correct mesh touches the boundary planes exactly.
+ */
+void CheckMeshWithinVolume(const DataStructure& dataStructure, const DataPath& triGeomPath, const DataPath& faceLabelsPath, const DataPath& imageGeomPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(imageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const SizeVec3 dims = imageGeom.getDimensions();
+  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3 spacing = imageGeom.getSpacing();
+
+  const std::array<float32, 3> lo = {origin[0], origin[1], origin[2]};
+  const std::array<float32, 3> hi = {origin[0] + static_cast<float32>(dims[0]) * spacing[0], origin[1] + static_cast<float32>(dims[1]) * spacing[1],
+                                     origin[2] + static_cast<float32>(dims[2]) * spacing[2]};
+  // Tolerance has to clear float32 representation error at the coordinate magnitudes in play while
+  // staying far below the defect being guarded against, which was half a cell. The spacing term sets
+  // the physical scale; the epsilon term keeps the check from becoming flaky for volumes with a large
+  // origin, where the gap between representable floats can exceed a small absolute tolerance.
+  const float32 maxSpacing = std::max({spacing[0], spacing[1], spacing[2]});
+  const float32 maxMagnitude = std::max({std::abs(lo[0]), std::abs(lo[1]), std::abs(lo[2]), std::abs(hi[0]), std::abs(hi[1]), std::abs(hi[2])});
+  const float32 tol = std::max(1.0e-4f * maxSpacing, 8.0f * std::numeric_limits<float32>::epsilon() * maxMagnitude);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triGeomPath));
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  const usize numVertices = tri.getNumberOfVertices();
+
+  for(usize i = 0; i < numVertices; i++)
+  {
+    for(usize ax = 0; ax < 3; ax++)
+    {
+      const float32 c = vertStore[i * 3 + ax];
+      INFO("vertex " << i << " axis " << ax << " = " << c << ", volume spans [" << lo[ax] << ", " << hi[ax] << "]");
+      REQUIRE(c >= lo[ax] - tol);
+      REQUIRE(c <= hi[ax] + tol);
+    }
+  }
+
+  // Every VERTEX of an exterior triangle (one side outside the volume) must lie on the boundary
+  // surface of the volume, i.e. on at least one of the six bounding planes.
+  //
+  // Deliberately per-vertex rather than per-triangle: along a volume edge or corner the ghost-to-
+  // feature interface wraps around, so a single exterior triangle legitimately spans two different
+  // bounding planes and is not coplanar with either. Requiring the whole triangle to sit on one
+  // plane fails on real data for that reason. Spurious geometry generated inside the ghost shell
+  // still violates the per-vertex form, which is what this guards.
+  const auto& triStore = tri.getFaces()->getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+
+  for(usize i = 0; i < tri.getNumberOfFaces(); i++)
+  {
+    if(faceLabelStore[i * 2 + 0] != -1 && faceLabelStore[i * 2 + 1] != -1)
+    {
+      continue;
+    }
+    for(usize corner = 0; corner < 3; corner++)
+    {
+      const usize vertIndex = triStore[i * 3 + corner];
+      bool onBoundary = false;
+      for(usize ax = 0; ax < 3 && !onBoundary; ax++)
+      {
+        const float32 c = vertStore[vertIndex * 3 + ax];
+        onBoundary = (std::abs(c - lo[ax]) <= tol) || (std::abs(c - hi[ax]) <= tol);
+      }
+      INFO("exterior triangle " << i << " corner " << corner << " (vertex " << vertIndex << ") is not on the volume boundary: (" << vertStore[vertIndex * 3 + 0] << ", " << vertStore[vertIndex * 3 + 1]
+                                << ", " << vertStore[vertIndex * 3 + 2] << ")");
+      REQUIRE(onBoundary);
+    }
   }
 }
 
@@ -469,6 +564,18 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 
 // Hidden test: regenerate the exemplar .dream3d from the current output. Run explicitly with the tag
 // [.][M3CGenerateExemplar], then upload the file to the DREAM3D Data_Archive.
+// PROVENANCE TRIPWIRE - read before using this.
+//
+// This hidden helper writes an M3C mesh to disk. It must NOT be used to recreate a golden mesh that
+// M3C is then tested against. Doing so builds a circular oracle: the "expected" output is whatever
+// this filter last produced, so any future defect that changes the mesh is simply re-baselined as
+// correct. That is precisely how the half-cell offset and the ghost-shell surface survived - the
+// retired exemplar had frozen both, and every byte-for-byte comparison against it passed.
+//
+// M3C is validated instead by properties derived from the input geometry alone (see
+// CheckMeshIntegrity and CheckMeshWithinVolume), which fail on a wrong mesh rather than adopting it.
+// If a stored mesh is ever genuinely needed - for cross-version diffing, say - it must be validated
+// by those invariants first, and its provenance recorded.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGenerateExemplar]")
 {
   UnitTest::LoadPlugins();
@@ -490,36 +597,187 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGen
   WriteTestDataStructure(dataStructure, k_ExemplarFile);
 }
 
-TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Small IN100 structural validation", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
+  // Only the INPUT dataset is needed. The M3CSurfaceMeshingExemplar_v2 archive is no longer read -
+  // see the note below on why the golden comparison was replaced.
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
-  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar_v2.tar.gz", "M3CSurfaceMeshingExemplar_v2");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath));
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath));
-  const auto& computedGeom = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
-  const auto& exemplarGeom = exemplarDS.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
-
-  REQUIRE(computedGeom.getNumberOfVertices() == exemplarGeom.getNumberOfVertices());
-  REQUIRE(computedGeom.getNumberOfFaces() == exemplarGeom.getNumberOfFaces());
-
-  // Vertices, faces, and the face/vertex attribute arrays must match the golden reference exactly.
-  UnitTest::CompareArrays<float32>(computedGeom.getVertices(), exemplarGeom.getVertices());
-  UnitTest::CompareArrays<IGeometry::MeshIndexType>(computedGeom.getFaces(), exemplarGeom.getFaces());
-
   const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
   const DataPath nodeTypesPath = k_ExemplarMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
-  UnitTest::CompareArrays<int32>(dataStructure.getDataAs<IArray>(faceLabelsPath), exemplarDS.getDataAs<IArray>(faceLabelsPath));
-  UnitTest::CompareArrays<int8>(dataStructure.getDataAs<IArray>(nodeTypesPath), exemplarDS.getDataAs<IArray>(nodeTypesPath));
 
-  // Independent structural validation of the (default, multithreaded) output on real data.
+  // Validated against first-principles invariants rather than a stored golden mesh.
+  //
+  // The previous version of this test compared vertices, faces, FaceLabels and NodeTypes byte for
+  // byte against M3CSurfaceMeshingExemplar_v2. That exemplar was generated by this filter while it
+  // still placed roughly half of every mesh outside the source volume, so it cannot be used to
+  // validate the corrected output. Regenerating it from the fixed filter and then testing the fixed
+  // filter against it would be a circular oracle - it would pin whatever the code happens to emit
+  // rather than establish that the emitted mesh is right.
+  //
+  // The checks below are derived from the input geometry alone and would have FAILED on the old
+  // behaviour, so they validate the mesher rather than freeze it.
   CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
+  CheckMeshWithinVolume(dataStructure, k_ExemplarMeshPath, faceLabelsPath, DataPath({k_DataContainer}));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source volume", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Every cell is its own Feature, so interfaces exist along all three axes and no axis can pass by
+  // accident. A non-unit spacing and a non-zero origin are used deliberately: the two defects this
+  // guards against were a half-CELL offset and a one-CELL overhang, either of which would be masked
+  // by the common origin=0, spacing=1 case where those magnitudes coincide with round numbers.
+  auto [dimX, dimY, dimZ] = GENERATE(std::make_tuple(2, 2, 2), std::make_tuple(3, 2, 4), std::make_tuple(2, 2, 1));
+  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
+
+  DYNAMIC_SECTION("dims " << dimX << "x" << dimY << "x" << dimZ)
+  {
+    DataStructure dataStructure;
+    auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeom->setDimensions({static_cast<usize>(dimX), static_cast<usize>(dimY), static_cast<usize>(dimZ)});
+    imageGeom->setSpacing(spacing);
+    imageGeom->setOrigin(origin);
+    const std::vector<usize> tupleShape = {static_cast<usize>(dimZ), static_cast<usize>(dimY), static_cast<usize>(dimX)};
+    auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+    auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
+    auto& featureIdsRef = featureIds->getDataStoreRef();
+    for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
+    {
+      featureIdsRef[i] = static_cast<int32>(i) + 1;
+    }
+
+    M3CSurfaceMeshingFilter filter;
+    Arguments args;
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "Cell Data", "FeatureIds"})));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ExemplarMeshPath));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+    const DataPath nodeTypesPath = k_ExemplarMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
+
+    CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
+    CheckMeshWithinVolume(dataStructure, k_ExemplarMeshPath, faceLabelsPath, DataPath({"ImageGeometry"}));
+
+    // The mesh must also REACH the volume boundary on every axis, not merely stay inside it. Without
+    // this a mesher that collapsed everything to a point would satisfy the bounds check above.
+    const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
+    const auto& vertStore = tri.getVertices()->getDataStoreRef();
+    const std::array<usize, 3> dims = {static_cast<usize>(dimX), static_cast<usize>(dimY), static_cast<usize>(dimZ)};
+    for(usize ax = 0; ax < 3; ax++)
+    {
+      float32 minC = std::numeric_limits<float32>::max();
+      float32 maxC = std::numeric_limits<float32>::lowest();
+      for(usize i = 0; i < tri.getNumberOfVertices(); i++)
+      {
+        minC = std::min(minC, vertStore[i * 3 + ax]);
+        maxC = std::max(maxC, vertStore[i * 3 + ax]);
+      }
+      const float32 expectedLo = origin[ax];
+      const float32 expectedHi = origin[ax] + static_cast<float32>(dims[ax]) * spacing[ax];
+      INFO("axis " << ax << " spans [" << minC << ", " << maxC << "], volume spans [" << expectedLo << ", " << expectedHi << "]");
+      REQUIRE(minC == Approx(expectedLo));
+      REQUIRE(maxC == Approx(expectedHi));
+    }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly the bounding box", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // A volume containing one Feature has no interior interfaces at all, so the entire mesh is the
+  // exterior surface and must be exactly the bounding box of the volume - nothing inside it, nothing
+  // outside it. That makes the expected answer fully hand-derivable, independent of any stored mesh.
+  //
+  // This is the case the ghost-shell defect distorted most visibly: with six distinct sentinels the
+  // shell triangulated against itself and wrapped the box in extra surface.
+  const FloatVec3 origin(-1.0f, 3.0f, 0.5f);
+  const FloatVec3 spacing(2.0f, 0.5f, 1.5f);
+  const usize dimX = 3, dimY = 2, dimZ = 2;
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing(spacing);
+  imageGeom->setOrigin(origin);
+  const std::vector<usize> tupleShape = {dimZ, dimY, dimX};
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
+  auto& featureIdsRef = featureIds->getDataStoreRef();
+  for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
+  {
+    featureIdsRef[i] = 1;
+  }
+
+  M3CSurfaceMeshingFilter filter;
+  Arguments args;
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "Cell Data", "FeatureIds"})));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ExemplarMeshPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+
+  const std::array<float32, 3> lo = {origin[0], origin[1], origin[2]};
+  const std::array<float32, 3> hi = {origin[0] + static_cast<float32>(dimX) * spacing[0], origin[1] + static_cast<float32>(dimY) * spacing[1], origin[2] + static_cast<float32>(dimZ) * spacing[2]};
+
+  // With one feature every face must separate that feature from the outside.
+  for(usize i = 0; i < tri.getNumberOfFaces(); i++)
+  {
+    INFO("triangle " << i << " FaceLabels (" << faceLabelStore[i * 2 + 0] << ", " << faceLabelStore[i * 2 + 1] << ")");
+    REQUIRE(faceLabelStore[i * 2 + 0] == -1);
+    REQUIRE(faceLabelStore[i * 2 + 1] == 1);
+  }
+
+  // Every vertex must lie on the surface of the bounding box - on at least one of the six planes -
+  // and none may lie strictly inside it.
+  constexpr float32 k_Tol = 1.0e-4f;
+  for(usize i = 0; i < tri.getNumberOfVertices(); i++)
+  {
+    bool onBoundary = false;
+    for(usize ax = 0; ax < 3 && !onBoundary; ax++)
+    {
+      const float32 c = vertStore[i * 3 + ax];
+      onBoundary = (std::abs(c - lo[ax]) <= k_Tol) || (std::abs(c - hi[ax]) <= k_Tol);
+    }
+    INFO("vertex " << i << " (" << vertStore[i * 3 + 0] << ", " << vertStore[i * 3 + 1] << ", " << vertStore[i * 3 + 2] << ") is not on the bounding box");
+    REQUIRE(onBoundary);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

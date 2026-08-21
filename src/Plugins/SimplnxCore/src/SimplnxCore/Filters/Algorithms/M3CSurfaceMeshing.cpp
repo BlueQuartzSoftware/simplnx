@@ -95,7 +95,12 @@ struct SiteCoords
     const int64 i = static_cast<int64>(linear % fileDim0) - 1;
     const int64 j = static_cast<int64>((linear / fileDim0) % fileDim1) - 1;
     const int64 k = static_cast<int64>(linear / fileNSP) - 1;
-    return VoxelCoord{{static_cast<float>(i) * res[0] + origin[0], static_cast<float>(j) * res[1] + origin[1], static_cast<float>(k) * res[2] + origin[2]}};
+    // A site is a CELL CENTRE, not the cell's lower corner. initialize_nodes (legacy) places the 7
+    // candidate nodes of a site at +half-spacing offsets, and the marching cube spans from one site
+    // to its (+1,+1,+1) neighbour - so the interface between two adjacent cells falls on the plane
+    // midway between their centres, which is exactly their shared face. Returning the lower corner
+    // here instead shifted every vertex by half a cell, placing the mesh partly outside the volume.
+    return VoxelCoord{{(static_cast<float>(i) + 0.5f) * res[0] + origin[0], (static_cast<float>(j) + 0.5f) * res[1] + origin[1], (static_cast<float>(k) + 0.5f) * res[2] + origin[2]}};
   }
 };
 
@@ -169,11 +174,15 @@ constexpr int k_NsTable2d[20][8] = {
 
 // -----------------------------------------------------------------------------
 // Copy FeatureIds into a 1-based working grid, wrapping it in a ghost shell of
-// negative labels (-3..-8) when addSurfaceLayer is true, fill voxel coordinates,
+// negative labels when addSurfaceLayer is true, fill voxel coordinates,
 // and renumber any FeatureId==0 to maxGrainId. Returns maxGrainId (the value that
 // zeros were remapped to; callers revert it on output). Transcribed from
 // M3CEntireVolume::initialize_micro_from_grainIds.
 // -----------------------------------------------------------------------------
+// The single sentinel used for every cell of the ghost shell. Any negative value works; only the
+// sign is tested. It must be the SAME for all ghost cells - see initialize_micro.
+constexpr int32 k_GhostLabel = -3;
+
 int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize fileDim[3], const AbstractDataStore<int32>& grainIds, int32* p)
 {
   int maxGrainId = 0;
@@ -192,29 +201,34 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
   }
   else
   {
-    // Wrap the volume in a one-cell ghost shell. Ghost cells carry distinct NEGATIVE sentinel labels
-    // (-3..-8) so the marching-cubes code treats them as "outside the volume" (only the sign matters;
-    // the distinct values are a legacy convention distinguishing which face/edge of the shell a ghost
-    // cell belongs to): -3 bottom z-slice, -4/-7 the y-row pads of each interior slice, -5/-6 the
-    // per-row x-end pads, -8 top z-slice.
+    // Wrap the volume in a one-cell ghost shell. Ghost cells carry a NEGATIVE sentinel label so the
+    // marching-cubes code treats them as "outside the volume"; only the sign is ever tested.
+    //
+    // Legacy used six DISTINCT sentinels here (-3 bottom z-slice, -4/-7 the y-row pads, -5/-6 the
+    // per-row x-end pads, -8 top z-slice) to record which face or edge of the shell a ghost cell
+    // belonged to. Nothing reads that back, but the marching cubes compares labels for INEQUALITY,
+    // so neighbouring ghost cells with different sentinels looked like a material interface and were
+    // triangulated - generating surface outside the volume along the shell's own internal seams.
+    // A single shared sentinel leaves the shell internally uniform, so the only interfaces it can
+    // produce are the real ghost-to-feature ones that form the volume's exterior surface.
     usize index = 0;
     usize gIdx = 0;
 
     // Bottom wrapping slice
     for(usize i = 0; i < (fileDim[0] * fileDim[1]); ++i)
     {
-      p[++index] = -3;
+      p[++index] = k_GhostLabel;
     }
     // Bulk of the volume, wrapped per-plane and per-row
     for(usize z = 0; z < dims[2]; ++z)
     {
       for(usize i = 0; i < fileDim[0]; ++i)
       {
-        p[++index] = -4;
+        p[++index] = k_GhostLabel;
       }
       for(usize y = 0; y < dims[1]; ++y)
       {
-        p[++index] = -5; // leading surface voxel for this row
+        p[++index] = k_GhostLabel; // leading surface voxel for this row
         for(usize x = 0; x < dims[0]; ++x)
         {
           p[++index] = grainIds[gIdx++];
@@ -223,17 +237,17 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
             maxGrainId = p[index];
           }
         }
-        p[++index] = -6; // trailing surface voxel for this row
+        p[++index] = k_GhostLabel; // trailing surface voxel for this row
       }
       for(usize i = 0; i < fileDim[0]; ++i)
       {
-        p[++index] = -7;
+        p[++index] = k_GhostLabel;
       }
     }
     // Top wrapping slice
     for(usize i = 0; i < (fileDim[0] * fileDim[1]); ++i)
     {
-      p[++index] = -8;
+      p[++index] = k_GhostLabel;
     }
   }
 
