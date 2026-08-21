@@ -15,12 +15,12 @@
 | Aspect                 | Current state                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 |------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Port (faithful) of the shift search + minor rewrite of the I/O and numeric paths.** The candidate scan, memoization, stride, tie-break and accumulation are line-for-line equivalent to 6.5.171. Three material port-time deltas: shift output moved from a text file to DataArrays (#1237), the misorientation angle moved from float `acos` to double `atan2` via EbsdLib 3.1.0, and the mask type widened from `bool` to `bool \| uint8`. |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary, Class 4 (Invariant) companion** — 16 hand-built analytical fixture configurations across 9 TEST_CASEs, expected shifts and expected aligned volumes derived in closed form from the algorithm source before any run. All pass. The key structural result: the six shift-asserting oracle cases passed against **unmodified** code on first execution, independently confirming the re-derived sign convention. |
-| Code paths enumerated  | **36 of 43 exercised.** The 7 uncovered are 2 cancel-injection paths, 1 runtime-only mask error, 1 candidate-bounds rejection that is only reachable inside a documented out-of-bounds regime, and 3 pre-existing preflight errors made unreachable by parameter validation. Each is listed as its own row with a reason.                                                                                                       |
-| Tests today            | **11 TEST_CASEs / 51,803 assertions.** 9 new-for-V&V (51,565 assertions): 7 Class 1 oracle cases + 2 guard cases. 1 kept legacy-parity exemplar (209). 1 untouched SIMPL 6.4/6.5 backwards-compat (29). 1 retired (circular). Mutation-verified: 19 mutation runs, 14 killed a test, 5 survived — every survival is accounted for below (1 equivalent mutant, 1 expected non-observable, 2 runs of one explained stride limitation, 1 stated assertion-strength gap). |
-| Exemplar archive        | **`align_sections_misorientation.tar.gz` retained unchanged** (SHA512 verified against CMakeLists). Its `6_6_` file is still the legacy-parity pin; its `output_*.dream3d` file is no longer read by any test. A second archive, `align_sections.tar.gz`, was **retired** — download and sentinel both removed; nothing had read it since #1237. Provenance: `vv/provenance/align_sections_misorientation.md`. |
-| Legacy comparison      | **Run — no output deviations.** 4 fixtures, 8 binary runs (PipelineRunner 6.5.171 vs `nxrunner`), 96 element-wise checks, 0 failures. Every cell array bit-identical (Quats to 0.0 max abs diff over 12,288 elements); every shift value identical, including negative relative and cumulative shifts and the 3-pass multi-hop search. All divergences were predicted from source before the runs; **zero unpredicted divergences**. |
-| Bug flags              | **D5** (a restored 3D guard plus four new guards, converting silent garbage and two out-of-bounds reads into diagnostics — the out-of-bounds phase read was shared with legacy) and **D7** (memoization array read before its bounds check — shared with legacy, documented, deliberately not fixed). **D8** is a legacy-only defect with no SIMPLNX exposure. |
+| Oracle (confirmed)     | **Class 1 (Analytical) primary, Class 4 (Invariant) companion** — 16 hand-built fixture configurations (14 carrying the analytic pattern, 2 hand-rolled degenerate geometries for the preflight guards) across 9 TEST_CASEs: **7 Class 1 oracle cases plus 2 guard cases**. Expected shifts and expected aligned volumes were derived in closed form from the algorithm source before any run. All pass. The key structural result: the six shift-asserting oracle cases passed against **unmodified** code on first execution, independently confirming the re-derived sign convention. |
+| Code paths enumerated  | **36 of 47 exercised.** The 11 uncovered are 5 cancel-injection paths (2 in the algorithm, 3 in the shared base), 1 runtime-only mask error, 1 candidate-bounds rejection that is only reachable inside a documented out-of-bounds regime, 1 message-text variant of the -68008 guard, 2 pre-existing preflight errors made unreachable by parameter validation, and 1 pre-existing preflight error (-68063) that is **reachable but not directly tested**. Each is listed as its own row with a reason.                                                                                                       |
+| Tests today            | **11 TEST_CASEs / 51,812 assertions** (per-case counts in Test inventory): 9 new-for-V&V (51,574), 1 kept legacy-parity exemplar (209), 1 untouched SIMPL 6.4/6.5 backwards-compat (29); 1 circular test retired. Coverage shape: 7 Class 1 oracle cases, 2 guard cases, 1 legacy-parity pin, 1 argument-conversion case. Mutation-verified — 19 runs over 16 distinct mutants, 14 killed a test, 5 survived, every survival accounted for under Mutation verification. |
+| Exemplar archive        | **`align_sections_misorientation.tar.gz` retained unchanged** (SHA512 verified against CMakeLists). Its `6_6_` file is still the legacy-parity pin; its `output_*.dream3d` file is **still a golden input for the two `SimplnxCore::AlignSectionsListFilter` execution tests** (3 consumers in total), so the circular-oracle retirement achieved here is scoped to this filter's own tests — see Exemplar archive and follow-up 7. A second archive, `align_sections.tar.gz`, was **retired** — download and sentinel both removed; nothing had read it since #1237. Provenance: `vv/provenance/align_sections_misorientation.md`. |
+| Legacy comparison      | **Run — no output deviations.** 4 fixtures, 8 binary runs (PipelineRunner 6.5.171 vs `nxrunner`), **95 checks, 0 failures**, of which 18 are element-wise array comparisons (the other 77 are presence, shape and shift-value checks). Every compared cell array was **element-for-element identical** (Quats max absolute difference exactly 0.0 over 12,288 elements, integer arrays 0 differing elements — the comparison uses no tolerance of any kind); every shift value identical, including negative relative and cumulative shifts and the 3-pass multi-hop search. All divergences were predicted from source before the runs; **zero unpredicted divergences**. Log: `ww_work/AlignSectionsMisorientation/ab/ab_comparison_results.txt`. |
+| Bug flags              | **D5, D7, D8** — the three deviations whose root cause is classified `bug`. **D5**: a restored 3D guard plus four new guards, converting silent garbage and two out-of-bounds reads into diagnostics; the out-of-bounds phase read was shared with legacy and is now fixed in SIMPLNX. **D7**: memoization array read before its bounds check — shared with legacy, documented, deliberately not fixed. **D8**: `bug in 6.5.171` — the legacy shift file is left truncated on cancel; **legacy-only, no SIMPLNX exposure and nothing to fix in SIMPLNX**, but flagged here because its root cause is a bug. |
 | V&V phase              | Oracle design, RED-first implementation, mutation verification, legacy A/B, documentation and archive retirement are **complete**. **Outstanding:** second-engineer review of the oracle design and the deviation narrative; status promotion to COMPLETE. |
 
 ## Summary
@@ -31,8 +31,8 @@ that minimises the fraction of subsampled cell pairs whose misorientation exceed
 user-supplied tolerance. Verification used a **Class 1 analytical oracle**: 16 hand-built
 fixture configurations whose expected shifts, shift arrays and aligned volumes were derived in
 closed form from the algorithm source before anything was run, backed by a **legacy A/B against
-DREAM3D 6.5.171** on four fixtures. Headline result: **all 11 TEST_CASEs pass and the A/B is
-bit-identical with zero unpredicted divergences.** The pass also added five new input checks —
+DREAM3D 6.5.171** on four fixtures. Headline result: **all 11 TEST_CASEs pass and every array the
+A/B compared is element-for-element identical, with zero unpredicted divergences.** The pass also added five new input checks —
 four errors and one warning — one each for: two out-of-bounds read paths reachable from
 ordinary user input (-68006, -68008), a 3D-geometry guard that legacy had and the port had lost
 (-68005), a parameter value that silently produced meaningless output (-68007), and a crystal
@@ -41,7 +41,7 @@ structure that was silently ignored (-68009).
 ## Algorithm Relationship
 
 *Classification:* **Port (faithful)** of the shift search, with a **minor rewrite** of the I/O
-and numeric paths. ~~Rewrite | New filter~~
+and numeric paths.
 
 *Evidence:* SIMPLNX retains a distinct UUID but the same human name, and ships SIMPL 6.4/6.5
 conversion fixtures at `test/simpl_conversion/6_*/AlignSectionsMisorientationFilter.json`. The
@@ -115,7 +115,12 @@ than NaN; the top section is bit-unchanged by the run; and
 `UnitTest::CheckArraysInheritTupleDims` holds over the whole DataStructure in every case.
 
 *Encoded:* `test/AlignSectionsMisorientationTest.cpp`, `namespace AnalyticalFixtures` —
-**16 fixture configurations across 9 TEST_CASEs**, 51,565 assertions, all pass.
+**16 fixture configurations across 9 TEST_CASEs** (7 Class 1 oracle cases and 2 guard cases),
+**51,574 assertions**, all pass. Of the 16 configurations, **14 are built by
+`AnalyticalFixtures::BuildFixture` and carry the analytic pattern**; the remaining 2 — the
+`Preflight Guards` "degenerate X dimension" and "cell array tuple count" sections — are
+hand-rolled degenerate geometries with default-initialised arrays and no pattern, since those
+guards fire before any pattern is read.
 
 *Independent confirmation:* the six shift-asserting oracle cases were written against
 unmodified code and **passed on their first execution**. Since the expected shifts, including
@@ -124,14 +129,16 @@ source rather than observed, this is a genuine independent check of the derivati
 fit to observed output. The A/B then produced the same values from a *third* independent
 implementation (DREAM3D 6.5.171).
 
-*Second-engineer review:* **pending** — to be performed at PR review.
+*Second-engineer review:* **not yet performed — deliberately deferred to PR review**, with the
+reason recorded in `vv/provenance/align_sections_misorientation.md` (§Second-engineer oracle
+review). This gate is open, which is why Status reads `READY FOR REVIEW` rather than `COMPLETE`.
 
 ## Code path coverage
 
-**36 of 43 paths exercised.**
+**36 of 47 paths exercised.**
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/AlignSectionsMisorientation.cpp`
-(368 lines), plus the filter's `preflightImpl`
+(377 lines), plus the filter's `preflightImpl`
 (`AlignSectionsMisorientationFilter.cpp`, 337 lines) and the shift application in the shared
 base `src/simplnx/Utilities/AlignSections.cpp` (182 lines).
 
@@ -144,47 +151,55 @@ candidate scan, which exists in **two duplicated copies** (recording / non-recor
 |----|-------|------|-----------|
 | 1  | (a) | cancel flag already set on entry -> return empty | *Not directly tested. Requires cancel-signal injection.* |
 | 2  | (a) | max phase >= crystal-structure tuple count -> error -68008 | `Execute Guards` |
-| 3  | (a) | indexed phase with an unknown Laue class -> warning -68009, run continues | `Execute Guards` |
-| 4  | (a) | all phases valid -> no diagnostic | every oracle case |
-| 5  | (b) | UseMask true and mask instantiable -> MaskCompare built | `Class 1 Oracle Mask Semantics` |
-| 6  | (b) | UseMask true, mask path invalid at runtime -> error -53900 | *Not directly tested. Preflight makes it unreachable through the IFilter API.* |
-| 7  | (b) | UseMask false -> mask branches skipped entirely | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 8  | (c) | per-section-pair cancel check -> return | *Not directly tested. Requires cancel-signal injection.* |
-| 9  | (c) | candidate already memoized -> skipped | `Class 1 Oracle Multi Hop Convergence` (passes 2 and 3 depend on it) |
-| 10 | (c) | candidate outside the halfDim window -> skipped | *Not directly tested. Requires a shift near half the slice width, which is inside deviation D7's out-of-bounds-read regime; a test there would assert undefined behaviour.* |
-| 11 | (c) | sampled pair out of bounds -> skipped, not counted | every oracle case with a nonzero shift (drops an edge column) |
-| 12 | (c) | sampled pair in bounds -> counted | every oracle case |
-| 13 | (c) | mask both-true -> orientation comparison performed | `Class 1 Oracle Mask Semantics` |
-| 14 | (c) | mask exclusive-or -> +1 mismatch | `Class 1 Oracle Mask Semantics` |
-| 15 | (c) | mask both-false -> counted, no mismatch contribution | `Class 1 Oracle Mask Semantics` (both sections) |
-| 16 | (c) | either phase == 0 -> angle stays FLT_MAX -> mismatch | every orientation-carrier oracle case (the y-pin rows) |
-| 17 | (c) | same Laue class and in range -> EbsdLib misorientation computed | all oracle cases |
-| 18 | (c) | different Laue class -> FLT_MAX -> mismatch | `Class 1 Oracle Multi Phase And Cross Laue Class` |
-| 19 | (c) | Laue class out of ops range (999) -> FLT_MAX -> mismatch | `Execute Guards` (unknown-structure section) |
-| 20 | (c) | angle > tolerance -> mismatch | `Class 1 Oracle Misorientation Tolerance Bracket` (29 deg) |
-| 21 | (c) | angle <= tolerance -> no mismatch | `Class 1 Oracle Misorientation Tolerance Bracket` (31 deg) |
-| 22 | (c) | candidate strictly better -> accepted | all oracle cases |
-| 23 | (c) | candidate ties and wins the asymmetric OR tie-break | `Misorientation Tolerance Bracket` (31 deg), `Mask Semantics` (all-false) |
-| 24 | (c) | candidate worse -> rejected | all oracle cases |
-| 25 | (c) | re-centring loop takes another pass | `Class 1 Oracle Multi Hop Convergence` (3 passes) |
-| 26 | (c) | re-centring loop converges -> exit | all oracle cases |
-| 27 | (d) | cumulative accumulation `xShifts[iter-1] + newxshift` | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 28 | (d) | recording branch writes all three arrays at tuple `iter` | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 29 | (d) | non-recording branch: same search, no arrays created | `Class 1 Oracle Shift Application Without Shift Arrays` |
-| 30 | (d) | shift-array tuple 0 unwritten -> deterministic zeros via fill value | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 31 | (e) | non-negative shift -> forward index remap | `Class 1 Oracle Shift Accumulation And Shift Arrays` (section 1, shift (2,0)) |
-| 32 | (e) | negative shift -> reversed index remap | `Class 1 Oracle Shift Accumulation And Shift Arrays` (section 0, shift (-1,2)) |
-| 33 | (e) | source voxel in bounds -> copyTuple | all volume-asserting oracle cases |
-| 34 | (e) | source voxel off-slice -> zero fill | `Shift Accumulation` (both x edges + y edge), `Multi Hop Convergence`, `Hexagonal Laue Class Path` |
-| 35 | (e) | top section never modified | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 36 | (f) | negative tolerance -> -68007 | `Preflight Guards` |
-| 37 | (f) | Quats component count != 4 -> -68004 | *Not directly tested. The parameter's allowed component shape makes it unreachable from a pipeline or the GUI.* |
-| 38 | (f) | selected cell arrays disagree with each other -> -68063 | *Not directly tested. Pre-existing path, unchanged by this pass.* |
-| 39 | (f) | geometry missing, or has no cell data -> -68001 | *Not directly tested. The geometry selection parameter validates existence.* |
-| 40 | (f) | geometry not 3D -> -68005 | `Preflight Guards` (2 sections: Z == 1 and X == 1) |
-| 41 | (f) | cell array tuple count != geometry cell count -> -68006 | `Preflight Guards` |
-| 42 | (f) | StoreAlignmentShifts true -> create AM + 3 arrays with fill value | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 43 | (f) | StoreAlignmentShifts false -> no arrays created | `Class 1 Oracle Shift Application Without Shift Arrays` (asserts the AM is absent) |
+| 3  | (a) | same guard with an **empty** crystal-structure array -> -68008 with the "there are no valid phase values" message text instead of a valid range | *Not directly tested. Requires a zero-tuple CrystalStructures array alongside a positive phase; the message string is the only difference from path 2, which is asserted.* |
+| 4  | (a) | indexed phase with an unknown Laue class -> warning -68009, run continues | `Execute Guards` |
+| 5  | (a) | all phases valid -> no diagnostic | every oracle case |
+| 6  | (b) | UseMask true and mask instantiable -> MaskCompare built | `Class 1 Oracle Mask Semantics` |
+| 7  | (b) | UseMask true, mask path invalid at runtime -> error -53900 | *Not directly tested. Preflight makes it unreachable through the IFilter API.* |
+| 8  | (b) | UseMask false -> mask branches skipped entirely | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 9  | (c) | per-section-pair cancel check -> return | *Not directly tested. Requires cancel-signal injection.* |
+| 10 | (c) | candidate already memoized -> skipped | `Class 1 Oracle Multi Hop Convergence` (passes 2 and 3 depend on it) |
+| 11 | (c) | candidate outside the halfDim window -> skipped | *Not directly tested. Requires a shift near half the slice width, which is inside deviation D7's out-of-bounds-read regime; a test there would assert undefined behaviour.* |
+| 12 | (c) | sampled pair out of bounds -> skipped, not counted | every oracle case with a nonzero shift (drops an edge column) |
+| 13 | (c) | sampled pair in bounds -> counted | every oracle case |
+| 14 | (c) | mask both-true -> orientation comparison performed | `Class 1 Oracle Mask Semantics` |
+| 15 | (c) | mask exclusive-or -> +1 mismatch | `Class 1 Oracle Mask Semantics` |
+| 16 | (c) | mask both-false -> counted, no mismatch contribution | `Class 1 Oracle Mask Semantics` (both sections) |
+| 17 | (c) | either phase == 0 -> angle stays FLT_MAX -> mismatch | every orientation-carrier oracle case (the y-pin rows) |
+| 18 | (c) | same Laue class and in range -> EbsdLib misorientation computed | all oracle cases |
+| 19 | (c) | different Laue class -> FLT_MAX -> mismatch | `Class 1 Oracle Multi Phase And Cross Laue Class` — **partial**: the case proves cross-Laue pairs do not perturb the argmin, but does **not** assert that they are *counted* as mismatches (mutation M8 survives). See Mutation verification and follow-up 5. |
+| 20 | (c) | Laue class out of ops range (999) -> FLT_MAX -> mismatch | `Execute Guards` (unknown-structure section) |
+| 21 | (c) | angle > tolerance -> mismatch | `Class 1 Oracle Misorientation Tolerance Bracket` (29 deg) |
+| 22 | (c) | angle <= tolerance -> no mismatch | `Class 1 Oracle Misorientation Tolerance Bracket` (31 deg) |
+| 23 | (c) | candidate strictly better -> accepted | all oracle cases |
+| 24 | (c) | candidate ties and wins the asymmetric OR tie-break | `Misorientation Tolerance Bracket` (31 deg), `Mask Semantics` (all-false) |
+| 25 | (c) | candidate worse -> rejected | all oracle cases |
+| 26 | (c) | re-centring loop takes another pass | `Class 1 Oracle Multi Hop Convergence` (3 passes) |
+| 27 | (c) | re-centring loop converges -> exit | all oracle cases |
+| 28 | (d) | cumulative accumulation `xShifts[iter-1] + newxshift` | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 29 | (d) | recording branch writes all three arrays at tuple `iter` | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 30 | (d) | non-recording branch: same search, no arrays created | `Class 1 Oracle Shift Application Without Shift Arrays` |
+| 31 | (d) | shift-array tuple 0 unwritten -> deterministic zeros via fill value | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 32 | (e) | non-negative shift -> forward index remap | `Class 1 Oracle Shift Accumulation And Shift Arrays` (section 1, shift (2,0)) |
+| 33 | (e) | negative shift -> reversed index remap | `Class 1 Oracle Shift Accumulation And Shift Arrays` (section 0, shift (-1,2)) |
+| 34 | (e) | source voxel in bounds -> copyTuple | all volume-asserting oracle cases |
+| 35 | (e) | source voxel off-slice -> zero fill | `Shift Accumulation` (both x edges + y edge), `Multi Hop Convergence`, `Hexagonal Laue Class Path` |
+| 36 | (e) | top section never modified | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 37 | (e) | cancel check inside the per-array transfer loop (`AlignSections.cpp`, `AlignSectionsTransferDataImpl::convert`, the per-slice `m_Filter->getCancel()` guard) | *Not directly tested. Requires cancel-signal injection.* |
+| 38 | (e) | cancel check between `findShifts` and the transfer (`AlignSections::execute`, the `getCancel()` guard immediately after the `findShifts` result check) | *Not directly tested. Requires cancel-signal injection.* |
+| 39 | (e) | cancel check at the top of each selected-array iteration (`AlignSections::execute`, the `m_ShouldCancel` guard inside the `selectedCellArrays` loop) | *Not directly tested. Requires cancel-signal injection.* |
+| 40 | (f) | negative tolerance -> -68007 | `Preflight Guards` |
+| 41 | (f) | Quats component count != 4 -> -68004 | *Not directly tested. The parameter's allowed component shape makes it unreachable from a pipeline or the GUI.* |
+| 42 | (f) | selected cell arrays disagree with each other -> -68063 | *Not directly tested, and **reachable** — three independently selected cell arrays can disagree. The check is a single shared `DataStructure::validateNumberOfTuples` call used identically by dozens of filters; coverage is deferred to that utility rather than duplicated per filter.* |
+| 43 | (f) | geometry missing, or has no cell data -> -68001 | *Not directly tested. The geometry selection parameter validates existence.* |
+| 44 | (f) | geometry not 3D -> -68005 | `Preflight Guards` (2 sections: Z == 1 and X == 1) |
+| 45 | (f) | cell array tuple count != geometry cell count -> -68006 | `Preflight Guards` |
+| 46 | (f) | StoreAlignmentShifts true -> create AM + 3 arrays with fill value | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
+| 47 | (f) | StoreAlignmentShifts false -> no arrays created | `Class 1 Oracle Shift Application Without Shift Arrays` (asserts the AM is absent) |
+
+Line citations in this report and in the test file's comments are to the **head of this branch**.
+Where `findShifts` duplicates a construct between its recording and non-recording copies, both
+line numbers are given.
 
 ### Known coverage limitation: the sampling stride
 
@@ -212,7 +227,14 @@ only for the non-recording copy of the scan (mutation M3/M3b). Logged as a follo
 | `... Preflight Guards` | new-for-V&V | 4 SECTIONs: -68005 twice (Z == 1, X == 1), -68006, -68007. Each asserts exactly one error of the expected code. |
 | `... Execute Guards` | new-for-V&V | 2 SECTIONs: -68008 error, -68009 warning with a successful run. |
 | `AlignSectionsMisorientationFilter: SIMPL Backwards Compatibility` | kept, untouched | SIMPL 6.4 + 6.5 argument-mapping conversion, 2 DYNAMIC_SECTIONs, 29 assertions. |
-| `AlignSectionsMisorientationFilter: output test` | **retired** | Compared the three shift arrays against `output_align_sections_misorientation.dream3d`, a file captured from this filter's own output — a circular oracle that could only confirm whatever the filter did at capture time. Replaced by hand-derived Class 1 assertions on the same three arrays. |
+| `AlignSectionsMisorientationFilter: output test` | **retired** | Compared the three shift arrays against `output_align_sections_misorientation.dream3d`, a file captured from this filter's own output — a circular oracle that could only confirm whatever the filter did at capture time. Replaced by hand-derived Class 1 assertions on the same three arrays. **Note:** retiring this TEST_CASE closes the circular oracle *for this filter's own tests only*; the same file is still a golden input for two `SimplnxCore::AlignSectionsListFilter` tests (see Exemplar archive and follow-up 7). |
+
+Per-case assertion counts, recounted from `ctest -V -R "OrientationAnalysis::AlignSectionsMisorientation"`
+at the branch head (11/11 passed): 209 (Small IN100 legacy-parity), 15,400 (Shift Accumulation),
+15,373 (Shift Application Without Shift Arrays), 10,274 (Multi Hop), 63 (Tolerance Bracket),
+63 (Mask Semantics), 63 (Multi Phase And Cross Laue), 10,274 (Hexagonal), 41 (Preflight Guards),
+23 (Execute Guards), 29 (SIMPL Backwards Compatibility). **Total 51,812; the 9 new-for-V&V cases
+account for 51,574.**
 
 All non-retired tests pass at the branch head:
 
@@ -221,29 +243,58 @@ All non-retired tests pass at the branch head:
 - `ctest -R "SimplnxCore::AlignSections"` -> **6/6 passed, 0 failed** (the family
   no-regression run for the SimplnxCore consumers of the shared base).
 
+Both suite runs were executed from `ctest` in the shared build directory after rebuilding
+`OrientationAnalysisUnitTest` and `SimplnxCoreUnitTest` at the branch head; the console
+transcripts are not archived, so the reproduction command is the evidence pointer. The
+per-case counts above are reproducible with the single `ctest -V` invocation named.
+
 **OOC runs waived** per the standing program decision of 2026-08-19.
 
 ## Mutation verification
 
-19 mutation runs. Each: apply exactly one textual edit -> rebuild -> run the blind suite
-`ctest -R "OrientationAnalysis::AlignSections"` -> revert -> **prove `git diff` is empty**.
-All 19 recorded a clean revert. Evidence: `ww_work/AlignSectionsMisorientation/mutations/`.
+19 mutation runs over **16 distinct mutants**. Each run: apply exactly one textual edit -> rebuild
+-> run the blind suite `ctest -R "OrientationAnalysis::AlignSections"` -> revert -> **prove
+`git diff` is empty**. All 19 recorded a clean revert. Evidence:
+`ww_work/AlignSectionsMisorientation/mutations/` (per-mutation logs plus `COMBINED_SUMMARY.txt`).
 
-The blind suite is **15 tests**: this filter's 11 plus the 4 `AlignSectionsMutualInformation`
-tests, which is the other *OrientationAnalysis* consumer of the shared base. It does **not**
-include `AlignSectionsList` or `AlignSectionsFeatureCentroid` — those live in SimplnxCore and
-are covered instead by the `ctest -R "SimplnxCore::AlignSections"` family no-regression run
-reported under Test inventory.
+Three qualifications on those headline numbers, all verifiable from the logs:
+
+1. **The 19 runs cover 16 distinct mutants.** M2b's edit is byte-identical to M2's, M3b's to M3's,
+   and M1's to M16's; each pair was re-run to confirm reproducibility, not to test a new mutant.
+   The pairings are visible in the table below.
+2. **Run M1 is the one exception to "rebuild, 15 tests".** M1 was produced by the
+   first-generation `mutate.sh` harness: its log's build section is **empty** (the harness did not
+   record a build result) and it ran **14 tests**, because it predates the
+   `Shift Application Without Shift Arrays` case. Every one of the other 18 runs recorded
+   `build OK` and ran the full 15-test suite. The M1/M16 row below therefore scopes its no-store
+   claim to **M16**: at the time M1 ran, the no-store oracle case did not exist to be spared.
+3. **The blind suite's effective detector set is 11 tests, not 15.** All 19 edits were made in
+   `AlignSectionsMisorientation.cpp` or `AlignSectionsMisorientationFilter.cpp`, so the 4
+   `AlignSectionsMutualInformation` tests in the suite are structurally incapable of detecting
+   any of them; they are present as a no-regression check on the shared base, not as detectors.
+
+The blind suite is **15 tests** (14 for run M1, per qualification 2): this filter's 11 plus the 4
+`AlignSectionsMutualInformation` tests, which is the other *OrientationAnalysis* consumer of the
+shared base. It does **not** include `AlignSectionsList` or `AlignSectionsFeatureCentroid` — those
+live in SimplnxCore and are covered instead by the `ctest -R "SimplnxCore::AlignSections"` family
+no-regression run reported under Test inventory.
 
 The two duplicated copies of the candidate scan were targeted independently (by occurrence
 index) so that each copy's coverage could be established separately.
 
+*Harness caveat, recorded for honesty:* both harnesses infer build success from the absence of
+`": error"` in the compiler output rather than from the build's exit status, and prove the revert
+with `git diff --stat` (which sees unstaged tracked files only) while printing "working tree
+byte-identical to HEAD". The two mutations independently re-run by the review gate used a real
+build plus `git status --short` and were clean, so this is harness rigor rather than a result in
+doubt.
+
 | ID | Mutation | Outcome |
 |---|---|---|
-| M1 / M16 | accumulation sign `+` -> `-`, **recording copy** | Killed the 6 shift-asserting oracle cases. Correctly did **not** kill the legacy-parity test or the no-store oracle case, both of which run the other copy. |
+| M1 / M16 | accumulation sign `+` -> `-`, **recording copy** (one edit, run twice) | Killed the 6 shift-asserting oracle cases in both runs. Correctly did **not** kill the legacy-parity test, which runs the other copy. **M16 only:** also correctly did not kill the no-store oracle case (also the other copy) — that case did not exist when M1 ran. |
 | M17 | accumulation sign `+` -> `-`, **non-recording copy** | Killed the legacy-parity test **and** the no-store oracle case — the latter proving that case earns its place. |
-| M2 / M2b | y sampling stride 4 -> 2, recording copy | **Survived.** Explained above: exact-translation fixtures are stride-invariant by construction. |
-| M3 / M3b | y sampling stride 4 -> 2, non-recording copy | Killed the legacy-parity test only. Same explanation for the oracle cases. |
+| M2 / M2b | y sampling stride 4 -> 2, recording copy (one edit, run twice) | **Survived.** Explained above: exact-translation fixtures are stride-invariant by construction. |
+| M3 / M3b | y sampling stride 4 -> 2, non-recording copy (one edit, run twice) | Killed the legacy-parity test only. Same explanation for the oracle cases. |
 | M4 | drop the degrees-to-radians conversion | Killed 7 of 15: the legacy-parity test plus 6 oracle cases. `Mask Semantics` correctly survives — its fixture carries the identity quaternion everywhere, so no angle is ever compared against the tolerance and the conversion is irrelevant to it. |
 | M5 | tie-break `||` -> `&&` | Killed the tolerance bracket and the legacy-parity test. |
 | M6 | collapse the re-centring loop to a single pass | Killed `Multi Hop Convergence` and the legacy-parity test. |
@@ -281,6 +332,31 @@ it.
 - **SHA512:** `8a186b2e96dd94a8583eacaec768c252885d89c8f5734b6511d573235beae075971e6e81b42bb517b7cd617fc478ed394abf8ea4fe3188f50d340f90573013f4`
   (verified equal to `test/CMakeLists.txt:134`).
 - **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/align_sections_misorientation.md`
+- **Three consumers, not one.** The archive is read by:
+  1. `OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline`
+     (`test/AlignSectionsMisorientationTest.cpp:379,386`) — reads
+     `6_6_align_sections_misorientation.dream3d`, the legacy-parity pin.
+  2. `SimplnxCore::AlignSectionsListFilter: Relative Shifts execution`
+     (`src/Plugins/SimplnxCore/test/AlignSectionsListTest.cpp:41,50`) — reads
+     `output_align_sections_misorientation.dream3d` and feeds its `Relative Shifts` array into
+     `AlignSectionsListFilter`.
+  3. `SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution`
+     (`src/Plugins/SimplnxCore/test/AlignSectionsListTest.cpp:109,118`) — same file, its
+     `Cumulative Shifts` array.
+- **The circular-oracle retirement is scoped to this filter.** Retiring this filter's "output test"
+  removed the last place where `AlignSectionsMisorientationFilter` was validated against a capture
+  of its own output. It does **not** close the problem repo-wide:
+  `output_align_sections_misorientation.dream3d` was captured from this filter's output and remains
+  the **golden input** for consumers 2 and 3, so `AlignSectionsListFilter` is still exercised
+  against data this filter produced. That is out of this batch's ratified scope
+  (`AlignSectionsList` is a separate filter with its own V&V) and is recorded as follow-up 7.
+- **Cross-plugin coupling: `src/Plugins/SimplnxCore/test/CMakeLists.txt` has no
+  `download_test_data` entry for this archive.** Consumers 2 and 3 free-ride on the
+  OrientationAnalysis declaration at
+  `src/Plugins/OrientationAnalysis/test/CMakeLists.txt:134`, which is the only place the archive is
+  fetched. Two consequences: the archive **cannot** be dropped or re-cut without breaking
+  SimplnxCore tests, and a SimplnxCore-only build/test configuration would not fetch it. Recorded
+  as follow-up 7.
 - **Retired:** `align_sections.tar.gz` — download and in-test sentinel both removed. It was
   downloaded only to satisfy a sentinel expecting a legacy shift *text* file; no test had read
   its contents since #1237 replaced the file output with DataArrays. Confirmed by
@@ -302,16 +378,49 @@ legacy-layout `.dream3d` files (`Quats` float32x4 in (x,y,z,w) order, `Phases` i
 | AB3 | 32x32x2 | true shift (4,0) — forces the 3-pass search | identical; legacy also reports (4,0), not (3,0) |
 | AB4 | 32x32x3 | negative relative **and** cumulative shift | identical, including the reversed index-remap branch |
 
-**96 element-wise checks, 0 failures.** Quats bit-identical (max absolute difference 0.0 over
-12,288 elements on the 3-section fixtures); Phases and Mask identical element for element;
-every shift value identical, with the legacy text row `r` mapping to SIMPLNX tuple `r+1` and
-SIMPLNX tuple 0 all zeros. Every predicted value was **frozen in writing before the runs**
-(`ww_work/AlignSectionsMisorientation/ab_predictions.md`) and every one was confirmed;
-**zero unpredicted divergences**.
+**95 checks, 0 failures**, of which **18 are element-wise array comparisons** (the 3 cell arrays
+on each of the 4 fixtures, plus 6 in the AB1-vs-AB2 no-op section). The other 77 are 32
+array-presence checks, 12 element-count checks and 33 shift-value/structure checks. Full log:
+`ww_work/AlignSectionsMisorientation/ab/ab_comparison_results.txt` (the file also carries a
+`RESULT: ALL CHECKS PASSED` banner line, so a naive `grep -c PASS` returns 96).
+
+The comparison predicate (`ab/compare_ab.py`) uses **no tolerance of any kind** — no `allclose`,
+no `atol`, no `rtol`. Floating-point arrays are compared as
+`abs(a.astype(float64) - b.astype(float64)).max() == 0.0`; integer and boolean arrays as
+`(a != b).sum() == 0`. Quats therefore matched with a maximum absolute difference of exactly 0.0
+over 12,288 elements on the 3-section fixtures, and Phases and Mask with 0 differing elements.
+This is **exact equality on value**; it is deliberately not described as bit-identical, because a
+zero max-abs-difference does not distinguish `+0.0` from `-0.0` (immaterial here, since both sides
+zero-fill through `T(0)`). Every shift value was identical, with the legacy text row `r` mapping to
+SIMPLNX tuple `r+1` and SIMPLNX tuple 0 all zeros. Every predicted value was **frozen in writing
+before the runs** (`ww_work/AlignSectionsMisorientation/ab_predictions.md`) and every one was
+confirmed; **zero unpredicted divergences**.
 
 Two warnings appear in the `nxrunner` logs and are **harness artefacts, not filter behaviour**:
 an optional-python-plugin `ModuleNotFoundError`, and `-5432` reporting that the *writer* filter's
-optional `compression_level` key was absent from the hand-written pipeline JSON.
+optional `compression_level` key was absent from the hand-written pipeline JSON. Note that
+`ab_predictions.md` marks prediction P4 ("no errors or warnings on either side") CONFIRMED even
+though these two lines are present in all four `nxrunner` logs, and `compare_ab.py` never inspects
+the logs; P4 is correct about the *filter* and wrong about the *run*, and the honest reading is the
+disclosure in this paragraph rather than the prediction table's tick.
+
+**How strong the pre-registration evidence is.** The predictions live in
+`ww_work/AlignSectionsMisorientation/ab_predictions.md`, which is **not** under version control, so
+only file mtimes are available as proof of ordering. Round 2 (predictions P7 and P8, for AB4) is
+timestamp-proven: the file was last written 7 seconds *before* the AB4 legacy run, and it labels
+itself as a later addition. Round 1 (P1–P6) is **not** provable that way — the file's mtime is
+16:48:57, about six minutes *after* the AB1–AB3 run logs at 16:42:57–58, because appending round 2
+rewrote the whole file. The prose claim that round 1 was frozen first is therefore attested rather
+than proven, and the file's own opening line ("frozen BEFORE any comparison run was executed") is
+strictly false of the file as it now stands. What *is* provable, and is the pre-registration that
+matters for the oracle itself, is that every expected shift value is committed to git in
+`test/AlignSectionsMisorientationTest.cpp` with real commit ordering, ahead of the A/B.
+
+More generally: **all** mutation and A/B evidence lives under `ww_work/`, outside this repository
+and outside this branch's commit range, so a reviewer working from the commits alone cannot
+independently verify the 19 mutation runs or the 95 A/B checks. That is a program-level property of
+where V&V evidence is archived, not a property of this filter's pass; the reproduction commands and
+file paths are given throughout so the evidence can be regenerated or fetched from the archive.
 
 Deviations, all detailed in `vv/deviations/AlignSectionsMisorientationFilter.md`:
 
@@ -348,3 +457,22 @@ there was nothing whose root cause required proving by patching the legacy sourc
    `AlignSectionsFeatureCentroidFilter.cpp`. Fixed here only; the codes are per-file so there
    is no live collision. `-68001` is still used for two distinct geometry errors in this file
    (both messages are self-identifying); splitting it was outside the ratified scope.
+7. **The circular oracle survives outside this filter, and the archive is cross-plugin coupled.**
+   `output_align_sections_misorientation.dream3d` — a capture of *this* filter's output — is still
+   the golden input for `SimplnxCore::AlignSectionsListFilter: Relative Shifts execution` and
+   `: Cumulative Shifts execution` (`src/Plugins/SimplnxCore/test/AlignSectionsListTest.cpp:41,50`
+   and `:109,118`). Retiring it there needs a hand-derived oracle for `AlignSectionsListFilter`,
+   which is that filter's own V&V, not this one's. Separately,
+   `src/Plugins/SimplnxCore/test/CMakeLists.txt` declares no `download_test_data` for this
+   archive; those two tests free-ride on
+   `src/Plugins/OrientationAnalysis/test/CMakeLists.txt:134`. Either declare the archive in
+   SimplnxCore as well, or fold it into that filter's own archive when its V&V re-cuts one.
+8. **AM-12 — the shared base discards a valid-but-warning `findShifts` result.**
+   `AlignSections::execute` propagates only an `invalid()` result from `findShifts`
+   (`src/simplnx/Utilities/AlignSections.cpp:136-140`) and otherwise returns `{}` (`:167`), so a
+   warning raised inside `findShifts` never reaches the user. This pass worked around it for this
+   filter by raising the `-68009` warning from `operator()` instead of from `findShifts`; the base
+   itself is unchanged. It affects **all four AlignSections consumers**
+   (`AlignSectionsMisorientation`, `AlignSectionsMutualInformation`, `AlignSectionsList`,
+   `AlignSectionsFeatureCentroid`). Fixing it means touching the shared base, which is outside this
+   batch's ratified scope; routed here so it reaches whoever owns the base next.

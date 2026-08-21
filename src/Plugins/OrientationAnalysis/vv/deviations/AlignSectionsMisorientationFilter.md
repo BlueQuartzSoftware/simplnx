@@ -10,9 +10,11 @@ report. The Filter UUID field is the permanent cross-reference anchor.
 The A/B comparison behind these entries is described in
 `vv/AlignSectionsMisorientationFilter.md` (§Deviations). Headline: across four fixtures and
 eight runs, **every cell array was element-for-element identical and every shift value was
-identical**. Only D1 below was observed as an actual output difference; the rest are
-interface, precision-bound, or guard differences established by source reading and, where
-noted, by targeted fixtures.
+identical** — 95 checks, 0 failures, with no tolerance of any kind in the comparison predicate.
+Log: `ww_work/AlignSectionsMisorientation/ab/ab_comparison_results.txt`; predicate:
+`ww_work/AlignSectionsMisorientation/ab/compare_ab.py`. Only D1 below was observed as an actual
+output difference; the rest are interface, precision-bound, or guard differences established by
+source reading and, where noted, by targeted fixtures.
 
 ---
 
@@ -100,7 +102,10 @@ within that ULP.
 **Affected users:** Nobody in practice. Requires a sampled pair's disorientation to coincide
 with the tolerance to about 1e-7 rad.
 
-**Recommendation:** Either acceptable. The single-narrowing form is marginally more accurate.
+**Recommendation:** Either acceptable within tolerance, where the tolerance is **one ULP of the
+float tolerance value** (about 1e-7 rad at the tolerances users actually set) — the two conversions
+cannot differ by more than that, and the value only feeds a strict `>` comparison. The
+single-narrowing form is marginally more accurate.
 Deliberately **not** asserted by the test suite: pinning behaviour exactly at the strict-`>`
 boundary would encode float noise as a contract. The oracle fixtures are all kept at least
 5 degrees away from the tolerance in use.
@@ -140,11 +145,13 @@ SIMPLNX oracle suite through the `bool` path and by the mask utility's own tests
 | **Filter UUID** | `8df2135c-7079-49f4-9756-4f3c028a5ced` |
 | **Status** | active |
 
-**Symptom:** SIMPLNX rejects, or warns about, four classes of input that legacy either
-accepted silently or reported differently.
+**Symptom:** SIMPLNX rejects, or warns about, **five** classes of input that legacy either
+accepted silently or reported differently — four errors and one warning, enumerated in the table
+below.
 
-**Root cause:** *bug (in both, fixed in SIMPLNX) plus added defensive guards.* Added during
-this V&V pass:
+**Root cause:** *bug (in both, fixed in SIMPLNX)* for `-68008`, which closes an out-of-bounds read
+present in both implementations, plus *algorithmic choice* for the other four, which are added
+defensive guards with no legacy counterpart in that exact form. Added during this V&V pass:
 
 | Code | Condition | Legacy behaviour |
 |---|---|---|
@@ -153,6 +160,15 @@ this V&V pass:
 | -68007 | negative misorientation tolerance | Legacy accepted it and produced meaningless shifts (every pair, including identical orientations, counts as a mismatch). |
 | -68008 | a phase value at or above the crystal-structure ensemble tuple count | Legacy read out of bounds (`m_CrystalStructures[m_CellPhases[pos]]` behind only a `> 0` test). Shared latent defect; SIMPLNX now detects it. |
 | -68009 (warning) | an indexed phase whose crystal structure is not a known Laue class | Both silently treat such cells as misoriented against everything. SIMPLNX now says so. |
+
+**Known residual in `-68006`.** The guard checks only that each selected cell array's tuple count
+equals the selected geometry's cell count; it does **not** check that the arrays are children of
+that geometry's cell attribute matrix. A same-sized array belonging to a *different* geometry
+therefore still passes preflight and is then indexed as though it belonged to the selected
+geometry. That is silently wrong output rather than an out-of-bounds read, so the undefined
+behaviour the guard was added for is closed; the parentage half is not. Logged rather than
+implemented because adding a parentage requirement is a user-visible tightening of what the
+selection parameters accept, which is beyond the ratified scope of this pass.
 
 **Affected users:** Users who were previously getting silent garbage or an out-of-bounds read
 from malformed input now get a specific, actionable error naming the offending values. Users
@@ -187,7 +203,10 @@ is why the A/B's element-wise comparison of Quats, Phases and Mask matched.
 member would see a difference; the parameter was never exposed in the 6.5.171 misorientation
 filter's GUI either.
 
-**Recommendation:** Either acceptable within tolerance. Nothing to restore.
+**Recommendation:** Either acceptable, and the applicable tolerance is **zero** — because the
+legacy member was always empty in any pipeline run, both implementations shift exactly the same set
+of arrays and the A/B compared them element for element with no tolerance at all. Nothing to
+restore.
 
 ---
 
@@ -204,9 +223,11 @@ establish the index is in range, so a shift approaching half the slice width cau
 out-of-bounds read.
 
 **Root cause:** *bug, shared with 6.5.171.* The acceptance test is
-`if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)`
-(SIMPLNX algorithm `:126`; legacy `:304`). `idx` is computed from the unvalidated candidate
-two lines earlier, so `misorients[idx]` is evaluated first. Legacy reads past the end of a raw
+`if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)`,
+which appears twice in `AlignSectionsMisorientation::findShifts` — once in each duplicated copy of
+the candidate scan (recording copy `:203`, non-recording copy `:311` at the head of this branch;
+legacy `:304`). `idx` is computed from the unvalidated candidate two lines earlier, so
+`misorients[idx]` is evaluated first. Legacy reads past the end of a raw
 `bool*`; SIMPLNX reads past the end of a `std::vector<bool>`. A truthy garbage read silently
 skips an otherwise legal candidate, which makes both implementations non-reproducible in that
 regime.
@@ -215,12 +236,18 @@ regime.
 width, which on realistic EBSD data would mean the sections barely overlap. Trivially
 reachable on very small volumes.
 
-**Recommendation:** Either acceptable within tolerance for now — the reordering is safe on
-in-bounds data but is a behaviour change in the out-of-bounds regime, where neither
-implementation currently has defined behaviour to preserve. Deliberately left unfixed in this
-V&V pass so that the pass makes no unproven behaviour change; logged as a follow-up. All V&V
-fixtures are sized 32x32 with shifts of at most 8 voxels, which keeps every memoization index
-inside the array (`idx` at most 792 of 1024) and out of this regime.
+**Recommendation:** Either acceptable — the two implementations agree exactly (zero tolerance
+required) everywhere the behaviour is defined, and they differ only in the out-of-bounds regime
+where neither has defined behaviour to preserve. The reordering is safe on in-bounds data but is a
+behaviour change in that regime, so it was deliberately left unfixed in this V&V pass to keep the
+pass free of unproven behaviour changes; logged as a follow-up. All V&V
+fixtures are sized 32x32, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
+largest shift any fixture reaches is **4** voxels (the multi-hop fixture's `d = (4, 0)`; every other
+fixture peaks at 3), and the largest memoization index any fixture actually computes is **688** —
+reached by the shift-accumulation fixture's second section pair, whose search re-centres on
+`(-3, 2)` and so evaluates `idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688`. The next largest are 631
+(multi-hop, re-centred on `(4, 0)`) and 629 (the `d = (2, 0)` fixtures). All are comfortably inside
+the 1024-entry array and clear of this regime.
 
 ---
 
