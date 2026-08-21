@@ -38,7 +38,7 @@ The structure for which looks like this
 ```console
 |-- Image Geometry
   |-- Alignment Shifts Data
-    |-- Slices
+    |-- Slice Indices
     |-- Relative Shifts
     |-- Cumulative Shifts
 ```
@@ -46,13 +46,13 @@ The structure for which looks like this
 In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
-- Slices (DataArray | 2 component) - The slice indices (stored as uint32s). Component 0 is the section that was moved; component 1 is the section above it that it was aligned to.
+- Slice Indices (DataArray | 2 component) - The slice indices (stored as uint32s). Component 0 is the section that was moved; component 1 is the section above it that it was aligned to.
 - Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
 - Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
 
 ### Tuple 0
 
-These arrays have one tuple per section, but there are only *number of sections - 1* section pairs: the topmost section is the alignment anchor and is never moved. **Tuple 0 therefore describes no section pair and is filled with zeros** — `Slices` reads `{0, 0}` there, which should not be read as "section 0 aligned to section 0". Meaningful data starts at tuple 1, which describes the pair *(second-from-top, topmost)*, and the last tuple describes the pair *(bottom, second-from-bottom)*.
+These arrays have one tuple per section, but there are only *number of sections - 1* section pairs: the topmost section is the alignment anchor and is never moved. **Tuple 0 therefore describes no section pair and is filled with zeros** — `Slice Indices` reads `{0, 0}` there, which should not be read as "section 0 aligned to section 0". Meaningful data starts at tuple 1, which describes the pair *(second-from-top, topmost)*, and the last tuple describes the pair *(bottom, second-from-bottom)*.
 
 ### Sign convention
 
