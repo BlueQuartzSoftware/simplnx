@@ -26,6 +26,69 @@ AlignSectionsMisorientation::AlignSectionsMisorientation(DataStructure& dataStru
 // -----------------------------------------------------------------------------
 AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 
+namespace
+{
+// -----------------------------------------------------------------------------
+// Validates the phase data against the crystal-structure ensemble array before the shift
+// search starts.
+//
+// This lives outside findShifts for two reasons. First, findShifts duplicates its whole body
+// between the store-shifts and no-store-shifts branches, and a guard placed inside would have
+// to be maintained twice. Second, the shared base only propagates an INVALID result from
+// findShifts (Utilities/AlignSections.cpp:136-140) and discards a valid-but-warning one, so a
+// warning raised in findShifts would never reach the user.
+Result<> ValidatePhaseData(const Int32Array& cellPhases, const UInt32Array& crystalStructures, const DataPath& cellPhasesPath, const DataPath& crystalStructuresPath)
+{
+  const usize ensembleTupleCount = crystalStructures.getNumberOfTuples();
+  const usize laueClassCount = ebsdlib::LaueOps::GetAllOrientationOps().size();
+
+  // The search reads crystalStructures[cellPhases[pos]] behind nothing but a `> 0` test on the
+  // phase value, so any phase at or above the ensemble tuple count is an out-of-bounds read.
+  // Negative phases are safe: they fail the `> 0` test and are skipped.
+  int32 maxPhase = 0;
+  bool sawUnknownStructure = false;
+  int32 unknownStructurePhase = 0;
+  uint32 unknownStructureValue = 0;
+
+  const auto& cellPhasesStore = cellPhases.getDataStoreRef();
+  const usize cellCount = cellPhasesStore.getNumberOfTuples();
+  for(usize i = 0; i < cellCount; i++)
+  {
+    const int32 phase = cellPhasesStore.getValue(i);
+    if(phase > maxPhase)
+    {
+      maxPhase = phase;
+    }
+    if(phase > 0 && static_cast<usize>(phase) < ensembleTupleCount && !sawUnknownStructure)
+    {
+      const uint32 laueClass = crystalStructures[static_cast<usize>(phase)];
+      if(static_cast<usize>(laueClass) >= laueClassCount)
+      {
+        sawUnknownStructure = true;
+        unknownStructurePhase = phase;
+        unknownStructureValue = laueClass;
+      }
+    }
+  }
+
+  if(maxPhase > 0 && static_cast<usize>(maxPhase) >= ensembleTupleCount)
+  {
+    return MakeErrorResult(-68008, fmt::format("The Cell Phases array '{}' contains the phase value {}, but the Crystal Structures array '{}' has only {} tuples (valid phase values are 0 through "
+                                               "{}). Reading the crystal structure for that phase would index outside the Crystal Structures array.",
+                                               cellPhasesPath.toString(), maxPhase, crystalStructuresPath.toString(), ensembleTupleCount, ensembleTupleCount - 1));
+  }
+
+  if(sawUnknownStructure)
+  {
+    return MakeWarningVoidResult(-68009, fmt::format("Phase {} is used by at least one Cell but its crystal structure in '{}' is {}, which is not one of the {} known Laue classes. Cells of that "
+                                                     "phase cannot be compared and are counted as misoriented against every neighbor, which biases the computed shifts.",
+                                                     unknownStructurePhase, crystalStructuresPath.toString(), unknownStructureValue, laueClassCount));
+  }
+
+  return {};
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::operator()()
 {
@@ -35,7 +98,15 @@ Result<> AlignSectionsMisorientation::operator()()
   }
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  Result<> phaseValidation = ValidatePhaseData(cellPhases, crystalStructures, m_InputValues->cellPhasesArrayPath, m_InputValues->crystalStructuresArrayPath);
+  if(phaseValidation.invalid())
+  {
+    return phaseValidation;
+  }
+
+  return MergeResults(std::move(phaseValidation), execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath));
 }
 
 // -----------------------------------------------------------------------------
@@ -88,11 +159,8 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      if(m_ShouldCancel)
-      {
-        return {};
-      }
       throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+      // m_ShouldCancel and getCancel() are the same flag; one check per slice pair is enough.
       if(getCancel())
       {
         return {};

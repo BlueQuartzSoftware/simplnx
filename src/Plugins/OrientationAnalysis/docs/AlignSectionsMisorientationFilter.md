@@ -17,9 +17,17 @@ This **Filter** attempts to align consecutive 'sections' perpendicular to the Z-
 
 **Note that this is similar to a downhill simplex and can get caught in a local minimum!**
 
-If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.
+If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process. A pair in which exactly one **Cell** is flagged *false* counts as a mismatch; a pair in which both are flagged *false* contributes nothing to the mismatch count but is still included in the total that the mismatch count is divided by.
 
-The user can also decide to remove a *background shift* present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
+Only **Cells** whose phase is greater than 0 are compared. A pair is counted as a mismatch, regardless of the tolerance, whenever either **Cell** is unindexed (phase 0), the two **Cells** belong to different Laue classes, or the crystal structure recorded for the phase is not one of the known Laue classes.
+
+Sections are processed from the top of the stack downwards. The topmost section is the registration anchor and is never moved; every other section is shifted so that it lines up with the section above it.
+
+Note that the misalignment is evaluated on a subsampled grid — every fourth **Cell** in X and in Y — so features must be several **Cells** across to influence the alignment.
+
+## Required Geometry
+
+An Image Geometry that is genuinely three-dimensional: every dimension (X, Y and Z) must be greater than 1. The selected **Cell** arrays must have exactly one tuple per **Cell** of the selected Image Geometry. The Misorientation Tolerance must not be negative.
 
 ## Optional Output Data
 
@@ -38,9 +46,17 @@ The structure for which looks like this
 In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
-- Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
+- Slices (DataArray | 2 component) - The slice indices (stored as uint32s). Component 0 is the section that was moved; component 1 is the section above it that it was aligned to.
 - Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
 - Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
+
+### Tuple 0
+
+These arrays have one tuple per section, but there are only *number of sections - 1* section pairs: the topmost section is the alignment anchor and is never moved. **Tuple 0 therefore describes no section pair and is filled with zeros** — `Slices` reads `{0, 0}` there, which should not be read as "section 0 aligned to section 0". Meaningful data starts at tuple 1, which describes the pair *(second-from-top, topmost)*, and the last tuple describes the pair *(bottom, second-from-bottom)*.
+
+### Sign convention
+
+A shift of `(sx, sy)` means the section's content sat `(sx, sy)` **Cells** away from where the anchor section's content sits, and the filter removes that offset: the aligned **Cell** at `(x, y)` takes the value that was at `(x + sx, y + sy)`. **Cells** whose source falls outside the section are filled with zero.
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 

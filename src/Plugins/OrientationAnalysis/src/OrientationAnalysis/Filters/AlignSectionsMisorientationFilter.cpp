@@ -26,11 +26,11 @@ namespace
 
 // Error Code constants
 constexpr nx::core::int32 k_InputRepresentationTypeError = -68001;
-constexpr nx::core::int32 k_OutputRepresentationTypeError = -68002;
-constexpr nx::core::int32 k_InputComponentDimensionError = -68003;
 constexpr nx::core::int32 k_InputComponentCountError = -68004;
+constexpr nx::core::int32 k_GeometryNotThreeDimensionalError = -68005;
+constexpr nx::core::int32 k_TupleCountGeometryMismatchError = -68006;
+constexpr nx::core::int32 k_NegativeToleranceError = -68007;
 constexpr nx::core::int32 k_InconsistentTupleCount = -68063;
-constexpr nx::core::int32 k_OutputFilePathEmpty = -68063;
 
 } // namespace
 
@@ -162,6 +162,15 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 
   nx::core::Result<OutputActions> resultOutputActions;
 
+  // A negative tolerance makes the `angle > misorientationTolerance` test in the algorithm
+  // true for every pair, including a pair of identical orientations whose disorientation is
+  // exactly 0. Every candidate shift then scores the same maximum mismatch fraction and the
+  // reported shifts are meaningless rather than merely imprecise.
+  if(pMisorientationTolerance < 0.0F)
+  {
+    return MakePreflightErrorResult(::k_NegativeToleranceError, fmt::format("Misorientation Tolerance must be greater than or equal to 0 degrees but {} was supplied.", pMisorientationTolerance));
+  }
+
   std::vector<DataPath> dataPaths;
 
   const auto* quats = dataStructure.getDataAs<Float32Array>(pQuatsArrayPath);
@@ -196,6 +205,37 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     return MakePreflightErrorResult(k_InputRepresentationTypeError, fmt::format("Cannot find cell data Attribute Matrix in the selected Image geometry '{}'", inputImageGeometry.toString()));
   }
 
+  // The alignment search needs a genuinely 3D volume. With a Z dimension of 1 there is no
+  // section pair to align and the filter is a silent no-op. With an X or Y dimension of 1 the
+  // algorithm's halfDim bound collapses to 0, which drives the candidate memoization index
+  // negative and reads out of bounds. DREAM3D 6.5.171 rejected non-3D geometries in
+  // AlignSections::dataCheck with error -3010; this is the port's equivalent guard.
+  const SizeVec3 imageDims = inputGeom->getDimensions();
+  if(imageDims.getX() <= 1 || imageDims.getY() <= 1 || imageDims.getZ() <= 1)
+  {
+    return MakePreflightErrorResult(::k_GeometryNotThreeDimensionalError, fmt::format("The selected Image Geometry '{}' is not 3D and cannot be aligned. Its dimensions are ({}, {}, {}); "
+                                                                                      "every dimension must be greater than 1.",
+                                                                                      inputImageGeometry.toString(), imageDims.getX(), imageDims.getY(), imageDims.getZ()));
+  }
+
+  // The tuple check above only cross-checks the selected arrays against EACH OTHER. The
+  // algorithm indexes them with positions derived from the selected geometry's dimensions,
+  // so a mutually consistent set of arrays that belongs to a different (smaller) geometry
+  // passes that check and then reads out of bounds during execute.
+  const usize requiredTupleCount = imageDims.getX() * imageDims.getY() * imageDims.getZ();
+  for(const auto& dataPath : dataPaths)
+  {
+    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+    if(dataArray != nullptr && dataArray->getNumberOfTuples() != requiredTupleCount)
+    {
+      return MakePreflightErrorResult(::k_TupleCountGeometryMismatchError,
+                                      fmt::format("The array '{}' has {} tuples but the selected Image Geometry '{}' has dimensions ({}, {}, {}) and therefore {} cells. Every selected cell "
+                                                  "array must have one tuple per cell of the selected geometry.",
+                                                  dataPath.toString(), dataArray->getNumberOfTuples(), inputImageGeometry.toString(), imageDims.getX(), imageDims.getY(), imageDims.getZ(),
+                                                  requiredTupleCount));
+    }
+  }
+
   // Handle Array Creation
   if(pStoreAlignmentShifts)
   {
@@ -206,17 +246,26 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     // Create Parent AM
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(amPath, ShapeType{dims}));
 
+    // The shift search writes tuples 1 through dims-1; tuple 0 has no slice pair to describe
+    // because the topmost section is the registration anchor and is never moved. Pass an
+    // explicit fill value so tuple 0 is a deterministic {0, 0} instead of depending on the
+    // data store's default initialization.
+    const std::string k_ShiftArrayFillValue = "0";
+
     // Create slices Array
     auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName), "", k_ShiftArrayFillValue));
 
     // Create positioning Array
     auto pRelativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName), "", k_ShiftArrayFillValue));
 
     // Create shifts Array
     auto pCumulativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName), "", k_ShiftArrayFillValue));
   }
 
   // Inform users that the following arrays are going to be modified in place
