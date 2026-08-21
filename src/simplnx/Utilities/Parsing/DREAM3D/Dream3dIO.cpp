@@ -633,7 +633,7 @@ void WriteXdmfNodeGeometry0D(std::ostream& out, const INodeGeometry0D& nodeGeom0
 
 void WriteXdmfNodeGeometry1D(std::ostream& out, const INodeGeometry1D& nodeGeom1D, std::string_view geomName, std::string_view hdf5FilePath)
 {
-  WriteXdmfNodeGeometry0D(out, nodeGeom1D, hdf5FilePath, geomName);
+  WriteXdmfNodeGeometry0D(out, nodeGeom1D, geomName, hdf5FilePath);
 
   const AttributeMatrix* edgeData = nodeGeom1D.getEdgeAttributeMatrix();
   if(edgeData == nullptr)
@@ -645,7 +645,7 @@ void WriteXdmfNodeGeometry1D(std::ostream& out, const INodeGeometry1D& nodeGeom1
 
 void WriteXdmfNodeGeometry2D(std::ostream& out, const INodeGeometry2D& nodeGeom2D, std::string_view geomName, std::string_view hdf5FilePath)
 {
-  WriteXdmfNodeGeometry1D(out, nodeGeom2D, hdf5FilePath, geomName);
+  WriteXdmfNodeGeometry1D(out, nodeGeom2D, geomName, hdf5FilePath);
 
   const AttributeMatrix* faceData = nodeGeom2D.getFaceAttributeMatrix();
   if(faceData == nullptr)
@@ -657,7 +657,7 @@ void WriteXdmfNodeGeometry2D(std::ostream& out, const INodeGeometry2D& nodeGeom2
 
 void WriteXdmfNodeGeometry3D(std::ostream& out, const INodeGeometry3D& nodeGeom3D, std::string_view geomName, std::string_view hdf5FilePath)
 {
-  WriteXdmfNodeGeometry2D(out, nodeGeom3D, hdf5FilePath, geomName);
+  WriteXdmfNodeGeometry2D(out, nodeGeom3D, geomName, hdf5FilePath);
 
   const AttributeMatrix* polyhedraData = nodeGeom3D.getPolyhedraAttributeMatrix();
   if(polyhedraData == nullptr)
@@ -2370,7 +2370,7 @@ Result<DREAM3D::FileData> DREAM3D::ReadFile(const nx::core::HDF5::FileIO& fileRe
   }
 
   auto dataStructure = ImportDataStructureFromFile(fileReader, preflight);
-  if(pipeline.invalid())
+  if(dataStructure.invalid())
   {
     return {{nonstd::make_unexpected(std::move(dataStructure.errors()))}, std::move(dataStructure.warnings())};
   }
