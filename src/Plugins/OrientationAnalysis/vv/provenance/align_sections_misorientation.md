@@ -52,7 +52,8 @@ repository. What can be established from the naming policy and the file contents
 | `/DataStructure/DataContainer/Alignment Shifts Data/*` (in `output_...dream3d`) | SIMPLNX's own output — **circular**. Retired as an oracle for `AlignSectionsMisorientationFilter` by this V&V pass, but **still live as a golden input for `AlignSectionsListFilter`** (see below). The circular-oracle closure achieved here is scoped to this filter's own tests, not repo-wide. |
 
 The filter's actual oracle is **Class 1 (Analytical)** and lives entirely in the test source
-(`namespace AnalyticalFixtures` in `test/AlignSectionsMisorientationTest.cpp`), not in any
+(`namespace AnalyticalFixtures` in
+`src/Plugins/OrientationAnalysis/test/AlignSectionsMisorientationTest.cpp`), not in any
 archive. Classes 1 and 4 need no provenance block: the derivations are comments beside the
 assertions, and the long-form derivation is reproduced in the V&V report.
 

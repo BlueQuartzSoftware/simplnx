@@ -102,25 +102,20 @@ within that ULP.
 **Affected users:** Nobody in practice. Requires a sampled pair's disorientation to coincide with
 the tolerance to within one float32 ULP of the converted tolerance: **7.5e-9 rad at a 5-degree
 tolerance** (0.0873 rad, binade 2^-4, so ULP = 2^-27) and **6.0e-8 rad at a 30-degree tolerance**
-(0.524 rad, binade 2^-1, so ULP = 2^-24). Note this is a *different and much smaller* quantity than
-the ~1e-7 rad formula-disagreement bound quoted in D2: D2 bounds how far two different `acos`/`atan2`
-formulations of the **angle** can drift apart, whereas this entry bounds the last-bit difference in
-the **tolerance constant** itself.
+(0.524 rad, binade 2^-1, so ULP = 2^-24). D2's larger figures (9e-4 rad near 0 degrees, 1e-7 rad
+elsewhere) bound a different quantity — the spread between two `acos`/`atan2` formulations of the
+**angle** — not the last-bit difference in the **tolerance constant** bounded here.
 
 **Recommendation:** Either acceptable within tolerance, where the tolerance is **one ULP of the
 converted float tolerance value** — 7.5e-9 to 6.0e-8 rad across the range users actually set. The
 two conversions cannot differ by more than that, and the value only feeds a strict `>` comparison.
 The single-narrowing form is marginally more accurate.
 Deliberately **not** asserted by the test suite: pinning behaviour exactly at the strict-`>`
-boundary would encode float noise as a contract. Margins in the fixtures, stated precisely rather
-than as a blanket claim: the closest any fixture comes to its tolerance is the
-`Misorientation Tolerance Bracket`, deliberately **1 degree** away (29- and 31-degree tolerances
-around a 30-degree disorientation). Every other fixture keeps its A/B pattern disorientation at
-least **15 degrees** above the tolerance (25 degrees for the 30-degree cubic fixtures, 15 for the
-20-degree hexagonal one) and its matching identity pairs 5 degrees below it. Even the deliberate
-1-degree bracket is 0.0175 rad — about **2.9e5 times**, roughly five orders of magnitude, the
-6.0e-8 rad ULP at that tolerance — so no fixture is anywhere near the boundary this deviation
-concerns.
+boundary would encode float noise as a contract. The closest any fixture in the suite comes to its
+tolerance is the `Misorientation Tolerance Bracket`, deliberately **1 degree** away (29- and
+31-degree tolerances around a 30-degree disorientation). That is 0.0175 rad — about **2.9e5 times**,
+roughly five orders of magnitude, the 6.0e-8 rad ULP at that tolerance. Since 1 degree is the
+minimum margin anywhere in the suite, no fixture is near the boundary this deviation concerns.
 
 ---
 
@@ -250,8 +245,8 @@ out-of-bounds read.
 which appears twice in `AlignSectionsMisorientation::findShifts` — once in each duplicated copy of
 the candidate scan (recording copy `:203`, non-recording copy `:311` at the head of this branch;
 legacy `:304`). `idx` is computed from the unvalidated candidate on the immediately preceding line
-(`:202`, from `xIdx`/`yIdx` at `:200-201`; legacy `:303`), so `misorients[idx]` is evaluated first. Legacy reads past the end of a raw
-`bool*`; SIMPLNX reads past the end of a `std::vector<bool>`. A truthy garbage read silently
+(`:202` / `:310`; legacy `:303`), so `misorients[idx]` is evaluated first. Legacy reads past the end
+of a raw `bool*`; SIMPLNX reads past the end of a `std::vector<bool>`. A truthy garbage read silently
 skips an otherwise legal candidate, which makes both implementations non-reproducible in that
 regime.
 
@@ -263,14 +258,11 @@ reachable on very small volumes.
 required) everywhere the behaviour is defined, and they differ only in the out-of-bounds regime
 where neither has defined behaviour to preserve. The reordering is safe on in-bounds data but is a
 behaviour change in that regime, so it was deliberately left unfixed in this V&V pass to keep the
-pass free of unproven behaviour changes; logged as a follow-up. All V&V
-fixtures are sized 32x32, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
-largest shift any fixture reaches is **4** voxels (the multi-hop fixture's `d = (4, 0)`; every other
-fixture peaks at 3), and the largest memoization index any fixture actually computes is **688** —
-reached by the shift-accumulation fixture's second section pair, whose search re-centres on
-`(-3, 2)` and so evaluates `idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688`. The next largest are 631
-(multi-hop, re-centred on `(4, 0)`) and 629 (the `d = (2, 0)` fixtures). All are comfortably inside
-the 1024-entry array and clear of this regime.
+pass free of unproven behaviour changes; logged as a follow-up. Every fixture that reaches the
+search is 32x32 in plane, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
+largest memoization index any of them computes is **688**, reached by the shift-accumulation
+fixture's second section pair, whose search re-centres on `(-3, 2)` and so evaluates
+`idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688` — well inside the array and clear of this regime.
 
 ---
 
