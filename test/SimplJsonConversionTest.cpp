@@ -67,16 +67,18 @@ constexpr float64 k_TwoToThe64 = 18446744073709551616.0;
 
 TEST_CASE("nx::core::SIMPL Json Conversion 64 Bit Integer Bounds", "[simplnx][Parameters]")
 {
-  // The bound helpers themselves
-  static_assert(ExceedsMaxOf<int64>(k_TwoToThe63));
-  static_assert(!ExceedsMaxOf<int64>(k_LargestInt64Double));
-  static_assert(ExceedsMaxOf<uint64>(k_TwoToThe64));
-  static_assert(!ExceedsMaxOf<uint64>(k_LargestUInt64Double));
-  static_assert(ExceedsLowestOf<int64>(-k_TwoToThe63 * 2.0));
-  static_assert(!ExceedsLowestOf<int64>(-k_TwoToThe63));
-  static_assert(ExceedsLowestOf<uint64>(-1.0));
-  static_assert(!ExceedsMaxOf<int32>(static_cast<float64>(std::numeric_limits<int32>::max())));
-  static_assert(ExceedsMaxOf<int32>(static_cast<float64>(std::numeric_limits<int32>::max()) + 1.0));
+  SECTION("The bound helpers themselves")
+  {
+    STATIC_REQUIRE(ExceedsMaxOf<int64>(k_TwoToThe63));
+    STATIC_REQUIRE_FALSE(ExceedsMaxOf<int64>(k_LargestInt64Double));
+    STATIC_REQUIRE(ExceedsMaxOf<uint64>(k_TwoToThe64));
+    STATIC_REQUIRE_FALSE(ExceedsMaxOf<uint64>(k_LargestUInt64Double));
+    STATIC_REQUIRE(ExceedsLowestOf<int64>(-k_TwoToThe63 * 2.0));
+    STATIC_REQUIRE_FALSE(ExceedsLowestOf<int64>(-k_TwoToThe63));
+    STATIC_REQUIRE(ExceedsLowestOf<uint64>(-1.0));
+    STATIC_REQUIRE_FALSE(ExceedsMaxOf<int32>(static_cast<float64>(std::numeric_limits<int32>::max())));
+    STATIC_REQUIRE(ExceedsMaxOf<int32>(static_cast<float64>(std::numeric_limits<int32>::max()) + 1.0));
+  }
 
   SECTION("IntFilterParameterConverter rejects a float64 that overflows the target type")
   {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <limits>
 #include <type_traits>
 
@@ -16,10 +17,9 @@ namespace detail
  * @param exponent The power of two to compute. Must be non-negative and within the exponent range of FloatT.
  * @return 2^exponent
  */
-template <class FloatT>
+template <std::floating_point FloatT>
 constexpr FloatT PowerOfTwo(int exponent)
 {
-  static_assert(std::is_floating_point_v<FloatT>, "PowerOfTwo requires a floating point type");
   FloatT result = 1;
   for(int i = 0; i < exponent; i++)
   {
