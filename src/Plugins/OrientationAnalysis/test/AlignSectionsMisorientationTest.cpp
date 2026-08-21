@@ -489,6 +489,37 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracle Shift Application Without Shift Arrays", "[OrientationAnalysis][AlignSectionsMisorientationFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // findShifts duplicates its entire body between the store-shifts and no-store-shifts
+  // branches, so a test that only ever sets Store Alignment Shifts exercises just one of the
+  // two copies. This is the same fixture and the same hand-derived answer as the shift
+  // accumulation test, run with the shift arrays turned OFF so the second copy of the search
+  // is covered too. The shift arrays cannot be inspected here, so the aligned volume is the
+  // observable: it is only correct if the accumulated shifts came out as (2, 0) and (1, 2).
+  AnalyticalFixtures::FixtureSpec spec;
+  spec.offsets = {{1, 2}, {2, 0}, {0, 0}};
+  DataStructure dataStructure = AnalyticalFixtures::BuildFixture(spec);
+
+  AlignSectionsMisorientationFilter filter;
+  Arguments args = AnalyticalFixtures::MakeArguments(5.0F, false, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // No Alignment Shifts Data attribute matrix should have been created.
+  REQUIRE(dataStructure.getDataAs<AttributeMatrix>(AnalyticalFixtures::k_AlignmentAMPath) == nullptr);
+
+  const std::vector<std::array<int64, 2>> appliedShifts = {{1, 2}, {2, 0}, {0, 0}};
+  AnalyticalFixtures::CheckAlignedVolume(dataStructure, spec, appliedShifts);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracle Multi Hop Convergence", "[OrientationAnalysis][AlignSectionsMisorientationFilter]")
 {
   UnitTest::LoadPlugins();
