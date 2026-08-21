@@ -84,6 +84,6 @@ Full provenance detail, including the feature-layout table and the resolved "che
 
 **`IdentifySample-D1` (active, A/B-proven):** Hole fill (`FillHoles=true`) on 2D/1D geometry. Legacy's hole-fill boundary test includes `plane==0 || plane==(zp-1)`, which is always true when `zp==1`, so legacy flags every voxel as boundary-touching and **never fills holes in a 2D/1D geometry**. SIMPLNX fills enclosed holes correctly. Proven by A/B (legacy left a 2D enclosed hole unfilled; SIMPLNX filled it) and by a dimensionality-aware boundary-test fix applied to a local build of the legacy source, which then reproduces SIMPLNX. Recommend trusting SIMPLNX. Full entry in `vv/deviations/IdentifySampleFilter.md`.
 
-**Single-voxel hole fill:** Not a legacy deviation. Legacy correctly leaves a lone bad voxel unfilled; pre-fix SIMPLNX wrongly filled it (empty neighbor loop left `touchesBoundary=false`). This PR's `touchesBoundary = k_NeighborCount == 0` (`IdentifySample.cpp:139`) fixes SIMPLNX to match legacy; verified by A/B. Full entry in `vv/deviations/IdentifySampleFilter.md`.
+**Single-voxel hole fill:** Not a legacy deviation. Legacy correctly leaves a lone bad voxel unfilled; released versions through 7.4.1 wrongly fill it (empty neighbor loop left `touchesBoundary=false`). This PR's `touchesBoundary = k_NeighborCount == 0` (`IdentifySample.cpp:139`) fixes SIMPLNX to match legacy; verified by A/B. Full entry in `vv/deviations/IdentifySampleFilter.md`.
 
 **`SliceBySlice` and cancel checks:** Genuinely new, no legacy path to deviate from.

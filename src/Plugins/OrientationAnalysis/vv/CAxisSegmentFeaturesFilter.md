@@ -128,7 +128,7 @@ All non-retired tests pass at the verified commit in **both** builds: in-core `N
 
 Comparison run 2026-07-22, extended with a 3-D fixture and fully rerun 2026-07-24, on five pure-Phi fixtures (chain, π-fold, bool mask, phase-0, and a 3×2×2 masked fixture covering the y/z stride branches) through the official 6.5.171 PipelineRunner and nxrunner from one shared legacy-format input (`vv/comparisons/CAxisSegmentFeaturesFilter/`). All five match at the segmentation-partition level with identical feature counts.
 
-- `CAxisSegmentFeaturesFilter-D1` — unvalidated first seed in SIMPLNX (affected releases) could add a phantom feature or grow from a masked voxel — **resolved** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
+- `CAxisSegmentFeaturesFilter-D1` — unvalidated first seed in DREAM3D-NX 7.4.1 (the only affected release) could add a phantom feature or grow from a masked voxel — **resolved** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D2` — 6.5.171 always clock-randomizes FeatureIds (irreproducible); SIMPLNX is deterministic with opt-in randomization — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D3` — SIMPLNX rejects non-hexagonal participating cells (`-8363`/`-8364`); legacy silently produced meaningless output — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D4` — pre-fix SIMPLNX spuriously rejected unindexed/masked cells — **resolved** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`

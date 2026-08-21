@@ -18,7 +18,7 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 |---|---|
 | **Deviation ID** | `ErodeDilateBadDataFilter-D1` (formerly cited as `-B1`) |
 | **Filter UUID** | `7f2f7378-580e-4337-8c04-a29e7883db0b` |
-| **Status** | active (SIMPLNX bug **resolved** in PR #1687; documented for users of prior SIMPLNX releases) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1687 (2026-08-18) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
 **Symptom:** In SIMPLNX releases prior to PR #1687, the *X Direction*, *Y Direction*, and *Z Direction* parameters had **no effect on the output**. They were parsed correctly from filter args into `ErodeDilateBadDataInputValues` (`ErodeDilateBadDataFilter.cpp:151-153`), but every face neighbor remained eligible — subject only to the geometry boundary — regardless of the flags. Disabling a direction silently produced the all-directions-on result. DREAM3D 6.5.171 honors the flags correctly, so any run with fewer than all three directions enabled diverges from legacy. This is also what produced the previous V&V pass's observation that "all 7 direction-combination fixtures encode byte-identical expected output": the fixture was not under-discriminating, the algorithm was ignoring direction entirely.
 
@@ -35,7 +35,7 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 - `(Erode) Expanded` / `(Dilate) Expanded` (28 parameterized runs total, 2078 assertions combined) pass in both in-core and OOC builds.
 - Per-direction structural coverage confirmed by temporary hit-count instrumentation — see "Per-direction code-path coverage" below.
 
-**Affected users:** Anyone who ran `ErodeDilateBadData` on a SIMPLNX build predating PR #1687 with fewer than all three directions enabled. Their output silently matched the all-directions-on result, eroding or dilating across axes they had explicitly disabled. Users who left all three directions on (the default) are **unaffected** — that path was always correct, and the archive-based `(Erode)` regression test passes on affected releases for exactly that reason.
+**Affected users:** Anyone who ran `ErodeDilateBadData` on any released version up to and including 7.4.1 with fewer than all three directions enabled. Their output silently matched the all-directions-on result, eroding or dilating across axes they had explicitly disabled. Users who left all three directions on (the default) are **unaffected** — that path was always correct, and the archive-based `(Erode)` regression test passes on affected builds for exactly that reason.
 
 **Recommendation:** Trust SIMPLNX at or after PR #1687, which agrees with 6.5.171 across all 28 parameter combinations. Results from affected builds that used a restricted direction set should be regenerated.
 
