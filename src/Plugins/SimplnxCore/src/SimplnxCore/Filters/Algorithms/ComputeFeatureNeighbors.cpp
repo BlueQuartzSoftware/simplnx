@@ -352,9 +352,8 @@ Result<> ComputeFeatureNeighbors::operator()()
   if(static_cast<usize>(maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
-    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << maxFeatureId << " which is greater than the "
-        << " number of features from array " << m_InputValues->NumberOfNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
-        << " incorrect array for the 'FeatureIds' array?";
+    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << maxFeatureId << " which is greater than the " << " number of features from array "
+        << m_InputValues->NumberOfNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the " << " incorrect array for the 'FeatureIds' array?";
     return MakeErrorResult(-24500, out.str());
   }
 

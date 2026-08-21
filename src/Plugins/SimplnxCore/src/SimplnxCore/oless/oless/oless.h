@@ -23,7 +23,7 @@ private:
   void recurse(POLE::Storage*, const std::string, void (Oless::*)(POLE::Storage*, std::string, std::string));
 
 public:
-  Oless(){};
+  Oless() {};
   Oless(char*);
 
   std::vector<OleSummary*> List();

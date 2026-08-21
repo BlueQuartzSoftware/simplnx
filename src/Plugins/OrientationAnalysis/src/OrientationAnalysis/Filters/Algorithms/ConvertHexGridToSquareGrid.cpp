@@ -206,8 +206,7 @@ public:
 
           // Write to the output file
           outFile << "  " << phi1[hexGridIndex] << "	" << PHI[hexGridIndex] << "	" << phi2[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iq[hexGridIndex] << "	" << ci[hexGridIndex]
-                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  "
-                  << "\n";
+                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  " << "\n";
         }
       }
 

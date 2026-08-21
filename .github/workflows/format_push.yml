@@ -8,12 +8,17 @@ on:
 
 jobs:
   clang_format:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v2
       - name: Add Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Install clang-format-19
+        run: |
+          sudo apt-get update
+          sudo apt-get install clang-format-19
+          clang-format-19 --version
       - name: Check Formatting
         run: |
-          python3 scripts/clang_format.py --format-version 15
+          python3 scripts/clang_format.py --format-version 19

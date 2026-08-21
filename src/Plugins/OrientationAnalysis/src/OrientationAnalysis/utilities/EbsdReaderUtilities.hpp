@@ -230,8 +230,7 @@ void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::P
   }
 
   ss << "Num Rows: " << rowCount << "\n"
-     << "Sample Physical Dimensions: " << (xStep * colCount) << " (W) x " << (yStep * rowCount) << " (H) microns"
-     << "\n";
+     << "Sample Physical Dimensions: " << (xStep * colCount) << " (W) x " << (yStep * rowCount) << " (H) microns" << "\n";
 
   if constexpr(std::is_same_v<ReaderType, ebsdlib::CtfReader>)
   {

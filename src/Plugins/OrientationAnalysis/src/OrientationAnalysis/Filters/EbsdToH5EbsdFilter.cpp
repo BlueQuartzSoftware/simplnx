@@ -113,51 +113,27 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
   switch(referenceFrame)
   {
   case EbsdToH5EbsdInputConstants::k_Edax:
-    description << "Manufacturer: "
-                << "Edax - TSL"
-                << "\n"
-                << "Sample Reference Transformation: "
-                << "180 @ <010>"
-                << "\n"
-                << "Euler Transformation: "
-                << "90 @ <001>"
-                << "\n";
+    description << "Manufacturer: " << "Edax - TSL" << "\n"
+                << "Sample Reference Transformation: " << "180 @ <010>" << "\n"
+                << "Euler Transformation: " << "90 @ <001>" << "\n";
     break;
 
   case EbsdToH5EbsdInputConstants::k_Oxford:
-    description << "Manufacturer: "
-                << "Oxford - HKL"
-                << "\n"
-                << "Sample Reference Transformation: "
-                << "180 @ <010>"
-                << "\n"
-                << "Euler Transformation: "
-                << "0 @ <001>"
-                << "\n";
+    description << "Manufacturer: " << "Oxford - HKL" << "\n"
+                << "Sample Reference Transformation: " << "180 @ <010>" << "\n"
+                << "Euler Transformation: " << "0 @ <001>" << "\n";
     break;
 
   case EbsdToH5EbsdInputConstants::k_Hedm:
-    description << "Manufacturer: "
-                << "HEDM - IceNine"
-                << "\n"
-                << "Sample Reference Transformation: "
-                << "0 @ <001>"
-                << "\n"
-                << "Euler Transformation: "
-                << "0 @ <001>"
-                << "\n";
+    description << "Manufacturer: " << "HEDM - IceNine" << "\n"
+                << "Sample Reference Transformation: " << "0 @ <001>" << "\n"
+                << "Euler Transformation: " << "0 @ <001>" << "\n";
     break;
 
   default:
-    description << "Manufacturer: "
-                << "Unknown"
-                << "\n"
-                << "Sample Reference Transformation: "
-                << "0 @ <001>"
-                << "\n"
-                << "Euler Transformation: "
-                << "0 @ <001>"
-                << "\n";
+    description << "Manufacturer: " << "Unknown" << "\n"
+                << "Sample Reference Transformation: " << "0 @ <001>" << "\n"
+                << "Euler Transformation: " << "0 @ <001>" << "\n";
     break;
   }
 

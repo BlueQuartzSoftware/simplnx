@@ -39,8 +39,7 @@
   error = H5Aclose(attributeId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error Closing Attribute." << std::endl;                                                                                                                                              \
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error Closing Attribute." << std::endl;                                                                                          \
     returnError = MakeErrorResult(error, "Error Closing Attribute");                                                                                                                                   \
   }
 
@@ -48,8 +47,7 @@
   error = H5Sclose(dataspaceId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error closing Dataspace." << std::endl;                                                                                                                                              \
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error closing Dataspace." << std::endl;                                                                                          \
     returnError = MakeErrorResult(error, "Error Closing Dataspace");                                                                                                                                   \
   }
 
@@ -57,8 +55,7 @@
   error = H5Tclose(typeId);                                                                                                                                                                            \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error closing DataType" << std::endl;                                                                                                                                                \
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error closing DataType" << std::endl;                                                                                            \
     returnError = MakeErrorResult(error, "Error closing DataType");                                                                                                                                    \
   }
 
@@ -66,8 +63,7 @@
   error = H5Dclose(datasetId);                                                                                                                                                                         \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << returnError << std::endl;                                                                   \
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << returnError << std::endl;               \
     returnError = error;                                                                                                                                                                               \
   }
 

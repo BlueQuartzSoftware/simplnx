@@ -21,23 +21,15 @@ Result<> WriteHeader(const DataStructure& dataStructure, const WriteSPParksSites
 
   const size_t totalPoints = featureIds.getNumberOfTuples();
 
-  outfile << "-"
-          << "\n";
-  outfile << "3 dimension"
-          << "\n";
-  outfile << totalPoints << " sites"
-          << "\n";
-  outfile << "26 max neighbors"
-          << "\n";
-  outfile << "0 " << dims[0] << " xlo xhi"
-          << "\n";
-  outfile << "0 " << dims[1] << " ylo yhi"
-          << "\n";
-  outfile << "0 " << dims[2] << " zlo zhi"
-          << "\n";
+  outfile << "-" << "\n";
+  outfile << "3 dimension" << "\n";
+  outfile << totalPoints << " sites" << "\n";
+  outfile << "26 max neighbors" << "\n";
+  outfile << "0 " << dims[0] << " xlo xhi" << "\n";
+  outfile << "0 " << dims[1] << " ylo yhi" << "\n";
+  outfile << "0 " << dims[2] << " zlo zhi" << "\n";
   outfile << "\n";
-  outfile << "Values"
-          << "\n";
+  outfile << "Values" << "\n";
   outfile << "\n";
 
   return {};

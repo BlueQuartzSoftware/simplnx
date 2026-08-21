@@ -611,7 +611,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
         }
       }
     } // END TRIANGLE LOOP
-  }   // END SLICE LOOP
+  } // END SLICE LOOP
 
   return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
 }
