@@ -24,6 +24,10 @@ The image below shows a single STL file that contains 12 different geometries. T
 
 ![Filter Output](Images/LabelTriangleGeometry_1.png)
 
+### Required Input Sources
+
+- **Triangle Geometry** -- the surface mesh whose triangles will be labeled, typically read from a CAD mesh via [Read STL File](ReadStlFileFilter.md). STL is a common CAD mesh file format that stores a surface as a collection of triangles.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright
@@ -32,4 +36,4 @@ Please see the description file distributed with this plugin.
 
 ## DREAM3D-NX Help
 
-If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GitHub site where the community of DREAM3D-NX users can help answer your questions.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

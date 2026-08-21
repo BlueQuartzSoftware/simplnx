@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" width="820" height="420" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <rect width="820" height="420" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="410" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Orientation representations</text>
+  <text x="410" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">All eight forms describe the same 3D crystal rotation</text>
+
+  <!-- conversion banner -->
+  <rect x="270" y="70" width="280" height="30" rx="15" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.2"/>
+  <text x="410" y="90" text-anchor="middle" fill="#1a5276" font-size="13" font-weight="700">Convert Orientations:  input [ i ] → output [ j ]</text>
+
+  <!-- Row 1 -->
+  <!-- [0] Euler -->
+  <g transform="translate(26,116)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">0</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Euler Angles</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">3 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(φ<tspan baseline-shift="sub" font-size="8">1</tspan>, Φ, φ<tspan baseline-shift="sub" font-size="8">2</tspan>)  Bunge Z-X-Z</text>
+  </g>
+  <!-- [1] Orientation Matrix -->
+  <g transform="translate(224,116)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">1</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Orientation Matrix</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">9 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">3 × 3 rotation matrix</text>
+  </g>
+  <!-- [2] Quaternion -->
+  <g transform="translate(422,116)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.4"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">2</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Quaternion</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">4 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(x, y, z), w</text>
+  </g>
+  <!-- [3] Axis-Angle -->
+  <g transform="translate(620,116)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">3</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Axis-Angle</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">4 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">axis (x, y, z), angle°</text>
+  </g>
+
+  <!-- Row 2 -->
+  <!-- [4] Rodrigues -->
+  <g transform="translate(26,214)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">4</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Rodrigues</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">4 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(x, y, z), w</text>
+  </g>
+  <!-- [5] Homochoric -->
+  <g transform="translate(224,214)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">5</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Homochoric</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">3 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(x, y, z)</text>
+  </g>
+  <!-- [6] Cubochoric -->
+  <g transform="translate(422,214)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">6</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Cubochoric</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">3 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(x, y, z)</text>
+  </g>
+  <!-- [7] Stereographic -->
+  <g transform="translate(620,214)">
+    <rect x="0" y="0" width="178" height="86" rx="8" fill="#F7F9FB" stroke="#D9E1E7"/>
+    <circle cx="24" cy="26" r="13" fill="#2874A6"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">7</text>
+    <text x="46" y="30" fill="#2C3E50" font-size="13" font-weight="700">Stereographic</text>
+    <text x="16" y="56" fill="#5D6D7E" font-size="11">3 components</text>
+    <text x="16" y="72" fill="#5D6D7E" font-size="11">(x, y, z)</text>
+  </g>
+
+  <!-- footnote -->
+  <text x="410" y="332" text-anchor="middle" fill="#5D6D7E" font-size="11.5">Euler Angles and Quaternions are the most commonly used; the filter converts between any pair (within numerical precision).</text>
+  <text x="410" y="352" text-anchor="middle" fill="#888888" font-size="11" font-style="italic">Choose the input and output representation from the list above.</text>
+</svg>

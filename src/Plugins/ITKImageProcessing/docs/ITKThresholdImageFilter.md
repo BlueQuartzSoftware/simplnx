@@ -1,6 +1,6 @@
 # ITK Threshold Image Filter
 
-Set image values to a user-specified value if they are below, above, or between simple threshold values.
+Replaces pixels that fall outside a chosen intensity range with a single "outside" value while leaving in-range pixels unchanged.
 
 ## Group (Subgroup)
 
@@ -8,21 +8,24 @@ ITKThresholding (Thresholding)
 
 ## Description
 
-ThresholdImageFilter sets image values to a user-specified "outside" value (by default, "black") if the image values are below, above, or between simple threshold values.
+This filter clips an image by intensity. Every pixel whose value lies **within the range [Lower, Upper]** keeps its original value; every pixel **outside** that range is replaced with the *Outside Value*:
 
-The available methods are:
+$$
+\text{output}(x) = \begin{cases} x & \text{if } \text{Lower} \le x \le \text{Upper} \\ \text{OutsideValue} & \text{otherwise} \end{cases}
+$$
 
-ThresholdAbove() : The values greater than the threshold value are set to OutsideValue
+Use this filter when you want to mask away intensities that are too low or too high while preserving the actual pixel values inside the band of interest. This is different from the [Binary Threshold](ITKBinaryThresholdImageFilter.md) filter, which replaces *every* pixel with one of two labels (it binarizes); here the in-range pixels retain their measured intensity.
 
-ThresholdBelow() : The values less than the threshold value are set to OutsideValue
+### Parameter Guidance
 
-ThresholdOutside() : The values outside the threshold range (less than lower or greater than upper) are set to OutsideValue
+- **Lower** / **Upper** — the bounds of the range to keep, in the **input image's intensity units**. Pixels below *Lower* or above *Upper* are set to the *Outside Value*. To keep everything above a value, set *Lower* and leave *Upper* at its maximum; to keep everything below a value, set *Upper* and leave *Lower* at its minimum.
+- **Outside Value** — the intensity written for every out-of-range pixel (in the image's intensity units, default *0*).
 
-Note that these definitions indicate that pixels equal to the threshold value are not set to OutsideValue in any of these methods
+### Required Input Sources
 
-The pixels must support the operators >= and <=.
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
-![](Images/ITKThresholdImageFilter.png)
+![Threshold result.](Images/ITKThresholdImageFilter.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -30,7 +33,7 @@ The pixels must support the operators >= and <=.
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

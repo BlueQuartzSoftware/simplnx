@@ -1,6 +1,6 @@
 # ITK Exp Negative Image Filter
 
-Computes the function exp(-K.x) for each input pixel.
+Computes exp(-x) for each input pixel.
 
 ## Group (Subgroup)
 
@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-Every output pixel is equal to std::exp(-K.x ). where x is the intensity of the homologous input pixel, and K is a user-provided constant.
+Computes the negative natural exponential exp(-x) of each pixel, where x is the input pixel value. Operates on any scalar image.
 
 % Auto generated parameter table will be inserted here
 
@@ -16,7 +16,7 @@ Every output pixel is equal to std::exp(-K.x ). where x is the intensity of the 
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

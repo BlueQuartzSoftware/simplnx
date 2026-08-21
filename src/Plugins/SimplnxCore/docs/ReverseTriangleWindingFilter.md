@@ -6,11 +6,15 @@ Surface Meshing (Connectivity/Arrangement)
 
 ## Description
 
-This **Filter** reverses the *winding* for each **Triangle** in a **Triangle Geometry**. This will *reverse* the direction of calculated **Triangle** normals. Some analysis routines require the normals to be pointing "away" from the center of a **Feature**. This **Filter** allows for manipulation of this construct.
+This **Filter** reverses the **winding** of every **Triangle** in a **Triangle Geometry**. The *winding* is the order in which a triangle's three vertices are listed; that order determines which way the triangle's normal points. Reversing the winding therefore *flips* the direction of the triangle normals so they point the opposite way.
+
+Some analysis routines require the normals to point "away" from the center of a **Feature**. This **Filter** lets you flip the winding so the normals point in the required direction. After reversing the winding, recompute normals with [Compute Triangle Normals](TriangleNormalFilter.md) so they reflect the new vertex order. To check whether a mesh has consistent winding before or after this operation, use [Verify Triangle Winding](VerifyTriangleWindingFilter.md).
+
+### Required Input Sources
+
+- **Triangle Geometry** -- the surface mesh whose triangle winding will be reversed.
 
 % Auto generated parameter table will be inserted here
-
-## Example Pipelines
 
 ## License & Copyright
 

@@ -28,7 +28,11 @@ Points that are in sparse regions of the data space are considered "outliers"; t
 
 The user may select from a number of options to use as the distance metric.
 
-An advantage of DBSCAN over other clustering approaches (e.g., k-means) is that the number of clusters is not defined *a priori*.  Additionally, DBSCAN is capable of finding arbitrarily shaped, nonlinear clusters, and is robust to noise.
+An advantage of DBSCAN over other clustering approaches (e.g., [Compute K Means](ComputeKMeansFilter.md)) is that the number of clusters is not defined *a priori*.  Additionally, DBSCAN is capable of finding arbitrarily shaped, nonlinear clusters, and is robust to noise.
+
+### Required Input Sources
+
+- **Input Data Array** -- any 2D or 3D scalar/multi-component array (other than `bool`) to be clustered. This may already exist in your **DataStructure**, or be assembled from coordinate components using [Combine Attribute Arrays](CombineAttributeArraysFilter.md) (see the **Visualization Tips** section).
 
 ### Examples
 
@@ -67,19 +71,19 @@ This filter is designed to be applicable to any 2D or 3D array (other than bool 
 Take note of the name of your input array referred to as `input_array` from here on, and the cluster ids array name referred to as `cluster_array` from here on.
 
 **Step 2 (2D only): Create a 1 component array of 0s named `Z`**
-This can be done with the *Create Data Array* filter. **It's important to ensure the created array has the same length and type as `input_array`**
+This can be done with the [Create Data Array](CreateDataArrayFilter.md) filter. **It's important to ensure the created array has the same length and type as `input_array`**
 
 **Step 3 (2D only): Merge `input_array` and `Z` array**
-This can be done with the *Combine Attribute Arrays* filter. Make sure **`input_array` is above the `Z` array** in the "Attribute Arrays to Combine" parameter. **The output array will now be the new `input_array` for the following steps**, so it's recommended to enable the "Move Data" parameter to avoid confusion and keep data structure tree clean.
+This can be done with the [Combine Attribute Arrays](CombineAttributeArraysFilter.md) filter. Make sure **`input_array` is above the `Z` array** in the "Attribute Arrays to Combine" parameter. **The output array will now be the new `input_array` for the following steps**, so it's recommended to enable the "Move Data" parameter to avoid confusion and keep data structure tree clean.
 
 **Step 4: Convert `input_array` to `float32` (skip step if not applicable)**
-This can be done with the "Convert AttributeArray DataType" filter. Be sure to set "Scalar Type" parameter to `float32`.
+This can be done with the [Convert AttributeArray DataType](ConvertDataFilter.md) filter. Be sure to set "Scalar Type" parameter to `float32`.
 
 **Step 5: Create Vertex Geometry**
-This can be done with the "Create Geometry" filter. Be sure to set "Geometry Type" to `Vertex`. Your `input_array` is going to be the "Shared Vertex List", so place it in the corresponding parameter with the same name. Take note of the created "Vertex Data" *AttributeMatrix* this will be referred to as `vertex_data` in following steps.
+This can be done with the [Create Geometry](CreateGeometryFilter.md) filter. Be sure to set "Geometry Type" to `Vertex`. Your `input_array` is going to be the "Shared Vertex List", so place it in the corresponding parameter with the same name. Take note of the created "Vertex Data" *AttributeMatrix* this will be referred to as `vertex_data` in following steps.
 
 **Step 6: Move the `cluster_array` into `vertex_data` *AttributeMatrix***
-This can be done with the "Move Data" filter. Place the `cluster_data` array in the "Data to Move" parameter, and place `vertex_data` in the "New Parent" parameter.
+This can be done with the [Move Data](MoveDataFilter.md) filter. Place the `cluster_data` array in the "Data to Move" parameter, and place `vertex_data` in the "New Parent" parameter.
 
 **Step 7: Run the pipeline**
 This concludes the post-processing.
@@ -98,7 +102,7 @@ This implementation of DBSCAN uses a grid approach to greatly increase the speed
 
 #### Understanding the Grid
 
-The most important part to understand for the function to click into place is the Grid. The Grid is a regular grid that contains all the points in the input array. It serves as a way to spatially partition the dataset for processing. The voxel cells all have a side length of `Epsilon / sqaure_root(Dimensions)` where `Epsilon` is the user supplied hyperparameter and `Dimensions` is the number of components in the input array. This means that if your input array has 2 components the regular grid can be visualized as a square and 3 components can be visualized as a cube.
+The most important part to understand for the function to click into place is the Grid. The Grid is a regular grid that contains all the points in the input array. It serves as a way to spatially partition the dataset for processing. The voxel cells all have a side length of `Epsilon / square_root(Dimensions)` where `Epsilon` is the user supplied hyperparameter and `Dimensions` is the number of components in the input array. This means that if your input array has 2 components the regular grid can be visualized as a square and 3 components can be visualized as a cube.
 
 #### Minimum Points
 
@@ -108,7 +112,7 @@ This hyperparameter has outsized effects on how many cluster expansion/merge ite
 
 #### Epsilon
 
-This hyperparameter is the basis for the entire algorithm. It actually has two separate use cases in this implementation. The first was laid out already in the **Understanding the Grid** section, as it effects the size of the voxels in the regular grid. The second is the maximum distance allowed between any two points in the input array for them to be considered density connected. As you may have perceived, these two use cases are connected, in that the voxels side length ensures all points within the same voxel satisfy the density connected requirement inherently. When preforming merge checks between voxels, every point in a grid is compared against every point in the other grid to see if there are any points that have a distance *less than* `Epsilon`.
+This hyperparameter is the basis for the entire algorithm. It actually has two separate use cases in this implementation. The first was laid out already in the **Understanding the Grid** section, as it effects the size of the voxels in the regular grid. The second is the maximum distance allowed between any two points in the input array for them to be considered density connected. As you may have perceived, these two use cases are connected, in that the voxels side length ensures all points within the same voxel satisfy the density connected requirement inherently. When performing merge checks between voxels, every point in a grid is compared against every point in the other grid to see if there are any points that have a distance *less than* `Epsilon`.
 
 This hyperparameter has outsized effects on how accurate cluster result is to ground truth and what value is appropriate for `Minimum Points`. Detailed further in the **Optimization** section below.
 
@@ -116,11 +120,11 @@ This hyperparameter has outsized effects on how accurate cluster result is to gr
 
 For `Epsilon`, ideally you want a little *a priori* knowledge on what the average distance between points in the dataset is, and start with slightly above that. However, this can be supplemented by visualizing the dataset, selecting a couple of areas you would consider clusters, finding the distance between some of the points on the edges of each of the clusters, and setting an `Epsilon` slightly above that.
 
-For `Minimum Points`, previous recommendations suggested 1 above the dimensions of input data (for 2D - 3 and for 3D - 4). However, the density of points heavily effects this. If you have several packed regions and the rest sparse higher values are reasonable (5-9), and vise versa. **Avoid supplying a 1 as this will result in 0 unlabeled points always, unless that is knowingly the intention.**
+For `Minimum Points`, previous recommendations suggested 1 above the dimensions of input data (for 2D - 3 and for 3D - 4). However, the density of points heavily effects this. If you have several packed regions and the rest sparse higher values are reasonable (5-9), and vice versa. **Avoid supplying a 1 as this will result in 0 unlabeled points always, unless that is knowingly the intention.**
 
 #### Optimization
 
-Before any optimization, you should always try cleaning up your data. **Standardizing your data with a scaler**, such as [StandardScaler `fit_transform()` from Sci-Kit](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html), **will make it much easier to tune the `Epsilon` parameter**. Similarly, **subtle changes in output can be caused by duplicate points in input array**. Duplicate points can be identified and removed with filters like "Identify Duplicate Vertices" and "Remove Flagged Vertices". These require your data to be in a `SharedVertexList` which is type-locked to `float32`, if typecasting is safe this can be done with steps similar to the ones laid out in the **Visualization** section. Otherwise, you may need to clean the data before import to `simplnx`.
+Before any optimization, you should always try cleaning up your data. **Standardizing your data with a scaler**, such as [StandardScaler `fit_transform()` from Sci-Kit](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html), **will make it much easier to tune the `Epsilon` parameter**. Similarly, **subtle changes in output can be caused by duplicate points in input array**. Duplicate points can be identified and removed with filters like [Identify Duplicate Vertices](IdentifyDuplicateVerticesFilter.md) and [Remove Flagged Vertices](RemoveFlaggedVerticesFilter.md). These require your data to be in a `SharedVertexList` which is type-locked to `float32`, if typecasting is safe this can be done with steps similar to the ones laid out in the **Visualization** section. Otherwise, you may need to clean the data before import to `simplnx`.
 
 Optimization is going to rely on extensive *a priori* knowledge of the data no matter what. However, this knowledge can be obtained through sequential runs of the filter and some visualization of the output. That said here is how to interpret results to optimize the speed and/or increase accuracy of output:
 
@@ -147,7 +151,7 @@ Additionally, oddities such as duplicates in the dataset or non-standardized dat
 This can obviously be caused by large datasets, but it can be mitigated with some changes. Firstly, the "Parse Order" parameter can result in immediate speedups of 60% or more on a majority of datasets by switching to `Low Density First`. The idea being that lower density regions are cheaper for merge checks, so other denser core grids can be picked off early if they are close to sparser core grids, meaning that the expensive grids have less of a chance of running against one another. Another change is tightening the voxels grids by lowering the `Epsilon` and reducing the `Minimum Points` slightly. For ideal performance, in the vast majority of cases, you want to reach the lowest value for both of these that still produces expected clustering. This is because the most costly part is the distance check most of the time. Logically, grids with fewer points run less distance checks.
 
 **If your algorithm spends more time in "cluster expansion pass:" than "Identifying Qualifying Independent Clusters".** See output window.
-There are many datasets that this is normal in such as `No Structure` from **Examples**. This typically happens when `Minimum Points` is too high. This results in too few Core grids being identified. Since few clusters are able to be formed, most of the time is spent in iterative loops expanding the clusters rather than just preforming the early merges in the Core grid step.
+There are many datasets that this is normal in such as `No Structure` from **Examples**. This typically happens when `Minimum Points` is too high. This results in too few Core grids being identified. Since few clusters are able to be formed, most of the time is spent in iterative loops expanding the clusters rather than just performing the early merges in the Core grid step.
 
 ### Parse Order
 

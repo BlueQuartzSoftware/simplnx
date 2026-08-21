@@ -8,15 +8,11 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel value to a maximum value. The maximum value can be set with SetMaximum and defaults the maximum of input pixel type. This filter can be used to invert, for example, a binary image, a distance map, etc.
+Inverts the intensity of each pixel by computing `Maximum - pixel`. This filter can be used to invert, for example, a binary image, a distance map, etc.
 
-### Author
+### Parameter Guidance
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
-
-### Related Filters
-
-- IntensityWindowingImageFilter ShiftScaleImageFilter
+- **Maximum**: The largest intensity value used as the reference for the inversion, in image intensity units. Set this to the largest intensity present in the data (for example, 255 for an 8-bit image).
 
 ![](Images/ITKInvertIntensityImageFilter.png)
 

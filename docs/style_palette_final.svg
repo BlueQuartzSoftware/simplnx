@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1580" width="1100" height="1580" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <filter id="sh" x="-2%" y="-3%" width="104%" height="108%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shSm" x="-2%" y="-3%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- Page background -->
+  <rect width="1100" height="1580" fill="#f0f2f5"/>
+
+  <!-- ================================================================== -->
+  <!-- HEADER -->
+  <!-- ================================================================== -->
+  <rect x="30" y="20" width="1040" height="80" rx="12" fill="#2874A6" filter="url(#sh)"/>
+  <text x="550" y="52" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">DREAM3DNX Figure Style Guide</text>
+  <text x="550" y="78" text-anchor="middle" fill="#c8e0f0" font-size="14">Option A Refined: Ocean Blues + Semantic Accents</text>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 1: COLOR PALETTE -->
+  <!-- ================================================================== -->
+  <rect x="30" y="120" width="1040" height="340" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="120" width="1040" height="40" rx="12" fill="#1a5276"/>
+  <rect x="30" y="148" width="1040" height="12" fill="#1a5276"/>
+  <text x="55" y="147" fill="white" font-size="17" font-weight="600">Color Palette</text>
+
+  <!-- Row 1: Primary colors -->
+  <text x="55" y="190" fill="#2c3e50" font-size="13" font-weight="600">Primary (Focus / Active / Inactive)</text>
+  <g transform="translate(55, 200)">
+    <rect x="0" y="0" width="100" height="60" rx="8" fill="#2874A6" filter="url(#shSm)"/>
+    <text x="50" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Focus</text>
+    <text x="50" y="46" text-anchor="middle" fill="#c8e0f0" font-size="10">#2874A6</text>
+
+    <rect x="115" y="0" width="100" height="60" rx="8" fill="#AED6F1" stroke="#2874A6" stroke-width="1.5" filter="url(#shSm)"/>
+    <text x="165" y="28" text-anchor="middle" fill="#1a5276" font-size="12" font-weight="600">Active</text>
+    <text x="165" y="46" text-anchor="middle" fill="#1a5276" font-size="10">#AED6F1</text>
+
+    <rect x="230" y="0" width="100" height="60" rx="8" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1" filter="url(#shSm)"/>
+    <text x="280" y="28" text-anchor="middle" fill="#5D6D7E" font-size="12" font-weight="600">Inactive</text>
+    <text x="280" y="46" text-anchor="middle" fill="#7a8a9c" font-size="10">#E8ECF0</text>
+  </g>
+
+  <!-- Row 1: Semantic colors -->
+  <text x="500" y="190" fill="#2c3e50" font-size="13" font-weight="600">Semantic Accents</text>
+  <g transform="translate(500, 200)">
+    <rect x="0" y="0" width="100" height="60" rx="8" fill="#E74C3C" filter="url(#shSm)"/>
+    <text x="50" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Danger</text>
+    <text x="50" y="46" text-anchor="middle" fill="#f5c6cb" font-size="10">#E74C3C</text>
+
+    <rect x="115" y="0" width="100" height="60" rx="8" fill="#27AE60" filter="url(#shSm)"/>
+    <text x="165" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Good</text>
+    <text x="165" y="46" text-anchor="middle" fill="#c3ecd1" font-size="10">#27AE60</text>
+
+    <rect x="230" y="0" width="100" height="60" rx="8" fill="#8E44AD" filter="url(#shSm)"/>
+    <text x="280" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Annotation</text>
+    <text x="280" y="46" text-anchor="middle" fill="#dcc5e8" font-size="10">#8E44AD</text>
+  </g>
+
+  <!-- Row 2: Supporting colors -->
+  <text x="55" y="295" fill="#2c3e50" font-size="13" font-weight="600">Supporting</text>
+  <g transform="translate(55, 305)">
+    <rect x="0" y="0" width="100" height="60" rx="8" fill="#2C3E50" filter="url(#shSm)"/>
+    <text x="50" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Text</text>
+    <text x="50" y="46" text-anchor="middle" fill="#aab8c8" font-size="10">#2C3E50</text>
+
+    <rect x="115" y="0" width="100" height="60" rx="8" fill="#5D6D7E" filter="url(#shSm)"/>
+    <text x="165" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Secondary Text</text>
+    <text x="165" y="46" text-anchor="middle" fill="#c8d0d8" font-size="10">#5D6D7E</text>
+
+    <rect x="230" y="0" width="100" height="60" rx="8" fill="#E67E22" filter="url(#shSm)"/>
+    <text x="280" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Highlight</text>
+    <text x="280" y="46" text-anchor="middle" fill="#fde0c0" font-size="10">#E67E22</text>
+  </g>
+
+  <text x="500" y="295" fill="#2c3e50" font-size="13" font-weight="600">Backgrounds</text>
+  <g transform="translate(500, 305)">
+    <rect x="0" y="0" width="100" height="60" rx="8" fill="#FFFFFF" stroke="#d0d5da" stroke-width="1" filter="url(#shSm)"/>
+    <text x="50" y="28" text-anchor="middle" fill="#5D6D7E" font-size="12" font-weight="600">Card BG</text>
+    <text x="50" y="46" text-anchor="middle" fill="#7a8a9c" font-size="10">#FFFFFF</text>
+
+    <rect x="115" y="0" width="100" height="60" rx="8" fill="#EBF5FB" stroke="#AED6F1" stroke-width="1" filter="url(#shSm)"/>
+    <text x="165" y="28" text-anchor="middle" fill="#1a5276" font-size="12" font-weight="600">Formula BG</text>
+    <text x="165" y="46" text-anchor="middle" fill="#1a5276" font-size="10">#EBF5FB</text>
+
+    <rect x="230" y="0" width="100" height="60" rx="8" fill="#F0F2F5" filter="url(#shSm)"/>
+    <text x="280" y="28" text-anchor="middle" fill="#5D6D7E" font-size="12" font-weight="600">Page BG</text>
+    <text x="280" y="46" text-anchor="middle" fill="#7a8a9c" font-size="10">#F0F2F5</text>
+
+    <rect x="345" y="0" width="100" height="60" rx="8" fill="#FDEDEC" stroke="#E74C3C" stroke-width="1" filter="url(#shSm)"/>
+    <text x="395" y="28" text-anchor="middle" fill="#922b21" font-size="12" font-weight="600">Warning BG</text>
+    <text x="395" y="46" text-anchor="middle" fill="#c0392b" font-size="10">#FDEDEC</text>
+
+    <rect x="460" y="0" width="100" height="60" rx="8" fill="#EAFAF1" stroke="#27AE60" stroke-width="1" filter="url(#shSm)"/>
+    <text x="510" y="28" text-anchor="middle" fill="#1a7a40" font-size="12" font-weight="600">Success BG</text>
+    <text x="510" y="46" text-anchor="middle" fill="#27AE60" font-size="10">#EAFAF1</text>
+  </g>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 2: TYPOGRAPHY -->
+  <!-- ================================================================== -->
+  <rect x="30" y="480" width="1040" height="130" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="480" width="1040" height="40" rx="12" fill="#8E44AD"/>
+  <rect x="30" y="508" width="1040" height="12" fill="#8E44AD"/>
+  <text x="55" y="507" fill="white" font-size="17" font-weight="600">Typography</text>
+
+  <text x="55" y="548" fill="#2c3e50" font-size="18" font-weight="700">Figure Title — 17-18px Bold</text>
+  <text x="55" y="570" fill="#2c3e50" font-size="14" font-weight="600">Section Heading — 14px Semibold</text>
+  <text x="55" y="590" fill="#555555" font-size="13">Body text and descriptions — 13px Regular, color #555</text>
+  <text x="55" y="604" fill="#888888" font-size="11" font-style="italic">Captions and notes — 11px Italic, color #888</text>
+
+  <text x="550" y="548" fill="#2c3e50" font-size="13" font-weight="600">Font Stack:</text>
+  <text x="550" y="570" fill="#555" font-size="13">'Segoe UI', 'Helvetica Neue', Arial, sans-serif</text>
+  <text x="550" y="600" fill="#888" font-size="11" font-style="italic">Cross-platform sans-serif with consistent rendering.</text>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 3: DEMO — Conceptual Diagram -->
+  <!-- ================================================================== -->
+  <rect x="30" y="630" width="1040" height="290" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="630" width="1040" height="40" rx="12" fill="#2874A6"/>
+  <rect x="30" y="658" width="1040" height="12" fill="#2874A6"/>
+  <text x="55" y="657" fill="white" font-size="17" font-weight="600">Demo: Conceptual Diagram (Kernel Radius = 1)</text>
+
+  <g transform="translate(550, 800)">
+    <!-- Inactive cells -->
+    <rect x="-270" y="-32" width="60" height="56" rx="7" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1.5"/>
+    <text x="-240" y="2" text-anchor="middle" fill="#7a8a9c" font-size="11">...</text>
+    <rect x="-200" y="-32" width="60" height="56" rx="7" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1.5"/>
+
+    <!-- Active neighbor left -->
+    <rect x="-130" y="-32" width="60" height="56" rx="7" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#shSm)"/>
+    <text x="-100" y="2" text-anchor="middle" fill="#1a5276" font-size="13" font-weight="600">-1</text>
+
+    <!-- Focus center -->
+    <rect x="-50" y="-32" width="80" height="56" rx="7" fill="#2874A6" stroke="#1a5276" stroke-width="2.5" filter="url(#shSm)"/>
+    <text x="-10" y="3" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">Center</text>
+
+    <!-- Active neighbor right -->
+    <rect x="50" y="-32" width="60" height="56" rx="7" fill="#AED6F1" stroke="#2874A6" stroke-width="2" filter="url(#shSm)"/>
+    <text x="80" y="2" text-anchor="middle" fill="#1a5276" font-size="13" font-weight="600">+1</text>
+
+    <!-- Inactive cells -->
+    <rect x="120" y="-32" width="60" height="56" rx="7" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1.5"/>
+    <rect x="190" y="-32" width="60" height="56" rx="7" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1.5"/>
+    <text x="220" y="2" text-anchor="middle" fill="#7a8a9c" font-size="11">...</text>
+
+    <!-- Annotation brackets (purple) -->
+    <line x1="-130" y1="40" x2="-50" y2="40" stroke="#8E44AD" stroke-width="2"/>
+    <line x1="-130" y1="34" x2="-130" y2="46" stroke="#8E44AD" stroke-width="2"/>
+    <line x1="-50" y1="34" x2="-50" y2="46" stroke="#8E44AD" stroke-width="2"/>
+    <text x="-90" y="60" text-anchor="middle" fill="#8E44AD" font-size="11" font-weight="600">R = 1</text>
+
+    <line x1="30" y1="40" x2="110" y2="40" stroke="#8E44AD" stroke-width="2"/>
+    <line x1="30" y1="34" x2="30" y2="46" stroke="#8E44AD" stroke-width="2"/>
+    <line x1="110" y1="34" x2="110" y2="46" stroke="#8E44AD" stroke-width="2"/>
+    <text x="70" y="60" text-anchor="middle" fill="#8E44AD" font-size="11" font-weight="600">R = 1</text>
+
+    <!-- Size bracket (green = correct/good) -->
+    <line x1="-130" y1="-46" x2="110" y2="-46" stroke="#27AE60" stroke-width="2"/>
+    <line x1="-130" y1="-52" x2="-130" y2="-40" stroke="#27AE60" stroke-width="2"/>
+    <line x1="110" y1="-52" x2="110" y2="-40" stroke="#27AE60" stroke-width="2"/>
+    <text x="-10" y="-58" text-anchor="middle" fill="#27AE60" font-size="12" font-weight="600">Kernel Size = 3 cells</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(170, 880)">
+    <rect x="0" y="0" width="16" height="16" rx="3" fill="#2874A6" stroke="#1a5276" stroke-width="1"/>
+    <text x="22" y="13" fill="#2c3e50" font-size="11">Focus / Center</text>
+    <rect x="135" y="0" width="16" height="16" rx="3" fill="#AED6F1" stroke="#2874A6" stroke-width="1"/>
+    <text x="157" y="13" fill="#2c3e50" font-size="11">Active neighbor</text>
+    <rect x="280" y="0" width="16" height="16" rx="3" fill="#E8ECF0" stroke="#D0D5DA" stroke-width="1"/>
+    <text x="302" y="13" fill="#2c3e50" font-size="11">Outside kernel</text>
+    <rect x="410" y="0" width="16" height="4" rx="1" fill="#8E44AD"/>
+    <text x="432" y="13" fill="#2c3e50" font-size="11">Annotation</text>
+    <rect x="520" y="0" width="16" height="4" rx="1" fill="#27AE60"/>
+    <text x="542" y="13" fill="#2c3e50" font-size="11">Good / Correct</text>
+    <rect x="640" y="0" width="16" height="4" rx="1" fill="#E74C3C"/>
+    <text x="662" y="13" fill="#2c3e50" font-size="11">Warning / Danger</text>
+  </g>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 4: DEMO — Semantic callouts -->
+  <!-- ================================================================== -->
+  <rect x="30" y="940" width="1040" height="250" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="940" width="1040" height="40" rx="12" fill="#E74C3C"/>
+  <rect x="30" y="968" width="1040" height="12" fill="#E74C3C"/>
+  <text x="55" y="967" fill="white" font-size="17" font-weight="600">Demo: Semantic Callout Boxes</text>
+
+  <!-- Warning box -->
+  <rect x="60" y="1000" width="480" height="76" rx="8" fill="#FDEDEC" stroke="#E74C3C" stroke-width="1.5" filter="url(#shSm)"/>
+  <circle cx="84" cy="1020" r="12" fill="#E74C3C"/>
+  <text x="84" y="1025" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">!</text>
+  <text x="105" y="1024" fill="#922b21" font-size="13" font-weight="600">Warning / Danger</text>
+  <text x="75" y="1048" fill="#7b241c" font-size="12">DataArray is NOT thread-safe for concurrent access.</text>
+  <text x="75" y="1066" fill="#7b241c" font-size="12">Writing to different indices from multiple threads may fail.</text>
+
+  <!-- Success box -->
+  <rect x="560" y="1000" width="480" height="76" rx="8" fill="#EAFAF1" stroke="#27AE60" stroke-width="1.5" filter="url(#shSm)"/>
+  <circle cx="584" cy="1020" r="12" fill="#27AE60"/>
+  <text x="584" y="1025" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">&#x2713;</text>
+  <text x="605" y="1024" fill="#1a7a40" font-size="13" font-weight="600">Good / Correct</text>
+  <text x="575" y="1048" fill="#1e6f3f" font-size="12">Use getDataRefAs&lt;T&gt;() when the parameter has</text>
+  <text x="575" y="1066" fill="#1e6f3f" font-size="12">already validated that the object exists.</text>
+
+  <!-- Annotation box -->
+  <rect x="60" y="1095" width="480" height="76" rx="8" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.5" filter="url(#shSm)"/>
+  <circle cx="84" cy="1115" r="12" fill="#8E44AD"/>
+  <text x="84" y="1120" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">i</text>
+  <text x="105" y="1119" fill="#6c3483" font-size="13" font-weight="600">Note / Annotation</text>
+  <text x="75" y="1143" fill="#5b2d80" font-size="12">All Cells in the kernel are weighted equally during</text>
+  <text x="75" y="1161" fill="#5b2d80" font-size="12">averaging, though they are not equidistant from center.</text>
+
+  <!-- Highlight box -->
+  <rect x="560" y="1095" width="480" height="76" rx="8" fill="#FEF5E7" stroke="#E67E22" stroke-width="1.5" filter="url(#shSm)"/>
+  <circle cx="584" cy="1115" r="12" fill="#E67E22"/>
+  <text x="584" y="1120" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">&#x2605;</text>
+  <text x="605" y="1119" fill="#7e5109" font-size="13" font-weight="600">Tip / Highlight</text>
+  <text x="575" y="1143" fill="#6e4b08" font-size="12">Setting Z Radius to 0 restricts the kernel to a</text>
+  <text x="575" y="1161" fill="#6e4b08" font-size="12">single 2D slice — useful for thin-section data.</text>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 5: DEMO — Formula Box -->
+  <!-- ================================================================== -->
+  <rect x="30" y="1210" width="1040" height="130" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="1210" width="1040" height="40" rx="12" fill="#2874A6"/>
+  <rect x="30" y="1238" width="1040" height="12" fill="#2874A6"/>
+  <text x="55" y="1237" fill="white" font-size="17" font-weight="600">Demo: Formula Box</text>
+
+  <rect x="200" y="1265" width="700" height="52" rx="10" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.5"/>
+  <text x="550" y="1298" text-anchor="middle" fill="#1a5276" font-size="22" font-weight="700">Kernel Size  =  (2  ×  Radius)  +  1</text>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 6: USAGE RULES -->
+  <!-- ================================================================== -->
+  <rect x="30" y="1360" width="1040" height="200" rx="12" fill="white" filter="url(#sh)"/>
+  <rect x="30" y="1360" width="1040" height="40" rx="12" fill="#2C3E50"/>
+  <rect x="30" y="1388" width="1040" height="12" fill="#2C3E50"/>
+  <text x="55" y="1387" fill="white" font-size="17" font-weight="600">Usage Rules</text>
+
+  <g transform="translate(55, 1415)">
+    <circle cx="8" cy="8" r="5" fill="#2874A6"/>
+    <text x="22" y="13" fill="#2c3e50" font-size="13"><tspan font-weight="600">Blue</tspan> — Default for all primary diagram elements (focus, active, borders, headers)</text>
+
+    <circle cx="8" cy="35" r="5" fill="#8E44AD"/>
+    <text x="22" y="40" fill="#2c3e50" font-size="13"><tspan font-weight="600">Purple</tspan> — General annotations: brackets, dimensions, labels, measurements</text>
+
+    <circle cx="8" cy="62" r="5" fill="#27AE60"/>
+    <text x="22" y="67" fill="#2c3e50" font-size="13"><tspan font-weight="600">Green</tspan> — Positive semantics: correct approach, recommended, valid result</text>
+
+    <circle cx="8" cy="89" r="5" fill="#E74C3C"/>
+    <text x="22" y="94" fill="#2c3e50" font-size="13"><tspan font-weight="600">Red</tspan> — Negative semantics: danger, thread-safety warning, common mistake, invalid</text>
+
+    <circle cx="8" cy="116" r="5" fill="#E67E22"/>
+    <text x="22" y="121" fill="#2c3e50" font-size="13"><tspan font-weight="600">Amber</tspan> — Tips, highlights, parameters of interest, optional but recommended</text>
+  </g>
+</svg>

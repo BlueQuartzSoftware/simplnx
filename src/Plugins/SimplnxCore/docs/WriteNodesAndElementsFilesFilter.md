@@ -8,7 +8,7 @@ IO (Output)
 
 This **Filter** exports node based geometries into structured text files.  It allows users to save the following:
 
-1. Node Data (Vertices): Export the coordinates of points that define the geometry.
+1. Node Data (Vertices): Export the coordinates of points that define the geometry. The coordinates are written in the geometry's physical units (the same units as the geometry's vertex coordinates).
 2. Element Data (Connectivity): Export the node indices that make up the edges, faces, or volumes of the geometry.
 
 The filter gives the user the option to export a node file, element file, or both.  It also allows the user to decide whether or not to number the nodes and elements and whether or not to include headers for the node and element files.
@@ -40,7 +40,7 @@ In this example output, the following filter parameter options have been selecte
 
 The output is listed below where column 1 is controlled by the `Number Elements/Cells` parameter and line #2 is controlled by the `Include Element/Cell File Header` parameter.
 
-Some explanation as to the columns is requried for this output. 
+Some explanation as to the columns is required for this output. 
 
 - Column #1 is just the index of the element
 - Column #2 is the number of vertices in this element. in this output, 3 since this was exported from a Triangle Geometry
@@ -72,6 +72,10 @@ ELEMENT_NUM NUM_VERTS_IN_ELEMENT V0_Index V1_Index V2_Index
 | Tetrahedral   | 4               |
 | Hexahedral    | 8               |
 
+
+## Required Input Sources
+
+- **Node-based Geometry** -- any node-based geometry (**Vertex**, **Edge**, **Triangle**, **Quadrilateral**, **Tetrahedral**, or **Hexahedral Geometry**), produced by a surface-meshing filter such as [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) or a geometry-creation filter such as [Create Geometry](CreateGeometryFilter.md).
 
 % Auto generated parameter table will be inserted here
 

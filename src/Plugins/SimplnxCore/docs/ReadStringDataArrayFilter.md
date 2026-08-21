@@ -13,7 +13,7 @@ This **Filter** allows the user to import a plain text file containing the conte
 There are several use cases for this filter. Both use cases have in common that the data
 in the input file should **all** be contained in a single Data Array. If your data file
 instead is organized in a table format where each column of data represents a distinct
-Data Array then the 'Read CSV Filter' should be used instead.
+Data Array then the [Read CSV File](ReadCSVFileFilter.md) filter should be used instead.
 
 ### Use Case 1
 
@@ -27,7 +27,7 @@ parameters should be set:
 ### Use Case 2
 
 In this use case the user wants to read the data into an existing Attribute Matrix. In this case
-the user should set the "Created Arra Path" where the parent object is the target Attribute Matrix and
+the user should set the "Created Array Path" where the parent object is the target Attribute Matrix and
 also set the name of the created Data Array. The following parameters should be set
 with the following values:
 
@@ -36,7 +36,7 @@ with the following values:
 
 ### Example Data
 
-The example data below has 10 Tuples. The AttributeMatrix would need to have dimensions such that mulplying all the dimensions together yields 10. For example the AttributeMatrix could have X=5, Y=1 and Z=2 or X=10, Y=1 and Z=1. This filter does not require any type of Geometry as the filter is reading data directly into an array.
+The example data below has 10 Tuples. The AttributeMatrix would need to have dimensions such that multiplying all the dimensions together yields 10. For example the AttributeMatrix could have X=5, Y=1 and Z=2 or X=10, Y=1 and Z=1. This filter does not require any type of Geometry as the filter is reading data directly into an array.
 
     companies, cushioned, gabby, sizeable, unintelligible, tonos, approximation, pharmacology, transfection, descending
 
@@ -54,6 +54,10 @@ The *Delimiter* parameter provides the following choices:
 - **: (colon) [3]**: Values are separated by a colon character.
 - **\t (Tab) [4]**: Values are separated by a tab character.
 - **New Line [5]**: Each value occupies its own line; the newline character acts as the delimiter.
+
+## Required Input Sources
+
+None — this filter reads directly from a plain text file on disk.
 
 % Auto generated parameter table will be inserted here
 

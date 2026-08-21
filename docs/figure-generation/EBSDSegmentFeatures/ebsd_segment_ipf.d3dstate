@@ -1,0 +1,429 @@
+{
+  "charting_state": {
+    "0": {
+      "active_chart_tab": 0,
+      "active_view": true,
+      "chart_type_selectors": [
+        {
+          "chart_type": 0,
+          "chart_type_visible": false
+        }
+      ],
+      "num_chart_tabs": 0
+    },
+    "dream3d_file_path": "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/DocFigures/ebsd_segment_pilot.dream3d"
+  },
+  "pipeline_state": {
+    "isDisabled": false,
+    "name": "Untitled Pipeline",
+    "pinnedParams": [],
+    "pipeline": [
+      {
+        "args": {
+          "import_data_object": {
+            "value": {
+              "data_paths": [],
+              "file_path": "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/DocFigures/ebsd_segment_pilot.dream3d",
+              "path_import_policy": 0
+            },
+            "version": 2
+          },
+          "parameters_version": 1
+        },
+        "comments": "",
+        "filter": {
+          "name": "nx::core::ReadDREAM3DFilter",
+          "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+        },
+        "isDisabled": false
+      }
+    ],
+    "pipeline_uuid": "4c120bda-d8be-4784-894a-9ec8cc5c41f4",
+    "version": 1,
+    "workflowParams": []
+  },
+  "quadview_state": {
+    "0": {
+      "active_quad_view_tab": 0,
+      "active_view": true,
+      "num_quad_view_tabs": 1,
+      "quad_view_tab_states": {
+        "0": {
+          "active_array": "",
+          "active_component": -1,
+          "ambient": 0.2,
+          "array_lut_fct": null,
+          "array_scalar_opacity_fct": null,
+          "color_map_inverted": false,
+          "diffuse": 0.8,
+          "geometry_path": "",
+          "gi_reach": 0.0,
+          "length_units": "mm",
+          "light_follows_camera": true,
+          "max_intensity_blend": true,
+          "mean_blend": false,
+          "min_intensity_blend": false,
+          "perPaneViewActionState": [
+            {},
+            {},
+            {},
+            {}
+          ],
+          "reslice_mode": false,
+          "shading_enabled": false,
+          "show_annotations": true,
+          "show_color_legend": true,
+          "show_plane_widgets": false,
+          "specular": 0.2,
+          "specular_power": 20.0,
+          "ssao_enabled": false,
+          "thick_mode": false,
+          "volume_blend_mode": 0,
+          "volumetric_scattering": 0.0
+        }
+      }
+    },
+    "quad_view_files": [
+      "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/DocFigures/ebsd_segment_pilot.dream3d"
+    ]
+  },
+  "spreadsheet_state": {
+    "0": {
+      "active_spreadsheet_tab": 0,
+      "active_view": true,
+      "num_spreadsheet_tabs": 0,
+      "spreadsheet_type_selectors": [
+        {
+          "chart_type": 0,
+          "chart_type_visible": false
+        }
+      ]
+    },
+    "dream3d_file_path": "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/DocFigures/ebsd_segment_pilot.dream3d"
+  },
+  "state_file_version": 4,
+  "visualization_state": {
+    "split_view_state": {
+      "cells": [
+        [
+          {
+            "col_span": 1,
+            "row_span": 1,
+            "widget_state": {
+              "active_view": true,
+              "block_render": false,
+              "camera_center_of_rotation_x": -23.625,
+              "camera_center_of_rotation_y": 25.125,
+              "camera_center_of_rotation_z": -0.5,
+              "camera_focal_pt_x": -26.353316907594433,
+              "camera_focal_pt_y": 22.547708844875523,
+              "camera_focal_pt_z": -0.5,
+              "camera_parallel_scale": 33.14477492067222,
+              "camera_pos_x": -26.353316907594433,
+              "camera_pos_y": 22.547708844875523,
+              "camera_pos_z": 160.75006004466653,
+              "camera_view_angle": 30.0,
+              "camera_view_up_x": 0.0,
+              "camera_view_up_y": 1.0,
+              "camera_view_up_z": 0.0,
+              "check_context_menu": false,
+              "global_grid_axes": false,
+              "global_grid_axes_color": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "global_grid_axes_opacity": 1.0,
+              "global_grid_axes_show_grid_lines": false,
+              "global_grid_axes_show_labels": true,
+              "global_grid_axes_spacingx": 0.0,
+              "global_grid_axes_spacingy": 0.0,
+              "global_grid_axes_spacingz": 0.0,
+              "global_grid_axes_title_x": "",
+              "global_grid_axes_title_y": "",
+              "global_grid_axes_title_z": "",
+              "num_render_layers": 2,
+              "own_context_menu": true,
+              "parallel_projection": 1,
+              "split_view_index": 1
+            }
+          }
+        ]
+      ],
+      "col_widths": [
+        1.0
+      ],
+      "grid_cols": 1,
+      "grid_rows": 1,
+      "grid_version": 1,
+      "row_heights": [
+        1.0
+      ]
+    },
+    "tree_view_state": [
+      {
+        "item_children": [
+          {
+            "item_children": [
+              {
+                "item_data": {
+                  "core_object_name": "2D Image/Slice View",
+                  "core_object_name_suffix": 1,
+                  "rep_view_implementations": [
+                    {
+                      "active_array": "IPFColors",
+                      "active_component": -1,
+                      "animation_duration": 0.5,
+                      "color_map_inverted": false,
+                      "color_preset": {
+                        "Annotations": null,
+                        "ColorSpace": "RGB",
+                        "Creator": "Francesca Samsel, and Alan W. Scott",
+                        "DefaultMap": true,
+                        "IndexedColors": [],
+                        "License": "",
+                        "Name": "Fast",
+                        "NanColor": [
+                          0.0,
+                          1.0,
+                          0.0
+                        ],
+                        "RGBPoints": [
+                          0.0,
+                          0.05640000104904175,
+                          0.05640000104904175,
+                          0.4699999988079071,
+                          0.17159223556518555,
+                          0.24300000071525574,
+                          0.46035000681877136,
+                          0.8100000023841858,
+                          0.2984914779663086,
+                          0.3568143844604492,
+                          0.7450246214866638,
+                          0.9543676972389221,
+                          0.4321287274360657,
+                          0.6881999969482422,
+                          0.9300000071525574,
+                          0.9179099798202515,
+                          0.5,
+                          0.8994959592819214,
+                          0.944646418094635,
+                          0.7686567306518555,
+                          0.5882260203361511,
+                          0.9571079611778259,
+                          0.8338184952735901,
+                          0.5089156031608582,
+                          0.7061412334442139,
+                          0.927520751953125,
+                          0.6214389204978943,
+                          0.3153570592403412,
+                          0.8476395010948181,
+                          0.800000011920929,
+                          0.35199999809265137,
+                          0.1599999964237213,
+                          1.0,
+                          0.5899999737739563,
+                          0.07670000195503235,
+                          0.11947499960660934
+                        ],
+                        "Source": ""
+                      },
+                      "custom_range_max": 431.457,
+                      "custom_range_min": 0.0,
+                      "data_grid_visible": false,
+                      "detach_color_settings": true,
+                      "generate_histogram_data": false,
+                      "global_grid_axes_color": [
+                        1.0,
+                        1.0,
+                        1.0
+                      ],
+                      "global_grid_axes_opacity": 1.0,
+                      "global_grid_axes_show_grid_lines": false,
+                      "global_grid_axes_show_labels": true,
+                      "global_grid_axes_spacingx": 0.0,
+                      "global_grid_axes_spacingy": 0.0,
+                      "global_grid_axes_spacingz": 0.0,
+                      "global_grid_axes_title_x": "",
+                      "global_grid_axes_title_y": "",
+                      "global_grid_axes_title_z": "",
+                      "indexed_color_preset": {
+                        "Annotations": null,
+                        "ColorSpace": "",
+                        "Creator": "",
+                        "DefaultMap": false,
+                        "IndexedColors": [
+                          0.6509804129600525,
+                          0.8078431487083435,
+                          0.8901960849761963,
+                          0.12156862765550613,
+                          0.47058823704719543,
+                          0.7058823704719543,
+                          0.6980392336845398,
+                          0.8745098114013672,
+                          0.5411764979362488,
+                          0.20000000298023224,
+                          0.6274510025978088,
+                          0.1725490242242813,
+                          0.9843137264251709,
+                          0.6039215922355652,
+                          0.6000000238418579,
+                          0.8901960849761963,
+                          0.10196078568696976,
+                          0.10980392247438431,
+                          0.9921568632125854,
+                          0.7490196228027344,
+                          0.43529412150382996,
+                          1.0,
+                          0.49803921580314636,
+                          0.0,
+                          0.7921568751335144,
+                          0.6980392336845398,
+                          0.8392156958580017,
+                          0.4156862795352936,
+                          0.239215686917305,
+                          0.6039215922355652,
+                          1.0,
+                          1.0,
+                          0.6000000238418579
+                        ],
+                        "License": "",
+                        "Name": "Brewer Qualitative Paired",
+                        "NanColor": [
+                          1.0,
+                          1.0,
+                          0.6000000238418579
+                        ],
+                        "RGBPoints": [],
+                        "Source": ""
+                      },
+                      "link_physical_units": false,
+                      "nan_color_b": 0.0,
+                      "nan_color_g": 0.0,
+                      "nan_color_r": 0.0,
+                      "render_window_index": 1,
+                      "rep_linked": false,
+                      "rep_split_id": 1,
+                      "representation_visible": true,
+                      "scalar_bar_visible": false,
+                      "scalar_mapping": 1,
+                      "show_box_tool": false,
+                      "slice_dir": 0,
+                      "slice_num": 0,
+                      "solid_color_b": 255,
+                      "solid_color_g": 255,
+                      "solid_color_r": 255,
+                      "source_position2_x": 0.1,
+                      "source_position2_y": 0.5,
+                      "source_position_x": 0.9,
+                      "source_position_y": 0.175,
+                      "toggle_left_slice_num": 0,
+                      "toggle_right_slice_num": 0,
+                      "transform_box_rotate_x": 0.0,
+                      "transform_box_rotate_y": 0.0,
+                      "transform_box_rotate_z": 0.0,
+                      "transform_box_scale_x": 1.0,
+                      "transform_box_scale_y": 1.0,
+                      "transform_box_scale_z": 1.0,
+                      "transform_box_translate_x": 0.0,
+                      "transform_box_translate_y": 0.0,
+                      "transform_box_translate_z": 0.0,
+                      "use_decimation_during_interactions": false,
+                      "using_custom_range": false,
+                      "using_default_indexed_preset": true,
+                      "using_default_preset": false,
+                      "using_solid_color": false,
+                      "values_as_categories": false
+                    }
+                  ]
+                },
+                "item_type": "VXImageSliceRep "
+              }
+            ],
+            "item_data": {
+              "core_object_name": "DataContainer",
+              "current_preset": {
+                "Annotations": null,
+                "ColorSpace": "RGB",
+                "Creator": "Francesca Samsel, and Alan W. Scott",
+                "DefaultMap": true,
+                "IndexedColors": [],
+                "License": "",
+                "Name": "Fast",
+                "NanColor": [
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                "RGBPoints": [
+                  0.0,
+                  0.05640000104904175,
+                  0.05640000104904175,
+                  0.4699999988079071,
+                  0.17159223556518555,
+                  0.24300000071525574,
+                  0.46035000681877136,
+                  0.8100000023841858,
+                  0.2984914779663086,
+                  0.3568143844604492,
+                  0.7450246214866638,
+                  0.9543676972389221,
+                  0.4321287274360657,
+                  0.6881999969482422,
+                  0.9300000071525574,
+                  0.9179099798202515,
+                  0.5,
+                  0.8994959592819214,
+                  0.944646418094635,
+                  0.7686567306518555,
+                  0.5882260203361511,
+                  0.9571079611778259,
+                  0.8338184952735901,
+                  0.5089156031608582,
+                  0.7061412334442139,
+                  0.927520751953125,
+                  0.6214389204978943,
+                  0.3153570592403412,
+                  0.8476395010948181,
+                  0.800000011920929,
+                  0.35199999809265137,
+                  0.1599999964237213,
+                  1.0,
+                  0.5899999737739563,
+                  0.07670000195503235,
+                  0.11947499960660934
+                ],
+                "Source": ""
+              },
+              "data_source_color_map_inverted": false,
+              "data_source_nan_color_b": 0,
+              "data_source_nan_color_g": 191,
+              "data_source_nan_color_r": 128,
+              "data_source_solid_color_b": 255,
+              "data_source_solid_color_g": 255,
+              "data_source_solid_color_r": 255,
+              "data_source_using_default_preset": true,
+              "data_source_visibility": true,
+              "imported_data_path": "DataContainer",
+              "render_window_index": [
+                {
+                  "core_object_visibility": true,
+                  "render_window_index": 1
+                }
+              ]
+            },
+            "item_type": "VXDataSource"
+          }
+        ],
+        "item_data": {
+          "bridge_object_file_path": "/Users/mjackson/Workspace1/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/DocFigures/ebsd_segment_pilot.dream3d",
+          "bridge_object_item_name": "Untitled Pipeline",
+          "bridge_object_uuid": "4c120bda-d8be-4784-894a-9ec8cc5c41f4"
+        },
+        "item_type": "NXToVXBridge"
+      }
+    ]
+  },
+  "window_state": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48UXRBZHZhbmNlZERvY2tpbmdTeXN0ZW0gVmVyc2lvbj0iMSIgVXNlclZlcnNpb249IjEiIENvbnRhaW5lcnM9IjEiPjxDb250YWluZXIgRmxvYXRpbmc9IjAiPjxTcGxpdHRlciBPcmllbnRhdGlvbj0ifCIgQ291bnQ9IjEiPjxTcGxpdHRlciBPcmllbnRhdGlvbj0iLSIgQ291bnQ9IjIiPjxTcGxpdHRlciBPcmllbnRhdGlvbj0ifCIgQ291bnQ9IjIiPjxTcGxpdHRlciBPcmllbnRhdGlvbj0iLSIgQ291bnQ9IjIiPjxBcmVhIFRhYnM9IjEiIEN1cnJlbnQ9Im1fUGlwZWxpbmVEb2NrIj48V2lkZ2V0IE5hbWU9Im1fUGlwZWxpbmVEb2NrIiBDbG9zZWQ9IjEiLz48L0FyZWE+PEFyZWEgVGFicz0iMiIgQ3VycmVudD0ibV9Cb29rbWFya3NEb2NrIj48V2lkZ2V0IE5hbWU9Im1fRmlsdGVyTGlzdERvY2siIENsb3NlZD0iMSIvPjxXaWRnZXQgTmFtZT0ibV9Cb29rbWFya3NEb2NrIiBDbG9zZWQ9IjEiLz48L0FyZWE+PFNpemVzPjAgMCA8L1NpemVzPjwvU3BsaXR0ZXI+PEFyZWEgVGFicz0iNCIgQ3VycmVudD0ibV9WaXN1YWxpemF0aW9uRG9jayI+PFdpZGdldCBOYW1lPSJtX0ZpbHRlclBhcmFtZXRlcnNEb2NrIiBDbG9zZWQ9IjEiLz48V2lkZ2V0IE5hbWU9Im1fV29ya2Zsb3dQYXJhbWV0ZXJzRG9jayIgQ2xvc2VkPSIxIi8+PFdpZGdldCBOYW1lPSJtX1Zpc3VhbGl6YXRpb25Eb2NrIiBDbG9zZWQ9IjAiLz48V2lkZ2V0IE5hbWU9Im1fQ2hhcnRpbmdEb2NrIiBDbG9zZWQ9IjEiLz48L0FyZWE+PFNpemVzPjAgMTA5NCA8L1NpemVzPjwvU3BsaXR0ZXI+PFNwbGl0dGVyIE9yaWVudGF0aW9uPSJ8IiBDb3VudD0iMyI+PEFyZWEgVGFicz0iMSIgQ3VycmVudD0ibV9PdXRwdXREb2NrIj48V2lkZ2V0IE5hbWU9Im1fT3V0cHV0RG9jayIgQ2xvc2VkPSIxIi8+PC9BcmVhPjxBcmVhIFRhYnM9IjEiIEN1cnJlbnQ9Im1fSXNzdWVzRG9jayI+PFdpZGdldCBOYW1lPSJtX0lzc3Vlc0RvY2siIENsb3NlZD0iMSIvPjwvQXJlYT48QXJlYSBUYWJzPSIxIiBDdXJyZW50PSJtX1Bpbm5lZFBhcmFtZXRlcnNEb2NrIj48V2lkZ2V0IE5hbWU9Im1fUGlubmVkUGFyYW1ldGVyc0RvY2siIENsb3NlZD0iMSIvPjwvQXJlYT48U2l6ZXM+MCAwIDAgPC9TaXplcz48L1NwbGl0dGVyPjxTaXplcz43ODkgMCA8L1NpemVzPjwvU3BsaXR0ZXI+PFNpemVzPjEwOTQgPC9TaXplcz48L1NwbGl0dGVyPjwvQ29udGFpbmVyPjwvUXRBZHZhbmNlZERvY2tpbmdTeXN0ZW0+Cg==",
+  "workflow_mode": false
+}

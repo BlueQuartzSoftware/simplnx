@@ -36,7 +36,7 @@ The **Feature Volumes** and **Parent Volumes** are typically expressed as a coun
 
 #### Use Non-Contiguous Neighbors
 
-When enabled, the filter also queries the **Non-Contiguous Neighbor List** for each child **Feature** in addition to the standard **Contiguous Neighbor List**. This expands the set of checked **Features** to include neighbors that are nearby but do not share a direct face/edge/vertex with the child **Feature**. Enable this option if non-contiguous neighbors were used during the original grouping step. Typically the [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md) filter is used to generate the **Non-Contiguous Neighbor List**. The *Multiples of Average Diameter* parameter on that filter has a large effect on the final **Grouping Density** value that is computed.
+When enabled, the filter also queries the **Non-Contiguous Neighbor List** for each child **Feature** in addition to the standard **Contiguous Neighbor List**. This expands the set of checked **Features** to include neighbors that are nearby but do not share a direct face/edge/vertex with the child **Feature**. Enable this option if non-contiguous neighbors were used during the original grouping step. Typically the [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md) filter is used to generate the non-contiguous neighbor lists. That filter's *Multiples of Average Diameter* parameter can have a large effect on the final Grouping Density value that is computed.
 
 #### Find Checked Features
 
@@ -89,6 +89,12 @@ Note that both densities are less than 1.0 because each parent's children have n
 | Contiguous Neighbor List | produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).|
 | Non-Contiguous Neighbor List | (optional, only when "Use Non-Contiguous Neighbors" is enabled)* -- produced by [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md). See the "Use Non-Contiguous Neighbors" parameter guidance above for notes on how the upstream *Multiples of Average Diameter* parameter affects results.|
 
+
+### Required Input Sources
+
+- **Parent IDs** -- produced by a hierarchical grouping/merge filter (for example a twin- or parent-grain merge step).
+- **Contiguous Neighbor List** (and optionally the **Non-Contiguous Neighbor List**) -- produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) / [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md).
+- **Feature Volumes** -- produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

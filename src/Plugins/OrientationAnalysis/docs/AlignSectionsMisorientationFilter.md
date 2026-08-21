@@ -6,20 +6,34 @@ Reconstruction (Alignment)
 
 ## Description
 
-This **Filter** attempts to align consecutive 'sections' perpendicular to the Z-direction of the sample by determining the position that results in the minimum amount of misorientation between **Cells** directly above-below each other. The algorithm of this **Filter** is as follows:
+This **Filter** aligns serial sections (2D slices stacked along the Z-direction) by finding the shift that minimizes the crystal orientation mismatch between cells on neighboring slices. This is the most commonly used alignment method for EBSD data because it directly uses the orientation information measured at each point.
 
-1. Calculate the misorientation between each **Cell** in a section and the **Cell** directly above it in the next section  
-2. Count the number of **Cell** pairs that have a misorientation above the user defined tolerance and store that as the misalignment value for that position
-3. Repeat steps 1 and 2 for each position when shifting the second slice (relative to the first) from three (3) **Cells** to the left to three (3) **Cells** to the right, as well as from three (3) **Cells** up to three (3) **Cells** down. *Note that this creates a 7x7 grid*
-4. Determine the position in the 7x7 grid that has the lowest misalignment value. (It will be the position with the fewest different **Cell** pairs)
-5. Repeat steps 1-4 with the center of each (new) 7x7 grid at the best position from the last 7x7 grid until the best position in the current/new 7x7 grid is the same as the last 7x7 grid
-6. Repeat steps 1-5 for each pair of neighboring sections
+### When to Use This Method
 
-**Note that this is similar to a downhill simplex and can get caught in a local minimum!**
+Use this method when your data contains crystal orientation measurements (quaternions or Euler angles) and you want to align sections based on the actual crystallographic content. This works well for most EBSD datasets. For data without orientation information, consider the [Align Sections (Feature Centroid)](../SimplnxCore/AlignSectionsFeatureCentroidFilter.md) or [Align Sections (Mutual Information)](AlignSectionsMutualInformationFilter.md) methods instead.
 
-If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.
+### How This Filter Works
 
-The user can also decide to remove a *background shift* present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
+The filter uses an iterative grid search to find the optimal alignment for each pair of neighboring sections:
+
+1. For a given relative position of two sections, calculate the misorientation between each **Cell** on the lower section and the **Cell** directly above it on the upper section
+2. Count the number of cell pairs whose misorientation exceeds the user-defined tolerance. This count is the "misalignment score" for that position -- lower is better
+3. Evaluate the misalignment score at all 49 positions in a 7x7 grid (shifting the upper section from -3 to +3 cells in both X and Y)
+4. Select the position with the lowest misalignment score
+5. Re-center the 7x7 grid on the best position and repeat until the best position no longer changes
+6. Repeat for each pair of neighboring sections
+
+### Local Minima Warning
+
+This iterative grid search is similar to a downhill simplex optimization and **can get caught in a local minimum**. If alignment results look incorrect, try adjusting the misorientation tolerance or consider using the [Align Sections (Feature Centroid)](../SimplnxCore/AlignSectionsFeatureCentroidFilter.md) method, which does not have this limitation.
+
+### Masking
+
+If a mask array is provided, **Cells** flagged as *false* are excluded from the alignment calculation. This is useful for ignoring regions of bad data or regions outside the sample boundary.
+
+### Linear Background Subtraction
+
+Some combinations of sample geometry and internal features can cause the alignment to introduce a gradual "shear" across the sample. Enabling *Linear Background Subtraction* corrects for this by fitting a line to the X and Y shifts along the Z-direction and removing the linear trend. This effectively keeps the top and bottom sections of the sample fixed relative to each other.
 
 ## Optional Output Data
 
@@ -44,12 +58,18 @@ In this new structure, what follows is what the created structures represent:
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
+### Required Input Sources
+
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
+- **Mask** (optional) -- a boolean array marking valid cells, typically produced by a threshold operation such as [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ (02) Small IN100 Full Reconstruction
++ `(02) Small IN100 Full Reconstruction`
 
 
 ## License & Copyright

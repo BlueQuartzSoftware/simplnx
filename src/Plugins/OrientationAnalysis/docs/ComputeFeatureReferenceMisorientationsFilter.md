@@ -6,16 +6,16 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** calculates the misorientation angle between each **Cell** within a **Feature** and a 
-*reference orientation* for that **Feature**.  The user can choose the *reference orientation* to 
-be used for the **Features** from a drop-down menu.  The options for the *reference orientation* are 
-the average orientation of the **Feature** or the orientation of the **Cell** that is furthest from 
-the *boundary* of the **Feature**.
+This **Filter** measures how much crystal orientation varies within each **Feature** (grain) by computing the misorientation angle between each **Cell** (voxel) and a chosen *reference orientation* for that **Feature**.
 
-Note: the average orientation of the **Feature** is a typical choice, but if the **Feature** has 
-undergone plastic deformation and the amount of lattice rotation developed is of interest, then 
-it may be more reasonable to use the orientation *near the center* of the **Feature** as it may 
-not have rotated and thus serve as a better *reference orientation*.
+This is useful for detecting intragranular orientation gradients caused by plastic deformation, subgrain formation, or other processes that cause the crystal lattice to rotate within a grain.
+
+### Choosing a Reference Orientation
+
+The user selects the reference orientation from two options. The choice depends on the physical question being asked:
+
+- **Average Feature Orientation** -- Uses the average orientation of all cells in the grain. This is the typical choice for characterizing overall orientation spread within a grain.
+- **Orientation Farthest from Feature Boundary** -- Uses the orientation of the cell nearest to the Euclidean center of the grain (farthest from any boundary). If the grain has undergone plastic deformation, boundary regions tend to rotate more than the interior. Using the center cell as the reference provides a more stable baseline that better reveals the pattern of lattice rotation from the interior outward.
 
 ### Reference Orientation
 
@@ -52,6 +52,15 @@ Using the same dataset, the algorithm will find the voxel that is the furthest f
 feature boundary, and use that voxel's orientation as the **reference orientation**.
 
 ![ComputeFeatureReferenceMisorientations_1.png](Images/ComputeFeatureReferenceMisorientations_1.png)
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md).
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Average Quaternions** (for Average Feature Orientation mode) -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Boundary Euclidean Distances** (for Orientation Farthest from Feature Boundary mode) -- produced by [Compute Euclidean Distance Map](../SimplnxCore/ComputeEuclideanDistMapFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

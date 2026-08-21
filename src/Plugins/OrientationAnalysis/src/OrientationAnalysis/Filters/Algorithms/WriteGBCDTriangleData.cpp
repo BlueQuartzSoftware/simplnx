@@ -43,7 +43,7 @@ Result<> WriteGBCDTriangleData::operator()()
   fprintf(f, "# Column 1-3:    right hand average orientation (phi1, PHI, phi2 in RADIANS)\n");
   fprintf(f, "# Column 4-6:    left hand average orientation (phi1, PHI, phi2 in RADIANS)\n");
   fprintf(f, "# Column 7-9:    triangle normal\n");
-  fprintf(f, "# Column 8:      surface area\n");
+  fprintf(f, "# Column 10:     surface area\n");
 
   int32 gid0 = 0; // Feature identifier 0
   int32 gid1 = 0; // Feature identifier 1

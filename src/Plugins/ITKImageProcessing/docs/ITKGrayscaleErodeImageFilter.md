@@ -1,6 +1,6 @@
 # ITK Grayscale Erode Image Filter
 
-Grayscale erosion of an image.
+Replaces each pixel with the minimum value in its neighborhood — a grayscale erosion that darkens the image and grows dark regions.
 
 ## Group (Subgroup)
 
@@ -8,20 +8,26 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-Erode an image using grayscale morphology. Erosion takes the maximum of all the pixels identified by the structuring element.
+Grayscale **erosion** replaces each pixel with the **minimum** value found within the neighborhood defined by the **structuring element** (the probe shape — ball, box, etc. — swept over the image). The effect is to darken the image, grow dark regions, and shrink bright ones. It is the grayscale counterpart of binary erosion and the dual of [ITK Grayscale Dilate Image Filter](ITKGrayscaleDilateImageFilter.md).
 
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.* MorphologyImageFilter , GrayscaleFunctionErodeImageFilter , BinaryErodeImageFilter
+### Parameter Guidance
 
-![](Images/ITKGrayscaleErosion.png)
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Larger radii grow dark regions more.
 
-### Kernel Type
+#### Kernel Type
 
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on any scalar (grayscale) image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
+
+![Grayscale erosion example.](Images/ITKGrayscaleErosion.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -29,7 +35,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

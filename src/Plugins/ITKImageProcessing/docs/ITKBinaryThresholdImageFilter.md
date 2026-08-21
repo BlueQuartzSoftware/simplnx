@@ -1,6 +1,6 @@
 # ITK Binary Threshold Image Filter
 
-Binarize an input image by thresholding.
+Produces a two-value (binary) image by marking pixels whose intensity falls inside a chosen range.
 
 ## Group (Subgroup)
 
@@ -8,19 +8,23 @@ ITKThresholding (Thresholding)
 
 ## Description
 
-This filter produces an output image whose pixels are either one of two values ( OutsideValue or InsideValue ), depending on whether the corresponding input image pixels lie between the two thresholds ( LowerThreshold and UpperThreshold ). Values equal to either threshold is considered to be between the thresholds.
+This filter binarizes an image. Every pixel whose value lies **between the Lower Threshold and Upper Threshold (inclusive)** is set to the *Inside Value*; every other pixel is set to the *Outside Value*:
 
-More precisely \f[ Output(x_i) = \begin{cases} InsideValue & \text{if \f$LowerThreshold \leq x_i \leq UpperThreshold\f$} \\ OutsideValue & \text{otherwise} \end{cases} \f]
+$$
+\text{output}(x) = \begin{cases} \text{InsideValue} & \text{if } \text{LowerThreshold} \le x \le \text{UpperThreshold} \\ \text{OutsideValue} & \text{otherwise} \end{cases}
+$$
 
-This filter is templated over the input image type and the output image type.
+### Parameter Guidance
 
-The filter expect both images to have the same number of dimensions.
+- **Lower Threshold** / **Upper Threshold** — the bounds of the "inside" range, in the **input image's intensity units**. By default the lower bound is the smallest possible pixel value and the upper bound is the largest, so the range spans everything; in practice you usually set only one of the two — a lower bound to keep everything *above* a value, or an upper bound to keep everything *below* a value.
+- **Inside Value** — the output value written for pixels inside the range (a `uint8` label, default *1*).
+- **Outside Value** — the output value written for pixels outside the range (a `uint8` label, default *0*).
 
-The default values for LowerThreshold and UpperThreshold are: LowerThreshold = NumericTraits<TInput>::NonpositiveMin() ; UpperThreshold = NumericTraits<TInput>::max() ; Therefore, generally only one of these needs to be set, depending on whether the user wants to threshold above or below the desired threshold.
+![Binary threshold result.](Images/ITKBinaryThreshold.png)
 
-Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.
+### Required Input Sources
 
-![](Images/ITKBinaryThreshold.png)
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -28,7 +32,7 @@ Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

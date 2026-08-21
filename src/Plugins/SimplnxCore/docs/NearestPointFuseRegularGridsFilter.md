@@ -6,9 +6,26 @@ Sampling (Resolution)
 
 ## Description
 
-This **Filter** fuses two **Image Geometry** data sets together. The grid of **Cells** in the *Reference* **Data Container** is overlaid on the grid of **Cells** in the *Sampling* **Data Container**.  Each **Cell** in the *Reference* **Data Container** is associated with the nearest point in the *Sampling* **Data Container** (i.e., no *interpolation* is performed).  All the attributes of the **Cell** in the *Sampling* **Data Container** are then assigned to the **Cell** in the *Reference* **Data Container**.
+This filter copies the **Cell** data from one **Image Geometry** onto another by matching each cell to the spatially nearest cell in the other grid. It is used to bring the attribute arrays of two separately-sampled volumes into a single grid so they can be analyzed together.
 
-*Note:* The *Sampling* **Data Container** remains identical after this **Filter**, but the *Reference* **Data Container**, while "geometrically identical", gains all the attribute arrays from the *Sampling* **Data Container**.
+### Reference vs. Sampling Geometry
+
+The filter works with two **Image Geometries**:
+
+- The **Reference** geometry is the grid that is kept. Its cells are the destination.
+- The **Sampling** geometry is the grid that is read from. Its cells are the source of the copied data.
+
+For each cell in the *Reference* geometry, the filter finds the cell in the *Sampling* geometry whose center is physically closest (using the two grids' origins and spacings), and copies all of that sampling cell's attribute arrays onto the reference cell. **No interpolation is performed** — the nearest sampling value is taken as-is. Because the match is by physical position, the two grids may have different spacings, dimensions, or extents; only their overlap in space is meaningful.
+
+The *Sampling* geometry is left unchanged. The *Reference* geometry keeps its own geometry but gains a copy of the sampling geometry's attribute arrays.
+
+### Parameter Guidance
+
+- **Use Custom Fill Value** — controls what happens to reference cells that fall outside the sampling grid (no nearby sampling cell). When off, copied arrays are filled with *0* there; when on, the user supplies the fill value.
+
+### Required Input Sources
+
+- **Reference Image Geometry** and **Sampling Image Geometry** -- two **Image Geometries** (each with a **Cell Attribute Matrix**), typically created by separate import or resampling steps.
 
 % Auto generated parameter table will be inserted here
 

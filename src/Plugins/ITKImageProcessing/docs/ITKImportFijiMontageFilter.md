@@ -1,16 +1,31 @@
 # Read Fiji Montage (ITK)
 
+Imports a set of overlapping tile images described by a Fiji/ImageJ TileConfiguration file, placing each tile in its own data group for later montage assembly.
+
 ## Group (Subgroup)
 
 IO (Input)
 
 ## Description
 
-Imports multiple images for the purpose of montage assembly. Each image is stored in it's own *DataContaner/AttributeMatrix/AttributeArray* where the name of the *DataContainer* is based off the row & column index of the montage. The filter assumes that the Configuration File is in the same folder as the images. The created *AttributeMatrix* and *AttributeArray* will have the same name. The image files **MUST** be located in the same directory as the Fiji Configuration File.
+This filter reads a Fiji/ImageJ *TileConfiguration* file and imports the overlapping tile images it references so they can later be assembled into a single montage. The configuration file lists each tile image along with the coordinate at which it belongs in the mosaic. The image files **must** be located in the same directory as the configuration file.
 
-Utilizes the *itkReadImage* and *ColorToGrayScale* filters
+Each tile is imported into its own **Image Geometry**, named using the *Image Geometry Prefix* followed by the tile's file name. Inside each Image Geometry, the pixel data is stored in a **Cell Attribute Matrix** group, which holds the image **Data Array**. If *Parent Imported Images Under a DataGroup* is enabled, all of these per-tile Image Geometries are placed under a single parent **DataGroup** so they are grouped together in the DataStructure.
 
-## Example Registration File
+Use this filter as the first step in a montage-stitching workflow when your tiles are described by a Fiji TileConfiguration file.
+
+### Parameter Guidance
+
+- **Change Origin** / **Origin** — when enabled, overrides the origin of the assembled mosaic with the user-supplied value (in the chosen length unit).
+- **Convert To GrayScale** / **Color Weighting** — when enabled, converts color tiles to grayscale using a weighted (luminosity) average of the red, green, and blue channels. The default weights are the BT.709 values *Red 0.2125, Green 0.7154, Blue 0.0721*, which approximate human brightness perception (the eye is most sensitive to green). The weights can be changed to any values. The incoming color array must be 8-bit unsigned (uint8); otherwise that image is skipped.
+- **Set Image Data Type** / **Output Data Type** — when enabled, stores the imported pixel data using the chosen numeric type (uint8, uint16, or uint32).
+- **Length Unit** — the physical length unit applied to the created Image Geometries.
+
+### Required Input Sources
+
+A Fiji/ImageJ TileConfiguration text file, with all referenced tile images in the same directory.
+
+## Example Configuration File
 
     # Define the number of dimensions we are working on
     dim = 2                         <===== THIS LINE IS REQUIRED
@@ -23,56 +38,6 @@ Utilizes the *itkReadImage* and *ColorToGrayScale* filters
     SampleMosaic_p4.bmp; ; (0.23675, 1839.55)
     SampleMosaic_p5.bmp; ; (1227.31, 1839.55)
 
-### Color To Gray Scale Notes
-
-**For this option to work the read in color array must be a *UInt8Array* otherwise the image will be skipped over when loading**
-
-The luminosity method is a more sophisticated version of the average method. It also averages the values, but it forms a weighted average to account for human perception. We re more sensitive to green than other colors, so green is weighted most heavily. The default formula for luminosity is BT709 Gray scale:
-
-    Red: 0.2125 Green: 0.7154 Blue: 0.0721. 
-
-The user can set the weightings to what ever values they would like.
-
-### Lenght Unit
-
-    Yoctometer = 0
-    Zeptometer = 1
-    Attometer = 2
-    Femtometer = 3
-    Picometer = 4
-    Nanometer = 5
-    Micrometer = 6
-    Millimeter = 7
-    Centimeter = 8
-    Decimeter = 9
-    Meter = 10
-    Decameter = 11
-    Hectometer = 12
-    Kilometer = 13
-    Megameter = 14
-    Gigameter = 15
-    Terameter = 16
-    Petameter = 17
-    Exameter = 18
-    Zettameter = 19
-    Yottameter = 20
-    Angstrom = 21
-    Mil = 22
-    Inch = 23
-    Foot = 24
-    Mile = 25
-    Fathom = 26
-    Unspecified = 100U
-    Unknown = 101U
-
-### Output Data Type
-
-The *Output Data Type* parameter controls the numeric type used to store the imported image data:
-
-- **uint8 [0]**: Read image data as unsigned 8-bit integers (0–255).
-- **uint16 [1]**: Read image data as unsigned 16-bit integers (0–65535).
-- **uint32 [2]**: Read image data as unsigned 32-bit integers (0–4294967295).
-
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
@@ -81,9 +46,8 @@ Prebuilt Pipelines / Examples / ITKImageProcessing / Fiji Import
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-<https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

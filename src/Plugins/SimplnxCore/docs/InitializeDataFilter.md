@@ -6,73 +6,80 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** allows the user to define the data set in a _DataArray_.
+This **Filter** overwrites every tuple in a **Data Array** with a value chosen by one of four initialization modes. Multi-component arrays can be initialized either uniformly (one value applied to every component) or per-component (a semicolon-separated list).
 
 ### Initialization Type
 
-The *Initialization Type* parameter provides the following choices:
+The *Initialization Type* parameter provides four modes:
 
-- **Fill Value [0]**: Copies a user-supplied constant value (or per-component values) into every tuple in the array.
-- **Incremental [1]**: Fills the array starting from a user-supplied value and applying a fixed step (increment or decrement) to each successive tuple.
-- **Random [2]**: Generates random values across the full scalar type range. An optional fixed seed can be supplied for reproducibility.
-- **Random With Range [3]**: Generates random values within a user-specified minimum/maximum range per component.
+- **Fill Value [0]** -- every tuple is set to a user-supplied constant value (or per-component values).
+- **Incremental [1]** -- the array is filled starting from a user-supplied starting value, applying a fixed step (increment or decrement) to each successive tuple.
+- **Random [2]** -- every tuple is set to a uniformly-random value drawn from the **full range** of the array's data type. An optional fixed seed can be supplied for reproducibility.
+- **Random With Range [3]** -- every tuple is set to a uniformly-random value drawn from a user-specified [min, max] interval per component.
+
+#### Fill Value
+
+Provide a single value or, for multi-component arrays, a semicolon-separated list. The same value is copied into every tuple.
+
+#### Incremental
+
+Provide a starting value, a *Step Operation* (Addition or Subtraction), and a step value. Each successive tuple's value is the previous tuple's value plus (or minus) the step. A step value of 0 leaves that component unchanged across all tuples.
+
+Example -- a 3-component array filled with 3-D rotations in radians, stepping X and Y but not Z:
+
+- Starting value: `0`
+- Step Operation: Addition
+- Step Values: `3.141592;6.283185;0`
+
+#### Random and Random With Range
+
+Both modes draw uniformly. *Random* uses the full data-type range; *Random With Range* honors a per-component lower and upper bound. Both modes use the same random seed plumbing:
+
+- *Use Seed for Random Generation* + *Seed Value* -- supply a fixed integer seed for reproducibility.
+- With the option disabled, a time-based seed is generated; the actual seed used is saved to the *Stored Seed Value Array* so the run can be reproduced later.
+
+*Standardize Seed* (Random mode only) controls whether all components in a tuple share the same random draw:
+
+- ON: a single value is drawn per tuple and broadcast to all components: `| 3;3;3 | 9;9;9 | 4;4;4 | ...`
+- OFF: each component is drawn independently: `| 3;9;4 | 7;2;8 | 5;9;6 | ...`
+
+For *Random With Range* on a multi-component array, the lower and upper bounds are semicolon-separated per component. A trick for fixing one component while randomizing the others: set the lower and upper bound to the same value for the fixed component. Example -- 3-component array where the middle component is always 6 and the others vary:
+
+- Lower bound: `0;6;0`
+- Upper bound: `90;6;252`
 
 ### Step Operation
 
-The *Step Operation* parameter (used with **Incremental** initialization) provides the following choices:
+Used only with *Incremental*:
 
-- **Addition [0]**: Adds the step value to the previous tuple's value at each successive tuple.
-- **Subtraction [1]**: Subtracts the step value from the previous tuple's value at each successive tuple.
+- **Addition [0]** -- adds the step value to the previous tuple's value.
+- **Subtraction [1]** -- subtracts the step value from the previous tuple's value.
 
-This **Filter** provides several ways to do this:
+### Boolean Array Notes
 
-- Fill Value:
-  - This type is fairly straight forward you provide a value, or set of values for a multi-component array, and it gets copied into every tuple in the array.
-  - Nuances to note:
-    - None for this type aside from aforementioned boolean nuances
-- Incremental:
-  - This allows the user to supply a start value, define the type (increment or decrement), and set a step value to for the operation. Providing 0 will ensure that that component remains unchanged.
-  - Example: Say you have a 3 component array where you want to define 3-D rotations in radians for different components, but you only want to operate on the x and y and not the z; You could define your starting value as '0' (ignoring the apostrophe marks), select addition as the operation, then define the step values like so: '3.141592;6.283185;0'
-  - Boolean Nuances:
-    - For the _Step Values_ please enter uint8 values, preferably a 0 or 1 only.
-    - Addition:
-      - Any step value that is greater than 0 will cause all values to be 'true' after the first tuple, 'true' values will remain unchanged.
-      - If your start value is 'false' and step value > 0, the array will initialize to | false | true | true | ... |
-      - If your start value is 'true' and step value > 0, the array will initialize to | true | true | true | ... |
-    - Subtraction:
-      - Any step value that is greater than 0 will cause all values to be 'false' after the first tuple, 'false' values will remain unchanged.
-      - If your start value is 'true' and step value > 0, the array will initialize to | true | false | false | ... |
-      - If your start value is 'false' and step value > 0, the array will initialize to | false | false | false | ... |
-- Random:
-  - This allows the user to randomly generate values from the actual scalar type min to the scalar type max. If you choose to define the seed for the array the seed in the _Seed Value_ box will be used, otherwise a random seed will be generated. Either way the seed will be saved to the _Stored Seed Value Array_.
-  - **Standardizing Seed:**
-    - This value allows the user to be able to generate the same sequence of values for every component in the tuple throughout the array when set to true
-    - Example:
-      - When true it will look like | 3;3;3 | 9;9;9 | 4;4;4 | ... |
-      - When false it will look like | 3;9;4 | 7;2;8 | 5;9;6 | ... |
-- Random with Range:
-  - This is beholden to the same rules as random with some additional considerations in relation to the range.
-  - If you require an array that has one stable component and other variable components you can define the lower and upper bounds of the range to be the same and the variable will never change.
-  - Example: Say you have a 3 component array where you want the middle component to be always be 6 and the other component to be randomized above six. When defining a range supply '6' (ignoring the apostrophe marks) for the lower bound and '90;6;252' for the upper bound
+For boolean arrays, the only values that produce `false` are:
 
-The filter provides two ways to define the values in a multi-component array:
+- The strings `False`, `FALSE`, `false`.
+- Any well-formed numeric `0` (integer or floating-point).
 
-- Define a single value that will be used for every component in the tuple
-- Defining each component's value seperated by the semicolon ';' character
+**Any other** string or number is interpreted as `true`. Conventional `true` values are the strings `True`, `TRUE`, `true`, or the numeric `1`.
 
-Example: Say you have a 3 component array that you want to range that starts from zero and has unique end values for each component. In the starting value box just supply '0' (ignoring the apostrophe marks) and then define your end values in a list like this: '4;0;7'
+For boolean arrays under *Incremental* mode, the *Step Operation* behaves as follows:
 
-**Boolean Entry Notes:**
+- **Addition** with step value > 0: starting `false` produces `false, true, true, ...`; starting `true` produces all `true`.
+- **Subtraction** with step value > 0: starting `true` produces `true, false, false, ...`; starting `false` produces all `false`.
 
-The **ONLY** two ways to specify a 'false' boolean value are as follows:
+### Multi-Component Value Format
 
-- boolean value string types as follows ignoring apostrophe marks: 'False', 'FALSE', 'false'
-- all well-formed integers and well-formed floating point definitions of 0
+Single value: applied to all components. Example: `2.5` initializes every component of every tuple to 2.5.
 
-**ANY OTHER** string or number **WILL BE** 'true', although it is good practice to define true values as follows:
+Per-component values: semicolons separate components. Example for a 2-component array: `0;1` sets component 0 to 0 and component 1 to 1.
 
-- boolean value string types as follows ignoring apostrophe marks: 'True', 'TRUE', 'true'
-- all well-formed integers and well-formed floating point definitions of 1
+Semicolons (rather than commas) are used to avoid international locale ambiguity (commas are decimal points in some locales).
+
+### Required Input Sources
+
+- **Input Data Array** -- the array to overwrite. Typically a previously created or imported array.
 
 % Auto generated parameter table will be inserted here
 

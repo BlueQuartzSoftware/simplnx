@@ -6,14 +6,14 @@ Generic (Spatial)
 
 ## Description
 
-This **Filter** determines whether a **Feature** touches an outer surface of the sample. This is accomplished by simply querying the **Feature** owners of the **Cells** that sit at either . Any **Feature** that owns one of those **Cells** is said to touch an outer surface and all other **Features** are said to not touch an outer surface of the sample.
+This **Filter** flags each **Feature** with whether it touches an outer surface of the sample volume. The output is a feature-level boolean array where *false* (0) means the feature is fully enclosed in the interior and *true* (1) means at least one of its cells sits on the sample surface.
 
-This **Filter** determines whether a **Feature** touches an outer *Surface* of the sample volume. A **Feature** is considered touching the *Surface* of the sample if either of the following conditions are met:
+A **Feature** is considered a "surface feature" if either of the following is true:
 
-+ Any cell location is x<sub>min</sub>, x<sub>max</sub>, y<sub>min</sub>, y<sub>max</sub>, z<sub>min</sub> or z<sub>max</sub>
-+ Any cell has **Feature ID = 0** as a neighbor.
+- Any of its cells sits on the outermost voxel layer of the geometry -- i.e., a cell location equal to x<sub>min</sub>, x<sub>max</sub>, y<sub>min</sub>, y<sub>max</sub>, z<sub>min</sub>, or z<sub>max</sub>.
+- Any of its cells has a neighbor with **Feature ID = 0**. (Feature ID 0 is the "unassigned" / "outside sample" label, typically produced by a mask or by [Isolate Largest Feature](IdentifySampleFilter.md).)
 
-The output of this filter is a **Feature** level array of booleans where 0=Interior/Not touching and 1=Surface/Touching.
+Surface features are usually excluded from size distributions, neighbor statistics, and other analyses because their measured volume is artificially truncated by the sample boundary. See [Compute Biased Features](ComputeBiasedFeaturesFilter.md) for a more statistically rigorous treatment of boundary bias.
 
 ### WARNING - Feature ID=0 Voxels
 
@@ -33,6 +33,10 @@ If the structure/data is actually 2D, then the dimension that is planar is not c
 |-------|--------|
 | ![ComputeSurfaceFeatures_Cylinder](Images/ComputeSurfaceFeatures_Cylinder.png) |  ![ComputeSurfaceFeatures_Square](Images/ComputeSurfaceFeatures_Square.png) |
 | Example showing features touching Feature ID=0 (Black voxels) "Mark Feature 0 Neighbors" is **ON** | Example showing features touching the outer surface of the bounding box |
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

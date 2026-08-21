@@ -6,136 +6,96 @@ Rotation, Scale & Transformation
 
 ## Description
 
-This **Filter** applies a spatial transformation to either a node **Geometry** or an **Image Geometry**.
+This **Filter** applies a spatial transformation -- rotation, translation, scaling, or an arbitrary 4x4 matrix -- to a **Geometry**. Both **Image Geometries** and node-based geometries (Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, Hexahedral) are supported.
+
+![Fig. 1: The "Rotation" transform type rotates the geometry by an angle θ (in degrees) about a user-specified axis (x, y, z). Unlike Rotate Sample Reference Frame, this is a true geometric transform that moves the geometry itself.](Images/ApplyTransformationToGeometry_AxisAngle.png)
 
 ### Node Geometries
 
- A node **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
-
-- **NO** interpolation will take place as the only changes that take place are the actual coordinates of the vertices.
+For node-based geometries, the transformation modifies vertex positions only. No interpolation occurs. Multiple transformations can be applied in succession without artifacts.
 
 ### Image Geometry
 
-If the user selects an **Image Geometry** then there are 2 additional required filter parameters that need to be set:
+For Image Geometries, transformation requires re-gridding because cell positions are implicit in the grid spacing and origin. After transformation, a new grid is generated and cell data is interpolated onto it. This is governed by two extra parameters:
 
-- **Interpolation Method**: This will be used when transferring the data from the old geometry to the newly transformed geometry.
-- **Cell Attribute Matrix**: This Attribute Matrix holds the data that is associated with each cell of the image geometry.
+- **Interpolation Method** -- how cell data values are sampled from the old grid (see below).
+- **Cell Attribute Matrix** -- which attribute matrix holds the cell data to transform.
 
-The linear/Bi-Linear/Tri-Linear Interpolation is adapted from the equations presented
-in [https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36}](https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf)
+### Image Geometry Caveat: Successive Transformations
 
-## Example Image Geometry Transformations
-
-| Description | Example Output Image |
-|-------------|----------------------|
-| Input Image |  ![Input Image](Images/ApplyTransformation_AsRead.png) |
-| After Rotation of 45 Degrees around the <001> axis | ![Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_Rotated.png) |
-| Scaled by 2x in the X and Y axis  | ![Scaled by 2x in the X and Y axis.](Images/ApplyTransformation_Scaled.png) |
-
-## Image Geometry Caveat
-
-Using this filter several times in a row to apply several transforms in succession to the same image geometry is highly likely to result in visual artifacts related to the intermediate re-gridding of the image geometry between transformations.  For example, let's rotate an image geometry 90 degrees along the Z axis:
+Applying multiple transformations one-at-a-time to an Image Geometry produces visible re-gridding artifacts because each intermediate step re-samples the data. The following example shows a 90-degree rotation done as a single step versus as two 45-degree steps:
 
 | Description | Image |
 |-------------|----------------------|
 | Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom.png) |
-| After Rotation of 90 Degrees around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
+| After single 90-degree rotation around <001> | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
+| After first 45-degree rotation | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate.png) |
+| After second 45-degree rotation (artifacts visible) | ![2nd Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final_Artifacts.png) |
 
-Instead of using a single rotation of 90 degrees, if the user has a need to instead apply several rotations that still add up to 90 degrees, for example a pair of 45 degree rotations, potential unwanted artifacts can occur due to the intermediate regridding for each rotation.
-
-| Description | Image |
-|-------------|----------------------|
-| Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom.png) |
-| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate.png) |
-| After 2nd Rotation of 45 Degrees around the <001> axis | ![2nd Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final_Artifacts.png) |
-
-Why does this happen?  Let's overlay the centers of each cell on top of the original image geometry.
+The problem is that after the first 45-degree rotation, the cell centers no longer align with the new grid cells -- the re-gridding has shifted them. On the second rotation, those misalignments compound.
 
 | Description | Image |
 |-------------|----------------------|
 | Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom_WithVertices.png) |
-| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate_WithVertices.png) |
+| After 1st 45-degree rotation (cell centers in green) | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate_WithVertices.png) |
 
-The green vertices refer to the center of each image geometry cell.  As you can see, after the first 45 degree rotation, the image geometry is re-gridded and now the transformed green vertices are no longer in the center of each cell.
-
-On the 2nd and final 45 degree rotation, the image geometry is going to double in size because the algorithm doesn't know the final image geometry's exact size and doubles its size to account for the worst case scenario.
-
-Let's see how the transformed green vertices overlay on the intermediate image geometry when the field of vertices has doubled in size but the image geometry hasn't actually been transformed a 2nd time yet.
+To avoid these artifacts, **combine all transformations into a single 4x4 matrix first** using [Combine Transformation Matrices](CombineTransformationMatricesFilter.md), then apply that combined matrix as a single transformation:
 
 | Description | Image |
 |-------------|----------------------|
-| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate_WithVertices2.png) |
+| Combined 90-degree rotation applied once | ![Combined Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
 
-The cell circled in purple has two green vertices inside it.  This means that once the 2nd 45 degree transformation is completed, the final image geometry will have that orange color shifted outside where we would expect it to be.  And sure enough:
+This caveat only applies to Image Geometries. Node-based geometries can have any number of transformations chained without issue.
 
-| Description | Image |
+### Example Transformations (Image Geometry)
+
+| Description | Example Output Image |
 |-------------|----------------------|
-| After 2nd Rotation of 45 Degrees around the <001> axis | ![2nd Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final_Artifacts2.png) |
-
-To avoid this problem, it is considered best practice to use the *[Combine Transformation Matrices](CombineTransformationMatricesFilter.md)* filter to combine all transforms together into one transform before applying the transform to an image geometry.
-
-| Description | Image |
-|-------------|----------------------|
-| After combining both 45 degree rotations and applying around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
-
-## NOTE: 
-
-This caveat is ONLY for image geometries.  Multiple transformations can be applied in succession to any of the "Node" based geometries without any issues. Those are:
-
-- Vertex
-- Edge
-- Triangle
-- Quad
-- Tetrahedral
-- Hexahedral
-
-## Transformation Information
+| Input Image |  ![Input Image](Images/ApplyTransformation_AsRead.png) |
+| 45-degree rotation around <001> | ![Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_Rotated.png) |
+| 2x scale in X and Y | ![Scaled by 2x in the X and Y axis.](Images/ApplyTransformation_Scaled.png) |
 
 ### Transformation Type
 
-The *Transformation Type* parameter provides the following choices:
+The *Transformation Type* parameter selects how the transformation is specified:
 
-- **No Transform [0]**: Applies an identity transformation; the geometry is unchanged.
-- **Pre-Computed Transformation Matrix (4x4) [1]**: Uses a 4x4 transformation matrix supplied as an Attribute Array in row major order.
-- **Manual Transformation Matrix [2]**: Uses a manually entered 4x4 transformation matrix.
-- **Rotation [3]**: Rotates about a supplied axis-angle <x,y,z> with the angle specified in degrees.
-- **Translation [4]**: Translates the geometry by the supplied (x, y, z) values.
-- **Scale [5]**: Scales the geometry by the supplied (x, y, z) values.
+| Value | Type | Description |
+|---|---|---|
+| 0 | No Transform | Identity (geometry unchanged). |
+| 1 | Pre-Computed Transformation Matrix (4x4) | A 4x4 matrix supplied as a 16-element float32 Attribute Array in row-major order. |
+| 2 | Manual Transformation Matrix | A 4x4 matrix typed in directly. |
+| 3 | Rotation | Axis-angle: a unit vector (x, y, z) and an angle in **degrees**. |
+| 4 | Translation | A (dx, dy, dz) translation vector in the geometry's physical units. |
+| 5 | Scale | A (sx, sy, sz) scaling vector (dimensionless multipliers). |
 
-The user may select from a variety of options for the type of transformation to apply:
+The linear / bi-linear / tri-linear interpolation math is adapted from [Purdue CS530 slides, page 36](https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf).
 
-| Enum Value | Transformation Type                | Representation                                                                       |
-|------------|------------------------------------|--------------------------------------------------------------------------------------|
-| 0          | No Transformation                  | Identity transformation                                                              |
-| 1          | Pre-Computed Transformation Matrix | A 4x4 transformation matrix, supplied by an **Attribute Array** in *row major* order |
-| 2          | Manual Transformation Matrix       | Manually entered 4x4 transformation matrix                                           |
-| 3          | Rotation                           | Rotation about the supplied axis-angle <x,y,z> (Angle in Degrees).                   |
-| 4          | Translation                        | Translation by the supplied (x, y, z) values                                         |
-| 5          | Scale                              | Scaling by the supplied (x, y, z) values                                             |
+If *Translate Geometry To Global Origin Before Transformation* is enabled, the geometry is shifted so its centroid sits at (0, 0, 0) before the transformation is applied, then translated back. Use this to rotate about the geometry's center rather than the world origin.
 
-The **Translate Geometry To Global Origin Before Transformation** option must be selected if the user wants to translate their volume to (0, 0, 0), apply the transform, and then translate the volume back to its original location.
+### Interpolation Method (Image Geometry Only)
 
-### Resampling or Interpolation (Image Geometry Only)
+- **Nearest Neighbor [0]** -- each output cell takes the value of the nearest input cell. Fast; preserves sharp boundaries; blocky.
+- **Linear (trilinear in 3D) [1]** -- each output cell value is interpolated from surrounding input cells. Smoother; may blur sharp features.
+- **No Interpolation [2]** -- no resampling. Use only when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
 
-When transforming an **Image Geometry**, the *Resampling or Interpolation* parameter controls how cell data values are assigned in the newly created grid:
+### Saving the Final Transformation Matrix
 
-- **Nearest Neighbor Resampling [0]**: Each output cell takes the value of the nearest input cell. This is fast and preserves sharp boundaries, but may produce a blocky appearance.
-- **Linear Interpolation [1]**: Each output cell value is computed using trilinear interpolation from the surrounding input cells. This produces smoother results but may blur sharp features.
-- **No Interpolation [2]**: The transformation is applied without any resampling of cell data. Use this option when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
-
-## Saving the final transformation Matrix.
-
-There is an option to save the final transformation matrix into its own array. The format of the output DataArray is a
-flattened array 16 elements in size that represents a 4x4 matrix. The elements are encoded in a ROW MAJOR array, i.e., 
+Optionally, the final 4x4 transformation matrix can be saved as an Attribute Array. The output is a 16-element float32 array in **row-major** order:
 
     1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
 
-represents the following 4x4 Matrix
+represents the 4x4 matrix:
 
     1   2   3   4
     5   6   7   8
     9   10  11  12
     13  14  15  16
+
+### Required Input Sources
+
+- **Geometry** -- any supported geometry; for Image Geometry workflows, typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
+- **Pre-Computed Transformation Matrix** (only for Transformation Type 1) -- typically produced by [Combine Transformation Matrices](CombineTransformationMatricesFilter.md).
+- **Cell Attribute Matrix** (Image Geometry only) -- the cell-level data to be re-gridded.
 
 % Auto generated parameter table will be inserted here
 

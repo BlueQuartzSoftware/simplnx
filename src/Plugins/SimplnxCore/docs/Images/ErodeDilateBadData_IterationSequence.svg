@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 470" width="820" height="470" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <pattern id="cellgrid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect width="12" height="12" fill="#DCEBF5" stroke="#B8D4EA" stroke-width="0.75"/>
+    </pattern>
+    <!-- bad-data diamonds (Feature Id 0), local coords in an 84x84 / 7x7 grid, cell 12 -->
+    <g id="bd0"><rect x="36" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/></g>
+    <g id="bd1"><use href="#bd0"/>
+      <rect x="24" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="48" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="36" y="24" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="36" y="48" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/></g>
+    <g id="bd2"><use href="#bd1"/>
+      <rect x="12" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="60" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="36" y="12" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="36" y="60" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="24" y="24" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="48" y="24" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="24" y="48" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="48" y="48" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/></g>
+    <g id="bd3"><use href="#bd2"/>
+      <rect x="0" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="72" y="36" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="36" y="0" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="36" y="72" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="12" y="24" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="24" y="12" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="48" y="12" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="60" y="24" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="12" y="48" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="24" y="60" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/>
+      <rect x="48" y="60" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/><rect x="60" y="48" width="12" height="12" fill="#FADBD8" stroke="#E74C3C" stroke-width="1"/></g>
+    <g id="frame"><rect width="84" height="84" fill="url(#cellgrid)" stroke="#7FB0D6" stroke-width="1.25"/></g>
+  </defs>
+
+  <rect width="820" height="470" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="410" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Erode / Dilate Bad Data — one cell layer per iteration</text>
+  <text x="410" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">Bad data = cells with <tspan font-weight="600">Feature Id 0</tspan> (red); good feature cells in blue</text>
+
+  <!-- iteration labels -->
+  <text x="212" y="82" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600">iter 0</text>
+  <text x="326" y="82" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600">iter 1</text>
+  <text x="440" y="82" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600">iter 2</text>
+  <text x="554" y="82" text-anchor="middle" fill="#8E44AD" font-size="12" font-weight="600">iter 3</text>
+
+  <!-- Dilate row (grows) -->
+  <text x="120" y="130" text-anchor="end" fill="#C0392B" font-size="14" font-weight="700">Dilate</text>
+  <text x="120" y="148" text-anchor="end" fill="#5D6D7E" font-size="11">grows outward</text>
+  <use href="#frame" x="170" y="92"/><use href="#bd0" x="170" y="92"/>
+  <use href="#frame" x="284" y="92"/><use href="#bd1" x="284" y="92"/>
+  <use href="#frame" x="398" y="92"/><use href="#bd2" x="398" y="92"/>
+  <use href="#frame" x="512" y="92"/><use href="#bd3" x="512" y="92"/>
+  <text x="272" y="140" fill="#C0392B" font-size="20">→</text><text x="386" y="140" fill="#C0392B" font-size="20">→</text><text x="500" y="140" fill="#C0392B" font-size="20">→</text>
+
+  <!-- Erode row (shrinks) -->
+  <text x="120" y="290" text-anchor="end" fill="#1E8449" font-size="14" font-weight="700">Erode</text>
+  <text x="120" y="308" text-anchor="end" fill="#5D6D7E" font-size="11">shrinks inward</text>
+  <use href="#frame" x="170" y="250"/><use href="#bd3" x="170" y="250"/>
+  <use href="#frame" x="284" y="250"/><use href="#bd2" x="284" y="250"/>
+  <use href="#frame" x="398" y="250"/><use href="#bd1" x="398" y="250"/>
+  <use href="#frame" x="512" y="250"/><use href="#bd0" x="512" y="250"/>
+  <text x="272" y="298" fill="#1E8449" font-size="20">→</text><text x="386" y="298" fill="#1E8449" font-size="20">→</text><text x="500" y="298" fill="#1E8449" font-size="20">→</text>
+
+  <!-- Note callout -->
+  <g transform="translate(60, 360)">
+    <rect x="0" y="0" width="700" height="76" rx="7" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.2"/>
+    <circle cx="20" cy="24" r="9" fill="#8E44AD"/>
+    <text x="20" y="28" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">i</text>
+    <text x="38" y="21" fill="#4A235A" font-size="12"><tspan font-weight="600">Dilate</tspan> grows the bad-data region outward by one cell layer per iteration (good cells touching bad become bad).</text>
+    <text x="38" y="41" fill="#4A235A" font-size="12"><tspan font-weight="600">Erode</tspan> shrinks it: each bad cell is reassigned to the Feature Id held by the majority of its neighbors.</text>
+    <text x="38" y="61" fill="#4A235A" font-size="12">The <tspan font-weight="600">Number of Iterations</tspan> sets the layer count; per-axis toggles (X / Y / Z) restrict which directions are processed.</text>
+  </g>
+</svg>

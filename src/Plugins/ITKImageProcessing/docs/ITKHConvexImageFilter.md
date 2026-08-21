@@ -1,6 +1,6 @@
 # ITK H Convex Image Filter
 
-Identify local maxima whose height above the baseline is greater than h.
+Extracts bright peaks (local maxima) that rise more than a height *h* above their surroundings.
 
 ## Group (Subgroup)
 
@@ -8,14 +8,18 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-HConvexImageFilter extract local maxima that are more than h intensity units above the (local) background. This has the effect of extracting objects that are brighter than background by at least h intensity units.
+The **H-Convex** transform isolates the prominent peaks in a grayscale image. It keeps only those local maxima whose **prominence — their height above the local background — is greater than *h***, and reports each peak's prominence (up to *h*) while flattening everything else toward zero. In other words, it extracts objects that are brighter than their surroundings by at least *h* intensity units.
 
-This filter uses the HMaximaImageFilter .
+Use this filter to detect or enhance bright blobs, spots, or particles on an uneven background. Because it measures prominence rather than absolute brightness, it finds peaks consistently even when the background level drifts across the image.
 
-Geodesic morphology and the H-Convex algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter
+### Parameter Guidance
 
-- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+- **Height** — the height *h*, in the **input image's intensity units**. It sets the minimum peak prominence: only maxima that rise more than *h* above their local background are extracted; shallower bumps are suppressed. Larger values keep only the most prominent peaks. Default *2.0*.
+- **Fully Connected** — controls pixel connectivity. When off (default), neighbors share a face; when on, neighbors also include edge- and corner-touching pixels. Turn it on for thin, one-pixel-wide features.
+
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -23,7 +27,7 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

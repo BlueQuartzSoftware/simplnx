@@ -8,6 +8,8 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
+Replaces each pixel with the square of its value.
+
 ![](Images/ITKSquareImageFilter.png)
 
 % Auto generated parameter table will be inserted here

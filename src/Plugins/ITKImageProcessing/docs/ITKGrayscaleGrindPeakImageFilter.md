@@ -1,6 +1,6 @@
 # ITK Grayscale Grind Peak Image Filter
 
-Remove local maxima not connected to the boundary of the image.
+Removes bright "peaks" from a grayscale image — enclosed bright spots that are not connected to the image border.
 
 ## Group (Subgroup)
 
@@ -8,20 +8,23 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-GrayscaleGrindPeakImageFilter removes peaks in a grayscale image. Peaks are local maxima in the grayscale topography that are not connected to boundaries of the image. Gray level values adjacent to a peak are extrapolated through the peak.
+This filter removes **peaks** in a grayscale image. A peak is a local maximum (a bright spot) that is fully enclosed by darker pixels and not connected to the image border. The filter lowers each peak down to the gray level of the surrounding pixels, smoothing over bright spots while leaving dark features (local minima) untouched. It is the exact dual of [ITK Grayscale Fillhole Image Filter](ITKGrayscaleFillholeImageFilter.md).
 
-This filter is used to smooth over local maxima without affecting the values of local minima. If you take the difference between the output of this filter and the original image (and perhaps threshold the difference above a small value), you'll obtain a map of the local maxima.
+A useful trick: subtract this filter's output from the original image (and optionally threshold the difference) to obtain a map of the bright spots that were removed.
 
-This filter uses the GrayscaleGeodesicDilateImageFilter . It provides its own input as the "mask" input to the geodesic erosion. The "marker" image for the geodesic erosion is constructed such that boundary pixels match the boundary pixels of the input image and the interior pixels are set to the minimum pixel value in the input image.
+### Parameter Guidance
 
-This filter is the dual to the GrayscaleFillholeImageFilter which implements the Fillhole algorithm. Since it is a dual, it is somewhat superfluous but is provided as a convenience.
+- **Fully Connected** — controls neighbor connectivity when deciding whether a region is "enclosed" (face-only versus face + edge + corner). Turn it on for thin, one-pixel-wide structures.
 
-Geodesic morphology and the Fillhole algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter
+### Required Input Sources
 
-- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+Operates on any scalar (grayscale) image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
-![](Images/ITKGrayscaleGrindPeak.png)
+![Grayscale grind-peak example.](Images/ITKGrayscaleGrindPeak.png)
+
+## Reference
+
+Pierre Soille, *Morphological Image Analysis: Principles and Applications*, Second Edition, Springer, 2003 (Chapter 6).
 
 % Auto generated parameter table will be inserted here
 
@@ -29,7 +32,7 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

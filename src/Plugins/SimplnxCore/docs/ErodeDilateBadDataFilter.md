@@ -6,14 +6,13 @@ Processing (Cleanup)
 
 ## Description
 
-Bad data refers to a **Cell** that has a *Feature Id* of *0*, which means the **Cell** has failed some sort of test and
-been marked as a *bad* **Cell**.
+This **Filter** grows or shrinks regions of *bad data* (cells with *Feature Id = 0*) by one cell-layer per iteration, using standard image-morphology operations. It is a building block for cleaning up isolated noise or for compensating for boundaries that were systematically under- or over-measured by the experiment.
+
+![Fig. 1: Dilate grows the bad-data (Feature Id 0) region outward by one cell layer per iteration; Erode shrinks it, reassigning each bad cell to its majority neighbor. The Number of Iterations sets the layer count.](Images/ErodeDilateBadData_IterationSequence.png)
 
 ### Dilation
 
-If the **bad** data is *dilated*, the Filter grows the *bad* data by one **Cell** in
-an iterative sequence for a user defined number of iterations. During the *dilate* process the *Feature Id* of any
-Cell neighboring a *bad* **Cell** will be changed to *0*.
+*Dilate* grows the bad-data region outward. Each iteration changes any cell adjacent to a bad cell into a bad cell, adding a one-cell-thick layer.
 
 | Before Dilation                      | After Dilation                       |
 |--------------------------------------|--------------------------------------|
@@ -21,39 +20,23 @@ Cell neighboring a *bad* **Cell** will be changed to *0*.
 
 ### Erosion
 
-If the *bad* data is *eroded*, the Filter shrinks the
-bad data by one **Cell** in an iterative sequence for a user defined number of iterations. During the *erode* process
-the *Feature Id* of the *bad* **Cell** is changed from *0* to the *Feature Id* of the majority of its neighbors.
-
-Ties are broken deterministically, not randomly. The Filter visits the six face neighbors in the fixed order
-*-Z, -Y, -X, +X, +Y, +Z*, and a later neighbor must have a strictly greater count than the current leader to replace it.
-When two or more *Feature Ids* are tied for the majority, the one belonging to the earliest neighbor in that scan order
-is assigned. The same input therefore always produces the same output.
+*Erode* shrinks the bad-data region. Each iteration converts each bad cell into the *Feature Id* held by the majority of its neighbors. Ties are broken randomly. Single-cell bad regions disappear in one iteration; thicker regions take more.
 
 | Before Erosion                       | After Erosion                        |
 |--------------------------------------|--------------------------------------|
 | ![](Images/ErodeDilateBadData_1.png) | ![](Images/ErodeDilateBadData_3.png) |
 
-Goals a user might be trying to accomplish with this Filter include:
+### When to Use This Filter
 
-- Remove small or thin regions of bad data by running a single (or two) iteration *erode* operation.
-- Increase the size of a *bad* data region by running an *dilate* operation. This might be useful if the experimental
-  technique tends to underestimates the size of certain objects. For example, when running EBSD, the pores (which show
-  up as *bad* data) are generally smaller in the scans than in the specimen, because the beam, when it is just inside
-  the pore, still can pick up signal from the material just beneath the pore.
+- **Erode** to remove small or thin regions of bad data — single-cell EBSD dropouts, salt-and-pepper noise.
+- **Dilate** to grow under-measured features. For example, EBSD scans tend to under-estimate pore size because the beam picks up signal from material *below* the pore when it sits at the pore edge; dilating the *Feature Id = 0* region restores the true pore boundary.
+- **Erode followed by Dilate** (a morphological *opening*) is the classic pattern for removing isolated noise without affecting larger regions. A single erode-dilate pair will erase isolated single-cell bad regions but return larger pores to almost their original size.
+- **Dilate followed by Erode** (a morphological *closing*) fills small holes inside bad-data regions while preserving their outer boundary.
 
-Running the *erode-dilate* operations in pairs can often change the size of some objects without affecting others. For
-example, if there were a number of big pores and a number of single *bad* **Cells**, running a single *erode* operation
-would remove the single **Cells** and reduce the pores by one **Cell**. If this is followed immediately by a *dilate*
-operation, then the pores would grow by one **Cell** and return to near their original size, while the single **Cells**
-would remain removed and not "grow back".
+### Iterations and Direction
 
-### Operation
-
-The *Operation* parameter selects which morphological operation to apply:
-
-- **Dilate [0]**: Grows bad data regions by one **Cell** per iteration. Any **Cell** neighboring a bad **Cell** has its *Feature Id* changed to 0.
-- **Erode [1]**: Shrinks bad data regions by one **Cell** per iteration. Each bad **Cell** is assigned the *Feature Id* of the majority of its neighbors.
+- *Number of Iterations* is in **cell-layers**. An iteration count of 3 grows or shrinks the bad-data region by 3 cells.
+- *X Direction*, *Y Direction*, and *Z Direction* toggle whether the morphology is applied along that axis. Disable an axis to perform anisotropic erosion/dilation -- useful when serial-sectioning resolution is anisotropic (typically Z is coarser than X and Y) and you want to limit smoothing along the fine axes.
 
 ### Direction Restrictions
 
@@ -72,7 +55,11 @@ The Filter refuses to run in two cases:
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
+By modifying cell-level data, any feature-level data that was previously computed will most likely be invalid after this filter runs. Re-run any downstream feature-level computation filters to ensure accurate results.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md). Cells with Feature Id = 0 are treated as bad.
 
 % Auto generated parameter table will be inserted here
 

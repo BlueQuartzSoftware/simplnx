@@ -6,7 +6,9 @@ Meshing (Cleanup)
 
 ## Description
 
-This filter takes a geometry with a **SharedVertexList** and produces a `uint8` mask that contains `1` in positions where a duplicate of an existing vertex exists. It should be noted that this filter utilizes quicksort to speed up checks, quick sort is not a stable sort meaning the vertex point deemed "unique" (ie not labeled as a duplicate) is not guaranteed to be the first instance of the vertex point. See example section below for a visual explanation. The intention is for this filters output to be used as the input for *RemoveFlaggedVertices*.
+This filter takes a geometry with a **SharedVertexList** and produces a `uint8` mask that contains `1` at the position of each vertex that duplicates an earlier vertex, and `0` otherwise. Two vertices are considered **duplicates** when their X, Y, and Z coordinates are all equal (the comparison treats coordinate differences smaller than machine epsilon as equal, so this is effectively exact coordinate equality); no user-supplied tolerance is applied.
+
+It should be noted that this filter utilizes quicksort to speed up checks. Quicksort is not a stable sort, meaning the vertex deemed "unique" (i.e., not labeled as a duplicate) is not guaranteed to be the first instance of that coordinate in the original list. See the example below, which uses small text arrays to illustrate this behavior. The intention is for this filter's output to be used as the input for [Remove Flagged Vertices](RemoveFlaggedVerticesFilter.md).
 
 ## Example
 

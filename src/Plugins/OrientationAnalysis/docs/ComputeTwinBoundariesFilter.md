@@ -6,14 +6,36 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** identifies all **Triangles** between neighboring **Features** that have a &sigma; = 3 twin relationship.  The **Filter** uses the average orientation of the **Features** on either side of the **Triangle** to determine the *misorientation* between the **Features**.  If the *axis-angle* that describes the *misorientation* is within both the axis and angle user-defined tolerance, then the **Triangle** is flagged as being a twin.  After the **Triangle** is flagged as a twin, the crystal direction parallel to the **Face** normal is determined and compared with the *misorientation axis* if *Compute Coherence* is selected.  The misalignment of these two crystal directions is stored as the incoherence value for the **Triangle** (in degrees). Note that this **Filter** will only extract twin boundaries if the twin **Feature** is the same phase as the parent **Feature**.
+This **Filter** identifies twin boundaries on a **Triangle Geometry** surface mesh. A twin boundary is a special type of grain boundary where two grains share a specific crystallographic relationship -- their crystal lattices are mirror images of each other across the boundary plane.
+
+### What is a Twin Boundary?
+
+Twins are grains that share a highly symmetric orientation relationship. The most common type is the &Sigma;3 twin, where the two grains are related by a 60-degree rotation about the <111> crystal direction. Twin boundaries are significant because they tend to have very low energy and distinct mechanical properties compared to general grain boundaries. They are particularly common in FCC metals such as copper, nickel, and austenitic stainless steel.
+
+### How This Filter Works
+
+1. For each **Triangle** on the grain boundary mesh, the filter computes the misorientation between the two **Features** on either side using their average orientations.
+2. If the misorientation axis and angle match the &Sigma;3 twin relationship within the user-defined tolerances, the **Triangle** is flagged as a twin boundary.
+3. If **Compute Coherence** is enabled, the filter additionally measures the *incoherence* -- the angle (in degrees) between the boundary plane normal and the misorientation axis, both expressed in the crystal reference frame. A perfectly coherent twin has an incoherence of 0 degrees, meaning the boundary plane is exactly the twin plane. Higher incoherence values indicate a boundary that has the correct misorientation but is not on the ideal twin plane.
+
+### Note
+
+Only boundaries between **Features** of the same phase are evaluated.
 
 ### Output Type for Twin Boundaries Array
 
-The *Output Type for Twin Boundaries Array* parameter controls the data type used to store the twin boundary identification result:
+- **boolean [0]**: Stores the result as true/false
+- **uint8 [1]**: Stores the result as 1/0
 
-- **boolean [0]**: Stores the twin boundary flag as a boolean array (true if the **Triangle** is a twin boundary, false otherwise).
-- **uint8 [1]**: Stores the twin boundary flag as an unsigned 8-bit integer array (1 if the **Triangle** is a twin boundary, 0 otherwise).
+### Required Input Sources
+
+This filter operates on a grain-boundary surface mesh and requires the following upstream steps:
+
+- **Face Labels** -- produced by a surface meshing filter such as [Quick Surface Mesh](../SimplnxCore/QuickSurfaceMeshFilter.md).
+- **Face Normals** (only when *Find Coherence* is enabled) -- produced by [Compute Triangle Normals](../SimplnxCore/TriangleNormalFilter.md).
+- **Average Quaternions** -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

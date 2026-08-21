@@ -19,7 +19,12 @@ Commonly used _BaseGroup_ children:
 
 See the DataStructure section of the reference manual for a complete hierarchy.
 
-When the _Copy to New Parent_ is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
+When *Copy to New Parent* is toggled on, a new parameter appears. This parameter, *Copied Parent Group*, lets the selected objects be copied into a different parent **DataGroup**, **Attribute Matrix**, or **Geometry** rather than alongside their originals.
+
+### Required Input Sources
+
+- **Objects to Copy** -- one or more existing **DataObjects** in the Data Structure.
+- **Copied Parent Group** (only when *Copy to New Parent* is enabled) -- an existing parent container where the copies will be placed.
 
 % Auto generated parameter table will be inserted here
 

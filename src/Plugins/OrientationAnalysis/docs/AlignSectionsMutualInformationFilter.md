@@ -6,25 +6,35 @@ Reconstruction (Alignment)
 
 ## Description
 
-This **Filter** segments each 2D slice, creating *Feature Ids* that are used when determining the *mutual information* between neighboring slices. The slices are shifted relative to one another until the position of maximum *mutual information*  is determined for each section.  The *Feature Ids* are temporary, they apply to this **Filter** only and are not related to the *Feature Ids* generated in other **Filters**.  The algorithm of this **Filter** is listed below:
+This **Filter** aligns serial sections (2D slices stacked along the Z-direction) by maximizing the *mutual information* between the feature patterns on neighboring slices. Rather than comparing individual cell orientations (as in [Align Sections (Misorientation)](AlignSectionsMisorientationFilter.md)), this method first groups cells into temporary features on each slice, then finds the shift that best aligns those feature patterns between slices.
 
-1. Segment *Features* on each 'section' of the sample perpendicular to the Z-direction.  This is done using the same algorithm in the [Segment Features (Misorientation)](@ref alignsectionsmisorientation) **Filter** (only in 2D on each section)  
-2. Calculate the *mutual information* between neighboring sections and store that as the misalignment value for that position. *Mutual information* is related to the ratio of joint probability to individual probabilities of variables (i.e., p(x,y)/p(x)p(y) ). Details of the actual *mutual information* calculation can be found in the references below, but can be thought of as the inherent dependence between variables (here the *Feature Ids* on neighboring sections).  
-3. Repeat step 2 for each position when shifting the second slice (relative to the first) from three (3) **Cells** to the left
-to three (3) **Cells** to the right, as well as from three (3) **Cells** up to three (3) **Cells** down
-*Note that this creates a 7x7 grid*
-4. Determine the position in the 7x7 grid that has the highest *mutual information* value
-5. Repeat steps 2-4 with the center of each (new) 7x7 grid at the best position from the last 7x7 grid until the best position in the current/new 7x7 grid is the same as the last 7x7 grid
+### When to Use This Method
 
-6) Repeat steps 2-5 for each pair of neighboring sections
+This method is useful when feature-level pattern matching is more appropriate than cell-level orientation comparison. It can sometimes produce better results than misorientation-based alignment when the data has significant noise or when features are large relative to the misalignment.
 
-**Note that this is similar to a downhill simplex and can get caught in a local minimum!**
+### What is Mutual Information?
 
-The user choses the level of *misorientation tolerance* by which to align **Cells**, where here the tolerance means the *misorientation* cannot exceed a given value. If the rotation angle is below the tolerance, then the **Cell** is grouped with other **Cells** that satisfy the criterion.
+Mutual information is a statistical measure of how much information one variable provides about another. In this context, it measures how well the feature patterns on two neighboring slices correspond to each other. High mutual information means the features on one slice strongly predict the features on the adjacent slice -- indicating good alignment.
 
-The approach used in this **Filter** is to group neighboring **Cells** on a slice that have a *misorientation* below the tolerance the user entered. *Misorientation* here means the minimum rotation angle of one **Cell's** crystal axis needed to coincide with another **Cell's** crystal axis. When the **Features** in the slices are defined, they are moved until *disks* in neighboring slices align with each other.
+### How This Filter Works
 
-If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.
+1. **Segment features on each slice:** Neighboring cells on each 2D slice are grouped into temporary features using a misorientation tolerance (the same algorithm as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md), applied in 2D). These feature IDs are internal to this filter and are not stored.
+2. **Calculate mutual information:** For a given relative position of two slices, compute the mutual information between the feature ID patterns on the two slices.
+3. **Grid search:** Evaluate the mutual information at all 49 positions in a 7x7 grid (shifting the upper slice from -3 to +3 cells in both X and Y). Select the position with the highest mutual information.
+4. **Iterate:** Re-center the 7x7 grid on the best position and repeat until the best position no longer changes.
+5. **Repeat** for each pair of neighboring sections.
+
+### Misorientation Tolerance
+
+The *misorientation tolerance* parameter controls how cells are grouped into temporary features on each slice. Cells whose orientations differ by less than this tolerance are grouped together. Lower values produce more, smaller features; higher values produce fewer, larger features.
+
+### Local Minima Warning
+
+This iterative grid search is similar to a downhill simplex optimization and **can get caught in a local minimum**. If alignment results look incorrect, try adjusting the misorientation tolerance or consider using the [Align Sections (Feature Centroid)](../SimplnxCore/AlignSectionsFeatureCentroidFilter.md) method, which does not have this limitation.
+
+### Masking
+
+If a mask array is provided, **Cells** flagged as *false* are excluded from the alignment calculation.
 
 ## Optional Output Data
 
@@ -49,6 +59,13 @@ In this new structure, what follows is what the created structures represent:
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
+### Required Input Sources
+
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
+- **Mask** (optional) -- a boolean array marking valid cells, typically produced by a threshold operation such as [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
+
 % Auto generated parameter table will be inserted here
 
 ## References
@@ -65,7 +82,7 @@ Journal articles on *Mutual Information* that are useful:
 
 ## Example Pipelines
 
-AlignSectionsMutualInformation
++ `AlignSectionsMutualInformation`
 
 ## License & Copyright
 

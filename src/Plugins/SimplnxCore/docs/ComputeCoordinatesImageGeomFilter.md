@@ -6,19 +6,25 @@ Statistics
 
 ## Description
 
-This **Filter** produces one or two arrays that stores implicit image information (indices and physical coordinates of each point) as explicit cell level data. The produced arrays are in XYZ component format and stored as X by Y by Z, starting from the origin. The intention behind this filter is primarily for output compatibility and readability.
+This **Filter** writes the per-cell coordinates and/or grid indices of an **Image Geometry** into regular cell-level **Attribute Arrays**. In an Image Geometry, each cell's (i, j, k) index and (x, y, z) physical position are implicit -- derivable from the geometry's dimensions, origin, and spacing. This filter makes them explicit so they can be exported to CSV/text, used as inputs to downstream math filters, or visualized directly.
+
+### When to Use This Filter
+
+Most commonly used as a preparation step before exporting cell data to CSV or other text formats that need explicit coordinate columns. Also useful when a downstream filter needs the (x, y, z) of each cell as a regular array (e.g., for distance calculations).
 
 ### Output Array(s) Type
 
-The *Output Array(s) Type* parameter controls which arrays are produced by the filter:
+- **Physical Coordinates [0]**: produces a single 3-component float array containing the (x, y, z) physical coordinates of the center of each cell, computed from the geometry's origin and spacing.
+- **Indices [1]**: produces a single 3-component integer array containing the (i, j, k) grid indices of each cell. Indices are **0-based**.
+- **Both [2]**: produces both arrays.
 
-- **Physical Coordinates [0]**: Outputs a single 3-component array containing the physical (spatial) XYZ coordinates of the center of each cell, computed from the geometry's origin and spacing.
-- **Indices [1]**: Outputs a single 3-component array containing the integer ijk grid indices of each cell.
-- **Both [2]**: Outputs both the physical coordinates array and the indices array.
+### Cell Order
 
-The arrays follow the following cell parsing scheme: `0,0,0 -> 1,0,0 -> 2,0,0 -> ... n,0,0 -> 0,1,0 -> 1,1,0 -> 2,1,0 -> ... n,n,0 -> 0,0,1 -> 1,0,1 -> 2,0,1 -> ... n,n,n`.
+The arrays are stored in the geometry's default cell raster order: X varies fastest, then Y, then Z.
 
-The printed output will look something like this:
+    (0,0,0) → (1,0,0) → (2,0,0) → ... (n,0,0) → (0,1,0) → (1,1,0) → ... (n,n,0) → (0,0,1) → ...
+
+A sample of the output for a 9-column slice (showing both indices and physical coordinates):
 
 ```console
 Image Indices_0,Image Indices_1,Image Indices_2,Image Physical Coordinates_0,Image Physical Coordinates_1,Image Physical Coordinates_2
@@ -32,6 +38,15 @@ Image Indices_0,Image Indices_1,Image Indices_2,Image Physical Coordinates_0,Ima
 7,0,0,-45.375,0.125,-0.37500411
 8,0,0,-45.125,0.125,-0.37500411
 ```
+
+### Units
+
+- **Physical coordinates** are in the geometry's physical units (microns, millimeters, etc.).
+- **Indices** are dimensionless integers (0-based cell indices along each axis).
+
+### Required Input Sources
+
+- **Input Image Geometry** -- the geometry whose per-cell coordinates/indices will be made explicit. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

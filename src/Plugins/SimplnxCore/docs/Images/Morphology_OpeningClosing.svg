@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 430" width="800" height="430" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <pattern id="mgrid" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#EDF1F4" stroke="#D8E0E6" stroke-width="0.75"/></pattern>
+    <marker id="stepArr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5D6D7E"/></marker>
+  </defs>
+  <rect width="800" height="430" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+  <text x="400" y="34" text-anchor="middle" fill="#2C3E50" font-size="18" font-weight="700">Morphological Opening &amp; Closing</text>
+  <text x="400" y="55" text-anchor="middle" fill="#5D6D7E" font-size="13">An erode / dilate pair applied to the mask's true (colored) region</text>
+
+  <!-- ===== Opening row ===== -->
+  <text x="38" y="118" fill="#C0392B" font-size="14" font-weight="700">Opening</text>
+  <text x="38" y="135" fill="#5D6D7E" font-size="11">erode → dilate</text>
+  <text x="38" y="151" fill="#5D6D7E" font-size="10.5">removes small</text>
+  <text x="38" y="164" fill="#5D6D7E" font-size="10.5">isolated regions</text>
+
+  <!-- O1 input -->
+  <rect x="200" y="88" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="248" cy="134" rx="30" ry="24" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <circle cx="284" cy="102" r="6" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <text x="250" y="190" text-anchor="middle" fill="#5D6D7E" font-size="11">input</text>
+  <!-- O2 erode -->
+  <rect x="350" y="88" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="400" cy="134" rx="23" ry="17" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <text x="400" y="190" text-anchor="middle" fill="#5D6D7E" font-size="11">erode (speck gone)</text>
+  <!-- O3 opening -->
+  <rect x="500" y="88" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="550" cy="134" rx="30" ry="24" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <text x="550" y="190" text-anchor="middle" fill="#C0392B" font-size="11" font-weight="600">= opening</text>
+  <line x1="306" y1="132" x2="344" y2="132" stroke="#5D6D7E" stroke-width="2" marker-end="url(#stepArr)"/>
+  <line x1="456" y1="132" x2="494" y2="132" stroke="#5D6D7E" stroke-width="2" marker-end="url(#stepArr)"/>
+
+  <!-- ===== Closing row ===== -->
+  <text x="38" y="256" fill="#1E8449" font-size="14" font-weight="700">Closing</text>
+  <text x="38" y="273" fill="#5D6D7E" font-size="11">dilate → erode</text>
+  <text x="38" y="289" fill="#5D6D7E" font-size="10.5">fills small</text>
+  <text x="38" y="302" fill="#5D6D7E" font-size="10.5">holes</text>
+
+  <!-- C1 input -->
+  <rect x="200" y="212" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="250" cy="256" rx="32" ry="25" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <circle cx="250" cy="256" r="8" fill="#EDF1F4" stroke="#B8C4CE" stroke-width="1"/>
+  <text x="250" y="314" text-anchor="middle" fill="#5D6D7E" font-size="11">input</text>
+  <!-- C2 dilate -->
+  <rect x="350" y="212" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="400" cy="256" rx="38" ry="30" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <text x="400" y="314" text-anchor="middle" fill="#5D6D7E" font-size="11">dilate (hole filled)</text>
+  <!-- C3 closing -->
+  <rect x="500" y="212" width="100" height="88" fill="url(#mgrid)" stroke="#B8C4CE"/>
+  <ellipse cx="550" cy="256" rx="32" ry="25" fill="#5DADE2" stroke="#2471A3" stroke-width="1.5"/>
+  <text x="550" y="314" text-anchor="middle" fill="#1E8449" font-size="11" font-weight="600">= closing</text>
+  <line x1="306" y1="256" x2="344" y2="256" stroke="#5D6D7E" stroke-width="2" marker-end="url(#stepArr)"/>
+  <line x1="456" y1="256" x2="494" y2="256" stroke="#5D6D7E" stroke-width="2" marker-end="url(#stepArr)"/>
+
+  <!-- Note callout -->
+  <g transform="translate(40, 334)">
+    <rect x="0" y="0" width="720" height="76" rx="7" fill="#F4ECF7" stroke="#8E44AD" stroke-width="1.2"/>
+    <circle cx="20" cy="22" r="9" fill="#8E44AD"/>
+    <text x="20" y="26" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">i</text>
+    <text x="38" y="19" fill="#4A235A" font-size="12"><tspan font-weight="600">Opening</tspan> (erode then dilate) removes small isolated regions and thin protrusions while returning the larger</text>
+    <text x="38" y="37" fill="#4A235A" font-size="12">region to about its original size. <tspan font-weight="600">Closing</tspan> (dilate then erode) fills small holes and gaps while preserving</text>
+    <text x="38" y="55" fill="#4A235A" font-size="12">the outer boundary. Run the erode and dilate passes with equal iteration counts to keep the overall size stable.</text>
+  </g>
+</svg>

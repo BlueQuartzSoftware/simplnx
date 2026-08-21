@@ -6,7 +6,7 @@ IO (Output)
 
 ## Description
 
-This **Filter** is used in a workflow where the user would like to generate a synthetic microstructure with an ODF that matches (as closely as possible) an existing experimental data set or other data set that is being mimicked. The basic workflow is the following:
+This **Filter** is used in a workflow where the user would like to generate a synthetic microstructure with an **Orientation Distribution Function (ODF)** that matches (as closely as possible) an existing experimental data set or other data set that is being mimicked. The ODF describes how crystallographic orientations are statistically distributed in the material. The basic workflow is the following:
 
 1. Import Euler angle data (e.g., ANG or CTF files)
 2. Optionally threshold the data so each cell is marked as allowable or not-allowable
@@ -21,13 +21,13 @@ This **Filter** is used in a workflow where the user would like to generate a sy
 
 ## Important Change from Earlier Versions of StatsGenerator
 
-StatsGenerator can not load data from standard .ang or .ctf files. If you want to get the ODF from an existing experimental data set and you have one of those files then you must use the functionality of this filter
+StatsGenerator cannot load data from standard .ang or .ctf files. If you want to get the ODF from an existing experimental data set and you have one of those files then you must use the functionality of this filter.
 
 ## Notes on Implementation
 
 + A separate file is written for each phase
 + Spaces are the default as the delimiters between values. The user can select another value
-+ Default values of 1.0 are used for both the *weight* and *sigma*. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
++ Default values of 1.0 are used for both the *weight* and *sigma*. Both values are dimensionless. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
 + The user has the option to convert the supplied Euler angles to degrees. **StatsGenerator** is able to import Euler angles as either degrees or radians based on user input, so the output type from this **Filter** could remain as radians or be converted to degrees. The user should remain cognizant of what representation their angles are in so that the correct option is chosen during the import process in **StatsGenerator**
 
 ## Example File
@@ -61,6 +61,12 @@ The *Delimiter* parameter provides the following choices:
 - **(space) [2]**: Uses a space as the column separator. This is the default value.
 - **: (colon) [3]**: Uses a colon as the column separator.
 - **\t (tab) [4]**: Uses a tab character as the column separator.
+
+## Required Input Sources
+
+- **Euler Angles** -- typically read from EBSD data via [Read H5EBSD File](ReadH5EbsdFilter.md), [Read EDAX EBSD Data (.ang)](ReadAngDataFilter.md), or [Read Oxford Instr. EBSD Data (.ctf)](ReadCtfDataFilter.md). Supplied in radians (Bunge Z-X-Z convention); use the *Convert to Degrees* option only if **StatsGenerator** will import them as degrees.
+- **Phases** -- read alongside the Euler angles from the same EBSD reader. A separate output file is written for each phase.
+- **Mask** (optional) -- typically produced by [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md). Only required when *Only Write Good Elements* is checked.
 
 % Auto generated parameter table will be inserted here
 

@@ -2,17 +2,38 @@
 
 ## Group (Subgroup)
 
-Import/Export
+IO (Input)
 
 ## Description
 
-This **Filter** will import Volume Graphics data files in the form of .vgi/.vol pairs. Both files must exist and be in the same directory for the filter to work. The .vgi file is read to find out the dimensions, spacing and units of the data. The name of the .vol file is also contained in the .vgi file.
+This filter imports **Volume Graphics** data, the format produced by Volume Graphics VGStudio and similar industrial computed-tomography (CT) software. A Volume Graphics dataset is a pair of files that must live in the same directory:
+
+- A `.vgi` file: a small human-readable metadata header that lists the volume dimensions, voxel spacing (resolution), length units, and the name of the companion `.vol` file.
+- A `.vol` file: the raw block of voxel values (the reconstructed density volume from the CT scan).
+
+The filter reads the `.vgi` header to learn the geometry, then reads the raw voxel data from the `.vol` file. Both files must exist for the filter to run.
+
+### What Is Created
+
+The filter creates an **Image Geometry** (a regular grid of equally-sized voxels) whose dimensions and spacing come from the `.vgi` header. Under that geometry it creates a **Cell Attribute Matrix** containing a single `float32` density array (one value per voxel), the per-voxel value read from the `.vol` file. The geometry origin is set to (0, 0, 0).
+
+This filter reads the full volume described by the `.vgi` file. It does not currently extract an arbitrary sub-volume, even though the `.vgi` header may describe a region of interest.
+
+### Dimensions, Spacing, and Units
+
+The volume dimensions (number of voxels along X, Y, and Z), the voxel spacing (the physical size of one voxel), and the length unit are all read from the `.vgi` header. When the header's `unit` field is `mm`, the geometry length unit is set to millimeters; otherwise the spacing values are stored as plain numbers in whatever unit the header implies.
+
+### Required Input Sources
+
+None — this filter reads directly from a `.vgi`/`.vol` file pair on disk.
 
 % Auto generated parameter table will be inserted here
 
+## Example Pipelines
+
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

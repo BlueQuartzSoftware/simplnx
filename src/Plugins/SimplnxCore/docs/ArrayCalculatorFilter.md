@@ -135,6 +135,11 @@ This equation takes the cube root of *8* and stores the result in an array with 
 
 This equation raises *3* to the power of the value stored in every component of every tuple in *Array1*.  The resulting array has the same tuple and component size of *Array1*.
 
+### Required Input Sources
+
+- **Source Attribute Matrix** -- the Attribute Matrix that contains the input arrays referenced in the *Infix Expression*.
+- **Output Attribute Matrix** -- an existing Attribute Matrix with the matching tuple count (or with exactly one tuple, when the expression contains no arrays).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

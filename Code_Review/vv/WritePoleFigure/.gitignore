@@ -1,5 +1,0 @@
-# Binary V&V evidence is archived to OneDrive, not committed to the repo.
-# The scripts + pipelines here regenerate all of it; see README.md.
-*.dream3d
-*.pdf
-*.png

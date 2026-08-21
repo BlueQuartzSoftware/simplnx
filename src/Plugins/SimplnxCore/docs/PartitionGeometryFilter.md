@@ -6,7 +6,7 @@ Reconstruction (Reconstruction)
 
 ## Description
 
-This **Filter** generates a partition grid and assigns partition IDs for every voxel/node of a given geometry.
+This **Filter** overlays a coarse **partition grid** onto an existing geometry and tags every cell or vertex of that geometry with the **partition ID** of the partition cell it falls into. The output is a per-cell or per-vertex integer label plus an Image Geometry representing the partition grid itself. Use this filter to prepare for sub-volume statistics, spatially-binned analysis, parallel decomposition, or any workflow that needs to group elements by spatial region.
 
 If the **Filter** determines that any voxel/node of the original geometry is out-of-bounds compared to the generated partition grid, the **Out-Of-Bounds Cell ID** will be used as the partition ID in the output partition IDs array.
 
@@ -112,6 +112,12 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 | Figure 5A: Vertex With Mask Value = True | Figure 5B: Vertex With Mask Value = False |
 |:---:|:---:|
 | ![](Images/PartitionGeometry/UseVertexMask_1a.png) | ![](Images/PartitionGeometry/UseVertexMask_1b.png) |
+
+### Required Input Sources
+
+- **Input Geometry** -- any supported geometry (Image, RectGrid, Vertex, Edge, Triangle, Quad, Tet, Hex). Typically produced by [Create Geometry](CreateGeometryFilter.md), [Create Image Geometry](CreateImageGeometryFilter.md), or an upstream reader.
+- **Partition Grid Geometry** (only when *Partitioning Mode* is *Existing Partition Grid*) -- an Image Geometry produced by a prior run of this filter.
+- **Vertex Mask** (optional, for vertex-based input geometries) -- a boolean cell-level array on the input geometry's vertices.
 
 % Auto generated parameter table will be inserted here
 

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 160" width="680" height="160" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <filter id="sh" x="-2%" y="-4%" width="104%" height="112%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- Card -->
+  <rect width="680" height="160" rx="12" fill="#ffffff" stroke="#D0D5DA" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="340" y="35" text-anchor="middle" fill="#2C3E50" font-size="17" font-weight="700">How Kernel Radius Relates to Kernel Size</text>
+
+  <!-- Formula box -->
+  <rect x="120" y="52" width="440" height="52" rx="10" fill="#EBF5FB" stroke="#2874A6" stroke-width="1.5"/>
+  <text x="340" y="86" text-anchor="middle" fill="#1a5276" font-size="24" font-weight="700">Kernel Size  =  (2  ×  Radius)  +  1</text>
+
+  <!-- Explanation -->
+  <text x="340" y="130" text-anchor="middle" fill="#5D6D7E" font-size="13" font-weight="400">The radius extends in <tspan font-weight="600">both</tspan> directions along each axis, plus the center cell itself.</text>
+  <text x="340" y="150" text-anchor="middle" fill="#5D6D7E" font-size="13" font-weight="400">Each axis (X, Y, Z) can have a different radius value.</text>
+</svg>

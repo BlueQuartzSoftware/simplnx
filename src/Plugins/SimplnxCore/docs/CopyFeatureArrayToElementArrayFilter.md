@@ -12,6 +12,18 @@ Multiple **Feature** arrays may be selected and copied in a single filter instan
 
 Note that each created array is **Element**-sized (number of **Elements** × components × bytes per value), so selecting many **Feature** arrays multiplies the additional memory required.
 
+### When to Use This Filter
+
+- **Visualization.** Most exporters (Xdmf, VTK, ParaView state files) treat Cell-level arrays as the natural per-voxel scalar to render. Broadcasting a per-grain statistic (size, average misorientation, Schmid factor, biased flag, etc.) down to the Cell level produces a colorable map of that quantity.
+- **Downstream filtering on cells.** When you want to threshold cells based on a Feature-level criterion (e.g., "keep cells whose parent grain is unbiased"), it is simpler to broadcast the Feature flag to all cells and then apply a cell-level threshold.
+
+The output is always the same data type and component shape as the source Feature array.
+
+### Required Input Sources
+
+- **Feature Array to Copy** -- any feature-level array; common sources include [Compute Feature Sizes](ComputeFeatureSizesFilter.md), [Compute Average Orientations](../OrientationAnalysis/ComputeAvgOrientationsFilter.md), [Compute Schmid Factors](../OrientationAnalysis/ComputeSchmidsFilter.md), or a custom flag from [Compute Biased Features](ComputeBiasedFeaturesFilter.md) / [Compute Surface Features](ComputeSurfaceFeaturesFilter.md).
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+
 ### Input Validation
 
 - All selected **Feature** arrays must have the same number of tuples (error -3020).

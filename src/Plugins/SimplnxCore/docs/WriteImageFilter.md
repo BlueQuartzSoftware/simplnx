@@ -91,6 +91,10 @@ the padded size.
 - **Interaction with *Flip Output Image***: the flip applies to the image data only; the band and its
   bar remain upright at the bottom of the written file.
 
+### Required Input Sources
+
+- **Image Data** -- a `uint8` (or `uint16`/`float32` for TIFF) **Cell Data** array on an **Image Geometry**, produced by an image reader such as [Read Image](ReadImageFilter.md) / [Read Images [3D Stack]](ReadImageStackFilter.md), or by any upstream image-processing filter.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

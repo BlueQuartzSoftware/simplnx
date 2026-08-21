@@ -32,6 +32,12 @@ The user may also select to normalize the resulting combined array. The normaliz
 
 **NOTE:** If you are wanting to instead concatenate/append data arrays together into a longer array, please see the [Concatenate Data Arrays](ConcatenateDataArraysFilter.md) filter.
 
+A typical use case is building a multi-component coordinate or quaternion array from three or four separate single-component scalar arrays (e.g., combining `X_Coord`, `Y_Coord`, `Z_Coord` into a single 3-component `Vertices` array before passing to [Create Geometry](CreateGeometryFilter.md)).
+
+### Required Input Sources
+
+- **Input Attribute Arrays** -- two or more arrays of the same primitive type and tuple count, in the order you want their components to appear in the combined array.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -1,6 +1,6 @@
 # ITK Label Contour Image Filter
 
-Labels the pixels on the border of the objects in a labeled image.
+From a label image, keeps only the boundary pixels of each labeled region.
 
 ## Group (Subgroup)
 
@@ -8,27 +8,30 @@ ITKImageLabel (ImageLabel)
 
 ## Description
 
-LabelContourImageFilter takes a labeled image as input, where the pixels in the objects are the pixels with a value different of the BackgroundValue. Only the pixels on the contours of the objects are kept. The pixels not on the border are changed to BackgroundValue. The labels of the object are the same in the input and in the output image.
+This filter takes a **label image** (one where each region has a unique integer value) and keeps only the pixels that lie on the contour (outer boundary) of each labeled region. Object pixels are those whose value differs from the *Background Value*. Pixels that sit on a region's border keep their original label, while all interior pixels are set to the *Background Value*. The result is an outline of every region, with each outline retaining the label of the region it bounds.
 
-The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
+Use this filter when you need the edges of segmented regions — for example to overlay region boundaries on an image or to measure perimeters — rather than the filled regions themselves.
 
-<https://www.insight-journal.org/browse/publication/217>
+### Parameter Guidance
 
-### Author
+- **Background Value** — the pixel value treated as background. Any pixel equal to this value is ignored, and interior (non-boundary) object pixels are reset to it. The default is 0.
+- **Fully Connected** — controls connectivity. *Off* uses face-only connectivity. *On* uses face+edge+corner connectivity, which produces thicker contours. Turn this *On* for objects that are 1 pixel wide or that connect along diagonals.
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Required Input Sources
 
-### Related Filters
-
-- BinaryContourImageFilter
+A label image (cell data on an **Image Geometry**), such as the output of the [ITK Connected Component Image Filter](ITKConnectedComponentImageFilter.md) or a segmentation filter.
 
 % Auto generated parameter table will be inserted here
+
+## See Also
+
+- [Insight Journal: Label object representation and manipulation with ITK](https://www.insight-journal.org/browse/publication/217) — Gaetan Lehmann, INRA de Jouy-en-Josas, France.
 
 ## Example Pipelines
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

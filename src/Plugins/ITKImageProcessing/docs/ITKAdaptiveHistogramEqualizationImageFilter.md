@@ -1,6 +1,6 @@
 # ITK Adaptive Histogram Equalization Image Filter
 
-Power Law Adaptive Histogram Equalization.
+Enhances local contrast using a tunable power-law adaptive histogram equalization.
 
 ## Group (Subgroup)
 
@@ -8,21 +8,23 @@ ITKImageStatistics (ImageStatistics)
 
 ## Description
 
-Histogram equalization modifies the contrast in an image. The AdaptiveHistogramEqualizationImageFilter is a superset of many contrast enhancing filters. By modifying its parameters (alpha, beta, and window), the AdaptiveHistogramEqualizationImageFilter can produce an adaptively equalized histogram or a version of unsharp mask (local mean subtraction). Instead of applying a strict histogram equalization in a window about a pixel, this filter prescribes a mapping function (power law) controlled by the parameters alpha and beta.
+Histogram equalization redistributes pixel intensities to improve contrast. This filter is *adaptive*: instead of one global remap, it computes statistics in a local window around each pixel and applies a power-law mapping controlled by *alpha*, *beta*, and the window size. By tuning those parameters it can behave like classical histogram equalization, like an unsharp mask (local mean subtraction), or anything in between.
 
-The parameter alpha controls how much the filter acts like the classical histogram equalization method (alpha=0) to how much the filter acts like an unsharp mask (alpha=1).
+### Parameter Guidance
 
-The parameter beta controls how much the filter acts like an unsharp mask (beta=0) to much the filter acts like pass through (beta=1, with alpha=1).
+- **Alpha** — blends between classical histogram equalization (*alpha = 0*) and an unsharp mask (*alpha = 1*). Dimensionless, range 0-1.
+- **Beta** — blends between an unsharp mask (*beta = 0*) and pass-through / no change (*beta = 1*, with *alpha = 1*). Dimensionless, range 0-1.
+- **Radius** — the half-width of the local window per axis, **in pixels**; the window spans `2 × Radius + 1` pixels along each axis (default radius *5*). Larger windows use broader local statistics.
 
-The parameter window controls the size of the region over which local statistics are calculated. The size of the window is controlled by SetRadius the default Radius is 5 in all directions.
+### Required Input Sources
 
-By altering alpha, beta and window, a host of equalization and unsharp masking filters is available.
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
-The boundary condition ignores the part of the neighborhood outside the image, and over-weights the valid part of the neighborhood.
+## Reference
 
-For detail description, reference "Adaptive Image Contrast Enhancement using Generalizations of Histogram Equalization." J.Alex Stark. IEEE Transactions on Image Processing, May 2000.
+J. Alex Stark, "Adaptive Image Contrast Enhancement using Generalizations of Histogram Equalization," *IEEE Transactions on Image Processing*, May 2000.
 
-![](Images/ITKAdaptiveImageHistogram.png)
+![Adaptive histogram equalization example.](Images/ITKAdaptiveImageHistogram.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -30,7 +32,7 @@ For detail description, reference "Adaptive Image Contrast Enhancement using Gen
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

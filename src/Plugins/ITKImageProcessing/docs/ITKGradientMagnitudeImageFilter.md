@@ -1,6 +1,6 @@
 # ITK Gradient Magnitude Image Filter
 
-Computes the gradient magnitude of an image region at each pixel.
+Computes the gradient magnitude (edge strength) of an image at each pixel.
 
 ## Group (Subgroup)
 
@@ -8,14 +8,15 @@ ITKImageGradient (ImageGradient)
 
 ## Description
 
-Computes the gradient magnitude of an image region at each pixel.
+The gradient magnitude is the length of the local intensity gradient vector — large where the image changes rapidly (edges) and near zero in smooth regions. This filter estimates it directly from simple finite differences between neighboring pixels, which makes it fast but sensitive to noise; for noisy data prefer the smoothed variant [ITK Gradient Magnitude Recursive Gaussian Image Filter](ITKGradientMagnitudeRecursiveGaussianImageFilter.md), which blurs with a Gaussian before differentiating.
 
-### Related Filters
+### Parameter Guidance
 
-- Image
-- Neighborhood
-- NeighborhoodOperator
-- NeighborhoodIterator
+- **Use Image Spacing**: When on (default), derivatives are computed in physical space using the image spacing, giving results in intensity units per physical length unit. When off, spacing is ignored and the gradient is computed in isotropic voxel space.
+
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -23,7 +24,7 @@ Computes the gradient magnitude of an image region at each pixel.
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

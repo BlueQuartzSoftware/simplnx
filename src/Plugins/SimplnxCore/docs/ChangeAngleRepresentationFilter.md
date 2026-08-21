@@ -23,6 +23,10 @@ Generally, all **Filters** within DREAM3D-NX use radians as a default unit, but 
 
 If the wrong conversion is selected (e.g., the user chooses *degrees to radians*, but their data is already in radians), the **Filter** will apply the conversion anyway and will result in erroneous data being used for the rest of the pipeline. If unsure about the units, check with the software supplier.
 
+### Required Input Sources
+
+- An angle **Attribute Array** (e.g., Euler angles), typically read from EBSD data via [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

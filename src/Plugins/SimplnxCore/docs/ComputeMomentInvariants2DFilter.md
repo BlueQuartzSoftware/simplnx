@@ -6,13 +6,24 @@ Statistics (Statistics)
 
 ## Description
 
-This **Filter** computes the 2D Omega-1 and Omega 2 values from the *Central Moments* matrix and optionally will normalize the values to a unit circle and also optionally save the *Central Moments* matrix as a DataArray to the *Cell Feature Attribute Matrix*. Based off the paper by MacSleyne et. al [1], the algorithm will calculate the 2D central moments for each feature starting at *feature id = 1*. Because *feature id 0* is of special significance and typically is a matrix or background it is ignored in this filter. If any feature id has a Z Delta of > 1, the feature will be skipped. This algorithm works strictly in the XY plane and is meant to be applied to a 2D image. Using the research from the cited paper certain shapes can be detected using the Omega-1 and Omega-2 values. An example usage is finding elliptical shapes in an image:
+This **Filter** computes the 2D **moment invariants** Omega-1 and Omega-2 for each **Feature** in a 2D image. A **Feature** is a contiguous region of like-segmented cells (for example a particle). **Moment invariants** are scalar shape descriptors derived from the *Central Moments* of a **Feature**: the **Filter** treats each **Feature** as a flat 2D shape, measures how its area is distributed about its own centroid, and condenses that distribution into two numbers that do not change when the shape is translated, rotated, or (after normalization) scaled. Omega-1 and Omega-2 are therefore dimensionless values that describe the *shape* of a **Feature**, independent of its position, orientation, or size.
 
-See below figure from [1] that can help the user classify objects.
+In practice these values measure how elongated or irregular a **Feature** is. A perfect circle gives the smallest possible Omega values; the more a **Feature** deviates toward an elongated ellipse or an irregular shape, the larger the Omega values become. By thresholding Omega-1 and Omega-2, you can classify **Features** by shape, for example separating round particles from elongated or irregular ones.
 
-![Example appllication of filter to identify elliptical particales (red) which are differentiated from non-elliptical particals (purple)](Images/ComputeMomentInvariants_Fig1.png)
+Based on the paper by MacSleyne et al. [1], the algorithm calculates the 2D central moments for each **Feature** starting at *feature id = 1*. Because *feature id 0* is of special significance and is typically a matrix or background, it is ignored. If any **Feature** has a Z extent (Z Delta) greater than 1 cell, that **Feature** is skipped. The algorithm works strictly in the XY plane and is meant to be applied to a 2D image.
 
-![Example appllication of filter to identify elliptical particales (red) which are differentiated from non-elliptical particals (purple)](Images/ComputeMomentInvariants2D.png)
+The **Filter** can optionally normalize the values to a unit circle (the *Normalize Moment Invariants* parameter) and can optionally save the full 3x3 *Central Moments* matrix as a Data Array in the *Feature Attribute Matrix*.
+
+The figures below, from [1], can help classify objects by their Omega values. An example usage is finding elliptical shapes (red) and differentiating them from non-elliptical shapes (purple):
+
+![Example application of the filter to identify elliptical particles (red), differentiated from non-elliptical particles (purple)](Images/ComputeMomentInvariants_Fig1.png)
+
+![Example application of the filter to identify elliptical particles (red), differentiated from non-elliptical particles (purple)](Images/ComputeMomentInvariants2D.png)
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- the Feature that owns each Cell, produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+- **Feature Rect** -- the min/max XY pixel coordinates (bounding corners) of each Feature, produced by [Compute Feature Corners](ComputeFeatureRectFilter.md).
 
 % Auto generated parameter table will be inserted here
 
@@ -24,11 +35,10 @@ See below figure from [1] that can help the user classify objects.
 # Acknowledgements
 
 The authors would like to thank Dr. Marc De Graef from Carnegie Mellon University for enlightening discussions and a concrete implementation from which to start this filter.
-## Example Pipelines
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

@@ -14,6 +14,12 @@ This filter is designed to handle arrays of matching array types and component d
 
 **NOTE:** If you are wanting to instead combine data arrays into a multi-component array, please see the [Combine Attribute Arrays](CombineAttributeArraysFilter.md) filter.
 
+For example, given two 3-component float arrays of 5 and 7 tuples respectively, the output is a 3-component float array of 12 tuples whose first 5 tuples are the first input and last 7 tuples are the second input.
+
+### Required Input Sources
+
+- **Input Data Arrays** -- two or more arrays sharing the same primitive type and the same component dimensions.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

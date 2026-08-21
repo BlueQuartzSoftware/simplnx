@@ -1,80 +1,86 @@
 # Crop Geometry (Image)
 
+## Group (Subgroup)
+
+Core (Spatial)
+
 ## Description
 
-This **Filter** allows the user to crop a region of interest (ROI) from an **Image Geometry**.  The input parameters are in units of voxels or physical coordinates.  
+This **Filter** extracts a region of interest (ROI) from an **Image Geometry**, producing a new geometry that contains only the selected cells. Bounds can be specified either in cell indices (voxels) or in physical coordinates. Individual dimensions (X, Y, Z) can be cropped independently.
 
-It is possible to also crop specific dimensions of the **Image Geometry** by toggling **Crop X Dimension**, **Crop Y Dimension**, and **Crop Z Dimension** ON and OFF.
+This is the inverse of [Pad Image Geometry](PadImageGeometryFilter.md). Common uses are isolating a sample from its overscan border, focusing analysis on a single feature, or reducing data size for testing.
 
-## WARNING: NeighborList Removal
+### Bounds Mode
 
-If the option to "Renumber Features" is turn ON and the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+The *Use Physical Bounds* parameter selects how the crop bounds are interpreted:
 
+- **Use Physical Bounds = false**: bounds are integer **cell indices** (0-based, **inclusive** on both ends). Xmin=50, Xmax=99 keeps cells 50 through 99 (the last 50 cells of a 100-cell volume).
+- **Use Physical Bounds = true**: bounds are **physical coordinates** in the geometry's units. The filter computes which cells fall inside the box defined by those coordinates, taking the geometry's origin and spacing into account.
 
-## Examples
+If any bound exceeds the geometry's extent on that axis, the filter clamps to the geometry's actual extent. The filter fails in preflight only when **all** of the requested bounds fall outside the geometry.
 
-In the following examples, the following image is being used.
+### Per-Axis Cropping
 
-- Origin:     [0.0, 0.0, 0.0]
-- Spacing:    {0.5, 0.5, 1.0}
-- Dimensions: {100, 100, 1}
+The *Crop X Dimension*, *Crop Y Dimension*, and *Crop Z Dimension* booleans toggle whether each axis is cropped at all. An axis with its flag OFF retains all of its cells regardless of the bounds setting.
 
-So the bounds of the image is (0-50 micron, 0-50 micron, 0-1 micron)
+### Examples
+
+In the following examples, the source image has:
+
+- Origin: (0.0, 0.0, 0.0)
+- Spacing: (0.5, 0.5, 1.0)
+- Dimensions: (100, 100, 1)
+
+So the physical bounds are (0-50 microns, 0-50 microns, 0-1 micron).
 
 ![Base image for examples](Images/CropImageGeometry_1.png)
 
-### Example 1
+#### Example 1 -- Crop to the last 50 cells in X and Y
 
-If the user wanted to crop the last 50 voxels in the X and Y axis then the user would use the following values:
+    Xmin = 50, Xmax = 99
+    Ymin = 50, Ymax = 99
+    Zmin = 0,  Zmax = 0
+    Use Physical Bounds = false
 
-    Xmin = 50,
-    Xmax = 99,
-    Ymin = 50,
-    Ymax = 99,
-    Zmin = 0,
-    Zmax = 0 
+Result:
 
 ![Cropped image using voxels as the bounds](Images/CropImageGeometry_2.png)
 
-**Note:** the units in the above image is in microns.
+#### Example 2 -- Crop to the middle 50 cells
 
-**Note:** The input parameters are *inclusive* and begin at *0*, so in the above example *50-99* will include the last 50 voxels.
+    Xmin = 25, Xmax = 74
+    Ymin = 25, Ymax = 74
+    Zmin = 0,  Zmax = 0
+    Use Physical Bounds = false
 
-### Example 2
-
-If the user would like to crop out the `middle` 50 voxels from the image, these are the inputs:
-
-    Xmin = 25,
-    Xmax = 74,
-    Ymin = 25,
-    Ymax = 74,
-    Zmin = 0,
-    Zmax = 0
+Result:
 
 ![Cropped image using voxels as the bounds](Images/CropImageGeometry_3.png)
 
-### Example 3
+#### Example 3 -- Crop using physical coordinates, with one bound exceeding the volume
 
-In this example the user is going to define the crop using physical coordinates and also selecting an upper bound that exceeds the actual bounds of the image. In this case, the filter will instead use the maximum bounds from that axis.
+    Xmin = 30 microns, Xmax = 65 microns
+    Ymin = 30 microns, Ymax = 65 microns
+    Zmin = 0 microns,  Zmax = 65 microns
+    Use Physical Bounds = true
 
-    Xmin = 30 microns,
-    Xmax = 65 microns,
-    Ymin = 30 microns,
-    Ymax = 65 microns,
-    Zmin = 0 microns,
-    Zmax = 65 microns
-
-**Note:** This will work because at least some portion of the cropped image is within the original image. If **ALL** cropped values fall out side of the image bounds then the filter will error out in preflight.
+The Zmax of 65 microns exceeds the geometry's 1-micron Z extent and is silently clamped. The crop still succeeds because at least part of the requested box lies inside the geometry.
 
 ![Cropped image using voxels as the bounds](Images/CropImageGeometry_4.png)
 
-User may note that the way the bounds are determined are affected by the origin and spacing, so be sure to take these into account when supplying coordinate bounds for the crop.
+### Renumber Features
 
-## Renumber Features
+Cropping can fully remove some **Features** from the volume, which leaves their Feature IDs unused and produces gaps. If *Renumber Features* is enabled, the Cell Feature Attribute Matrix is resized to drop empty features and remaining Features are renumbered to be contiguous starting from 1. Leave this off if you intend to compare the cropped output against the original larger volume by Feature ID.
 
-It is possible with this **Filter** to fully remove **Features** from the volume, possibly resulting in consistency errors if more **Filters** process the data in the pipeline. If the user selects to *Renumber Features* then the *Feature Ids* array will be adjusted so that all **Features** are continuously numbered starting from 1. The user should decide if they would like their **Features** renumbered or left alone (in the case where the cropped output is being compared to some larger volume).
+The user can save the cropped volume as a new **Data Container** or overwrite the current volume in place.
 
-The user has the option to save the cropped volume as a new **Data Container** or overwrite the current volume.
+## WARNING: NeighborList Removal
+
+When *Renumber Features* is enabled and the Cell Feature Attribute Matrix contains any *NeighborList* arrays, those arrays are **removed** because they refer to the old Feature IDs. Re-run [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) afterward to rebuild them.
+
+### Required Input Sources
+
+- **Input Image Geometry** -- the geometry to crop. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

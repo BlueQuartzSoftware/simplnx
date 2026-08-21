@@ -17,7 +17,9 @@ This **Filter** is a *lossless reference-frame rotation*: the output is an exact
 
 The **Filter** enforces this in preflight. Any rotation that does **not** map the grid onto itself — an arbitrary angle (e.g. 45 degrees), or an off-group axis/angle combination such as **90 degrees about (111)** — is rejected with an error, because a nearest-neighbor resample of such a rotation would silently drop and duplicate voxels and pad the result with background values. To apply an arbitrary rotation (with interpolation), use the [Apply Transformation To Geometry](ApplyTransformationToGeometryFilter.md) filter instead.
 
-### Rotation Representation
+![Fig. 1: Rotating the sample reference frame rotates the coordinate axes and resamples the data onto the new grid, leaving the microstructure fixed (left); a geometric rotation instead rotates the data within fixed axes (right).](Images/RotateSampleRefFrame_SampleVsGeometric.png)
+
+### ⚠ Limited Verification
 
 The *Rotation Representation* parameter selects how the rotation is specified. Both forms must still resolve to a rotation that maps the voxel grid onto itself (see Supported Rotations above):
 
@@ -49,6 +51,21 @@ When importing EBSD data from EDAX, the user typically rotates the sample refere
 ### Required Input Sources
 
 - **Selected Image Geometry** -- an **Image Geometry** and all of its **Cell** arrays; produced by any image or EBSD reader, for example [Read H5EBSD File](../OrientationAnalysis/ReadH5EbsdFilter.md), [Import EDAX OIM Data (.h5)](../OrientationAnalysis/ReadH5OimDataFilter.md), or [ITK Import Images (3D Stack)](../ITKImageProcessing/ITKImportImageStackFilter.md).
+
+### Rotation Representation
+
+The *Rotation Representation* parameter selects how the rotation is specified:
+
+- **Axis Angle [0]**: A unit axis vector (x, y, z) plus an angle in **degrees**. The most common form for single-axis rotations.
+- **Rotation Matrix [1]**: A 3x3 rotation matrix entered directly.
+
+### Notes on the Output Origin
+
+The rotated geometry will most likely have an origin that differs from the input geometry's origin (see EDAX example above). If you wish to keep the input origin, enable the *Keep Input Geometry's Origin* option. By default, the option is OFF, so the transformation-derived origin is used.
+
+### Required Input Sources
+
+- **Image Geometry** -- the input image whose reference frame is being rotated. Typically produced by an EBSD reader such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md).
 
 % Auto generated parameter table will be inserted here
 

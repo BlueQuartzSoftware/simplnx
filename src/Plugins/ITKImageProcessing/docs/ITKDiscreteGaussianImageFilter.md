@@ -1,6 +1,6 @@
 # ITK Discrete Gaussian Image Filter
 
-Blurs an image by separable convolution with discrete gaussian kernels. This filter performs Gaussian blurring by separable convolution of an image and a discrete Gaussian operator (kernel).
+Blurs an image with a Gaussian kernel — the standard linear smoothing/denoising operation.
 
 ## Group (Subgroup)
 
@@ -8,18 +8,26 @@ ITKSmoothing (Smoothing)
 
 ## Description
 
-The Gaussian operator used here was described by Tony Lindeberg (Discrete Scale-Space Theory and the Scale-Space Primal Sketch. Dissertation. Royal Institute of Technology, Stockholm, Sweden. May 1991.) The Gaussian kernel used here was designed so that smoothing and derivative operations commute after discretization.
+This filter applies **Gaussian blurring**: each pixel is replaced by a weighted average of its neighborhood, with the weights following a bell-shaped (Gaussian) curve so nearby pixels count more than distant ones. It is the most common general-purpose smoothing/denoising filter. The blur is performed efficiently as a separable convolution and can be set independently per axis.
 
-The variance or standard deviation (sigma) will be evaluated as pixel units if SetUseImageSpacing is off (false) or as physical units if SetUseImageSpacing is on (true, default). The variance can be set independently in each dimension.
+A faster alternative for large blur widths is a recursive-Gaussian (IIR) smoother, whose run time does not grow with the blur size.
 
-When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .* GaussianOperator
+### Parameter Guidance
 
-- Image
-- Neighborhood
-- NeighborhoodOperator
-- RecursiveGaussianImageFilter
+- **Variance** — the blur strength per axis. Note this is the **variance (sigma squared)**, *not* sigma itself — a common point of confusion. Larger values blur more. Units are **pixels²** when *Use Image Spacing* is off, or **physical units²** when it is on. Typical values are around 1.0-4.0 px².
+- **Use Image Spacing** — when on (default), the variance is interpreted in the geometry's physical units; when off, in pixels.
+- **Maximum Kernel Width** — the largest kernel size, in **pixels**, the filter is allowed to build. It caps memory/time for very large variances.
+- **Maximum Error** — the maximum allowed approximation error of the discrete Gaussian (per axis), a small dimensionless tolerance.
 
-![](Images/ITKDiscreteGaussianImageFilter.png)
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
+
+## Reference
+
+T. Lindeberg, *Discrete Scale-Space Theory and the Scale-Space Primal Sketch*, Dissertation, Royal Institute of Technology, Stockholm, May 1991.
+
+![Discrete Gaussian blur example.](Images/ITKDiscreteGaussianImageFilter.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -27,7 +35,7 @@ When the Gaussian kernel is small, this filter tends to run faster than itk::Rec
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

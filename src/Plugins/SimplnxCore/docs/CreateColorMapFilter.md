@@ -1,5 +1,9 @@
 # Create Color Map
 
+## Group (Subgroup)
+
+Core (Image)
+
 ## Description
 
 This **Filter** generates a color table array for a given 1-component input array.  Each element of the input array
@@ -8,9 +12,14 @@ is normalized and converted to a color based on where the value falls in the spe
 The user can apply an optional data mask and then set the RGB values (0-255) that will be used if the data mask has a FALSE
 value.
 
+### Required Input Sources
+
+- A single-component (scalar) **Data Array** to colorize. This can be any scalar array already present in the **DataStructure**, for example a Confidence Index or Image Quality array read by an EBSD reader, a Feature ID array, or any computed scalar metric.
+- (Optional) A **Mask Array** (boolean or uint8) used to flag elements as good/bad; flagged-FALSE elements receive the user-specified RGB color.
+
 ## Preset Values
 
-These are the valid preset strings that can be used.
+These are the valid preset strings that can be used. This table is maintained by hand and lists the presets shipped with DREAM3D-NX along with a swatch of each color scheme.
 
 | Preset Name | Color Space | Example |
 |-------------|-------------|---------|
@@ -135,11 +144,9 @@ These are the valid preset strings that can be used.
 
 % Auto generated parameter table will be inserted here
 
-## Example Pipelines
-
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

@@ -1,6 +1,6 @@
 # ITK Mask Image Filter
 
-This filter directly wraps an ITK filter of the same name.
+Masks an image using a second mask image.
 
 ## Group (Subgroup)
 
@@ -8,27 +8,13 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-Mask an image with a mask.
+This filter combines an input image with a mask image of the same size. For each pixel, if the corresponding mask pixel is non-zero (foreground), the input pixel value is copied to the output. If the mask pixel is zero (background), the *Outside Value* is written to the output instead.
 
-This class is templated over the types of the input image type, the mask image type and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
+The input image and the mask image must have the same dimensions.
 
-The pixel type of the input 2 image must have a valid definition of the operator != with zero. This condition is required because internally this filter will perform the operation
+### Parameter Guidance
 
-```
--        if pixel_from_mask_image != masking_value
--             pixel_output_image = pixel_input_image
--        else
--             pixel_output_image = outside_value
-*
-```
-
-The pixel from the input 1 is cast to the pixel type of the output image.
-
-Note that the input and the mask images must be of the same size.
-
-*WARNING* Any pixel value other than masking value (0 by default) will not be masked out.* MaskNegatedImageFilter
-
- Wiki Examples:*All Examples* Apply a mask to an image
+**Outside Value** is the value written to the output wherever the mask pixel equals 0. It defaults to 0. This value is interpreted in the intensity units of the image data.
 
 ![](Images/ITKMaskImageFilter.png)
 
@@ -44,9 +30,8 @@ Note that the input and the mask images must be of the same size.
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-<https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

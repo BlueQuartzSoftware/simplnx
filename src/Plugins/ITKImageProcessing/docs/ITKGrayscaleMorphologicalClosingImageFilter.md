@@ -1,6 +1,6 @@
 # ITK Grayscale Morphological Closing Image Filter
 
-Grayscale closing of an image.
+Fills small dark features in a grayscale image (a grayscale dilation followed by an erosion).
 
 ## Group (Subgroup)
 
@@ -8,20 +8,27 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-Close an image using grayscale morphology.
+Grayscale **closing** is a **dilation followed by an erosion** using the same structuring element. It removes small **dark** features — narrow dark gaps, thin dark lines, and small dark spots smaller than the **structuring element** (the probe shape swept over the image) — while leaving the overall brightness and larger structures essentially unchanged. The dual operation, [ITK Grayscale Morphological Opening Image Filter](ITKGrayscaleMorphologicalOpeningImageFilter.md), removes small bright features instead.
 
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.* MorphologyImageFilter , GrayscaleFunctionErodeImageFilter , BinaryErodeImageFilter
+### Parameter Guidance
 
-![](Images/ITKGrayscaleClosing.png)
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Dark features smaller than this are removed.
+- **Safe Border** — when on (default), a temporary border is added during processing to avoid edge artifacts and removed afterward.
 
-### Kernel Type
+#### Kernel Type
 
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on any scalar (grayscale) image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
+
+![Grayscale closing example.](Images/ITKGrayscaleClosing.png)
 
 % Auto generated parameter table will be inserted here
 
@@ -29,7 +36,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

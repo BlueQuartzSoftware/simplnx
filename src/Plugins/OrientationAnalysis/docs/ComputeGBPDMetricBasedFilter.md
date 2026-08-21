@@ -6,7 +6,17 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** computes the grain boundary plane distribution (GBPD) like that shown in Fig. 1. It should be noted that most GBPDs presented so far in literature were obtained using a method based on partition of the grain boundary space into bins, similar to that implemented in the *Compute GBCD* **Filter**. This **Filter** calculates the GBPD using an alternative approach adapted from the one included in the *Compute GBCD (Metric-based Approach)* **Filter** and described by K. Glowinski and A. Morawiec in [Analysis of experimental grain boundary distributions based on boundary-space metrics, Metall. Mater. Trans. A 45, 3189-3194 (2014)](http://link.springer.com/article/10.1007%2Fs11661-014-2325-y). Briefly, the GBPD is probed at evenly distributed sampling directions (similarly to *Compute GBCD (Metric-based Approach)* **Filter**) and areas of mesh segments with their normal vectors deviated by less than a limiting angle &rho;<sub>p</sub>  from a given direction are summed. If *n*<sub>S</sub> is the number of crystal symmetry transformations, each boundary plane segment is represented by up to 4 &times; *n*<sub>S</sub> equivalent vectors, and all of them are processed. It is enough to sample the distribution at directions corresponding to the standard stereographic triangle (or, in general, to a fundamental region corresponding to a considered crystallographic point group); values at remaining points are obtained based on crystal symmetries. After summing the boundary areas, the distribution is normalized. First, the values at sampling vectors are divided by the total area of all segments. Then, in order to express the distribution in the conventional units, i.e., multiples of random distribution (MRDs), the obtained fractional values are divided by the volume *v* = (*A* n<sub>S</sub>) / (4&pi;), where *A* is the area of a spherical cap determined by &rho;<sub>p</sub>.
+This **Filter** computes the Grain Boundary Plane Distribution (GBPD), which describes the relative frequency of grain boundary plane orientations in a polycrystalline material, regardless of the misorientation across the boundary. While the GBCD (see [Compute GBCD](ComputeGBCDFilter.md)) describes boundaries in the full 5D space of misorientation + plane normal, the GBPD considers only the 2D distribution of boundary plane normals.
+
+An example GBPD is shown in Fig. 1.
+
+### Metric-Based Approach
+
+This filter uses a metric-based approach adapted from the [Compute GBCD (Metric-Based Approach)](ComputeGBCDMetricBasedFilter.md) filter, as described by K. Glowinski and A. Morawiec in [Analysis of experimental grain boundary distributions based on boundary-space metrics, Metall. Mater. Trans. A 45, 3189-3194 (2014)](http://link.springer.com/article/10.1007%2Fs11661-014-2325-y).
+
+The distribution is sampled at evenly distributed directions. For each sampling direction, the areas of mesh segments whose normals fall within a limiting angle &rho;<sub>p</sub> of that direction are summed. Crystal symmetry is applied so that each boundary segment is represented by up to 4 &times; *n*<sub>S</sub> equivalent vectors (where *n*<sub>S</sub> is the number of symmetry transformations). Only directions within the standard stereographic triangle need to be sampled; values at other points are obtained from symmetry.
+
+After summing boundary areas, the distribution is normalized to multiples of a random distribution (MRD). A value of 1.0 means that plane orientation is as frequent as in a random polycrystal; values above 1.0 indicate preferred boundary plane orientations.
 
 ![Fig. 1: GBPD obtained for Small IN100 with the limiting distance set to 7&deg; and with triangles adjacent to triple lines removed. Units are MRDs.](Images/ComputeGBPDMetricBased_example.png)
 
@@ -16,7 +26,7 @@ This **Filter** also calculates statistical errors of the distributions using th
 
 is the relative error of the distribution function at a given point, *f* is the value of the function at that point, and *n* stands for the number of grain boundaries (**not** the number of mesh triangles) in the considered network. The errors can be calculated either as their absolute values, i.e., &epsilon; &times; *f* or as relative errors, i.e., 100% &times; &epsilon;. The latter are computed in a way that if the relative error exceeds 100%, it is rounded down to 100%.
 
-See also the documentation for {ref}`Compute GBCD (Metric-based Approach) Filter <OrientationAnalysis/ComputeGBCDMetricBasedFilter:Description>` for additional information.
+See also the documentation for [Compute GBCD (Metric-Based Approach)](ComputeGBCDMetricBasedFilter.md) for additional information.
 
 
 ## Format of Output Files
@@ -32,6 +42,15 @@ Then, the directions are given as [ sin &theta; &times; cos &phi; , sin &theta; 
 ## Feedback
 
 In the case of any questions, suggestions, bugs, etc., please feel free to email the author of this **Filter** at kglowinski *at* ymail.com
+
+### Required Input Sources
+
+This filter operates on a grain-boundary surface mesh and requires the following upstream steps:
+
+- **Triangle Geometry** with **Face Labels**, **Face Normals**, **Face Areas**, and **Node Types** -- produced by a surface meshing filter such as [Quick Surface Mesh](../SimplnxCore/QuickSurfaceMeshFilter.md), followed by [Compute Triangle Normals](../SimplnxCore/TriangleNormalFilter.md) and [Compute Triangle Areas](../SimplnxCore/ComputeTriangleAreasFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
+
 % Auto generated parameter table will be inserted here
 
 ## References

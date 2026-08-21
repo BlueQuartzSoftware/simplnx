@@ -22,6 +22,17 @@ For a command with spaces in the path
 
 > "C:/Program Files/DREAM3D-6.6.332/nxrunner.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
 
+The path to the executable should be given as an **absolute path**; relative paths and shell built-ins that are resolved by a particular shell are not reliable across platforms.
+
+### Blocking and Timeout
+
+- **Should Block**: When enabled, the **Filter** waits for the launched process to finish (or to start, on platforms where that distinction applies) before the pipeline continues. When disabled, the process is launched and the pipeline moves on without waiting.
+- **Timeout (ms)**: Only applies when *Should Block* is enabled. It is the maximum time, in milliseconds, that the **Filter** will wait for the command before giving up.
+
+### Required Input Sources
+
+None -- this **Filter** launches an external program and does not consume any **DataStructure** objects.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

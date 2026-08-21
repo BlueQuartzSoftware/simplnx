@@ -6,55 +6,54 @@ Processing (Cleanup)
 
 ## Description
 
-This filter will change the value of a cell's `mask` value from **False** to **True** based on the misorientation between the target
-cell and it's 6-face neighbors. This filter should be used to target isolated 
-voxels inside potential features (grains).
+This **Filter** rescues *bad* cells (those with *Mask = false*) that are surrounded by good cells with consistent orientations. It does **not** modify any cell-level attributes other than the **Mask** array; it only flips the *Mask* value of qualifying cells from **false** to **true**, effectively re-classifying them as good.
 
-### Algorithm Description
+This is a sister filter to [Neighbor Orientation Correlation](NeighborOrientationCorrelationFilter.md). The key difference: this filter only updates the mask, while *Neighbor Orientation Correlation* copies full cell attributes from a neighbor. Use this filter as the **first pass** to recover cells that were marked bad by an over-aggressive threshold but are genuinely surrounded by valid neighbors; use *Neighbor Orientation Correlation* afterward to clean up cells whose orientation is genuinely wrong.
 
-For each cell (voxel) in the input Image Geometry, if the *Mask* value of the target cell is **FALSE**,
-then the misorientation between that cell and each of its 6-face
-neighbor cells is calculated. If the number of misorientation values that fall below the 
-user defined threshold is equal to or greater than the user defined value of 
-`Required Number of Neighbors` then the current cells `mask` value is changed from
-**False** to **True**.
+### How This Filter Works
 
-The filter will iteratively reduce the required number of neighbors from 6 until
-it reaches the user defined number. So, if the user selects a required number 
-of neighbors of 4, then the filter will run with a required number of neighbors 
-of 6, then 5, then 4 before finishing.
+For each cell whose *Mask* is **false**:
 
-During the algorithm since the `mask` array is being updated continuously, each time
-the `mask` array is updated, any neighbors of that changed voxel are evaluated again
-to check if that neighbor now has the required number of valid neighbors. If this
-check ends up being true then that neighbor voxel is added to the list of voxels to check.
-This can lead to a **Flood Fill** type of algorithm. The user should take care to examine
-the output from this filter to ensure that the filter is not being overly aggressive about
-changing voxels.
+1. Compute the misorientation between the cell and each of its 6 face-neighbors (cells in the +X, -X, +Y, -Y, +Z, -Z directions).
+2. Count the number of neighbors whose misorientation falls below the user-specified *Misorientation Tolerance*.
+3. If that count is at least *Required Number of Neighbors*, flip the cell's *Mask* from **false** to **true**.
 
-### 2D Versus 3D Note
+The filter steps down through *Required Number of Neighbors* from 6 to the user-defined floor: setting it to 4 runs at levels 6, 5, and 4 in sequence.
 
-If the user is processing a 2D data set, **none** of the voxels can have 6 neighbors
-since there are no neighbors in the +/-Z directions.
+While the algorithm runs, the *Mask* array is updated continuously. When a cell's mask flips, its neighbors are re-evaluated -- they may now have enough valid neighbors to qualify themselves. **This can cascade into a flood fill**, especially if the user sets *Required Number of Neighbors* very low. Always inspect the output to confirm the filter is not overshooting.
 
-### Warning - Data Modification
+### Required Number of Neighbors
 
-Only the *Mask* value defining the cell as *good* or *bad* is changed. No other cell level array is modified.
+The *Required Number of Neighbors* parameter is the **count of agreeing face-neighbors needed to flip the mask** and ranges from **1 to 6**:
 
-### Memory Considerations
+- **6** -- only rescue cells where all 6 face-neighbors agree. Very conservative.
+- **4-5** -- rescues most over-thresholded cells while leaving genuinely uncertain cells alone.
+- **2-3** -- aggressive; risks cascading.
+- **1** -- one matching neighbor is enough; effectively a flood fill.
 
-The filter allocates a temporary `int32` neighbor-count array sized to the total voxel count
-(4 bytes per voxel). For a 1-billion-voxel dataset, that is approximately 4 GB of additional
-working memory during execution. This memory is released when the filter finishes.
+### 2D vs 3D
 
-## Example Data
+In 2D data (Z dimension = 1), no cell can have 6 face-neighbors because there are no neighbors in the +Z and -Z directions. The maximum count for 2D is therefore 4.
+
+### Warning -- Data Modification
+
+Only the *Mask* array is modified. Every other cell-level array (orientations, phases, etc.) is left unchanged. To replace orientation data on cells whose orientations are wrong, run [Neighbor Orientation Correlation](NeighborOrientationCorrelationFilter.md) afterward.
+
+### Example Data
 
 | Example Input Image                                                       | Example Output Image                                                                                                                          |
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | ![](Images/BadDataNeighborOrientationCheckFilter_1.png)                   | ![](Images/BadDataNeighborOrientationCheckFilter_2.png)                                                                                       |
-| The Small IN100 data just after initial alignment filters have completed. | The Small IN100 data just after running this filter with a *Misorientation Tolerance* of 5 degrees and a *Required Number of Neighbors* of 4. |
+| The Small IN100 data just after initial alignment filters have completed. | The Small IN100 data after running this filter with *Misorientation Tolerance* = 5° and *Required Number of Neighbors* = 4. |
 
-From the above before and after images you can see that this filter can help modify a mask that was generated through a simple threshold filter. This filter essentially uses neighbors to determine if a cell point should have had a mask value of false. The majority of cells that were changed from *false* or the black voxels, into valid IPF colored voxels, had a confidence index that fell just below the initial threshold applied (Confidence Index > 0.1 and Image Quality > 120). This filter determines that enough of that cell's neighbors had a mask value of true, the misorientation was < 5 degrees and the cell had enough valid neighbors that the cell's *mask* value was changed from **false** to **true**.
+The cells that flipped from false (black) to true (IPF-colored) had Confidence Index just below the original mask threshold (CI > 0.1, IQ > 120) but had enough valid neighbors with consistent orientations to be rescued.
+
+### Required Input Sources
+
+- **Mask Array** -- a boolean cell-level array, typically produced by [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) applied to EBSD confidence/quality scalars.
+- **Cell Quaternions** -- typically read from EBSD data via [Read H5EBSD](ReadH5EbsdFilter.md), [Read CTF Data](ReadCtfDataFilter.md), or [Read ANG Data](ReadAngDataFilter.md).
+- **Cell Phases** -- typically read from EBSD data alongside the quaternions.
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

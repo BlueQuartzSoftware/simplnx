@@ -6,36 +6,58 @@ Core (IO/Read)
 
 ## Description
 
-This **Filter** allows the user to import datasets from an HDF5 file and store them as attribute arrays in DREAM3D-NX.  This filter supports importing datasets with any number of dimensions, as long as the created attribute array's total number of components and the tuple count of the destination attribute matrix multiply together to match the HDF5 dataset's total number of elements.
+This filter imports one or more datasets from an HDF5 file and stores each one as a **Data Array** in DREAM3D-NX. HDF5 (Hierarchical Data Format version 5) is a binary file format that organizes named datasets inside a tree of groups, much like files inside folders on a disk.
 
-The component dimensions are input as a comma-delimited list of dimensional values.  For example:
+When the filter is configured, the user browses the structure of the selected HDF5 file and checks one or more datasets to import. Multiple datasets can be selected and imported in a single pass; each checked dataset becomes its own Data Array. For every checked dataset the user supplies how that dataset's elements should be split into **tuple dimensions** and **component dimensions**:
 
-1. 3, 4 = 3x4
-2. 5, 2, 1 = 5x2x1
-3. 6 = 6
+- **Tuple dimensions** describe how many elements (tuples) the array holds — for example, the number of voxels or rows of data.
+- **Component dimensions** describe how many values belong to each tuple — for example, a 3-component vector stores 3 values per tuple.
 
-### Examples
+![Fig. 1: The flat HDF5 dataset is reshaped into a Data Array of tuples × components; the element count must equal (product of tuple dimensions) × (product of component dimensions).](Images/ReadHDF5Dataset_TuplesComponents.png)
 
-1. Suppose we have a 1D dataset in an HDF5 file with dimension **12,000**.
-    We can input component dimensions of **5, 2, 2** and set the destination attribute matrix tuple dimensions to **35 x 5 x 2 x 2**
+The filter places the imported array either at the top level of the **Data Structure** or, if the user selects an existing **Data Group** or **Attribute Matrix** as the parent, inside that container. When an Attribute Matrix is chosen as the parent, the tuple dimensions are taken automatically from that Attribute Matrix and do not need to be entered.
 
-+ The total number of elements for the HDF5 dataset is 12,000.
-+ The total number of tuples in the destination attribute matrix is 35\*5\*2\*2 = 700.
-+ The total number of components for the created attribute array is 5\*2\*2 = 20.
-+ The total number of elements for the created attribute array will be 700\*20 = 14,000.
+### How It Works
 
-14,000 does not equal 12,000, so this will result in a preflight error.
+The import only succeeds when the math is consistent: the total number of elements actually stored in the HDF5 dataset must equal the number of tuples multiplied by the number of components per tuple.
 
-2. Suppose we have a 3D dataset in an HDF5 file with dimensions **1 x 16 x 1001 x 1001**.
-We can input component dimensions of **2** and set our destination attribute matrix tuple dimensions to **134 x 67**.
+```
+HDF5 dataset element count  ==  (product of tuple dimensions) x (product of component dimensions)
+```
 
-+ The total number of elements for the HDF5 dataset is 1\*16\*1001\*1001 = 16,032,016.
-+ The total number of tuples in the destination attribute matrix is 8\*1001\*1001 = 8,016,008.
-+ The total number of components for the created attribute array is 2.
-+ The total number of elements for the created attribute array will be 8,016,008\*2 = 16,032,016.
-+ The total number of elements of the created attribute array (16,032,016) equals the total number of elements of the HDF5 dataset (16,032,016), so we can import this dataset without errors (see below).
+If these two totals do not match, the filter reports a preflight error and nothing is imported.
+
+The component dimensions are entered as a comma-separated list. For example:
+
+1. `3, 4` means 3 x 4 = 12 components per tuple
+2. `5, 2, 1` means 5 x 2 x 1 = 10 components per tuple
+3. `6` means 6 components per tuple
+
+### Worked Examples
+
+**Example 1 (valid):** Suppose an HDF5 file contains a 1D dataset with **12,000** elements.
+
+- The user enters component dimensions of `2` (so 2 components per tuple).
+- The user enters tuple dimensions of `6000` (so 6,000 tuples).
+- Check: 6,000 tuples x 2 components = 12,000 elements, which equals the HDF5 dataset element count of 12,000. The dataset imports successfully.
+
+**Example 2 (invalid):** Suppose an HDF5 file contains a 1D dataset with **12,000** elements.
+
+- The user enters component dimensions of `5, 2, 2` (so 5 x 2 x 2 = 20 components per tuple).
+- The user enters tuple dimensions of `35, 5, 2, 2` (so 35 x 5 x 2 x 2 = 700 tuples).
+- Check: 700 tuples x 20 components = 14,000 elements, which does not equal the HDF5 dataset element count of 12,000. The filter reports a preflight error.
+
+**Example 3 (valid, multi-dimensional dataset):** Suppose an HDF5 file contains a dataset whose stored dimensions are **16 x 1001 x 1001**, for a total of 16 x 1001 x 1001 = 16,032,016 elements.
+
+- The user enters component dimensions of `2` (so 2 components per tuple). This means there must be 16,032,016 / 2 = 8,016,008 tuples.
+- The user enters tuple dimensions of `8, 1001, 1001` (so 8 x 1001 x 1001 = 8,016,008 tuples).
+- Check: 8,016,008 tuples x 2 components = 16,032,016 elements, which equals the HDF5 dataset element count of 16,032,016. The dataset imports successfully.
 
 ![Example Image](Images/ImportHDF5Dataset_ui.png)
+
+## Required Input Sources
+
+None — this filter reads directly from an external `.h5`/`.hdf5` file on disk. The imported array may optionally be placed into an existing **Data Group** or **Attribute Matrix** if one is selected as the parent.
 
 % Auto generated parameter table will be inserted here
 

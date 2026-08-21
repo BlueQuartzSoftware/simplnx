@@ -1,6 +1,6 @@
 # ITK Dilate Object Morphology Image Filter
 
-dilation of an object in an image
+Grows (dilates) a single labeled object in a mask image — a fast single-object variant of binary dilation.
 
 ## Group (Subgroup)
 
@@ -8,20 +8,25 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-Dilate an image using binary morphology. Pixel values matching the object value are considered the "foreground" and all other pixels are "background". This is useful in processing mask images containing only one object.
+This filter **dilates one object** in a mask image. Pixels whose value equals the *Object Value* are treated as the object (foreground); all other pixels are background. Wherever an object pixel is adjacent to a background pixel, the **structuring element** (the probe shape swept over the image) is centered on the object pixel and the background pixels it covers are set to the object value, growing the object outward. It is intended for masks that contain a single object; to dilate any of several segment values in a general segmented image, use [ITK Binary Dilate Image Filter](ITKBinaryDilateImageFilter.md).
 
-If a pixel's value is equal to the object value and the pixel is adjacent to a non-object valued pixel, then the kernel is centered on the object-value pixel and neighboring pixels covered by the kernel are assigned the object value. The structuring element is assumed to be composed of binary values (zero or one).* ObjectMorphologyImageFilter , ErodeObjectMorphologyImageFilter
+### Parameter Guidance
 
-- BinaryDilateImageFilter
+- **Object Value** — the pixel value of the object to dilate. Default *1*.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). The object grows by this amount.
 
-### Kernel Type
+#### Kernel Type
 
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on a binary/single-object mask image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here
 
@@ -29,7 +34,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

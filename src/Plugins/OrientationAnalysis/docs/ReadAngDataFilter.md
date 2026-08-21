@@ -25,14 +25,17 @@ The **Image Geometry** dimensions come from the `NCOLS_EVEN`/`NROWS` header valu
 
 The created **Image Geometry** is always marked as **micrometers**, matching standard EDAX SEM-based `.ang` files. Legacy DREAM.3D 6.5 detected certain retired TEM/ACOM `.ang` variants and marked them as nanometers; EDAX retired those file formats over a decade ago and this filter does not special-case them. If you are importing such an archival file, set the geometry units manually after import.
 
+
+![Fig. 1: An EBSD orientation is the rotation (Euler angles) between the sample reference frame (specimen axes) and the crystal reference frame (lattice axes). Import conventions may require realigning the sample frame with Rotate Sample Reference Frame and/or the crystal frame with Rotate Euler Reference Frame.](Images/EBSD_SampleVsCrystalReferenceFrame.png)
+
 ### Default TSL Transformations
 
-If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
+If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data. These rotations can be applied with [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md) and [Rotate Euler Reference Frame](RotateEulerRefFrameFilter.md):
 
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality. **Confidence Index** and **Image Quality** are per-pixel metrics that describe how reliable each individual measurement is.
 
 ### Note About Sample Grid
 
@@ -42,8 +45,15 @@ OIMAnalysis can create EBSD data sampled on a hexagonal grid. The user can look 
 # GRID: HexGrid
 ```
 
-If the user's .ang files are hexagonal grid files then they will need to run the {ref}`Convert EDAX Hex Grid to Square Grid (.ang)<OrientationAnalysis/ConvertHexGridToSquareGridFilter:Description>` filter to first convert the input files to square gridded files. This filter rejects hexagonal grid files during preflight with error `-19500`.
+If the user's .ang files are hexagonal grid files then they will need to run the [Convert EDAX Hex Grid to Square Grid (.ang)](ConvertHexGridToSquareGridFilter.md) filter first to convert the input files to square-gridded files. This filter rejects hexagonal grid files during preflight with error `-19500`.
 
+### Downstream Processing
+
+Once the reference frames are correct, the imported Euler angles are typically converted to other orientation representations (quaternions, and so on) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
+
+### Required Input Sources
+
+None — this filter reads directly from a `.ang` file on disk.
 
 ### Note on .ang file Data Ordering
 

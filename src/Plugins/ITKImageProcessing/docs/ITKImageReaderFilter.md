@@ -1,6 +1,6 @@
 # Read Image (ITK)
 
-This filter directly wraps an ITK filter of the same name.
+Reads a single image file into a new Image Geometry using the ITK software library.
 
 ## Group (Subgroup)
 
@@ -9,6 +9,8 @@ ITKImageProcessing (ITKImageProcessing)
 ## Description
 
 Reads images through the ITK software library [https://www.itk.org](https://www.itk.org)
+
+This filter shares its human name with the SimplnxCore [Read Image](../SimplnxCore/ReadImageFilter.md) filter. This ITK-based variant supports additional file formats (such as NRRD and MHA) and provides ITK-driven decoding; if you only need common 2D formats, the SimplnxCore filter may be sufficient.
 
 The following image types are supported:
 

@@ -34,11 +34,20 @@ The figure below shows a single target feature and how progressively larger mult
 
 ![Search sphere around a feature at 1x, 2x, and 3x its own diameter](Images/ComputeFeatureNeighborhoods_SearchSphere.png)
 
-## Output Notes
+### Multiplier
 
-There are 2 outputs from this filter:
-- The "Number of Neighbors" for each feature
-- The list of "neighbor" features for each neighbor
+The *Multiplier* parameter is **dimensionless** -- a multiple of the average ESD. Common values:
+
+- **1.0** -- search sphere is the same size as the average grain. Catches a feature's immediate neighbors and slightly beyond.
+- **2.0-3.0** -- second-nearest-neighbor analysis.
+- **5.0+** -- broader clustering / long-range arrangement studies.
+
+### Required Input Sources
+
+- **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md).
+- **Feature Centroids** -- produced by [Compute Feature Centroids](ComputeFeatureCentroidsFilter.md).
+- **Feature Equivalent Diameters** -- produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

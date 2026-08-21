@@ -14,7 +14,7 @@ the file.
 There are several use cases for this filter. Both use cases have in common that the data
 in the input file should **all** be contained in a single Data Array. If your data file
 instead is organized in a table format where each column of data represents a distinct
-Data Array then the 'Read CSV Filter' should be used instead.
+Data Array then the [Read CSV File](ReadCSVFileFilter.md) filter should be used instead.
 
 ### Use Case 1
 
@@ -28,7 +28,7 @@ parameters should be set:
 ### Use Case 2
 
 In this use case the user wants to read the data into an existing Attribute Matrix. In this case
-the user should set the "Created Arra Path" where the parent object is the target Attribute Matrix and
+the user should set the "Created Array Path" where the parent object is the target Attribute Matrix and
 also set the name of the created Data Array. The following parameters should be set
 with the following values:
 
@@ -38,8 +38,8 @@ with the following values:
 ### Example Data
 
 The example data below has 50 elements. This means that it could successfully be read into an array that 
-has 10 Tuples and 5 Componenets or 50 Tuples and 1 Component. The AttributeMatrix would need to 
-have dimensions such that mulplying all the dimensions together yields 50. For example the AttributeMatrix 
+has 10 Tuples and 5 Components or 50 Tuples and 1 Component. The AttributeMatrix would need to 
+have dimensions such that multiplying all the dimensions together yields 50. For example the AttributeMatrix 
 could have X=5, Y=5 and Z=2 or X=10, Y=5 and Z=1. This filter does not require any type of Geometry 
 as the filter is reading data directly into an array.
 
@@ -49,7 +49,7 @@ as the filter is reading data directly into an array.
     30    31    32    33    34    35    36    37    38    39
     40    41    42    43    44    45    46    47    48    49
 
-![](Images/ReadTextDataArray_1.png)
+![Example of plain text numeric data laid out as five rows of ten values](Images/ReadTextDataArray_1.png)
 
 ### Scalar Types
 
@@ -75,6 +75,10 @@ The *Delimiter* parameter provides the following choices:
 - **  (space) [2]**: Values are separated by a space character.
 - **: (colon) [3]**: Values are separated by a colon character.
 - **\t (Tab) [4]**: Values are separated by a tab character.
+
+## Required Input Sources
+
+None — this filter reads directly from a plain text file on disk.
 
 % Auto generated parameter table will be inserted here
 

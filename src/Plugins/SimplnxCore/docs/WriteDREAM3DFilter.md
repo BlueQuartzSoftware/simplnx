@@ -1,5 +1,9 @@
 # Write DREAM3D-NX File
 
+## Group (Subgroup)
+
+IO (Output)
+
 ## Description
 
 This **Filter** writes the current `DataStructure` to disk as an HDF5 file with the `.dream3d` extension. The file contains every `DataArray`, geometry, attribute matrix, and group in the pipeline, along with the pipeline itself so the work can be re-run or inspected later.
@@ -33,6 +37,10 @@ The `.xdmf` file does not contain a copy of the data — it is a metadata wrappe
 - **VisIt** — same workflow, same capabilities.
 
 Enabling XDMF costs almost nothing (the file is small and fast to write) and is the recommended setting whenever visualization outside DREAM3D-NX is a possibility. It can safely be left off for intermediate pipeline outputs that will only be re-read by DREAM3D-NX itself.
+
+### Required Input Sources
+
+None — this filter writes whatever currently exists in the **DataStructure** to the output file. If the file already exists it is overwritten.
 
 % Auto generated parameter table will be inserted here
 

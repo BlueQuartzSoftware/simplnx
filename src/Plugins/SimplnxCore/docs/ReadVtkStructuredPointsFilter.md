@@ -6,9 +6,22 @@ IO (Input)
 
 ## Description
 
-This **Filter** reads a _STRUCTURED_POINTS_ type of 3D array from a legacy .vtk file. A _STRUCTURED_POINTS_ file is a more general type of **Image Geometry** where data can be stored at the vertices of each voxel. The currently supported VTK dataset attribute types are SCALARS and VECTORS. Other dataset attributes will not be read correctly and may cause issues when running the **Filter**. The VTK data must be _POINT_DATA_ and/or _CELL_DATA_ and can be either binary or ASCII. The **Filter** will create a new **Data Container** with an **Image** geometry for each of the types of data (i.e., _POINT_DATA_ and/or _CELL_DATA_) selected to be read, along with a **Cell Attribute Matrix** to hold the imported data.
+This filter reads a *STRUCTURED_POINTS* 3D array from a legacy `.vtk` file and stores it in an **Image Geometry** (a regular grid of equally-sized voxels). A *STRUCTURED_POINTS* file is a general form of an **Image Geometry** in which data values can be attached either to each voxel or to the corner points of each voxel. The file can be either binary or ASCII. The currently supported VTK attribute types are *SCALARS* and *VECTORS*; other attribute types are not read correctly and may cause the filter to fail.
 
-*Note:* In a _STRUCTURED_POINTS_ file, _POINT_DATA_ lies on the vertices of each unit element voxel (i.e., eight values per voxel), while _CELL_DATA_ lies at the voxel center.  This Filter will import *both* types of data as **Image Geometries**, since either form a structured rectilinear grid.  This is to enable easier visualization of the _POINT_DATA_, and to enable greater flexibility when using DREAM3D-NX analysis tools, many of which rely on an **Image Geometry**.
+### Point Data vs. Cell Data
+
+A *STRUCTURED_POINTS* file can store its values in two ways, and a single file may contain one or both:
+
+- ***CELL_DATA***: one value per voxel, conceptually located at the voxel's center. This is the most common case and maps directly onto an **Image Geometry** **Cell Attribute Matrix**.
+- ***POINT_DATA***: values located at the eight corner (vertex) points of each voxel, so there are more point values than there are voxels.
+
+The filter can read either or both, controlled by the *Read Point Data* and *Read Cell Data* options. To keep the data easy to visualize and compatible with the many DREAM3D-NX analysis tools that require an **Image Geometry**, the filter imports *both* kinds of data into their own separate **Image Geometry**, since both a cell-center grid and a corner-point grid form a structured rectilinear grid.
+
+When both are read, two independent outputs are created: the **Cell Data** is placed under the **Image Geometry** named by the *Data Container [Cell Data]* parameter (default `VTK Cell Data`), and the **Point Data** is placed under the **Image Geometry** named by the *Data Container [Point Data]* parameter (default `VTK Point Data`). Each gets its own **Cell Attribute Matrix** to hold the imported arrays.
+
+### Spacing, Origin, and Units
+
+The grid dimensions, spacing, and origin are read directly from the `.vtk` file's `DIMENSIONS`, `SPACING`, and `ORIGIN` records. The spacing and origin are plain numbers with no embedded unit, so their length unit is whatever the file's author intended (dimensionless to the reader).
 
 ### Example Input
 
@@ -30,8 +43,18 @@ This **Filter** reads a _STRUCTURED_POINTS_ type of 3D array from a legacy .vtk 
     0 5 10 15 20 25 25 20 15
     10 5 0 0 0 0 0 0 0 0 0 0 0 0 0
 
+### Required Input Sources
+
+None — this filter reads directly from a `.vtk` file on disk.
+
 % Auto generated parameter table will be inserted here
+
+## Example Pipelines
 
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
+
+## DREAM3D-NX Help
+
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

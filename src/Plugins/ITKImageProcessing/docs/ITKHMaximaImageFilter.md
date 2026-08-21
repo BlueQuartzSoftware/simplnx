@@ -1,6 +1,6 @@
 # ITK H Maxima Image Filter
 
-Suppress local maxima whose height above the baseline is less than h.
+Flattens shallow bright peaks by suppressing local maxima whose height is less than *h*.
 
 ## Group (Subgroup)
 
@@ -8,18 +8,17 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-HMaximaImageFilter suppresses local maxima that are less than h intensity units above the (local) background. This has the effect of smoothing over the "high" parts of the noise in the image without smoothing over large changes in intensity (region boundaries). See the HMinimaImageFilter to suppress the local minima whose depth is less than h intensity units below the (local) background.
+The **H-Maxima** transform removes insignificant bright peaks from a grayscale image. Any local maximum that rises **less than *h* above its local background** is suppressed — flattened down to an estimate of that background — while larger, genuine peaks are preserved. This smooths over the "high" parts of the noise without blurring real region boundaries or large intensity changes.
 
-If the output of HMaximaImageFilter is subtracted from the original image, the significant "peaks" in the image can be identified. This is what the HConvexImageFilter provides.
+Use this filter to clean up speckle and spurious bright spots before segmentation, or as a preconditioning step for peak/maxima detection. Subtracting this filter's output from the original image yields the prominent peaks themselves (the operation performed by the [H Convex](ITKHConvexImageFilter.md) filter); the complementary operation for dark features is the [H Minima](ITKHMinimaImageFilter.md) filter.
 
-This filter uses the ReconstructionByDilationImageFilter . It provides its own input as the "mask" input to the geodesic dilation. The "marker" image for the geodesic dilation is the input image minus the height parameter h.
+### Parameter Guidance
 
-Geodesic morphology and the H-Maxima algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.
+- **Height** — the height *h*, in the **input image's intensity units**. Maxima that rise less than *h* above their local background are suppressed; peaks taller than *h* survive. Larger values flatten more peaks. Default *2.0*.
 
-The height parameter is set using SetHeight.* ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter
+### Required Input Sources
 
-- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
 
 % Auto generated parameter table will be inserted here
 
@@ -27,7 +26,7 @@ The height parameter is set using SetHeight.* ReconstructionByDilationImageFilte
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

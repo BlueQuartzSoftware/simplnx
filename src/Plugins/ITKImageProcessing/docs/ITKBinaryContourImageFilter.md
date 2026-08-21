@@ -1,6 +1,6 @@
 # ITK Binary Contour Image Filter
 
-Labels the pixels on the border of the objects in a binary image.
+Extracts the one-pixel-wide outlines of the foreground objects in a binary image.
 
 ## Group (Subgroup)
 
@@ -8,19 +8,21 @@ ITKImageLabel (ImageLabel)
 
 ## Description
 
-BinaryContourImageFilter takes a binary image as input, where the pixels in the objects are the pixels with a value equal to ForegroundValue. Only the pixels on the contours of the objects are kept. The pixels not on the border are changed to BackgroundValue.
+This filter keeps only the **border** pixels of the foreground objects in a binary image. A foreground pixel (one whose value equals the *Foreground Value*) is retained as a contour pixel if it is adjacent to a background pixel; all interior and background pixels are set to the *Background Value*. The result is the outline of each object.
 
-The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
+### Parameter Guidance
 
-<https://www.insight-journal.org/browse/publication/217>
+- **Foreground Value** — the pixel value that marks objects in the input. Contour pixels keep this value in the output. Default *1*.
+- **Background Value** — the value written for non-contour pixels (interior and background). Default *0*.
+- **Fully Connected** — controls neighbor connectivity. With it off, only face-sharing neighbors count (thinner contours); with it on, edge- and corner-sharing neighbors also count, producing **thicker contours**.
 
-### Author
+### Required Input Sources
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+Operates on a binary/segmented image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md). For outlines of a multi-region label image, see [ITK Label Contour Image Filter](ITKLabelContourImageFilter.md).
 
-### Related Filters
+## Reference
 
-- LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
+Insight Journal: <https://www.insight-journal.org/browse/publication/217>
 
 % Auto generated parameter table will be inserted here
 
@@ -28,7 +30,7 @@ The connectivity can be changed to minimum or maximum connectivity with SetFully
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

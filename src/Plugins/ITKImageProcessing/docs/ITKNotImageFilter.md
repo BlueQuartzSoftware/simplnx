@@ -8,26 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-This class is templated over the type of an input image and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
-
-Since the logical NOT operation operates only on boolean types, the input type must be implicitly convertible to bool, which is only defined in C++ for integer types, the images passed to this filter must comply with the requirement of using integer pixel type.
-
-The total operation over one pixel will be
-
-```
-if( !A )
-
- {
-
- return this->m_ForegroundValue;
-
- }
-
-return this->m_BackgroundValue;
-
-```
-
-Where "!" is the unary Logical NOT operator in C++.
+Applies the logical NOT operator to each pixel of an integer image. The input must be an integer-valued image. For each pixel, a value equal to 0 is replaced with the Foreground Value, and any non-zero value is replaced with the Background Value. This is commonly used to invert a binary (mask) image.
 
 ![](Images/ITKNotImageFilter.png)
 

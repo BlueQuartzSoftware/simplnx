@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-The computations are performed using std::tan(x).
+Computes the tangent of each pixel. Pixel values are interpreted as radians. Operates on any scalar image.
 
 % Auto generated parameter table will be inserted here
 
@@ -16,7 +16,7 @@ The computations are performed using std::tan(x).
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D-NX Help
 

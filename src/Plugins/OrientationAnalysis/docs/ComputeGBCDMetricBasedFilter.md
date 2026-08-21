@@ -6,11 +6,18 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** computes a section through the five-dimensional grain boundary distirbution for a fixed misorientation. An example of such a section is shown in Fig. 1. Differently than **Compute GBCD Filter**, which uses a method based on partition of the boundary space into bins, this **Filter** implements an alternative metric-based approach described by K. Glowinski and A. Morawiec in [Analysis of experimental grain boundary distributions based on boundary-space metrics, Metall. Mater. Trans. A 45, 3189-3194 (2014)](https://link.springer.com/article/10.1007/s11661-014-2325-y)
+This **Filter** computes a section through the five-dimensional grain boundary character distribution (GBCD) for a fixed misorientation, using a metric-based approach rather than binning. An example of such a section is shown in Fig. 1.
+
+Unlike the [Compute GBCD](ComputeGBCDFilter.md) filter, which partitions the boundary space into discrete bins, this filter uses a continuous metric-based approach described by K. Glowinski and A. Morawiec in [Analysis of experimental grain boundary distributions based on boundary-space metrics, Metall. Mater. Trans. A 45, 3189-3194 (2014)](https://link.springer.com/article/10.1007/s11661-014-2325-y). The metric-based approach avoids discretization artifacts and can produce smoother distributions, especially with limited data.
 
 ![Fig. 1: Section for the 17.9 deg./[111] misorientation through the grain boundary distribution obtained using this Filter for the small IN100 data set. Units are multiples of random distribution (MRDs).](Images/ComputeGBCDMetricBased_dist.png)
 
-Metrics in the boundary space can be defined in a number of ways, but it is essential that two boundaries are close (distant) if they have similar (different) geometric features, and that symmetrically equivalent representations of boundaries are taken into consideration. Formally, the boundary space is a Cartesian product of the misorientation and boundary-normal subspaces. For computational reasons and because of considerably different resolutions in determinination of grain misorientation and boundary-plane parameters, it is convenient to use a separate metric in each subspace. With separate metrics, the procedure for computing distribution values for a selected misorientation has two stages. First, boundary segments with misorientations located not farther from the fixed misorientation than a limiting distance &rho;<sub>m</sub> are selected. In the second stage, the distribution is probed at evenly distributed normal directions (see Fig. 2), and areas of boundaries whose normals deviate from a given direction by less than &rho;<sub>p</sub> are summed. (The radii &rho;<sub>m</sub> and &rho;<sub>p</sub> should be tailored to resolution, amount, and quality of data and set.) Eventually, the obtained distribution is normalized in order to express it in the conventional units, i.e., multiples of the random distribution.
+The metric-based approach defines distance measures in the boundary space so that boundaries with similar geometry are considered "close" and boundaries with different geometry are considered "distant," taking crystal symmetry into account. The procedure has two stages:
+
+1. **Misorientation selection:** Boundary segments whose misorientation is within a limiting angular distance &rho;<sub>m</sub> of the user-specified fixed misorientation are selected.
+2. **Normal probing:** The distribution is sampled at evenly distributed normal directions (see Fig. 2). For each sampling direction, the areas of boundaries whose normals fall within &rho;<sub>p</sub> of that direction are summed.
+
+The limiting distances &rho;<sub>m</sub> and &rho;<sub>p</sub> should be chosen based on the resolution, amount, and quality of the data. The result is normalized and expressed in multiples of a random distribution (MRD).
 
 | Image |
 |-------|
@@ -54,6 +61,14 @@ The *Limiting Distances* parameter selects the maximum angular deviations used w
 - **6 deg. Misorientations; 7 deg. Plane Inclinations [4]**: Use a 6-degree misorientation radius and a 7-degree plane-inclination radius.
 - **7 deg. Misorientations; 7 deg. Plane Inclinations [5]**: Use a 7-degree radius for both misorientations and plane inclinations.
 - **8 deg. Misorientations; 8 deg. Plane Inclinations [6]**: Use an 8-degree radius for both misorientations and plane inclinations.
+
+### Required Input Sources
+
+This filter operates on a grain-boundary surface mesh and requires the following upstream steps:
+
+- **Triangle Geometry** with **Face Labels**, **Face Normals**, **Face Areas**, and **Node Types** -- produced by a surface meshing filter such as [Quick Surface Mesh](../SimplnxCore/QuickSurfaceMeshFilter.md), followed by [Compute Triangle Normals](../SimplnxCore/TriangleNormalFilter.md) and [Compute Triangle Areas](../SimplnxCore/ComputeTriangleAreasFilter.md).
+- **Feature Euler Angles / Feature Phases** -- feature-level averages produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md) and [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

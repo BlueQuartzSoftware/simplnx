@@ -6,8 +6,14 @@ IO (Input)
 
 ## Description
 
-This **Filter** will read a single .ctf file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and an **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be **undefined, inaccurate and/or wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data. An excellent reference for this is the following PDF file:
+This filter reads a single `.ctf` file (the EBSD scan format written by Oxford Instruments / HKL Channel 5 software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
+
+The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample).
+
+The user should be aware that simply reading the file and then performing operations that depend on a correct crystal reference frame (the axes fixed to the crystal lattice) and sample reference frame (the axes fixed to the physical specimen) will be **undefined, inaccurate and/or wrong**. To bring the crystal and sample reference frames into coincidence, rotations may need to be applied to the data. An excellent reference for this is the following PDF file:
 [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
+
+![Fig. 1: An EBSD orientation is the rotation (Euler angles) between the sample reference frame (specimen axes) and the crystal reference frame (lattice axes). Import conventions may require realigning the sample frame with Rotate Sample Reference Frame and/or the crystal frame with Rotate Euler Reference Frame.](Images/EBSD_SampleVsCrystalReferenceFrame.png)
 
 ### Multi-Slice (3D) .ctf Files
 
@@ -19,12 +25,12 @@ Points the acquisition software could not index ("zero solutions") carry a phase
 
 ### Default HKL Transformations
 
-If the data has come from a HKL acquisition system and the settings of the acquisition software were in the default modes, then the following reference frame transformations need to be performed:
+If the data has come from a HKL acquisition system and the settings of the acquisition software were in the default modes, then the following reference frame transformations need to be performed. These rotations can be applied with [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md) and [Rotate Euler Reference Frame](RotateEulerRefFrameFilter.md):
 
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: None
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Error* = 0.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Error* = 0.
 
 ### Memory Requirements
 
@@ -32,9 +38,17 @@ While the filter executes, the reader's per-column buffers and the created **Att
 
 ### Radians and Degrees
 
-Most 2D .ctf files have their angles in **degrees** whereas DREAM3D-NX expects radians. The filter provides an option to convert the Euler angles to radians, which is enabled by default. The user is encouraged to create an IPF Image of their EBSD data to ensure that they do in fact need to have this option enabled.
+Most 2D `.ctf` files store their angles in **degrees**, whereas DREAM3D-NX expects radians. The filter provides an option to convert the Euler angles to radians, turned on by default. The user is encouraged to create an IPF (Inverse Pole Figure) image of their EBSD data to confirm whether this option actually needs to be enabled.
 
-### The Axis Alignment Issue for Hexagonal Symmetry [1]
+### Downstream Processing
+
+Once the reference frames are correct, the imported Euler angles are typically converted to other orientation representations (quaternions, and so on) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
+
+### Required Input Sources
+
+None — this filter reads directly from a `.ctf` file on disk.
+
+### The Axis Alignment Issue for Hexagonal Symmetry (Advanced) [1]
 
 + The issue with hexagonal materials is the alignment of the Cartesian coordinate system used for calculations with the crystal coordinate system (the Bravais lattice).
 + In one convention (e.g. EDAX.TSL), the x-axis, i.e. [1,0,0], is aligned with the crystal a1 axis, i.e. the [2,-1,-1,0] direction. In this case, the y-axis is aligned with the [0,1,-1,0] direction. (Green Axis in Figure 1)
@@ -48,7 +62,7 @@ Most 2D .ctf files have their angles in **degrees** whereas DREAM3D-NX expects r
 | Figure 1 |
 |--------|
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
-| Figure 1: showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Instr. is in **Red**. |
+| **Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Instr. is in **Red**. |
 
 % Auto generated parameter table will be inserted here
 

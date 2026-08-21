@@ -6,75 +6,56 @@ Sampling (Resample)
 
 ## Description
 
-This **Filter** changes the **Cell** spacing/resolution based on inputs from the user. There are several resampling modes:
+This **Filter** changes the cell resolution of an **Image Geometry** by overlaying a new regular grid on the existing data and copying the *closest-cell* value from the old grid to each new cell. No interpolation is performed.
+
+The overall **bounds** of the volume do not change -- only the spacing and the number of cells. To scale the physical extent of a geometry, apply a scaling transformation with [Apply Transformation To Geometry](ApplyTransformationToGeometryFilter.md) instead.
+
+![Fig. 1: Resampling overlays a new grid of a different spacing on the same physical volume; doubling the spacing along an axis halves the cell count there. Each new cell takes the value of the nearest source cell — no interpolation is performed.](Images/ResampleImageGeom_SpacingCellCount.png)
 
 ### Resampling Mode
 
-The *Resampling Mode* parameter provides the following choices:
+The *Resampling Mode* parameter provides three ways to specify the new grid:
 
-- **Spacing (0) [0]**: The entered values are the desired new spacings (not multiples of the current resolution). The number of cells in the volume will change accordingly.
-- **Scaling (1) [1]**: The entered values are the desired scaling factor for each dimension, expressed as percentages.
-- **Exact Dimensions (2) [2]**: The entered values are the desired cell dimensions of the resampled geometry.
+- **Spacing [0]**: Set the new spacing directly (in physical units; same as the input geometry's spacing). The cell count adjusts accordingly. Use small spacings cautiously -- they can produce very large cell counts.
+- **Scaling [1]**: Scale spacing by a percentage per axis. A scaling factor of 30% reduces cell count to roughly 30% of the original (and increases spacing by ~3.33x).
+- **Exact Dimensions [2]**: Set the exact new cell counts per axis (integer). Spacing is computed automatically to span the original bounds.
+
+#### Spacing Examples
+
+Image with cell dimensions (524, 390, 164) and spacing (1, 1, 1) (units in microns/voxel).
+
+- New spacing (2, 2, 2) → cell dimensions (262, 195, 82), spacing (2, 2, 2) microns/voxel.
+- New spacing (0.25, 0.7, 2.3) → cell dimensions (2096, 557, 71), spacing (0.25, 0.7, 2.3).
+
+#### Scaling Examples
+
+Same starting image.
+
+- Scaling (30%, 30%, 30%) → cell dimensions (157, 117, 49), spacing (3.333, 3.333, 3.333).
+- Scaling (120.4%, 50.74%, 68.12%) → cell dimensions (630, 197, 111), spacing (0.831, 1.971, 1.468).
+
+#### Exact Dimensions Examples
+
+Same starting image.
+
+- Exact dimensions (100, 100, 100) → cell dimensions (100, 100, 100), spacing (5.24, 3.9, 1.64).
+- Exact dimensions (100, 500, 20) → cell dimensions (100, 500, 20), spacing (5.24, 0.78, 8.2).
+
+### Resampling Algorithm
+
+A new regular grid is overlaid on the old one. For each new cell, the filter finds the old cell whose center is closest and copies that old cell's attributes (Feature Ids, phases, orientations, etc.) into the new cell. There is **no interpolation** -- this is the right behavior for label data (Feature Ids), but it does mean that small features can disappear during downsampling.
+
+### Renumber Features
+
+When downsampling produces a result in which some Features no longer have any cells, those Features become invalid. Enable *Renumber Features* to detect this case, resize the Cell Feature Attribute Matrix to drop the empty features, and renumber the remaining features so that Feature IDs remain contiguous starting at 1.
 
 ## WARNING: NeighborList Removal
 
-If the option to "Renumber Features" is turn ON and the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+When *Renumber Features* is enabled and the Cell Feature Attribute Matrix contains any *NeighborList* arrays, those arrays are **removed** because they refer to the old (pre-renumber) Feature IDs. Re-run [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) afterward to rebuild them.
 
-### Spacing
+### Required Input Sources
 
-The values entered are the desired new spacings (not multiples of the current resolution).  The number of **Cells** in the volume will change when the spacing values are changed and thus the user should be cautious of generating "too many" **Cells** by entering very small values (i.e., very high resolution).
-
-**Example 1**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new spacing value is (2, 2, 2), then the geometry will have cell dimensions (262, 195, 82) and spacing (2, 2, 2).
-
-**Example 2**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new spacing value is (0.25, 0.7, 2.3), then the geometry will have cell dimensions (2096, 557, 71) and spacing (0.25, 0.7, 2.3).
-
-### Scale Factor
-
-The values entered are the desired scaling factor for each dimension, in percentages.
-
-**Example 1**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new scaling value is (30%, 30%, 30%), then the geometry will have cell dimensions (157, 117, 49) and spacing (3.3333, 3.3333, 3.3333).
-
-**Example 2**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new scaling value is (120.4%, 50.74%, 68.12%), then the geometry will have cell dimensions (630, 197, 111) and spacing (0.830565, 1.97083, 1.468).
-
-### Exact Dimensions
-
-The values entered are the desired cell dimensions of the resampled geometry.  (100, 100, 100) would resample the geometry so that there are 100 cells in each dimension.
-
-**Example 1**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new exact dimensions are (100, 100, 100), then the geometry will have cell dimensions (100, 100, 100) and spacing (5.24, 3.9, 1.64).
-
-**Example 2**:
-
-Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
-
-If the new exact dimensions are (100, 500, 20), then the geometry will have cell dimensions (100, 500, 20) and spacing (5.24, 0.78, 8.2).
-
----
-
-A new grid of **Cells** is created and "overlaid" on the existing grid of **Cells**.  There is currently no *interpolation* performed, rather the attributes of the old **Cell** that is closest to each new **Cell's** is assigned to that new **Cell**.
-
-*Note:* Present **Features** may disappear when down-sampling to coarse resolutions. If *Renumber Features* is checked, the **Filter** will check if this is the case and resize the corresponding **Feature Attribute Matrix** to comply with any changes. Additionally, the **Filter** will renumber **Features** such that they remain contiguous.
-
-*Note:* This filter does NOT change the overall bounds of the volume, just the spacing and number of cells in the volume.  To change the overall bounds of the volume, apply a scaling transformation with the [Apply Transformation To Geometry](./ApplyTransformationToGeometryFilter.md) filter.
+- **Input Image Geometry** -- the geometry to be resampled. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

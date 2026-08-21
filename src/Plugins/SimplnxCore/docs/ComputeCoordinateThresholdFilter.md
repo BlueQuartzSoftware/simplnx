@@ -6,7 +6,9 @@ Geometry
 
 ## Description
 
-This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibility, while leveraging existing algorithms. This filter doesn't modify the input geometry in any way if you wish to modify the data within the bounding box, consider using one of the cleanup filters on the marked values. See *Remove Flagged Vertices/Edges/Triangles* for an example of a potential followup filter.
+This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibility, while leveraging existing algorithms. This filter doesn't modify the input geometry in any way; if you wish to modify the data within the bounding box, consider using one of the cleanup filters on the marked values. See [Remove Flagged Vertices](RemoveFlaggedVerticesFilter.md), [Remove Flagged Edges](RemoveFlaggedEdgesFilter.md), or [Remove Flagged Triangles](RemoveFlaggedTrianglesFilter.md) for examples of potential followup filters.
+
+All threshold bounds (the rectangle minimum/maximum coordinates and the sphere center/radius) are specified in **physical coordinates** — the same length units as the input geometry's vertex positions (or, for an **Image Geometry**, its origin and spacing) — not in cell/voxel indices.
 
 ### Coordinate Container Shape
 
@@ -32,6 +34,8 @@ Starting with the simple case, a `VertexGeom`, if a vertex/point (cell-level) fa
 The way a point is determined to be in the sphere uses the following calculation where `p` is the query point, `c` is the centroid of the sphere (provided from the first 3 values in "Sphere Info" parameter), and `r` is the radius of the sphere (provided from the 4th value in "Sphere Info" parameter):
 
 `(p_x - c_x)^2 + (p_y - c_y)^2 + (p_z - c_z)^2 <= r^2`
+
+The center `c` (first 3 values of *Sphere Info*) and radius `r` (4th value) are both given in **physical coordinate** units matching the geometry.
 
 ### Inverting the Mask
 

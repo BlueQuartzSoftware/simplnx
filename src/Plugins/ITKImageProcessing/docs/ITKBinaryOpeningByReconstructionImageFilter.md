@@ -1,6 +1,6 @@
 # ITK Binary Opening By Reconstruction Image Filter
 
-Binary morphological opening by reconstruction of an image.
+Removes small foreground objects from a binary image while preserving the exact shape of the objects that remain.
 
 ## Group (Subgroup)
 
@@ -8,28 +8,37 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-This filter removes small (i.e., smaller than the structuring element) objects in the image. It is defined as: Opening(f) = ReconstructionByDilatation(Erosion(f)).
+Like a standard morphological **opening**, this filter removes foreground objects that are smaller than the **structuring element** (the small probe shape — a ball, box, etc. — that is swept over the image). Unlike a plain opening, it then uses **morphological reconstruction** to restore the surviving objects to their original shape.
 
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.
+A plain opening erodes (shrinks) the image and then dilates (regrows) it. The erosion deletes small objects, but it also rounds off and shrinks the corners of the larger objects that survive. Opening *by reconstruction* avoids that side effect: after the erosion deletes the small objects, the reconstruction step regrows each surviving object back to exactly its original boundary instead of the rounded, dilated approximation. The net effect is "delete the small objects, leave the rest untouched."
 
-### Author
+The result is defined as `Opening(f) = ReconstructionByDilation(Erosion(f))`.
 
- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+![Binary opening by reconstruction.](Images/ITKOpeningByReconstruction.png)
 
-### Related Filters
+### Parameter Guidance
 
-This implementation was taken from the Insight Journal paper: <https://www.insight-journal.org/browse/publication/176> * MorphologyImageFilter , OpeningByReconstructionImageFilter , BinaryClosingByReconstructionImageFilter
+- **Foreground Value** — the pixel value that counts as object/foreground (everything else is background). For a segmented or thresholded image, this is the label of the region to process.
+- **Background Value** — the value written where foreground is removed.
+- **Kernel Radius** — the radius of the structuring element, **in pixels** (one value per axis). Objects smaller than this are removed.
+- **Fully Connected** — controls neighbor connectivity during reconstruction (face-only versus face + edge + corner). Turn it on for thin, one-pixel-wide features.
 
-![](Images/ITKOpeningByReconstruction.png)
+#### Kernel Type
 
-### Kernel Type
-
-The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+The *Kernel Type* parameter selects the structuring element shape:
 
 - **Annulus [0]**: A ring-shaped structuring element.
 - **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
 - **Box [2]**: A rectangular/cuboid structuring element.
 - **Cross [3]**: A cross-shaped structuring element.
+
+### Required Input Sources
+
+Operates on a binary/segmented image — typically the output of a thresholding filter such as [ITK Binary Threshold Image Filter](ITKBinaryThresholdImageFilter.md) or [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md). Compare with the standard [ITK Binary Morphological Opening Image Filter](ITKBinaryMorphologicalOpeningImageFilter.md), which does not preserve object shape.
+
+### Author
+
+Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. (Insight Journal: <https://www.insight-journal.org/browse/publication/176>)
 
 % Auto generated parameter table will be inserted here
 
@@ -37,7 +46,7 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
 ## DREAM3D-NX Help
 

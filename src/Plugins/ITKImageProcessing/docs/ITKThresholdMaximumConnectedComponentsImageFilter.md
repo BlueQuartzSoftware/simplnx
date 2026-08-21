@@ -1,6 +1,6 @@
 # ITK Threshold Maximum Connected Components Image Filter
 
-Finds the threshold value of an image based on maximizing the number of objects in the image that are larger than a given minimal size.
+Automatically picks the threshold that yields the most distinct objects above a minimum size, then produces a binary image.
 
 ## Group (Subgroup)
 
@@ -8,34 +8,34 @@ ITKConnectedComponents (ConnectedComponents)
 
 ## Description
 
-This method is based on Topological Stable State Thresholding to calculate the threshold set point. This method is particularly effective when there are a large number of objects in a microscopy image. Compiling in Debug mode and enable the debug flag for this filter to print debug information to see how the filter focuses in on a threshold value. Please see the Insight Journal's MICCAI 2005 workshop for a complete description. References are below.
+This filter automatically selects a threshold rather than asking you for an intensity cutoff. It searches for the threshold value that **maximizes the number of connected objects** larger than a given minimum size, then binarizes the image at that threshold. Because the chosen threshold separates as many real objects as possible while merging or dropping noise-sized blobs, the filter is well suited to **counting many small objects** — for example cells or particles in a microscopy image.
 
-### Parameters
+The lower threshold boundary is computed by the filter; you supply the upper boundary of the search and the minimum object size. Pixels that pass the selected threshold are written with the *Inside Value* and all others with the *Outside Value*.
 
-The MinimumObjectSizeInPixels parameter is controlled through the class Get/SetMinimumObjectSizeInPixels() method. Similar to the standard itk::BinaryThresholdImageFilter the Get/SetInside and Get/SetOutside values of the threshold can be set. The GetNumberOfObjects() and GetThresholdValue() methods return the number of objects above the minimum pixel size and the calculated threshold value.
+### Parameter Guidance
 
-### Automatic Thresholding in ITK
+- **Minimum Object Size In Pixels** — the smallest connected region (in **pixels**) that counts as an object. Regions smaller than this are treated as noise and ignored when the filter optimizes the threshold. Default *0* (count everything).
+- **Upper Boundary** — the upper limit of the threshold search, in the **input image's intensity units**. The filter computes the lower boundary automatically. Default is the maximum intensity of the pixel type.
+- **Inside Value** — the output value written for pixels that pass the selected threshold (a `uint8` label, default *1*).
+- **Outside Value** — the output value written for all other pixels (a `uint8` label, default *0*).
 
-There are multiple methods to automatically calculate the threshold intensity value of an image. As of version 4.0, ITK has a Thresholding ( ITKThresholding ) module which contains numerous automatic thresholding methods.implements two of these. Topological Stable State Thresholding works well on images with a large number of objects to be counted.
+### Required Input Sources
+
+Operates on any scalar image — typically from [Read Image](../SimplnxCore/ReadImageFilter.md), [Read Images [3D Stack]](../SimplnxCore/ReadImageStackFilter.md), or the output of a prior ITK image filter.
+
+% Auto generated parameter table will be inserted here
 
 ## References
 
-1) Urish KL, August J, Huard J. "Unsupervised segmentation for myofiber counting in immunofluorescent microscopy images". Insight Journal. ISC/NA-MIC/MICCAI Workshop on Open-Source Software (2005) https://insight-journal.org/browse/publication/40 
-2) Pikaz A, Averbuch, A. "Digital image thresholding based on topological
-stable-state". Pattern Recognition, 29(5): 829-843, 1996.
-
-## Questions
-
-email Ken Urish at ken.urish(at)gmail.com Please cc the itk list serve for archival purposes.
-
-% Auto generated parameter table will be inserted here
+1. Urish KL, August J, Huard J. "Unsupervised segmentation for myofiber counting in immunofluorescent microscopy images." Insight Journal, ISC/NA-MIC/MICCAI Workshop on Open-Source Software (2005). <https://insight-journal.org/browse/publication/40>
+2. Pikaz A, Averbuch A. "Digital image thresholding based on topological stable-state." Pattern Recognition, 29(5): 829-843, 1996.
 
 ## Example Pipelines
 
 ## License & Copyright
 
-Please see the description file distributed with this plugin.
+Please see the description file distributed with this **Plugin**
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
 If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

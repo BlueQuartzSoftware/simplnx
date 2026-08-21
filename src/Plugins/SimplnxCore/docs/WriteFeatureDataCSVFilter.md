@@ -6,9 +6,11 @@ IO (Output)
 
 ## Description
 
-This **Filter** writes the data associated with each **Feature** to a file name specified by the user in *CSV* format. Every array in the **Feature** map is written as a column of data in the *CSV* file.  The user can choose to also write the neighbor data. Neighbor data are data arrays that are associated with the neighbors of a **Feature**, such as: list of neighbors, list of misorientations, list of shared surface areas, etc. These blocks of info are written after the scalar data arrays.  Since the number of neighbors is variable for each **Feature**, the data is written as follows (for each **Feature**): Id, number of neighbors, value1, value2,...valueN.
+A **Feature** is a grouped region of the data, such as a grain. This **Filter** writes the data associated with each **Feature** to a file name specified by the user in *CSV* format. Every array in the **Feature** map is written as a column of data in the *CSV* file.  The user can choose to also write the neighbor data. Neighbor data are data arrays that are associated with the neighbors of a **Feature**, such as: list of neighbors, list of misorientations, list of shared surface areas, etc. These blocks of info are written after the scalar data arrays.  Since the number of neighbors is variable for each **Feature**, the data is written as follows (for each **Feature**): Id, number of neighbors, value1, value2,...valueN.
 
 ### Example Output
+
+In the examples below, the very first line of the output (here `5414`) is the total **Feature** count — the number of Features whose data follows.
 
 The *CSV* file:
 
@@ -48,6 +50,14 @@ The *Delimiter* parameter selects the character used to separate values within e
 - **Comma [2]**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
 - **Colon [3]**: Values are separated by a colon (`:`).
 - **Tab [4]**: Values are separated by a tab character.
+
+## Required Input Sources
+
+The per-feature columns come from any feature-level **Data Array**s present in the selected Feature **Attribute Matrix** (for example feature phases, sizes, or average orientations). When *Write Neighbor Data* is enabled, the additional neighbor blocks require:
+
+- **Number of Neighbors** and the contiguous **Neighbor List** -- produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).
+- **Shared Surface Area List** -- produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).
+- **Neighbor Misorientation List** -- produced by [Compute Feature Neighbor Misorientations](../OrientationAnalysis/ComputeFeatureNeighborMisorientationsFilter.md).
 
 % Auto generated parameter table will be inserted here
 

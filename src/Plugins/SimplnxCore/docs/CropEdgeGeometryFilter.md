@@ -1,10 +1,16 @@
 # Crop Geometry (Edge)
 
+## Group (Subgroup)
+
+Core (Conversion)
+
 ## Description
 
-The **Crop Geometry (Edge) Filter** allows users to crop a region of interest (ROI) from an **Edge Geometry**. This filter is essential for isolating specific portions of edge-based data structures.
+The **Crop Geometry (Edge) Filter** allows users to crop a region of interest (ROI) from an **Edge Geometry**. This filter is essential for isolating specific portions of edge-based data structures. For cropping voxel-based data instead, see [Crop Geometry (Image)](CropImageGeometryFilter.md).
 
 Users can selectively crop specific dimensions of the **Edge Geometry** by toggling **Crop X Dimension**, **Crop Y Dimension**, and **Crop Z Dimension** ON or OFF. Only dimensions that are turned ON will be cropped.
+
+The **Min Coordinate** and **Max Coordinate** values define the ROI bounds and are specified in the **Edge Geometry's** physical coordinate units (the same units as the vertex positions), *not* as cell or vertex indices.
 
 ### Boundary Intersection Behavior
 
@@ -88,8 +94,6 @@ Three outside vertices, that have been interpolated to lie within the boundary, 
 As you can see, the edges that intersect the ROI boundary have been interpolated so that the outside vertex lies exactly on the boundary edge.  Edges that have both vertices outside the boundary are cropped out completely.
 
 % Auto generated parameter table will be inserted here
-
-## Example Pipelines
 
 ## License & Copyright
 

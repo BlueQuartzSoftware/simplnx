@@ -1,4 +1,4 @@
-# Read Image Stack
+# Read Images [3D Stack]
 
 ## Group (Subgroup)
 
@@ -6,7 +6,7 @@ IO (Input)
 
 ## Description
 
-Reads a numbered sequence of 2D image files and stacks them into a 3D volume. This filter does not depend on ITK; it uses stb_image for PNG/JPEG/BMP files and libtiff for TIFF files. The per-slice read is delegated to the **Read Image** filter, so any option available there (data type conversion, origin/spacing overrides, 2D cropping) is also available per-slice here.
+Reads a numbered sequence of 2D image files and stacks them into a 3D volume. This filter does not depend on ITK; it uses stb_image for PNG/JPEG/BMP files and libtiff for TIFF files. The per-slice read is delegated to the [Read Image](ReadImageFilter.md) filter, so any option available there (data type conversion, origin/spacing overrides, 2D cropping) is also available per-slice here.
 
 Supported image types:
 
@@ -14,6 +14,10 @@ Supported image types:
 - JPEG / JPG (via stb)
 - BMP (via stb)
 - TIFF / TIF (via libtiff)
+
+### File List and Slice Ordering
+
+The stack is defined by a file list rather than a single file. The user supplies an input directory plus a numeric naming pattern (a file prefix, suffix, file extension, and the start/end index with a padding digit count). The filter expands that pattern into an ordered list of files, where each file becomes one Z-slice of the resulting 3D volume. The first file in the list becomes Z = 0, the next file Z = 1, and so on, so the numeric ordering of the file names directly determines the slice order along the Z axis. The total number of files becomes the Z dimension of the created **Image Geometry**.
 
 ### Processing Order
 
@@ -27,7 +31,7 @@ Image operations are applied in the following order:
 
 ### Origin & Spacing Caveats
 
-The filter will create a new Image Geometry. The user can optionally override the origin and spacing for the created geometry. The default values from the input files will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
+The filter will create a new **Image Geometry**. The user can optionally override the origin and spacing for the created geometry. *Spacing* is the physical size of each voxel and *Origin* is the coordinate of the lower-left-back corner of the volume; both are expressed in the same physical length units (for example microns). The default values from the input files will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
 
 ### Origin & Spacing Processing
 
@@ -64,7 +68,7 @@ The user can optionally resample each image as it is read in. The *Resample Imag
 
 ### Grayscale Conversion
 
-When *Convert To GrayScale* is enabled, RGB image data is converted to a scalar grayscale array using the luminosity algorithm with the supplied *Color Weighting* values. Only uint8 input data is supported for grayscale conversion.
+When *Convert To GrayScale* is enabled, RGB image data is converted to a scalar grayscale array using the luminosity algorithm. The luminosity algorithm computes each gray value as a weighted sum of the red, green, and blue channels (gray = wR·R + wG·G + wB·B), where the weights come from the supplied *Color Weighting* values (dimensionless). This produces a perceptually weighted brightness rather than a simple channel average. Only uint8 input data is supported for grayscale conversion.
 
 ### Output Data Type
 
@@ -87,6 +91,10 @@ Both subvolume cropping types have checkboxes to turn on/off cropping in each of
 ### Image Operations
 
 The user can select to flip the images about the X or Y axis during import.
+
+## Required Input Sources
+
+None — this filter reads from a file list of image files on disk.
 
 % Auto generated parameter table will be inserted here
 
