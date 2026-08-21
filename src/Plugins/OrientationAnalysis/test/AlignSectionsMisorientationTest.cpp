@@ -673,8 +673,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
     //     everywhere. Pairs whose reference is masked-in are exclusive-or pairs and add 1
     //     each (:159-162); pairs whose reference is masked-out are both-false and add
     //     NOTHING to the numerator while still being counted in the denominator (:134).
-    //     With T in [16, 20] that is 4 or 5 sampled columns per row, i.e. a score near
-    //     34/64 -- far above the true answer.
+    //     The numerator is the number of sampled columns below the boundary summed over the
+    //     8 rows, whose T values are 16,17,18,19,20,19,18,17: exactly 4 + 5*7 = 39 of the 64
+    //     sampled pairs, a score of about 0.61 -- far above the true answer.
     //   * ey == 0: the exclusive-or fires iff [u < T] != [u + ex < T], which is the same
     //     interval count as the orientation carrier -> 2 * |ex|. Both-true pairs compare
     //     identity against identity -> 0 degrees -> not > tolerance -> contribute nothing.

@@ -17,7 +17,7 @@
 | Algorithm Relationship | **Port (faithful) of the shift search + minor rewrite of the I/O and numeric paths.** The candidate scan, memoization, stride, tie-break and accumulation are line-for-line equivalent to 6.5.171. Three material port-time deltas: shift output moved from a text file to DataArrays (#1237), the misorientation angle moved from float `acos` to double `atan2` via EbsdLib 3.1.0, and the mask type widened from `bool` to `bool \| uint8`. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary, Class 4 (Invariant) companion** — 16 hand-built analytical fixture configurations across 9 TEST_CASEs, expected shifts and expected aligned volumes derived in closed form from the algorithm source before any run. All pass. The key structural result: the six shift-asserting oracle cases passed against **unmodified** code on first execution, independently confirming the re-derived sign convention. |
 | Code paths enumerated  | **36 of 43 exercised.** The 7 uncovered are 2 cancel-injection paths, 1 runtime-only mask error, 1 candidate-bounds rejection that is only reachable inside a documented out-of-bounds regime, and 3 pre-existing preflight errors made unreachable by parameter validation. Each is listed as its own row with a reason.                                                                                                       |
-| Tests today            | **11 TEST_CASEs / 51,761 assertions.** 9 new-for-V&V (51,523 assertions): 7 Class 1 oracle cases + 2 guard cases. 1 kept legacy-parity exemplar (209). 1 untouched SIMPL 6.4/6.5 backwards-compat (29). 1 retired (circular). Mutation-verified: 19 mutation runs, 14 killed a test, 5 survived — every survival is accounted for below (1 equivalent mutant, 1 expected non-observable, 2 runs of one explained stride limitation, 1 stated assertion-strength gap). |
+| Tests today            | **11 TEST_CASEs / 51,803 assertions.** 9 new-for-V&V (51,565 assertions): 7 Class 1 oracle cases + 2 guard cases. 1 kept legacy-parity exemplar (209). 1 untouched SIMPL 6.4/6.5 backwards-compat (29). 1 retired (circular). Mutation-verified: 19 mutation runs, 14 killed a test, 5 survived — every survival is accounted for below (1 equivalent mutant, 1 expected non-observable, 2 runs of one explained stride limitation, 1 stated assertion-strength gap). |
 | Exemplar archive        | **`align_sections_misorientation.tar.gz` retained unchanged** (SHA512 verified against CMakeLists). Its `6_6_` file is still the legacy-parity pin; its `output_*.dream3d` file is no longer read by any test. A second archive, `align_sections.tar.gz`, was **retired** — download and sentinel both removed; nothing had read it since #1237. Provenance: `vv/provenance/align_sections_misorientation.md`. |
 | Legacy comparison      | **Run — no output deviations.** 4 fixtures, 8 binary runs (PipelineRunner 6.5.171 vs `nxrunner`), 96 element-wise checks, 0 failures. Every cell array bit-identical (Quats to 0.0 max abs diff over 12,288 elements); every shift value identical, including negative relative and cumulative shifts and the 3-pass multi-hop search. All divergences were predicted from source before the runs; **zero unpredicted divergences**. |
 | Bug flags              | **D5** (a restored 3D guard plus four new guards, converting silent garbage and two out-of-bounds reads into diagnostics — the out-of-bounds phase read was shared with legacy) and **D7** (memoization array read before its bounds check — shared with legacy, documented, deliberately not fixed). **D8** is a legacy-only defect with no SIMPLNX exposure. |
@@ -31,9 +31,12 @@ that minimises the fraction of subsampled cell pairs whose misorientation exceed
 user-supplied tolerance. Verification used a **Class 1 analytical oracle**: 16 hand-built
 fixture configurations whose expected shifts, shift arrays and aligned volumes were derived in
 closed form from the algorithm source before anything was run, backed by a **legacy A/B against
-DREAM3D 6.5.171** on four fixtures. Headline result: **all 11 TEST_CASEs pass, the A/B is
-bit-identical with zero unpredicted divergences, and the pass added five input guards plus one
-warning that convert two out-of-bounds reads and two silent-garbage paths into named errors.**
+DREAM3D 6.5.171** on four fixtures. Headline result: **all 11 TEST_CASEs pass and the A/B is
+bit-identical with zero unpredicted divergences.** The pass also added five new input checks —
+four errors and one warning — one each for: two out-of-bounds read paths reachable from
+ordinary user input (-68006, -68008), a 3D-geometry guard that legacy had and the port had lost
+(-68005), a parameter value that silently produced meaningless output (-68007), and a crystal
+structure that was silently ignored (-68009).
 
 ## Algorithm Relationship
 
@@ -103,12 +106,16 @@ that this minimum is also unique and reachable:
   tolerance bracket.
 
 Expected values were derived by hand from the algorithm source before any execution, and the
-derivation is reproduced as comments beside each assertion. Class 4 companions assert
-structural invariants: shift-array tuple counts, `Slices` component 1 == component 0 + 1, the
-zero-filled strips, and that the top section is never modified.
+derivation is reproduced as comments beside each assertion.
+
+The Class 4 companion assertions — properties that hold regardless of the specific expected
+values — are: the three shift arrays each have one tuple per section; no alignment attribute
+matrix exists when Store Alignment Shifts is off; an all-false mask yields a score of 0 rather
+than NaN; the top section is bit-unchanged by the run; and
+`UnitTest::CheckArraysInheritTupleDims` holds over the whole DataStructure in every case.
 
 *Encoded:* `test/AlignSectionsMisorientationTest.cpp`, `namespace AnalyticalFixtures` —
-**16 fixture configurations across 9 TEST_CASEs**, 51,523 assertions, all pass.
+**16 fixture configurations across 9 TEST_CASEs**, 51,565 assertions, all pass.
 
 *Independent confirmation:* the six shift-asserting oracle cases were written against
 unmodified code and **passed on their first execution**. Since the expected shifts, including
@@ -194,7 +201,7 @@ only for the non-recording copy of the scan (mutation M3/M3b). Logged as a follo
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `AlignSectionsMisorientation Small IN100 Pipeline` | kept | Legacy-parity pin against the `6_6_` (DREAM3D 6.6-generated) exemplar; 209 assertions over the whole cell attribute matrix. Not an independent oracle. Retained for regression value; the vestigial `align_sections.tar.gz` sentinel was removed from it. Mutation-verified as a real pin: killed by 6 of 19 mutations. |
+| `AlignSectionsMisorientation Small IN100 Pipeline` | kept | Legacy-parity pin against the `6_6_` (DREAM3D 6.6-generated) exemplar; 209 assertions over the whole cell attribute matrix. Not an independent oracle. Retained for regression value; the vestigial `align_sections.tar.gz` sentinel was removed from it. Mutation-verified as a real pin: killed by 7 of the 19 mutation runs (M3, M3b, M4, M5, M6, M9, M17) — all of them mutations that reach the non-recording copy of the search, which is the copy this test exercises. |
 | `AlignSectionsMisorientationFilter: Class 1 Oracle Shift Accumulation And Shift Arrays` | new-for-V&V | 3-section fixture. Asserts all three shift arrays tuple-by-tuple (including the zero tuple 0) and the entire aligned volume element-by-element. Exercises both index-remap directions and both x zero-fill edges. |
 | `... Class 1 Oracle Shift Application Without Shift Arrays` | new-for-V&V | Same fixture with the shift arrays off, to cover the second, duplicated copy of the search. Added *because* mutation testing showed the first copy's coverage did not extend to it. Also asserts no alignment attribute matrix is created. |
 | `... Class 1 Oracle Multi Hop Convergence` | new-for-V&V | True shift (4,0) lies outside the first 7x7 window, so the re-centring loop must run 3 passes. Full per-candidate score table derived in the test comment. A single-pass search reports (3,0) and is killed. |
@@ -213,9 +220,14 @@ decision of 2026-08-19.
 ## Mutation verification
 
 19 mutation runs. Each: apply exactly one textual edit -> rebuild -> run the blind suite
-`ctest -R "OrientationAnalysis::AlignSections"` (15 tests, including the AlignSectionsList and
-AlignSectionsMutualInformation consumers of the shared base) -> revert -> **prove `git diff` is
-empty**. All 19 recorded a clean revert. Evidence: `ww_work/AlignSectionsMisorientation/mutations/`.
+`ctest -R "OrientationAnalysis::AlignSections"` -> revert -> **prove `git diff` is empty**.
+All 19 recorded a clean revert. Evidence: `ww_work/AlignSectionsMisorientation/mutations/`.
+
+The blind suite is **15 tests**: this filter's 11 plus the 4 `AlignSectionsMutualInformation`
+tests, which is the other *OrientationAnalysis* consumer of the shared base. It does **not**
+include `AlignSectionsList` or `AlignSectionsFeatureCentroid` — those live in SimplnxCore and
+are covered instead by the `ctest -R "SimplnxCore::AlignSections"` family no-regression run
+reported under Test inventory.
 
 The two duplicated copies of the candidate scan were targeted independently (by occurrence
 index) so that each copy's coverage could be established separately.
