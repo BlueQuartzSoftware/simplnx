@@ -95,3 +95,26 @@ The first two rows establish that grouping is unaffected on hexagonal data regar
 **Affected users:** Anyone running legacy `UseRunningAverage=true` on a scan that contains a non-hexagonal indexed phase adjacent to the hexagonal phase of interest. Users whose scans contain a single hexagonal phase — or several phases all of which are hexagonal — are unaffected and their historical results are correct.
 
 **Recommendation:** Trust SIMPLNX. Migrating an existing legacy MTR pipeline should produce the same regions unless the scan contains a genuinely non-hexagonal phase touching the hexagonal one, in which case SIMPLNX will correctly decline merges that legacy made.
+
+---
+
+## GroupMicroTextureRegionsFilter-D4
+
+| Field            | Value                                                     |
+|------------------|-----------------------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D4`                       |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                    |
+| **Status**       | active — intentional default difference                   |
+
+**Deviation:** The two implementations ship different defaults for `UseRunningAverage`. Legacy defaults to `false` (`m_UseRunningAverage(false)`); SIMPLNX defaults to **`true`**, and has since the initial port. Because that flag selects what a candidate feature is compared against, a pipeline run on defaults does not produce the same regions in the two implementations.
+
+**Why it matters.** The flag chooses the comparison target for each candidate feature:
+
+- `false` — the candidate is compared against the feature it touches (the current BFS frontier). Grouping is the transitive closure of the pairwise tolerance test along neighbour chains, so a region can drift arbitrarily far from its seed orientation one step at a time. At a 20° tolerance, features at 0°, 15°, and 30° all merge.
+- `true` — the candidate is compared against the region's running volume-weighted average c-axis, which anchors the region and bounds that drift. On the same three features, 0° and 15° merge and 30° does not.
+
+Both behaviours are correct and intended; they answer different questions. External review (A. Pilchak, Pratt & Whitney, 2026-08-11) confirmed both should be offered as user-selectable options, that neighbour-to-neighbour is appropriate when enforcing a misorientation requirement between adjacent features, and that the running average is appropriate when the region's ensemble orientation feeds downstream structure–property modelling. The reviewer's own practice is to use the running average.
+
+**Affected users:** Anyone migrating a legacy pipeline that left "Group C-Axes With Running Average" at its default. Legacy ran the neighbour-to-neighbour path; SIMPLNX will run the running-average path unless the flag is explicitly cleared. Expect fewer, tighter regions in SIMPLNX on the same data — the anchored comparison rejects chains the legacy default would have accepted.
+
+**Recommendation:** Set `UseRunningAverage` explicitly rather than relying on either default. To reproduce a legacy run exactly, set it to `false`. Note that this deviation is independent of D3: D3 concerns *which Laue classes* are validated when the running average is enabled, whereas D4 concerns *which comparison target* is selected by default.

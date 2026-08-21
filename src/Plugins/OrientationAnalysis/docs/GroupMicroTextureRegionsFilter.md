@@ -18,18 +18,26 @@ small groups. Tune the value for your alloy and scan rather than assuming the de
 
 ### How a region grows: neighbor-to-neighbor vs. running average
 
-With **Group C-Axes With Running Average** off (the default), each candidate **Feature** is compared
-against the **Feature** it touches — the one that most recently joined the region. Grouping is
-therefore the *transitive closure* of the pairwise tolerance test along chains of neighbors: with a
-20 degree tolerance, features at 0, 15 and 30 degrees will all end up in one region even though the
-two end members are 30 degrees apart. A region can drift arbitrarily far from its starting
-orientation, one small step at a time.
+**Group C-Axes With Running Average** selects what each candidate **Feature** is measured against,
+and it is **on by default**.
 
-With the option on, each candidate is instead compared against the volume-weighted average c-axis of
-the whole region so far, which anchors the region and bounds that drift. Which behavior is correct
-depends on the analysis: use neighbor-to-neighbor when you want to enforce a misorientation
-requirement between adjacent features, and the running average when you want an ensemble-average
-orientation for the region (for example when feeding structure-property models).
+With the option **on** (the default), each candidate is compared against the volume-weighted average
+c-axis of the region built so far. The region's own average anchors it, which bounds how far the
+region can drift from the orientation it started at.
+
+With the option **off**, each candidate is compared against the **Feature** it touches — the one that
+most recently joined the region. Grouping is then the *transitive closure* of the pairwise tolerance
+test along chains of neighbors: at a 20 degree tolerance, features at 0, 15 and 30 degrees all end up
+in one region even though the two end members are 30 degrees apart. A region can drift arbitrarily
+far from its starting orientation, one small step at a time.
+
+Which behavior is correct depends on the analysis: use neighbor-to-neighbor when you want to enforce
+a misorientation requirement between adjacent features, and the running average when you want an
+ensemble-average orientation for the region (for example when feeding structure-property models).
+
+Note for users migrating a pipeline from DREAM3D 6.5.171: the legacy filter defaulted this option to
+**off**. A pipeline that relied on the legacy default will group differently here unless you turn the
+option off explicitly.
 
 Both versions group by **Laue class**, not by phase identity. Two distinct phases that both resolve
 to *Hexagonal_High* — for example primary alpha and transformed beta in a titanium alloy — will be
