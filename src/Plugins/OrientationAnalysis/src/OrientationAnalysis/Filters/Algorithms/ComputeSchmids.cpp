@@ -40,6 +40,10 @@ Result<> ComputeSchmids::operator()()
 
   auto* phiArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->PhisArrayName);
   auto* lambdaArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->LambdasArrayName);
+  // Feature 0 is the conventional unassigned-Feature sentinel and is never computed; the loop below
+  // starts at 1. Preflight now creates all five arrays with a "0" fill value so every tuple is
+  // defined regardless, but these explicit writes are kept because they are what documents the
+  // sentinel row's meaning at the point of use.
   if(m_InputValues->StoreAngleComponents)
   {
     (*phiArray)[0] = 0.0F;
@@ -52,14 +56,10 @@ Result<> ComputeSchmids::operator()()
   slipSystems[0] = 0;
 
   size_t totalFeatures = avgQuatPtr.getNumberOfTuples();
-
-  int32_t slipSystem = 0;
+  const usize numEnsembles = crystalStructures.getNumberOfTuples();
 
   Eigen::Vector3d sampleLoading = {m_InputValues->LoadingDirection[0], m_InputValues->LoadingDirection[1], m_InputValues->LoadingDirection[2]};
   sampleLoading.normalize();
-
-  double angleComps[2] = {0.0f, 0.0f};
-  double schmid = 0.0f;
 
   Eigen::Vector3d plane;
   Eigen::Vector3d direction;
@@ -79,11 +79,36 @@ Result<> ComputeSchmids::operator()()
       return {};
     }
 
-    uint32_t laueClass = crystalStructures[featurePhases[i]];
+    // The phase id indexes the Crystal Structures array directly, so it has to be validated before
+    // it is used. An id at or beyond the ensemble count, or a negative one, would read outside the
+    // array and dispatch on whatever Laue value that read produced.
+    const int32 phaseId = featurePhases[i];
+    if(phaseId < 0)
+    {
+      return MakeErrorResult(-13502, fmt::format("Feature {} has a negative phase value of {}. Phase values index the Crystal Structures array '{}' and must be zero or greater.", i, phaseId,
+                                                 m_InputValues->CrystalStructuresArrayPath.toString()));
+    }
+    if(static_cast<usize>(phaseId) >= numEnsembles)
+    {
+      return MakeErrorResult(-13501, fmt::format("Feature {} has a phase value of {} but the Crystal Structures array '{}' only has {} entries (valid phase values are 0 through {}).", i, phaseId,
+                                                 m_InputValues->CrystalStructuresArrayPath.toString(), numEnsembles, numEnsembles - 1));
+    }
+
+    uint32_t laueClass = crystalStructures[phaseId];
     if(laueClass >= ebsdlib::CrystalStructure::LaueGroupEnd)
     {
       continue;
     }
+
+    // Re-initialized every iteration on purpose. EbsdLib Laue ops that enumerate no slip systems
+    // for their class return without writing every output, so a buffer hoisted out of the loop
+    // would carry the previous Feature's values into the current Feature's row. Fixed in EbsdLib
+    // 3.1.1-staging as well; keeping the locals loop-scoped means this filter is correct against
+    // any EbsdLib.
+    double schmid = 0.0;
+    double angleComps[2] = {0.0, 0.0};
+    int32_t slipSystem = 0;
+
     auto om = ebsdlib::QuaternionDType(avgQuatPtr[i * 4 + 0], avgQuatPtr[i * 4 + 1], avgQuatPtr[i * 4 + 2], avgQuatPtr[i * 4 + 3]).toOrientationMatrix();
     Eigen::Vector3d crystalLoading = om * sampleLoading;
 

@@ -135,31 +135,37 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
   auto tupleShape = phases.getIDataStore()->getTupleShape();
 
+  // All five output arrays are created with an explicit "0" fill value. The algorithm skips any
+  // Feature whose Laue class has no slip systems enumerated for it, and Feature 0 is a sentinel
+  // slot that is never computed, so without the fill those tuples would be handed to the user as
+  // whatever the allocator happened to hold. Legacy SIMPL FindSchmids allocated with initValue 0.
+  const std::string k_ZeroFill = "0";
+
   // Create output Schmids Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pSchmidsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pSchmidsArrayNameValue, "", k_ZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output SlipSystems Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1}, pSlipSystemsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1}, pSlipSystemsArrayNameValue, "", k_ZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
-  // Create output SlipSystems Array
+  // Create output Poles Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3}, pPolesArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3}, pPolesArrayNameValue, "", k_ZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
-  // Create output SlipSystems Array
+  // Create output Phis Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pPhisArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pPhisArrayNameValue, "", k_ZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output Lambdas Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pLambdasArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pLambdasArrayNameValue, "", k_ZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

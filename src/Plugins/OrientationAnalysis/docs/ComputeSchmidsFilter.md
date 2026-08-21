@@ -6,47 +6,62 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** calculates the Schmid factor for each **Feature** (grain), which measures how favorably oriented that grain is for plastic deformation under a given loading direction. A higher Schmid factor means the grain is more likely to deform (slip) under the applied load.
+This **Filter** calculates the Schmid factor of each **Feature** given its average orientation and a user defined loading axis. The Schmid Factor is the combination of the component of the axial force *F* that lies parallel to the slip direction and the component that lies perpendicular to the slip plane.  The equation for the Schmid Factor is given as:
 
-### What is the Schmid Factor?
+Schmid Factor = (cos &phi; cos &lambda;)
 
-When a force is applied to a polycrystalline material, each grain responds differently depending on how its internal crystal planes are oriented relative to the loading direction. Deformation occurs by *slip* -- atoms sliding along specific crystal planes in specific directions. Each combination of a slip plane and a slip direction is called a *slip system*.
+*The angle &phi; is the angle between the tensile axis and the slip plane normal, and &lambda; is the angle between the tensile axis and the slip direction in the slip plane.*
 
-The Schmid factor quantifies how much of the applied force is resolved onto a given slip system:
+The **Filter** determines the Schmid factor for each **Feature** by using the above equation for all possible slip systems (given the **Feature's** crystal structure).  The largest Schmid factor from all of the slip systems is stored for the **Feature**. Only the Schmid factor is used in determining which slip system's Schmid factor to report.  The critical resolved shear stress for the different slip systems is not considered.
 
-**Schmid Factor = cos(&phi;) &times; cos(&lambda;)**
+The user-supplied *Loading Direction* is normalized before use, so only its direction matters — `[1, 2, 3]` and `[3, 6, 9]` give identical results. It is a **sample-frame** direction; the **Filter** rotates it into each **Feature's** crystal frame using that **Feature's** average orientation before evaluating the slip systems.
 
-where:
+**Feature 0** is the conventional "unassigned" **Feature** and is never computed; all of its output values are zero. A **Feature** whose phase maps to a crystal structure for which no slip systems are enumerated is skipped, and all of its output values are likewise zero.
 
-- **&phi;** is the angle between the loading axis and the *slip plane normal* (the direction perpendicular to the slip plane)
-- **&lambda;** is the angle between the loading axis and the *slip direction* (the direction atoms slide along within the slip plane)
+### Ties Between Slip Systems
 
-The Schmid factor ranges from 0 to 0.5. A value of 0.5 means the slip system is optimally aligned with the applied load. A value near 0 means the slip system is poorly oriented for deformation.
+Candidate slip systems are compared with a strict greater-than, in the fixed order in which they are enumerated for the crystal structure. When two or more slip systems share the maximum Schmid factor — which happens for high-symmetry loading directions such as `[0, 0, 1]` or `[1, 1, 1]` in a cubic crystal — the **lowest-numbered** of the tied systems is reported. This is a property of the enumeration order, not a physical preference: the tied systems are equally favoured.
 
-![Fig. 1: The geometric relationship between the tensile axis, slip plane, and slip direction that defines the Schmid factor.](Images/ComputeSchmids_SchmidFactor.png)
+### Slip Systems Numbering Depends on Override Default Slip System
 
-### How This Filter Works
+The meaning of the *Slip Systems* output changes with the *Override Default Slip System* toggle:
 
-1. The user specifies a **Loading Direction** as a unit vector in the sample reference frame (e.g., [0, 0, 1] for loading along the Z-axis). This is a dimensionless direction, not a magnitude.
-2. For each **Feature**, the filter rotates the loading direction from the sample frame into the grain's crystal frame using the grain's average orientation.
-3. The filter evaluates the Schmid factor for every slip system available for that grain's crystal structure.
-4. By default, the slip system with the **largest** Schmid factor is reported.  Alternatively, the user can specify a particular slip plane and slip direction to evaluate.
+| Override Default Slip System | *Slip Systems* value |
+|---|---|
+| Off (default) | Index into the crystal structure's built-in slip system list — numbered from **0** (0–11) for Cubic-High and Cubic-Low, and from **1** (1–6) for Hexagonal-High and Hexagonal-Low |
+| On | Index of the **symmetry operator** (0–23 for Cubic-High) that maps the user-supplied slip plane and slip direction onto the winning variant |
 
-### Note
+The two numbering schemes are not comparable, and neither is the base of the *off* numbering comparable between the cubic and hexagonal classes.
 
-Only the geometric Schmid factor is considered. The critical resolved shear stress (CRSS), which varies between slip systems in real materials, is not taken into account. This means the reported "most favorable" slip system is based purely on geometric alignment, not on the actual stress required to activate slip.
+A *Slip Systems* value of `0` means **"no slip system found"** in two situations, and in neither of them is it a slip-system number:
 
-### Required Input Sources
+- With *Override Default Slip System* **on** and no symmetry-operator variant producing a non-zero Schmid factor — for example a loading direction parallel to the slip plane normal, which puts the loading axis perpendicular to every slip direction.
+- With the toggle **off** on a **Hexagonal-High or Hexagonal-Low** phase, where the built-in systems are numbered 1–6 and no candidate exceeds the initial Schmid factor of `0`. Because that numbering starts at 1, `0` falls outside the valid range and is unambiguous. (For the cubic classes, whose numbering starts at 0, the reported `0` in this situation is indistinguishable from a genuine win on system 0; check the reported Schmid factor, which is `0` in the degenerate case.)
 
-- **Average Quaternions** -- the per-feature average orientation produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
-- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
-- **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
+In every one of these cases the reported Schmid factor is `0`.
+
+With *Override Default Slip System* on, the reported index is **relative to the symmetry-operator table** of the orientation library, and several operators typically tie at the maximum Schmid factor — for a `(001)[100]` system under `[1,2,3]` loading, six of the twenty-four do. The reported index is simply the first of those in table order. It identifies *a* maximizing variant, not a uniquely determined one, and the same input run through DREAM3D 6.5.x reports a different index for the same physical answer because that version's table is ordered differently. Treat this value as a handle into the current library's table, not as a portable label.
+
+### Phis and Lambdas Units Depend on Override Default Slip System
+
+The *Phis* and *Lambdas* arrays change **units** with the same toggle, which is easy to miss because the parameter descriptions and array names do not:
+
+| Override Default Slip System | *Phis* / *Lambdas* contents |
+|---|---|
+| Off (default) | The direction **cosines** cos &phi; and cos &lambda; (dimensionless, in [0, 1]) |
+| On | The **angles** &phi; and &lambda; themselves, in **radians** |
+
+With the toggle off, the reported Schmid factor is the product of the two stored values. With the toggle on, it is the product of their cosines. If you need consistent units across both modes, convert explicitly rather than assuming.
+
+### Poles Is Not a Miller Index
+
+Despite its name, the *Poles* array does **not** contain a crystallographic index. It is the unit loading direction expressed in the **Feature's** crystal frame, multiplied by 100 and **truncated toward zero** to an integer — a compact fixed-point encoding of that unit vector, retaining two decimal places. Components can be negative, and the sum of squares is approximately 10 000 rather than 1. Because the conversion truncates rather than rounds, a component whose scaled value falls near an integer can differ by one from the value you would get by rounding. Reducing the triplet to a Miller index requires dividing by the greatest common divisor yourself, and the truncation means the result is only approximate.
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ `(05) SmallIN100 Crystallographic Statistics`
++ (04) Small IN100 Crystallographic Statistics
 
 ## License & Copyright
 
