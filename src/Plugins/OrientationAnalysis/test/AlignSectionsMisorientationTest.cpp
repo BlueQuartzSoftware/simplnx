@@ -33,11 +33,19 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 // Class 1 (analytical) oracle scaffolding.
 //
-// The full hand derivation that every expected value below comes from lives in
-// docs form beside this test suite; the load-bearing steps are reproduced as
-// comments at each assertion site. The short version:
+// The load-bearing steps of the hand derivation that every expected value below
+// comes from are reproduced as comments at each assertion site; the long-form
+// write-up is the V&V report at
+// src/Plugins/OrientationAnalysis/vv/AlignSectionsMisorientationFilter.md.
 //
-// SIGN CONVENTION (re-derived from Algorithms/AlignSectionsMisorientation.cpp:135-136).
+// CITATION CONVENTION. A bare ":NNN" cites Algorithms/AlignSectionsMisorientation.cpp
+// at the head of this branch. AlignSectionsMisorientation::findShifts duplicates its
+// entire body between the store-shifts and no-store-shifts branches, so every
+// construct inside the candidate scan has two line numbers; they are written
+// "recording / non-recording", e.g. ":212-213 / :320-321".
+//
+// SIGN CONVENTION (re-derived from
+// Algorithms/AlignSectionsMisorientation.cpp:212-213 / :320-321).
 //   refposition = ((slice + 1) * dimX * dimY) + (l * dimX) + n
 //   curposition = ( slice      * dimX * dimY) + ((l + sy) * dimX) + (n + sx)
 // The reference is the UPPER slice (slice + 1), read UNSHIFTED; the candidate shift
@@ -51,15 +59,16 @@ using namespace nx::core;
 // falls off the slice are zero-filled (AlignSections.cpp:86-89).
 //
 // SAMPLING. The mismatch fraction is evaluated on a stride-4 lattice only
-// (AlignSectionsMisorientation.cpp:128-130), so on a 32x32 slice the sampled plane
-// coordinates are {0, 4, ..., 28} -- 8 x 8 = 64 positions at full overlap. `count` is
-// incremented for EVERY in-bounds sampled pair (:134), including mask-both-false pairs.
+// (AlignSectionsMisorientation.cpp:205-207 / :313-315), so on a 32x32 slice the sampled
+// plane coordinates are {0, 4, ..., 28} -- 8 x 8 = 64 positions at full overlap. `count`
+// is incremented for EVERY in-bounds sampled pair (:211 / :319), including
+// mask-both-false pairs.
 //
 // PATTERN. Each fixture slice carries this pattern, in pattern coordinates
 // (u, v) = (x - Dx, y - Dy):
-//   * v not a multiple of 4  -> phase 0. Phase 0 fails the `cellPhases > 0` test at :140,
-//     so the angle stays FLT_MAX and the pair is an UNCONDITIONAL mismatch at any
-//     tolerance. These rows pin the y component of the shift.
+//   * v not a multiple of 4  -> phase 0. Phase 0 fails the `cellPhases > 0` test at
+//     :217 / :325, so the angle stays FLT_MAX and the pair is an UNCONDITIONAL mismatch
+//     at any tolerance. These rows pin the y component of the shift.
 //   * otherwise              -> phase 1, orientation A if u < T(v) else B.
 // T(v) is a zigzag staircase that steps one voxel right every 4 rows and reverses at the
 // midpoint. Over the 8 sampled rows of a 32-row slice it takes the values
@@ -79,8 +88,8 @@ using namespace nx::core;
 namespace AnalyticalFixtures
 {
 constexpr int64 k_Dim = 32;     // X and Y extent of every analytical fixture
-constexpr int64 k_HalfDim = 16; // == int64(32 * 0.5f), the algorithm's halfDim0/halfDim1 (:78-79)
-constexpr int64 k_Stride = 4;   // the algorithm's sampling stride (:128-130)
+constexpr int64 k_HalfDim = 16; // == int64(32 * 0.5f), the algorithm's halfDim0/halfDim1 (:158-159)
+constexpr int64 k_Stride = 4;   // the algorithm's sampling stride (:205-207 / :313-315)
 
 const std::string k_ImageGeomName = "Image Geometry";
 const DataPath k_ImagePath({k_ImageGeomName});
@@ -532,9 +541,10 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   UnitTest::LoadPlugins();
 
   // 32 x 32 x 2 with d = (4, 0). |d| == 4 > 3, so the answer lies OUTSIDE the first 7x7
-  // candidate window and the re-centring while loop at AlignSectionsMisorientation.cpp:113
-  // must run more than once. dy == 0 keeps ey == sy in [-3, 3] throughout, so the phase-0
-  // pin rows dominate every candidate with a nonzero y component.
+  // candidate window and the re-centring while loop in
+  // AlignSectionsMisorientation::findShifts (:190 / :298) must run more than once.
+  // dy == 0 keeps ey == sy in [-3, 3] throughout, so the phase-0 pin rows dominate every
+  // candidate with a nonzero y component.
   AnalyticalFixtures::FixtureSpec spec;
   spec.offsets = {{4, 0}, {0, 0}};
   DataStructure dataStructure = AnalyticalFixtures::BuildFixture(spec);
@@ -550,7 +560,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // DERIVATION. Scores are 2 * |sx - 4| / count for sy == 0, and 1.0 for sy != 0.
   // count == 8 rows * #{n in {0,4,...,28} : 0 <= n + sx < 32}, i.e. 64 for sx in [0, 3] and
   // 56 otherwise. (Dropping the n == 0 or n == 28 column never removes a mismatching
-  // column: the mismatch interval lives in u in [9, 23].)
+  // column: over the whole candidate set, ex = sx - 4 ranges over [-7, 3] and the mismatch
+  // interval [min(T, T - ex), max(T, T - ex)) therefore lives in u in [13, 26], whose only
+  // sampled columns are 16, 20 and 24.)
   //
   // Pass 1, centred (0, 0), s in [-3, 3]^2:
   //   (-3,0) 14/56 = 0.2500   (-2,0) 12/56 = 0.2143   (-1,0) 10/56 = 0.1786
@@ -588,9 +600,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // exactly 30 degrees: the smallest non-identity cubic symmetry rotation is 90 degrees, and
   // the rotation angle is bi-invariant, so no symmetry operator can bring a 30-degree
   // rotation below 90 - 30 = 60 degrees. The tolerance is a parameter in DEGREES, converted
-  // to radians per slice pair at AlignSectionsMisorientation.cpp:111.
+  // to radians per slice pair at AlignSectionsMisorientation.cpp:188 / :296.
   //
-  // 30 degrees is deliberately NOT tested: the comparison at :152 is a strict `>` and the
+  // 30 degrees is deliberately NOT tested: the comparison at :229 / :337 is a strict `>` and the
   // exact-boundary behaviour is a documented precision finding, not a specified contract.
   // Both brackets sit a full degree away from the fixture's disorientation, which is three
   // orders of magnitude more than the float/double spread of the two code paths.
@@ -609,7 +621,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
                                          // sy == 0 candidate scores exactly 0 and every sy != 0 candidate scores 1.0.
                                          //
                                          // The sy == 0 row is a 7-way tie at zero, resolved by the asymmetric OR tie-break at
-                                         // :176. Trace (scan order is j = -3..3 outer, k = -3..3 inner):
+                                         // :253 / :361. Trace (scan order is j = -3..3 outer, k = -3..3 inner):
                                          //   j = -3 (score 1.0): (-3,-3) is accepted because min is still FLT_MAX; then
                                          //       k = -2,-1,0 each satisfy |k| < |newx| so newshift walks to (0,-3);
                                          //       k = 1,2,3 fail both clauses.
@@ -671,8 +683,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
     // DERIVATION. Reference rows have v == 0 (mod 4), so mask_ref = [u < T].
     //   * ey not a multiple of 4: the probed row is a pin row, so mask_cur is false
     //     everywhere. Pairs whose reference is masked-in are exclusive-or pairs and add 1
-    //     each (:159-162); pairs whose reference is masked-out are both-false and add
-    //     NOTHING to the numerator while still being counted in the denominator (:134).
+    //     each (the two mask XOR branches at :236-243 / :344-351); pairs whose reference is
+    //     masked-out are both-false and add NOTHING to the numerator while still being
+    //     counted in the denominator (`count++` at :211 / :319).
     //     The numerator is the number of sampled columns below the boundary summed over the
     //     8 rows, whose T values are 16,17,18,19,20,19,18,17: exactly 4 + 5*7 = 39 of the 64
     //     sampled pairs, a score of about 0.61 -- far above the true answer.
@@ -690,7 +703,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   SECTION("all false mask yields a zero shift and no NaN")
   {
     // Every pair is both-false, so the numerator stays 0 while `count` still increments for
-    // every in-bounds sampled pair (:134 precedes all mask logic). The quotient is therefore
+    // every in-bounds sampled pair (`count++` at :211 / :319 precedes all mask logic). The quotient is therefore
     // 0 / count == 0, NOT 0 / 0 == NaN. All 49 candidates tie at 0 and the asymmetric OR
     // tie-break walks to (0, 0) exactly as traced in the tolerance-bracket test.
     AnalyticalFixtures::FixtureSpec spec;
@@ -721,7 +734,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // phase 3 = Cubic_High again. A co-moving stripe (pattern columns u in [4, 8)) carries the
   // decorated phase.
   //
-  // The dispatch guard at :146 is `laueClass1 == laueClass2 && laueClass1 < ops.size()`,
+  // The dispatch guard at :223 / :331 is `laueClass1 == laueClass2 && laueClass1 < ops.size()`,
   // and the classes compared are CRYSTAL STRUCTURE values, not phase indices.
   SECTION("cross Laue class stripe does not perturb the argmin")
   {
@@ -742,8 +755,15 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
     // DERIVATION. Because the phase-2 stripe CO-MOVES with the pattern, at e == 0 every
     // sampled pair is phase-matched (Cubic vs Cubic or Hex vs Hex) and orientation-matched,
     // so the score is still exactly 0. Any ex != 0 misaligns the stripe and creates
-    // cross-Laue pairs, which fail the :146 guard, keep angle == FLT_MAX and count as
+    // cross-Laue pairs, which fail the :223 / :331 guard, keep angle == FLT_MAX and count as
     // mismatches on top of the staircase's 2 * |ex|. So the unique zero is unchanged.
+    //
+    // KNOWN LIMITATION (mutation M8 survives): this asserts that cross-Laue pairs do not
+    // PERTURB the argmin, not that they are COUNTED as mismatches. Because the stripe carries
+    // the same quaternion as its surroundings, dropping the laueClass1 == laueClass2 half of
+    // the guard would make those pairs compute 0 degrees and match, which only lowers the
+    // score of already-losing candidates without displacing the zero-scoring true answer.
+    // Closing it needs a stripe with a DISTINCT orientation; see the V&V report, follow-up 5.
     const std::vector<std::array<int64, 5>> expectedShifts = {{0, 0, 0, 0, 0}, {0, 2, 0, 2, 0}};
     AnalyticalFixtures::CheckShiftArrays(dataStructure, expectedShifts);
 
@@ -766,7 +786,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // Phase 1 and phase 3 both map to Cubic_High, so :146 lets the comparison through and
+    // Phase 1 and phase 3 both map to Cubic_High, so :223 / :331 lets the comparison through and
     // the identical quaternions match. Dispatch is by crystal structure, not phase index:
     // if it keyed on the phase index the stripe would read as a permanent mismatch and the
     // score at e == 0 would no longer be zero.
@@ -837,7 +857,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
   SECTION("degenerate X dimension is rejected")
   {
     // dims[0] == 1 makes halfDim0 == int64(1 * 0.5f) == 0, so xIdx = k + oldxshift + 0 is
-    // negative for every candidate with k < 0 and `misorients[idx]` at :126 is a
+    // negative for every candidate with k < 0 and `misorients[idx]` at :203 / :311 is a
     // negative-index read that happens BEFORE the bounds test short-circuits.
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, AnalyticalFixtures::k_ImageGeomName);
@@ -867,7 +887,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
     // The three cell arrays are validated against EACH OTHER only. Selecting a consistent
     // set that belongs to a different, smaller geometry passed preflight and then indexed
     // out of bounds inside findShifts, because every position there is derived from the
-    // SELECTED geometry's dimensions (:135-136).
+    // SELECTED geometry's dimensions (:212-213 / :320-321).
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, AnalyticalFixtures::k_ImageGeomName);
     imageGeom->setDimensions({32, 32, 3});
@@ -919,7 +939,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Execute Guard
 
   SECTION("phase value beyond the ensemble array is rejected")
   {
-    // `crystalStructures[cellPhases[pos]]` (:143, :145) is indexed with only a `> 0` check
+    // `crystalStructures[cellPhases[pos]]` (:220 and :222, duplicated at :328 and :330) is indexed with only a `> 0` check
     // on the phase, so a phase value at or above the ensemble tuple count reads out of
     // bounds. Not preventable at preflight -- the phase values are data.
     AnalyticalFixtures::FixtureSpec spec;
@@ -944,7 +964,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Execute Guard
   SECTION("indexed phase with an unknown crystal structure warns")
   {
     // A crystal-structure value of 999 (UnknownCrystalStructure) fails
-    // `laueClass1 < ops.size()` at :146, so those voxels are silently treated as permanent
+    // `laueClass1 < ops.size()` at :223 / :331, so those voxels are silently treated as permanent
     // mismatches. The run must succeed and say so.
     AnalyticalFixtures::FixtureSpec spec;
     spec.offsets = {{2, 0}, {0, 0}};
