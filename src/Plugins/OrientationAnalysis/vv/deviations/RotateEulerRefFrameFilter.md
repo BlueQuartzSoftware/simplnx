@@ -61,7 +61,7 @@ Entries are referenced by stable ID (`RotateEulerRefFrameFilter-D<N>`) from the 
 
 **Symptom:** Given rotation axis (0,0,0), 6.5.171 silently fills the entire euler array with NaN (unguarded `axis/|axis|` division). SIMPLNX fails preflight with error `-96200` and a descriptive message.
 
-**Root cause:** Bug (input-validation gap) in 6.5.171, closed on the SIMPLNX side during this V&V cycle's algorithm review. Not an output deviation for any valid input — outputs are identical whenever the axis is non-zero. Pinned by test `RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight`.
+**Root cause:** Bug (input-validation gap) in 6.5.171, closed on the SIMPLNX side during algorithm review. Not an output deviation for any valid input — outputs are identical whenever the axis is non-zero. Pinned by test `RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight`.
 
 **Affected users:** Users with malformed pipelines: legacy destroys their data silently; SIMPLNX refuses to run.
 

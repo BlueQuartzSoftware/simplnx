@@ -45,7 +45,7 @@
 
 *Material PRs since baseline (2025-10-01):*
 
-- **PR #1590** — "ENH: Standardize 2D Image Handling" (2026-03-xx) — extracted `NeighborUtilities` as a shared module; added explicit 2D/1D dimensionality dispatch to this filter. Non-square 2D regression tests added during V&V catch the stride bug fixed in this PR.
+- **PR #1590** — "ENH: Standardize 2D Image Handling" (2026-03-xx) — extracted `NeighborUtilities` as a shared module; added explicit 2D/1D dimensionality dispatch to this filter. Non-square 2D regression tests added during V&V catch the stride bug, since resolved.
 
 ## Oracle
 

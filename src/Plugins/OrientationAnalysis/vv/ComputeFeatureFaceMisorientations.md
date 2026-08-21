@@ -75,7 +75,7 @@ And three boundary faces are constructed: A↔B, A↔C, A↔D. The symmetry-redu
 | Tetragonal_Low 4/m (7)                     | 4-fold        | 45°          | 0°           | 0°            |
 | Tetragonal_High 4/mmm (8)                  | 4-fold        | 45°          | 0°           | 0°            |
 | Trigonal_Low -3 (9)                        | 3-fold        | 45°          | 30°          | 60°           |
-| Trigonal_High -3m (10) — *added this cycle* | 3-fold        | 45°          | 30°          | 60°           |
+| Trigonal_High -3m (10) — *SIMPLNX addition* | 3-fold        | 45°          | 30°          | 60°           |
 
 *Cubic_High A↔C: 90° about c-axis is a 4-fold cubic symmetry op of m-3m, so the true symmetry-reduced misorientation is exactly 0°. Before the EbsdLib precision fix, this returned ~0.0212° due to `acos(w)` near 1. See Deviation D4 / Algorithm Relationship delta 6.
 

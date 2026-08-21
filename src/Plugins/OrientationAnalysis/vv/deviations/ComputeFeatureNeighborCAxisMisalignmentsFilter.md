@@ -200,4 +200,4 @@ This is **user-facing migration noise**, not a behavioral deviation. The SIMPLNX
 
 ### EbsdLib 2.4.1 CubicOps precision improvement does NOT apply
 
-Unlike F#1 / F#2 / F#4 / F#5 of this V&V cycle, this filter does NOT route through `LaueOps::calculateMisorientation` or `CubicOps::calculateMisorientationInternal`. The algorithm computes c-axis vectors directly from the orientation matrix (`R^T · [0,0,1]`) and takes `arccos(c1·c2)` without any cubic-symmetry-operator search. The EbsdLib 2.4.1 precision improvement therefore has no effect on this filter's output, and there is no `D-precision` entry analogous to the other filters in the cycle.
+Unlike F#1 / F#2 / F#4 / F#5, this filter does NOT route through `LaueOps::calculateMisorientation` or `CubicOps::calculateMisorientationInternal`. The algorithm computes c-axis vectors directly from the orientation matrix (`R^T · [0,0,1]`) and takes `arccos(c1·c2)` without any cubic-symmetry-operator search. The EbsdLib 2.4.1 precision improvement therefore has no effect on this filter's output, and there is no `D-precision` entry analogous to the other filters in the cycle.

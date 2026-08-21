@@ -20,7 +20,7 @@
 | Tests today            | **5 TEST_CASEs / 13 ctest sections** — 8 Class 1 fixtures (DYNAMIC_SECTION), 3 Class 4 invariant sections, 1 zero-axis preflight-error test (new guard added this cycle), 1 legacy-parity 480k-tuple regression pin (ASCIIData), 1 SIMPL 6.4/6.5 backwards-compat. |
 | Exemplar archive       | `ASCIIData.tar.gz` (pre-existing, shared archive) — provides the 480k-tuple legacy-parity input/comparison CSVs only. **Not an oracle** (legacy-DREAM3D provenance); the Class 1 oracle is inline in the test source. No new archive needed. |
 | Legacy comparison      | **Run** against DREAM3D 6.5.171 on 6 axis/angle cases × 12 orientations (shared CSV input). Max wrap-aware diff 7.2e-7 rad (float32 ULP level). Both implementations independently match the numpy oracle (NX 2.3e-7, legacy 8.1e-7). No deviations; two non-deviations documented. |
-| Bug flags              | None affecting output. Two robustness/policy items addressed this cycle: (1) zero-length rotation axis previously produced silent NaN corruption — preflight now rejects it (`-96200`) and the Algorithm class guards it as well (`-67050`); (2) the parallel kernel writes the in-place Euler array via `operator[]` from TBB workers — per the project thread-safety policy this is now gated with `requireArraysInMemory` so parallelization is only enabled for in-core stores (the codebase-sanctioned pattern). Legacy 6.5.171 retains the zero-axis NaN behavior (documented as a non-deviation — not output-correctness). |
+| Bug flags              | None affecting output. Two robustness/policy items addressed: (1) zero-length rotation axis previously produced silent NaN corruption — preflight now rejects it (`-96200`) and the Algorithm class guards it as well (`-67050`); (2) the parallel kernel writes the in-place Euler array via `operator[]` from TBB workers — per the project thread-safety policy this is now gated with `requireArraysInMemory` so parallelization is only enabled for in-core stores (the codebase-sanctioned pattern). Legacy 6.5.171 retains the zero-axis NaN behavior (documented as a non-deviation — not output-correctness). |
 | V&V phase              | Oracle design + reconciliation, algorithm review (fixes applied), code-path coverage, test inventory, legacy comparison, deviations, and provenance complete. **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** **Outstanding:** dual-build (OOC) run deferred — no OOC-specific variant of this algorithm and no OOC build configured in Workspace4. |
 
 ## Summary
@@ -39,7 +39,7 @@
 2. **Matrix math**: hand-rolled `MatrixMath::Multiply3x3with3x3D` + `Normalize3x3D` → Eigen row-major multiply + `colwise().normalized()`. Semantically identical column-wise normalization; legacy's per-entry `>1` clamp is unreachable except through rounding. No output change.
 3. **Degree→radian conversion precision**: legacy computes `float rotAngle = angle * pi / 180.0` in **float** before the double-precision transforms; SIMPLNX converts in **double**. ULP-level output difference only (see non-deviation N1).
 4. **Progress reporting + cancel checking**: legacy has neither; SIMPLNX adds `ProgressMessageHelper`/`ProgressMessenger` (throttled) and per-element `m_ShouldCancel` checks. UX-only.
-5. **Zero-axis preflight guard (added this V&V cycle)**: preflight error `-96200` for a zero-length rotation axis, which previously NaN-corrupted the array silently in both codebases. Behavior change only for invalid input.
+5. **Zero-axis preflight guard (SIMPLNX addition)**: preflight error `-96200` for a zero-length rotation axis, which previously NaN-corrupted the array silently in both codebases. Behavior change only for invalid input.
 
 *Material PRs since baseline:* none identified for this filter beyond routine EbsdLib version bumps and the progress-messaging framework migration.
 
@@ -65,7 +65,7 @@ The algorithm is flat: (a) entry/setup in `operator()` (cancel check, axis norma
 |---|-------|------|-----------|
 | 1 | (a) Entry | Cancel-before-start → early return | *Not directly tested. Requires cancel-signal injection; two-line guard, same accepted gap as prior V&V reports.* |
 | 2 | (a) Entry | Axis normalization (`axis.normalize()`) | `Class 1 Analytical Fixtures` — F5 (axis (2,0,0) ≡ (1,0,0)) |
-| 3 | (a) Entry | Zero-length axis → preflight error `-96200` (guard added this cycle) | `Zero-Length Axis Fails Preflight` |
+| 3 | (a) Entry | Zero-length axis → preflight error `-96200` (SIMPLNX addition) | `Zero-Length Axis Fails Preflight` |
 | 4 | (b) Kernel | Per-tuple rotate: eu2om → multiply → column-normalize → om2eu → write-back | All Class 1 fixtures + Class 4 sections + legacy-parity ASCIIData test |
 | 5 | (b) Kernel | om2eu gimbal-degenerate branch (`|g22| ≈ 1`) | `Class 1 Analytical Fixtures` — F1, F6 (Φ = 0 outputs) |
 | 6 | (b) Kernel | Mid-loop cancel check → early return | *Not directly tested — only the false branch runs; the true (cancel) path needs cancel-signal injection (see path 1).* |

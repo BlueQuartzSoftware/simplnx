@@ -10,13 +10,13 @@ Entries are referenced by stable ID (`MultiThresholdObjectsFilter-D<N>`) from th
 
 ## Headline
 
-**6 deviations documented: 3 bugs (all in SIMPLNX, all fixed by this PR, all with in-repo regression tests), 3 confirmed non-bug capability differences.** Legacy comparison has been **run**: an independent three-way A/B — DREAM3D 6.5.171 `PipelineRunner`, this branch's `nxrunner`, and an independent numpy oracle — on a shared 100-tuple fixture, covering representative flat (`Threshold Objects`), nested, and inverted-nested (`Threshold Objects (Advanced)`) configurations, re-run again at 50M tuples. Post-fix, all three sources MATCH in every case at both scales. The in-repo `MultiThresholdObjectsTest.cpp` suite (14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations / 31 ctest entries — see the V&V report's Test inventory for the count basis) also passes locally.
+**6 deviations documented: 3 bugs (all in SIMPLNX, all resolved, all with in-repo regression tests), 3 confirmed non-bug capability differences.** Legacy comparison has been **run**: an independent three-way A/B — DREAM3D 6.5.171 `PipelineRunner`, this branch's `nxrunner`, and an independent numpy oracle — on a shared 100-tuple fixture, covering representative flat (`Threshold Objects`), nested, and inverted-nested (`Threshold Objects (Advanced)`) configurations, re-run again at 50M tuples. Post-fix, all three sources MATCH in every case at both scales. The in-repo `MultiThresholdObjectsTest.cpp` suite (14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations / 31 ctest entries — see the V&V report's Test inventory for the count basis) also passes locally.
 
-The same three pipelines run against `develop` (pre-fix) reproduce two real bugs quantitatively: `MultiThresholdObjectsFilter-D1` (38/100 tuples wrong) and `MultiThresholdObjectsFilter-D2` (51/100 tuples wrong). Both are **fixed by this PR** — not by a commit that predates this V&V pass. Both now have dedicated in-repo regression coverage as well: the `ArraySet 6` and `ArraySet 7` `SECTION`s of `Valid Threshold Sets` (see the V&V report's Code path coverage row 25 and Test inventory), each confirmed to fail when the algorithm is stubbed out.
+The same three pipelines run against `develop` (pre-fix) reproduce two real bugs quantitatively: `MultiThresholdObjectsFilter-D1` (38/100 tuples wrong) and `MultiThresholdObjectsFilter-D2` (51/100 tuples wrong). Both are **resolved** — not by a commit that predates this V&V pass. Both now have dedicated in-repo regression coverage as well: the `ArraySet 6` and `ArraySet 7` `SECTION`s of `Valid Threshold Sets` (see the V&V report's Code path coverage row 25 and Test inventory), each confirmed to fail when the algorithm is stubbed out.
 
 `MultiThresholdObjectsFilter-D3`, `-D5`, and `-D6` document confirmed, deliberate capability differences (not bugs): multi-component index selection, custom TRUE/FALSE mask values, and a selectable mask output `DataType` all exist only in SIMPLNX.
 
-`MultiThresholdObjectsFilter-D4` is a third SIMPLNX bug, found during second-engineer review and fixed by this PR: converting a legacy *nested* threshold set flattened it and discarded every union operator, so converted `Threshold Objects (Advanced)` pipelines computed a plain AND over all leaves.
+`MultiThresholdObjectsFilter-D4` is a third SIMPLNX bug, found during second-engineer review and resolved: converting a legacy *nested* threshold set flattened it and discarded every union operator, so converted `Threshold Objects (Advanced)` pipelines computed a plain AND over all leaves.
 
 ---
 
@@ -68,7 +68,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D1` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1688; documented for users of prior SIMPLNX releases) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
 **Symptom:** On `develop`, an `ArrayThresholdSet` whose children mix at least one leaf `ArrayThreshold` with at least one nested `ArrayThresholdSet` (e.g. `AB2`: `{leaf: Int32 > 20, nestedSet: (Float32 < 0.60 OR Int32 == 55)}`) produced an all-false mask, regardless of input data. Quantified on the `AB2` fixture: **38 of 100 tuples wrong** (all forced false) vs. legacy `Threshold Objects (Advanced)` and the numpy oracle.
 
@@ -78,7 +78,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 
 **Regression coverage:** `Valid Threshold Sets` → `ArraySet 6: leaf + nested set` (`CreateThresholdSet6`/`CheckThresholdSet6` in `test/MultiThresholdObjectsTest.cpp`), swept over `isInverted`. Verified load-bearing: stubbing `MultiThresholdObjects::operator()()` to `return {}` — which reproduces D1's all-false mask, since the output array is zero-initialized at creation — makes this `SECTION` fail.
 
-**Recommendation:** Trust SIMPLNX (this PR — confirmed bit-for-bit against legacy on `AB2` at both 100 tuples and 50M tuples). The `develop` output was unconditionally wrong; anyone on a `develop` build predating this PR should upgrade and re-verify any pipeline outputs generated before the fix.
+**Recommendation:** Trust SIMPLNX (confirmed bit-for-bit against legacy on `AB2` at both 100 tuples and 50M tuples). The pre-fix output was unconditionally wrong; anyone on a released version through 7.4.1 should upgrade and re-verify any pipeline outputs generated before the fix.
 
 ---
 
@@ -88,7 +88,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D2` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1688; documented for users of prior SIMPLNX releases) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
 **Symptom:** On `develop`, a leaf combined with an inverted nested set (`AB3`: `{leaf: Int32 < 80, invertedNestedSet: NOT(Int32 > 30 AND Float32 < 0.95)}`) produced incorrect mask output. Quantified on the `AB3` fixture: **51 of 100 values differ** vs. legacy `Threshold Objects (Advanced)` and the numpy oracle. `AB3`'s shape overlaps with `D1`'s mixed-leaf/nested-set trigger, so this result is not a clean isolation of the inversion defect alone — both mechanisms plausibly contribute to the discrepancy.
 
@@ -98,7 +98,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 
 **Regression coverage:** `Valid Threshold Sets` → `ArraySet 7: leaf + inverted nested set` (`CreateThresholdSet7`/`CheckThresholdSet7`), the in-repo analogue of the `AB3` shape, swept over `isInverted`. Verified load-bearing by the same stub experiment as D1.
 
-**Recommendation:** Trust SIMPLNX (this PR — confirmed bit-for-bit against legacy on `AB3` at both 100 tuples and 50M tuples). Anyone on a `develop` build predating this PR using an inverted threshold set should upgrade and re-verify any pipeline outputs generated before the fix.
+**Recommendation:** Trust SIMPLNX (confirmed bit-for-bit against legacy on `AB3` at both 100 tuples and 50M tuples). Anyone on a released version through 7.4.1 using an inverted threshold set should upgrade and re-verify any pipeline outputs generated before the fix.
 
 ---
 
@@ -126,24 +126,24 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D4` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1688; documented for users of prior SIMPLNX releases) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
 **Symptom:** A legacy `Threshold Objects (Advanced)` pipeline whose thresholds contain a *nested* comparison set produced the wrong mask after conversion to SIMPLNX. The nesting was discarded and every union operator was reset to AND, so `A AND (B OR C)` was evaluated as `A AND B AND C`. Quantified on the `AB4`–`AB6` fixtures against real legacy output: **55/100, 50/100, and 4/100 tuples wrong** respectively. `AB6` degenerated to an all-false mask. Filters run from natively-authored SIMPLNX pipelines were never affected — only pipelines converted from SIMPL.
 
-**Root cause:** Bug (SIMPLNX-side, pre-existing on `develop`; not introduced by this PR). Two independent defects in `src/simplnx/Parameters/ArrayThresholdsParameter.cpp`, both in the `ComparisonSelectionAdvancedFilterParameterConverter` path:
+**Root cause:** Bug (SIMPLNX-side, pre-existing on `develop`). Two independent defects in `src/simplnx/Parameters/ArrayThresholdsParameter.cpp`, both in the `ComparisonSelectionAdvancedFilterParameterConverter` path:
 
 1. `flattenSetThreshold()` collapsed each nested `ArrayThresholdSet` into its parent's flat threshold list. SIMPLNX represents nested sets natively, so the flattening served no purpose and destroyed the AND/OR grouping the legacy pipeline encoded.
 2. `convertArrayThreshold()` never called `setUnionOperator()`, so every converted leaf silently took `ArrayThreshold`'s default (`And`). Any OR in the legacy pipeline was lost. This affected leaves at every level, not just nested ones.
 
 The flattening pass also carried a third latent defect: it attempted to push an inverted set's inversion down onto its leaves by flipping each comparison operator, which is not a valid negation — `NOT(x > v)` is `x >= v`, not `x < v`, so tuples exactly equal to the threshold were misclassified; De Morgan's required AND↔OR flip was never applied; and `Operator_NotEqual` fell through unchanged, so `NOT(x != v)` stayed `x != v`.
 
-**Fix:** the converter now keeps the nested `ArrayThresholdSet` (which `convertSetThreshold()` was already building correctly) and sets each leaf's union operator from the legacy `"Union Operator"` key. `flattenSetThreshold()` and `invertComparison()` are removed. Set inversion is handled natively by the algorithm, which is what this PR's rewrite made correct.
+**Fix:** the converter now keeps the nested `ArrayThresholdSet` (which `convertSetThreshold()` was already building correctly) and sets each leaf's union operator from the legacy `"Union Operator"` key. `flattenSetThreshold()` and `invertComparison()` are removed. Set inversion is handled natively by the algorithm, which is where it is now correctly applied.
 
 **Affected users:** Anyone opening or running a converted DREAM3D 6.5 `Threshold Objects (Advanced)` pipeline that used a nested comparison set or any OR union — a standard use of that filter, and the only reason to choose the Advanced variant over the basic one. The failure was silent: the filter reported success and wrote a wrong mask. Natively-authored SIMPLNX pipelines were never affected.
 
 **Regression coverage:** `SIMPL Nested Set Conversion` (`test/MultiThresholdObjectsTest.cpp`, fixture `test/simpl_conversion/6_5/MultiThresholdObjectsFilter_Nested.json`) asserts that a converted leaf-plus-inverted-nested-set survives as a nested `ArrayThresholdSet` with its inversion flag and its children's union operators intact. Verified load-bearing: the test fails against the pre-fix converter.
 
-**Recommendation:** Trust SIMPLNX (this PR — confirmed against legacy on `AB4`–`AB6`). Any pipeline converted from SIMPL before this PR that used nested sets or OR unions should be re-converted and re-run; masks produced from such a converted pipeline should not be trusted.
+**Recommendation:** Trust SIMPLNX (confirmed against legacy on `AB4`–`AB6`). Any pipeline converted from SIMPL by a released version through 7.4.1 that used nested sets or OR unions should be re-converted and re-run; masks produced from such a converted pipeline should not be trusted.
 
 ---
 

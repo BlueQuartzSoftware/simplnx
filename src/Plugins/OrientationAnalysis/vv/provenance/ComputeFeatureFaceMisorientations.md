@@ -22,13 +22,13 @@ The dataset is a hand-rolled triangulated mesh designed as a **Class 1 (Analytic
 
 1. **Mesh structure:** 102 + 9 = 111 vertices, arranged in y-axis-stacked blocks of 9 vertices per "row" (one row per Laue class block); 34 + 3 = 37 triangles, each with its own 3 dedicated vertices (no shared edges or vertices between triangles). The algorithm reads only `FaceLabels`, not vertex coordinates, so the geometric layout is arbitrary; the row-stacked structure is purely for human readability.
 
-2. **Feature structure:** 41 + 4 = 45 features (indices 0–44). Feature 0 is a sentinel/unused (phase `999`). Features 1–4 are phase 1 (Hex_High), 5–8 phase 2 (Cubic_High), ..., 37–40 phase 10 (Trigonal_Low), 41–44 phase 11 (Trigonal_High, added during this V&V cycle).
+2. **Feature structure:** 41 + 4 = 45 features (indices 0–44). Feature 0 is a sentinel/unused (phase `999`). Features 1–4 are phase 1 (Hex_High), 5–8 phase 2 (Cubic_High), ..., 37–40 phase 10 (Trigonal_Low), 41–44 phase 11 (Trigonal_High, added).
 
 3. **Ensemble structure:** 12 + 1 = 13 phase entries (index 0 = sentinel `999`; indices 1–11 = Laue-class indices 0–10). Phase `i` has `CrystalStructure[i] = i - 1` for `i = 1..11`, so phase 1 → CrystalStructure 0 (Hex_High), phase 2 → CrystalStructure 1 (Cubic_High), ..., phase 11 → CrystalStructure 10 (Trigonal_High).
 
 4. **Orientations (`AvgEulerAngles`):** Each Laue class block uses four orientations: `(φ1, Φ, φ2) = (0°, 0°, 0°)`, `(45°, 0°, 0°)`, `(90°, 0°, 0°)`, `(180°, 0°, 0°)`. With `Φ = φ2 = 0`, these are pure rotations about the c-axis. The choice is deliberate: pure c-axis rotations allow closed-form symmetry-group reduction (the c-axis is the principal symmetry axis of each Laue class), so the expected misorientation is just `|Δφ1|` modulo the c-axis n-fold rotation.
 
-5. **Face labels:** 34 + 3 = 37 entries. The first 30 entries are organized as Laue-class blocks of 3 boundary types: A↔B (φ1 0° vs 45°), A↔C (0° vs 90°), A↔D (0° vs 180°). Entries 30–33 are the four invalid-face edge cases: (0, 1) background-front, (1, 0) background-back, (1, 5) different-phase forward, (5, 1) different-phase reverse. Entries 34–36 are the Trigonal_High boundaries added during this V&V cycle.
+5. **Face labels:** 34 + 3 = 37 entries. The first 30 entries are organized as Laue-class blocks of 3 boundary types: A↔B (φ1 0° vs 45°), A↔C (0° vs 90°), A↔D (0° vs 180°). Entries 30–33 are the four invalid-face edge cases: (0, 1) background-front, (1, 0) background-back, (1, 5) different-phase forward, (5, 1) different-phase reverse. Entries 34–36 are the Trigonal_High boundaries added.
 
 6. **Expected values:** Derived in closed form from the c-axis n-fold rotation of each Laue class. See the V&V report's Oracle table for the full per-class derivation. The Trigonal_High values (45°, 30°, 60°) match Trigonal_Low — the additional mirror planes in -3m do not reduce pure c-axis rotation magnitudes further.
 

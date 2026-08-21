@@ -25,7 +25,7 @@ The oracle is now **inline in `test/ReadCtfDataTest.cpp`** (no archive at all):
 
 - A hand-authored toy `.ctf` fixture (string literal, written to the binary test-output dir at runtime) with **Class 1 hand-derived expected values** for the geometry and all 12 output arrays, plus **Class 4 invariants** (ensemble sizing, Invalid-Phase slot defaults).
 - A 2×2 parameter sweep over DegreesToRadians × EdaxHexagonalAlignment whose expected Euler values are the correctly-rounded float32 results of double-precision arithmetic, computed independently with NumPy IEEE-754 float32/float64 semantics from the fixture text (constant: `M_PI/180.0`; derivation commented beside the literals). Four fixture angles (7.125°, 3.375°, 6.75°, and 37.125° via the hex shift) were deliberately chosen where the float32 and double-precision roundings **differ**, so the assertions pin the required double-precision code path (added after the adversarial review showed the original angles were blind to it).
-- A 2×2×2 multi-slice fixture for the 3D `.ctf` support restored during this pass.
+- A 2×2×2 multi-slice fixture for the 3D `.ctf` support restored.
 - Eight error fixtures: value-add guards (`-19600`…`-19604`; `-19605` is reachable only by file-mutation injection and is documented untested) and EbsdLib passthroughs (`-102`, `-105`, `-107`).
 
 See the report's Oracle section: `src/Plugins/OrientationAnalysis/vv/ReadCtfDataFilter.md`.

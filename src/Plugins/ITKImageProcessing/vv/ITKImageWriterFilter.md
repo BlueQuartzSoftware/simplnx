@@ -19,7 +19,7 @@
 | Tests today | 7 named test cases - 1 Class 1+4 Oracle, 2 preflight error-path tests, 1 single-slice exact-name test, 1 RGBA output test, 1 stack-writing test, and 1 SIMPL backwards-compatibility test |
 | Exemplar archive | None - Class 1+4 oracle uses inline data |
 | Legacy comparison | Reproduced against DREAM3D 6.5.171 with a pipeline-generated copy of the inline oracle and the archived Small IN100 input. All 577 decoded slices match exactly per implementation; D1 and D2 record filename-formatting and plane-metadata differences. See `vv/provenance/ITKImageWriterFilter.md`. |
-| Bug flags | Unsigned uint32/uint64 dispatch was corrected for this V&V cycle. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, selected-plane physical metadata, and tuple-copy error propagation. |
+| Bug flags | Unsigned uint32/uint64 dispatch was corrected. Current changes add invalid fill-character validation, component-count validation, RGBA dispatch, selected-plane physical metadata, and tuple-copy error propagation. |
 | V&V phase | Regression tests and report amendments in progress |
 
 ## Summary

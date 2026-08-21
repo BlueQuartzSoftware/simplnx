@@ -12,13 +12,13 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D1` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle**; documented for users of prior SIMPLNX releases) |
+| **Status** | active in **DREAM3D-NX 7.4.1** only; **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
-**Symptom:** In SIMPLNX releases containing PR #1466 (2025-11-14) and prior to this V&V cycle, the filter could report one extra (empty) feature, shift every FeatureId up by one, or grow a feature from a masked-out / unindexed voxel — whenever voxel 0 of the image was not a legitimate seed. 6.5.171 never exhibits this.
+**Symptom:** PR #1466 (2025-11-14) introduced this, so **7.4.1 (2026-03-23) is the only affected release** — 7.4.0 (2025-10-27) and earlier predate it. In affected builds the filter could report one extra (empty) feature, shift every FeatureId up by one, or grow a feature from a masked-out / unindexed voxel — whenever voxel 0 of the image was not a legitimate seed. 6.5.171 never exhibits this.
 
 **Root cause:** Bug (SIMPLNX). The shared driver `src/simplnx/Utilities/SegmentFeatures.cpp::execute()` started the flood fill from the raw index `seed = 0` without calling `getSeed()`, so the first seed was neither validated against the mask/phase requirements nor stamped with its FeatureId. Legacy `SegmentFeatures::execute()` obtains every seed — including the first — from `getSeed()`. Restored in this V&V cycle (`seed = getSeed(gnum, nextSeed)` before the loop); the fix also applies to `EBSDSegmentFeatures` and `ScalarSegmentFeatures`, which share the driver. Pinned by the `Class 1 Analytical (Mask Excludes Voxel 0)` and `Execute Error - No Features Found (-87000)` test cases.
 
-**Affected users:** SIMPLNX users (post-#1466, pre-fix builds) whose datasets have a masked-out, unindexed, or already-owned cell at linear index 0 — common in EBSD scans with a mask. Legacy 6.5.171 users are unaffected.
+**Affected users:** DREAM3D-NX 7.4.1 users whose datasets have a masked-out, unindexed, or already-owned cell at linear index 0 — common in EBSD scans with a mask. Legacy 6.5.171 users are unaffected.
 
 **Recommendation:** Trust SIMPLNX at or after this V&V commit (which agrees with 6.5.171). Results from affected intermediate SIMPLNX builds on masked data should be regenerated.
 
@@ -66,13 +66,13 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D4` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle**; documented for users of prior SIMPLNX releases) |
+| **Status** | active in all releases through **7.4.1**; resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
 
-**Symptom:** Prior to this V&V cycle, SIMPLNX rejected (error `-8363`) any dataset containing unindexed (phase 0) cells — whose `CrystalStructures[0]` entry is the conventional `999` sentinel — or masked-out non-hexagonal cells; 6.5.171 processes such datasets normally.
+**Symptom:** In every released version up to and including 7.4.1, SIMPLNX rejected (error `-8363`) any dataset containing unindexed (phase 0) cells — whose `CrystalStructures[0]` entry is the conventional `999` sentinel — or masked-out non-hexagonal cells; 6.5.171 processes such datasets normally.
 
 **Root cause:** Bug (SIMPLNX). The D3 validation loop checked every cell's crystal structure, including phase-0 cells and cells excluded by the mask, neither of which can ever participate in segmentation (`getSeed` requires phase > 0 and a set mask bit; `determineGrouping` requires equal phases and a set mask bit). It also indexed `CrystalStructures[phase]` without a bounds check, so an out-of-range phase value read out of bounds instead of producing an error. Fixed by exempting phase ≤ 0 and masked-out cells and adding the `-8364` bounds error. Pinned by the `Phase 0 (Unindexed) Cells Tolerated`, `Masked Non-Hexagonal Cells Tolerated`, and `Execute Error - Phase Out of Ensemble Bounds (-8364)` test cases; the 2026-07-22 A/B run confirms post-fix parity with 6.5.171 on phase-0 data (TC4).
 
-**Affected users:** SIMPLNX users (pre-fix builds) with EBSD scans containing unindexed points — a very common case — or deliberately masked non-hexagonal phases.
+**Affected users:** Users of any released version through 7.4.1 with EBSD scans containing unindexed points — a very common case — or deliberately masked non-hexagonal phases.
 
 **Recommendation:** Trust SIMPLNX at or after this V&V commit; upgrade if the filter spuriously rejects data with unindexed points.
 
@@ -84,12 +84,12 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D5` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle**; no legacy equivalent behavior) |
+| **Status** | active in all releases through **7.4.1**; resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`). No legacy equivalent behavior |
 
-**Symptom:** SIMPLNX accepts a RectGrid geometry as input (6.5.171 accepts only Image geometry); prior to this V&V cycle, selecting a RectGrid geometry passed preflight and then crashed at execute.
+**Symptom:** SIMPLNX accepts a RectGrid geometry as input (6.5.171 accepts only Image geometry); in every released version up to and including 7.4.1, selecting a RectGrid geometry passed preflight and then crashed at execute.
 
 **Root cause:** Bug (SIMPLNX). The algorithm fetched the geometry with a stale `getDataAs<ImageGeom>()` cast, returning a null pointer for RectGrid input, which the shared segmentation driver dereferenced. Fixed to `getDataAs<IGridGeometry>()`, matching the parameter's allowed types and the sibling EBSD/Scalar segmentation algorithms. Pinned by the `Class 1 Analytical (RectGrid Geometry)` test case.
 
-**Affected users:** SIMPLNX users (pre-fix builds) segmenting RectGrid data — e.g., regularized serial-sectioning data. Legacy users are unaffected (the capability does not exist in 6.5.171).
+**Affected users:** Users of any released version through 7.4.1 segmenting RectGrid data — e.g., regularized serial-sectioning data. Legacy users are unaffected (the capability does not exist in 6.5.171).
 
 **Recommendation:** Trust SIMPLNX at or after this V&V commit.

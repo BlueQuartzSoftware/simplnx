@@ -34,7 +34,7 @@
 
 1. **Output medium** — legacy writes one **PDF per phase** to disk (libharu/HPDF); nothing enters the data structure. SIMPLNX creates an **ImageGeometry** with an RGB `Phase_N` array (and optional Float64 intensity arrays) in the DataStructure, and optionally writes a raster image (TIFF/PNG) to disk.
 2. **Rendering stack** — legacy draws pole-figure chrome (circle, axes, labels, color bar) directly with libharu primitives; SIMPLNX delegates to the **EbsdLib pole-figure compositor** (`GeneratePoleFigureComposite`), whose rasterized output is byte-tested upstream in `PoleFigureCompositorTest::All_Laue_Classes`.
-3. **Discrete mode** — this V&V cycle's PR renders discrete figures with EbsdLib 3.1.0's **vector-marker renderer** (configurable **Discrete Marker Radius**), replacing legacy's single-black-pixel-per-orientation.
+3. **Discrete mode** — SIMPLNX renders discrete figures with EbsdLib 3.1.0's **vector-marker renderer** (configurable **Discrete Marker Radius**), replacing legacy's single-black-pixel-per-orientation.
 4. **New capabilities** — optional intensity Float64 arrays, MRD normalization, in-DataStructure image geometry, and the X‖a / X‖a* Hex/Trig basis convention parameter.
 
 The shared pole-figure projection math (modified Lambert for Color, stereographic for Discrete) descends from the same lineage, which is why the rendered figures agree visually. Being a Rewrite under the same UUID, the Deviations file defends the equivalence claim.
@@ -49,7 +49,7 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 *Encoded:*
 - **Class 4 (Invariant):** `test/WritePoleFigureTest.cpp::"OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure"` (masked output differs from unmasked by >1% of bytes → mask is wired) and `::"…: HexConvention choice reaches algorithm"` (X‖a vs X‖a* rotates the basal families 30° in both the intensity array and the composite RGB → both plumbing paths honor the convention). Both pass against EbsdLib 3.1.0.
-- **Class 5 (Expert-visual):** the hex + cubic renders (legacy PDFs + SIMPLNX PNGs), signed off this cycle. Generator scripts + pipelines are committed under `Code_Review/vv/WritePoleFigure/`; the binary renders are archived to OneDrive — see the provenance sidecar and that folder's `README.md`.
+- **Class 5 (Expert-visual):** the hex + cubic renders (legacy PDFs + SIMPLNX PNGs), signed off. Generator scripts + pipelines are committed under `Code_Review/vv/WritePoleFigure/`; the binary renders are archived to OneDrive — see the provenance sidecar and that folder's `README.md`.
 - **Class 2 (Reference), cited not duplicated:** EbsdLib `PoleFigureCompositorTest::All_Laue_Classes` pins per-Laue-class pixel reproduction.
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
