@@ -47,7 +47,7 @@ VertexGeom& CreateEmptyPointCloud(DataStructure& ds)
   return *geom;
 }
 
-ImageGeom& CreateImageGeom(DataStructure& ds, SizeVec3 dims, FloatVec3 origin, FloatVec3 spacing)
+ImageGeom& CreateImageGeom(DataStructure& ds, SizeVec3 dims, const FloatVec3& origin, const FloatVec3& spacing)
 {
   auto* geom = ImageGeom::Create(ds, k_GridGeomName);
   geom->setDimensions(dims);
