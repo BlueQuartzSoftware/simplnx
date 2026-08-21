@@ -28,6 +28,11 @@ AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 
 namespace
 {
+// Error/warning code constants. These continue the filter's own -680xx series; -68005 through
+// -68007 are used by the filter's preflight.
+constexpr nx::core::int32 k_PhaseBeyondEnsembleError = -68008;
+constexpr nx::core::int32 k_UnknownCrystalStructureWarning = -68009;
+
 // -----------------------------------------------------------------------------
 // Validates the phase data against the crystal-structure ensemble array before the shift
 // search starts.
@@ -73,16 +78,20 @@ Result<> ValidatePhaseData(const Int32Array& cellPhases, const UInt32Array& crys
 
   if(maxPhase > 0 && static_cast<usize>(maxPhase) >= ensembleTupleCount)
   {
-    return MakeErrorResult(-68008, fmt::format("The Cell Phases array '{}' contains the phase value {}, but the Crystal Structures array '{}' has only {} tuples (valid phase values are 0 through "
-                                               "{}). Reading the crystal structure for that phase would index outside the Crystal Structures array.",
-                                               cellPhasesPath.toString(), maxPhase, crystalStructuresPath.toString(), ensembleTupleCount, ensembleTupleCount - 1));
+    // Guard the subtraction: an empty ensemble array would underflow an unsigned type.
+    const std::string validRange = (ensembleTupleCount == 0) ? "there are no valid phase values" : fmt::format("valid phase values are 0 through {}", ensembleTupleCount - 1);
+    return MakeErrorResult(k_PhaseBeyondEnsembleError,
+                           fmt::format("The Cell Phases array '{}' contains the phase value {}, but the Crystal Structures array '{}' has only {} tuples ({}). Reading the crystal structure for "
+                                       "that phase would index outside the Crystal Structures array.",
+                                       cellPhasesPath.toString(), maxPhase, crystalStructuresPath.toString(), ensembleTupleCount, validRange));
   }
 
   if(sawUnknownStructure)
   {
-    return MakeWarningVoidResult(-68009, fmt::format("Phase {} is used by at least one Cell but its crystal structure in '{}' is {}, which is not one of the {} known Laue classes. Cells of that "
-                                                     "phase cannot be compared and are counted as misoriented against every neighbor, which biases the computed shifts.",
-                                                     unknownStructurePhase, crystalStructuresPath.toString(), unknownStructureValue, laueClassCount));
+    return MakeWarningVoidResult(k_UnknownCrystalStructureWarning,
+                                 fmt::format("Phase {} is used by at least one Cell but its crystal structure in '{}' is {}, which is not one of the {} known Laue classes. Cells of that phase "
+                                             "cannot be compared and are counted as misoriented against every neighbor, which biases the computed shifts.",
+                                             unknownStructurePhase, crystalStructuresPath.toString(), unknownStructureValue, laueClassCount));
   }
 
   return {};
