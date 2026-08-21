@@ -214,8 +214,14 @@ only for the non-recording copy of the scan (mutation M3/M3b). Logged as a follo
 | `AlignSectionsMisorientationFilter: SIMPL Backwards Compatibility` | kept, untouched | SIMPL 6.4 + 6.5 argument-mapping conversion, 2 DYNAMIC_SECTIONs, 29 assertions. |
 | `AlignSectionsMisorientationFilter: output test` | **retired** | Compared the three shift arrays against `output_align_sections_misorientation.dream3d`, a file captured from this filter's own output — a circular oracle that could only confirm whatever the filter did at capture time. Replaced by hand-derived Class 1 assertions on the same three arrays. |
 
-All non-retired tests pass at the branch head. **OOC runs waived** per the standing program
-decision of 2026-08-19.
+All non-retired tests pass at the branch head:
+
+- `ctest -R "OrientationAnalysis::"` -> **301/301 passed, 0 failed** (303 s). This includes the
+  `PIPELINE::` and `PY::` chained example-pipeline tests, all of which passed.
+- `ctest -R "SimplnxCore::AlignSections"` -> **6/6 passed, 0 failed** (the family
+  no-regression run for the SimplnxCore consumers of the shared base).
+
+**OOC runs waived** per the standing program decision of 2026-08-19.
 
 ## Mutation verification
 
