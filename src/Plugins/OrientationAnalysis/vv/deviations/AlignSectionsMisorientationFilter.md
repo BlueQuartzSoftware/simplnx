@@ -99,16 +99,28 @@ product narrowed once. The two results can differ by one ULP. Since the comparis
 `>`, this can only change an outcome for a pair whose disorientation equals the tolerance to
 within that ULP.
 
-**Affected users:** Nobody in practice. Requires a sampled pair's disorientation to coincide
-with the tolerance to about 1e-7 rad.
+**Affected users:** Nobody in practice. Requires a sampled pair's disorientation to coincide with
+the tolerance to within one float32 ULP of the converted tolerance: **7.5e-9 rad at a 5-degree
+tolerance** (0.0873 rad, binade 2^-4, so ULP = 2^-27) and **6.0e-8 rad at a 30-degree tolerance**
+(0.524 rad, binade 2^-1, so ULP = 2^-24). Note this is a *different and much smaller* quantity than
+the ~1e-7 rad formula-disagreement bound quoted in D2: D2 bounds how far two different `acos`/`atan2`
+formulations of the **angle** can drift apart, whereas this entry bounds the last-bit difference in
+the **tolerance constant** itself.
 
 **Recommendation:** Either acceptable within tolerance, where the tolerance is **one ULP of the
-float tolerance value** (about 1e-7 rad at the tolerances users actually set) — the two conversions
-cannot differ by more than that, and the value only feeds a strict `>` comparison. The
-single-narrowing form is marginally more accurate.
+converted float tolerance value** — 7.5e-9 to 6.0e-8 rad across the range users actually set. The
+two conversions cannot differ by more than that, and the value only feeds a strict `>` comparison.
+The single-narrowing form is marginally more accurate.
 Deliberately **not** asserted by the test suite: pinning behaviour exactly at the strict-`>`
-boundary would encode float noise as a contract. The oracle fixtures are all kept at least
-5 degrees away from the tolerance in use.
+boundary would encode float noise as a contract. Margins in the fixtures, stated precisely rather
+than as a blanket claim: the closest any fixture comes to its tolerance is the
+`Misorientation Tolerance Bracket`, deliberately **1 degree** away (29- and 31-degree tolerances
+around a 30-degree disorientation). Every other fixture keeps its A/B pattern disorientation at
+least **15 degrees** above the tolerance (25 degrees for the 30-degree cubic fixtures, 15 for the
+20-degree hexagonal one) and its matching identity pairs 5 degrees below it. Even the deliberate
+1-degree bracket is 0.0175 rad — about **2.9e5 times**, roughly five orders of magnitude, the
+6.0e-8 rad ULP at that tolerance — so no fixture is anywhere near the boundary this deviation
+concerns.
 
 ---
 
@@ -149,9 +161,20 @@ SIMPLNX oracle suite through the `bool` path and by the mask utility's own tests
 accepted silently or reported differently — four errors and one warning, enumerated in the table
 below.
 
-**Root cause:** *bug (in both, fixed in SIMPLNX)* for `-68008`, which closes an out-of-bounds read
-present in both implementations, plus *algorithmic choice* for the other four, which are added
-defensive guards with no legacy counterpart in that exact form. Added during this V&V pass:
+**Root cause:** *bug (in both, fixed in SIMPLNX)* for `-68008`, plus *algorithmic choice* for the
+other four, which are added defensive guards with no legacy counterpart in that exact form.
+
+**Why only one of the two out-of-bounds reads is classified `bug`.** Both `-68008` and `-68006`
+close a genuine out-of-bounds read, so the asymmetry needs stating. `-68008` guards
+`crystalStructures[cellPhases[pos]]`, an unchecked index behind nothing but a `> 0` test — a defect
+in the algorithm's own logic that legacy shares verbatim, hence `bug`. `-68006` guards a *user
+misconfiguration*: selecting cell arrays that belong to a different geometry than the one being
+aligned. Legacy could not express that at all, because it fetched the arrays from the geometry's own
+attribute matrix rather than from free-form selection, so there is no shared defect to call a bug —
+SIMPLNX's more flexible array selection created the possibility and this pass closed it, hence
+`algorithmic choice`. The At-a-glance Bug-flags row in the V&V report states the same split.
+
+Added during this V&V pass:
 
 | Code | Condition | Legacy behaviour |
 |---|---|---|
@@ -226,8 +249,8 @@ out-of-bounds read.
 `if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)`,
 which appears twice in `AlignSectionsMisorientation::findShifts` — once in each duplicated copy of
 the candidate scan (recording copy `:203`, non-recording copy `:311` at the head of this branch;
-legacy `:304`). `idx` is computed from the unvalidated candidate two lines earlier, so
-`misorients[idx]` is evaluated first. Legacy reads past the end of a raw
+legacy `:304`). `idx` is computed from the unvalidated candidate on the immediately preceding line
+(`:202`, from `xIdx`/`yIdx` at `:200-201`; legacy `:303`), so `misorients[idx]` is evaluated first. Legacy reads past the end of a raw
 `bool*`; SIMPLNX reads past the end of a `std::vector<bool>`. A truthy garbage read silently
 skips an otherwise legal candidate, which makes both implementations non-reproducible in that
 regime.
