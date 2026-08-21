@@ -32,6 +32,10 @@ constexpr nx::core::int32 k_GeometryNotThreeDimensional = -68072;
 constexpr nx::core::int32 k_NonDataArrayCellChild = -68073;
 constexpr nx::core::int32 k_MissingCellAttributeMatrix = -68074;
 
+// Only the tuples of the slices that actually move are written, so every alignment-shift array is
+// filled with zeros to keep the untouched anchor tuple deterministic instead of uninitialized memory.
+constexpr nx::core::StringLiteral k_ZeroFillValue = "0";
+
 } // namespace
 
 namespace nx::core
@@ -217,9 +221,6 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   // Handle Array Creation
   if(pStoreAlignmentShifts)
   {
-    // Only the tuples of the slices that actually move are written, so every array is filled with
-    // zeros to keep the untouched anchor tuple deterministic instead of uninitialized memory.
-    const std::string k_ZeroFillValue = "0";
     const usize dims = imageGeomDims.getZ();
     auto pAlignmentAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key);
     const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
@@ -230,22 +231,22 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
     // Create slices Array
     auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);
     resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName), "", k_ZeroFillValue));
+        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName), "", k_ZeroFillValue.str()));
 
     // Create positioning Array
     auto pRelativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key);
     resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName), "", k_ZeroFillValue));
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName), "", k_ZeroFillValue.str()));
 
     // Create shifts Array
     auto pCumulativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key);
     resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName), "", k_ZeroFillValue));
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName), "", k_ZeroFillValue.str()));
 
     // Create centroids Array
     auto pCentroidsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
     resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCentroidsName), "", k_ZeroFillValue));
+        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCentroidsName), "", k_ZeroFillValue.str()));
   }
 
   // Inform users that the following arrays are going to be modified in place
