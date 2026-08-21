@@ -6,7 +6,7 @@ Entries are referenced by stable ID (`AlignSectionsFeatureCentroidFilter-D<N>`) 
 
 ## Headline: A/B performed against 6.5.171, and a matching 6.5.172 alignment patch exists
 
-Five configurations (consecutive; reference anchored three different ways; one fully masked-out section) were run through DREAM3D 6.5.171 `PipelineRunner` and through SIMPLNX `nxrunner` on byte-identical legacy-format inputs, comparing every Cell array element-wise plus the legacy shift CSV against the SIMPLNX shift arrays: 130 comparables, 21 divergences, **all predicted from source before either binary was run**. The same five configurations were then run through a patched 6.5.172 tree (`/Users/mjackson/Workspace9/6.5.172/DREAM3D`, commit `f81973147`, with the message-text follow-up `f6e20f7e3`), which agrees with SIMPLNX on **every** comparable.
+Five configurations (consecutive; reference anchored three different ways; one fully masked-out section) were run through DREAM3D 6.5.171 `PipelineRunner` and through SIMPLNX `nxrunner` on byte-identical legacy-format inputs, comparing every Cell array element-wise plus the legacy shift CSV against the SIMPLNX shift arrays: 59 comparables, 21 divergences, **all predicted from source before either binary was run**. The same five configurations were then run through a patched 6.5.172 tree (`/Users/mjackson/Workspace9/6.5.172/DREAM3D`, commit `f81973147`, with the message-text follow-up `f6e20f7e3`): 71 further comparables, and it agrees with SIMPLNX on **every** one.
 
 ---
 
@@ -265,7 +265,7 @@ Note on ownership: the Reference Slice upper bound `-68071` is **D4's** guard, n
 
 **Symptom:** None. Four error-code constants `-68001`, `-68002`, `-68003` and `-68004` were defined in the filter's translation unit and never used, and the documentation described a "Linear Background Subtraction" option that this filter has never had (copied in from the Misorientation-family documentation).
 
-**Root cause:** `bug` — dead code plus a documentation error. Neither has any computational effect.
+**Root cause:** `cleanup` — dead code plus a documentation error. Neither has any computational effect, so this is not an output deviation and is excluded from the bug-flag roll-up; it is recorded for the error-code audit trail.
 
 **Affected users:** Nobody. Recorded because a reader comparing the SIMPLNX and DREAM3D error-code tables would find four SIMPLNX codes with no counterpart and no trigger.
 
