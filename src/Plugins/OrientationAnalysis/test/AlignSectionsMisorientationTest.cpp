@@ -427,13 +427,17 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
 {
   UnitTest::LoadPlugins();
 
-  // 32 x 32 x 3. Pattern offsets chosen so that every slice that serves as a REFERENCE has
-  // Dy congruent to 0 (mod 4) -- reference rows must land on phase-1 staircase rows.
-  //   D_2 = (0, 0)   top slice, the registration anchor
+  // 32 x 32 x 3. Pattern offsets chosen so that (a) every slice that serves as a REFERENCE
+  // has Dy congruent to 0 (mod 4) -- reference rows must land on phase-1 staircase rows --
+  // and (b) the bottom slice's ACCUMULATED x shift comes out NEGATIVE, which is what selects
+  // the reversed index-remap branch in the shared base (AlignSections.cpp:75-78). A fixture
+  // whose shifts are all non-negative never visits that branch, and it is exactly where an
+  // in-place copyTuple overwrite bug would hide.
+  //   D_2 = (0, 0)    top slice, the registration anchor
   //   D_1 = (2, 0)
-  //   D_0 = (1, 2)
+  //   D_0 = (-1, 2)
   AnalyticalFixtures::FixtureSpec spec;
-  spec.offsets = {{1, 2}, {2, 0}, {0, 0}};
+  spec.offsets = {{-1, 2}, {2, 0}, {0, 0}};
   DataStructure dataStructure = AnalyticalFixtures::BuildFixture(spec);
 
   AlignSectionsMisorientationFilter filter;
@@ -455,35 +459,38 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   //   min == 0; pass 2 re-centres on it, finds no other zero, and the while loop exits.
   //   => relative shift (2, 0); xShifts[1] = 0 + 2 = 2, yShifts[1] = 0 + 0 = 0.
   //
-  // iter == 2 pairs slice 0 (moving) with slice 1 (reference); d = D_0 - D_1 = (-1, 2).
-  //   e = s - (-1, 2) spans ex in [-2, 4], ey in [-5, 1].
+  // iter == 2 pairs slice 0 (moving) with slice 1 (reference); d = D_0 - D_1 = (-3, 2).
+  //   e = s - (-3, 2) spans ex in [0, 6], ey in [-5, 1].
   //     * ey not a multiple of 4 -> phase-0 pin row -> score 1.0.
-  //     * ey == 0 -> 2 * |ex| / count, zero only at s = (-1, 2).
+  //     * ey == 0 -> 2 * |ex| / count, zero only at ex == 0, i.e. s = (-3, 2).
   //     * ey == -4 (s_y == -2) is the case the zigzag exists to kill. The probed row is
-  //       4 rows up, and g(r-1) - g(r) is -1 for r = 1..4 but +1 for r = 5,6,7. With
-  //       ex == -1 the upper rows cancel exactly (interval length |-1 + 1| = 0) but the
-  //       lower rows give interval length |+1 + 1| = 2. For r = 5,6,7 the boundary T is
-  //       19, 18, 17; a half-open interval [T, T+2) contains a sampled u (== 2 mod 4 here)
-  //       iff T == 1 or 2 (mod 4), which holds for r = 6 (T = 18) and r = 7 (T = 17).
+  //       4 rows up, and g(r-1) - g(r) is -1 for r = 1..4 but +1 for r = 5,6,7, so with
+  //       ex == 0 the mismatch interval has length |delta| == 1 on every row: a single
+  //       point, at T-1 for the upper rows and at T for the lower ones. The reference
+  //       column coordinates here are u == 2 (mod 4) (slice 1 carries Dx = 2), and row 0 is
+  //       out of bounds for s_y == -2. Upper rows r = 1..4 have T = 17,18,19,20 so the
+  //       points are 16,17,18,19 -- one of them (18, at r = 3) is 2 (mod 4). Lower rows
+  //       r = 5,6,7 have T = 19,18,17 -- one of them (18, at r = 6) is 2 (mod 4).
   //       => 2 mismatches, strictly greater than zero. Not a tie.
-  //   s = (-1, 2) is the UNIQUE zero.
-  //   => relative shift (-1, 2); xShifts[2] = 2 + (-1) = 1, yShifts[2] = 0 + 2 = 2.
+  //   s = (-3, 2) is the UNIQUE zero.
+  //   => relative shift (-3, 2); xShifts[2] = 2 + (-3) = -1, yShifts[2] = 0 + 2 = 2.
   //
   // Cross-check: Cumulative[iter] must equal D_slice - D_top.
-  //   iter 1 -> D_1 - D_2 = (2, 0)   OK
-  //   iter 2 -> D_0 - D_2 = (1, 2)   OK
+  //   iter 1 -> D_1 - D_2 = (2, 0)    OK
+  //   iter 2 -> D_0 - D_2 = (-1, 2)   OK
   //
   //                                  {slice, relX, relY, cumX, cumY}
   const std::vector<std::array<int64, 5>> expectedShifts = {
-      {0, 0, 0, 0, 0}, // tuple 0: never written by findShifts; fill value "0"
-      {1, 2, 0, 2, 0}, // iter 1: slices {1, 2}
-      {0, -1, 2, 1, 2} // iter 2: slices {0, 1}
+      {0, 0, 0, 0, 0},  // tuple 0: never written by findShifts; fill value "0"
+      {1, 2, 0, 2, 0},  // iter 1: slices {1, 2}
+      {0, -3, 2, -1, 2} // iter 2: slices {0, 1}
   };
   AnalyticalFixtures::CheckShiftArrays(dataStructure, expectedShifts);
 
   // The accumulated shift applied to each slice, indexed by z. The top slice is never
   // touched by the base transfer loop (it starts at i == 1), so its shift is (0, 0).
-  const std::vector<std::array<int64, 2>> appliedShifts = {{1, 2}, {2, 0}, {0, 0}};
+  // Slice 0's shift is negative in x, so the base walks x from the far edge inward.
+  const std::vector<std::array<int64, 2>> appliedShifts = {{-1, 2}, {2, 0}, {0, 0}};
   AnalyticalFixtures::CheckAlignedVolume(dataStructure, spec, appliedShifts);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -498,9 +505,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // two copies. This is the same fixture and the same hand-derived answer as the shift
   // accumulation test, run with the shift arrays turned OFF so the second copy of the search
   // is covered too. The shift arrays cannot be inspected here, so the aligned volume is the
-  // observable: it is only correct if the accumulated shifts came out as (2, 0) and (1, 2).
+  // observable: it is only correct if the accumulated shifts came out as (2, 0) and (-1, 2).
   AnalyticalFixtures::FixtureSpec spec;
-  spec.offsets = {{1, 2}, {2, 0}, {0, 0}};
+  spec.offsets = {{-1, 2}, {2, 0}, {0, 0}};
   DataStructure dataStructure = AnalyticalFixtures::BuildFixture(spec);
 
   AlignSectionsMisorientationFilter filter;
@@ -514,7 +521,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // No Alignment Shifts Data attribute matrix should have been created.
   REQUIRE(dataStructure.getDataAs<AttributeMatrix>(AnalyticalFixtures::k_AlignmentAMPath) == nullptr);
 
-  const std::vector<std::array<int64, 2>> appliedShifts = {{1, 2}, {2, 0}, {0, 0}};
+  const std::vector<std::array<int64, 2>> appliedShifts = {{-1, 2}, {2, 0}, {0, 0}};
   AnalyticalFixtures::CheckAlignedVolume(dataStructure, spec, appliedShifts);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
