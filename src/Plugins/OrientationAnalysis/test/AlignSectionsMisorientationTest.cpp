@@ -829,6 +829,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     REQUIRE(preflightResult.outputActions.errors()[0].code == -68005);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("degenerate X dimension is rejected")
@@ -855,6 +857,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     REQUIRE(preflightResult.outputActions.errors()[0].code == -68005);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("cell array tuple count that disagrees with the geometry is rejected")
@@ -883,6 +887,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     REQUIRE(preflightResult.outputActions.errors()[0].code == -68006);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("negative misorientation tolerance is rejected")
@@ -901,6 +907,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Preflight Gua
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     REQUIRE(preflightResult.outputActions.errors()[0].code == -68007);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -928,6 +936,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Execute Guard
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
     REQUIRE(executeResult.result.errors().size() == 1);
     REQUIRE(executeResult.result.errors()[0].code == -68008);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("indexed phase with an unknown crystal structure warns")
@@ -950,6 +960,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Execute Guard
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     REQUIRE(executeResult.result.warnings().size() == 1);
     REQUIRE(executeResult.result.warnings()[0].code == -68009);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
