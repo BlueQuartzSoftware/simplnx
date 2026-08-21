@@ -20,7 +20,7 @@ If the user elects to *Use Reference Slice*, then each section's centroid is shi
 
 ### Sections With No Selected Cells
 
-A section in which no **Cell** is flagged *true* has no centroid. Such a section cannot be aligned, so it keeps the shift of the section before it, the **Filter** emits a warning naming the section, and the last usable centroid is carried forward so the remaining sections still align to each other. If the *reference* section is the empty one there is nothing to align to at all and the **Filter** reports an error.
+A section in which no **Cell** is flagged *true* has no centroid, so it cannot be aligned. Such a section contributes a shift of zero and the **Filter** emits a warning naming it. What that means depends on the mode: in consecutive mode the section carries the shift of the section before it, because consecutive shifts accumulate; in reference mode its shift is an absolute 0, so the section stays exactly where it is. In both modes the last usable centroid is carried forward so the remaining sections still align to real data. If the *reference* section is the empty one there is nothing to align to at all and the **Filter** reports an error.
 
 ### Consecutive Versus Reference Alignment
 
@@ -37,7 +37,7 @@ The structure for which looks like this
 ```console
 |-- Image Geometry
   |-- Alignment Shifts Data
-    |-- Slices
+    |-- Slice Indices
     |-- Relative Shifts
     |-- Cumulative Shifts
     |-- Centroids
@@ -46,12 +46,12 @@ The structure for which looks like this
 In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
-- Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
+- Slice Indices (DataArray | 2 component) - The slice indices (stored as uint32s)
 - Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
 - Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
 - Centroids (DataArray | 2 component) - The xy centroids of the corresponding slice
 
-The tuples run in the **Filter**'s internal order, which starts at the section farthest from the Z origin: tuple `i` describes physical slice `Z-1-i`, and the `Slices` array records that section together with the neighboring section above it. In consecutive mode tuple 0 describes the anchor section, which never moves, so it is filled with zeros; in reference mode tuple 0 carries that section's real shift because it is aligned like every other section. A section with no selected **Cells** reports a centroid of 0 and a relative shift of 0.
+The tuples run in the **Filter**'s internal order, which starts at the section farthest from the Z origin: tuple `i` describes physical slice `Z-1-i`, and the `Slice Indices` array records that section together with the neighboring section above it. That pair always describes the consecutive-mode pairing, so in reference mode the second component is *not* the reference section that was actually used as the alignment target. In consecutive mode tuple 0 describes the anchor section, which never moves, so it is filled with zeros; in reference mode tuple 0 carries that section's real shift because it is aligned like every other section. A section with no selected **Cells** reports a centroid of 0 and a relative shift of 0.
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 

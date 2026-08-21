@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -14,9 +12,7 @@
 #include <catch2/catch.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <filesystem>
-#include <fstream>
 #include <map>
 
 namespace fs = std::filesystem;
@@ -854,6 +850,58 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Non Data Array Cell 
   REQUIRE(HasError(preflightResult.outputActions, -68073));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Mask Tuple Count Must Match The Cell Count", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // The mask is indexed by Cell id across the whole geometry, and MaskCompare::isTrue() reaches the
+  // store through AbstractDataStore::at(), which throws std::out_of_range past the end. IFilter has
+  // no try/catch around execute, so a mask that does not hold one tuple per Cell escapes the filter
+  // as an uncaught exception rather than as an error. Preflight has to reject it first.
+  const std::string k_OtherAmName = "Other Data";
+  const std::string k_OtherMaskName = "Other Mask";
+
+  struct TupleCase
+  {
+    std::string name;
+    usize zTuples = 0; // The tuple shape is {zTuples, 5, 5} against a 5 x 5 x 3 = 75 Cell geometry.
+  };
+
+  const std::vector<TupleCase> cases{
+      {"fewer tuples than Cells", 2}, // 50 tuples: this is the out-of-range read
+      {"more tuples than Cells", 4},  // 100 tuples
+  };
+
+  for(const auto& testCase : cases)
+  {
+    DYNAMIC_SECTION(testCase.name)
+    {
+      DataStructure dataStructure = CreateFixture(k_StackDims, k_UnitSpacing, StackedBlockLayout());
+
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_GeomPath));
+      const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
+
+      // The mismatched mask lives in its own Attribute Matrix so that it is a legal DataStructure
+      // that only the geometry's Cell count contradicts.
+      const ShapeType tupleShape{testCase.zTuples, k_StackDims[1], k_StackDims[0]};
+      auto* otherAm = AttributeMatrix::Create(dataStructure, k_OtherAmName, tupleShape, imageGeom.getId());
+      REQUIRE(otherAm != nullptr);
+      auto maskStore = std::make_shared<BoolDataStore>(tupleShape, ShapeType{1}, false);
+      REQUIRE(BoolArray::Create(dataStructure, k_OtherMaskName, maskStore, otherAm->getId()) != nullptr);
+
+      AlignSectionsFeatureCentroidFilter filter;
+      Arguments args = CreateArgs(false, 0, false);
+      args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_GeomPath.createChildPath(k_OtherAmName).createChildPath(k_OtherMaskName)));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+      REQUIRE(HasError(preflightResult.outputActions, -68075));
+
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: SIMPL Backwards Compatibility", "[SimplnxCore][AlignSectionsFeatureCentroidFilter][BackwardsCompatibility]")

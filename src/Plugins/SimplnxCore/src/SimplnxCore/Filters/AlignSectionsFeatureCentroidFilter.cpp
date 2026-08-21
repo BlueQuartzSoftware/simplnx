@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -24,13 +25,13 @@ namespace
 {
 
 // Error Code constants
-constexpr nx::core::int32 k_InconsistentTupleCount = -68063;
 constexpr nx::core::int32 k_NegativeReferenceSliceValue = -68064;
 constexpr nx::core::int32 k_MissingImageGeometry = -68070;
 constexpr nx::core::int32 k_ReferenceSliceBeyondZDim = -68071;
 constexpr nx::core::int32 k_GeometryNotThreeDimensional = -68072;
 constexpr nx::core::int32 k_NonDataArrayCellChild = -68073;
 constexpr nx::core::int32 k_MissingCellAttributeMatrix = -68074;
+constexpr nx::core::int32 k_MaskCellCountMismatch = -68075;
 
 // Only the tuples of the slices that actually move are written, so every alignment-shift array is
 // filled with zeros to keep the untouched anchor tuple deterministic instead of uninitialized memory.
@@ -208,14 +209,17 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
     }
   }
 
-  std::vector<DataPath> dataPaths;
-  dataPaths.push_back(pGoodVoxelsArrayPath);
-
-  // Ensure all DataArrays have the same number of Tuples
-  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!tupleValidityCheck)
+  // The Mask Array is indexed by Cell id across the whole geometry, and MaskCompare reaches its
+  // store through AbstractDataStore::at(), which throws std::out_of_range past the end. IFilter does
+  // not wrap execute in a try/catch, so a Mask Array that does not hold exactly one tuple per Cell
+  // would escape the filter as an uncaught exception instead of an error.
+  const usize numCells = imageGeomPtr->getNumberOfCells();
+  const usize numMaskTuples = dataStructure.getDataRefAs<IDataArray>(pGoodVoxelsArrayPath).getNumberOfTuples();
+  if(numMaskTuples != numCells)
   {
-    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+    return MakePreflightErrorResult(k_MaskCellCountMismatch, fmt::format("The Mask Array '{}' has {} tuples but the Image Geometry '{}' has {} Cells. The Mask Array must have exactly one tuple per "
+                                                                         "Cell of the selected Image Geometry.",
+                                                                         pGoodVoxelsArrayPath.toString(), numMaskTuples, inputImageGeometry.toString(), numCells));
   }
 
   // Handle Array Creation

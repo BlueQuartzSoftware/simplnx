@@ -120,7 +120,8 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
       // shift is undefined behavior. An empty slice is reported instead and left where it is.
       xCentroid[iter] = 0.0f;
       yCentroid[iter] = 0.0f;
-      result.warnings().push_back(Warning{k_EmptySlice, fmt::format("Slice={} has no Cells that are true in the mask array '{}'. That slice keeps the shift of the slice before it and is not aligned.",
+      result.warnings().push_back(Warning{k_EmptySlice, fmt::format("Slice={} has no Cells that are true in the mask array '{}', so it cannot be aligned. In consecutive mode it carries the shift of "
+                                                                    "the slice before it; in reference mode its shift is zero.",
                                                                     slice, m_InputValues->MaskArrayPath.toString())});
       continue;
     }
@@ -138,8 +139,10 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   {
     if(m_InputValues->ReferenceSlice < 0 || static_cast<size_t>(m_InputValues->ReferenceSlice) >= dims[2])
     {
+      // sdims[2] rather than dims[2] so that a zero-slice geometry reports "0 to -1" instead of
+      // wrapping the unsigned subtraction around.
       return MakeErrorResult(k_ReferenceSliceOutOfRange, fmt::format("Reference Slice ({}) is not a valid slice index. The Image Geometry '{}' has {} slices, so the valid range is 0 to {}.",
-                                                                     m_InputValues->ReferenceSlice, m_InputValues->ImageGeometryPath.toString(), dims[2], dims[2] - 1));
+                                                                     m_InputValues->ReferenceSlice, m_InputValues->ImageGeometryPath.toString(), dims[2], sdims[2] - 1));
     }
     referenceIndex = static_cast<size_t>(static_cast<int64>(dims[2]) - 1 - static_cast<int64>(m_InputValues->ReferenceSlice));
     if(!sliceHasMask[referenceIndex])
@@ -168,7 +171,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
 
   // Shift of one slice relative to its alignment target, in Cells. Note that the cast truncates
   // toward zero rather than rounding. A slice with no in-mask Cells contributes no shift.
-  auto computeRelativeShift = [&](size_t iterIndex) -> std::array<int64, 2> {
+  auto takeRelativeShift = [&](size_t iterIndex) -> std::array<int64, 2> {
     if(!sliceHasMask[iterIndex])
     {
       return {0, 0};
@@ -206,7 +209,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
     for(size_t iter = firstIndex; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
-      const std::array<int64, 2> relativeShift = computeRelativeShift(iter);
+      const std::array<int64, 2> relativeShift = takeRelativeShift(iter);
       if(m_InputValues->UseReferenceSlice)
       {
         // Cumulative and Relative are identical
@@ -253,7 +256,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
     for(size_t iter = firstIndex; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
-      const std::array<int64, 2> relativeShift = computeRelativeShift(iter);
+      const std::array<int64, 2> relativeShift = takeRelativeShift(iter);
       if(m_InputValues->UseReferenceSlice)
       {
         xShifts[iter] = relativeShift[0];
