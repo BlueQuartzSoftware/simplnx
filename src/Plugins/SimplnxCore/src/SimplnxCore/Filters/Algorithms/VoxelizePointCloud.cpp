@@ -10,46 +10,54 @@ namespace
 {
 Result<> CalculateImageVoxelMask(const INodeGeometry0D::SharedVertexList& pointCloud, const ImageGeom* image, UInt8AbstractDataStore& voxelMaskStore)
 {
+  const usize numTup = pointCloud.getNumberOfTuples();
+
   const SizeVec3 dims = image->getDimensions();
   const FloatVec3 origin = image->getOrigin();
   const FloatVec3 spacing = image->getSpacing();
 
-  for(usize i = 0; i < pointCloud.getNumberOfTuples(); i++)
+  const float32 xInv = 1.0f / spacing[0];
+  const float32 yInv = 1.0f / spacing[1];
+  const float32 zInv = 1.0f / spacing[2];
+
+  const usize sliceSize = dims[0] * dims[1];
+
+  for(usize i = 0; i < numTup; i++)
   {
-    const float32 xRaw = (pointCloud.getValue(i * 3) - origin[0]) / spacing[0];
+    const float32 xRaw = (pointCloud.getValue(i * 3) - origin[0]) * xInv;
     if(xRaw < 0.0f)
     {
       continue;
     }
-    const usize xPos = static_cast<usize>(xRaw);
+    const auto xPos = static_cast<usize>(xRaw);
     if(xPos >= dims[0])
     {
       continue;
     }
 
-    const float32 yRaw = (pointCloud.getValue(i * 3 + 1) - origin[1]) / spacing[1];
+    const float32 yRaw = (pointCloud.getValue(i * 3 + 1) - origin[1]) * yInv;
     if(yRaw < 0.0f)
     {
       continue;
     }
-    const usize yPos = static_cast<usize>(yRaw);
+    const auto yPos = static_cast<usize>(yRaw);
     if(yPos >= dims[1])
     {
       continue;
     }
 
-    const float32 zRaw = (pointCloud.getValue(i * 3 + 2) - origin[2]) / spacing[2];
+    const float32 zRaw = (pointCloud.getValue(i * 3 + 2) - origin[2]) * zInv;
     if(zRaw < 0.0f)
     {
       continue;
     }
-    const usize zPos = static_cast<usize>(zRaw);
+    const auto zPos = static_cast<usize>(zRaw);
     if(zPos >= dims[2])
     {
       continue;
     }
 
-    const usize target = (zPos * dims[0] * dims[1]) + (yPos * dims[0]) + xPos;
+    const usize target = (zPos * sliceSize) + (yPos * dims[0]) + xPos;
     voxelMaskStore.setValue(target, 1);
   }
 
@@ -63,19 +71,29 @@ Result<> CalculateRectGridVoxelMask(const INodeGeometry0D::SharedVertexList& poi
   const Float32AbstractDataStore& zBounds = rectGrid->getZBoundsRef().getDataStoreRef();
 
   const SizeVec3 dims = rectGrid->getDimensions();
+  const usize numTup = pointCloud.getNumberOfTuples();
 
-  for(usize i = 0; i < pointCloud.getNumberOfTuples(); i++)
+  const usize sliceSize = dims[0] * dims[1];
+
+  for(usize i = 0; i < numTup; i++)
   {
     const usize xPos = std::upper_bound(xBounds.begin(), xBounds.end(), pointCloud.getValue(i * 3)) - xBounds.begin();
+    if(xPos == 0 || xPos > dims[0])
+    {
+      continue;
+    }
     const usize yPos = std::upper_bound(yBounds.begin(), yBounds.end(), pointCloud.getValue(i * 3 + 1)) - yBounds.begin();
+    if(yPos == 0 || yPos > dims[1])
+    {
+      continue;
+    }
     const usize zPos = std::upper_bound(zBounds.begin(), zBounds.end(), pointCloud.getValue(i * 3 + 2)) - zBounds.begin();
-
-    if(xPos == 0 || xPos > dims[0] || yPos == 0 || yPos > dims[1] || zPos == 0 || zPos > dims[2])
+    if(zPos == 0 || zPos > dims[2])
     {
       continue;
     }
 
-    const usize target = ((zPos - 1) * dims[0] * dims[1]) + ((yPos - 1) * dims[0]) + (xPos - 1);
+    const usize target = ((zPos - 1) * sliceSize) + ((yPos - 1) * dims[0]) + (xPos - 1);
     voxelMaskStore.setValue(target, 1);
   }
 
@@ -115,7 +133,7 @@ Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* image)
   image->setOrigin(minPoint);
 
   auto* cellData = image->getCellData();
-  cellData->resizeTuples(ShapeType{dims[0], dims[1], dims[2]});
+  cellData->resizeTuples(ShapeType{dims[2], dims[1], dims[0]});
 
   return {};
 }
