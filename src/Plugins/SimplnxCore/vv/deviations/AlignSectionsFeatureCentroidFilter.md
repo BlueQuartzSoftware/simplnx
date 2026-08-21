@@ -6,7 +6,7 @@ Entries are referenced by stable ID (`AlignSectionsFeatureCentroidFilter-D<N>`) 
 
 ## Headline: A/B performed against 6.5.171, and a matching 6.5.172 alignment patch exists
 
-Five configurations (consecutive; reference anchored three different ways; one fully masked-out section) were run through DREAM3D 6.5.171 `PipelineRunner` and through SIMPLNX `nxrunner` on byte-identical legacy-format inputs, comparing every Cell array element-wise plus the legacy shift CSV against the SIMPLNX shift arrays: 130 comparables, 21 divergences, **all predicted from source before either binary was run**. The same five configurations were then run through a patched 6.5.172 tree (`/Users/mjackson/Workspace9/6.5.172/DREAM3D`, commit `f81973147`), which agrees with SIMPLNX on **every** comparable.
+Five configurations (consecutive; reference anchored three different ways; one fully masked-out section) were run through DREAM3D 6.5.171 `PipelineRunner` and through SIMPLNX `nxrunner` on byte-identical legacy-format inputs, comparing every Cell array element-wise plus the legacy shift CSV against the SIMPLNX shift arrays: 130 comparables, 21 divergences, **all predicted from source before either binary was run**. The same five configurations were then run through a patched 6.5.172 tree (`/Users/mjackson/Workspace9/6.5.172/DREAM3D`, commit `f81973147`, with the message-text follow-up `f6e20f7e3`), which agrees with SIMPLNX on **every** comparable.
 
 ---
 
@@ -20,7 +20,7 @@ Five configurations (consecutive; reference anchored three different ways; one f
 
 **Symptom:** With *Use Reference Slice* enabled, `Reference Slice = k` aligned every section to physical slice `Z-1-k` rather than to physical slice `k`. Only `k = Z-1` (and, for a single-slice-thick request, coincidence) selected the section the user asked for. Nothing warned, and for `k = 0` — the default, and the value in the shipping `(02) Small IN100 Full Reconstruction` pipeline — the filter anchored on the section farthest from the Z origin instead of the one at it.
 
-**Root cause:** Algorithmic choice inherited from a common ancestor, i.e. a shared bug. The per-slice centroid arrays are filled by an iteration that walks the stack from the far end toward the Z origin: `slice = (dims[2] - 1) - iter` (SIMPLNX `Algorithms/AlignSectionsFeatureCentroid.cpp:101`, legacy `AlignSectionsFeatureCentroid.cpp:207`), so `xCentroid[i]` holds the centroid of physical slice `Z-1-i`. The user's value was then used directly as an index into that array (`xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]`, legacy `xCentroid[static_cast<size_t>(m_ReferenceSlice)]`), which reverses the meaning of the parameter. The parameter has always been documented as a slice number.
+**Root cause:** `bug`, shared — inherited by both code bases from a common ancestor. The per-slice centroid arrays are filled by an iteration that walks the stack from the far end toward the Z origin: `slice = (dims[2] - 1) - iter` (SIMPLNX `Algorithms/AlignSectionsFeatureCentroid.cpp:101`, legacy `AlignSectionsFeatureCentroid.cpp:207`), so `xCentroid[i]` holds the centroid of physical slice `Z-1-i`. The user's value was then used directly as an index into that array (`xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]`, legacy `xCentroid[static_cast<size_t>(m_ReferenceSlice)]`), which reverses the meaning of the parameter. The parameter has always been documented as a slice number.
 
 The fix has two parts, because correcting the index alone is not enough. The shift loop began at index 1, treating the far section as an unmovable anchor, and the shared transfer loop in `src/simplnx/Utilities/AlignSections.cpp` also began at index 1. In reference mode the far section is an ordinary section that must move like any other, so the shift loop now starts at 0 in reference mode and the transfer loop starts at 0 unconditionally, skipping any section whose X and Y shifts are both zero. That skip is what keeps the transfer-loop change a no-op for `AlignSectionsList`, `AlignSectionsMisorientation` and `AlignSectionsMutualInformation`, whose `findShifts` implementations only ever write indices 1 and up.
 
@@ -46,7 +46,7 @@ The fix has two parts, because correcting the index alone is not enough. The shi
 
 The observed 6.5.171 behavior on the `ab5` fixture (arm64 build) is the `0` branch: the empty section and the section after it both kept cumulative shift 1 where the correct answer for the second is 2, and the CSV recorded `nan,nan` centroids.
 
-**Fix (both code bases):** an empty section contributes a relative shift of 0, so it keeps the shift of the section before it and travels with the stack; a Warning names the physical slice; and the last usable centroid is carried forward so the following sections still align to real data. If the *reference* section is the empty one there is no alignment target at all and the filter fails at execute time (SIMPLNX `-53901`, 6.5.172 `-5557`). No path casts a NaN any more.
+**Fix (both code bases):** an empty section contributes a relative shift of 0, a Warning names the physical slice, and the last usable centroid is carried forward so the following sections still align to real data. What a zero relative shift means depends on the mode, and the warning text says so: in consecutive mode the section inherits the running cumulative shift, so it travels with the stack; in reference mode the shift is absolute, so a zero relative shift leaves the section exactly where it is. If the *reference* section is the empty one there is no alignment target at all and the filter fails at execute time (SIMPLNX `-53901`, 6.5.172 `-5557`). No path casts a NaN any more.
 
 **Affected users:** Anyone whose mask leaves an entire section unflagged — common when a threshold is tight, when a section is badly indexed, or at the ends of a scan. In consecutive mode the damage propagates to every section past the empty one. Platform-dependent, so the same data could align differently on Intel and Apple Silicon builds.
 
@@ -182,17 +182,20 @@ The observed 6.5.171 behavior on the `ab5` fixture (arm64 build) is the `0` bran
 | **Filter UUID** | `b83f9bae-9ccf-4932-96c3-7f2fdb091452` |
 | **Status** | active (SIMPLNX-only guard gaps **closed during this V&V cycle**) |
 
-**Symptom:** Three inputs that DREAM3D 6.5.171 either rejected or tolerated were accepted by SIMPLNX and then went wrong at execute time:
+**Symptom:** Four inputs that DREAM3D 6.5.171 either rejected or tolerated were accepted by SIMPLNX and then went wrong at execute time:
 
 * A geometry with any dimension of 1 or 0. Legacy errored `-3010` (`AlignSections.cpp:217-223`); SIMPLNX silently no-oped a single-slice volume and would happily "align" a planar one.
 * A Cell Attribute Matrix holding a `StringArray` or `NeighborList`. Both derive from `IArray` but not `IDataArray` (`StringArray.hpp:10`, `INeighborList.hpp:17`), and the shared transfer step reaches them through `getDataRefAs<IDataArray>` (`AlignSections.cpp:168`), which is a `dynamic_cast` to a reference and therefore throws `std::bad_cast`. `IFilter::execute` has no `try`/`catch`, so the exception escapes the filter. DREAM3D 6.5.171 shifted NeighborLists without complaint because SIMPL's `IDataArray` interface included `copyTuple`.
 * An Image Geometry with no Cell Attribute Matrix. `AlignSections::getSelectedDataPaths` dereferences `imageGeom.getCellData()` unconditionally (`AlignSections.cpp:183`), so the run ends in a null dereference.
+* A Mask Array whose tuple count is not the geometry's Cell count. The mask is indexed by Cell id across the whole volume and `MaskCompare::isTrue` reads it through `AbstractDataStore::at` (`MaskCompareUtilities.hpp:81`, `:121`), which throws `std::out_of_range` past the end (`DataStore.hpp:312`). `IFilter::execute` has no `try`/`catch`, so a mask smaller than the geometry escaped the filter as an uncaught exception. The filter appeared to guard this — it called `validateNumberOfTuples` and owned error code `-68063` — but it passed a single DataPath, and `DataStructure::validateNumberOfTuples` can only report a mismatch *between* paths (`DataStructure.cpp:776-815`), so with one entry it always succeeded. The guard could never fire.
 
-**Root cause:** Missing guards (SIMPLNX), all three arising from the port dropping legacy's `dataCheck` coverage.
+**Root cause:** `bug` (SIMPLNX-only) — missing guards, all four arising from the port dropping legacy's `dataCheck` coverage. The fourth is compounded by a guard that looked like it covered the case and could not.
 
-**Fix:** preflight rejects a non-3D geometry with `-68072` (restoring the legacy semantics with the actual dimensions in the message), a non-Data-Array Cell child with `-68073` (naming the offending objects), and a missing Cell Attribute Matrix with `-68074`. Per the ratified scope for this cycle the guards live in this filter's preflight, not in the shared base, so `AlignSectionsList` and `AlignSectionsMutualInformation` remain exposed — logged as a follow-up.
+**Fix:** preflight rejects a non-3D geometry with `-68072` (restoring the legacy semantics with the actual dimensions in the message), a non-Data-Array Cell child with `-68073` (naming the offending objects), a missing Cell Attribute Matrix with `-68074`, and a Mask Array whose tuple count is not the geometry's Cell count with `-68075` (naming both counts and both paths). The vacuous single-path `validateNumberOfTuples` call and its `-68063` code were removed, since `-68075` is the check that call appeared to be making. Per the ratified scope for this cycle the guards live in this filter's preflight, not in the shared base, so `AlignSectionsList` and `AlignSectionsMutualInformation` remain exposed — logged as a follow-up.
 
-**Affected users:** Anyone pointing the filter at a 2D or single-slice geometry, or at a Cell Attribute Matrix that also holds a string or neighbor-list array. The last case is a hard crash, not a bad answer.
+Note on ownership: the Reference Slice upper bound `-68071` is **D4's** guard, not one of these four. Counting it here would double-count it.
+
+**Affected users:** Anyone pointing the filter at a 2D or single-slice geometry, at a Cell Attribute Matrix that also holds a string or neighbor-list array, or at a mask that does not belong to the selected geometry (easy to do when two geometries in the same DataStructure have similarly named masks). The last two cases are hard crashes, not bad answers.
 
 **Recommendation:** Trust SIMPLNX at or after this cycle.
 
@@ -242,13 +245,13 @@ The observed 6.5.171 behavior on the `ab5` fixture (arm64 build) is the `0` bran
 | **Filter UUID** | `b83f9bae-9ccf-4932-96c3-7f2fdb091452` |
 | **Status** | active (SIMPLNX improvement) |
 
-**Symptom:** DREAM3D 6.5.171's empty-section diagnostic named the *iteration* index, not the slice: for the `ab5` fixture, whose empty section is physical slice 1 of a four-slice volume, legacy reported `Slice=2`. SIMPLNX reports the physical slice.
+**Symptom:** DREAM3D 6.5.171's empty-section diagnostic named the *iteration* index, not the slice: for the `ab5` fixture, whose empty section is physical slice 1 of a four-slice volume, legacy reported `Slice=2`. SIMPLNX reports the physical slice. The same substitution applied to the two shift-out-of-range diagnostics, in legacy *and* in pre-V&V SIMPLNX: both printed `iter`. All three SIMPLNX messages now print the physical slice.
 
-**Root cause:** Bug (legacy). The warning interpolated the loop counter `iter` rather than `slice = dims[2]-1-iter` (`fc.cpp:267,276`), even though the very same loop had already computed `slice` for the shift file.
+**Root cause:** `bug` (legacy). The warnings interpolated the loop counter `iter` rather than `slice = dims[2]-1-iter` (`fc.cpp:249,258,267,276`), even though the very same loop had already computed `slice` for the shift file. Pre-V&V SIMPLNX inherited it for the range messages (`git show 9bcf794e9:.../AlignSectionsFeatureCentroid.cpp` lines 137-153).
 
 **Affected users:** Anyone who tried to find the offending section from a DREAM3D 6.5.x or 6.6.x warning message. The reported number is the mirror image of the real one.
 
-**Recommendation:** Trust SIMPLNX. The 6.5.172 patch adopts the physical index as well.
+**Recommendation:** Trust SIMPLNX. The 6.5.172 patch adopts the physical index for its new empty-section warning 104; its pre-existing warnings 100 and 101 still print `iter`, which is recorded as a follow-up on that patch.
 
 ---
 
@@ -262,7 +265,7 @@ The observed 6.5.171 behavior on the `ab5` fixture (arm64 build) is the `0` bran
 
 **Symptom:** None. Four error-code constants `-68001`, `-68002`, `-68003` and `-68004` were defined in the filter's translation unit and never used, and the documentation described a "Linear Background Subtraction" option that this filter has never had (copied in from the Misorientation-family documentation).
 
-**Root cause:** Cruft.
+**Root cause:** `bug` — dead code plus a documentation error. Neither has any computational effect.
 
 **Affected users:** Nobody. Recorded because a reader comparing the SIMPLNX and DREAM3D error-code tables would find four SIMPLNX codes with no counterpart and no trigger.
 
