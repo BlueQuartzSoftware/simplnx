@@ -116,6 +116,19 @@ than NaN; the top section is bit-unchanged by the run; and
 **16 fixture configurations across 9 TEST_CASEs** (7 Class 1 oracle cases and 2 guard cases),
 **51,574 assertions**, all pass.
 
+**The fixture population this suite runs on**, written down once so that every "fixture" claim in
+this report and in `vv/deviations/AlignSectionsMisorientationFilter.md` can be scoped against it:
+
+1. **14 `BuildFixture` configurations** — synthetic, 32x32 in plane, 2 or 3 sections.
+2. **2 hand-rolled degenerate-geometry fixtures** — the `Preflight Guards` "degenerate X dimension"
+   (1x32x3) and "cell array tuple count" sections; default-initialised arrays, rejected at
+   preflight.
+3. **1 real-data legacy-parity test** — `AlignSectionsMisorientation Small IN100 Pipeline`, on the
+   **189 x 201 x 117** Small IN100 volume at a **5-degree** tolerance.
+
+Items 1 and 2 are the **16 Class 1 fixture configurations**; item 3 is a retained regression pin,
+not part of the Class 1 oracle. Unqualified claims about "fixtures" below mean the 16.
+
 The 16 configurations cut two different ways, and both cuts matter:
 
 - **By construction — 14 + 2.** 14 are built by `AnalyticalFixtures::BuildFixture` and carry the
@@ -194,7 +207,7 @@ candidate scan, which exists in **two duplicated copies** (recording / non-recor
 | 34 | (e) | source voxel in bounds -> copyTuple | all volume-asserting oracle cases |
 | 35 | (e) | source voxel off-slice -> zero fill | `Shift Accumulation` (both x edges + y edge), `Multi Hop Convergence`, `Hexagonal Laue Class Path` |
 | 36 | (e) | top section never modified | `Class 1 Oracle Shift Accumulation And Shift Arrays` |
-| 37 | (e) | cancel check inside the per-array transfer loop (`AlignSections.cpp`, `AlignSectionsTransferDataImpl::convert`, the per-slice `m_Filter->getCancel()` guard) | *Not directly tested. Requires cancel-signal injection.* |
+| 37 | (e) | cancel check inside the per-array transfer loop (`AlignSections.cpp`, `AlignSectionsTransferDataImpl::operator()`, the per-slice `m_Filter->getCancel()` guard at `:52`) | *Not directly tested. Requires cancel-signal injection.* |
 | 38 | (e) | cancel check between `findShifts` and the transfer (`AlignSections::execute`, the `getCancel()` guard immediately after the `findShifts` result check) | *Not directly tested. Requires cancel-signal injection.* |
 | 39 | (e) | cancel check at the top of each selected-array iteration (`AlignSections::execute`, the `m_ShouldCancel` guard inside the `selectedCellArrays` loop) | *Not directly tested. Requires cancel-signal injection.* |
 | 40 | (f) | negative tolerance -> -68007 | `Preflight Guards` |
@@ -219,7 +232,9 @@ scan: the `!sawUnknownStructure` short-circuit at `AlignSectionsMisorientation.c
 looking up crystal structures once the first unknown one is recorded (exercised by
 `Execute Guards`, unknown-structure section), and the `maxPhase > 0` test at `:79`, which means a
 volume whose phases are all zero or negative skips the ensemble-bounds error entirely (not
-exercised — no fixture has a non-positive maximum phase). Splitting those out would raise `M`
+exercised — no fixture that **reaches `ValidatePhaseData`** has a non-positive maximum phase; the
+two hand-rolled guard fixtures do, since `CreateTestDataArray` zero-fills, but preflight rejects
+them with -68005/-68006 before the scan runs). Splitting those out would raise `M`
 without changing which *diagnostics* and *output-affecting decisions* are pinned by a test, which
 is what this table exists to answer.
 
@@ -426,10 +441,11 @@ optional `compression_level` key was absent from the hand-written pipeline JSON.
 so only mtimes prove ordering. Round 2 (P7, P8, for AB4) is timestamp-proven: the file's mtime is
 16:48:57 and the AB4 legacy run log is 16:49:04. Round 1 (P1–P6) is **not** — the same mtime is
 about six minutes *after* the AB1–AB3 logs at 16:42:57–58, because appending round 2 rewrote the
-whole file, so round 1's ordering is attested rather than proven. What *is* provable is that every
-expected shift value is committed to git in
-`src/Plugins/OrientationAnalysis/test/AlignSectionsMisorientationTest.cpp` with real commit
-ordering, ahead of the A/B.
+whole file, so round 1's ordering is attested rather than proven. What *is* provable for AB1–AB3 is
+that their expected shift values were committed to git in
+`src/Plugins/OrientationAnalysis/test/AlignSectionsMisorientationTest.cpp` at 16:28:28 and 16:30:59,
+ahead of those runs. AB4's expected values were committed 35 s *after* its runs (`2e28f72b9`,
+16:49:40), so its ordering rests on the mtime-proven round-2 pre-registration above, not on git.
 
 All mutation and A/B evidence lives under `ww_work/`, outside this repository and this branch's
 commit range, so a reviewer working from the commits alone cannot independently verify the 19

@@ -606,8 +606,10 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Class 1 Oracl
   // exact-boundary behaviour is a documented precision finding, not a specified contract.
   // Both brackets sit a full degree away from the fixture's disorientation. That is 0.0175 rad,
   // about five orders of magnitude above the one-ULP tolerance-conversion difference of deviation
-  // D3 (6.0e-8 rad at a 30-degree tolerance). This 1 degree is the closest any fixture in this
-  // suite comes to its tolerance, and it is deliberate.
+  // D3 (6.0e-8 rad at a 30-degree tolerance). This 1 degree is the closest any of the Class 1
+  // analytical fixtures comes to its tolerance, and it is deliberate. (The retained Small IN100
+  // legacy-parity test is real EBSD data at a 5-degree tolerance, so pairs there do land close to
+  // the threshold; it is a parity pin against a frozen exemplar, not a hand-derived oracle.)
   struct Bracket
   {
     std::string label;

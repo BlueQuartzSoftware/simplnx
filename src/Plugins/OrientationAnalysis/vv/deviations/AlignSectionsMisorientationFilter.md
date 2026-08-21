@@ -111,11 +111,15 @@ converted float tolerance value** — 7.5e-9 to 6.0e-8 rad across the range user
 two conversions cannot differ by more than that, and the value only feeds a strict `>` comparison.
 The single-narrowing form is marginally more accurate.
 Deliberately **not** asserted by the test suite: pinning behaviour exactly at the strict-`>`
-boundary would encode float noise as a contract. The closest any fixture in the suite comes to its
-tolerance is the `Misorientation Tolerance Bracket`, deliberately **1 degree** away (29- and
-31-degree tolerances around a 30-degree disorientation). That is 0.0175 rad — about **2.9e5 times**,
-roughly five orders of magnitude, the 6.0e-8 rad ULP at that tolerance. Since 1 degree is the
-minimum margin anywhere in the suite, no fixture is near the boundary this deviation concerns.
+boundary would encode float noise as a contract. Among the **Class 1 analytical fixtures**, the
+closest any comes to its tolerance is the `Misorientation Tolerance Bracket`, deliberately
+**1 degree** away (29- and 31-degree tolerances around a 30-degree disorientation). That is
+0.0175 rad — about **2.9e5 times**, roughly five orders of magnitude, the 6.0e-8 rad ULP at that
+tolerance. Since 1 degree is the minimum margin among those fixtures, none of them is near the
+boundary this deviation concerns. The retained Small IN100 legacy-parity test is a different case:
+it runs on real EBSD data at a 5-degree tolerance, so sampled pairs there do land arbitrarily close
+to the threshold, and that test is a parity pin against a frozen exemplar rather than a hand-derived
+oracle.
 
 ---
 
@@ -167,7 +171,7 @@ misconfiguration*: selecting cell arrays that belong to a different geometry tha
 aligned. Legacy could not express that at all, because it fetched the arrays from the geometry's own
 attribute matrix rather than from free-form selection, so there is no shared defect to call a bug —
 SIMPLNX's more flexible array selection created the possibility and this pass closed it, hence
-`algorithmic choice`. The At-a-glance Bug-flags row in the V&V report states the same split.
+`algorithmic choice`. The V&V report's Deviations bullet list states the same split.
 
 Added during this V&V pass:
 
@@ -258,11 +262,14 @@ reachable on very small volumes.
 required) everywhere the behaviour is defined, and they differ only in the out-of-bounds regime
 where neither has defined behaviour to preserve. The reordering is safe on in-bounds data but is a
 behaviour change in that regime, so it was deliberately left unfixed in this V&V pass to keep the
-pass free of unproven behaviour changes; logged as a follow-up. Every fixture that reaches the
-search is 32x32 in plane, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
+pass free of unproven behaviour changes; logged as a follow-up. Every **Class 1 analytical** fixture
+is 32x32 in plane, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
 largest memoization index any of them computes is **688**, reached by the shift-accumulation
 fixture's second section pair, whose search re-centres on `(-3, 2)` and so evaluates
-`idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688` — well inside the array and clear of this regime.
+`idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688` — well inside the array and clear of this regime. The
+retained Small IN100 legacy-parity test runs on a **189 x 201 x 117** volume, where `misorients`
+holds 37,989 entries and `halfDim0`/`halfDim1` are 94/100; those bounds dwarf any shift that dataset
+takes, so it is clear of the regime too.
 
 ---
 
