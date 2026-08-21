@@ -46,12 +46,20 @@ public:
 
     std::string arrayName = m_DataArray.getName();
 
-    for(size_t i = 1; i < m_Dims[2]; i++)
+    // Index 0 is the slice farthest from the Z origin. It is the anchor for every findShifts()
+    // implementation except AlignSectionsFeatureCentroid in reference-slice mode, where it is an
+    // ordinary slice that has to move as well, so the loop covers it and skips the no-op case.
+    for(size_t i = 0; i < m_Dims[2]; i++)
     {
       progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
       if(m_Filter->getCancel())
       {
         return;
+      }
+      if(m_Xshifts[i] == 0 && m_Yshifts[i] == 0)
+      {
+        // Nothing moves and nothing is filled in: every Cell would copy onto itself.
+        continue;
       }
       size_t slice = (m_Dims[2] - 1) - i;
       for(size_t yIndex = 0; yIndex < m_Dims[1]; yIndex++)
@@ -164,7 +172,8 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
 
-  return {};
+  // Carries forward any warnings the shift search raised, e.g. a slice that could not be aligned.
+  return foundShiftsResults;
 }
 
 // -----------------------------------------------------------------------------

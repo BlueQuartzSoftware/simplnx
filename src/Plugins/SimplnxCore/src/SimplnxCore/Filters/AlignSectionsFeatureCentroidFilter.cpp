@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -23,12 +24,13 @@ namespace
 {
 
 // Error Code constants
-constexpr nx::core::int32 k_InputRepresentationTypeError = -68001;
-constexpr nx::core::int32 k_OutputRepresentationTypeError = -68002;
-constexpr nx::core::int32 k_InputComponentDimensionError = -68003;
-constexpr nx::core::int32 k_InputComponentCountError = -68004;
 constexpr nx::core::int32 k_InconsistentTupleCount = -68063;
-constexpr nx::core::int32 k_OutOfRangeReferenceSliceValue = -68064;
+constexpr nx::core::int32 k_NegativeReferenceSliceValue = -68064;
+constexpr nx::core::int32 k_MissingImageGeometry = -68070;
+constexpr nx::core::int32 k_ReferenceSliceBeyondZDim = -68071;
+constexpr nx::core::int32 k_GeometryNotThreeDimensional = -68072;
+constexpr nx::core::int32 k_NonDataArrayCellChild = -68073;
+constexpr nx::core::int32 k_MissingCellAttributeMatrix = -68074;
 
 } // namespace
 
@@ -137,6 +139,7 @@ IFilter::UniquePointer AlignSectionsFeatureCentroidFilter::clone() const
 IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto pUseReferenceSliceValue = filterArgs.value<bool>(k_UseReferenceSlice_Key);
   auto pReferenceSliceValue = filterArgs.value<int32>(k_ReferenceSlice_Key);
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -145,9 +148,60 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  if(pReferenceSliceValue < 0)
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(imageGeomPtr == nullptr)
   {
-    return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
+    return MakePreflightErrorResult(k_MissingImageGeometry, fmt::format("An Image Geometry could not be found at the selected path '{}'.", inputImageGeometry.toString()));
+  }
+
+  const SizeVec3 imageGeomDims = imageGeomPtr->getDimensions();
+  if(imageGeomDims[0] <= 1 || imageGeomDims[1] <= 1 || imageGeomDims[2] <= 1)
+  {
+    return MakePreflightErrorResult(k_GeometryNotThreeDimensional,
+                                    fmt::format("The Image Geometry '{}' is not 3D and cannot be aligned section by section. The dimensions are ({}, {}, {}) and every dimension must be at least 2.",
+                                                inputImageGeometry.toString(), imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]));
+  }
+
+  // The Reference Slice is only consulted when Use Reference Slice is enabled, so it is only
+  // validated in that case.
+  if(pUseReferenceSliceValue)
+  {
+    if(pReferenceSliceValue < 0)
+    {
+      return MakePreflightErrorResult(k_NegativeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
+    }
+    if(static_cast<usize>(pReferenceSliceValue) >= imageGeomDims[2])
+    {
+      return MakePreflightErrorResult(k_ReferenceSliceBeyondZDim, fmt::format("Reference Slice value ({}) is outside the Image Geometry '{}', which has {} slices. The valid range is 0 to {}.",
+                                                                              pReferenceSliceValue, inputImageGeometry.toString(), imageGeomDims[2], imageGeomDims[2] - 1));
+    }
+  }
+
+  // Every child of the Cell Attribute Matrix is shifted, and the shift requires an IDataArray.
+  // StringArray and NeighborList are IArray but not IDataArray, so they have to be rejected here.
+  const AttributeMatrix* cellDataAmPtr = imageGeomPtr->getCellData();
+  if(cellDataAmPtr == nullptr)
+  {
+    return MakePreflightErrorResult(k_MissingCellAttributeMatrix,
+                                    fmt::format("The Image Geometry '{}' does not have a Cell Attribute Matrix, so there is no Cell data to align.", inputImageGeometry.toString()));
+  }
+  const DataPath cellDataAmPath = inputImageGeometry.createChildPath(cellDataAmPtr->getName());
+  if(auto childPathsResult = GetAllChildDataPaths(dataStructure, cellDataAmPath); childPathsResult.has_value())
+  {
+    std::vector<std::string> unsupportedChildren;
+    for(const auto& childPath : childPathsResult.value())
+    {
+      if(dataStructure.getDataAs<IDataArray>(childPath) == nullptr)
+      {
+        unsupportedChildren.push_back(childPath.getTargetName());
+      }
+    }
+    if(!unsupportedChildren.empty())
+    {
+      return MakePreflightErrorResult(k_NonDataArrayCellChild,
+                                      fmt::format("The Cell Attribute Matrix '{}' contains {} object(s) that are not Data Arrays and cannot be shifted: '{}'. Remove or move them before aligning.",
+                                                  cellDataAmPath.toString(), unsupportedChildren.size(), fmt::join(unsupportedChildren, "', '")));
+    }
   }
 
   std::vector<DataPath> dataPaths;
@@ -163,14 +217,10 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   // Handle Array Creation
   if(pStoreAlignmentShifts)
   {
-    const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
-
-    if(gridGeom == nullptr)
-    {
-      return MakePreflightErrorResult(-68070, fmt::format("Store Alignment Shifts was selected, but an invalid image geometry was provided. Input Geometry Path :{}", inputImageGeometry.toString()));
-    }
-
-    const usize dims = gridGeom->getDimensions().getZ();
+    // Only the tuples of the slices that actually move are written, so every array is filled with
+    // zeros to keep the untouched anchor tuple deterministic instead of uninitialized memory.
+    const std::string k_ZeroFillValue = "0";
+    const usize dims = imageGeomDims.getZ();
     auto pAlignmentAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key);
     const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
 
@@ -179,19 +229,23 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
     // Create slices Array
     auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName), "", k_ZeroFillValue));
 
     // Create positioning Array
     auto pRelativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName), "", k_ZeroFillValue));
 
     // Create shifts Array
     auto pCumulativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName), "", k_ZeroFillValue));
 
     // Create centroids Array
     auto pCentroidsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCentroidsName)));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCentroidsName), "", k_ZeroFillValue));
   }
 
   // Inform users that the following arrays are going to be modified in place
