@@ -10,13 +10,23 @@ This **Filter** attempts to align 'sections' of the sample perpendicular to the 
 
 1. Determine the centroid of all **Cells** that are flagged with a boolean value equal to *true* for each section
 2. Determine the shifts that place centroids of consecutive sections on top of one another
-3. Round the shifts determined in step 2 to the nearest multiple of the **Cell** resolution. (This forces the sections to be shifted by full **Cell** increments)
+3. Convert the shifts determined in step 2 from length units into whole **Cell** increments by dividing by the **Cell** size and *truncating toward zero*. A shift of 0.9 **Cells** therefore becomes 0 and a shift of -1.9 **Cells** becomes -1.
 
 If the user elects to *Use Reference Slice*, then each section's centroid is shifted to lie on top of the reference slice's centroid position and not its neighboring section's centroid position.
 
+*Reference Slice* is a physical slice index: slice 0 is the section at the Z origin and slice `Z-1` is the section farthest from it. The value must lie inside the geometry or the **Filter** reports an error.
+
 **Note that this is algorithm cannot get caught in a local minimum!**
 
-The user can also decide to remove a *background shift* present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
+### Sections With No Selected Cells
+
+A section in which no **Cell** is flagged *true* has no centroid. Such a section cannot be aligned, so it keeps the shift of the section before it, the **Filter** emits a warning naming the section, and the last usable centroid is carried forward so the remaining sections still align to each other. If the *reference* section is the empty one there is nothing to align to at all and the **Filter** reports an error.
+
+### Consecutive Versus Reference Alignment
+
+In consecutive mode the section farthest from the Z origin is the anchor: it never moves, and every other section accumulates the truncated shift of its neighbor. Because the *truncated* per-section shifts are summed, truncation error accumulates down the stack.
+
+In reference mode every section, including the one farthest from the Z origin, is shifted so that its centroid lands on the reference section's centroid, so no section is treated as an anchor.
 
 ## Optional Output Data
 
@@ -40,6 +50,8 @@ In this new structure, what follows is what the created structures represent:
 - Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
 - Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
 - Centroids (DataArray | 2 component) - The xy centroids of the corresponding slice
+
+The tuples run in the **Filter**'s internal order, which starts at the section farthest from the Z origin: tuple `i` describes physical slice `Z-1-i`, and the `Slices` array records that section together with the neighboring section above it. In consecutive mode tuple 0 describes the anchor section, which never moves, so it is filled with zeros; in reference mode tuple 0 carries that section's real shift because it is aligned like every other section. A section with no selected **Cells** reports a centroid of 0 and a relative shift of 0.
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
