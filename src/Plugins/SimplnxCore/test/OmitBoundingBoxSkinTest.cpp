@@ -340,8 +340,7 @@ Result<> RunSurfaceNetsRaw(DataStructure& dataStructure, ChoicesParameter::Value
 
 Result<> RunM3CRaw(DataStructure& dataStructure, ChoicesParameter::ValueType boundingBoxSkinMode, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<M3CSurfaceMeshingFilter>(
-      dataStructure, k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {}, repairWinding);
+  return SurfaceMeshingTest::RunMesherRaw<M3CSurfaceMeshingFilter>(dataStructure, k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {}, repairWinding);
 }
 } // namespace
 

@@ -92,44 +92,42 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 
 **Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.
 
-### Omitting the Bounding Box Skin
+### Bounding Box Skin
 
-By default this filter generates triangles covering all six outer walls of the Image
-Geometry's bounding box. These faces are artifacts of where the volume was cropped rather
-than real interfaces, and they receive a Face Label of `-1` on the exterior side.
+The six outer walls of the **Image Geometry**'s bounding box are not real interfaces — they are
+artifacts of where the volume was cropped. This option controls whether triangles are generated to
+cover them. Wall faces carry a **Face Label** of `-1` on their exterior side.
 
-Enabling the **Bounding Box Skin** option's **Background-Backed Walls Only** mode suppresses a
-wall face when the voxel behind it is background (Feature Id 0) — that is, when its Face Labels would be `{-1, 0}`. Wall faces
-that cap a *real* Feature are still generated, because that cut plane is the only possible
-closure for a Feature flush with the box. A cylinder sitting flush with the box floor
-therefore comes out as a closed surface with no surrounding box.
+#### Off (default)
 
-On a fully-indexed volume with no Feature Id 0 voxels, nothing is dropped and the option
-has no effect — every boundary Feature already needs its wall cap to stay closed. The same warning
-also fires on a volume whose background is fully enclosed as interior porosity: no bounding-box
-wall voxel is background-backed even though the volume is full of Feature Id 0 internally, so the
-option again drops nothing. Rather than silently doing nothing, the **Filter** reports this with a
-warning (code `-56342`): no bounding-box **wall** face is backed by background, so the option has
-nothing to prune on this input. The warning says nothing about whether the volume contains
-background elsewhere — only that none of it borders a wall.
+All six walls are covered. Note that wherever an internal **Feature**-**Feature** boundary meets a
+wall, three faces share that edge — the internal boundary plus the two wall faces on either side of
+it — a non-manifold T-junction inherent to including the full skin.
 
-Because the test is per-face rather than per-vertex, no triangles are lost along the rim
-where an internal boundary meets the box wall. With the option **off**, wherever an internal
-Feature-Feature boundary meets the bounding box wall, three faces share that edge: the internal
-boundary quad and the two wall quads on either side of it — a non-manifold T-junction that is
-inherent to including the full box skin. With the option **on**, the background-backed wall quad
-on that edge is dropped, leaving exactly two faces sharing it, which is manifold. The option
-therefore does not merely remove unwanted geometry: in the configurations exercised by this
-**Filter**'s cross-mesher conformance test (a cylinder **Feature** flush with the box wall) and by
-a separate corner-Feature test (a **Feature** occupying a box corner where three suppressed wall
-planes meet), enabling it produces a watertight mesh where leaving it off does not. This is not a
-universal guarantee of watertightness for arbitrary input.
+#### Background-Backed Walls Only
 
-If every voxel in the volume is background (Feature Id 0), every face is a background-backed
-wall face and the option removes all of them. The **Filter** reports a warning (code `-56340`)
-and creates the **Triangle Geometry** with zero vertices and zero faces; this is treated as
-success, not an error, because the input is legal — it simply contains no internal interface
-and no Feature to cap.
+A wall face is omitted where the **Voxel** behind it is background (**Feature Id** 0), that is,
+where its **Face Labels** would be `{-1, 0}`. Wall faces that cap a *real* **Feature** are still
+generated, because that cut plane is the only possible closure for a **Feature** flush with the box;
+a cylinder sitting flush with the box floor therefore comes out as a closed surface with no
+surrounding box.
+
+Because the test is per *face* rather than per *vertex*, no triangles are lost along the rim where an
+internal boundary meets a wall, and dropping the background-backed face on such an edge leaves two
+faces there rather than three, which is manifold. In the configurations this **Filter**'s tests
+exercise — a cylinder **Feature** flush with a wall, and a **Feature** occupying a box corner where
+three omitted wall planes meet — this mode therefore yields a watertight mesh where **Off** does not.
+That is not a universal guarantee for arbitrary input.
+
+Two inputs leave this mode nothing useful to do. Both are reported as warnings, not errors:
+
+- `-56342` — no bounding-box wall **Voxel** is background, so no face is omitted and the mode has no
+  effect. This covers a fully-indexed volume as well as one whose background is entirely enclosed as
+  interior porosity; the warning concerns only the walls, not whether background exists elsewhere in
+  the volume.
+- `-56340` — every **Voxel** is background, so every face is omitted and the **Triangle Geometry** is
+  created with zero vertices and zero faces. The input is legal — it holds no internal interface and
+  no **Feature** to cap — so this is success.
 
 ### Feature Id Validation
 

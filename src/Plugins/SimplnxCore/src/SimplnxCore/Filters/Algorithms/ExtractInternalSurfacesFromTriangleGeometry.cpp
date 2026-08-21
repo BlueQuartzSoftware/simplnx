@@ -80,25 +80,26 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   const Int32AbstractDataStore* faceLabelsPtr = nullptr;
   if(m_InputValues->CriterionMode == 0)
   {
-    nodeTypesPtr = &m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath).getDataStoreRef();
+    nodeTypesPtr = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath).getDataStore();
   }
   else
   {
-    faceLabelsPtr = &m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStoreRef();
+    faceLabelsPtr = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStore();
   }
 
   // True when this triangle belongs to the extracted internal surface.
   const auto isInternalTriangle = [&](MeshIndexType triIndex, MeshIndexType v0Index, MeshIndexType v1Index, MeshIndexType v2Index) -> bool {
     if(m_InputValues->CriterionMode == 0)
     {
-      const auto& nodeTypes = *nodeTypesPtr;
-      return (nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
-             (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]);
+      const int8 type0 = (*nodeTypesPtr)[v0Index];
+      const int8 type1 = (*nodeTypesPtr)[v1Index];
+      const int8 type2 = (*nodeTypesPtr)[v2Index];
+      return (type0 >= minMaxNodeValues[0] && type0 <= minMaxNodeValues[1]) && (type1 >= minMaxNodeValues[0] && type1 <= minMaxNodeValues[1]) &&
+             (type2 >= minMaxNodeValues[0] && type2 <= minMaxNodeValues[1]);
     }
     // Face Labels mode: drop only the bounding box wall backed by background.
-    const auto& faceLabels = *faceLabelsPtr;
-    const int32 labelA = faceLabels[triIndex * 2];
-    const int32 labelB = faceLabels[triIndex * 2 + 1];
+    const int32 labelA = (*faceLabelsPtr)[triIndex * 2];
+    const int32 labelB = (*faceLabelsPtr)[triIndex * 2 + 1];
     return !((labelA == -1 && labelB == 0) || (labelB == -1 && labelA == 0));
   };
 
