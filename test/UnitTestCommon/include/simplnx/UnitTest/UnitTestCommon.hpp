@@ -42,12 +42,14 @@ using namespace nx::core;
 
 namespace nx::core
 {
-// Concept that checks if T is an instance of Result<T>
+template <class>
+inline constexpr bool IsResult_v = false;
+
 template <class T>
-concept IsResult = requires(T x) {
-  { Result{x} } -> std::same_as<T>;
-};
+inline constexpr bool IsResult_v<Result<T>> = true;
 } // namespace nx::core
+
+#define NX_IS_LVALUE_RESULT(value) (IsResult_v<std::remove_cvref_t<decltype(value)>> && std::is_lvalue_reference_v<decltype((value))>)
 
 #define SIMPLNX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
   for(const auto& warning : (result).warnings())                                                                                                                                                       \
@@ -65,17 +67,17 @@ concept IsResult = requires(T x) {
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    const IsResult auto NX_TEST_RESULT = (result);                                                                                                                                                     \
-    SIMPLNX_RESULT_CATCH_PRINT(NX_TEST_RESULT);                                                                                                                                                        \
-    REQUIRE(NX_TEST_RESULT.valid());                                                                                                                                                                   \
+    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                                           \
+    SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                \
+    REQUIRE((result).valid());                                                                                                                                                                         \
   } while(false);
 
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    const IsResult auto NX_TEST_RESULT = (result);                                                                                                                                                     \
-    SIMPLNX_RESULT_CATCH_PRINT(NX_TEST_RESULT);                                                                                                                                                        \
-    REQUIRE(NX_TEST_RESULT.invalid());                                                                                                                                                                 \
+    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                                         \
+    SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                \
+    REQUIRE((result).invalid());                                                                                                                                                                       \
   } while(false);
 
 namespace nx::core
