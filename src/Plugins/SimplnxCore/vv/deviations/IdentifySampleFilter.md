@@ -63,7 +63,7 @@ For a 2D geometry `zp==1`, so `plane==0` (and `plane==(zp-1)`) is unconditionall
 
 This was originally suspected (alongside `IdentifySample-D1`) to be a legacy deficiency. The A/B run showed the opposite. For a single-voxel `{1,1,1}` `ImageGeom` with `FillHoles=true`, **legacy correctly does not fill the lone bad voxel** (its coordinate boundary test flags it as boundary). The pre-fix SIMPLNX main functor left `touchesBoundary=false` because the neighbor loop never executes when `k_NeighborCount==0` (`SingleVoxelImage`), so it wrongly filled the voxel.
 
-This PR's one-line change — `bool touchesBoundary = k_NeighborCount == 0;` (`Algorithms/IdentifySample.cpp:139`) — initializes the flag to `true` for `SingleVoxelImage`, fixing SIMPLNX to match legacy. Verified by A/B: after the fix, SIMPLNX and stock 6.5.171 both leave the single bad voxel unfilled. This is a SIMPLNX correctness fix, not a deviation from DREAM3D 6.5.171.
+The current one-line form — `bool touchesBoundary = k_NeighborCount == 0;` (`Algorithms/IdentifySample.cpp:139`) — initializes the flag to `true` for `SingleVoxelImage`, fixing SIMPLNX to match legacy. Verified by A/B: after the fix, SIMPLNX and stock 6.5.171 both leave the single bad voxel unfilled. This is a SIMPLNX correctness fix, not a deviation from DREAM3D 6.5.171.
 
 ---
 

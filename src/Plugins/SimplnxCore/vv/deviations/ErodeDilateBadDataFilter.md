@@ -18,13 +18,13 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 |---|---|
 | **Deviation ID** | `ErodeDilateBadDataFilter-D1` (formerly cited as `-B1`) |
 | **Filter UUID** | `7f2f7378-580e-4337-8c04-a29e7883db0b` |
-| **Status** | active (SIMPLNX bug **fixed during this V&V cycle** in PR #1687; documented for users of prior SIMPLNX releases) |
+| **Status** | active (SIMPLNX bug **resolved** in PR #1687; documented for users of prior SIMPLNX releases) |
 
 **Symptom:** In SIMPLNX releases prior to PR #1687, the *X Direction*, *Y Direction*, and *Z Direction* parameters had **no effect on the output**. They were parsed correctly from filter args into `ErodeDilateBadDataInputValues` (`ErodeDilateBadDataFilter.cpp:151-153`), but every face neighbor remained eligible — subject only to the geometry boundary — regardless of the flags. Disabling a direction silently produced the all-directions-on result. DREAM3D 6.5.171 honors the flags correctly, so any run with fewer than all three directions enabled diverges from legacy. This is also what produced the previous V&V pass's observation that "all 7 direction-combination fixtures encode byte-identical expected output": the fixture was not under-discriminating, the algorithm was ignoring direction entirely.
 
 **Root cause:** Bug (SIMPLNX). `adjustValidNeighbors` — the helper intended to mask face-neighbor validity by direction — was defined in `Algorithms/ErodeDilateBadData.cpp` but **never called** from `operator()()`. Confirmed by grepping the translation unit for `XDirOn` / `YDirOn` / `ZDirOn` / `adjustValidNeighbors(`: only the function definition matched, with no call site. Legacy achieves the same gating by ORing the direction flag into each per-face boundary check (`|| !m_ZDirOn` and siblings), so the legacy behavior was never in question.
 
-*Branch-history note:* an earlier commit on the fix branch, `7e543f701` "Fixed XYZ direction off bug", *had* added a call to `adjustValidNeighbors`, but passed it the face-index-order array and bitwise-ANDed the index constants `0..5` against the direction booleans — which corrupts the iteration order rather than gating validity — and additionally gated `+X` by `zDir` and `+Z` by `xDir` (swapped axes). Since `2&1=0` and `3&1=1`, the iterated face list collapsed to `{-Z,-Y}` for *every* flag combination, including all-on. That call was later removed, leaving direction fully inert — the state this V&V pass found and fixed from scratch.
+*Branch-history note:* an earlier commit on the fix branch, `7e543f701` "Fixed XYZ direction off bug", *had* added a call to `adjustValidNeighbors`, but passed it the face-index-order array and bitwise-ANDed the index constants `0..5` against the direction booleans — which corrupts the iteration order rather than gating validity — and additionally gated `+X` by `zDir` and `+Z` by `xDir` (swapped axes). Since `2&1=0` and `3&1=1`, the iterated face list collapsed to `{-Z,-Y}` for *every* flag combination, including all-on. That call was later removed, leaving direction fully inert until it was reimplemented.
 
 **Fix:** `Algorithms/ErodeDilateBadData.cpp:64-80` — `adjustValidNeighbors` now takes the per-voxel `isValidFaceNeighbor` boolean array (the actual validity gate consumed by the vote/mark loop) and ANDs each of the six entries against the correct axis flag, using the named `VoxelNeighbors<Image3D>` constants rather than raw indices. It is called at `:162-163`, immediately after `computeValidFaceNeighbors`, for every bad-data voxel.
 
@@ -35,9 +35,9 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 - `(Erode) Expanded` / `(Dilate) Expanded` (28 parameterized runs total, 2078 assertions combined) pass in both in-core and OOC builds.
 - Per-direction structural coverage confirmed by temporary hit-count instrumentation — see "Per-direction code-path coverage" below.
 
-**Affected users:** Anyone who ran `ErodeDilateBadData` on a SIMPLNX build predating PR #1687 with fewer than all three directions enabled. Their output silently matched the all-directions-on result, eroding or dilating across axes they had explicitly disabled. Users who left all three directions on (the default) are **unaffected** — that path was always correct, and the archive-based `(Erode)` regression test passes on pre-fix builds for exactly that reason.
+**Affected users:** Anyone who ran `ErodeDilateBadData` on a SIMPLNX build predating PR #1687 with fewer than all three directions enabled. Their output silently matched the all-directions-on result, eroding or dilating across axes they had explicitly disabled. Users who left all three directions on (the default) are **unaffected** — that path was always correct, and the archive-based `(Erode)` regression test passes on affected releases for exactly that reason.
 
-**Recommendation:** Trust SIMPLNX at or after PR #1687, which agrees with 6.5.171 across all 28 parameter combinations. Results from affected pre-fix builds that used a restricted direction set should be regenerated.
+**Recommendation:** Trust SIMPLNX at or after PR #1687, which agrees with 6.5.171 across all 28 parameter combinations. Results from affected builds that used a restricted direction set should be regenerated.
 
 ---
 
@@ -45,7 +45,7 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 
 ### Dilate tie-break: last-bad-neighbor-wins is correct, not a bug
 
-**Investigated and ruled out this pass.** When a good voxel has two or more bad face-neighbors, `neighbors[neighborPoint] = voxelIndex` unconditionally overwrites on each bad neighbor visited, so whichever bad voxel is scanned *last* (highest flat index, in z/y/x order) wins. Since every bad voxel shares `FeatureId == 0`, this choice is invisible to a `FeatureIds`-only comparison — it shows up only in the `Misc` tracer array, which is why it was flagged as unverified in the prior pass and initially suspected as a bug in this one.
+**Investigated and ruled out.** When a good voxel has two or more bad face-neighbors, `neighbors[neighborPoint] = voxelIndex` unconditionally overwrites on each bad neighbor visited, so whichever bad voxel is scanned *last* (highest flat index, in z/y/x order) wins. Since every bad voxel shares `FeatureId == 0`, this choice is invisible to a `FeatureIds`-only comparison — it shows up only in the `Misc` tracer array, which is why it was flagged as unverified in the prior pass and initially suspected as a bug in this one.
 
 A "first bad neighbor wins" fix (skip the overwrite if `neighbors[neighborPoint]` is already set, plus resetting `neighbors` to `-1` at the top of each iteration) was implemented and *appeared* correct until checked against real DREAM3D 6.5.171 output: `PipelineRunner` running Dilate / XYZ / 1 iteration against the matching legacy input produced `Misc` values matching the **original, unmodified** last-write-wins SIMPLNX behavior, not the "first-wins" rewrite (diverging at 3 of 32 indices: 9, 15, 30). The change was reverted in full — both the per-iteration reset and the overwrite guard. Unconditional last-write-wins, with `neighbors` initialized once before the iteration loop rather than per-iteration, is confirmed legacy-faithful.
 
@@ -75,7 +75,7 @@ The SIMPLNX filter markdown (`docs/ErodeDilateBadDataFilter.md`), carried over f
 
 ## Per-direction code-path coverage
 
-Previously an open question ("could not distinguish correct per-direction gating from a no-op gate" — see prior V&V pass). Resolved this pass by two independent means:
+Previously an open question ("could not distinguish correct per-direction gating from a no-op gate" — previously unresolved). Now resolved by two independent means:
 
 1. **Behavioral:** expected data now differs by direction combination (see D1 above) and matches legacy per-combination, 28/28.
 2. **Structural:** `Algorithms/ErodeDilateBadData.cpp` was temporarily instrumented with per-face-direction (`-Z/-Y/-X/+X/+Y/+Z`) hit counters and run through the full `(Erode) Expanded` + `(Dilate) Expanded` sweep. All six directions were hit, both at the "loop reached" level and at the "vote/mark condition fired" level, in both the vote/mark loop and the Erode-only cleanup loop. Instrumentation was removed afterward and is not shipped.

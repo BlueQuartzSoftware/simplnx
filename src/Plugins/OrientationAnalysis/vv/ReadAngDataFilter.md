@@ -20,12 +20,12 @@
 | Tests today            | 7 test cases: Class 1+4 analytical oracle, non-contiguous phase-index invariant (regression pin for D3), 2 value-add preflight error paths (-19500/-19501), 2 EbsdLib error passthroughs (-150/-600), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION, new — the filter previously had no conversion test). All inline hand-built fixtures — no exemplar archive. |
 | Exemplar archive       | **None — retired `read_ang_test.tar.gz`** (circular oracle: the exemplar `.dream3d` was generated from this filter's own output). `download_test_data()` entry removed from `test/CMakeLists.txt`; retirement documented in `vv/provenance/read_ang_test.md`. |
 | Legacy comparison      | **Run (2026-07-07) vs the official DREAM3D 6.5.171 release.** Three fixtures: hand-authored toy, Small IN100 `Slice_1.ang` (189×201 production scan), non-contiguous-phase toy. On the two supported-format fixtures **all numeric outputs are bit-identical** (cell arrays, ensemble arrays, geometry). Differences: MaterialName trailing space (D1) and the non-contiguous-phase fixture, where **6.5.171 segfaults** (D3). |
-| Bug flags              | One **legacy** bug, empirically confirmed: `ReadAngDataFilter-D3` (6.5.171 out-of-bounds ensemble write → SIGSEGV on non-contiguous phase indices; SIMPLNX fixed during this pass and pinned by test). **No SIMPLNX bugs** — the same latent OOB existed in the NX port and was found by the algorithm review and fixed before the comparison. |
+| Bug flags              | One **legacy** bug, empirically confirmed: `ReadAngDataFilter-D3` (6.5.171 out-of-bounds ensemble write → SIGSEGV on non-contiguous phase indices; SIMPLNX resolved and pinned by test). **No SIMPLNX bugs** — the same latent OOB existed in the NX port and was found by the algorithm review and fixed before the comparison. |
 | V&V phase              | Discovery, oracle, reconciliation, algorithm review (fixes applied), tests, legacy comparison, deviations, provenance, docs — **complete**. In-core build/tests pass (`simplnx-rel`); OOC build skipped (no OOC build configured in this workspace, per maintainer precedent). Outstanding: sign-off. |
 
 ## Summary
 
-`ReadAngDataFilter` ("Read EDAX EBSD Data (.ang)") imports a single EDAX TSL `.ang` file into a new Image Geometry: it builds the geometry from the header (dims/step, z=1, origin 0, Micrometer), creates one cell array per data column plus the condensed 3-component `EulerAngles` and remapped `Phases` arrays, and populates the ensemble arrays (`CrystalStructures` via EbsdLib's symmetry mapping, trimmed `MaterialName`, `LatticeConstants`) with slot 0 reserved for the "Invalid Phase". Verification is Class 1 analytical + Class 4 invariant on a hand-authored inline toy `.ang` whose expected outputs were fully hand-derived (EbsdLib parsing itself is trusted upstream and not re-tested). Headline result: SIMPLNX matches the oracle exactly; against DREAM3D 6.5.171 all numeric outputs are bit-identical on supported files, with 4 documented deviations — including one empirically confirmed legacy crash bug (D3) whose latent NX twin was found and fixed during this pass. All 7 unit tests pass; the circular-oracle exemplar archive `read_ang_test.tar.gz` is retired.
+`ReadAngDataFilter` ("Read EDAX EBSD Data (.ang)") imports a single EDAX TSL `.ang` file into a new Image Geometry: it builds the geometry from the header (dims/step, z=1, origin 0, Micrometer), creates one cell array per data column plus the condensed 3-component `EulerAngles` and remapped `Phases` arrays, and populates the ensemble arrays (`CrystalStructures` via EbsdLib's symmetry mapping, trimmed `MaterialName`, `LatticeConstants`) with slot 0 reserved for the "Invalid Phase". Verification is Class 1 analytical + Class 4 invariant on a hand-authored inline toy `.ang` whose expected outputs were fully hand-derived (EbsdLib parsing itself is trusted upstream and not re-tested). Headline result: SIMPLNX matches the oracle exactly; against DREAM3D 6.5.171 all numeric outputs are bit-identical on supported files, with 4 documented deviations — including one empirically confirmed legacy crash bug (D3) whose latent NX twin was found and resolved. All 7 unit tests pass; the circular-oracle exemplar archive `read_ang_test.tar.gz` is retired.
 
 ## Algorithm Relationship
 
@@ -37,10 +37,10 @@
 
 1. **Material-name trim added** (D1). NX applies `StringUtilities::trimmed()`; legacy stores EbsdLib's raw token-rejoin which carries a trailing space. Changes output (string arrays only).
 2. **TEM/ACOM units detection dropped** (D2). Legacy scans the header for `# TEM data` / ACOM markers and sets Nanometer units; NX hard-codes Micrometer. Deliberately not restored — EDAX retired those file variants 10+ years ago. Changes output metadata only for obsolete files.
-3. **Non-contiguous phase-index handling** (D3, fixed this pass). Preflight now sizes ensemble arrays by `maxPhaseIndex + 1` (identical to `phases.size() + 1` for well-formed files), `loadMaterialInfo` initializes every slot to Invalid-Phase defaults and guards the write range (`-19502`). Legacy has an out-of-bounds write here (segfault, demonstrated).
+3. **Non-contiguous phase-index handling** (D3, resolved). Preflight now sizes ensemble arrays by `maxPhaseIndex + 1` (identical to `phases.size() + 1` for well-formed files), `loadMaterialInfo` initializes every slot to Invalid-Phase defaults and guards the write range (`-19502`). Legacy has an out-of-bounds write here (segfault, demonstrated).
 4. **`determineLaueGroup()` → `determineOrientationOpsIndex()`** — the EbsdLib symmetry→structure mapping was diffed function-body-for-function-body: **byte-identical** (pure rename). No output effect.
 5. **Error-code renumbering** (D4) and framework-level file validation (extension/existence moved to `FileSystemPathParameter`). Rejection paths only.
-6. **Legacy PIMPL file-cache dropped** (`ReadAngDataPrivate`/`Ang_Private_Data` — ported as dead declarations, removed during this pass). No output effect; NX re-reads the file on each execute.
+6. **Legacy PIMPL file-cache dropped** (`ReadAngDataPrivate`/`Ang_Private_Data` — ported as dead declarations, removed). No output effect; NX re-reads the file on each execute.
 
 *Material PRs since baseline:* none identified for this filter beyond cross-cutting EbsdLib version bumps (the `ebsdlib` namespace migration visible in the current source); the May-2026 touch (`FromSIMPLJson`/conversion fixture refresh) does not alter the algorithm.
 
@@ -120,7 +120,7 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 
 ## Exemplar archive
 
-- **Archive:** None. **`read_ang_test.tar.gz` retired** this pass (SHA512 was `de7cd89d…e4b236`); its `download_test_data()` entry is removed from `test/CMakeLists.txt`.
+- **Archive:** None. **`read_ang_test.tar.gz` retired** (SHA512 was `de7cd89d…e4b236`); its `download_test_data()` entry is removed from `test/CMakeLists.txt`.
 - **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/read_ang_test.md` — documents the circular-oracle status and the inline replacement.
 - All current oracle data is inline in `test/ReadAngDataTest.cpp`; there is nothing to archive.
 
@@ -130,6 +130,6 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 
 - `ReadAngDataFilter-D1` — MaterialName trailing space: legacy stores `"Nickel "`, SIMPLNX trims to `"Nickel"`. Demonstrated on both fixtures. Trust SIMPLNX.
 - `ReadAngDataFilter-D2` — TEM/ACOM `.ang` variants get Nanometer units in legacy, Micrometer in SIMPLNX. Document-only: EDAX retired those files 10+ years ago. Either acceptable.
-- `ReadAngDataFilter-D3` — **Legacy crash bug, empirically confirmed:** non-contiguous phase indices segfault 6.5.171 (OOB ensemble write, exit 139); SIMPLNX imports correctly (fixed this pass, test-pinned). Trust SIMPLNX.
+- `ReadAngDataFilter-D3` — **Legacy crash bug, empirically confirmed:** non-contiguous phase indices segfault 6.5.171 (OOB ensemble write, exit 139); SIMPLNX imports correctly (resolved, test-pinned). Trust SIMPLNX.
 - `ReadAngDataFilter-D4` — Error-code renumbering on rejection paths (`-1000`→`-19500` HexGrid, etc.). No data effect. Either acceptable.
 - `ReadAngDataFilter-D5` — A `# Phase 0` section is accepted by 6.5.171 but rejected by SIMPLNX at execute (`-19502`); `.ang` phase numbering starts at 1. Pinned by a static fixture. Trust SIMPLNX.

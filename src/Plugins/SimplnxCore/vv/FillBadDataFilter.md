@@ -20,7 +20,7 @@
 | Tests                  | **14 TEST_CASEs**, all pass. 1 SmallIN100 (Class 2) + 9 OOC synthetic fixtures (Class 1, Tests 01–07, 11, 13) + 1 all-bad-data termination guard + 1 preflight-error inline (asserts `-16500`) + 1 SIMPL backwards-compat. |
 | Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–07, 11, 13 (Class 1). *(Tests 08–10 and 12 have no fixtures — the numbering is non-contiguous.)* |
 | Legacy comparison      | SmallIN100 in-test (Class 2) — SIMPLNX matches the 6.5.x exemplar element-wise. A separate Test 08 three-way binary A/B was cited by an earlier revision but its working files are unrecoverable, so that claim is **withdrawn** (see deviations). Per-code-path correctness is pinned by the Class 1 analytical fixtures. |
-| Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Fixed this cycle: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
+| Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Resolved: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
 | V&V phase              | **COMPLETE — V&V signed off by Michael Jackson (technical authority) 2026-07-16.** Outstanding: cancel path (Path 14) untested. *(The unrecoverable Test 08 A/B claim has been withdrawn — no longer a gate.)* |
 
 ## Summary

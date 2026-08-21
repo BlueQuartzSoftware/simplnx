@@ -14,18 +14,18 @@
 
 | Aspect                 | Current state |
 |------------------------|----------------|
-| Algorithm Relationship | **Port** — legacy `ErodeDilateBadData.{h,cpp}` was diffed line-by-line against `Algorithms/ErodeDilateBadData.cpp` this pass. Neighbor offsets, boundary-validity checks, vote/tie-break order, and transfer conditions are structurally identical. One divergence found and fixed — see Bug Fixes. |
+| Algorithm Relationship | **Port** — legacy `ErodeDilateBadData.{h,cpp}` was diffed line-by-line against `Algorithms/ErodeDilateBadData.cpp` this pass. Neighbor offsets, boundary-validity checks, vote/tie-break order, and transfer conditions are structurally identical. One divergence, since resolved — see Resolved Defects. |
 | Oracle (confirmed)     | **Class 2 (Reference implementation).** The 28 expected `FeatureIds`/`Misc` arrays (7 direction combinations × 2 operations × 2 iteration counts) are genuine DREAM3D 6.5.171 output, matched element-wise against SIMPLNX and compiled into `ErodeDilateBadDataTest.cpp` as constants so the comparison re-runs in CI without the legacy binary. Confirmed — `(Erode) Expanded` and `(Dilate) Expanded` pass, 28/28 combinations. |
 | Code paths enumerated  | **10 of 11 exercised.** All 6 face directions (-Z/-Y/-X/+X/+Y/+Z) confirmed hit by instrumentation. Only gap: the `m_ShouldCancel` early-exit (Path 11) — no test injects a cancel signal. |
 | Tests today            | **7 TEST_CASEs, all pass in both in-core and OOC builds** (2283 assertions, identical in each): 1 production-scale exemplar-archive comparison + 2 `GENERATE` parameter sweeps (14 valid runs each over direction × iteration count) + 1 ignored-path test + 2 preflight-error tests + 1 SIMPL backwards-compat. |
 | Exemplar archive       | `6_6_erode_dilate_test.tar.gz` — provides `Input Data` plus legacy-generated `Exemplar Bad Data Erode` / `Exemplar Bad Data Dilate` containers on a 189×201×20 Small IN100 slice. Consumed by the `(Erode)` test here and shared with `ErodeDilateMaskTest` and `ErodeDilateCoordinationNumberTest`. SHA512 verified against `test/CMakeLists.txt`. |
 | Legacy comparison      | **Run.** Two independent comparisons: (1) all 28 parameter combinations run through DREAM3D 6.5.171 `PipelineRunner` against an HDF5 twin of the inline fixture and diffed element-wise — **28/28 exact matches** on both `FeatureIds` and `Misc`; (2) the `(Erode)` test compares SIMPLNX against a legacy-generated exemplar at production scale (759,780 cells, 6 cell arrays). |
-| Bug flags              | `ErodeDilateBadDataFilter-D1` (X/Y/Z direction parameters had no effect) — **confirmed and fixed this pass.** One additional hypothesis (Dilate tie-break order) was investigated, found to be a false lead, and reverted — see deviations doc. |
+| Bug flags              | `ErodeDilateBadDataFilter-D1` (X/Y/Z direction parameters had no effect) — **confirmed and resolved.** One additional hypothesis (Dilate tie-break order) was investigated, found to be a false lead, and reverted — see deviations doc. |
 | V&V phase              | Oracle chosen and confirmed; legacy comparison run; direction-masking bug fixed; zero-dimensions preflight path now covered. Outstanding before promotion to COMPLETE: second-engineer sign-off, the uncovered cancel path (Path 11), and formalizing the manual 28-combination A/B run as an automated archive-based test (see deviations doc). |
 
 ## Summary
 
-`ErodeDilateBadDataFilter` erodes or dilates voxels with `FeatureId == 0` ("bad data") in an `ImageGeometry`, optionally restricted to any non-empty combination of X, Y, and Z face directions. Verification is **Class 2**: the 28 expected output arrays compiled into `(Erode) Expanded` / `(Dilate) Expanded` are genuine DREAM3D 6.5.171 output for the same fixture, matched element-wise across every operation × direction × iteration combination, and the `(Erode)` test additionally compares against a legacy-generated exemplar archive at production scale. One SIMPLNX-side bug was found and fixed this pass (`ErodeDilateBadDataFilter-D1` — the direction parameters had no effect at all); all 7 tests pass in both in-core and OOC builds with 2283 assertions.
+`ErodeDilateBadDataFilter` erodes or dilates voxels with `FeatureId == 0` ("bad data") in an `ImageGeometry`, optionally restricted to any non-empty combination of X, Y, and Z face directions. Verification is **Class 2**: the 28 expected output arrays compiled into `(Erode) Expanded` / `(Dilate) Expanded` are genuine DREAM3D 6.5.171 output for the same fixture, matched element-wise across every operation × direction × iteration combination, and the `(Erode)` test additionally compares against a legacy-generated exemplar archive at production scale. One SIMPLNX-side bug was found and resolved (`ErodeDilateBadDataFilter-D1` — the direction parameters had no effect at all); all 7 tests pass in both in-core and OOC builds with 2283 assertions.
 
 ## Algorithm Relationship
 
@@ -53,7 +53,7 @@ Earlier commits (#1249, #1017, #1013, #801) are compiler-warning, store-API, and
 
 *SIMPLNX implementation:* `Algorithms/ErodeDilateBadData.cpp` (231 lines) uses `NeighborUtilities::VoxelNeighbors<Image3D>` for face-neighbor offsets and boundary validity, and `ParallelTaskAlgorithm` to transfer non-`FeatureIds` arrays in parallel.
 
-## Bug Fixes (this pass)
+## Resolved Defects
 
 ### ErodeDilateBadDataFilter-D1: Direction parameters had no effect — fixed
 
@@ -79,7 +79,7 @@ A plausible-looking bug hypothesis (last-bad-neighbor-wins vs. first-bad-neighbo
 - `SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded` and `(Dilate) Expanded` — each `GENERATE`s `dirX,dirY,dirZ ∈ {true,false}` and `numIterations ∈ {1,2}`, reports the invalid all-directions-off combination with `SUCCEED`, and looks the expected arrays up in the 28-row `k_Exemplars` table. 14 valid parameterized runs each, both `FeatureIds` and `Misc` asserted, 1039 assertions each — all pass.
 - `SimplnxCore::ErodeDilateBadDataFilter(Erode)` — `UnitTest::CompareExemplarToGeneratedData` against `6_6_erode_dilate_bad_data.dream3d`, 55 assertions. Passes.
 
-*Second-engineer review:* **pending.** The prior pass's open items — erode/dilate tie-break order, and whether direction combinations produce genuinely different output — were both resolved this pass by the legacy binary comparison above rather than by review alone. A named second-engineer sign-off on the oracle design is still required before Status can move to COMPLETE.
+*Second-engineer review:* **pending.** The previously open items — erode/dilate tie-break order, and whether direction combinations produce genuinely different output — were both resolved this pass by the legacy binary comparison above rather than by review alone. A named second-engineer sign-off on the oracle design is still required before Status can move to COMPLETE.
 
 ## Code path coverage
 
@@ -101,7 +101,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ErodeDilateB
 | 10 | (a) Preflight | `dims[0] == 0 \|\| dims[1] == 0 \|\| dims[2] == 0` → error `-14602` (`k_NoGeometryDimensionsError`) | `No Dimensions` — directions all **on** so the `-14601` check does not mask this path (the prior revision zeroed them and never reached here); asserts error code is exactly `-14602` |
 | 11 | (b) Cancel | `m_ShouldCancel` read once per Z-slice inside the iteration loop → early return | *Not directly tested. Requires cancel-signal injection; no test sets `m_ShouldCancel` and asserts early termination.* Legacy has no cancel check at all, so SIMPLNX is ahead of legacy here — not a deviation. |
 
-**Per-direction coverage, confirmed by instrumentation this pass:** `Algorithms/ErodeDilateBadData.cpp` was temporarily instrumented with per-face-direction hit counters at (a) the point immediately after the `isValidFaceNeighbor` gate in the vote/mark loop, (b) the point where the Dilate mark / Erode vote condition (`feature > 0`) fires, and (c) the equivalent point in the Erode cleanup loop. Running the full `(Erode) Expanded` + `(Dilate) Expanded` sweep produced non-zero counts for **every one of the 6 directions at all 3 measurement points** — vote/mark loop reached counts `-Z=38 -Y=111 -X=108 +X=106 +Y=64 +Z=97`; Dilate marking fired at `-Z=9 -Y=46 -X=37 +X=35 +Y=16 +Z=44`; Erode voting at `-Z=8 -Y=25 -X=24 +X=24 +Y=8 +Z=32`. The instrumentation was removed afterward; this records the empirical result, not a standing code artifact.
+**Per-direction coverage, confirmed by instrumentation:** `Algorithms/ErodeDilateBadData.cpp` was temporarily instrumented with per-face-direction hit counters at (a) the point immediately after the `isValidFaceNeighbor` gate in the vote/mark loop, (b) the point where the Dilate mark / Erode vote condition (`feature > 0`) fires, and (c) the equivalent point in the Erode cleanup loop. Running the full `(Erode) Expanded` + `(Dilate) Expanded` sweep produced non-zero counts for **every one of the 6 directions at all 3 measurement points** — vote/mark loop reached counts `-Z=38 -Y=111 -X=108 +X=106 +Y=64 +Z=97`; Dilate marking fired at `-Z=9 -Y=46 -X=37 +X=35 +Y=16 +Z=44`; Erode voting at `-Z=8 -Y=25 -X=24 +X=24 +Y=8 +Z=32`. The instrumentation was removed afterward; this records the empirical result, not a standing code artifact.
 
 Confirmed correct and deliberately not counted as deviations:
 
@@ -135,7 +135,7 @@ The archive is shared: `6_6_erode_dilate_bad_data.dream3d` serves this filter, `
 
 No confirmed legacy deviations. The comparison was run at both scales described in the Oracle section — 28/28 exact matches on the 32-voxel fixture, and an element-wise match against the legacy-generated exemplar on the 189×201×20 Small IN100 slice.
 
-One SIMPLNX-side bug was found and fixed:
+One SIMPLNX-side defect, since resolved:
 
 - `ErodeDilateBadDataFilter-D1` — the `XDirOn`/`YDirOn`/`ZDirOn` parameters had no effect on which face neighbors participated — see [`deviations/ErodeDilateBadDataFilter.md`](deviations/ErodeDilateBadDataFilter.md)
 

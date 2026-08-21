@@ -42,7 +42,7 @@ Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from 
 
 **Recommendation:** *Trust SIMPLNX.* Opt-in feature with a legacy-preserving default.
 
-**Note (SIMPLNX-internal bug fixed during V&V — not a legacy deviation):** Prior to this V&V cycle the periodic offset in the `ImageGeom` overload of `AdjustCentroidsForPeriodicFaces` was added in **cell-index units** (`(dim−1)/2`) directly to a physical-coordinate centroid, so it was only correct when spacing == 1. This was fixed to scale by spacing (`src/simplnx/Utilities/GeometryHelpers.cpp`), with `test/ComputeFeatureCentroidsTest.cpp` Fixture E (spacing = 2) as the regression pin. Because 6.5.171 has no periodic path, this fix is not a change relative to legacy; it is recorded here for completeness and for any SIMPLNX user who ran `Is Periodic` on non-unit-spacing data before the fix.
+**Note (no legacy deviation):** In earlier SIMPLNX releases the periodic offset in the `ImageGeom` overload of `AdjustCentroidsForPeriodicFaces` was added in **cell-index units** (`(dim−1)/2`) directly to a physical-coordinate centroid, so it was only correct when spacing == 1. This was fixed to scale by spacing (`src/simplnx/Utilities/GeometryHelpers.cpp`), with `test/ComputeFeatureCentroidsTest.cpp` Fixture E (spacing = 2) as the regression pin. Because 6.5.171 has no periodic path, this fix is not a change relative to legacy; it is recorded here for completeness and for any SIMPLNX user who ran `Is Periodic` on non-unit-spacing data before the fix.
 
 ---
 
