@@ -363,6 +363,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Filesystem.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Numbers.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/NumericBounds.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range3D.hpp

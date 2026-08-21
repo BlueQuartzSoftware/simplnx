@@ -1,6 +1,7 @@
 #include "VectorParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/NumericBounds.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 
@@ -180,9 +181,6 @@ ConversionState ConversionChecks(TempT temp)
     return Clear;
   }
 
-  constexpr ExpectedT lowerBound = std::numeric_limits<ExpectedT>::lowest();
-  constexpr ExpectedT upperBound = std::numeric_limits<ExpectedT>::max();
-
   // uint8/16/32/64 <- float32/64, int8/16/32/64
   if constexpr(!std::is_floating_point_v<ExpectedT> && std::is_unsigned_v<ExpectedT> && std::is_signed_v<TempT>)
   {
@@ -194,7 +192,7 @@ ConversionState ConversionChecks(TempT temp)
   // int8/16/32/64, float32/64 <- int8/16/32/64, float32/64
   else if constexpr(!std::is_unsigned_v<TempT>)
   {
-    if(temp < lowerBound)
+    if(ExceedsLowestOf<ExpectedT>(temp))
     {
       return Underflow;
     }
@@ -202,7 +200,7 @@ ConversionState ConversionChecks(TempT temp)
   // int8/16/32/64 <- uint8/16/32/64
   // Can't underflow by definition
 
-  if(temp > upperBound)
+  if(ExceedsMaxOf<ExpectedT>(temp))
   {
     return Overflow;
   }
