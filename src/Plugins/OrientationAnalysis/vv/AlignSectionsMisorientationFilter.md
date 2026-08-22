@@ -119,7 +119,8 @@ than NaN; the top section is bit-unchanged by the run; and
 **The fixture population this suite runs on**, written down once so that every "fixture" claim in
 this report and in `vv/deviations/AlignSectionsMisorientationFilter.md` can be scoped against it:
 
-1. **14 `BuildFixture` configurations** — synthetic, 32x32 in plane, 2 or 3 sections.
+1. **14 `BuildFixture` configurations** — synthetic, 32x32 in plane, 1 to 3 sections (the
+   single-section `Preflight Guards` configuration passes one offset, so its volume is 32x32x1).
 2. **2 hand-rolled degenerate-geometry fixtures** — the `Preflight Guards` "degenerate X dimension"
    (1x32x3) and "cell array tuple count" sections; default-initialised arrays, rejected at
    preflight.

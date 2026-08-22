@@ -262,9 +262,12 @@ reachable on very small volumes.
 required) everywhere the behaviour is defined, and they differ only in the out-of-bounds regime
 where neither has defined behaviour to preserve. The reordering is safe on in-bounds data but is a
 behaviour change in that regime, so it was deliberately left unfixed in this V&V pass to keep the
-pass free of unproven behaviour changes; logged as a follow-up. Every **Class 1 analytical** fixture
-is 32x32 in plane, so `misorients` holds 1024 entries and `halfDim0 == halfDim1 == 16`. The
-largest memoization index any of them computes is **688**, reached by the shift-accumulation
+pass free of unproven behaviour changes; logged as a follow-up. Every one of the **14 synthetic
+pattern-carrying (`BuildFixture`) fixtures** is 32x32 in plane, so `misorients` holds 1024 entries
+and `halfDim0 == halfDim1 == 16`; the hand-rolled **1x32x3** guard fixture has `halfDim0 == 0` —
+exactly the negative-index regime this deviation describes — and is rejected at preflight by
+`-68005` before `findShifts` can run. The
+largest memoization index any of the pattern-carrying fixtures computes is **688**, reached by the shift-accumulation
 fixture's second section pair, whose search re-centres on `(-3, 2)` and so evaluates
 `idx = 32*(2 + 3 + 16) + (-3 + 3 + 16) = 688` — well inside the array and clear of this regime. The
 retained Small IN100 legacy-parity test runs on a **189 x 201 x 117** volume, where `misorients`
