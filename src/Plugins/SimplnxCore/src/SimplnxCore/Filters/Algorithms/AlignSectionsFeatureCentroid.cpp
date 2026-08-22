@@ -120,9 +120,11 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
       // shift is undefined behavior. An empty slice is reported instead and left where it is.
       xCentroid[iter] = 0.0f;
       yCentroid[iter] = 0.0f;
-      result.warnings().push_back(Warning{k_EmptySlice, fmt::format("Slice={} has no Cells that are true in the mask array '{}', so it cannot be aligned. In consecutive mode it carries the shift of "
-                                                                    "the slice before it; in reference mode its shift is zero.",
-                                                                    slice, m_InputValues->MaskArrayPath.toString())});
+      result.warnings().push_back(
+          Warning{k_EmptySlice, fmt::format("Slice={} has no Cells that are true in the mask array '{}', so it cannot be aligned. In consecutive mode it adds no shift of its own "
+                                            "and keeps the cumulative shift of its previously processed neighbor (the section farther from the Z origin), or zero if it has "
+                                            "none; in reference mode its shift is zero.",
+                                            slice, m_InputValues->MaskArrayPath.toString())});
       continue;
     }
 

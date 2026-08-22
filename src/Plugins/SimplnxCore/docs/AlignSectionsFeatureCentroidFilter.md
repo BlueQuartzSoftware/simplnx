@@ -20,7 +20,7 @@ If the user elects to *Use Reference Slice*, then each section's centroid is shi
 
 ### Sections With No Selected Cells
 
-A section in which no **Cell** is flagged *true* has no centroid, so it cannot be aligned. Such a section contributes a shift of zero and the **Filter** emits a warning naming it. What that means depends on the mode: in consecutive mode the section carries the shift of the section before it, because consecutive shifts accumulate; in reference mode its shift is an absolute 0, so the section stays exactly where it is. In both modes the last usable centroid is carried forward so the remaining sections still align to real data. If the *reference* section is the empty one there is nothing to align to at all and the **Filter** reports an error.
+A section in which no **Cell** is flagged *true* has no centroid, so it cannot be aligned. Such a section contributes a shift of zero and the **Filter** emits a warning naming it. What that means depends on the mode: in consecutive mode the section adds no shift of its own and keeps the cumulative shift of its previously processed neighbor — the section farther from the Z origin — or zero when it is the farthest section, because consecutive shifts accumulate in processing order (top down); in reference mode its shift is an absolute 0, so the section stays exactly where it is. In both modes the last usable centroid is carried forward so the remaining sections still align to real data. If the *reference* section is the empty one there is nothing to align to at all and the **Filter** reports an error.
 
 ### Consecutive Versus Reference Alignment
 
