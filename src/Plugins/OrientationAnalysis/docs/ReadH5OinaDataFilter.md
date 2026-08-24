@@ -34,11 +34,12 @@ so the last selected scan is at Z = 0.
 
 ### Limitations of the Filter
 
-The filter reads the header keys and the nine data columns defined by **FORMAT VERSION 2.0**
-of the H5OINA specification, which later versions retain. The file's `Format Version` value
-is not used to select what is read, and a file without that value is read the same way. Any
-column outside that set — for example `Pattern Quality`, `Beam Position X`/`Y` or the
-`Electron Image` tree — is ignored, and can be brought in with the
+The filter reads a fixed set of header keys and nine data columns, the set Oxford documents
+for **FORMAT VERSION 2.0**. The file's `Format Version` value is not used to select what is
+read, and a file without that value is read the same way, so a file imports exactly when it
+carries that fixed set — the Format Version 5.0 export bundled with this filter's tests
+still does. Any column outside the set — for example `Pattern Quality`, `Beam Position
+X`/`Y` or the `Electron Image` tree — is ignored, and can be brought in with the
 [Read HDF5 Dataset](../SimplnxCore/ReadHDF5DatasetFilter.md) filter.
 
 **Importing diffraction patterns is not yet supported for H5OINA files.** Turning on
@@ -74,6 +75,12 @@ An H5OINA file stores its three lattice angles in radians; they are imported as 
 so that the array means the same thing no matter which EBSD format the phase came from. A
 cubic phase therefore reports `90, 90, 90` rather than `1.5707964, 1.5707964, 1.5707964`.
 The three lattice dimensions are imported unchanged.
+
+**This is a breaking change to a published output, and it is not in any released
+version.** DREAM3D-NX 7.0.0 through 7.4.1 reported those three slots in radians for
+H5OINA imports. See the migration notes below before comparing an H5OINA import against
+a `.dream3d` file, a regression baseline, or a pipeline result produced by one of those
+releases.
 
 ### The Axis Alignment Issue for Hexagonal Symmetry [1]
 
@@ -129,6 +136,25 @@ un-indexed points refer to.
 | `MaterialName` | string | 1 | `"Invalid Phase"` in tuple 0 |
 
 % Auto generated parameter table will be inserted here
+
+## Migration Notes
+
+Documented behavioral differences from DREAM3D-NX 7.0.0 through 7.4.1 are maintained as
+Deviation entries in the source tree at
+`src/Plugins/OrientationAnalysis/vv/deviations/ReadH5OinaDataFilter.md`. Two of them
+change values that an existing pipeline may compare against.
+
+- **`LatticeConstants` angle slots are degrees, not radians** (`ReadH5OinaDataFilter-D6`).
+  Every `.dream3d` file written by 7.0.0 through 7.4.1 carries radians in components 3, 4
+  and 5 of that array, so any saved exemplar, regression baseline or pipeline comparison
+  that reads them changes value. Multiply a stored radian value by 180/pi to compare it
+  against a new import, and remove any downstream conversion that was compensating for
+  the radian values. Nothing else in the import changes unit: the `Euler` array is still
+  radians and the three lattice dimensions are still unconverted.
+- **The hexagonal x-axis alignment adds 30 degrees, not 30 radians**
+  (`ReadH5OinaDataFilter-D1`). Orientations imported from a file with a hexagonal phase
+  by 7.0.0 through 7.4.1 with *Convert Hexagonal X-Axis to EDAX Standard* left on — its
+  default — are wrong and cannot be corrected after the fact; re-import the file.
 
 ## Example Pipelines
 
