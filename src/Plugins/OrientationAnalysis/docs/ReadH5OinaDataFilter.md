@@ -22,12 +22,15 @@ The file is EBSD (Electron Backscatter Diffraction) scan data. The most importan
 An H5OINA file can hold several scans. Selecting more than one stacks them into a single
 3D **Image Geometry**: the X and Y extents and step sizes come from the first selected
 scan, the Z extent is the number of selected scans, and the Z spacing is the **Z Spacing**
-parameter. Every selected scan must describe the same grid as the first one, and each must
-be present in the file; the filter reports an error naming the offending scan otherwise.
+parameter. Every selected scan must describe the same grid as the first one and declare
+the same phase groups, and each must be present in the file; the filter reports an error
+naming the offending scan otherwise. Scans whose phase lists differ have to be imported
+separately, because all of the stacked scans share one **Ensemble Attribute Matrix**.
 
-The scans are always stacked in the order they are listed. The **Stacking Order** setting
-carried by the scan selection is not applied by this filter, and selecting *High To Low*
-raises a warning; reverse the scan selection itself to change the stacking.
+The **Stacking Order** setting carried by the scan selection chooses which end of the
+list lands at Z = 0. *Low To High* stacks the scans in the order they are listed, so the
+first selected scan is at Z = 0. *High To Low* stacks them in the reverse of that order,
+so the last selected scan is at Z = 0.
 
 ### Limitations of the Filter
 

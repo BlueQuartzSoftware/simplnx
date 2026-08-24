@@ -1096,34 +1096,65 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
 }
 
 //------------------------------------------------------------------------------
-// The scan-selection parameter carries a stacking order that this filter does
-// not act on: scans are always stacked in the order they appear in the list.
-// Selecting High-to-Low therefore raises a preflight warning rather than
-// silently accepting a setting that has no effect.
+// The stacking order carried by the scan-selection parameter chooses which end of
+// the scan list lands in tuple slab 0. Low-to-High stacks the scans in the order
+// they are listed; High-to-Low stacks them in the reverse of that order, so the
+// LAST selected scan occupies slab 0.
+//
+// Fixture B's two scans are disjoint in every column, so each order is pinned by
+// values that the other order cannot produce. The geometry is identical under both
+// orders -- only the slab assignment changes.
 //------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order Warning (-9588)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
   UnitTest::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_stacking.h5oina", {MakeFixtureBScan1(), MakeFixtureBScan2()});
 
-  ReadH5OinaDataFilter filter;
+  const std::vector<float32> k_Scan1Euler = {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 1.5F};
+  const std::vector<float32> k_Scan2Euler = {2.125F, 2.25F, 2.375F, 2.5F, 2.625F, 2.75F, 2.875F, 3.0F, 3.125F, 3.25F, 3.375F, 3.5F};
 
+  uint32 stackingOrder = RefFrameZDir::k_LowtoHigh;
+  std::vector<float32> expectedEuler;
+  std::vector<uint8> expectedBandContrast;
+  std::vector<int32> expectedPhase;
+
+  SECTION("Low to High stacks the scans in list order")
   {
-    DataStructure dataStructure;
-    const Arguments args = MakeArgs(inputFile, {"1", "2"}, 1.0F, true, true, false, RefFrameZDir::k_HightoLow);
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
-    REQUIRE(preflightResult.outputActions.warnings()[0].code == -9588);
+    stackingOrder = RefFrameZDir::k_LowtoHigh;
+    expectedEuler = k_Scan1Euler;
+    expectedEuler.insert(expectedEuler.end(), k_Scan2Euler.cbegin(), k_Scan2Euler.cend());
+    expectedBandContrast = {10, 11, 12, 13, 110, 111, 112, 113};
+    expectedPhase = {1, 1, 1, 1, 1, 0, 1, 0};
   }
+  SECTION("High to Low stacks the scans in reverse list order")
   {
-    DataStructure dataStructure;
-    const Arguments args = MakeArgs(inputFile, {"1", "2"}, 1.0F, true, true, false, RefFrameZDir::k_LowtoHigh);
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.warnings().empty());
+    stackingOrder = RefFrameZDir::k_HightoLow;
+    expectedEuler = k_Scan2Euler;
+    expectedEuler.insert(expectedEuler.end(), k_Scan1Euler.cbegin(), k_Scan1Euler.cend());
+    expectedBandContrast = {110, 111, 112, 113, 10, 11, 12, 13};
+    expectedPhase = {1, 0, 1, 0, 1, 1, 1, 1};
   }
+
+  ReadH5OinaDataFilter filter;
+  DataStructure dataStructure;
+  const Arguments args = MakeArgs(inputFile, {"1", "2"}, 1.0F, true, true, false, stackingOrder);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.warnings().empty());
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(2, 2, 2));
+
+  CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler), expectedEuler);
+  CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::BandContrast), expectedBandContrast);
+  CompareArrayValues<int32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), expectedPhase);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------

@@ -3,6 +3,8 @@
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/utilities/IEbsdOemReader.hpp"
 
+#include <string>
+
 namespace nx::core
 {
 
@@ -26,6 +28,15 @@ public:
   Result<> operator()();
 
   Result<> copyRawEbsdData(int index) override;
+
+private:
+  /**
+   * @brief The scan name whose data is currently in the reader's buffers. The shared
+   * copyRawEbsdData(int) signature carries only the destination slab index, and under a
+   * High-to-Low stacking order that index no longer matches the scan's position in the
+   * selection list, so the name is carried here instead of being re-derived from it.
+   */
+  std::string m_CurrentScanName;
 };
 
 } // namespace nx::core

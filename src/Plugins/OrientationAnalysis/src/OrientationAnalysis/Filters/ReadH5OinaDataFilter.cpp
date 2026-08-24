@@ -255,17 +255,6 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     }
   }
 
-  // The stacking order is carried by the scan-selection parameter and shared with
-  // the sibling OEM readers, but this filter always stacks the scans in the order
-  // they appear in the list.
-  if(pSelectedScanNamesValue.stackingOrder != RefFrameZDir::k_LowtoHigh)
-  {
-    resultOutputActions.warnings().push_back(
-        {-9588, fmt::format("The stacking order is set to High To Low, which this filter does not apply: the {} selected scans are always stacked in the order they are listed. Reverse the scan "
-                            "selection itself to change the stacking.",
-                            pSelectedScanNamesValue.scanNames.size())});
-  }
-
   // create the Image Geometry and it's attribute matrices
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()), pSelectedScanNamesValue.scanNames.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};

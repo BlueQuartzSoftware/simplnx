@@ -9,6 +9,7 @@
 
 #include <EbsdLib/Math/EbsdLibMath.h>
 
+#include <algorithm>
 #include <array>
 #include <string>
 #include <utility>
@@ -149,18 +150,29 @@ Result<> ReadH5OinaData::operator()()
   imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
 
   // The scan loop is kept here rather than in IEbsdOemReader::execute() so that the
-  // cancel checks and the progress messages below apply to this filter only.
-  const usize scanCount = m_InputValues->SelectedScanNames.scanNames.size();
-  int index = 0;
-  for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
+  // cancel checks, the progress messages and the stacking order below apply to this
+  // filter only.
+  //
+  // The stacking order chooses which end of the selection list lands in tuple slab 0:
+  // Low-to-High reads the scans in the order they are listed, High-to-Low reads them in
+  // the reverse of that order, so the last selected scan occupies slab 0.
+  std::vector<std::string> orderedScanNames(m_InputValues->SelectedScanNames.scanNames.cbegin(), m_InputValues->SelectedScanNames.scanNames.cend());
+  if(m_InputValues->SelectedScanNames.stackingOrder == RefFrameZDir::k_HightoLow)
+  {
+    std::reverse(orderedScanNames.begin(), orderedScanNames.end());
+  }
+
+  const usize scanCount = orderedScanNames.size();
+  for(usize index = 0; index < scanCount; index++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Reading scan '{}' ({} of {})", currentScanName, index + 1, scanCount)});
-    Result<> readResults = readData(currentScanName);
+    m_CurrentScanName = orderedScanNames[index];
+    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Reading scan '{}' ({} of {})", m_CurrentScanName, index + 1, scanCount)});
+    Result<> readResults = readData(m_CurrentScanName);
     if(readResults.invalid())
     {
       return readResults;
@@ -171,14 +183,12 @@ Result<> ReadH5OinaData::operator()()
       return {};
     }
 
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Copying the cell data of scan '{}' ({} of {})", currentScanName, index + 1, scanCount)});
-    Result<> copyDataResults = copyRawEbsdData(index);
+    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Copying the cell data of scan '{}' ({} of {})", m_CurrentScanName, index + 1, scanCount)});
+    Result<> copyDataResults = copyRawEbsdData(static_cast<int>(index));
     if(copyDataResults.invalid())
     {
       return copyDataResults;
     }
-
-    ++index;
   }
   return {};
 }
@@ -191,8 +201,7 @@ Result<> ReadH5OinaData::copyRawEbsdData(int index)
   // Scan `index` occupies the tuple slab [index * totalPoints, (index + 1) * totalPoints).
   const usize tupleOffset = static_cast<usize>(index) * totalPoints;
 
-  const auto scanNameIterator = std::next(m_InputValues->SelectedScanNames.scanNames.cbegin(), index);
-  const std::string& scanName = *scanNameIterator;
+  const std::string& scanName = m_CurrentScanName;
 
   if(Result<> extentResults = validateDataSetExtents(m_InputValues->SelectedScanNames.inputFilePath, scanName, totalPoints); extentResults.invalid())
   {
