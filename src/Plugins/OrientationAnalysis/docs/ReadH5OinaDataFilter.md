@@ -17,9 +17,31 @@ The file is EBSD (Electron Backscatter Diffraction) scan data. The most importan
 - **Pattern-quality metrics** — values such as Band Contrast, Band Slope, Bands, and Mean Angular Deviation describe how clear and reliable each measurement is. These are commonly used to flag unreliable pixels (see *Reference Frames* below).
 - **Per-phase (Ensemble) data** — the crystal structure, lattice constants, and material name for each phase. An **Ensemble** here means one distinct material/crystal type.
 
+### Reading More Than One Scan
+
+An H5OINA file can hold several scans. Selecting more than one stacks them into a single
+3D **Image Geometry**: the X and Y extents and step sizes come from the first selected
+scan, the Z extent is the number of selected scans, and the Z spacing is the **Z Spacing**
+parameter. Every selected scan must describe the same grid as the first one, and each must
+be present in the file; the filter reports an error naming the offending scan otherwise.
+
+The scans are always stacked in the order they are listed. The **Stacking Order** setting
+carried by the scan selection is not applied by this filter, and selecting *High To Low*
+raises a warning; reverse the scan selection itself to change the stacking.
+
 ### Limitations of the Filter
 
-The current implementation only understands **FORMAT VERSION 2.0** of the H5OINA file. A user can still read a newer H5OINA file, but the filter will only extract the VERSION 2.0 headers and data. If additional data is needed from the file, the [Read HDF5 Dataset](../SimplnxCore/ReadHDF5DatasetFilter.md) filter can be used to augment this filter.
+The filter reads the header keys and the nine data columns defined by **FORMAT VERSION 2.0**
+of the H5OINA specification, which later versions retain. The file's `Format Version` value
+is not used to select what is read, and a file without that value is read the same way. Any
+column outside that set — for example `Pattern Quality`, `Beam Position X`/`Y` or the
+`Electron Image` tree — is ignored, and can be brought in with the
+[Read HDF5 Dataset](../SimplnxCore/ReadHDF5DatasetFilter.md) filter.
+
+**Importing diffraction patterns is not yet supported for H5OINA files.** Turning on
+*Import Pattern Data* stops the filter with an error rather than producing a partial result.
+A file's `Processed Patterns` or `Unprocessed Patterns` dataset can be read with the
+[Read HDF5 Dataset](../SimplnxCore/ReadHDF5DatasetFilter.md) filter.
 
 ![Overview of the user interface.](Images/ImportH5OinaFilter_1.png)
 
@@ -39,7 +61,14 @@ The user also may want to assign un-indexed pixels to be ignored by flagging the
 
 ### Radians and Degrees
 
-All orientation data in the H5OINA file are in radians.
+All orientation data in the H5OINA file are in radians, and the imported `Euler` array is in
+radians as well — no conversion is applied.
+
+The per-phase `LatticeConstants` array is the one place where a unit does change on import.
+An H5OINA file stores its three lattice angles in radians; they are imported as **degrees**,
+so that the array means the same thing no matter which EBSD format the phase came from. A
+cubic phase therefore reports `90, 90, 90` rather than `1.5707964, 1.5707964, 1.5707964`.
+The three lattice dimensions are imported unchanged.
 
 ### The Axis Alignment Issue for Hexagonal Symmetry [1]
 
@@ -50,7 +79,7 @@ All orientation data in the H5OINA file are in radians.
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ __The result of this is that the filter will by default add 30 degrees to the second Euler Angle (phi2) when reading Oxford `.h5oina` files. This can be disabled by the user if necessary.__
++ __The result of this is that the filter will by default add 30 degrees to the third Euler angle (phi2) of every point whose phase is Hexagonal-High when reading Oxford `.h5oina` files. Because the file's Euler angles are in radians, the value actually added is 30 degrees expressed in radians (pi/6, about 0.5235988). Points of any other symmetry, and un-indexed points, are never adjusted. This can be disabled by the user if necessary.__
 
 | Figure 1 |
 |--------|
@@ -64,6 +93,35 @@ Once the reference frames are correct, the imported Euler angles are typically c
 ## Required Input Sources
 
 None — this filter reads directly from a `.h5oina` file on disk.
+
+## Created Outputs
+
+The array names are the H5OINA dataset names, so several contain spaces.
+
+### Cell Attribute Matrix
+
+| Name | Type | Components | Notes |
+|------|------|------------|-------|
+| `Band Contrast` | uint8 | 1 | |
+| `Band Slope` | uint8 | 1 | |
+| `Bands` | uint8 | 1 | |
+| `Error` | uint8 | 1 | 0 marks a successfully indexed point |
+| `Euler` | float32 | 3 | Radians; phi2 optionally shifted for Hexagonal-High points |
+| `Mean Angular Deviation` | float32 | 1 | |
+| `Phase` | int32 or uint8 | 1 | int32 by default; uint8 when *Convert Phase Data to Int32* is off. 0 marks an un-indexed point |
+| `X` | float32 | 1 | |
+| `Y` | float32 | 1 | |
+
+### Ensemble Attribute Matrix
+
+One tuple per phase in the file, plus tuple 0, which is reserved for the invalid phase that
+un-indexed points refer to.
+
+| Name | Type | Components | Notes |
+|------|------|------------|-------|
+| `CrystalStructures` | uint32 | 1 | Mapped from the file's Laue group; 999 in tuple 0 |
+| `LatticeConstants` | float32 | 6 | a, b, c then alpha, beta, gamma in **degrees**; all zero in tuple 0 |
+| `MaterialName` | string | 1 | `"Invalid Phase"` in tuple 0 |
 
 % Auto generated parameter table will be inserted here
 
