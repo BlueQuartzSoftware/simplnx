@@ -57,7 +57,9 @@ Historical reference frame operations for Oxford data are the following:
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: None
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Error* = 0.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask*. For H5OINA data, threshold on `Phase` > 0: an un-indexed point carries phase 0, which is the reserved invalid-phase slot.
+
+Do not assume `Error` = 0 marks a good point in an H5OINA file. AZtec writes an enumerated status code there whose values are not the same as the `.ctf` convention: in the AZtec export bundled with this filter's tests, every one of the 587 indexed points carries `Error` = 1 and every one of the 38 un-indexed points carries `Error` = 2, and no point carries 0. A mask built from `Error` = 0 would select nothing on that file.
 
 ### Radians and Degrees
 
@@ -105,7 +107,7 @@ The array names are the H5OINA dataset names, so several contain spaces.
 | `Band Contrast` | uint8 | 1 | |
 | `Band Slope` | uint8 | 1 | |
 | `Bands` | uint8 | 1 | |
-| `Error` | uint8 | 1 | 0 marks a successfully indexed point |
+| `Error` | uint8 | 1 | AZtec status code; see the note on masking below — do not assume 0 means "indexed" |
 | `Euler` | float32 | 3 | Radians; phi2 optionally shifted for Hexagonal-High points |
 | `Mean Angular Deviation` | float32 | 1 | |
 | `Phase` | int32 or uint8 | 1 | int32 by default; uint8 when *Convert Phase Data to Int32* is off. 0 marks an un-indexed point |

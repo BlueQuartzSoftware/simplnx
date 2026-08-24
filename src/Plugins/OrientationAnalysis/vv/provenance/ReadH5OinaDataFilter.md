@@ -65,9 +65,13 @@ its replacement.
 **Toy fixtures, written by the test at run time.** `test/ReadH5OinaDataTest.cpp` declares a
 fixture specification as C++ structs and writes `.h5oina` files with `H5Support::H5Lite`
 into the binary test-output directory. Three fixture specifications (A, B, C) materialise
-into nineteen files: nine positive-path files and ten guard files. Nothing is committed as
-binary test data and no archive upload was needed. Each fixture carries exactly the dataset set `H5OINAReader`
-requires, plus the inert root datasets for realism.
+into nineteen files at run time: eight that are imported successfully and eleven that back a
+rejection or passthrough case. Nothing is committed as binary test data and no archive
+upload was needed. The eight that import carry exactly the dataset set `H5OINAReader`
+requires, plus the inert root datasets for realism. Of the eleven behind the rejection and
+passthrough cases, two omit a required dataset outright -- `Data/Bands` and
+`Phases/1/Lattice Angles` -- while the other nine carry the full set and are rejected on
+their values or on how they are selected.
 
 Every expected value is derived from the fixture specification. The hexagonal-alignment
 expectations are the correctly-rounded float32 results of `double(φ2) + 30 × (π/180)`,
