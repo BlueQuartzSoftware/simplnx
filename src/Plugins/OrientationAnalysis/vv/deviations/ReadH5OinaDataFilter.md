@@ -1,10 +1,11 @@
 # Deviations: ReadH5OinaDataFilter
 
-**There is no DREAM3D 6.5.171 equivalent of this filter**, so there is no legacy comparison and no legacy-versus-SIMPLNX deviation to record. A case-insensitive search for `oina` across `D3D_v6.5.171/DREAM3D/Source`, `.../SIMPL/Source` and `.../DREAM3D_Plugins` returns zero source hits; the filter was written in SIMPLNX (PR #700, `a51dd5f3d`, 2024-03-25) and has no `FromSIMPLJson`, no legacy-UUID mapping entry and no SIMPL conversion fixtures.
+**There is no DREAM3D 6.5.171 equivalent of this filter**, so there is no legacy comparison and no legacy-versus-SIMPLNX deviation to record. The filter was written in SIMPLNX (PR #700, `a51dd5f3d`, 2024-03-25) and has no `FromSIMPLJson`, no legacy-UUID mapping entry and no SIMPL conversion fixtures.
 
 This file therefore records, in the same structured form, every difference between the behavior DREAM3D-NX shipped and the correct behavior. Entries are referenced by stable ID (`ReadH5OinaDataFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Affected releases are named from `docs/dream3d_nx_release_dates.md`. The filter first shipped in DREAM3D-NX 7.0.0 (2024-11-11); D1 through D11 are present in every release from 7.0.0 through 7.4.1 (2026-03-23), which is every release that contains the filter. **No released version carries these corrections yet**: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINAReader` and reach users only through EbsdLib 3.1.1, and the DREAM3D-NX release that consumes it has not been made.
+Affected releases are named from `docs/dream3d_nx_release_dates.md`. The filter first shipped in DREAM3D-NX 7.0.0 (2024-11-11); D1 through D11 are present in every release from 7.0.0 through 7.4.1 (2026-03-23).
+EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINAReader` and every release of DREAM3D-NX up through and including 7.4.1 will have these bugs.
 
 ---
 
@@ -175,7 +176,7 @@ Affected releases are named from `docs/dream3d_nx_release_dates.md`. The filter 
 
 **Correct behavior:** Preflight applies the phase-index range check to **every** selected scan, with the bound taken from the first scan's phase count (`-9587`), and rejects a selected scan whose phase-group count differs from the first scan's (`-9589`), telling the user to import scans with differing phase lists separately. Pinned by `test/ReadH5OinaDataTest.cpp::"Phase Index Out Of Range rejected (-9587)"` section "Later selected scan" and `…::"Scan Phase Count Mismatch rejected (-9589)"`, whose fixtures both pass preflight and crash the process against the pre-correction filter.
 
-**Recommendation:** Trust the corrected behavior. A multi-scan import that completed under 7.0.0 through 7.4.1 was not affected — the crash is the only outcome the defect produced.
+**Recommendation:** Trust the corrected behavior. Every reproduction of the defect crashed before any output was written, so a multi-scan import that *completed* under 7.0.0 through 7.4.1 is very unlikely to have been affected — but the underlying write is undefined behavior, so silent corruption cannot be strictly excluded. Residual restriction: the guards require every selected scan to declare the same phase-group *names and count*; the group *contents* (material name, Laue class, lattice constants) are not compared across scans — the shared ensemble arrays keep the values of the last scan read, and the preflight phase display always reflects the first-listed scan. Scans whose phase definitions differ in content should be imported separately.
 
 ---
 
