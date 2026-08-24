@@ -191,7 +191,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
     }
     else
     {
-      iOrigin[2] = meshMinExtents[1] - (iRes[2] * 0.1f);
+      iOrigin[2] = meshMinExtents[2] - (iRes[2] * 0.1f);
     }
   }
 

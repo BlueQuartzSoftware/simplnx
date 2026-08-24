@@ -125,7 +125,14 @@ orphans. This is why an all-background volume yields zero faces but a non-zero v
 ### Notes and Limitations
 
 - The volume is automatically wrapped in a temporary ghost layer so that **Features** touching the
-  edge of the volume are meshed correctly; no manual padding is required.
+  edge of the volume are meshed correctly; no manual padding is required. The ghost layer is internal
+  only: the generated mesh lies entirely within the bounds of the input **Image Geometry**, and its
+  exterior surface sits exactly on the volume boundary.
+- **Changed in this release:** earlier versions placed the mesh half a **Cell** off from the input
+  volume and additionally emitted surface along the internal seams of the ghost layer, so roughly
+  half of every mesh fell outside the volume bounds. Both are fixed. Meshes produced by this
+  **Filter** now align with the input volume and with the other surface meshing **Filters**. Surface
+  meshes regenerated after this change will differ from ones saved previously.
 - **Feature Id** values of 0 are handled internally and restored on output.
 - Only an **Image Geometry** is accepted as input: the M3C node coordinates assume uniform **Cell**
   spacing, so a **RectGrid Geometry** cannot be meshed correctly by this **Filter**.
