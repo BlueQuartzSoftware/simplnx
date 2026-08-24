@@ -41,18 +41,25 @@ const std::vector<std::pair<std::string, usize>> k_RequiredDataSets = {
  * H5OINAReader sizes its buffers to whatever extent each dataset actually has, while
  * the geometry and the destination arrays are sized from the header's X Cells and
  * Y Cells. If a file's datasets are shorter than the header claims, copying
- * totalPoints elements out of those buffers reads past their end. The extents are
- * read straight from the file with H5Lite so no reader API is needed to expose them.
+ * totalPoints elements out of those buffers reads past their end.
+ *
+ * No reader API exposes the sizes the reader actually allocated, so the extents are
+ * re-probed from the file with H5Lite. That is the file's extents as of this call
+ * rather than the buffer sizes themselves; the two agree unless the file changed
+ * between H5OINAReader::readFile() and this call. A dataset LONGER than the header
+ * describes is rejected as well as a shorter one: the reader would size its buffers
+ * to the longer extent and the extra rows would be silently dropped, which is not a
+ * result a caller can distinguish from a correct import.
  */
 Result<> validateDataSetExtents(const std::filesystem::path& filePath, const std::string& scanName, usize totalPoints)
 {
-  const hid_t fileId = H5Support::H5Utilities::openFile(filePath.string(), true);
+  hid_t fileId = H5Support::H5Utilities::openFile(filePath.string(), true);
   if(fileId < 0)
   {
     return MakeErrorResult(
         -34971, fmt::format("The file '{}' could not be reopened to verify the extents of scan '{}'. The file may have been moved or changed since preflight.", filePath.string(), scanName));
   }
-  H5Support::H5ScopedFileSentinel sentinel(const_cast<hid_t&>(fileId), false);
+  H5Support::H5ScopedFileSentinel sentinel(fileId, false);
 
   const std::string dataGroupPath = fmt::format("/{}/{}/{}", scanName, ebsdlib::H5OINA::EBSD, ebsdlib::H5OINA::Data);
   for(const auto& [dataSetName, componentCount] : k_RequiredDataSets)

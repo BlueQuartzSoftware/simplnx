@@ -187,18 +187,36 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   }
 
   // The Ensemble Attribute Matrix is sized from the number of phase groups in the
-  // file, but each phase is placed at the index carried by its group name. A file
-  // whose phase groups are not numbered 1..N would place a phase past the end of
-  // the ensemble arrays.
+  // FIRST selected scan, but the shared ensemble fill in IEbsdOemReader::readData runs
+  // once per selected scan and places each phase at the index carried by its HDF5 group
+  // name. Both properties below therefore have to hold for EVERY selected scan, not just
+  // the first: a later scan with a group named outside 1..N, or with more phase groups
+  // than the first scan, writes past the end of the ensemble arrays at execute.
   const auto phases = reader.getPhaseVector();
-  for(const auto& phase : phases)
-  {
-    const int32 phaseIndex = phase->getPhaseIndex();
-    if(phaseIndex < 1 || static_cast<usize>(phaseIndex) > phases.size())
+  const usize ensemblePhaseCount = phases.size();
+  const auto validatePhaseGroups = [&](const std::string& scanName, const auto& scanPhases) -> Result<> {
+    if(scanPhases.size() != ensemblePhaseCount)
     {
-      return MakePreflightErrorResult(-9587, fmt::format("Scan '{}' in '{}' declares {} phase(s), but one of them carries index {}. The phase groups of an H5OINA file must be named 1 through {}.",
-                                                         firstScanName, inputFilePath, phases.size(), phaseIndex, phases.size()));
+      return MakeErrorResult(-9589, fmt::format("Scan '{}' in '{}' declares {} phase group(s), but scan '{}' declares {}. Every selected scan must declare the same phase groups, because the single "
+                                                "Ensemble Attribute Matrix that all of the stacked scans share is sized and filled from those groups. Import scans with differing phase lists "
+                                                "separately.",
+                                                scanName, inputFilePath, scanPhases.size(), firstScanName, ensemblePhaseCount));
     }
+    for(const auto& phase : scanPhases)
+    {
+      const int32 phaseIndex = phase->getPhaseIndex();
+      if(phaseIndex < 1 || static_cast<usize>(phaseIndex) > ensemblePhaseCount)
+      {
+        return MakeErrorResult(-9587, fmt::format("Scan '{}' in '{}' declares {} phase(s), but one of them carries index {}. The phase groups of an H5OINA file must be named 1 through {}.", scanName,
+                                                  inputFilePath, ensemblePhaseCount, phaseIndex, ensemblePhaseCount));
+      }
+    }
+    return {};
+  };
+
+  if(Result<> phaseCheck = validatePhaseGroups(firstScanName, phases); phaseCheck.invalid())
+  {
+    return MakePreflightErrorResult(phaseCheck.errors().front().code, phaseCheck.errors().front().message);
   }
 
   // Every other selected scan has to describe the same grid, because the geometry
@@ -229,6 +247,10 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
                                "grid, because they are stacked into a single Image Geometry.",
                                scanName, inputFilePath, scanCheckReader.getXDimension(), scanCheckReader.getYDimension(), scanCheckReader.getXStep(), scanCheckReader.getYStep(), firstScanName,
                                reader.getXDimension(), reader.getYDimension(), reader.getXStep(), reader.getYStep()));
+      }
+      if(Result<> phaseCheck = validatePhaseGroups(scanName, scanCheckReader.getPhaseVector()); phaseCheck.invalid())
+      {
+        return MakePreflightErrorResult(phaseCheck.errors().front().code, phaseCheck.errors().front().message);
       }
     }
   }
