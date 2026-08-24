@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -63,11 +64,19 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Vertex Data"});
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_CriterionMode_Key, "Internal Surface Criterion",
+      "How an internal surface is identified. 'Node Type Range' keeps triangles whose three nodes all fall inside the Node Type range; this also removes a one-triangle-wide rim wherever an "
+      "internal surface meets the bounding box. 'Face Labels' removes only the bounding box wall backed by the background (Feature Id 0), which leaves Features flush with the box closed.",
+      0, ChoicesParameter::Choices{"Node Type Range", "Face Labels"}));
+
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<VectorInt8Parameter>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
                                                       "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
                                                       std::vector<std::string>{"Min", "Max"}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels Array", "Path to the Face Labels array", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
@@ -81,13 +90,26 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
                                                                std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Face Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
                                                                std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+
+  params.linkParameters(k_CriterionMode_Key, k_NodeTypesPath_Key, static_cast<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_CriterionMode_Key, k_NodeTypeRange_Key, static_cast<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_CriterionMode_Key, k_FaceLabelsPath_Key, static_cast<ChoicesParameter::ValueType>(1));
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType ExtractInternalSurfacesFromTriangleGeometryFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_CriterionMode_Key = "internal_surface_criterion_index";
+  // Solution - set the value to 0 (Node Type Range, preserves prior behavior);
+  // Change 2:
+  // Added - k_FaceLabelsPath_Key = "face_labels_path";
+  // Solution - set the value to an empty DataPath (inactive unless Criterion Mode is Face Labels);
+  //
 }
 
 //------------------------------------------------------------------------------
@@ -102,7 +124,9 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  auto criterionMode = filterArgs.value<ChoicesParameter::ValueType>(k_CriterionMode_Key);
   auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
+  auto faceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsPath_Key);
   auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
   auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
@@ -111,13 +135,22 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   OutputActions actions;
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
 
-  // Validate NodeTypes and SharedVertexList all have the same number of tuples
+  if(triangleGeom.getVertices() == nullptr)
   {
-    if(triangleGeom.getVertices() == nullptr)
-    {
-      std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-      return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
-    }
+    std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
+  }
+
+  if(triangleGeom.getFaces() == nullptr)
+  {
+    std::string ss = fmt::format("Triangle Geometry does not a Shared Face List");
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
+  }
+
+  // Only the array the selected criterion needs is validated for matching tuple counts.
+  if(criterionMode == 0)
+  {
+    // Validate NodeTypes and SharedVertexList all have the same number of tuples
     std::vector<DataPath> vertexArrays;
     vertexArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
     vertexArrays.push_back(nodeTypesArrayPath);
@@ -128,11 +161,18 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
       return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
     }
   }
-
-  if(triangleGeom.getFaces() == nullptr)
+  else
   {
-    std::string ss = fmt::format("Triangle Geometry does not a Shared Face List");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
+    // Validate FaceLabels and SharedFaceList all have the same number of tuples
+    std::vector<DataPath> faceArrays;
+    faceArrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
+    faceArrays.push_back(faceLabelsArrayPath);
+
+    auto tupleValidityCheck = dataStructure.validateNumberOfTuples(faceArrays);
+    if(!tupleValidityCheck)
+    {
+      return MakePreflightErrorResult(-2072, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+    }
   }
 
   ShapeType cDims(1, 1);
@@ -215,8 +255,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   inputValues.CopyTriangleArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyTrianglePaths_Key);
   inputValues.CopyVertexArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.CriterionMode = filterArgs.value<ChoicesParameter::ValueType>(k_CriterionMode_Key);
   inputValues.NodeTypeRange = filterArgs.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
   inputValues.NodeTypesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_NodeTypesPath_Key);
+  inputValues.FaceLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsPath_Key);
   inputValues.OutputTriangleGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedTriangleGeometryPath_Key);
   inputValues.TriangleAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TriangleAttributeMatrixName_Key);
   inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);

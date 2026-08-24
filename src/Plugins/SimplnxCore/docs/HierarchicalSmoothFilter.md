@@ -14,6 +14,12 @@ This **Filter** applies hierarchical smoothing to a triangle surface mesh repres
 
 This hierarchical approach preserves the topology of the grain boundary network while producing smooth surfaces. The smoothing parameter is optimized via interval bisection to balance smoothness against displacement from the original mesh.
 
+Because every stage above is driven by the Node Type value, smoothing a mesh produced by Create
+Surface Mesh (Surface Nets) now behaves differently than it did previously: that **Filter**'s Node
+Types were corrected to follow the `2`/`3`/`4`/`12`/`13`/`14` convention this **Filter** expects,
+so vertices that were previously misclassified (and therefore held fixed or smoothed in the wrong
+stage) are now classified correctly. This is a correction, not a regression.
+
 Nodes that are displaced beyond the error threshold (a multiple of a reference edge length) are rejected and reset to their original positions.
 
 ## Algorithm Overview
@@ -48,12 +54,12 @@ where `I` is the identity matrix, `L` is the reduced graph Laplacian, `y_origina
 The algorithm uses **interval bisection** to find the optimal `epsilon`:
 
 
-1. Start at `epsilon = 0.5`.
-2. Compute a numerical derivative of the objective function (the total Laplacian residual energy).
-3. If the derivative is near zero (flat region), the current `epsilon` is not in the active tradeoff zone. Halve `epsilon` and try again.
-4. Repeat until either a significant slope is found or the iteration limit is reached.
+1. Start at `epsilon = 0.5`, with a step size of `epsilon / 2`.
+2. Compute a numerical derivative (slope) of the objective function (the total Laplacian residual energy) at the current `epsilon`.
+3. If the slope's magnitude is still significant, step `epsilon` up or down (in the direction that reduces the slope) by the current step size, then halve the step size.
+4. Repeat until the slope's magnitude falls below the convergence threshold (a flat region — the optimal `epsilon` has been found) or the iteration limit is reached.
 
-The **Max Bisection Iterations** parameter controls how many halvings are attempted. The default value of **53** comes from `log2(10^16) ~ 53`, which is the number of bisection steps needed to resolve a double-precision floating point value to machine epsilon. In practice, the search often converges in far fewer iterations because it terminates early once a significant slope is detected.
+The **Max Bisection Iterations** parameter controls how many halvings are attempted. The default value of **53** comes from `log2(10^16) ~ 53`, which is the number of bisection steps needed to resolve a double-precision floating point value to machine epsilon. In practice, the search often converges in far fewer iterations because it stops as soon as the slope flattens out below the convergence threshold, well before the iteration limit is reached.
 
 **Practical guidance:**
 

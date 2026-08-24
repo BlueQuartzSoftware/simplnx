@@ -2535,13 +2535,109 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
 
+  // Faces suppressed by the prune below. Stays 0 when the mode is Off, or when the mode is on but
+  // nothing matched. Read after the winding-repair pass to decide which (if either) of the two
+  // Bounding Box Skin warnings to emit.
+  int64 numFacesPruned = 0;
+
+  // Bounding Box Skin option, 'Background-Backed Walls Only' mode: drop faces whose output Face Labels would be {-1, 0}. In the
+  // internal representation that is one negative ghost label paired with maxGrainId, which
+  // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
+  // means the output TriangleGeom is sized from the surviving count and never over-allocated.
+  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  {
+    messageHandler("Omitting bounding box skin faces...");
+
+    // True when this triangle is a bounding-box wall face backed by background (i.e. its output
+    // Face Labels would be {-1, 0}). M3C's single sequential pass over `triangles` (below) is the
+    // only place this predicate is evaluated, so -- unlike QuickSurfaceMesh's SkipWallFace and
+    // SurfaceNets' SkipPaddingQuad -- there is no second pass it must stay in agreement with.
+    const auto SkipBackgroundSkinFace = [maxGrainId](const Triangle& triangle) -> bool {
+      const int spinA = triangle.nSpin[0];
+      const int spinB = triangle.nSpin[1];
+      return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
+    };
+
+    // Count how many triangles will be dropped before allocating droppedNodeIds: pushing onto an
+    // unreserved vector here causes dozens of reallocations (and a transient ~1.5x peak) on a
+    // representative dataset. This adds a second pass over `triangles`, but it only evaluates the
+    // same boolean predicate the compaction loop below already does -- no allocation -- so it is
+    // negligible next to the reallocations it avoids.
+    int64 numToDrop = 0;
+    for(int64 i = 0; i < nTriangle; i++)
+    {
+      if(SkipBackgroundSkinFace(triangles[static_cast<usize>(i)]))
+      {
+        numToDrop++;
+      }
+    }
+
+    int64 survivingCount = 0;
+    // node_id values touched by a DROPPED triangle, recorded before the in-place compaction below
+    // overwrites them. Used to narrow the nodeType clear (see below) to exactly the nodes the prune
+    // itself orphaned, at a cost of O(3 * droppedCount) instead of a second full 7*numSites mask.
+    std::vector<SiteId> droppedNodeIds;
+    droppedNodeIds.reserve(static_cast<usize>(3 * numToDrop));
+    for(int64 i = 0; i < nTriangle; i++)
+    {
+      const Triangle& triangle = triangles[static_cast<usize>(i)];
+      if(SkipBackgroundSkinFace(triangle))
+      {
+        droppedNodeIds.push_back(triangle.node_id[0]);
+        droppedNodeIds.push_back(triangle.node_id[1]);
+        droppedNodeIds.push_back(triangle.node_id[2]);
+      }
+      else
+      {
+        triangles[static_cast<usize>(survivingCount)] = triangle;
+        mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
+        survivingCount++;
+      }
+    }
+    triangles.resize(static_cast<usize>(survivingCount));
+    mCubeID.resize(static_cast<usize>(survivingCount));
+    numFacesPruned = nTriangle - survivingCount;
+
+    // Clear nodeType only for nodes the prune itself orphaned: referenced by a DROPPED triangle and
+    // by no SURVIVING triangle. Nodes referenced only by survivors are left untouched, and
+    // "pre-existing" candidates that no triangle -- dropped or surviving -- ever referenced are left
+    // exactly as they were; the option no longer sweeps up orphan candidates it had no hand in creating.
+    if(!droppedNodeIds.empty())
+    {
+      std::sort(droppedNodeIds.begin(), droppedNodeIds.end());
+      droppedNodeIds.erase(std::unique(droppedNodeIds.begin(), droppedNodeIds.end()), droppedNodeIds.end());
+
+      std::vector<bool> referencedBySurvivor(droppedNodeIds.size(), false);
+      for(const auto& triangle : triangles)
+      {
+        for(const SiteId nodeId : triangle.node_id)
+        {
+          const auto it = std::lower_bound(droppedNodeIds.begin(), droppedNodeIds.end(), nodeId);
+          if(it != droppedNodeIds.end() && *it == nodeId)
+          {
+            referencedBySurvivor[static_cast<usize>(it - droppedNodeIds.begin())] = true;
+          }
+        }
+      }
+      for(usize i = 0; i < droppedNodeIds.size(); i++)
+      {
+        if(!referencedBySurvivor[i])
+        {
+          nodeType[static_cast<usize>(droppedNodeIds[i])] = M3CNodeType::k_Unused;
+        }
+      }
+    }
+  }
+
+  const int64 nTriangleFinal = static_cast<int64>(triangles.size());
+
   // Promote surface nodes to their exterior variant (+10). A triangle that borders the outside of the
   // volume has exactly one negative feature label (nSpin[0]*nSpin[1] < 0), so each of its nodes lies on
   // the volume boundary. This is the only output-relevant effect of the legacy triangle-side/inner-edge
   // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
   // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
   // has been removed.
-  for(int64 j = 0; j < nTriangle; j++)
+  for(int64 j = 0; j < nTriangleFinal; j++)
   {
     if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
     {
@@ -2604,15 +2700,15 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
   triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
-  triangleGeom.resizeFaceList(static_cast<usize>(nTriangle));
+  triangleGeom.resizeFaceList(static_cast<usize>(nTriangleFinal));
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nNodes)});
-  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangle)});
+  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangleFinal)});
 
   auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
   auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
   auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(inputValues->FaceLabelsDataPath).getDataStoreRef();
   auto& nodeTypesOut = dataStructure.getDataRefAs<Int8Array>(inputValues->NodeTypesDataPath).getDataStoreRef();
-  faceLabels.resizeTuples({static_cast<usize>(nTriangle)});
+  faceLabels.resizeTuples({static_cast<usize>(nTriangleFinal)});
   nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
 
   // Compact nodes: scatter coordinates + node types to their new (sequential) ids. Walking candidates
@@ -2638,7 +2734,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
 
   // Triangles: remap to compacted node ids and write the ordered FaceLabels.
-  for(int64 i = 0; i < nTriangle; i++)
+  for(int64 i = 0; i < nTriangleFinal; i++)
   {
     triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[0]));
     triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[1]));
@@ -2668,7 +2764,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
       AddFeatureTupleTransferInstance(dataStructure, inputValues->SelectedFeatureDataArrayPaths[i], inputValues->CreatedDataArrayPaths[numCellArrays + i], inputValues->FeatureIdsArrayPath, transfers);
     }
 
-    for(int64 i = 0; i < nTriangle; i++)
+    for(int64 i = 0; i < nTriangleFinal; i++)
     {
       // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
       // the feature in the same FaceLabels component.
@@ -2717,6 +2813,26 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
+  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  {
+    // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+    // legitimately produces an empty mesh. Report it rather than returning silently. Unlike
+    // QuickSurfaceMesh/SurfaceNets, M3C's narrowed orphan-node clearing (see above) can leave
+    // pre-existing candidate nodes in the output even when every face is dropped, so nNodes here
+    // is not necessarily zero.
+    if(nTriangleFinal == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(inputValues->TriangleGeometryPath, dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                    static_cast<usize>(nNodes));
+    }
+    // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
+    // the user otherwise gets byte-identical output with no feedback that the option had no effect.
+    if(numFacesPruned == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(inputValues->TriangleGeometryPath);
+    }
+  }
+
   return {};
 }
 } // namespace
@@ -2749,6 +2865,21 @@ Result<> M3CSurfaceMeshing::operator()()
   //   M3C_SERIAL=1        -> runWindowed(false): serial sliding window (same tessellation as legacy)
   //   M3C_WHOLE_VOLUME=1  -> runEntireVolume():  serial whole-volume (O(volume) memory)
   // Both serial paths are byte-identical to each other.
+
+  // Reject Feature Ids that collide with this algorithm's internal sentinel space: maxGrainId+1 is
+  // signed overflow (undefined behavior) when INT32_MAX is present, and negative Feature Ids collide
+  // with M3C's nSpin < 0 ghost convention. This is a mitigation for the underlying sentinel-collision
+  // design, not a fix -- see simplnx#1705. Run here (execute), not preflight: a full-volume scan is
+  // too expensive to repeat on every GUI parameter edit.
+  {
+    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true, m_ShouldCancel, m_MessageHandler);
+    if(sentinelCheck.invalid())
+    {
+      return sentinelCheck;
+    }
+  }
+
   if(const char* wholeVol = std::getenv("M3C_WHOLE_VOLUME"); wholeVol != nullptr && std::string_view(wholeVol) == "1")
   {
     return runEntireVolume();

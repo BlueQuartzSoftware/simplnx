@@ -13,23 +13,14 @@
 #include "SimplnxCore/SurfaceNets/MMGeometryOBJ.h"
 #include "SimplnxCore/SurfaceNets/MMSurfaceNet.h"
 
+#include <limits>
+#include <vector>
+
 using namespace nx::core;
 
 namespace
 {
 using LabelType = int32;
-constexpr inline int8 CalculatePadding(int8 value)
-{
-  return value + ((9 * static_cast<int8>(value < 10)) + 1);
-}
-
-inline void HandlePadding(std::array<size_t, 4> vertexIndices, AbstractDataStore<int8>& nodeTypes)
-{
-  nodeTypes.setValue(vertexIndices[0], CalculatePadding(nodeTypes.getValue(vertexIndices[0])));
-  nodeTypes.setValue(vertexIndices[1], CalculatePadding(nodeTypes.getValue(vertexIndices[1])));
-  nodeTypes.setValue(vertexIndices[2], CalculatePadding(nodeTypes.getValue(vertexIndices[2])));
-  nodeTypes.setValue(vertexIndices[3], CalculatePadding(nodeTypes.getValue(vertexIndices[3])));
-};
 
 struct VertexData
 {
@@ -86,6 +77,21 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   triangleVtxIDs[4] = vData[2].VertexId;
   triangleVtxIDs[5] = vData[3].VertexId;
 }
+
+/**
+ * @brief True when this quad is bounding-box wall backed by background and must be skipped.
+ * Called from both the counting pass and the emit pass -- they must agree exactly.
+ * Note this reads the RAW quadLabels, where MMSurfaceNet::Padding is still distinct from a
+ * real Feature Id 0. Do not call it after the Padding -> -1 remap.
+ */
+inline bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelType, 2>& quadLabels)
+{
+  if(mode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  {
+    return false;
+  }
+  return (quadLabels[0] == MMSurfaceNet::Padding && quadLabels[1] == 0) || (quadLabels[1] == MMSurfaceNet::Padding && quadLabels[0] == 0);
+}
 } // namespace
 // -----------------------------------------------------------------------------
 SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues)
@@ -108,6 +114,20 @@ const std::atomic_bool& SurfaceNets::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SurfaceNets::operator()()
 {
+  // Reject Feature Ids that collide with MMSurfaceNet::Padding (INT32_MAX), the sentinel this
+  // algorithm uses for "outside the volume" throughout MMCellMap: a real Feature Id of INT32_MAX
+  // would be silently treated as exterior. This is a mitigation for the underlying
+  // sentinel-collision design, not a fix -- see simplnx#1705. Run here (execute), not preflight: a
+  // full-volume scan is too expensive to repeat on every GUI parameter edit.
+  {
+    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true, m_ShouldCancel, m_MessageHandler);
+    if(sentinelCheck.invalid())
+    {
+      return sentinelCheck;
+    }
+  }
+
   // Get the ImageGeometry
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
 
@@ -155,15 +175,18 @@ Result<> SurfaceNets::operator()()
   {
     cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
-    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
+    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
-    MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
+    nodeTypes[static_cast<usize>(vertIndex)] = cellMapPtr->nodeType(vertCellIndex.data());
   }
 
   usize triangleCount = 0;
+  // Counts quads suppressed by the Bounding Box Skin option's 'Background-Backed Walls Only' mode
+  // (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) in this counting pass. Always 0 when the mode is
+  // Off. Lets the caller warn when the option is on but pruned nothing.
+  usize suppressedFaceCount = 0;
   std::array<usize, 2> quadNxArrayIndices = {0, 0};
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
@@ -173,27 +196,36 @@ Result<> SurfaceNets::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
-        HandlePadding(vertexIndices, nodeTypes);
+        suppressedFaceCount++;
       }
-      triangleCount += 2;
+      else
+      {
+        triangleCount += 2;
+      }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
-        HandlePadding(vertexIndices, nodeTypes);
+        suppressedFaceCount++;
       }
-      triangleCount += 2;
+      else
+      {
+        triangleCount += 2;
+      }
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      if(::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
       {
-        HandlePadding(vertexIndices, nodeTypes);
+        suppressedFaceCount++;
       }
-      triangleCount += 2;
+      else
+      {
+        triangleCount += 2;
+      }
     }
   }
 
@@ -238,7 +270,8 @@ Result<> SurfaceNets::operator()()
   {
     cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
     // Back-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -246,13 +279,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
@@ -298,7 +333,8 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -306,13 +342,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -356,7 +394,8 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-back edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
+       !::SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -364,13 +403,15 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      // Map the exterior padding sentinel straight to the shared exterior Face Label (-1).
+      // Going through 0 as an intermediate would collide with real Feature Id 0.
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -414,12 +455,64 @@ Result<> SurfaceNets::operator()()
     }
   }
 
-  // Now run through the FaceLabels to make them consistent with Quick Surface Mesh
-  for(usize tIdx = 0; tIdx < triangleCount * 2; tIdx++)
+  // Dropping faces can orphan vertices, which come from the cell map before any triangle
+  // exists. Compact them so the vertex list, Node Types and vertex AttributeMatrix agree.
+  // Skipped entirely when the option is off, because then no face was dropped.
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
-    if(faceLabels[tIdx] == 0)
+    m_MessageHandler("Removing vertices orphaned by omitted bounding box faces...");
+
+    auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+    const usize numFaceIndices = triangleCount * 3;
+
+    // First pass: find which of the nodeCount vertices are actually referenced by a face.
+    std::vector<bool> isReferenced(nodeCount, false);
+    for(usize i = 0; i < numFaceIndices; i++)
     {
-      faceLabels[tIdx] = -1;
+      isReferenced[static_cast<usize>(facesRef[i])] = true;
+    }
+
+    // Second pass: assign each referenced vertex's new index and copy its data in the same
+    // step, walking in ascending order of OLD index (not order of first use in the face
+    // list). Assigning destIndex from a running counter as oldIndex ascends guarantees
+    // newVertexIndex[oldIndex] <= oldIndex for every referenced vertex, which is what makes
+    // the in-place copy below safe -- a destination slot is always at or before its source
+    // slot, so writing it never clobbers data that a later iteration still needs to read.
+    // The two passes this replaces (assign-then-copy) walked all nodeCount vertices twice for
+    // no benefit, since the copy consumes newVertexIndex[oldIndex] immediately after it is
+    // assigned.
+    constexpr usize k_NotUsed = std::numeric_limits<usize>::max();
+    std::vector<usize> newVertexIndex(nodeCount, k_NotUsed);
+    usize survivingVertexCount = 0;
+    auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
+    for(usize oldIndex = 0; oldIndex < nodeCount; oldIndex++)
+    {
+      if(!isReferenced[oldIndex])
+      {
+        continue;
+      }
+      const usize destIndex = survivingVertexCount;
+      newVertexIndex[oldIndex] = destIndex;
+      for(usize comp = 0; comp < 3; comp++)
+      {
+        verticesRef[destIndex * 3 + comp] = verticesRef[oldIndex * 3 + comp];
+      }
+      nodeTypes[destIndex] = nodeTypes[oldIndex];
+      survivingVertexCount++;
+    }
+
+    if(survivingVertexCount < nodeCount)
+    {
+      // Remap the face indices to the compacted vertex ids. Must run after the copy loop
+      // above (it reads the pre-remap face indices to look up newVertexIndex).
+      for(usize i = 0; i < numFaceIndices; i++)
+      {
+        facesRef[i] = static_cast<IGeometry::MeshIndexType>(newVertexIndex[static_cast<usize>(facesRef[i])]);
+      }
+
+      triangleGeom.resizeVertexList(survivingVertexCount);
+      triangleGeom.getVertexAttributeMatrix()->resizeTuples({survivingVertexCount});
+      nodeTypes.resizeTuples({survivingVertexCount});
     }
   }
 
@@ -445,6 +538,24 @@ Result<> SurfaceNets::operator()()
     // Purge connectivity
     m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
     m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
+  }
+
+  // Guarded on windingResult still being valid so a genuine winding-repair error is never discarded.
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  {
+    // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
+    // legitimately produces an empty mesh. Report it rather than returning silently.
+    if(triangleGeom.getNumberOfFaces() == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                    triangleGeom.getNumberOfVertices());
+    }
+    // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
+    // the user otherwise gets byte-identical output with no feedback that the option had no effect.
+    if(suppressedFaceCount == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+    }
   }
 
   return windingResult;

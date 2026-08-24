@@ -42,25 +42,20 @@ SurfaceNets output **with** the built-in smoothing operation applied.
 
 ## Node Types
 
-During the meshing process, each vertex (node) is assigned a "Node Type" value ranging from 0 to 6. The value is an internal representation from the Surface Nets algorithm. The values are roughly equivalent to the Node Types from the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) algorithm but are not strictly the same.
+During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. This filter uses the same convention as the Create Surface Mesh (QuickMesh) and Create Surface Mesh (M3C) **Filters**: the value is the number of distinct **Features** meeting at the node, capped at 4, plus 10 when the node lies on the outer surface of the bounding box. The region outside the volume counts as one of those owners, which is why an ordinary vertex on the wall between the exterior and a single Feature is `12` — two owners, one of them the exterior — rather than `11`.
 
-- Node Type = 0: A node that has ONLY 2 features connected to it.
-- Node Type = 2: A node that has 3 features connected to it, such as a **triple line** (the edge where exactly three features meet).
-- Node Type = 3-6: Nodes that have 4 or more features connected to them.
-
-| Node Type | Example Image                                |
-|-----------|----------------------------------------------|
-| 0 | ![Node Type 0](Images/SurfaceNets_NodeType_0.png)|
-| 2 |  ![Node Type 2](Images/SurfaceNets_NodeType_2.png)|
-| 3 |  ![Node Type 3](Images/SurfaceNets_NodeType_3.png)|
-| 4 | ![Node Type 4](Images/SurfaceNets_NodeType_4.png)|
-| 6 |  ![Node Type 6](Images/SurfaceNets_NodeType_6.png)|
+| Id Value | Node Type |
+|----------|-----------|
+| 2 | Normal **Vertex** |
+| 3 | Triple Line |
+| 4 | Quadruple Point (four or more Features meet) |
+| 12 | Normal **Vertex** on the outer surface of the bounding box |
+| 13 | Triple Line on the outer surface of the bounding box |
+| 14 | Quadruple Point on the outer surface of the bounding box |
 
 ### Exterior or Boundary Nodes
 
-Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume has a value of 12.
-
-![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
+Nodes that appear on the outer surface of the bounding box have Node Type values starting at 12 and going up from there. For instance, a triple line that is also on the exterior of the volume has a value of 13.
 
 ### Exterior or Boundary Triangles
 
@@ -70,10 +65,30 @@ Each triangle has a 2-component **Face Labels** array that holds the Feature Id 
 
 This filter should be used in place of the [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md) filter.
 
-### Required Input Sources
+## Changed Behavior for Existing Pipelines
 
-- **Image Geometry** -- the labeled volume to mesh, from an image/volume reader or an upstream processing filter.
-- **Cell Feature Ids** -- the per-Cell integer label array that defines the regions to wrap, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+Two defects in this filter's output were fixed as part of adding the **Bounding Box Skin**
+option below. Both fixes apply unconditionally -- they are not gated by that new option -- so any
+pipeline that already used this **Filter** will see different (corrected) output the next time it
+runs, with no parameter change on the user's part:
+
+- **Face Labels**: a face between the exterior and Feature Id 0 is now reported as `{-1, 0}`.
+  Previously it was reported as `{-1, -1}`. Likewise, a face between Feature Id 0 and another
+  Feature `k` is now `{0, k}`; previously it was reported as `{-1, k}`.
+- **Node Types**: values were previously a junction-face-crossing count in the range `0`-`6`, with
+  exterior-node variants offset inconsistently. They now follow the shared convention described
+  above (`2`/`3`/`4` for interior nodes, `12`/`13`/`14` on the bounding box wall), matching Create
+  Surface Mesh (QuickMesh) and Create Surface Mesh (M3C).
+- **Vertex Z coordinate on anisotropic spacing**: the half-voxel offset this **Filter** applies when
+  relocating each vertex used the **Y** spacing for the Z component instead of the **Z** spacing.
+  Every vertex's Z coordinate was wrong on any **Image Geometry** with anisotropic spacing (Z
+  spacing different from Y spacing); it is correct now. Volumes with isotropic spacing (all three
+  spacing values equal) were unaffected and see no change from this fix.
+
+If you hand-tuned a Node Type range parameter against this **Filter**'s old values, if you rely on
+smoothing **Filters** (Laplacian Smoothing, Hierarchical Smoothing) downstream that read Node
+Types, or if you compare newly generated output against previously stored SurfaceNets results
+generated on anisotropic-spacing data, re-check it against the corrected behavior above.
 
 ## Comparison of Surface Meshing Filters
 
@@ -91,6 +106,53 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 | Status | Deprecated | Recommended default | Specialized / legacy-compatible |
 
 **Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.
+
+### Bounding Box Skin
+
+The six outer walls of the **Image Geometry**'s bounding box are not real interfaces — they are
+artifacts of where the volume was cropped. This option controls whether triangles are generated to
+cover them. Wall faces carry a **Face Label** of `-1` on their exterior side.
+
+#### Off (default)
+
+All six walls are covered. Note that wherever an internal **Feature**-**Feature** boundary meets a
+wall, three faces share that edge — the internal boundary plus the two wall faces on either side of
+it — a non-manifold T-junction inherent to including the full skin.
+
+#### Background-Backed Walls Only
+
+A wall face is omitted where the **Voxel** behind it is background (**Feature Id** 0), that is,
+where its **Face Labels** would be `{-1, 0}`. Wall faces that cap a *real* **Feature** are still
+generated, because that cut plane is the only possible closure for a **Feature** flush with the box;
+a cylinder sitting flush with the box floor therefore comes out as a closed surface with no
+surrounding box.
+
+Because the test is per *face* rather than per *vertex*, no triangles are lost along the rim where an
+internal boundary meets a wall, and dropping the background-backed face on such an edge leaves two
+faces there rather than three, which is manifold. In the configurations this **Filter**'s tests
+exercise — a cylinder **Feature** flush with a wall, and a **Feature** occupying a box corner where
+three omitted wall planes meet — this mode therefore yields a watertight mesh where **Off** does not.
+That is not a universal guarantee for arbitrary input.
+
+Two inputs leave this mode nothing useful to do. Both are reported as warnings, not errors:
+
+- `-56342` — no bounding-box wall **Voxel** is background, so no face is omitted and the mode has no
+  effect. This covers a fully-indexed volume as well as one whose background is entirely enclosed as
+  interior porosity; the warning concerns only the walls, not whether background exists elsewhere in
+  the volume.
+- `-56340` — every **Voxel** is background, so every face is omitted and the **Triangle Geometry** is
+  created with zero vertices and zero faces. The input is legal — it holds no internal interface and
+  no **Feature** to cap — so this is success.
+
+### Feature Id Validation
+
+Independently of the **Bounding Box Skin** setting, this **Filter** always rejects a **Feature
+Ids** array that contains a negative value or a value equal to `INT32_MAX`, because both collide
+with sentinel values this **Filter**'s underlying `MMSurfaceNet` implementation uses internally to
+mark padding. A **Feature Id** must therefore be in the range `0` to `INT32_MAX - 1`. A rejected
+value produces an error (code `-56343`) naming the offending value, its tuple index, and the
+array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
+as issue #1705), not a fix for it.
 
 % Auto generated parameter table will be inserted here
 

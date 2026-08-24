@@ -2,12 +2,100 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
+namespace nx::core
+{
+/**
+ * @brief Shared values for the "Bounding Box Skin" ChoicesParameter used by QuickSurfaceMeshFilter,
+ * SurfaceNetsFilter, and M3CSurfaceMeshingFilter. Named here (rather than as bare literals) so a
+ * future third mode can be added without every `== 1` comparison needing to be rediscovered.
+ * Typed as `uint64` (rather than `ChoicesParameter::ValueType`, which is itself just an alias for
+ * `uint64`) so this header does not need to pull in ChoicesParameter.hpp; every use site compares or
+ * assigns against a `ChoicesParameter::ValueType`, so the two types are interchangeable here.
+ */
+namespace BoundingBoxSkinMode
+{
+inline constexpr uint64 k_Off = 0;
+inline constexpr uint64 k_BackgroundBackedWallsOnly = 1;
+} // namespace BoundingBoxSkinMode
+} // namespace nx::core
+
 namespace nx::core::MeshingUtilities
 {
+/**
+ * @brief Warning emitted when the 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode
+ * (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) removes every face of the mesh -- i.e. the input is
+ * entirely background (Feature Id 0), so there is no internal interface and no Feature to cap any box
+ * wall. Shared verbatim by QuickSurfaceMesh, SurfaceNets, and M3CSurfaceMeshing so the warning text and
+ * code are defined exactly once. See MakeEmptyMeshWarning().
+ */
+inline constexpr int32 k_EmptyMeshAfterSkinRemovalWarning = -56340;
+
+/**
+ * @brief Warning emitted when the 'Bounding Box Skin' option's 'Background-Backed Walls Only' mode
+ * (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) is enabled but suppressed zero bounding-box wall
+ * faces -- i.e. no wall face is backed by background (Feature Id 0), so the option had nothing to
+ * prune and the output is identical to leaving it off. This says nothing about whether the volume
+ * contains background elsewhere: a volume whose background is fully enclosed as interior porosity
+ * also reaches this warning, because none of that background borders a bounding-box wall. This is
+ * the most common dataset shape in practice, so silent no-feedback behavior here is not acceptable.
+ * See MakeNoFacesPrunedWarning().
+ */
+inline constexpr int32 k_NoFacesPrunedWarning = -56342;
+
+/**
+ * @brief Error emitted when a Feature Ids array contains a value that collides with a mesher's internal
+ * "not a real Feature" sentinel space (see ValidateFeatureIdsAgainstSentinels()). This is a mitigation
+ * for the underlying sentinel-collision design, not a fix for it -- the architectural issue is tracked
+ * separately as simplnx#1705.
+ */
+inline constexpr int32 k_InvalidFeatureIdError = -56343;
+
+/**
+ * @brief Builds the warning Result for k_EmptyMeshAfterSkinRemovalWarning (see its docs above).
+ * The vertex count is reported rather than assumed to be zero: QuickSurfaceMesh and SurfaceNets
+ * both reach zero vertices in this case, but M3CSurfaceMeshing's marching-cubes candidate generation
+ * can leave a handful of pre-existing candidate nodes that no triangle -- dropped or surviving --
+ * ever referenced, so its vertex count here is not necessarily zero.
+ * @param triangleGeomPath Path to the (now-empty, or near-empty) Triangle Geometry, named in the message.
+ * @param numCells Number of Feature Id cells in the input, named in the message.
+ * @param numVertices Number of vertices remaining in the Triangle Geometry after the prune.
+ */
+SIMPLNX_EXPORT Result<> MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices);
+
+/**
+ * @brief Builds the warning Result for k_NoFacesPrunedWarning (see its docs above).
+ * @param triangleGeomPath Path to the Triangle Geometry, named in the message.
+ */
+SIMPLNX_EXPORT Result<> MakeNoFacesPrunedWarning(const DataPath& triangleGeomPath);
+
+/**
+ * @brief Validates that no value in a Feature Ids array collides with a mesher's internal "not a real
+ * Feature" sentinel space (e.g. SurfaceNets' MMSurfaceNet::Padding == INT32_MAX, M3CSurfaceMeshing's
+ * maxGrainId+1 overflow and nSpin < 0 ghost convention, QuickSurfaceMesh's hard-coded -1 exterior Face
+ * Label). This is a mitigation, not a fix, for that design -- the architectural issue is tracked
+ * separately as simplnx#1705.
+ *
+ * Call this from an algorithm's execute entry point, never from preflight: a full-volume scan (e.g.
+ * ~134M reads at 512^3) is too expensive to repeat on every GUI parameter edit. Because that same
+ * full-volume scan is otherwise silent and uncancellable, this emits a message before scanning and
+ * polls shouldCancel periodically (not on every tuple, to keep the inner loop tight).
+ * @param featureIdsStore The Feature Ids to validate.
+ * @param featureIdsPath Path to the array, named in the error message so the user can locate it.
+ * @param rejectMaxInt32 When true, also reject a Feature Id of exactly INT32_MAX (SurfaceNets and
+ * M3CSurfaceMeshing both need this; QuickSurfaceMesh only collides on negative values, so it passes false).
+ * @param shouldCancel Checked periodically so the scan can be interrupted.
+ * @param mesgHandler Used to report that the scan is running before it starts.
+ * @returns An invalid Result<> naming the offending value, its tuple index, and featureIdsPath on the
+ * first rejected value found; an empty valid Result<> otherwise (including if cancelled).
+ */
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsAgainstSentinels(const Int32AbstractDataStore& featureIdsStore, const DataPath& featureIdsPath, bool rejectMaxInt32, const std::atomic_bool& shouldCancel,
+                                                           const IFilter::MessageHandler& mesgHandler);
+
 namespace detail
 {
 inline static constexpr usize k_00 = 0;

@@ -252,6 +252,10 @@
     },
     {
       "args": {
+        "bounding_box_skin_mode_index": {
+          "value": 0,
+          "version": 1
+        },
         "face_data_group_name": {
           "value": "Face Data",
           "version": 1
@@ -288,7 +292,7 @@
           "value": "TriangleDataContainer",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 3,
         "repair_triangle_winding": {
           "value": true,
           "version": 1

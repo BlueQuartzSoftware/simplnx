@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 #include <random>
@@ -19,6 +20,7 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
   bool FixProblemVoxels;
   bool RepairTriangleWinding;
   bool GenerateTripleLines;
+  ChoicesParameter::ValueType BoundingBoxSkinMode;
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
@@ -59,8 +61,11 @@ public:
    * @param m_NodeIds
    * @param nodeCount
    * @param triangleCount
+   * @param suppressedFaceCount Incremented once per bounding-box wall face that 'Omit Bounding Box
+   * Skin' (BoundingBoxSkinMode::k_BackgroundBackedWallsOnly) suppresses. Always 0 when the mode is
+   * Off. Lets the caller warn when the option is on but pruned nothing.
    */
-  void determineActiveNodes(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount);
+  void determineActiveNodes(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount, MeshIndexType& suppressedFaceCount);
 
   /**
    * @brief

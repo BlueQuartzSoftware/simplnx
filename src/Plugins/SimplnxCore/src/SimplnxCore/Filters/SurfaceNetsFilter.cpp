@@ -12,11 +12,13 @@
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 using namespace nx::core;
 
@@ -59,6 +61,12 @@ Parameters SurfaceNetsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent",
                                                 "If true, attempts to repair the windings for the mesh. This may not be possible. See help page.", true));
+  params.insert(std::make_unique<ChoicesParameter>(k_BoundingBoxSkinMode_Key, "Bounding Box Skin",
+                                                   "Controls how triangles are generated on the outer wall of the bounding box. 'Off' generates the "
+                                                   "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
+                                                   "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
+                                                   "Features flush with the box stay closed.",
+                                                   BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
@@ -108,7 +116,12 @@ Parameters SurfaceNetsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType SurfaceNetsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
+  // Solution - set the value to 0 (BoundingBoxSkinMode::k_Off, preserves prior behavior);
+  //
 }
 
 //------------------------------------------------------------------------------
@@ -201,6 +214,7 @@ Result<> SurfaceNetsFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   inputValues.ApplySmoothing = filterArgs.value<bool>(k_ApplySmoothing_Key);
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
+  inputValues.BoundingBoxSkinMode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);
   inputValues.SmoothingIterations = filterArgs.value<int32>(k_SmoothingIterations_Key);
   inputValues.MaxDistanceFromVoxel = filterArgs.value<float32>(k_MaxDistanceFromVoxelCenter_Key);
   inputValues.RelaxationFactor = filterArgs.value<float32>(k_RelaxationFactor_Key);

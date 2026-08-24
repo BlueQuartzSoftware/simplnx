@@ -13,6 +13,14 @@
           "value": false,
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "color_weights": {
           "value": [
             0.21250000596046448,
@@ -23,6 +31,40 @@
         },
         "convert_to_gray_scale": {
           "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
           "version": 1
         },
         "exact_xy_dimensions": {
@@ -64,6 +106,10 @@
             0.0,
             0.0
           ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -206,8 +252,16 @@
     },
     {
       "args": {
-        "input_grid_geometry_path": {
-          "value": "RoboMet.3D Image Stack",
+        "bounding_box_skin_mode_index": {
+          "value": 0,
+          "version": 1
+        },
+        "face_data_group_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_array_name": {
+          "value": "FaceLabels",
           "version": 1
         },
         "feature_ids_path": {
@@ -222,31 +276,27 @@
           "value": [],
           "version": 1
         },
-        "repair_triangle_winding": {
-          "value": true,
-          "version": 1
-        },
-        "output_triangle_geometry_path": {
-          "value": "TriangleDataContainer",
-          "version": 1
-        },
-        "vertex_data_group_name": {
-          "value": "Vertex Data",
+        "input_grid_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
           "version": 1
         },
         "node_types_array_name": {
           "value": "NodeTypes",
           "version": 1
         },
-        "face_data_group_name": {
-          "value": "Face Data",
+        "output_triangle_geometry_path": {
+          "value": "TriangleDataContainer",
           "version": 1
         },
-        "face_labels_array_name": {
-          "value": "FaceLabels",
+        "parameters_version": 2,
+        "repair_triangle_winding": {
+          "value": true,
           "version": 1
         },
-        "parameters_version": 1
+        "vertex_data_group_name": {
+          "value": "Vertex Data",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -257,11 +307,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/SurfaceMesh/M3C_Demo.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1

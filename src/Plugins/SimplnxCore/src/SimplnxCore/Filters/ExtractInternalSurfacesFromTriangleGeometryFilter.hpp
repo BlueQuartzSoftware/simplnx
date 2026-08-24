@@ -29,6 +29,8 @@ public:
   static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
   static constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
   static constexpr StringLiteral k_NodeTypeRange_Key = "node_type_range";
+  static constexpr StringLiteral k_CriterionMode_Key = "internal_surface_criterion_index";
+  static constexpr StringLiteral k_FaceLabelsPath_Key = "face_labels_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

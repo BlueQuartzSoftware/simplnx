@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace nx::core
@@ -14,6 +15,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 {
   bool RepairTriangleWinding;
+  ChoicesParameter::ValueType BoundingBoxSkinMode;
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;

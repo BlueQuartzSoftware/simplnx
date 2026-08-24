@@ -40,6 +40,7 @@ public:
 
   static constexpr StringLiteral k_ApplySmoothing_Key = "apply_smoothing";
   static constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
+  static constexpr StringLiteral k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
   static constexpr StringLiteral k_SmoothingIterations_Key = "smoothing_iterations";
   static constexpr StringLiteral k_MaxDistanceFromVoxelCenter_Key = "max_distance_from_voxel";
   static constexpr StringLiteral k_RelaxationFactor_Key = "relaxation_factor";

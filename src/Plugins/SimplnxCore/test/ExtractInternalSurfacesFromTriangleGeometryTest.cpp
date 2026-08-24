@@ -1,11 +1,16 @@
 #include "SimplnxCore/Filters/ExtractInternalSurfacesFromTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "SurfaceMeshingTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -181,4 +186,98 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: SIMPL
       // Complex type (StringToDataPathFilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+namespace
+{
+// Meshes the flush cylinder from SurfaceMeshingTestUtils with QuickSurfaceMesh, leaving Fix
+// Problem Voxels off so the mesh is deterministic. omitSkin selects whether QuickSurfaceMesh's own
+// Bounding Box Skin option runs, so the same helper can build both the "full" mesh (skin left
+// on, to be pruned by this filter) and the "direct" oracle mesh (skin already omitted by the mesher).
+const DataPath k_QuickMeshPath({"QuickMesh"});
+
+SurfaceMeshingTest::MeshResult RunQuickSurfaceMeshForExtraction(ChoicesParameter::ValueType boundingBoxSkinMode)
+{
+  return SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshPath, boundingBoxSkinMode,
+                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face Labels criterion", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Mesh the flush cylinder WITHOUT omitting the skin, then strip it with the Face Labels
+  // criterion. The result must match what QuickSurfaceMesh produces with the option ON.
+  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
+  DataStructure dataStructure = std::move(fullMeshResult.Structure);
+  const DataPath faceLabelsPath = fullMeshResult.FaceLabelsPath;
+
+  const DataPath extractedPath({"Internal"});
+  {
+    ExtractInternalSurfacesFromTriangleGeometryFilter filter;
+    Arguments args;
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_QuickMeshPath));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CriterionMode_Key, std::make_any<ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(faceLabelsPath));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(extractedPath));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+    // Copy Face Labels along into the extracted geometry too, so the "both code paths agree" claim
+    // below can be checked array-for-array rather than just by counting faces and vertices.
+    args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key,
+                        std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{faceLabelsPath}));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(extractedPath));
+  const auto& extractedGeom = dataStructure.getDataRefAs<TriangleGeom>(extractedPath);
+
+  // Face-label stripping does not erode the rim, so the cylinder stays closed.
+  REQUIRE(SurfaceMeshingTest::IsWatertight(extractedGeom));
+
+  // Same face and vertex counts as meshing with QuickSurfaceMesh's own option turned on directly:
+  // both code paths must agree on what "internal" means.
+  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+  const auto& directGeom = directMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshPath);
+
+  REQUIRE(extractedGeom.getNumberOfFaces() == directGeom.getNumberOfFaces());
+  REQUIRE(extractedGeom.getNumberOfVertices() == directGeom.getNumberOfVertices());
+
+  // The two paths must agree exactly, not just on counts: compare the Face Labels array copied
+  // into the extracted geometry against the one QuickSurfaceMesh produced directly.
+  const DataPath extractedFaceLabelsPath = extractedPath.createChildPath("Face Data").createChildPath(faceLabelsPath.getTargetName());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath));
+  REQUIRE_NOTHROW(directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
+  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath), directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face Labels criterion requires a valid array", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
+  DataStructure dataStructure = std::move(meshResult.Structure);
+
+  ExtractInternalSurfacesFromTriangleGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_QuickMeshPath));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CriterionMode_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  // Face Labels path is left at its default (an empty DataPath), which does not exist in the
+  // DataStructure. Preflight must reject this with a clear error instead of crashing in execute.
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({"Internal"})));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }

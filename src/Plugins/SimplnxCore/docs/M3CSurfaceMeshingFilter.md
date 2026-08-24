@@ -40,7 +40,10 @@ modeling and simulation workflows.
 ### Node Types
 
 The **Node Types** array uses the same convention as the Surface Nets **Filter**. Interior values
-denote how many **Features** meet at the vertex; the exterior (volume-boundary) variants add 10.
+denote how many **Features** meet at the vertex, capped at 4; the exterior (volume-boundary)
+variants add 10. The region outside the volume counts as one of those owners, which is why an
+ordinary vertex on the wall between the exterior and a single Feature is `12` — two owners, one
+of them the exterior — rather than `11`.
 
 | Node Type | Meaning |
 |-----------|---------|
@@ -63,6 +66,61 @@ heuristic, which does not guarantee globally consistent normals across the whole
 *Attempt to Make Windings Consistent* to run a post-processing pass that makes the triangle winding
 consistent across connected faces. This is recommended for meshes that will be used for normal- or
 curvature-dependent analysis.
+
+### Bounding Box Skin
+
+The six outer walls of the **Image Geometry**'s bounding box are not real interfaces — they are
+artifacts of where the volume was cropped. This option controls whether triangles are generated to
+cover them. Wall faces carry a **Face Label** of `-1` on their exterior side.
+
+#### Off (default)
+
+All six walls are covered. Note that wherever an internal **Feature**-**Feature** boundary meets a
+wall, three faces share that edge — the internal boundary plus the two wall faces on either side of
+it — a non-manifold T-junction inherent to including the full skin.
+
+#### Background-Backed Walls Only
+
+A wall face is omitted where the **Voxel** behind it is background (**Feature Id** 0), that is,
+where its **Face Labels** would be `{-1, 0}`. Wall faces that cap a *real* **Feature** are still
+generated, because that cut plane is the only possible closure for a **Feature** flush with the box;
+a cylinder sitting flush with the box floor therefore comes out as a closed surface with no
+surrounding box.
+
+Because the test is per *face* rather than per *vertex*, no triangles are lost along the rim where an
+internal boundary meets a wall, and dropping the background-backed face on such an edge leaves two
+faces there rather than three, which is manifold. In the configurations this **Filter**'s tests
+exercise — a cylinder **Feature** flush with a wall, and a **Feature** occupying a box corner where
+three omitted wall planes meet — this mode therefore yields a watertight mesh where **Off** does not.
+That is not a universal guarantee for arbitrary input.
+
+Two inputs leave this mode nothing useful to do. Both are reported as warnings, not errors:
+
+- `-56342` — no bounding-box wall **Voxel** is background, so no face is omitted and the mode has no
+  effect. This covers a fully-indexed volume as well as one whose background is entirely enclosed as
+  interior porosity; the warning concerns only the walls, not whether background exists elsewhere in
+  the volume.
+- `-56340` — every **Voxel** is background, so every face is omitted and the **Triangle Geometry** is
+  created with zero faces. Unlike Create Surface Mesh (QuickMesh) and Create Surface Mesh (Surface
+  Nets), the vertex count is not zero for M3C (see the note below), so the warning reports the
+  remaining vertex count. The input is legal — it holds no internal interface and no **Feature** to
+  cap — so this is success.
+
+### Feature Id Validation
+
+Independently of the **Bounding Box Skin** setting, this **Filter** always rejects a **Feature
+Ids** array that contains a negative value or a value equal to `INT32_MAX`, because both collide
+with sentinel values M3C's algorithm uses internally to represent ghost cells and the outside of
+the volume. A **Feature Id** must therefore be in the range `0` to `INT32_MAX - 1`. A rejected
+value produces an error (code `-56343`) naming the offending value, its tuple index, and the
+array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
+as issue #1705), not a fix for it.
+
+**Note:** M3C's candidate-node generation always leaves a handful of node entries near the volume
+boundary that no triangle references. These orphan vertices are present in stock M3C output
+regardless of the **Bounding Box Skin** setting (tracked as issue #1706), and
+**Background-Backed Walls Only** does not touch them — it clears only the vertices its own pruning
+orphans. This is why an all-background volume yields zero faces but a non-zero vertex count.
 
 ### Notes and Limitations
 
@@ -106,7 +164,7 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 
 ## Example Pipelines
 
-        Pipelines/SimplnxCore/M3C_Demo.d3dpipeline
+* Pipelines/SimplnxCore/M3C_Demo.d3dpipeline
 
 ## License & Copyright
 

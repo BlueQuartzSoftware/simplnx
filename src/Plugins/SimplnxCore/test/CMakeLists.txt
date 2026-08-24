@@ -105,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
+  OmitBoundingBoxSkinTest.cpp
   PadImageGeometryTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp
@@ -148,6 +149,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SliceTriangleGeometryTest.cpp
   SplitDataArrayByComponentTest.cpp
   SplitDataArrayByTupleTest.cpp
+  SurfaceMeshingTestUtilsTest.cpp
+  SurfaceNetsFaceLabelsTest.cpp
+  SurfaceNetsNodeTypesTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
@@ -284,7 +288,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d_v3.tar.gz SHA512 bfa9547e787b0f8e8122702da0eb4e519f48a48bf4f94aad020f72479d071d32dfc96a1425705874c68507a61ed391d28606d9c4f4acd559043ef0ace64fd33f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME SurfaceMeshTest.tar.gz SHA512 a74e9fa40ccec78174dbbac90969bfa17367c3a7e14b7b84624032317c351de89957750803d7cb43c67dec19281ee4f647de022d474566fd43e25b8230cce6d6)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME SurfaceNetsTest_v3.tar.gz SHA512 06865d006a5fb37b66c8045858112af6e2e2e077ee685246acb5516670954a9d87e0791b7e75aa74011e8187fc4625f3b3f97237b09d02475968c2768a65bd7c)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME SurfaceNetsTest_v4.tar.gz SHA512 9a89b55630120dc9c2701500e81da3f8d126fbc6e8a2de8ec21e1a8ef97ae90fda6c7a093a8217c65e1db5f5cebd091c37c8f6561cd44d3def911c8acbf83e49)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME volume_graphics_test.tar.gz SHA512 94d996fbf2b8b42cd715fb3adf33548f097970211e7a26eb9ccc5b073a78014eecbd10d40fc0451ff9cc7c92e23ed21582fc082d64e1f62b3714e4d9640c975f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME vtk_rectilinear_grid_writer.tar.gz SHA512 9fef02b5269609503d03dd0126cc635cc1c1156894cff18b0184b334d705b850ca1a06ae0d1c66a352a32dd9ad9fb74f24255c7de1399b06bbec7d2e2b41941b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME winding_quick_surface_mesh.tar.gz SHA512 ed9944b969c4c2feea8902f98d03024248780607848a40ad374d9a1c7861df1d971a355d779a7af8c775f2225b6364b9a17d61c2350375293e531bcee59255b7)

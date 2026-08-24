@@ -39,6 +39,7 @@ public:
   static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
   static constexpr StringLiteral k_SelectedFeatureDataArrayPaths_Key = "input_feature_data_array_paths";
   static constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
+  static constexpr StringLiteral k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
 
   static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
 
