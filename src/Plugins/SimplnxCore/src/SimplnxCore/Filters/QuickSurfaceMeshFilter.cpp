@@ -70,7 +70,6 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
                                                    BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
-  // params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
@@ -109,15 +108,15 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
 {
   return 3;
-  // Version 2 -> 3
-  // Change 1:
-  // Added - k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
-  // Solution - set the value to 0 (BoundingBoxSkinMode::k_Off, preserves prior behavior);
-  //
   // Version 1 -> 2
   // Change 1:
   // Added - k_RepairTriangleWinding_Key = "repair_triangle_winding";
   // Solution - set the value to false (not default);
+  //
+  // Version 2 -> 3
+  // Change 1:
+  // Added - k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
+  // Solution - set the value to 0 (BoundingBoxSkinMode::k_Off, preserves prior behavior);
   //
 }
 
@@ -221,7 +220,6 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
 {
   nx::core::QuickSurfaceMeshInputValues inputValues;
 
-  // inputValues.GenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   inputValues.FixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
   inputValues.BoundingBoxSkinMode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);

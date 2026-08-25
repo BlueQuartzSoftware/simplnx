@@ -47,6 +47,7 @@ add_executable(simplnx_test
   UuidTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
+  TripleLineUtilitiesTest.cpp
   ScaleBarRendererTest.cpp
   FilterValidationTest.cpp
   SimplJsonConversionTest.cpp
