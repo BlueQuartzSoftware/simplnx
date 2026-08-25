@@ -283,7 +283,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:NonConformingAttributeByteCount", "[Si
   const std::string k_VxElementsHeader = "Exported by VXelements";
   const std::string k_AnonymousHeader = "Written by some CAD package that nobody has heard of";
 
-  auto headerText = GENERATE_COPY(k_MagicsHeader, k_VxElementsHeader, k_AnonymousHeader);
+  auto headerText = GENERATE_COPY(as<std::string>{}, k_MagicsHeader, k_VxElementsHeader, k_AnonymousHeader);
 
   DYNAMIC_SECTION("Header: '" << headerText << "'")
   {
