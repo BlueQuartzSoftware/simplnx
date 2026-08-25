@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -100,7 +100,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ComputeGBCDMetricBasedFilter()
+nx_filter = nxor.ComputeGBCDMetricBasedFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

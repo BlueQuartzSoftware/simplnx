@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = cxor.ReadH5OimDataFilter()
+nx_filter = nxor.ReadH5OimDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

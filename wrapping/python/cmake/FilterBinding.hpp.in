@@ -1,8 +1,8 @@
 #pragma once
 
-#include "CxPybind/CxPybind.hpp"
+#include "NxPybind/NxPybind.hpp"
 
 namespace nx::core::@PLUGIN_NAME@
 {
-void BindFilters(pybind11::handle scope, const nx::core::CxPybind::Internals& internals);
+void BindFilters(pybind11::handle scope, const nx::core::NxPybind::Internals& internals);
 } // namespace nx::core

@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -21,7 +21,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-nx_filter = cxor.ComputeGBCDFilter()
+nx_filter = nxor.ComputeGBCDFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -41,7 +41,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ComputeGBCDPoleFigureFilter()
+nx_filter = nxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -58,7 +58,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.ComputeGBCDPoleFigureFilter()
+nx_filter = nxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -75,7 +75,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.ComputeGBCDPoleFigureFilter()
+nx_filter = nxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -92,7 +92,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.WriteGBCDGMTFileFilter()
+nx_filter = nxor.WriteGBCDGMTFileFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -106,7 +106,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxor.WriteGBCDTriangleDataFilter()
+nx_filter = nxor.WriteGBCDTriangleDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

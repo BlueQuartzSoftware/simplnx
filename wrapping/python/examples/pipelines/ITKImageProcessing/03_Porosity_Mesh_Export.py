@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = cxitk.ITKImportImageStackFilter()
+nx_filter = nxitk.ITKImportImageStackFilter()
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
 generated_file_list_value.input_path = str(nxtest.get_data_directory() / "Porosity_Image/")

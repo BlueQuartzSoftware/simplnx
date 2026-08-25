@@ -1,9 +1,10 @@
-#include <CxPybind/CxPybind.hpp>
+#include <NxPybind/NxPybind.hpp>
 
 #include <pybind11/pybind11.h>
 
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
+#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
@@ -92,7 +93,7 @@
 #include <filesystem>
 
 using namespace nx::core;
-using namespace nx::core::CxPybind;
+using namespace nx::core::NxPybind;
 
 namespace py = pybind11;
 namespace fs = std::filesystem;
@@ -511,6 +512,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindVec2<int32>(mod, "IntVec2");
   BindVec2<float32>(mod, "FloatVec2");
+  BindVec2<usize>(mod, "SizeVec2");
 
   py::enum_<NumericType> numericType(mod, "NumericType");
   numericType.value("int8", NumericType::int8);
@@ -672,6 +674,9 @@ PYBIND11_MODULE(simplnx, mod)
   uuid.def("__getitem__", [](const Uuid& self, usize i) { return static_cast<uint8>(self.data.at(i)); });
   uuid.def("__setitem__", [](Uuid& self, usize i, uint8 value) { self.data.at(i) = std::byte{value}; });
   uuid.def("__len__", [](const Uuid& self) { return self.data.size(); });
+  uuid.def(py::self == py::self);
+  uuid.def(py::self != py::self);
+  uuid.def(py::hash(py::self));
   uuid.def_property_readonly("bytes", [](const Uuid& self) { return py::bytes(reinterpret_cast<const char*>(self.data.data()), self.data.size()); });
 
   py::class_<AtomicBoolProxy, std::shared_ptr<AtomicBoolProxy>> atomicBool(mod, "AtomicBoolProxy");
@@ -706,6 +711,7 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
   py::class_<IParameter> parameter(mod, "IParameter");
+  parameter.def_property_readonly("uuid", [](const IParameter& self) { return self.uuid(); });
 
   py::enum_<IParameter::Type> parameterType(parameter, "Type");
   parameterType.value("Value", IParameter::Type::Value);
@@ -719,6 +725,9 @@ PYBIND11_MODULE(simplnx, mod)
   parameter.def_property_readonly("version", &IParameter::getVersion);
 
   py::class_<Parameters> parameters(mod, "Parameters");
+  parameters.def("__len__", [](const Parameters& self) { return self.size(); });
+  parameters.def("__getitem__", [](const Parameters& self, std::string_view key) { return self.at(key); });
+  parameters.def("__iter__", [](Parameters& self) { return py::make_iterator(self.begin(), self.end()); });
 
   py::class_<Parameters::Separator> separator(parameters, "Separator");
   separator.def(py::init<>());
@@ -1385,7 +1394,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto cropGeometryParameterCropValues = py::class_<CropGeometryParameter::ValueType>(cropGeometryParameter, "ValueType");
   cropGeometryParameterCropValues.def(py::init<>());
   cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2, SizeVec2, SizeVec2, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
-  cropGeometryParameterCropValues.def_readwrite("2d", &CropGeometryParameter::ValueType::is2D);
+  cropGeometryParameterCropValues.def_readwrite("is_2d", &CropGeometryParameter::ValueType::is2D);
   cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::cropX);
   cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::cropY);
   cropGeometryParameterCropValues.def_readwrite("crop_z", &CropGeometryParameter::ValueType::cropZ);
@@ -1564,6 +1573,7 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("name", &IFilter::name);
   filter.def("uuid", &IFilter::uuid);
   filter.def("human_name", &IFilter::humanName);
+  filter.def("parameters", &IFilter::parameters);
   filter.def("parameters_version", &IFilter::parametersVersion);
   filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
@@ -1724,6 +1734,27 @@ PYBIND11_MODULE(simplnx, mod)
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
   mod.def("convert_data_type_to_numeric_type", &ConvertDataTypeToNumericType);
+
+  mod.def("get_all_registered_filters", [internals]() {
+    std::vector<py::type> pyFilterList;
+
+    const FilterList* filterList = internals->getApp()->getFilterList();
+    if(filterList == nullptr)
+    {
+      throw std::runtime_error("The FilterList for simplnx does not exist");
+    }
+
+    FilterList::FilterContainerType filterHandles = filterList->getFilterHandles();
+
+    for(const FilterHandle& handle : filterHandles)
+    {
+      py::object filter_ = py::cast(filterList->createFilter(handle.getFilterId()));
+      py::type filterType = py::type::of(filter_);
+      pyFilterList.push_back(filterType);
+    }
+
+    return pyFilterList;
+  });
 
   mod.def("get_filters", [corePlugin]() {
     auto filterHandles = corePlugin->getFilterHandles();

@@ -1,10 +1,10 @@
 find_package(pybind11 2.10.0 CONFIG REQUIRED)
 
-add_library(CxPybind INTERFACE)
+add_library(NxPybind INTERFACE)
 
-target_include_directories(CxPybind INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/CxPybind)
+target_include_directories(NxPybind INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/NxPybind)
 
-target_link_libraries(CxPybind
+target_link_libraries(NxPybind
   INTERFACE
     simplnx
     pybind11::headers
@@ -56,7 +56,7 @@ endif()
 target_link_libraries(simplnxpy
   PUBLIC
     SimplnxCore
-    CxPybind
+    NxPybind
 )
 
 target_compile_options(simplnxpy
@@ -199,6 +199,9 @@ if(SIMPLNX_PY_ENABLE_INSTALL)
     LIBRARY
       DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
   )
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py
+    DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
+  )
   if(SIMPLNX_PY_GENERATE_PYI)
     install(FILES $<TARGET_FILE_DIR:simplnx>/simplnx.pyi
       DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
@@ -206,6 +209,15 @@ if(SIMPLNX_PY_ENABLE_INSTALL)
   endif()
 endif()
 
+#-------------------------------------------------------------------------------
+# Copy the Pipeline to Python Code utilities at build time
+#-------------------------------------------------------------------------------
+add_custom_target(CopySimplnxUtilities ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py"
+    "$<TARGET_FILE_DIR:simplnxpy>/simplnx_utilities.py"
+  COMMENT "Copying simplnx_utilities.py to build output"
+)
 
 #-------------------------------------------------------------------------------
 # FUNCTION: simplnx_add_python_plugin
@@ -236,7 +248,7 @@ function(simplnx_add_python_plugin)
   target_link_libraries(${PYTHON_MODULE_NAME}
     PUBLIC
       ${ARGS_PLUGIN_NAME}
-      CxPybind
+      NxPybind
   )
 
   target_compile_definitions(${PYTHON_MODULE_NAME} PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
