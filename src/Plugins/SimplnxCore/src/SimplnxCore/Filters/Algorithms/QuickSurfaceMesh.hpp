@@ -26,7 +26,6 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 {
   bool FixProblemVoxels;      ///< When true, run iterative problem-voxel correction before meshing
   bool RepairTriangleWinding; ///< When true, run winding repair on the output triangle mesh
-  bool GenerateTripleLines;   ///< When true, generate an EdgeGeom of triple lines (currently unused)
   ChoicesParameter::ValueType BoundingBoxSkinMode;
 
   DataPath GridGeomDataPath;
