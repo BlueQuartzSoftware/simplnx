@@ -4,7 +4,7 @@ This file lists every behavioral difference between the released SIMPLNX filter 
 
 Entries are referenced by stable ID (`GroupMicroTextureRegionsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Which legacy build is the reference.** In DREAM3D 6.5.171 this filter is *unregistered* — it is listed in `_PrivateFilters`, so `ADD_SIMPL_FILTER(... FALSE)` emits no `fm->addFilterFactory()` call and the filter cannot be instantiated from the GUI or from a pipeline file. The same is true of every other tagged 6.x release. The filter **is** public and runnable in **DREAM3D 6.6.379**, which is therefore the legacy build used for all behavioral comparisons recorded here. The algorithm in 6.6.379 is unchanged from 6.5.171 apart from the EbsdLib math-API migration, so these entries describe the 6.5.171 algorithm as well; they simply could not have been observed there. See the *Availability across DREAM3D versions* section of the V&V report.
+**Which legacy build is the reference.** In DREAM3D 6.5.171 this filter is *unregistered* — it is listed in `_PrivateFilters`, so `ADD_SIMPL_FILTER(... FALSE)` emits no `fm->addFilterFactory()` call and the filter cannot be instantiated from the GUI or from a pipeline file. The same is true of every other tagged 6.x release. The filter **is** public and runnable throughout the **DREAM3D 6.6.x** line, which is therefore the reference used for all behavioral comparisons recorded here. Two 6.6.x builds were used: 6.6.379 (`5bd740812`) for the registration probes and the small analytical fixtures, and a `v6_6` build (`107b8d51b`) for the full-dataset comparison; the GMR algorithm is identical in both. The algorithm in 6.6.x is unchanged from 6.5.171 apart from the EbsdLib math-API migration, so these entries describe the 6.5.171 algorithm as well; they simply could not have been observed there. See the *Availability across DREAM3D versions* and *Legacy comparison (DREAM3D 6.6.x)* sections of the V&V report.
 
 ---
 
@@ -35,12 +35,12 @@ Reserved ID, retained so cross-references do not dangle. The released SIMPLNX fi
 **SIMPLNX options:**
 
 - `RandomizeParentIds=false` (default) → reproducible sequential parent IDs. Suitable for diff testing and exemplar comparison.
-- `RandomizeParentIds=true, UseSeed=false` → legacy-like behaviour: shuffled IDs from a nondeterministic seed.
+- `RandomizeParentIds=true, UseSeed=false` → legacy-like behaviour: shuffled IDs from a nondeterministic seed. Note `UseSeed` now defaults to `true`, so this combination must be selected deliberately.
 - `RandomizeParentIds=true, UseSeed=true, SeedValue=<n>` → shuffled IDs that are still reproducible.
 
 **Why it matters downstream:** parent IDs are frequently fed straight into a color map. Sequential IDs mean adjacent regions get adjacent colors, which can make neighbouring regions hard to distinguish; that is precisely what legacy's unconditional shuffle was for. Users who relied on that visual behaviour should set `RandomizeParentIds=true`.
 
-**A secondary, unavoidable consequence:** legacy constructs a fresh RNG inside `getSeed()` on every call (`SIMPL_RANDOMNG_NEW()`), whereas SIMPLNX uses a single class-level generator seeded once. The order in which unparented features are selected as region seeds therefore differs between the two implementations. This does not change the resulting partition — the grouping criterion is symmetric and the neighbor graph is fixed — but it does change which region is discovered first, and hence the sequential labels under `RandomizeParentIds=false`.
+**A secondary consequence:** legacy constructs a fresh RNG inside `getSeed()` on every call (`SIMPL_RANDOMNG_NEW()`), whereas SIMPLNX uses one generator seeded once. The seed order does not change the partition when `UseRunningAverage=false`. It can change the partition when `UseRunningAverage=true` because each accepted feature changes the comparison target. See D4 and D6.
 
 **Recommendation:** Trust SIMPLNX. Compare partitions (equivalence classes), not parent-ID values, when validating against a legacy run.
 
@@ -90,7 +90,26 @@ That is a strictly **weaker** condition than the intended one, so the legacy def
 | Same, but the hexagonal phase is ensemble index 2 and a Cubic_High phase occupies index 1 | 3 groups (unchanged) | 3 groups (unchanged) | 3 groups (unchanged) |
 | 20 independent touching pairs, each one Cubic_High feature + one Hexagonal_High feature, c-axes exactly aligned | 0 / 20 pairs merged | **19 / 20 pairs merged** | 0 / 20 pairs merged |
 
-The first two rows establish that grouping is unaffected on hexagonal data regardless of which ensemble index the hexagonal phase occupies. The third isolates the deviation. (19 rather than roughly half of 20 because `getSeed()` scans forward from a random start index, so the lower-indexed cubic member of each pair is usually reached first and becomes the region seed.)
+The first two rows establish that grouping is unaffected on hexagonal data regardless of which ensemble index the hexagonal phase occupies. The third isolates the deviation.
+
+**Confirmed on real two-phase data (2026-08-25).** The fixture result above was reproduced at scale
+against DREAM3D 6.6.x on an alpha/beta titanium scan (`915C_50red`, Oxford `.h5oina`, 2,326,310
+cells; Phase 1 `Ti-Hex` → `Hexagonal_High`, Phase 2 `Titanium cubic` → `Cubic_High`). Both
+implementations ran on a byte-identical shared input of **1,840,838 features** containing **106,731
+hexagonal/cubic touching pairs**, at `CAxisTolerance = 20°`:
+
+- Legacy merged **907 hexagonal/cubic pairs** that SIMPLNX refused. SIMPLNX merged none that legacy
+  refused.
+- The effect is **structural, not stochastic**: varying only the RNG seed produces exactly **zero**
+  cross-Laue disagreements, so these 907 merges cannot be attributed to region-growth order.
+- Applying the one-line `phase1` correction to a local build of the legacy source removed **all 907**
+  merges, leaving zero cross-Laue disagreements in every configuration tested.
+
+This is the first observation of D3 on production data, and it accounts for the 884-group difference
+between the two as-shipped runs. With `UseRunningAverage=false` the same input yields **identical
+partitions** in both implementations (746,877 groups, zero differing pairs), confirming the defect is
+confined to the running-average path. Full method and controls: see the *Legacy comparison
+(DREAM3D 6.6.x)* section of the V&V report. (19 rather than roughly half of 20 because `getSeed()` scans forward from a random start index, so the lower-indexed cubic member of each pair is usually reached first and becomes the region seed.)
 
 **Affected users:** Anyone running legacy `UseRunningAverage=true` on a scan that contains a non-hexagonal indexed phase adjacent to the hexagonal phase of interest. Users whose scans contain a single hexagonal phase — or several phases all of which are hexagonal — are unaffected and their historical results are correct.
 
@@ -117,4 +136,64 @@ Both behaviours are correct and intended; they answer different questions. Exter
 
 **Affected users:** Anyone migrating a legacy pipeline that left "Group C-Axes With Running Average" at its default. Legacy ran the neighbour-to-neighbour path; SIMPLNX will run the running-average path unless the flag is explicitly cleared. Expect fewer, tighter regions in SIMPLNX on the same data — the anchored comparison rejects chains the legacy default would have accepted.
 
+**Reproducibility consequence.** Because the running-average comparison target is order-dependent, its result changes with the RNG seed: on the two-phase dataset above, varying only the seed moved 192,496 of 3,710,475 touching pairs. SIMPLNX therefore defaults `UseSeed` to `true` so the shipped configuration is deterministic. Legacy has no such parameter — its seed is always clock-derived — so legacy runs with the running average enabled are not reproducible run to run.
+
 **Recommendation:** Set `UseRunningAverage` explicitly rather than relying on either default. To reproduce a legacy run exactly, set it to `false`. Note that this deviation is independent of D3: D3 concerns *which Laue classes* are validated when the running average is enabled, whereas D4 concerns *which comparison target* is selected by default.
+
+---
+
+## GroupMicroTextureRegionsFilter-D5
+
+| Field            | Value                                      |
+|------------------|--------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D5`        |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`     |
+| **Status**       | active — intentional output removal        |
+
+**Deviation:** DREAM.3D creates `NewGrainData/Active` and initializes every value to `true`. DREAM3D-NX does not create this array. The parent Attribute Matrix is retained and its tuple count records the number of microtexture regions.
+
+**Reason for removal:** `GroupMicroTextureRegionsFilter` never reads an `Active` value. The SIMPLNX port created the array with `false` values and never changed them. No dedicated downstream consumer of this output was identified. The array therefore did not communicate usable state.
+
+**Compatibility:** Existing DREAM3D-NX pipelines that contain the removed `active_array_name` argument still load. The pipeline reader reports a warning for the unknown argument. The SIMPL 6.4 and 6.5 conversion fixtures also load successfully because the obsolete legacy `ActiveArrayName` value is ignored.
+
+**Affected users:** A workflow is affected only if it explicitly selects the generated `Active` array. Use the parent Attribute Matrix tuple count or the parent-ID arrays instead.
+
+**Recommendation:** Trust DREAM3D-NX. Remove references to the retired `Active` array from migrated pipelines.
+
+---
+
+## GroupMicroTextureRegionsFilter-D6
+
+| Field            | Value                                      |
+|------------------|--------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D6`        |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`     |
+| **Status**       | active — defect fixed in the verified branch |
+
+**Deviation:** Released DREAM3D-NX versions derived the grouping seed from the system clock by default. With `UseRunningAverage=true`, two runs of the same pipeline could produce different region partitions.
+
+**Evidence:** Two preserved runs differed on 194,658 of 3,710,475 touching pairs. A second fixed-input seed comparison differed on 192,496 pairs. All differences were hexagonal/hexagonal. No cross-Laue differences occurred.
+
+**Affected users:** DREAM3D-NX v7.0.0 through v7.4.1 users who used the running-average comparison and did not provide a fixed seed.
+
+**Resolution:** The verified branch enables `UseSeed` by default. The seed value is stored in a top-level array so the run can be repeated.
+
+**Recommendation:** Trust the verified branch. Keep `UseSeed=true` for reproducible grouping.
+
+---
+
+## GroupMicroTextureRegionsFilter-D7
+
+| Field            | Value                                      |
+|------------------|--------------------------------------------|
+| **Deviation ID** | `GroupMicroTextureRegionsFilter-D7`        |
+| **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`     |
+| **Status**       | active — precision difference              |
+
+**Deviation:** The legacy source converts the tolerance from degrees with a double-precision pi constant. DREAM3D-NX uses the float32 pi constant that matches the float32 input and angular calculation. A value at the acceptance boundary can therefore fall on different sides of the comparison.
+
+**Evidence:** At seed 5489 and a 20 degree tolerance, the implementations disagreed on two of 3,710,475 touching pairs. Changing only the local legacy tolerance conversion to the float32 pi constant removed both differences. Changing vector-normalization precision did not remove them. At seed 1234, no boundary value produced a difference.
+
+**Affected users:** Only comparisons that contain a candidate at the float32 tolerance boundary. The measured effect was two touching pairs in the production fixture.
+
+**Recommendation:** Either result is acceptable within float32 boundary precision. Use DREAM3D-NX output for current workflows.

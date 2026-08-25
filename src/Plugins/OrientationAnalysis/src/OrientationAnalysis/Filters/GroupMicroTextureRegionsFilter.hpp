@@ -37,7 +37,6 @@ public:
   static constexpr StringLiteral k_NewCellFeatureAttributeMatrixName_Key = "new_cell_feature_attribute_matrix_path";
   static constexpr StringLiteral k_CellParentIdsArrayName_Key = "cell_parent_ids_array_name";
   static constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "feature_parent_ids_array_name";
-  static constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static constexpr StringLiteral k_RandomizeParentIds_Key = "randomize_parent_ids";
   static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
   static constexpr StringLiteral k_UseSeed_Key = "use_seed";

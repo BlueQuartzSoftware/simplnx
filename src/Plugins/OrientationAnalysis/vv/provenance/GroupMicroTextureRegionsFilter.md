@@ -55,10 +55,11 @@ The dataset definition lives in `src/Plugins/OrientationAnalysis/test/GroupMicro
 | `/ImageGeometry/CellFeatureData/FeatureParentIds`                                         | Class 1 (Analytical) — per-pair grouping outcome derived in closed form from `\|Φ_A − Φ_B\|` and the contiguous neighbor adjacency. Encoded as same-group / different-group pairwise checks rather than absolute parent-id values, to remain invariant under deterministic seed-iteration order. |
 | `/ImageGeometry/CellData/CellParentIds`                                                   | Class 4 (Invariant) — must equal `FeatureParentIds[FeatureIds[k]]` for every cell `k`. Encoded as a loop check; no independent oracle derivation is needed because the value is determined by the feature-parent assignment plus the cell→feature mapping. |
 | `/ImageGeometry/MicroTextureFeatureData` (`AttributeMatrix` tuple count)                 | Class 4 (Invariant) — must equal `max(FeatureParentIds) + 1` (index 0 reserved for unassigned).                                                                                                                                                     |
-| `/ImageGeometry/MicroTextureFeatureData/Active`                                           | Class 4 (Invariant) — sized to the AM, default-initialized `true`. Verified for presence and tuple count; values not asserted (the algorithm does not write to this array, it inherits the default-true from `CreateArrayAction`).                |
 | `/GroupMicroTextureRegions_Seed` (top-level `UInt64Array`)                                | Class 4 (Invariant) — must equal the user-supplied seed value when `UseSeed=true`. Pins the seed-roundtrip behaviour.                                                                                                                              |
 
 For the `RandomizeParentIds invariants` test the canonical oracle output is the *set of invariants randomization must preserve* (equivalence classes, group count, cell/feature consistency, positivity, same-seed determinism) rather than specific array values. See the V&V report's Code-path coverage row #9 and the test's inline comments for the invariant list.
+
+The V&V branch retires the unused `/ImageGeometry/MicroTextureFeatureData/Active` output. The filter never consumed its values, and the SIMPLNX port never initialized them to the legacy `true` value. See `GroupMicroTextureRegionsFilter-D5`.
 
 ## Oracle provenance (Classes 2, 3, 5 only)
 
