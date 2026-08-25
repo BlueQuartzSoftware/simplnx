@@ -105,6 +105,7 @@ set(FilterList
   PadImageGeometryFilter
   PartitionGeometryFilter
   ExtractFeatureBoundaries2DFilter
+  ExtractTripleLinesFilter
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
