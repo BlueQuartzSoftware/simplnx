@@ -1,6 +1,6 @@
-# Deviations from DREAM3D 6.5.171: DBSCANFilter
+# Deviations from DREAM3D 6.5.172: DBSCANFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
+This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.172 equivalent.
 
 Entries are referenced by stable ID (`DBSCAN-D<N>`) from the V&V report and from public migration guidance. The Filter UUID fields are the permanent cross-reference anchors.
 

@@ -1,6 +1,7 @@
 #include "DBSCAN.hpp"
 
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
@@ -720,7 +721,7 @@ struct ClusterForest
     {
       if(lowestClusterIdx != clusterIdx)
       {
-        clusterForestNodes[clusterIdx].parent = clusterForestNodes[lowestClusterIdx].parent;
+        clusterForestNodes[clusterIdx].parent = lowestClusterIdx;
       }
     }
   }
@@ -756,7 +757,8 @@ public:
     }
     if(coreGridIds.empty())
     {
-      return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
+      return MakeWarningVoidResult(-85640, "No clusters detected - If a mask is applied, verify that some points are unmasked. Otherwise, consider reducing the number of required points (`Minimum "
+                                           "Points`) or increasing the acceptable distance (`Epsilon`).");
     }
 
     if(m_ShouldCancel)
@@ -791,6 +793,8 @@ public:
 
       break;
     }
+    default:
+      return MakeErrorResult(-85642, fmt::format("Unrecognized ParseOrder value: {}.", to_underlying(parseOrder)));
     }
 
     if(m_ShouldCancel)
@@ -943,11 +947,17 @@ public:
     return {};
   }
 
+  bool forestBuilt() const
+  {
+    return !clusterForest.clusterForestNodes.empty();
+  }
+
   Result<> label(AbstractDataStore<int32>& fIdsDataStore)
   {
     if(clusterForest.clusterForestNodes.empty())
     {
-      return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
+      return MakeWarningVoidResult(-85640, "No clusters detected - If a mask is applied, verify that some points are unmasked. Otherwise, consider reducing the number of required points (`Minimum "
+                                           "Points`) or increasing the acceptable distance (`Epsilon`).");
     }
 
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
@@ -1074,10 +1084,12 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
 
   messageHelper.sendMessage("Clustering:");
   Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
-  if(result.invalid() || !result.warnings().empty())
+  if(result.invalid())
   {
-    // If the result has warnings in it the cluster forest is
-    // ill-formed, so skip labeling step.
+    return result;
+  }
+  if(!algorithm.forestBuilt())
+  {
     return result;
   }
 
