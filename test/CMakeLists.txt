@@ -76,6 +76,7 @@ set(SIMPLNX_TEST_SRCS
   StbImageIOTest.cpp
   StoreResizeContractsTest.cpp
   ThrottledMessageHandlerTest.cpp
+  TripleLineUtilitiesTest.cpp
   ScaleBarRendererTest.cpp
   SelectiveImportReferencesTest.cpp
   FilterValidationTest.cpp

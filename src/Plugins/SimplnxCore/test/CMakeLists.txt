@@ -86,6 +86,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractFeatureBoundaries2DTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractPipelineToFileTest.cpp
+  ExtractTripleLinesTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
