@@ -105,11 +105,6 @@ Parameters SurfaceNetsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
                                                           "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_ApplySmoothing_Key, k_SmoothingIterations_Key, true);
-  params.linkParameters(k_ApplySmoothing_Key, k_MaxDistanceFromVoxelCenter_Key, true);
-  params.linkParameters(k_ApplySmoothing_Key, k_RelaxationFactor_Key, true);
-
   return params;
 }
 
@@ -203,6 +198,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
+
   return {std::move(resultOutputActions)};
 }
 

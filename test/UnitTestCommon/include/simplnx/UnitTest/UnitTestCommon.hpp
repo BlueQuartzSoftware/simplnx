@@ -3,6 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -1692,6 +1693,79 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, cons
       REQUIRE(attrMatrix.getShape() == arr->getTupleShape());
     }
   }
+}
+
+/**
+ * @brief Asserts that every vertex on a triple line also reports a junction count of 3 or
+ * more in NodeTypes. The two quantities are computed by completely independent paths -
+ * NodeTypes from the mesher's own junction logic, triple lines from FaceLabels - so
+ * agreement is a real signal. NodeTypes adds 10 for surface nodes, hence the % 10.
+ *
+ * A failure here indicates the NodeTypes producer is wrong, not GenerateTripleLines.
+ *
+ * Cost: O(triple-line vertices x mesh vertices) with exact coordinate matching, so this
+ * helper is intended for small fixtures only - not for full datasets.
+ */
+inline void CheckTripleLineNodeTypeAgreement(const DataStructure& dataStructure, const DataPath& tripleLineGeomPath, const DataPath& triangleGeomPath, const DataPath& nodeTypesPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(tripleLineGeomPath));
+  const auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(tripleLineGeomPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath));
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+  const auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(nodeTypesPath);
+
+  const auto& tripleLineVertsRef = tripleLineGeom.getVertices()->getDataStoreRef();
+  const auto& meshVertsRef = triangleGeom.getVertices()->getDataStoreRef();
+
+  // Triple line vertices are a compacted copy, so match them back by coordinate.
+  for(usize i = 0; i < tripleLineGeom.getNumberOfVertices(); i++)
+  {
+    bool foundMatch = false;
+    for(usize j = 0; j < triangleGeom.getNumberOfVertices(); j++)
+    {
+      if(tripleLineVertsRef[i * 3 + 0] == meshVertsRef[j * 3 + 0] && tripleLineVertsRef[i * 3 + 1] == meshVertsRef[j * 3 + 1] && tripleLineVertsRef[i * 3 + 2] == meshVertsRef[j * 3 + 2])
+      {
+        const int8 junctionCount = static_cast<int8>(nodeTypes[j] % 10);
+        INFO("Triple line vertex " << i << " maps to mesh vertex " << j << " with NodeType " << static_cast<int32>(nodeTypes[j]));
+        REQUIRE(junctionCount >= 3);
+        foundMatch = true;
+        break;
+      }
+    }
+    INFO("Triple line vertex " << i << " has no matching mesh vertex");
+    REQUIRE(foundMatch);
+  }
+}
+
+/**
+ * @brief Builds a 2x2x1 four-grain Image Geometry: every one of the four cells is its own
+ * Feature, so the four cells meet along one interior grid edge with 4 unique Feature Ids.
+ * Used by the triple-line tests across QuickSurfaceMesh, SurfaceNets, and M3CSurfaceMeshing.
+ *
+ * @param dataStructure The DataStructure to populate.
+ * @param imageGeomName Name given to the created ImageGeom.
+ * @param cellDataName Name given to the created Cell Data AttributeMatrix.
+ * @param featureIdsName Name given to the created FeatureIds Int32Array.
+ */
+inline void BuildFourGrainBlock(DataStructure& dataStructure, const std::string& imageGeomName = "ImageGeom", const std::string& cellDataName = "Cell Data",
+                                const std::string& featureIdsName = "FeatureIds")
+{
+  auto* imageGeom = ImageGeom::Create(dataStructure, imageGeomName);
+  imageGeom->setDimensions({2, 2, 1});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, cellDataName, ShapeType{1, 2, 2}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto featureIdsStore = std::make_unique<DataStore<int32>>(std::vector<usize>{1, 2, 2}, std::vector<usize>{1}, 0);
+  auto* featureIds = Int32Array::Create(dataStructure, featureIdsName, std::move(featureIdsStore), cellAM->getId());
+  auto& featureIdsRef = featureIds->getDataStoreRef();
+  featureIdsRef[0] = 1;
+  featureIdsRef[1] = 2;
+  featureIdsRef[2] = 3;
+  featureIdsRef[3] = 4;
 }
 
 namespace Cropping
