@@ -779,18 +779,7 @@ public:
     case DBSCAN::ParseOrder::Random:
     case DBSCAN::ParseOrder::SeededRandom: {
       std::mt19937_64 gen(seed);
-      std::uniform_real_distribution<float64> dist(0, 1);
-
-      const auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
-
-      //--- Shuffle elements by randomly exchanging each with one other.
-      for(usize i = 1; i < coreGridIds.size(); i++)
-      {
-        const auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
-
-        std::swap(coreGridIds[i], coreGridIds[r]);
-      }
-
+      std::shuffle(coreGridIds.begin(), coreGridIds.end(), gen);
       break;
     }
     default:

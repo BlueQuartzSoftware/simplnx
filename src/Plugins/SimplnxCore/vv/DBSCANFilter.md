@@ -87,7 +87,7 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | 4b | (a) Mask all false | No point passes the mask → bounds stay NaN → early return leaves the grid empty → warning `-85640`                              | **F3** (`Analytical Fixture F3 - All Points Masked`, added during Phase 7 fix) |
 | 5  | (b) No cores  | All grids have <minPoints → warning `-85640`, no labeling                                                                              | **F1** (`Analytical Fixture F1 - No Clusters Warning`, added Phase 8) |
 | 6  | (b) LDF sort  | Parse order = LowDensityFirst → QuickSort core grids ascending by occupancy                                                            | All 2D LDF tests and 3D test                                          |
-| 7  | (b) Random    | Parse order = Random → shuffle with time-based seed (non-deterministic run to run)                                                      | `Random` variant of all 2D tests. Compares cluster count + cluster-size multiset only; the seed actually used is read back from the seed array and reported via `INFO` so a failure is reproducible. |
+| 7  | (b) Random    | Parse order = Random → shuffle with time-based seed (non-deterministic run to run)                                                      | `Random` variant of all 2D tests. Non-deterministic — only structural invariants (`CheckClusterInvariants`) and AM tuple-count consistency are checked; no exemplar bin comparison. Seed read back from seed array and reported via `INFO` for reproducibility if a failure occurs. |
 | 8  | (b) SeededRnd | Parse order = SeededRandom → shuffle with user-supplied seed                                                                           | `SeededRandom` variant of all 2D tests; also asserts the seed array round-trips the user seed unchanged |
 | 9  | (c) Same clus | NeighborGridQuery returns already-merged grid → `clusterForest.infer()` true → skip                                                   | All 2D/3D tests (implicit on multi-grid clusters)                     |
 | 10 | (c) Unvisited border | Neighbor grid is border AND self-parent → merge to current core parent                                                         | All 2D/3D tests (implicit)                                            |
@@ -103,7 +103,7 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `SimplnxCore::DBSCAN: 2D Test: Aniso` | kept — regression fixture | LDF + Random + SeededRandom. Input data: `make_blobs(random_state=170)` + linear transform `[[0.6,-0.6],[-0.4,0.8]]`; verified against sklearn 1.7.1 oracle (Phase 6). LDF uses exact array compare; Random/SeededRandom use bin-size matching only. |
+| `SimplnxCore::DBSCAN: 2D Test: Aniso` | kept — regression fixture | LDF + Random + SeededRandom. Input data: `make_blobs(random_state=170)` + linear transform `[[0.6,-0.6],[-0.4,0.8]]`; verified against sklearn 1.7.1 oracle (Phase 6). LDF uses exact array compare; SeededRandom uses bin-size multiset matching against LDF exemplar; Random uses structural invariants only (no exemplar comparison — time-based seed is non-deterministic). |
 | `SimplnxCore::DBSCAN: 2D Test: Blobs` | kept — regression fixture | Same pattern. Input from sklearn `make_blobs`; exact sklearn match confirmed Phase 6. |
 | `SimplnxCore::DBSCAN: 2D Test: Noisy Circles` | kept — regression fixture | Same pattern. Input from sklearn `make_circles`; exact sklearn match confirmed Phase 6. |
 | `SimplnxCore::DBSCAN: 2D Test: Noisy Moons` | kept — regression fixture | Same pattern. Input from sklearn `make_moons`; exact sklearn match confirmed Phase 6. |
@@ -129,6 +129,7 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 - `DBSCAN-D2` — `LowDensityFirst` parse order added and made default; cluster ID numbering differs — see `vv/deviations/DBSCANFilter.md`
 - `DBSCAN-D3` — `use_precaching` parameter removed; old pipelines silently ignore it — see `vv/deviations/DBSCANFilter.md`
 - `DBSCAN-D4` — Parameter key renamed `init_type_index` → `parse_order_index`; `upgradeParametersImpl` not implemented — early SIMPLNX pipelines silently default to `LowDensityFirst` — see `vv/deviations/DBSCANFilter.md`
+- `DBSCAN-D5` — `SeededRandom` shuffle replaced with `std::shuffle`; same seed now produces a different (correct, unbiased) permutation compared to pre-PR builds — see `vv/deviations/DBSCANFilter.md`
 
 ---
 
@@ -319,8 +320,12 @@ This phase closes the circularity by running the same sklearn 1.7.1 library that
 
 *Deferred (not addressed in this pass)*:
 
-- The shuffle used for `Random`/`SeededRandom` is a biased hand-rolled Fisher-Yates: it draws `r` from `[0, size - 2]` (so the last index is never selected as a partner) over the full range rather than `[0, i]`, and it uses `uniform_real_distribution` + `floor` instead of `uniform_int_distribution`. `std::shuffle` would be both correct and simpler, but it changes the grid order produced for a given seed, and therefore changes `SeededRandom` cluster-ID numbering. That is a user-visible reproducibility change and warrants its own deviation entry, so it is left for a follow-up.
-- `RunAlgorithm` skips the labeling step whenever `cluster()` returns any warning, using "has warnings" as a proxy for "the cluster forest is ill-formed". That is correct today because `-85640` is the only warning `cluster()` can emit, but it will silently suppress labeling if a second, unrelated warning is ever added. Worth replacing with an explicit signal.
+- None remaining.
+
+*Addressed in review*:
+
+- **`RunAlgorithm` labeling-skip signal made explicit.** The `!result.warnings().empty()` proxy was replaced with `!algorithm.forestBuilt()` — a direct structural check on `clusterForest.clusterForestNodes`. Labeling is now gated on forest state rather than the warning list, so any future unrelated warning added to `cluster()` will not silently suppress labeling.
+- **Biased shuffle replaced with `std::shuffle`.** The hand-rolled Fisher-Yates had three defects (last index never selected, full-range draw instead of `[0, i]`, floating-point bias from `uniform_real_distribution` + `floor`). Replaced with `std::shuffle(coreGridIds.begin(), coreGridIds.end(), gen)`. This changes the permutation produced for any given `SeededRandom` seed — documented as DBSCAN-D5.
 
 ## Phase 8 — Unit Test Review & Implementation
 

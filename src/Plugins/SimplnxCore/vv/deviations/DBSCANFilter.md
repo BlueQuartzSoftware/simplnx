@@ -1,6 +1,6 @@
 # Deviations from DREAM3D 6.5.172: DBSCANFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.172 equivalent.
+This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.172 equivalent (D1–D4), plus within-SIMPLNX changes introduced by this PR that break reproducibility for existing users (D5).
 
 Entries are referenced by stable ID (`DBSCAN-D<N>`) from the V&V report and from public migration guidance. The Filter UUID fields are the permanent cross-reference anchors.
 
@@ -98,3 +98,22 @@ The `FromSIMPLJson` converter (`DBSCANFilter.cpp`, starting at line 242) is not 
 **Affected users:** SIMPLNX pipeline authors who explicitly saved a pipeline with a non-default parse order (`Random` or `SeededRandom`) using the v1 key `init_type_index` before PR #1421. These pipelines will silently default to `LowDensityFirst` without warning. Users who used the default `LowDensityFirst` or who created pipelines after PR #1421 are unaffected.
 
 **Recommendation:** If you have early SIMPLNX pipelines that explicitly set a non-default parse order, verify the `parse_order_index` key is present in the pipeline JSON. Edit the pipeline to use `parse_order_index` if it still contains `init_type_index`.
+
+---
+
+## DBSCAN-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `DBSCAN-D5` |
+| **SIMPLNX UUID** | `763dad44-fad7-4606-808f-617867257b98` |
+| **Legacy SIMPL UUID** | `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e` |
+| **Status** | active |
+
+**Symptom:** For a given `SeededRandom` seed value, SIMPLNX now produces a different core-grid processing order — and therefore potentially different cluster-ID assignments — compared to earlier SIMPLNX builds (prior to this PR). Cluster *membership* (which points are grouped together) is unaffected for well-separated datasets; only cluster *ID numbering* and boundary-point assignment at cluster edges may differ.
+
+**Root cause:** The hand-rolled shuffle used in earlier builds had three correctness defects: (1) the last index was never selected as a swap partner because `maxIdx = size - 1` combined with a half-open `uniform_real_distribution` excluded it; (2) the draw used the full `[0, size-1]` range rather than `[0, i]`, introducing the classic naive-shuffle bias; (3) `uniform_real_distribution<float64>` + `std::floor` adds floating-point rounding bias absent from `uniform_int_distribution`. These defects made the shuffle subtly non-uniform. The replacement `std::shuffle` (C++ standard library Fisher-Yates) is correct and unbiased, but produces a different permutation for any given seed.
+
+**Affected users:** Users who relied on a specific `SeededRandom` seed to reproduce a particular cluster-ID assignment from a pre-PR build. The same seed now produces a correct unbiased shuffle instead of the previously biased one, so the resulting cluster-ID numbers will differ. Users running `LowDensityFirst` (the default) are entirely unaffected. Users running `Random` (time-based seed, non-deterministic by design) are unaffected in practice.
+
+**Recommendation:** If reproducibility of specific cluster-ID values across builds is required, re-run with the same seed on the current build and use the new output as the reference. Cluster membership (grouping) is preserved for densely-clustered datasets; only the numeric label assigned to each cluster may change.
