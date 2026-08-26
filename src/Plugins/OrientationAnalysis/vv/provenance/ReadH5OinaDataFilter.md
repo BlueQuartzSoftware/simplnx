@@ -65,7 +65,7 @@ It also had the pre-correction behavior baked in: its `LatticeConstants` reads
 D6. A test comparing against it did not merely fail to detect D6 — it actively enforced it.
 Recorded measurement: `exemplar_selforacle_check.txt`.
 
-Its discriminating power against the eleven deviations is near zero: the file has
+Its discriminating power against the thirteen deviations is limited: the file has
 a single cubic phase, so the hexagonal alignment (D1, D3) never executes; it holds one scan,
 so the slab offsets (D2), the stacking order (D9) and the multi-scan ensemble write (D8) are
 never reached; pattern import was off, so D4 and its latent type mismatch were never
@@ -77,14 +77,10 @@ defaults against a real-world file — is preserved and strengthened by its repl
 
 **Toy fixtures, written by the test at run time.** `test/ReadH5OinaDataTest.cpp` declares a
 fixture specification as C++ structs and writes `.h5oina` files with `H5Support::H5Lite`
-into the binary test-output directory. Three fixture specifications materialise into
-twenty-three files at run time: eight that are imported successfully and fifteen that back a
-rejection or passthrough case. Nothing is committed as binary test data and no archive
-upload was needed. The eight that import carry exactly the dataset set `H5OINAReader`
-requires, plus the inert root datasets for realism. Of the fifteen behind the rejection and
-passthrough cases, three omit a required dataset outright — `Data/Bands` once and
-`Phases/<n>/Lattice Angles` twice — while the other twelve carry the full set and are
-rejected on a parameter value, on a header or phase value, or on how the scans are selected.
+into the binary test-output directory. The test cases create valid inputs and focused guard
+inputs at run time. Nothing is committed as binary test data and no archive upload was
+needed. The valid files carry the complete dataset set that `H5OINAReader` requires. The
+guard files omit a required dataset or contain a value that the filter must reject.
 
 Every expected value is derived from the fixture specification. The hexagonal-alignment
 expectations are the correctly-rounded float32 results of `double(φ2) + 30 × (π/180)`,
@@ -114,11 +110,11 @@ the ensemble slot-0 defaults, the radians-to-degrees lattice-angle conversion an
 hexagonal φ2 alignment — and applies them to the fixture specification or to a file's bytes.
 It never runs the filter.
 
-## Trusted-boundary versions
+## Oracle and dependency versions
 
 | Boundary | Version |
 |---|---|
-| **EbsdLib** | `topic/3_1_1_staging`, the branch that becomes EbsdLib 3.1.1. This is the primary Class 2 trusted boundary: it owns HDF5 traversal, header and phase parsing, the required-dataset reads and the error codes. Five of this filter's eleven deviations are corrections inside it. |
+| **EbsdLib** | 3.1.2. EbsdLib is part of the system under test. Six of the thirteen deviations are corrections in `H5OINAReader`. |
 | h5py / NumPy | 3.16.0 / 2.5.2, under `/opt/local/anaconda3/envs/dream3d/bin/python` |
 | HDF5 | as vendored by the `NX-Com-Qt69-Vtk96-Rel-EbsdLib` preset's vcpkg manifest |
 
@@ -130,7 +126,7 @@ It never runs the filter.
 | `probe_real_file.txt` | The h5py structure dump of the production `.h5oina` |
 | `error_column_check.txt` | The `Error` column census of the production file — 587 points at 1, 38 at 2, none at 0 — behind the documentation's masking correction |
 | `exemplar_selforacle_check.txt` | The measurement behind the exemplar's retirement: `Euler` bit-identity and the radian `LatticeConstants` |
-| `mutation_table.md` | Seven mutations, each killing exactly its claimed test cases, each reverted to an empty diff |
+| `mutation_table.md` | Test-sensitivity evidence for the original seven temporary defects. Internal review added four detected defects for phase-group parsing, phase-definition validation, spacing validation, and error context. |
 
 ## Suite logs
 
@@ -178,7 +174,7 @@ comparison establishes is that rolling EbsdLib back changes the non-H5OINA failu
 at all. The three extra failures at `539ddfc` are the three ReadH5Oina tests that the
 EbsdLib corrections are required for -- `Class 1 Analytical Oracle`, `Real AZtec File
 Readback` and `EbsdLib Error Passthrough - Missing Lattice Angles (-9582)`, the last as a
-SEGFAULT -- which is the evidence the `vcpkg.json` pin to EbsdLib 3.1.1 rests on. The
+SEGFAULT -- which is evidence for the EbsdLib dependency. The
 structural argument agrees: `git diff --stat 539ddfc..HEAD` on EbsdLib is one file,
 `Source/EbsdLib/IO/HKL/H5OINAReader.cpp`, with no header and no API change, so nothing
 outside the H5OINA read path can be reached.
@@ -191,6 +187,11 @@ pipeline test of exactly the shape described above.
 `Real AZtec File Readback` is intermittently flaky in this build dir on the test-data
 sentinel extraction, not on any assertion; a failure of that shape clears on an immediate
 re-run with no source change.
+
+The final internal-review run uses EbsdLib 3.1.2. The results are 20 of 20 H5OINA tests,
+408 of 408 EbsdLib tests, and 996 of 996 SimplnxCore tests. The OrientationAnalysis suite
+passes 281 of 282 tests. The only failure is the unrelated ComputeSchmids archive
+comparison against values from before its precision correction.
 
 ## Oracle-before-comparison ordering
 

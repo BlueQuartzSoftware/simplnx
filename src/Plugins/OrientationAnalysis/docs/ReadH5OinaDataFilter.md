@@ -22,10 +22,11 @@ The file is EBSD (Electron Backscatter Diffraction) scan data. The most importan
 An H5OINA file can hold several scans. Selecting more than one stacks them into a single
 3D **Image Geometry**: the X and Y extents and step sizes come from the first selected
 scan, the Z extent is the number of selected scans, and the Z spacing is the **Z Spacing**
-parameter. Every selected scan must describe the same grid as the first one and declare
-the same phase groups, and each must be present in the file; the filter reports an error
-naming the offending scan otherwise. Scans whose phase lists differ have to be imported
-separately, because all of the stacked scans share one **Ensemble Attribute Matrix**.
+parameter. The selected scans become the slices of one 3D microstructure. Therefore,
+every scan must describe the same grid and use the same phase definitions. The phase-group
+names, material names, Laue groups, space groups, and lattice constants must match. All
+scans share one **Ensemble Attribute Matrix**, so different phase definitions cannot be
+represented correctly. Import scans with different phase definitions separately.
 
 The **Stacking Order** setting carried by the scan selection chooses which end of the
 list lands at Z = 0. *Low To High* stacks the scans in the order they are listed, so the
@@ -160,7 +161,7 @@ change values that an existing pipeline may compare against.
 
 ## References
 
-[1] Rollett, A.D. Lecture Slides located at [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
+[1] Wright, S. I. and De Graef, M., "Electron backscatter diffraction," *International Tables for Crystallography*. [EBSD reference-frame conventions](https://onlinelibrary.wiley.com/iucr/itc/Cc/wf5160/).
 
 ## DREAM3D-NX Help
 

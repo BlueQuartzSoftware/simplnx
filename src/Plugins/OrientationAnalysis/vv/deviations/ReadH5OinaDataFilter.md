@@ -4,8 +4,7 @@
 
 This file therefore records, in the same structured form, every difference between the behavior DREAM3D-NX shipped and the correct behavior. Entries are referenced by stable ID (`ReadH5OinaDataFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Affected releases are named from `docs/dream3d_nx_release_dates.md`. The filter first shipped in DREAM3D-NX 7.0.0 (2024-11-11); D1 through D11 are present in every release from 7.0.0 through 7.4.1 (2026-03-23).
-EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINAReader` and every release of DREAM3D-NX up through and including 7.4.1 will have these bugs.
+The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every released version from 7.0.0 through 7.4.1. D5, D6, D7, D10, D11, and D12 are corrections to EbsdLib's `H5OINAReader` and require EbsdLib 3.1.2.
 
 ---
 
@@ -100,7 +99,7 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Deviation ID** | `ReadH5OinaDataFilter-D5` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
 
 **Symptom:** The `LatticeConstants` ensemble array reported each phase's γ angle as a copy of its β angle. The file's third lattice angle was never read. For a cubic phase, where α = β = γ, the error is invisible; for a hexagonal phase, whose angles are 90/90/120, the reported γ was 90 instead of 120, and the same applies to any monoclinic, triclinic, trigonal or rhombohedral cell whose γ differs from its β.
 
@@ -108,9 +107,9 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 
 **Affected users:** Anyone importing an `.h5oina` file whose phases are not cubic or tetragonal, and who reads `LatticeConstants` downstream. It does not affect orientations, phase indices or crystal-structure symmetry, which come from the Laue group and not from the lattice angles.
 
-**Correct behavior:** The gamma slot receives the third angle. Corrected in EbsdLib on `topic/3_1_1_staging` (`BUG: Store the third H5OINA lattice angle in the gamma slot`). Pinned by `test/ReadH5OinaDataTest.cpp::"Class 1 Analytical Oracle"`, whose hexagonal fixture phase has γ ≠ β specifically so that a gamma slot echoing beta is visible.
+**Correct behavior:** The gamma slot receives the third angle. Corrected in EbsdLib 3.1.2. Pinned by `test/ReadH5OinaDataTest.cpp::"Class 1 Analytical Oracle"`, whose hexagonal fixture phase has γ ≠ β specifically so that a gamma slot echoing beta is visible.
 
-**Recommendation:** Trust the corrected behavior. Note that the correction ships only with EbsdLib 3.1.1; a DREAM3D-NX build against EbsdLib 3.1.0 or earlier still reports the duplicated angle.
+**Recommendation:** Trust the corrected behavior. The correction requires EbsdLib 3.1.2.
 
 ---
 
@@ -121,7 +120,7 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Deviation ID** | `ReadH5OinaDataFilter-D6` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
 | **Breaking change** | **Yes.** The value of a published output array changes for every H5OINA import. |
 
 **Symptom:** The three angle slots of `LatticeConstants` were reported in radians for H5OINA imports and in degrees for every other EBSD importer. A cubic phase imported from an `.h5oina` file reported `1.5707964, 1.5707964, 1.5707964`, while the same phase imported from a `.ctf` or `.ang` file reported `90, 90, 90`. The array's meaning therefore depended on which file format the phase happened to come from, with nothing in the data to say which.
@@ -130,9 +129,9 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 
 **Affected users:** Anyone comparing or combining phase information across file formats, and anyone reading `LatticeConstants` from an H5OINA import while assuming the degrees convention that the rest of DREAM3D-NX uses.
 
-**Correct behavior:** `H5OINAReader` converts the angles from radians to degrees on import, on a double-precision intermediate, so the array carries the same unit no matter which format the phase came from. Corrected in EbsdLib on `topic/3_1_1_staging` (`ENH: Convert H5OINA lattice angles to degrees on import`). Pinned by `test/ReadH5OinaDataTest.cpp::"Class 1 Analytical Oracle"` (90, 90, 120 for the hexagonal fixture phase) and `…::"Real AZtec File Readback"` (90, 90, 90 for the production file's titanium-cubic phase).
+**Correct behavior:** `H5OINAReader` converts the angles from radians to degrees on import, on a double-precision intermediate, so the array carries the same unit no matter which format the phase came from. Corrected in EbsdLib 3.1.2. Pinned by `test/ReadH5OinaDataTest.cpp::"Class 1 Analytical Oracle"` (90, 90, 120 for the hexagonal fixture phase) and `…::"Real AZtec File Readback"` (90, 90, 90 for the production file's titanium-cubic phase).
 
-**Release note and migration:** This is a **breaking change to a published output**, and the first release that carries it is the first DREAM3D-NX release built against EbsdLib 3.1.1; no released version carries it today. Every `.dream3d` file written by 7.0.0 through 7.4.1 has radians in components 3, 4 and 5 of `LatticeConstants`, so any saved exemplar, regression baseline or pipeline comparison that reads those components changes value on upgrade. To compare a stored radian value against a new import, multiply it by 180/π. Consumers that compensated by converting H5OINA lattice angles themselves must stop doing so. Nothing else in the import changes unit: `Euler` is still radians and the three lattice dimensions are still unconverted. The user-facing migration note is in `docs/ReadH5OinaDataFilter.md` under "Migration Notes". The archived `H5Oina_Test_Data.dream3d` exemplar has the pre-correction radian values baked in, which is one of the reasons it is no longer used as a comparison target (see `vv/provenance/ReadH5OinaDataFilter.md`).
+**Release note and migration:** This is a **breaking change to a published output**. The first release that carries it is DREAM3D-NX 7.5.0 with EbsdLib 3.1.2. Every `.dream3d` file written by 7.0.0 through 7.4.1 has radians in components 3, 4 and 5 of `LatticeConstants`, so any saved exemplar, regression baseline or pipeline comparison that reads those components changes value on upgrade. To compare a stored radian value against a new import, multiply it by 180/π. Consumers that compensated by converting H5OINA lattice angles themselves must stop doing so. Nothing else in the import changes unit: `Euler` is still radians and the three lattice dimensions are still unconverted. The user-facing migration note is in `docs/ReadH5OinaDataFilter.md` under "Migration Notes". The archived `H5Oina_Test_Data.dream3d` exemplar has the pre-correction radian values baked in, which is one of the reasons it is no longer used as a comparison target (see `vv/provenance/ReadH5OinaDataFilter.md`).
 
 **Recommendation:** Trust the corrected behavior — the degrees convention is the one the rest of the toolkit uses and the one the other importers already produced.
 
@@ -145,7 +144,7 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Deviation ID** | `ReadH5OinaDataFilter-D7` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
 
 **Symptom:** An `.h5oina` file whose phase group was missing its `Lattice Dimensions` or `Lattice Angles` dataset **crashed the process**. This is empirically demonstrated, not inferred: running the fixture against a build with the corrected filter sources but the pre-correction `H5OINAReader` reports the regression test as `OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough - Missing Lattice Angles (-9582) (SEGFAULT)` rather than as a failure. The suite log recording that run is listed in `vv/provenance/ReadH5OinaDataFilter.md`.
 
@@ -153,9 +152,9 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 
 **Affected users:** Anyone opening a truncated, partially written or otherwise malformed `.h5oina` file. The crash occurs during preflight, so it takes down the application as the file is selected, before any pipeline runs.
 
-**Correct behavior:** The four required phase reads are checked and reported with EbsdLib error codes `-90030` through `-90033`, each naming the phase and the dataset; `Space Group` remains optional because the reader only passes it through. The filter surfaces the failure as `-9582` with the file path and the scan name. Corrected in EbsdLib on `topic/3_1_1_staging` (`BUG: Check the phase dataset reads in H5OINAReader::readHeader()`). Pinned by `test/ReadH5OinaDataTest.cpp::"EbsdLib Error Passthrough - Missing Lattice Angles (-9582)"`, which is the fixture that used to crash.
+**Correct behavior:** The four required phase reads are checked and reported with EbsdLib error codes `-90030` through `-90033`, each naming the phase and the dataset; `Space Group` remains optional because the reader only passes it through. The filter surfaces the failure as `-9582` with the file path and the scan name. Corrected in EbsdLib 3.1.2. Pinned by `test/ReadH5OinaDataTest.cpp::"EbsdLib Error Passthrough - Missing Lattice Angles (-9582)"`, which is the fixture that used to crash.
 
-**Recommendation:** Trust the corrected behavior. Note that the correction ships only with EbsdLib 3.1.1; a DREAM3D-NX build against EbsdLib 3.1.0 or earlier still crashes on such a file.
+**Recommendation:** Trust the corrected behavior. The correction requires EbsdLib 3.1.2.
 
 ---
 
@@ -168,15 +167,15 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Affected releases** | 7.0.0 through 7.4.1 |
 | **Status** | resolved |
 
-**Symptom:** Selecting two or more scans from a file whose scans do not all declare the same phase groups **crashed the process** at execute, with no preflight error and no warning. No malformed input is involved: an AZtec file may legitimately carry scans with different phase lists, and a scan that declares more phases than the *first* selected scan is enough.
+**Symptom:** A later scan with a phase index above the first scan's phase count wrote past the ensemble arrays and could crash the process. Scans with the same indices but different phase definitions silently used one shared definition for all scan slices.
 
 **Root cause:** Bug. The single Ensemble Attribute Matrix that all of the stacked scans share is sized from the first selected scan's phase count, `phases.size() + 1`. The shared ensemble fill in `utilities/IEbsdOemReader.hpp` then runs once per selected scan and writes `crystalStructures[phaseId]`, `materialNames[phaseId]` and `latticeConstants` component `phaseId`, where `phaseId` is the integer in that scan's HDF5 phase group name. Any later scan whose phase index exceeds the first scan's phase count writes past the end of all three arrays. Preflight range-checked those indices for the first selected scan only, and the execute-side `-34972` check inspects the phase *column values*, not the phase *group names*, and runs after the ensemble fill has already happened.
 
 **Affected users:** Anyone selecting more than one scan from an `.h5oina` file whose scans differ in their phase lists. Single-scan imports and multi-scan imports of files with one uniform phase list — which is every file in the shipped test data — were never affected, which is why the pre-existing suite could not see it.
 
-**Correct behavior:** Preflight applies the phase-index range check to **every** selected scan, with the bound taken from the first scan's phase count (`-9587`), and rejects a selected scan whose phase-group count differs from the first scan's (`-9589`), telling the user to import scans with differing phase lists separately. Pinned by `test/ReadH5OinaDataTest.cpp::"Phase Index Out Of Range rejected (-9587)"` section "Later selected scan" and `…::"Scan Phase Count Mismatch rejected (-9589)"`, whose fixtures both pass preflight and crash the process against the pre-correction filter.
+**Correct behavior:** Preflight validates the phase indices (`-9587`), phase count (`-9589`), and phase definitions (`-9590`) of every selected scan. The definitions must match because the scans become slices of one 3D microstructure and share one Ensemble Attribute Matrix.
 
-**Recommendation:** Trust the corrected behavior. Every reproduction of the defect crashed before any output was written, so a multi-scan import that *completed* under 7.0.0 through 7.4.1 is very unlikely to have been affected — but the underlying write is undefined behavior, so silent corruption cannot be strictly excluded. Residual restriction: the guards require every selected scan to declare the same phase-group *names and count*; the group *contents* (material name, Laue class, lattice constants) are not compared across scans — the shared ensemble arrays keep the values of the last scan read, and the preflight phase display always reflects the first-listed scan. Scans whose phase definitions differ in content should be imported separately.
+**Recommendation:** Trust the corrected behavior. Re-import any multi-scan file whose phase definitions differ between scans. Import those scans separately if they describe different microstructures.
 
 ---
 
@@ -208,7 +207,7 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Deviation ID** | `ReadH5OinaDataFilter-D10` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
 
 **Symptom:** Every failure reported out of `H5OINAReader` reached the user with a blank `Message:` field. A malformed `.h5oina` produced an error code and an empty explanation, so nothing in the message said which dataset, phase or scan was at fault.
 
@@ -216,9 +215,9 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 
 **Affected users:** Anyone who hit any `H5OINAReader` error — a malformed file, a missing dataset, an absent scan. The filter's own `-8970` and `-9582` messages name the file and the scan, so the file was identifiable; the reason was not.
 
-**Correct behavior:** Each of the ten sites composes into a stream of its own and reports that stream's contents, and `readFile()`'s wrappers name the scan and append the inner message rather than replacing it. Corrected in EbsdLib on `topic/3_1_1_staging` (`BUG: Report the error messages H5OINAReader builds`).
+**Correct behavior:** Each of the ten sites composes into a stream of its own and reports that stream's contents, and `readFile()`'s wrappers name the scan and append the inner message rather than replacing it. Corrected in EbsdLib 3.1.2.
 
-**Recommendation:** Trust the corrected behavior. Note that the correction ships only with EbsdLib 3.1.1; a DREAM3D-NX build against EbsdLib 3.1.0 or earlier still reports the blank message. No test asserts the text `H5OINAReader` composes — the filter-side assertions match the scan name and file path that the DREAM3D-NX format strings inject, which are independent of the reader's message.
+**Recommendation:** Trust the corrected behavior. The correction requires EbsdLib 3.1.2.
 
 ---
 
@@ -229,7 +228,7 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 | **Deviation ID** | `ReadH5OinaDataFilter-D11` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
 
 **Symptom:** Two defects in one code path. A scan whose header declared zero rows was rejected with error code `-90301` recorded on the reader but `-301` handed back as the return value, so a caller reporting the return value and a caller reading `getErrorCode()` disagreed about what had happened. A scan whose header declared a **negative** column count was not rejected at all: the count was widened to `size_t`, producing an enormous allocation request.
 
@@ -237,9 +236,51 @@ EbsdLib Deviations: D5, D6, D7, D10 and D11 are corrections to EbsdLib's `H5OINA
 
 **Affected users:** Anyone opening a truncated or otherwise malformed `.h5oina` file. DREAM3D-NX reports the code it receives, so the mismatched value was the one the user saw.
 
-**Correct behavior:** Both the row and the column count are validated and the rejection returns the code it sets. Corrected in EbsdLib on `topic/3_1_1_staging` (`BUG: Validate H5OINAReader::readData()'s row and column counts`). The filter rejects the same shape earlier and independently: `-9584` rejects `X Cells` or `Y Cells` below 1 at preflight, which is pinned by `test/ReadH5OinaDataTest.cpp::"Invalid Cell Counts rejected (-9584)"`, including the negative case.
+**Correct behavior:** Both the row and the column count are validated and the rejection returns the code it sets. Corrected in EbsdLib 3.1.2. The filter rejects the same shape earlier and independently: `-9584` rejects `X Cells` or `Y Cells` below 1 at preflight, which is pinned by `test/ReadH5OinaDataTest.cpp::"Invalid Cell Counts rejected (-9584)"`, including the negative case.
 
 **Recommendation:** Trust the corrected behavior. The filter's `-9584` guard fires first for a file selected through DREAM3D-NX, so this entry matters to other `H5OINAReader` callers.
+
+---
+
+## ReadH5OinaDataFilter-D12
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadH5OinaDataFilter-D12` |
+| **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
+| **Affected releases** | 7.0.0 through 7.4.1 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 |
+
+**Symptom:** A non-numeric or noncanonical phase-group name caused `std::stoi()` to throw during preflight. The exception stopped the import and left the opened HDF5 phase group unclosed.
+
+**Root cause:** Bug. `H5OINAReader::readHeader()` passed each HDF5 group name directly to `std::stoi()` after it opened the group. The code did not validate that the complete name was a positive integer.
+
+**Affected users:** Users with a malformed or manually edited H5OINA file whose phase group is not named with a canonical positive integer.
+
+**Correct behavior:** EbsdLib parses the complete group name before it opens the group. It returns `-90034` for a noncanonical name. The filter reports the error through `-9582` and identifies the file, scan, and group name.
+
+**Recommendation:** Trust the corrected behavior. Correct the phase-group names or export the file again from AZtec.
+
+---
+
+## ReadH5OinaDataFilter-D13
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadH5OinaDataFilter-D13` |
+| **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
+| **Affected releases** | 7.0.0 through 7.4.1 |
+| **Status** | resolved |
+
+**Symptom:** The filter accepted non-positive or non-finite X, Y, or Z spacing and created an invalid Image Geometry.
+
+**Root cause:** Bug. Preflight checked only whether Z spacing was less than or equal to zero. It did not reject NaN, and it did not validate the X and Y step values from the file.
+
+**Affected users:** Users with malformed H5OINA step values or a non-finite Z Spacing parameter.
+
+**Correct behavior:** Preflight requires finite, positive X, Y, and Z spacing. It reports `-9580` for Z spacing and `-9591` for scan spacing, with the actual values and file context.
+
+**Recommendation:** Trust the corrected behavior. Correct the spacing values or export the file again from AZtec.
 
 ---
 
@@ -254,6 +295,8 @@ These are not behavioral deviations on well-formed files — every one of them i
 | `-9586` | A selected scan name that is not in the file | Only the first name was checked, at preflight; a bad later name failed part-way through execute with the earlier scans already written into the output arrays and no rollback |
 | `-9587` | A phase group of **any** selected scan named outside 1 through N, where N is the first selected scan's phase count | The check covered the first selected scan only, so a group named `7` in a later scan wrote past the end of the ensemble arrays — see D8 |
 | `-9589` | A selected scan whose phase-group count differs from the first selected scan's | The ensemble arrays were sized from the first scan alone and filled from every scan — see D8 |
+| `-9590` | A selected scan whose phase definitions differ from the first selected scan's | One shared Ensemble Attribute Matrix silently kept one scan's phase definitions for every scan slice — see D8 |
+| `-9591` | Non-positive or non-finite X or Y spacing | The invalid values were assigned to the Image Geometry — see D13 |
 | `-34971` | A `Data` dataset whose extent disagrees with the header's cell counts, in either direction | The reader sizes its buffers to the actual extent while the copy spans the header's point count, reading past the end of those buffers when the dataset is short and silently dropping the surplus rows when it is long |
 | `-34972` | A phase value outside `[0, phase count]` | The value indexed `CrystalStructures` unchecked in the alignment loop, reading past the end of the ensemble array |
 

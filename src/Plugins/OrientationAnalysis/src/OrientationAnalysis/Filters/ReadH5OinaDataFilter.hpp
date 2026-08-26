@@ -116,4 +116,3 @@ protected:
 } // namespace nx::core
 
 SIMPLNX_DEF_FILTER_TRAITS(nx::core, ReadH5OinaDataFilter, "fad3d47f-f1e1-4429-bc65-5e021be62ba0");
-/* LEGACY UUID FOR THIS FILTER 3ff4701b-3a0c-52e3-910a-fa927aa6584c */

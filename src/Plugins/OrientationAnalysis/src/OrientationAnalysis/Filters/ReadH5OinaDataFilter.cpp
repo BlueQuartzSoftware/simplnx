@@ -23,10 +23,11 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <algorithm>
-#include <filesystem>
+#include <cmath>
 #include <list>
 #include <string>
-namespace fs = std::filesystem;
+
+#include <fmt/ranges.h>
 
 using namespace nx::core;
 
@@ -96,7 +97,9 @@ Parameters ReadH5OinaDataFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadH5OinaDataFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Pattern import is explicitly unsupported, and multi-scan inputs
+  // must have compatible geometry and identical phase definitions.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -121,19 +124,18 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   DataPath cellEnsembleAMPath = pImageGeometryNameValue.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   DataPath cellAMPath = pImageGeometryNameValue.createChildPath(pCellAttributeMatrixNameValue);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const std::string inputFilePath = pSelectedScanNamesValue.inputFilePath.string();
 
-  if(pZSpacingValue <= 0)
+  if(!std::isfinite(pZSpacingValue) || pZSpacingValue <= 0)
   {
-    return MakePreflightErrorResult(-9580, fmt::format("The Z Spacing field contains a value ({}) that is non-positive.  The Z Spacing field must be set to a positive value.", pZSpacingValue));
+    return MakePreflightErrorResult(-9580, fmt::format("The Z Spacing value ({}) must be finite and positive.", pZSpacingValue));
   }
   if(pSelectedScanNamesValue.scanNames.empty())
   {
-    return MakePreflightErrorResult(-9581, "At least one scan must be chosen.  Please select a scan from the list.");
+    return MakePreflightErrorResult(-9581, "At least one scan must be chosen. Please select a scan from the list.");
   }
   if(pReadPatternDataValue)
   {
@@ -186,6 +188,21 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
                                                        firstScanName, inputFilePath, reader.getXDimension(), reader.getYDimension()));
   }
 
+  const auto validateSpacing = [&](const std::string& scanName, ebsdlib::H5OINAReader& scanReader) -> Result<> {
+    const float32 xStep = scanReader.getXStep();
+    const float32 yStep = scanReader.getYStep();
+    if(!std::isfinite(xStep) || !std::isfinite(yStep) || xStep <= 0.0F || yStep <= 0.0F)
+    {
+      return MakeErrorResult(-9591, fmt::format("Scan '{}' in '{}' reports X Step = {} and Y Step = {}. Both values must be finite and positive.", scanName, inputFilePath, xStep, yStep));
+    }
+    return {};
+  };
+
+  if(Result<> spacingCheck = validateSpacing(firstScanName, reader); spacingCheck.invalid())
+  {
+    return MakePreflightErrorResult(spacingCheck.errors().front().code, spacingCheck.errors().front().message);
+  }
+
   // The Ensemble Attribute Matrix is sized from the number of phase groups in the
   // FIRST selected scan, but the shared ensemble fill in IEbsdOemReader::readData runs
   // once per selected scan and places each phase at the index carried by its HDF5 group
@@ -194,7 +211,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   // than the first scan, writes past the end of the ensemble arrays at execute.
   const auto phases = reader.getPhaseVector();
   const usize ensemblePhaseCount = phases.size();
-  const auto validatePhaseGroups = [&](const std::string& scanName, const auto& scanPhases) -> Result<> {
+  const auto validatePhaseGroups = [&](const std::string& scanName, const auto& scanPhases, bool comparePhaseDefinitions) -> Result<> {
     if(scanPhases.size() != ensemblePhaseCount)
     {
       return MakeErrorResult(-9589, fmt::format("Scan '{}' in '{}' declares {} phase group(s), but scan '{}' declares {}. Every selected scan must declare the same phase groups, because the single "
@@ -210,11 +227,52 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
         return MakeErrorResult(-9587, fmt::format("Scan '{}' in '{}' declares {} phase(s), but one of them carries index {}. The phase groups of an H5OINA file must be named 1 through {}.", scanName,
                                                   inputFilePath, ensemblePhaseCount, phaseIndex, ensemblePhaseCount));
       }
+
+      if(comparePhaseDefinitions)
+      {
+        const auto referencePhaseIter = std::find_if(phases.cbegin(), phases.cend(), [phaseIndex](const auto& referencePhase) { return referencePhase->getPhaseIndex() == phaseIndex; });
+        if(referencePhaseIter == phases.cend())
+        {
+          return MakeErrorResult(-9587, fmt::format("Scan '{}' in '{}' declares phase index {}, but scan '{}' does not. Every selected scan must use the same phase group names.", scanName,
+                                                    inputFilePath, phaseIndex, firstScanName));
+        }
+
+        const auto& referencePhase = *referencePhaseIter;
+        if(phase->getPhaseName() != referencePhase->getPhaseName())
+        {
+          return MakeErrorResult(-9590,
+                                 fmt::format("Phase group {} of scan '{}' in '{}' has material name '{}', but the same group of scan '{}' has material name '{}'. The selected scans form one 3D "
+                                             "microstructure and must use identical phase definitions.",
+                                             phaseIndex, scanName, inputFilePath, phase->getPhaseName(), firstScanName, referencePhase->getPhaseName()));
+        }
+        if(phase->getLaueGroup() != referencePhase->getLaueGroup())
+        {
+          return MakeErrorResult(-9590, fmt::format("Phase group {} of scan '{}' in '{}' has Laue group {}, but the same group of scan '{}' has Laue group {}. The selected scans form one 3D "
+                                                    "microstructure and must use identical phase definitions.",
+                                                    phaseIndex, scanName, inputFilePath, static_cast<int32>(phase->getLaueGroup()), firstScanName, static_cast<int32>(referencePhase->getLaueGroup())));
+        }
+        if(phase->getSpaceGroup() != referencePhase->getSpaceGroup())
+        {
+          return MakeErrorResult(-9590, fmt::format("Phase group {} of scan '{}' in '{}' has space group {}, but the same group of scan '{}' has space group {}. The selected scans form one 3D "
+                                                    "microstructure and must use identical phase definitions.",
+                                                    phaseIndex, scanName, inputFilePath, phase->getSpaceGroup(), firstScanName, referencePhase->getSpaceGroup()));
+        }
+
+        const std::vector<float32> scanLatticeConstants = phase->getLatticeConstants();
+        const std::vector<float32> referenceLatticeConstants = referencePhase->getLatticeConstants();
+        if(scanLatticeConstants != referenceLatticeConstants)
+        {
+          return MakeErrorResult(-9590,
+                                 fmt::format("Phase group {} of scan '{}' in '{}' has lattice constants [{}], but the same group of scan '{}' has lattice constants [{}]. The selected scans form "
+                                             "one 3D microstructure and must use identical phase definitions.",
+                                             phaseIndex, scanName, inputFilePath, fmt::join(scanLatticeConstants, ", "), firstScanName, fmt::join(referenceLatticeConstants, ", ")));
+        }
+      }
     }
     return {};
   };
 
-  if(Result<> phaseCheck = validatePhaseGroups(firstScanName, phases); phaseCheck.invalid())
+  if(Result<> phaseCheck = validatePhaseGroups(firstScanName, phases, false); phaseCheck.invalid())
   {
     return MakePreflightErrorResult(phaseCheck.errors().front().code, phaseCheck.errors().front().message);
   }
@@ -239,6 +297,10 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
         return MakePreflightErrorResult(
             -9582, fmt::format("An error occurred while reading the header of scan '{}' in '{}'.\n  Error Code: {}\n  Message: {}", scanName, inputFilePath, err, scanCheckReader.getErrorMessage()));
       }
+      if(Result<> spacingCheck = validateSpacing(scanName, scanCheckReader); spacingCheck.invalid())
+      {
+        return MakePreflightErrorResult(spacingCheck.errors().front().code, spacingCheck.errors().front().message);
+      }
       if(scanCheckReader.getXDimension() != reader.getXDimension() || scanCheckReader.getYDimension() != reader.getYDimension() || scanCheckReader.getXStep() != reader.getXStep() ||
          scanCheckReader.getYStep() != reader.getYStep())
       {
@@ -248,14 +310,14 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
                                scanName, inputFilePath, scanCheckReader.getXDimension(), scanCheckReader.getYDimension(), scanCheckReader.getXStep(), scanCheckReader.getYStep(), firstScanName,
                                reader.getXDimension(), reader.getYDimension(), reader.getXStep(), reader.getYStep()));
       }
-      if(Result<> phaseCheck = validatePhaseGroups(scanName, scanCheckReader.getPhaseVector()); phaseCheck.invalid())
+      if(Result<> phaseCheck = validatePhaseGroups(scanName, scanCheckReader.getPhaseVector(), true); phaseCheck.invalid())
       {
         return MakePreflightErrorResult(phaseCheck.errors().front().code, phaseCheck.errors().front().message);
       }
     }
   }
 
-  // create the Image Geometry and it's attribute matrices
+  // Create the Image Geometry and its attribute matrices.
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()), pSelectedScanNamesValue.scanNames.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {

@@ -6,11 +6,11 @@
  * no DREAM3D 6.5.171 H5OINA importer to compare against, so the oracle carries
  * the whole burden:
  *
- *  - .h5oina parsing     : Class 2 (EbsdLib reference, trusted & NOT re-tested).
- *                          EbsdLib's H5OINAReader owns HDF5 traversal, header and
- *                          phase parsing, required-dataset enforcement and its own
- *                          error codes. We do not re-test any of that; we do pin
- *                          the codes it hands back through the filter.
+ *  - .h5oina parsing     : Part of the system under test. EbsdLib's H5OINAReader
+ *                          owns HDF5 traversal, header and phase parsing, required-
+ *                          dataset enforcement, and its own error codes. The tests
+ *                          verify its user-visible results against analytical fixture
+ *                          values and the independent h5py readback.
  *  - SIMPLNX value-add   : Class 1 (analytical) + Class 4 (invariant). The filter's
  *                          value-add is deterministic plumbing on top of the reader:
  *                          geometry construction from the first scan's header, array
@@ -86,6 +86,7 @@
 
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -542,6 +543,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle"
 
   // Class 4 invariant: the ensemble matrix always carries exactly one more tuple
   // than the file has phase groups.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)));
   REQUIRE(dataStructure.getDataRefAs<UInt32Array>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)).getNumberOfTuples() == 3);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -724,6 +726,11 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Parameter Rejections", "[O
     args = MakeArgs(inputFile, {"1"}, 1.0F, true, true, true);
     expectedCode = -9583;
   }
+  SECTION("Non-finite Z Spacing (-9580)")
+  {
+    args = MakeArgs(inputFile, {"1"}, std::numeric_limits<float32>::quiet_NaN());
+    expectedCode = -9580;
+  }
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -902,6 +909,32 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Phase Index Out Of Range r
 }
 
 //------------------------------------------------------------------------------
+// EbsdLib guard: phase group names must be strict positive integers. The
+// pre-correction reader passed the name directly to std::stoi(), which threw an
+// exception for this file instead of returning a user-facing reader error.
+//------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Phase Group Name rejected (-9582)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  ScanSpec scan = MakeFixtureBScan1();
+  scan.phases[0].groupName = "phase-one";
+  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_invalid_phase_group_name.h5oina", {scan});
+
+  ReadH5OinaDataFilter filter;
+  DataStructure dataStructure;
+  const Arguments args = MakeArgs(inputFile, {"1"});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -9582);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("phase-one") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+//------------------------------------------------------------------------------
 // Value-add guard: the ensemble arrays are sized from the FIRST selected scan's
 // phase count, and every selected scan fills them from its own phase groups. A
 // later scan that declares more phase groups than the first therefore writes past
@@ -939,6 +972,97 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Count Mismatch 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -9589);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+//------------------------------------------------------------------------------
+// A multi-scan import creates one 3D microstructure with one shared Ensemble
+// Attribute Matrix. Therefore, the phase definition at each index must be the
+// same in every selected scan. A mismatch cannot be represented correctly.
+//------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Definition Mismatch rejected (-9590)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  ScanSpec scan2 = MakeFixtureBScan2();
+  std::string mismatchField;
+
+  SECTION("Material name")
+  {
+    scan2.phases[0].name = "Different cubic phase";
+    mismatchField = "material name";
+  }
+  SECTION("Laue group")
+  {
+    scan2.phases[0].laueGroup = k_LaueHexagonalHigh;
+    mismatchField = "Laue group";
+  }
+  SECTION("Space group")
+  {
+    scan2.phases[0].spaceGroup = 194;
+    mismatchField = "space group";
+  }
+  SECTION("Lattice dimensions")
+  {
+    scan2.phases[0].latticeDimensions[0] = 4.25F;
+    mismatchField = "lattice constants";
+  }
+  SECTION("Lattice angles")
+  {
+    scan2.phases[0].latticeAngles[2] = 2.0943952F;
+    mismatchField = "lattice constants";
+  }
+
+  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_phase_definition_mismatch.h5oina", {MakeFixtureBScan1(), scan2});
+
+  ReadH5OinaDataFilter filter;
+  DataStructure dataStructure;
+  const Arguments args = MakeArgs(inputFile, {"1", "2"});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -9590);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("'2'") != std::string::npos);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find(mismatchField) != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+//------------------------------------------------------------------------------
+// The X and Y step values become the Image Geometry spacing. They must be finite
+// and positive before the geometry action is created.
+//------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Scan Spacing rejected (-9591)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  ScanSpec scan = MakeFixtureAScan();
+
+  SECTION("Zero X Step")
+  {
+    scan.xStep = 0.0F;
+  }
+  SECTION("Negative Y Step")
+  {
+    scan.yStep = -0.5F;
+  }
+  SECTION("Non-finite X Step")
+  {
+    scan.xStep = std::numeric_limits<float32>::quiet_NaN();
+  }
+
+  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_invalid_spacing.h5oina", {scan});
+
+  ReadH5OinaDataFilter filter;
+  DataStructure dataStructure;
+  const Arguments args = MakeArgs(inputFile, {"1"});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -9591);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1007,12 +1131,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Out-of-Range Phase Value r
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -34972);
+  REQUIRE(executeResult.result.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
-// Error propagation from the trusted EbsdLib boundary. A Data group missing one
+// Error propagation from the EbsdLib boundary. A Data group missing one
 // of the nine required datasets is fatal inside H5OINAReader::readData; the
 // filter surfaces it as -8970 with the reader's own code and message attached.
 //------------------------------------------------------------------------------
@@ -1044,7 +1169,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
 }
 
 //------------------------------------------------------------------------------
-// Error propagation from the trusted EbsdLib boundary at header-read time: a
+// Error propagation from the EbsdLib boundary at header-read time: a
 // phase group missing its Lattice Angles dataset is reported through -9582, and
 // the message carries the file path and scan name.
 //
