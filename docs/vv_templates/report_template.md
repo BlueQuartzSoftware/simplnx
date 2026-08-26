@@ -1,5 +1,7 @@
 # V&V Report: <FilterName>
 
+<!-- Write the report in ASD-STE100 Simplified Technical English. Use short sentences, active voice, one meaning per sentence, and consistent technical terms. -->
+
 |        |              |
 |--------|--------------|
 | Plugin | <PluginName> |
@@ -46,6 +48,17 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 *Second-engineer review:* *<name, date>* OR *skipped — reason.*
 
+## Bugs found and fixed
+
+<!-- Include only confirmed defects that are fixed in the verified branch. Use the stable `<FilterName>-D<N>` deviation IDs. Do not use `SC-*` labels. State all affected released versions. Use `docs/dream3d_nx_release_dates.md` to identify the DREAM3D-NX releases. If the next release number is not known, state that the fix will be in the release after the latest affected release. If the V&V found no defects, replace this table with `None.` -->
+
+*This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX release after v<latest affected release>.*
+
+| Deviation | Defect | Affected released versions | Resolution in this branch |
+|---|---|---|---|
+| `<FilterName>-D1` | *State the defect and its effect.* | *DREAM.3D 6.5.171; DREAM3D-NX v<first> through v<last>.* | *State how the verified branch fixes the defect.* |
+| `<FilterName>-D2` | *State the defect and its effect.* | *DREAM.3D 6.5.171 only. DREAM3D-NX was not affected.* | *State how the verified branch fixes or prevents the defect.* |
+
 ## Code path coverage
 
 *N of M paths exercised. If N < M: which paths are NOT covered, and why each gap is acceptable (or what would close it).*
@@ -78,7 +91,7 @@ When a path is intentionally not covered, write `*Not directly tested. <one-line
 - **SHA512:** *`<copy from test/CMakeLists.txt>`*
 - **Provenance:** *`src/Plugins/<P>/vv/provenance/<name>.md`*
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D 6.5.171
 
 *Either:*
 
@@ -86,5 +99,9 @@ When a path is intentionally not covered, write `*Not directly tested. <one-line
 
 *Or:*
 
-- `<FilterName>-D1` — *one-line symptom* — see `vv/deviations/<FilterName>.md`
-- `<FilterName>-D2` — *one-line symptom* — see `vv/deviations/<FilterName>.md`
+See `vv/deviations/<FilterName>.md` for the root cause, affected users, and recommendation for each deviation.
+
+| Deviation | Observed difference |
+|---|---|
+| `<FilterName>-D1` | *State the user-visible difference.* |
+| `<FilterName>-D2` | *State the user-visible difference.* |

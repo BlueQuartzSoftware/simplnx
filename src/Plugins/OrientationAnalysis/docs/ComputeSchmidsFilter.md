@@ -6,17 +6,17 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** calculates the Schmid factor of each **Feature** given its average orientation and a user defined loading axis. The Schmid Factor is the combination of the component of the axial force *F* that lies parallel to the slip direction and the component that lies perpendicular to the slip plane.  The equation for the Schmid Factor is given as:
+This **Filter** calculates the Schmid factor of each **Feature** given its average orientation and a user-defined loading axis. The Schmid factor combines the component of the axial force *F* that lies parallel to the slip direction with the component perpendicular to the slip plane. The equation is:
 
 Schmid Factor = (cos &phi; cos &lambda;)
 
 *The angle &phi; is the angle between the tensile axis and the slip plane normal, and &lambda; is the angle between the tensile axis and the slip direction in the slip plane.*
 
-The **Filter** determines the Schmid factor for each **Feature** by using the above equation for all possible slip systems (given the **Feature's** crystal structure).  The largest Schmid factor from all of the slip systems is stored for the **Feature**. Only the Schmid factor is used in determining which slip system's Schmid factor to report.  The critical resolved shear stress for the different slip systems is not considered.
+The **Filter** evaluates this equation for every enumerated slip system in each **Feature's** crystal structure. It stores the largest Schmid factor and the corresponding slip-system index. Critical resolved shear stress is not considered.
 
-The user-supplied *Loading Direction* is normalized before use, so only its direction matters — `[1, 2, 3]` and `[3, 6, 9]` give identical results. It is a **sample-frame** direction; the **Filter** rotates it into each **Feature's** crystal frame using that **Feature's** average orientation before evaluating the slip systems.
+The user-supplied *Loading Direction* is normalized before use, so only its direction matters — `[1, 2, 3]` and `[3, 6, 9]` give identical results. It is a **sample-frame** direction; the **Filter** rotates it into each **Feature's** crystal frame using that **Feature's** average orientation before evaluating the slip systems. The loading direction must be non-zero. When *Override Default Slip System* is enabled, the supplied slip-plane normal and slip direction must also be non-zero and perpendicular.
 
-**Feature 0** is the conventional "unassigned" **Feature** and is never computed; all of its output values are zero. A **Feature** whose phase maps to a crystal structure for which no slip systems are enumerated is skipped, and all of its output values are likewise zero.
+**Feature 0** is the conventional "unassigned" **Feature** and is never computed; all of its output values are zero. A **Feature** whose crystal-structure value is outside EbsdLib's supported Laue-group range is skipped, and all of its output values are also zero. For a valid Laue class that has no enumerated slip systems, *Schmids*, *Slip Systems*, *Phis*, and *Lambdas* are zero, while *Poles* still records the transformed loading direction.
 
 ### Ties Between Slip Systems
 
@@ -33,7 +33,7 @@ The meaning of the *Slip Systems* output changes with the *Override Default Slip
 
 The two numbering schemes are not comparable, and neither is the base of the *off* numbering comparable between the cubic and hexagonal classes.
 
-A *Slip Systems* value of `0` means **"no slip system found"** in two situations, and in neither of them is it a slip-system number:
+A *Slip Systems* value of `0` can mean **"no slip system found"** in two situations:
 
 - With *Override Default Slip System* **on** and no symmetry-operator variant producing a non-zero Schmid factor — for example a loading direction parallel to the slip plane normal, which puts the loading axis perpendicular to every slip direction.
 - With the toggle **off** on a **Hexagonal-High or Hexagonal-Low** phase, where the built-in systems are numbered 1–6 and no candidate exceeds the initial Schmid factor of `0`. Because that numbering starts at 1, `0` falls outside the valid range and is unambiguous. (For the cubic classes, whose numbering starts at 0, the reported `0` in this situation is indistinguishable from a genuine win on system 0; check the reported Schmid factor, which is `0` in the degenerate case.)
@@ -44,7 +44,7 @@ With *Override Default Slip System* on, the reported index is **relative to the 
 
 ### Phis and Lambdas Units Depend on Override Default Slip System
 
-The *Phis* and *Lambdas* arrays change **units** with the same toggle, which is easy to miss because the parameter descriptions and array names do not:
+The *Phis* and *Lambdas* arrays change **units** with the same toggle, which is easy to miss because the array names do not change:
 
 | Override Default Slip System | *Phis* / *Lambdas* contents |
 |---|---|
@@ -56,6 +56,12 @@ With the toggle off, the reported Schmid factor is the product of the two stored
 ### Poles Is Not a Miller Index
 
 Despite its name, the *Poles* array does **not** contain a crystallographic index. It is the unit loading direction expressed in the **Feature's** crystal frame, multiplied by 100 and **truncated toward zero** to an integer — a compact fixed-point encoding of that unit vector, retaining two decimal places. Components can be negative, and the sum of squares is approximately 10 000 rather than 1. Because the conversion truncates rather than rounds, a component whose scaled value falls near an integer can differ by one from the value you would get by rounding. Reducing the triplet to a Miller index requires dividing by the greatest common divisor yourself, and the truncation means the result is only approximate.
+
+### Required Input Sources
+
+- **Average Quaternions** -- produced by [Compute Average Orientations](ComputeAvgOrientationsFilter.md).
+- **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
+- **Crystal Structures** -- read from EBSD data or produced by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
 % Auto generated parameter table will be inserted here
 

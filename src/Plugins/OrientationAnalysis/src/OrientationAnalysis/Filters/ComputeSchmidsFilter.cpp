@@ -12,6 +12,9 @@
 
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace nx::core
@@ -54,21 +57,21 @@ Parameters ComputeSchmidsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "The loading axis for the sample", std::vector<float32>({1.0F, 1.0F, 1.0F}),
-                                                         std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "A non-zero loading direction in the sample reference frame",
+                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_StoreAngleComponents_Key, "Store Angle Components of Schmid Factor", "Whether to store the angle components for each Feature", false));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_OverrideSystem_Key, "Override Default Slip System", "Allows the user to manually input the slip plane and slip direction", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipPlane_Key, "Slip Plane", "Vector defining the slip plane normal.", std::vector<float32>({0.0F, 0.0F, 1.0F}),
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipPlane_Key, "Slip Plane", "A non-zero vector defining the slip plane normal", std::vector<float32>({0.0F, 0.0F, 1.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipDirection_Key, "Slip Direction", "Vector defining the slip direction.", std::vector<float32>({1.0F, 0.0F, 0.0F}),
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipDirection_Key, "Slip Direction", "A non-zero vector defining the slip direction", std::vector<float32>({1.0F, 0.0F, 0.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Cell Feature Data", "Phases"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies the Ensemble to which each Feature belongs", DataPath({"Cell Feature Data", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orienation of each Feature in quaternion representation",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation",
                                                           DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
@@ -82,10 +85,12 @@ Parameters ComputeSchmidsFilter::parameters() const
       "Schmids"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SlipSystemsArrayName_Key, "Slip Systems",
                                                           "The name of the array containing the enumeration of the slip system that has the highest Schmid factor", "SlipSystems"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PolesArrayName_Key, "Poles",
-                                                          "The name of the array specifying the crystallographic pole that points along the user defined loading direction", "Poles"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PhisArrayName_Key, "Phis", "The name of the array containing the angle between tensile axis and slip plane normal. ", "Schmid_Phis"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_LambdasArrayName_Key, "Lambdas", "The name of the array containing the angle between tensile axis and slip direction.", "Schmid_Lambdas"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_PolesArrayName_Key, "Poles", "The name of the array containing the normalized loading direction in the crystal frame, multiplied by 100 and truncated toward zero", "Poles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_PhisArrayName_Key, "Phis", "The name of the array containing cos(phi) when the default slip systems are used or phi in radians when they are overridden", "Schmid_Phis"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_LambdasArrayName_Key, "Lambdas", "The name of the array containing cos(lambda) when the default slip systems are used or lambda in radians when they are overridden", "Schmid_Lambdas"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_StoreAngleComponents_Key, k_PhisArrayName_Key, true);
   params.linkParameters(k_StoreAngleComponents_Key, k_LambdasArrayName_Key, true);
@@ -98,7 +103,8 @@ Parameters ComputeSchmidsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeSchmidsFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2 clarifies the vector constraints and the mode-dependent output-array semantics.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -119,26 +125,53 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  DataPath cellFeatDataPath = pFeaturePhasesArrayPathValue.getParent();
-  auto pSchmidsArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
-  auto pSlipSystemsArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
-  auto pPolesArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
-  auto pPhisArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
-  auto pLambdasArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
-
-  PreflightResult preflightResult;
+  DataPath cellFeatureDataPath = pFeaturePhasesArrayPathValue.getParent();
+  auto pSchmidsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
+  auto pSlipSystemsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
+  auto pPolesArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
+  auto pPhisArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
+  auto pLambdasArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  DataPath featureDataGroup = pFeaturePhasesArrayPathValue.getParent();
+  const Int32Array& phasesRef = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const UInt32Array& crystalStructuresRef = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
 
-  const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
-  auto tupleShape = phases.getIDataStore()->getTupleShape();
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeaturePhasesArrayPathValue, pAvgQuatsArrayPathValue});
+  if(!tupleValidityCheck)
+  {
+    return {MakeErrorResult<OutputActions>(-13503, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' must have equal tuple counts. {}",
+                                                               pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString(), tupleValidityCheck.error()))};
+  }
+
+  if(phasesRef.getNumberOfTuples() == 0)
+  {
+    return {MakeErrorResult<OutputActions>(
+        -13504, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' each contain 0 tuples. They must contain at least the Feature 0 sentinel tuple.",
+                            pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString()))};
+  }
+
+  if(crystalStructuresRef.getNumberOfTuples() == 0)
+  {
+    return {MakeErrorResult<OutputActions>(
+        -13505, fmt::format("The Crystal Structures array '{}' contains 0 tuples. It must contain at least one Ensemble tuple.", pCrystalStructuresArrayPathValue.toString()))};
+  }
+
+  const auto vectorMagnitude = [](const VectorFloat32Parameter::ValueType& vector) {
+    return std::sqrt(static_cast<float64>(vector[0]) * vector[0] + static_cast<float64>(vector[1]) * vector[1] + static_cast<float64>(vector[2]) * vector[2]);
+  };
+
+  if(vectorMagnitude(pLoadingDirectionValue) < std::numeric_limits<float32>::epsilon())
+  {
+    return {MakeErrorResult<OutputActions>(-13506, fmt::format("Loading Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.", pLoadingDirectionValue[0],
+                                                               pLoadingDirectionValue[1], pLoadingDirectionValue[2]))};
+  }
+
+  const auto tupleShape = phasesRef.getIDataStore()->getTupleShape();
 
   // All five output arrays are created with an explicit "0" fill value. The algorithm skips any
-  // Feature whose Laue class has no slip systems enumerated for it, and Feature 0 is a sentinel
-  // slot that is never computed, so without the fill those tuples would be handed to the user as
-  // whatever the allocator happened to hold. Legacy SIMPL FindSchmids allocated with initValue 0.
+  // Feature whose crystal structure is outside the supported Laue-group range, and Feature 0 is a
+  // sentinel slot that is never computed. Legacy SIMPL FindSchmids allocated with initValue 0.
   const std::string k_ZeroFill = "0";
 
   // Create output Schmids Array
@@ -171,11 +204,24 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
 
   if(pOverrideSystemValue)
   {
-    // make sure direction lies in plane
-    float cosVec = pSlipPlaneValue[0] * pSlipDirectionValue[0] + pSlipPlaneValue[1] * pSlipDirectionValue[1] + pSlipPlaneValue[2] * pSlipDirectionValue[2];
-    if(0.0F != cosVec)
+    if(vectorMagnitude(pSlipPlaneValue) < std::numeric_limits<float32>::epsilon())
     {
-      return {MakeErrorResult<OutputActions>(-13500, "Slip Plane and Slip Direction must be normal")};
+      return {MakeErrorResult<OutputActions>(
+          -13507, fmt::format("Slip Plane <{}, {}, {}> has zero length. Its components must define a non-zero plane normal.", pSlipPlaneValue[0], pSlipPlaneValue[1], pSlipPlaneValue[2]))};
+    }
+    if(vectorMagnitude(pSlipDirectionValue) < std::numeric_limits<float32>::epsilon())
+    {
+      return {MakeErrorResult<OutputActions>(-13508, fmt::format("Slip Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.", pSlipDirectionValue[0],
+                                                                 pSlipDirectionValue[1], pSlipDirectionValue[2]))};
+    }
+
+    // make sure direction lies in plane
+    const float32 dotProduct = pSlipPlaneValue[0] * pSlipDirectionValue[0] + pSlipPlaneValue[1] * pSlipDirectionValue[1] + pSlipPlaneValue[2] * pSlipDirectionValue[2];
+    if(0.0F != dotProduct)
+    {
+      return {
+          MakeErrorResult<OutputActions>(-13500, fmt::format("Slip Plane <{}, {}, {}> and Slip Direction <{}, {}, {}> have a dot product of {}. The vectors must be perpendicular.", pSlipPlaneValue[0],
+                                                             pSlipPlaneValue[1], pSlipPlaneValue[2], pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2], dotProduct))};
     }
   }
 
@@ -203,12 +249,12 @@ Result<> ComputeSchmidsFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  DataPath cellFeatDataPath = inputValues.FeaturePhasesArrayPath.getParent();
-  inputValues.SchmidsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
-  inputValues.SlipSystemsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
-  inputValues.PolesArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
-  inputValues.PhisArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
-  inputValues.LambdasArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
+  DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
+  inputValues.SchmidsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
+  inputValues.SlipSystemsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
+  inputValues.PolesArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
+  inputValues.PhisArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
+  inputValues.LambdasArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
 
   return ComputeSchmids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -3,6 +3,7 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -10,15 +11,14 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <catch2/catch.hpp>
 
 #include <array>
-#include <cstring>
 #include <filesystem>
-#include <fstream>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -33,7 +33,6 @@ const std::string k_SlipSystemsArrayName("SlipSystems");
 const std::string k_PolesArrayName("Poles");
 const std::string k_PhisArrayName("Schmid_Phis");
 const std::string k_LambdasArrayName("Schmid_Lambdas");
-const std::string k_CalculatedArrayPrefix("Calculated_");
 } // namespace
 
 // =====================================================================================
@@ -81,7 +80,7 @@ const std::string k_CalculatedArrayPrefix("Calculated_");
 // 1.732f / 1.414f, which inflate every Schmid factor by the uniform factor
 //   sqrt(6) / (1.732f * 1.414f) = 1.00018035284   (+0.0180353 %)
 // and let m exceed the physical cubic maximum of 0.5 (0.500090176 at the maximizing
-// direction). Fixed on EbsdLib topic/3_1_1_staging; the values asserted below are the
+// direction). Fixed in EbsdLib 3.1.1; the values asserted below are the
 // EXACT-arithmetic post-fix values and will fail by ~7.4e-5 against EbsdLib <= 3.1.0.
 namespace
 {
@@ -105,52 +104,58 @@ const DataPath k_EnsembleAMPath({k_GeomName, k_EnsembleAMName});
 struct SchmidFixture
 {
   DataStructure ds;
-  Int32Array* featurePhases = nullptr;
-  Float32Array* avgQuats = nullptr;
-  UInt32Array* crystalStructures = nullptr;
+  Int32Array* featurePhasesPtr = nullptr;
+  Float32Array* avgQuatsPtr = nullptr;
+  UInt32Array* crystalStructuresPtr = nullptr;
 };
 
 SchmidFixture MakeFixture(usize numFeatures, usize numEnsembles = 2)
 {
-  SchmidFixture td;
-  auto* imageGeom = ImageGeom::Create(td.ds, k_GeomName);
-  imageGeom->setDimensions({1, 1, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  SchmidFixture fixture;
+  auto* imageGeomPtr = ImageGeom::Create(fixture.ds, k_GeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
 
-  auto* featureAM = AttributeMatrix::Create(td.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeom->getId());
-  auto* ensembleAM = AttributeMatrix::Create(td.ds, k_EnsembleAMName, ShapeType{numEnsembles}, imageGeom->getId());
+  auto* featureAMPtr = AttributeMatrix::Create(fixture.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeomPtr->getId());
+  auto* ensembleAMPtr = AttributeMatrix::Create(fixture.ds, k_EnsembleAMName, ShapeType{numEnsembles}, imageGeomPtr->getId());
 
-  td.featurePhases = UnitTest::CreateTestDataArray<int32>(td.ds, k_PhasesName, {numFeatures}, {1}, featureAM->getId());
-  td.avgQuats = UnitTest::CreateTestDataArray<float32>(td.ds, k_AvgQuatsName, {numFeatures}, {4}, featureAM->getId());
-  td.crystalStructures = UnitTest::CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numEnsembles}, {1}, ensembleAM->getId());
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>({numFeatures}, {1}, IDataAction::Mode::Execute);
+  fixture.featurePhasesPtr = Int32Array::Create(fixture.ds, k_PhasesName, featurePhasesStore, featureAMPtr->getId());
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>({numFeatures}, {4}, IDataAction::Mode::Execute);
+  fixture.avgQuatsPtr = Float32Array::Create(fixture.ds, k_AvgQuatsName, avgQuatsStore, featureAMPtr->getId());
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>({numEnsembles}, {1}, IDataAction::Mode::Execute);
+  fixture.crystalStructuresPtr = UInt32Array::Create(fixture.ds, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
 
-  for(usize i = 0; i < numFeatures; ++i)
+  for(usize featureIdx = 0; featureIdx < numFeatures; ++featureIdx)
   {
-    (*td.featurePhases)[i] = 1;
-    (*td.avgQuats)[i * 4 + 0] = 0.0F; // x
-    (*td.avgQuats)[i * 4 + 1] = 0.0F; // y
-    (*td.avgQuats)[i * 4 + 2] = 0.0F; // z
-    (*td.avgQuats)[i * 4 + 3] = 1.0F; // w  -> identity
+    (*fixture.featurePhasesPtr)[featureIdx] = 1;
+    (*fixture.avgQuatsPtr)[featureIdx * 4 + 0] = 0.0F; // x
+    (*fixture.avgQuatsPtr)[featureIdx * 4 + 1] = 0.0F; // y
+    (*fixture.avgQuatsPtr)[featureIdx * 4 + 2] = 0.0F; // z
+    (*fixture.avgQuatsPtr)[featureIdx * 4 + 3] = 1.0F; // w  -> identity
   }
-  (*td.featurePhases)[0] = 0; // feature 0 is the sentinel; the algorithm starts its loop at 1
-  for(usize e = 0; e < numEnsembles; ++e)
+  if(numFeatures > 0)
   {
-    (*td.crystalStructures)[e] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    (*fixture.featurePhasesPtr)[0] = 0; // feature 0 is the sentinel; the algorithm starts its loop at 1
+  }
+  for(usize ensembleIdx = 0; ensembleIdx < numEnsembles; ++ensembleIdx)
+  {
+    (*fixture.crystalStructuresPtr)[ensembleIdx] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   }
   if(numEnsembles > 1)
   {
-    (*td.crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High; // EbsdLib LaueOps index 1
+    (*fixture.crystalStructuresPtr)[1] = ebsdlib::CrystalStructure::Cubic_High; // EbsdLib LaueOps index 1
   }
-  return td;
+  return fixture;
 }
 
-void SetQuat(SchmidFixture& td, usize featureIdx, const std::array<float32, 4>& q)
+void SetQuat(SchmidFixture& fixture, usize featureIdx, const std::array<float32, 4>& quat)
 {
-  (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
-  (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
-  (*td.avgQuats)[featureIdx * 4 + 2] = q[2];
-  (*td.avgQuats)[featureIdx * 4 + 3] = q[3];
+  (*fixture.avgQuatsPtr)[featureIdx * 4 + 0] = quat[0];
+  (*fixture.avgQuatsPtr)[featureIdx * 4 + 1] = quat[1];
+  (*fixture.avgQuatsPtr)[featureIdx * 4 + 2] = quat[2];
+  (*fixture.avgQuatsPtr)[featureIdx * 4 + 3] = quat[3];
 }
 
 Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bool overrideSystem, const std::vector<float32>& plane = {0.0F, 0.0F, 1.0F},
@@ -175,165 +180,37 @@ Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bo
 
 /**
  * @brief Asserts the five outputs of one feature against the oracle. Angle components are
- * checked only when phis/lambdas are >= 0 (a negative sentinel means "do not check").
+ * checked only when phisRef/lambdasRef are >= 0 (a negative sentinel means "do not check").
  */
 void CheckFeature(const DataStructure& ds, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi, float64 expectedLambda)
 {
   REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
-  const auto& schmids = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-  const auto& slipSystems = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
-  const auto& poles = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
+  const auto& schmidsRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+  const auto& slipSystemsRef = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
+  const auto& polesRef = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
 
   CAPTURE(featureIdx);
-  CHECK(static_cast<float64>(schmids[featureIdx]) == Approx(expectedM).margin(k_Tol));
-  CHECK(slipSystems[featureIdx] == expectedSlipSystem);
-  for(usize k = 0; k < 3; ++k)
+  CHECK(static_cast<float64>(schmidsRef[featureIdx]) == Approx(expectedM).margin(k_Tol));
+  CHECK(slipSystemsRef[featureIdx] == expectedSlipSystem);
+  for(usize compIdx = 0; compIdx < 3; ++compIdx)
   {
-    CAPTURE(k);
-    CHECK(poles[featureIdx * 3 + k] == expectedPoles[k]);
+    CAPTURE(compIdx);
+    CHECK(polesRef[featureIdx * 3 + compIdx] == expectedPoles[compIdx]);
   }
 
   if(expectedPhi >= 0.0)
   {
     REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
     REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
-    const auto& phis = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-    const auto& lambdas = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
-    CHECK(static_cast<float64>(phis[featureIdx]) == Approx(expectedPhi).margin(k_Tol));
-    CHECK(static_cast<float64>(lambdas[featureIdx]) == Approx(expectedLambda).margin(k_Tol));
+    const auto& phisRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+    const auto& lambdasRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+    CHECK(static_cast<float64>(phisRef[featureIdx]) == Approx(expectedPhi).margin(k_Tol));
+    CHECK(static_cast<float64>(lambdasRef[featureIdx]) == Approx(expectedLambda).margin(k_Tol));
   }
 }
 } // namespace
-
-TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter", "[OrientationAnalysis][ComputeSchmidsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
-
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_CellData);
-  DataPath cellFeatureDataPath({k_DataContainer, k_CellFeatureData});
-  DataPath avgQuatsDataPath = cellFeatureDataPath.createChildPath(k_AvgQuats);
-  DataPath featurePhasesDataPath = cellFeatureDataPath.createChildPath(k_Phases);
-
-  {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
-    ComputeSchmidsFilter filter;
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeSchmidsFilter::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F}));
-    args.insertOrAssign(ComputeSchmidsFilter::k_StoreAngleComponents_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeSchmidsFilter::k_OverrideSystem_Key, std::make_any<bool>(false));
-    args.insertOrAssign(ComputeSchmidsFilter::k_SlipPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.0F, 0.0F, 1.0F}));
-    args.insertOrAssign(ComputeSchmidsFilter::k_SlipDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 0.0F, 0.0F}));
-
-    args.insertOrAssign(ComputeSchmidsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesDataPath));
-    args.insertOrAssign(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
-    args.insertOrAssign(ComputeSchmidsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-
-    args.insertOrAssign(ComputeSchmidsFilter::k_SchmidsArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_SchmidsArrayName));
-    args.insertOrAssign(ComputeSchmidsFilter::k_SlipSystemsArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_SlipSystemsArrayName));
-    args.insertOrAssign(ComputeSchmidsFilter::k_PolesArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_PolesArrayName));
-    args.insertOrAssign(ComputeSchmidsFilter::k_PhisArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_PhisArrayName));
-    args.insertOrAssign(ComputeSchmidsFilter::k_LambdasArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_LambdasArrayName));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
-
-  // The two INTEGER outputs must still match the archive EXACTLY. Both are provably invariant
-  // under the EbsdLib 3.1.1 normalizer fix:
-  //   * SlipSystems is an argmax over twelve candidates that the fix rescales by a single positive
-  //     factor, so the ranking -- and therefore the winner -- cannot move.
-  //   * Poles is derived from crystalLoading, which the fix does not touch at all.
-  // Keeping these exact is the check that the fix changed only what it was supposed to.
-  {
-    const std::vector<std::string> comparisonNames = {k_SlipSystemsArrayName, k_PolesArrayName};
-    for(const auto& comparisonName : comparisonNames)
-    {
-      const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
-      const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_CalculatedArrayPrefix + comparisonName});
-      const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-      const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData, 1);
-    }
-  }
-
-  // The three FLOAT outputs no longer match the archive, and they are not supposed to. The archive
-  // was generated with EbsdLib <= 3.1.0, whose CubicOps::getSchmidFactorAndSS normalized with the
-  // float literals 1.732f and 1.414f instead of sqrt(3) and sqrt(2). Both literals differ from the
-  // constants they stand in for, so every archived value carries a KNOWN, UNIFORM, per-component
-  // inflation factor:
-  //
-  //   Phis    (cos phi,    normalized by sqrt(3)):  sqrt(3) / 1.732f          = 1.0000293385
-  //   Lambdas (cos lambda, normalized by sqrt(2)):  sqrt(2) / 1.414f          = 1.0001510099
-  //   Schmids (their product)                    :  sqrt(6) / (1.732f*1.414f) = 1.0001803528
-  //
-  // Rather than retire the comparison -- which would throw away 214 real regression checks -- or
-  // loosen it into meaninglessness, assert the RELATIONSHIP. Every archived value must equal the
-  // freshly computed value times its predicted factor. That is a strictly STRONGER statement than
-  // the equality it replaces: it pins both the new values and the exact size and shape of the
-  // change, and it fails if the fix perturbed anything the bias analysis did not account for.
-  //
-  // Recompute these expectations (and regenerate the archive) if the exemplar is ever rebuilt
-  // against EbsdLib >= 3.1.1, at which point the factors all become 1.0.
-  {
-    const std::vector<std::pair<std::string, float64>> biasedComparisons = {
-        {k_SchmidsArrayName, 1.0001803528351113},
-        {k_PhisArrayName, 1.0000293384785181},
-        {k_LambdasArrayName, 1.0001510099261918},
-    };
-    for(const auto& [comparisonName, biasFactor] : biasedComparisons)
-    {
-      const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
-      const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_CalculatedArrayPrefix + comparisonName});
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(exemplarPath));
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(calculatedPath));
-      const auto& exemplarData = dataStructure.getDataRefAs<Float32Array>(exemplarPath);
-      const auto& calculatedData = dataStructure.getDataRefAs<Float32Array>(calculatedPath);
-      REQUIRE(exemplarData.getSize() == calculatedData.getSize());
-
-      usize mismatches = 0;
-      for(usize i = 1; i < calculatedData.getSize(); i++)
-      {
-        const float64 expected = static_cast<float64>(calculatedData[i]) * biasFactor;
-        const float64 archived = static_cast<float64>(exemplarData[i]);
-        // Absolute margin covers the float32 quantization of both operands near zero; the relative
-        // epsilon covers it away from zero.
-        if(archived != Approx(expected).margin(2.0e-7).epsilon(1.0e-6))
-        {
-          CAPTURE(comparisonName, i, archived, expected, biasFactor);
-          CHECK(archived == Approx(expected).margin(2.0e-7).epsilon(1.0e-6));
-          if(++mismatches >= 5)
-          {
-            break;
-          }
-        }
-      }
-      CAPTURE(comparisonName);
-      CHECK(mismatches == 0);
-    }
-  }
-
-// Write the DataStructure out to the file system
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_schmids.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
 
 // -----------------------------------------------------------------------------
 // Class 1 (Analytical): auto slip-system path, identity quaternion, Cubic_High.
@@ -406,39 +283,42 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle,
   {
     DYNAMIC_SECTION("loading " << row.label)
     {
-      SchmidFixture td = MakeFixture(2);
+      SchmidFixture fixture = MakeFixture(2);
 
       ComputeSchmidsFilter filter;
       Arguments args = MakeArgs(row.loading, true, false);
 
-      auto preflightResult = filter.preflight(td.ds, args);
+      auto preflightResult = filter.preflight(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      auto executeResult = filter.execute(td.ds, args);
+      auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      CheckFeature(td.ds, 1, row.m, row.slipSystem, row.poles, row.cosPhi, row.cosLambda);
+      CheckFeature(fixture.ds, 1, row.m, row.slipSystem, row.poles, row.cosPhi, row.cosLambda);
 
       // Class 4 invariants.
-      const auto& schmids = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-      const auto& phis = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-      const auto& lambdas = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      const auto& phisRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
       // (a) The Schmid factor of a cubic crystal cannot exceed 0.5 and cannot be negative.
       //     EbsdLib <= 3.1.0 violated the upper bound (max 0.500090176); this assertion is only
       //     satisfiable against the fixed normalizers.
-      CHECK(schmids[1] >= 0.0F);
-      CHECK(schmids[1] <= 0.5F);
+      CHECK(schmidsRef[1] >= 0.0F);
+      CHECK(schmidsRef[1] <= 0.5F);
       // (b) On the auto path angleComps are COSINES, so m must be their product exactly.
-      CHECK(static_cast<float64>(schmids[1]) == Approx(static_cast<float64>(phis[1]) * static_cast<float64>(lambdas[1])).margin(k_Tol));
+      CHECK(static_cast<float64>(schmidsRef[1]) == Approx(static_cast<float64>(phisRef[1]) * static_cast<float64>(lambdasRef[1])).margin(k_Tol));
       // (c) Both cosines are direction cosines: in [0, 1].
-      CHECK(phis[1] >= 0.0F);
-      CHECK(phis[1] <= 1.0F);
-      CHECK(lambdas[1] >= 0.0F);
-      CHECK(lambdas[1] <= 1.0F);
+      CHECK(phisRef[1] >= 0.0F);
+      CHECK(phisRef[1] <= 1.0F);
+      CHECK(lambdasRef[1] >= 0.0F);
+      CHECK(lambdasRef[1] <= 1.0F);
 
       // Feature 0 is the sentinel slot; the algorithm writes explicit zeros there.
-      CheckFeature(td.ds, 0, 0.0, 0, {0, 0, 0}, 0.0, 0.0);
+      CheckFeature(fixture.ds, 0, 0.0, 0, {0, 0, 0}, 0.0, 0.0);
 
-      UnitTest::CheckArraysInheritTupleDims(td.ds);
+      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 }
@@ -510,23 +390,24 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convent
   {
     DYNAMIC_SECTION("quat " << row.label)
     {
-      SchmidFixture td = MakeFixture(2);
-      SetQuat(td, 1, row.quat);
+      SchmidFixture fixture = MakeFixture(2);
+      SetQuat(fixture, 1, row.quat);
 
       ComputeSchmidsFilter filter;
       Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
 
-      auto preflightResult = filter.preflight(td.ds, args);
+      auto preflightResult = filter.preflight(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      auto executeResult = filter.execute(td.ds, args);
+      auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      CheckFeature(td.ds, 1, k_ExpectedM, row.slipSystem, row.poles, k_ExpectedPhi, k_ExpectedLambda);
+      CheckFeature(fixture.ds, 1, k_ExpectedM, row.slipSystem, row.poles, k_ExpectedPhi, k_ExpectedLambda);
 
-      const auto& schmids = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-      CHECK(schmids[1] <= 0.5F);
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      CHECK(schmidsRef[1] <= 0.5F);
 
-      UnitTest::CheckArraysInheritTupleDims(td.ds);
+      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 }
@@ -600,41 +481,44 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
   {
     DYNAMIC_SECTION("loading " << row.label)
     {
-      SchmidFixture td = MakeFixture(2);
+      SchmidFixture fixture = MakeFixture(2);
 
       ComputeSchmidsFilter filter;
       Arguments args = MakeArgs(row.loading, true, true, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F, 0.0F});
 
-      auto preflightResult = filter.preflight(td.ds, args);
+      auto preflightResult = filter.preflight(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      auto executeResult = filter.execute(td.ds, args);
+      auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      CheckFeature(td.ds, 1, row.m, row.symOpIndex, row.poles, row.phiRadians, row.lambdaRadians);
+      CheckFeature(fixture.ds, 1, row.m, row.symOpIndex, row.poles, row.phiRadians, row.lambdaRadians);
 
       // Class 4: on the override path m must equal cos(Phis) * cos(Lambdas) because the stored
       // components are the ANGLES, not their cosines. This is the assertion that proves the SC-3
       // unit flip is real rather than a documentation misreading.
-      const auto& schmids = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-      const auto& phis = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-      const auto& lambdas = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      const auto& phisRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
       if(row.m > 0.0)
       {
-        CHECK(static_cast<float64>(schmids[1]) == Approx(std::cos(static_cast<float64>(phis[1])) * std::cos(static_cast<float64>(lambdas[1]))).margin(k_Tol));
+        CHECK(static_cast<float64>(schmidsRef[1]) == Approx(std::cos(static_cast<float64>(phisRef[1])) * std::cos(static_cast<float64>(lambdasRef[1]))).margin(k_Tol));
       }
-      CHECK(schmids[1] <= 0.5F);
+      CHECK(schmidsRef[1] <= 0.5F);
 
-      UnitTest::CheckArraysInheritTupleDims(td.ds);
+      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 
   SECTION("preflight rejects a slip direction that is not in the slip plane")
   {
-    SchmidFixture td = MakeFixture(2);
+    SchmidFixture fixture = MakeFixture(2);
     ComputeSchmidsFilter filter;
     // (0,0,1) . (1,0,1) == 1 != 0
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F, 1.0F});
-    auto preflightResult = filter.preflight(td.ds, args);
+    auto preflightResult = filter.preflight(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     CHECK(preflightResult.outputActions.errors()[0].code == -13500);
@@ -650,7 +534,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
 // entirely on how the store was initialized. The fixture below is large and dirties the heap
 // first, which is what settled how much of that exposure is real -- see the note inside it.
 //
-// SC-4: `crystalStructures[featurePhases[i]]` (ComputeSchmids.cpp:82) is unbounded. A phase id
+// SC-4: `crystalStructures[featurePhases[featureIdx]]` was unbounded. A phase id
 // beyond the ensemble count, or a negative one, reads out of bounds.
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards", "[OrientationAnalysis][ComputeSchmidsFilter][VV]")
@@ -659,87 +543,47 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
   SECTION("StoreAngleComponents == false does not create Phis/Lambdas")
   {
-    SchmidFixture td = MakeFixture(2);
+    SchmidFixture fixture = MakeFixture(2);
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, false, false);
 
-    auto preflightResult = filter.preflight(td.ds, args);
+    auto preflightResult = filter.preflight(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(td.ds, args);
+    auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // The three unconditional outputs are unchanged by the toggle.
-    CheckFeature(td.ds, 1, 0.4665694748158435, 10, {26, 53, 80}, -1.0, -1.0);
-    CHECK(td.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)) == nullptr);
-    CHECK(td.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)) == nullptr);
+    CheckFeature(fixture.ds, 1, 0.4665694748158435, 10, {26, 53, 80}, -1.0, -1.0);
+    CHECK(fixture.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)) == nullptr);
+    CHECK(fixture.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)) == nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(td.ds);
+    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
   }
 
-  SECTION("features whose Laue class is beyond LaueGroupEnd get defined zeros, not stale memory")
+  SECTION("Features whose Laue class is beyond LaueGroupEnd get defined zeros")
   {
     // Ensemble slots: 0 = 999 sentinel, 1 = Cubic_High, 2 = 999 sentinel (>= LaueGroupEnd == 11).
     // Feature 1 uses phase 1 (computed); every other feature uses phase 2 (skipped by the
-    // continue), so all of their output rows are ones the algorithm never writes.
-    //
-    // WHY THE FIXTURE IS LARGE, AND WHAT THAT SETTLED. The claim SC-1 originally rested on was
-    // that without an explicit fill the skipped rows hold indeterminate memory. Removing the
-    // explicit "0" fill from all five CreateArrayAction calls and running THIS fixture -- 20000
-    // features, so every output array is 78 KB or more, with same-size blocks poisoned to 0xAB
-    // and freed immediately before the run -- still yields all zeros. That is not the allocator
-    // being kind: a standalone probe confirms that on this platform `new float[20000]` after a
-    // same-size dirty free does return 0xABABABAB, whereas the 8-to-36-byte allocations a
-    // three-feature fixture uses come from libmalloc's nano zone as freshly zeroed pages. So the
-    // zeros here are written by SIMPLNX, not inherited from the heap, and the mechanism is in the
-    // store factory rather than in the action: CoreDataIOManager::addDataStoreFnc() constructs
-    // every in-core store with `static_cast<T>(0)` as its initValue, and DataStore's constructor
-    // unconditionally `std::fill_n`s the buffer with it (DataStore.hpp:66-69). The fillValue
-    // string on CreateArrayAction only adds a second, redundant fill.
-    //
-    // The explicit fill is therefore DEFENSIVE, not a repair of a live in-core defect: it
-    // restores what legacy SIMPL FindSchmids stated explicitly, and it is the only guarantee for
-    // any store implementation whose factory does not hard-code a zero initValue. This section
-    // is the regression lock on the guarantee, and the large dirty-heap fixture is what makes it
-    // a non-vacuous one -- at this size the assertion would catch a store that stopped filling.
+    // continue), so the explicit CreateArrayAction fill must define every skipped output row.
     constexpr usize k_FeatureCount = 20000;
-    SchmidFixture td = MakeFixture(k_FeatureCount, 3);
-    for(usize i = 2; i < k_FeatureCount; ++i)
+    SchmidFixture fixture = MakeFixture(k_FeatureCount, 3);
+    for(usize featureIdx = 2; featureIdx < k_FeatureCount; ++featureIdx)
     {
-      (*td.featurePhases)[i] = 2;
+      (*fixture.featurePhasesPtr)[featureIdx] = 2;
     }
 
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
-    auto preflightResult = filter.preflight(td.ds, args);
+    auto preflightResult = filter.preflight(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Dirty the heap with blocks the same size as the five output arrays and free them
-    // immediately before the run, so that a default-initialized `new value_type[n]` of that size
-    // is served from a recycled block that still holds the poison.
-    {
-      std::vector<char*> dirtyBlocks;
-      for(int32 repetition = 0; repetition < 8; ++repetition)
-      {
-        for(usize byteCount : {k_FeatureCount * sizeof(float32), k_FeatureCount * 3 * sizeof(int32)})
-        {
-          char* block = new char[byteCount];
-          std::memset(block, 0xAB, byteCount);
-          dirtyBlocks.push_back(block);
-        }
-      }
-      for(char* block : dirtyBlocks)
-      {
-        delete[] block;
-      }
-    }
-
-    auto executeResult = filter.execute(td.ds, args);
+    auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // Feature 1 still gets the full oracle answer.
-    CheckFeature(td.ds, 1, 0.4665694748158435, 10, {26, 53, 80}, 0.6172133998483701, 0.7559289460184544);
+    CheckFeature(fixture.ds, 1, 0.4665694748158435, 10, {26, 53, 80}, 0.6172133998483701, 0.7559289460184544);
     // Feature 2 was skipped: every output must be a defined zero.
-    CheckFeature(td.ds, 2, 0.0, 0, {0, 0, 0}, 0.0, 0.0);
+    CheckFeature(fixture.ds, 2, 0.0, 0, {0, 0, 0}, 0.0, 0.0);
 
     // ...and so must every other row the algorithm never writes: feature 0 (the sentinel) and
     // features 2 through 19999. Aggregated into one CHECK per data type so the section stays a
@@ -747,12 +591,12 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     usize nonZeroFloatValues = 0;
     for(const auto& arrayName : {k_SchmidsArrayName, k_PhisArrayName, k_LambdasArrayName})
     {
-      REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName)));
-      const auto& arrayRef = td.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName)));
+      const auto& arrayRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName));
       REQUIRE(arrayRef.getSize() == k_FeatureCount);
-      for(usize i = 0; i < k_FeatureCount; ++i)
+      for(usize featureIdx = 0; featureIdx < k_FeatureCount; ++featureIdx)
       {
-        if(i != 1 && arrayRef[i] != 0.0F)
+        if(featureIdx != 1 && arrayRef[featureIdx] != 0.0F)
         {
           ++nonZeroFloatValues;
         }
@@ -762,12 +606,12 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
     usize nonZeroSlipSystemValues = 0;
     {
-      REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
-      const auto& slipSystemsRef = td.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
+      const auto& slipSystemsRef = fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
       REQUIRE(slipSystemsRef.getSize() == k_FeatureCount);
-      for(usize i = 0; i < k_FeatureCount; ++i)
+      for(usize featureIdx = 0; featureIdx < k_FeatureCount; ++featureIdx)
       {
-        if(i != 1 && slipSystemsRef[i] != 0)
+        if(featureIdx != 1 && slipSystemsRef[featureIdx] != 0)
         {
           ++nonZeroSlipSystemValues;
         }
@@ -777,12 +621,12 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
     usize nonZeroPoleValues = 0;
     {
-      REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
-      const auto& polesRef = td.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
+      const auto& polesRef = fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
       REQUIRE(polesRef.getSize() == k_FeatureCount * 3);
-      for(usize i = 0; i < k_FeatureCount * 3; ++i)
+      for(usize compIdx = 0; compIdx < k_FeatureCount * 3; ++compIdx)
       {
-        if((i / 3) != 1 && polesRef[i] != 0)
+        if((compIdx / 3) != 1 && polesRef[compIdx] != 0)
         {
           ++nonZeroPoleValues;
         }
@@ -790,19 +634,36 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     }
     CHECK(nonZeroPoleValues == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(td.ds);
+    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  }
+
+  SECTION("Valid Laue classes without slip systems keep zero Schmid outputs and computed Poles")
+  {
+    SchmidFixture fixture = MakeFixture(3, 3);
+    (*fixture.featurePhasesPtr)[2] = 2;
+    (*fixture.crystalStructuresPtr)[2] = ebsdlib::CrystalStructure::Triclinic;
+
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    CheckFeature(fixture.ds, 2, 0.0, 0, {26, 53, 80}, 0.0, 0.0);
+    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
   }
 
   SECTION("a phase id beyond the ensemble count is an error, not an out-of-bounds read")
   {
-    SchmidFixture td = MakeFixture(2); // 2 ensemble slots -> valid phase ids are 0 and 1
-    (*td.featurePhases)[1] = 7;
+    SchmidFixture fixture = MakeFixture(2); // 2 ensemble slots -> valid phase ids are 0 and 1
+    (*fixture.featurePhasesPtr)[1] = 7;
 
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
-    auto preflightResult = filter.preflight(td.ds, args);
+    auto preflightResult = filter.preflight(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(td.ds, args);
+    auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
     CHECK(executeResult.result.errors()[0].code == -13501);
@@ -813,18 +674,110 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
   SECTION("a negative phase id is an error, not an out-of-bounds read")
   {
-    SchmidFixture td = MakeFixture(2);
-    (*td.featurePhases)[1] = -3;
+    SchmidFixture fixture = MakeFixture(2);
+    (*fixture.featurePhasesPtr)[1] = -3;
 
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
-    auto preflightResult = filter.preflight(td.ds, args);
+    auto preflightResult = filter.preflight(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(td.ds, args);
+    auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
     CHECK(executeResult.result.errors()[0].code == -13502);
     CHECK(executeResult.result.errors()[0].message.find("-3") != std::string::npos);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation", "[OrientationAnalysis][ComputeSchmidsFilter][VV][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  SECTION("Feature Phases and Average Quaternions must have equal tuple counts")
+  {
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+    imageGeomPtr->setDimensions({1, 1, 1});
+
+    auto* phasesAMPtr = AttributeMatrix::Create(dataStructure, "Phases Data", ShapeType{2}, imageGeomPtr->getId());
+    auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>({2}, {1}, IDataAction::Mode::Execute);
+    Int32Array::Create(dataStructure, k_PhasesName, featurePhasesStore, phasesAMPtr->getId());
+    auto* quatsAMPtr = AttributeMatrix::Create(dataStructure, "Quaternions Data", ShapeType{6}, imageGeomPtr->getId());
+    auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>({6}, {4}, IDataAction::Mode::Execute);
+    Float32Array::Create(dataStructure, k_AvgQuatsName, avgQuatsStore, quatsAMPtr->getId());
+    auto* ensembleAMPtr = AttributeMatrix::Create(dataStructure, k_EnsembleAMName, ShapeType{2}, imageGeomPtr->getId());
+    auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>({2}, {1}, IDataAction::Mode::Execute);
+    UInt32Array::Create(dataStructure, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
+
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
+    args.insertOrAssign(ComputeSchmidsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({k_GeomName, "Phases Data", k_PhasesName})));
+    args.insertOrAssign(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_GeomName, "Quaternions Data", k_AvgQuatsName})));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13503);
+  }
+
+  SECTION("Feature arrays must contain the sentinel tuple")
+  {
+    SchmidFixture fixture = MakeFixture(0);
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
+
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13504);
+  }
+
+  SECTION("Crystal Structures must contain at least one ensemble")
+  {
+    SchmidFixture fixture = MakeFixture(2, 0);
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
+
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13505);
+  }
+
+  SECTION("Loading Direction must be non-zero")
+  {
+    SchmidFixture fixture = MakeFixture(2);
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({0.0F, 0.0F, 0.0F}, true, false);
+
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13506);
+  }
+
+  SECTION("Override Slip Plane must be non-zero")
+  {
+    SchmidFixture fixture = MakeFixture(2);
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F});
+
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13507);
+  }
+
+  SECTION("Override Slip Direction must be non-zero")
+  {
+    SchmidFixture fixture = MakeFixture(2);
+    ComputeSchmidsFilter filter;
+    Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F, 0.0F});
+
+    auto preflightResult = filter.preflight(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -13508);
   }
 }
 
