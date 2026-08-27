@@ -27,13 +27,9 @@ jobs:
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
       - name: Install mono
-        shell: bash
         run: |
-          sudo apt-get -y install ca-certificates gnupg
-          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-          sudo apt-get -y update
-          sudo apt-get -y install mono-complete
+          sudo apt-get update
+          sudo apt-get install mono-complete
       - name: Setup NuGet Credentials
         shell: bash
         run: |
