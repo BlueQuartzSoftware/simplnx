@@ -28,7 +28,7 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           submodules: true
       - name: Checkout vcpkg
@@ -39,7 +39,7 @@ jobs:
             echo "VCPKG_INSTALLATION_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
         if: matrix.os == 'macos-14'
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: '3.10'
       - name: Install Python dependencies
@@ -47,7 +47,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/gcc-problem-matcher@0.2.0
+        uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
       - name: Install Dependencies
         run: |
           brew install ninja mono

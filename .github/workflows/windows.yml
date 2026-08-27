@@ -24,11 +24,11 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           submodules: true
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/msvc-problem-matcher@0.2.0
+        uses: ammaraskar/msvc-problem-matcher@541aa4360062d76d9620af6b8bd35cfa0c5ef19f
       - name: Setup Build Environment
         uses: ilammy/msvc-dev-cmd@v1.12.1
         with:
