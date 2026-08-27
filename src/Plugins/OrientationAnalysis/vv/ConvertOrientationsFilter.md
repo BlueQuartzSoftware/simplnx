@@ -1,21 +1,19 @@
 # V&V Report: ConvertOrientationsFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
 | SIMPLNX Human Name | Convert Orientation Representation |
 | DREAM3D 6.5.171 equivalent | `ConvertOrientations` (SIMPL UUID `e5629880-98c4-5656-82b8-c9fe2b9744de`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ConvertOrientations.{h,cpp}`; mapped in `OrientationAnalysisLegacyUUIDMapping.hpp` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
+| Status | COMPLETE |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-A scannable dashboard for reviewers. Each row is one sentence to one short paragraph — enough that a reader can decide whether they need to read the long-form sections below.
-
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** (plumbing) under the retained SIMPL UUID. Legacy built a vector of 7 `OrientationConverter<T>` subclasses dispatching each pair to its **direct** pairwise transform (e.g. `eu2om`, `eu2cu`); SIMPLNX uses an 8×8 `switch` dispatching to macro-generated convertors that call EbsdLib `input.toX()` directly. Three scope deltas: SIMPLNX **adds Stereographic** (8th type), **restricts input to float32** (legacy accepted float and double, D2), and **drops legacy's in-place Euler sanitization** (D5). |
 | Oracle (confirmed)     | **Class 3 (Rowenhorst 2015, DOI 10.1088/0965-0393/23/8/083501)** primary + **Class 1 (Analytical)** for Stereographic closed form + **Class 4 (Invariant)** round-trip. *Transform math is owned/tested by EbsdLib itself (`EbsdLib/Source/Test/Orientation*Test.cpp`); this filter test verifies only the filter's value-add — dispatch routing, component striding, preflight.* Encoded in `test/ConvertOrientationsTest.cpp` — 56-pair 8×8 matrix + stereographic closed form; **1032 assertions pass** (in-core, via `ctest`). OOC: single-algorithm filter made OOC-safe via `requireArraysInMemory`; dedicated OOC run skipped (no in-core/OOC dispatch variants — see V&V phase). |
 | Code paths enumerated  | 11 enumerated; 2 are unreachable dead arms (same-type + `Unknown` dispatch), leaving **9 reachable, of which 7 are exercised**. Remaining gaps: `-67003` multi-dim guard and the per-tuple cancel branch (both low value). |
@@ -72,7 +70,7 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ConvertOrientations.cpp` (~370 lines) + `Filters/ConvertOrientationsFilter.cpp` preflight. Logical phases: (a) filter `preflightImpl` validation, (b) execute dispatch (8×8 output/input `switch`), (c) per-tuple parallel convertor.
 
-| #  | Phase          | Path                                                                                              | Test case                                                                 |
+| #  | Phase          | Path   | Test case                                                                 |
 |----|----------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | 1  | (a) Preflight  | `inputType == outputType` → `-67005`                                                              | `Equal Representations` (GENERATE over all 8 types)                       |
 | 2  | (a) Preflight  | input component shape has >1 dimension → `-67003`                                                 | *Not directly tested. Low-value guard; selection params produce 1-D component shapes in normal use.* |

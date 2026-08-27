@@ -1,27 +1,27 @@
 # V&V Report: CAxisSegmentFeaturesFilter
 
-|                            |                                                                                                                                              |
-|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Plugin                     | OrientationAnalysis                                                                                                                          |
-| SIMPLNX UUID               | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d`                                                                                                       |
-| SIMPLNX Human Name         | Segment Features (C-Axis Misalignment)                                                                                                       |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
+| SIMPLNX UUID               | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
+| SIMPLNX Human Name         | Segment Features (C-Axis Misalignment) |
 | DREAM3D 6.5.171 equivalent | `CAxisSegmentFeatures` — `Source/Plugins/Reconstruction/ReconstructionFilters/CAxisSegmentFeatures.{h,cpp}` (SIMPL UUID `bff6be19-1219-5876-8838-1574ad29d965`) |
-| Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                      |
-| Status                     | COMPLETE — 2026-07-25                                                                                                                        |
-| Sign-off                   | Michael A. Jackson <mike.jackson@bluequartz.net> — 2026-07-23. Second engineer: Matthew Marine, 2026-07-25 (PR #1685 review). |
+| Verified commit            | *<filled at SBIR deliverable assembly>*|
+| Status | COMPLETE     |
+| Sign-off  | Michael A. Jackson <mike.jackson@bluequartz.net> — 2026-07-23. Second engineer: Matthew Marine, 2026-07-25 (PR #1685 review). |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                                                                                                                                                                              |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes.** Line-for-line port of legacy `getSeed`/`determineGrouping` (same c-axis math, including the clamped `acos` and the π-fold), plus deliberate NX additions: crystal-structure validation, 26-neighbor scheme, uint8 masks, RectGrid input, deterministic opt-in FeatureId randomization. Three SIMPLNX defects (D1, D4, D5) are **resolved**. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — pure-Phi Bunge quats make the folded c-axis distance between cells exactly `min(\|ΔΦ\|, 180°−\|ΔΦ\|)`; expected FeatureIds derive in closed form. Encoded as 10 fixture tests in `test/CAxisSegmentFeaturesTest.cpp`; all pass. |
-| Code paths enumerated  | 20 of 20 enumerated; 18 exercised (2 gaps: defensive mask-instantiation error, cancel-signal path).                                                                                                                                                                                            |
+| Code paths enumerated  | 20 of 20 enumerated; 18 exercised (2 gaps: defensive mask-instantiation error, cancel-signal path). |
 | Tests today            | 20 test cases: 8 Class 1 analytical (chain, π-fold, neighbor-scheme, mask bool/uint8, phase separation, 3D linearization, Quats-outside-cell-AM, RectGrid), 2 Class 4 invariants (randomize non-identity/determinism, masked-zero preservation), 2 exemption pins (phase-0, masked non-hex), 3 execute-error, 4 preflight-error, 1 SIMPL 6.4/6.5 conversion (DYNAMIC_SECTION). |
-| Exemplar archive       | **None — fixtures inlined in the test source.** The filter's consumption of `segment_features_test_data.tar.gz` (circular oracle) is retired; the archive remains for the EBSD segmentation tests.                                                                                            |
+| Exemplar archive       | **None — fixtures inlined in the test source.** The filter's consumption of `segment_features_test_data.tar.gz` (circular oracle) is retired; the archive remains for the EBSD segmentation tests.       |
 | Legacy comparison      | **Run** (2026-07-22, rerun with TC5_3D 2026-07-24, `vv/comparisons/CAxisSegmentFeaturesFilter/`) — all 5 shared-behavior fixtures (incl. a 3×2×2 masked fixture covering the y/z stride branches) match 6.5.171 at the segmentation-partition level with identical feature counts; bit-identical ids are unattainable because 6.5.171 always clock-randomizes FeatureIds (D2). |
-| Bug flags              | D1, D4, D5 — all SIMPLNX defects, all **resolved** and pinned by tests. No legacy bug flags.                                                                                                                                                                                           |
-| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review, tests (dual-build), legacy comparison, deviations, provenance, docs — complete. Second-engineer review completed at PR per sign-off convention (Matthew Marine, 2026-07-25, PR #1685).                                                                    |
+| Bug flags              | D1, D4, D5 — all SIMPLNX defects, all **resolved** and pinned by tests. No legacy bug flags.|
+| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review, tests (dual-build), legacy comparison, deviations, provenance, docs — complete. Second-engineer review completed at PR per sign-off convention (Matthew Marine, 2026-07-25, PR #1685).|
 
 ## Summary
 
@@ -65,26 +65,26 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 
 Logical phases: **(a) init + validation** in `operator()`, **(b) flood-fill driver** in `SegmentFeatures::execute`, **(c) seeding** in `getSeed`, **(d) grouping decision** in `determineGrouping`, **(e) finalize** in `operator()`.
 
-| #  | Phase | Path                                                                                       | Test case                                                                              |
+| #  | Phase | Path  | Test case          |
 |----|-------|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| 1  | (a)   | Mask array missing/wrong type at execute → error `-8362`                                    | *Not directly tested. Defensive guard; `ArraySelectionParameter` validates the path through the normal IFilter API.* |
-| 2  | (a)   | Validation skips phase ≤ 0 cells                                                            | `Phase 0 (Unindexed) Cells Tolerated`                                                     |
-| 3  | (a)   | Validation skips masked-out cells                                                           | `Masked Non-Hexagonal Cells Tolerated`                                                    |
-| 4  | (a)   | Phase value ≥ CrystalStructures tuples → error `-8364`                                      | `Execute Error - Phase Out of Ensemble Bounds (-8364)`                                    |
-| 5  | (a)   | Participating non-hex cell → error `-8363`                                                  | `Execute Error - Non-Hexagonal Crystal Structure (-8363)`                                 |
-| 6  | (a)   | Hexagonal_High and Hexagonal_Low both accepted                                              | All Class 1 tests (High); `Class 1 Analytical (Phase Separation)` (Low, ensemble 2)       |
-| 7  | (a)   | Geometry fetched as `IGridGeometry` (Image and RectGrid)                                    | All tests (Image); `Class 1 Analytical (RectGrid Geometry)` (RectGrid)                    |
-| 8  | (b)   | First seed obtained via `getSeed` (D1 pin)                                                  | `Class 1 Analytical (Mask Excludes Voxel 0)`; `Execute Error - No Features Found (-87000)` |
+| 1  | (a)   | Mask array missing/wrong type at execute → error `-8362`  | *Not directly tested. Defensive guard; `ArraySelectionParameter` validates the path through the normal IFilter API.* |
+| 2  | (a)   | Validation skips phase ≤ 0 cells         | `Phase 0 (Unindexed) Cells Tolerated`  |
+| 3  | (a)   | Validation skips masked-out cells        | `Masked Non-Hexagonal Cells Tolerated` |
+| 4  | (a)   | Phase value ≥ CrystalStructures tuples → error `-8364`    | `Execute Error - Phase Out of Ensemble Bounds (-8364)`  |
+| 5  | (a)   | Participating non-hex cell → error `-8363`                | `Execute Error - Non-Hexagonal Crystal Structure (-8363)`                |
+| 6  | (a)   | Hexagonal_High and Hexagonal_Low both accepted            | All Class 1 tests (High); `Class 1 Analytical (Phase Separation)` (Low, ensemble 2)       |
+| 7  | (a)   | Geometry fetched as `IGridGeometry` (Image and RectGrid)  | All tests (Image); `Class 1 Analytical (RectGrid Geometry)` (RectGrid)   |
+| 8  | (b)   | First seed obtained via `getSeed` (D1 pin)                | `Class 1 Analytical (Mask Excludes Voxel 0)`; `Execute Error - No Features Found (-87000)` |
 | 9  | (b)   | Face (6-neighbor) scheme, incl. y-/z-stride branches and the x-fastest linearization        | `Class 1 Analytical (Pure-Phi Chain, Face)`; `Class 1 Analytical (3D Linearization, 3x2x2)` (axis-asymmetric Phi field kills any dims-permutation mutant) |
-| 10 | (b)   | All-connected (26-neighbor) scheme                                                          | `Class 1 Analytical (Neighbor Scheme Face vs All)` — "All Connected Neighbors" section    |
-| 11 | (b)   | Cancel requested → early return                                                             | *Not directly tested. Requires cancel-signal injection; low-value gap.*                   |
-| 12 | (c)   | Seed scan skips owned / masked / phase ≤ 0 cells                                            | `Mask Excludes Voxel 0`; `Phase 0 (Unindexed) Cells Tolerated`                            |
-| 13 | (c)   | Seed found → stamp FeatureId (feature AM resized once, post-run, in phase (e))              | Every successful Class 1 test (`CheckActiveArray` tuple counts)                           |
-| 14 | (c)   | No seed remains → return −1, driver exits                                                   | Every test (loop termination); immediately in `No Features Found (-87000)`                |
-| 15 | (d)   | Neighbor already owned or masked-out → reject                                               | Chain fixtures (burst revisits owned neighbors); `Mask Excludes Voxel 0` (cells 0, 3)     |
-| 16 | (d)   | Phases differ → reject                                                                      | `Class 1 Analytical (Phase Separation)`; `Phase 0 (Unindexed) Cells Tolerated`            |
-| 17 | (d)   | `w ≤ tol` → group                                                                           | `Pure-Phi Chain` (Δ = 3°, 4°, 5° pairs)                                                   |
-| 18 | (d)   | `π − w ≤ tol` → group (antiparallel c-axes)                                                 | `Class 1 Analytical (Pi-Fold Antiparallel C-Axes)`                                        |
+| 10 | (b)   | All-connected (26-neighbor) scheme       | `Class 1 Analytical (Neighbor Scheme Face vs All)` — "All Connected Neighbors" section    |
+| 11 | (b)   | Cancel requested → early return          | *Not directly tested. Requires cancel-signal injection; low-value gap.*  |
+| 12 | (c)   | Seed scan skips owned / masked / phase ≤ 0 cells          | `Mask Excludes Voxel 0`; `Phase 0 (Unindexed) Cells Tolerated`           |
+| 13 | (c)   | Seed found → stamp FeatureId (feature AM resized once, post-run, in phase (e))              | Every successful Class 1 test (`CheckActiveArray` tuple counts)          |
+| 14 | (c)   | No seed remains → return −1, driver exits| Every test (loop termination); immediately in `No Features Found (-87000)`                |
+| 15 | (d)   | Neighbor already owned or masked-out → reject             | Chain fixtures (burst revisits owned neighbors); `Mask Excludes Voxel 0` (cells 0, 3)     |
+| 16 | (d)   | Phases differ → reject  | `Class 1 Analytical (Phase Separation)`; `Phase 0 (Unindexed) Cells Tolerated`            |
+| 17 | (d)   | `w ≤ tol` → group       | `Pure-Phi Chain` (Δ = 3°, 4°, 5° pairs)|
+| 18 | (d)   | `π − w ≤ tol` → group (antiparallel c-axes)               | `Class 1 Analytical (Pi-Fold Antiparallel C-Axes)`      |
 | 19 | (e)   | `foundFeatures < 1` → error `-87000`; else AM resize, Active refill, `Active[0]=0`          | `No Features Found (-87000)` (error); `CheckActiveArray` in every passing test (success)  |
 | 20 | (e)   | `RandomizeFeatureIds == true` → deterministic, non-identity shuffle preserving id 0         | `Class 4 Invariants (RandomizeFeatureIds)` (non-identity + determinism); `Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)` |
 

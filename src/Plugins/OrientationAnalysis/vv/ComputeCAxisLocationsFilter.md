@@ -1,20 +1,18 @@
 # V&V Report: ComputeCAxisLocationsFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `a51c257a-ddc1-499a-9b21-f2d25a19d098` |
 | DREAM3D 6.5.171 equivalent | `FindCAxisLocations` (SIMPL UUID `68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e`) - `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindCAxisLocations.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE |
+| Status | COMPLETE     |
 | Sign-off | Jared Duffey, 07-31-2026 |
 
 ## At a glance
 
-A scannable dashboard for reviewers. Each row is one sentence to one short paragraph — enough that a reader can decide whether they need to read the long-form sections below.
-
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branches when the crystal structure type is not hexagonal. |
 | Oracle (confirmed)     | Class 1 (Analytical) -  15 hand derived data fixtures |
 | Code paths enumerated  | 7 of 8 paths exercised - only the filter cancelation path is untested |
@@ -71,7 +69,7 @@ There were no deviations that affect the output found for hexagonal materials.
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeCAxisLocations.cpp` (107 lines).
 
-| #  | Phase           | Path                                              | Test case                                  |
+| #  | Phase           | Path            | Test case|
 |----|-----------------|---------------------------------------------------|--------------------------------------------|
 | 1  | *Preflight* | Tuple validity check (-3520 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - Cell array tuple count mismatch (-3520)" |
 | 2  | *Preflight* | Unconditional warning advising user to ensure their data contains hexagonal phases | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |

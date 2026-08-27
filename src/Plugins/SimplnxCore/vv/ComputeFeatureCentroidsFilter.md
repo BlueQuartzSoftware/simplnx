@@ -1,8 +1,8 @@
 # V&V Report: ComputeFeatureCentroidsFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | SimplnxCore |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID | `c6875ac7-8bdd-4f69-b6ce-82ac09bd3421` |
 | SIMPLNX Human Name | Compute Feature Centroids |
 | DREAM3D 6.5.171 equivalent | `FindFeatureCentroids` (SIMPL UUID `6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca`) — `Source/Plugins/Generic/GenericFilters/FindFeatureCentroids.{h,cpp}` |
@@ -12,8 +12,8 @@
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** — the non-periodic path of `ComputeFeatureCentroids::operator()` is a near line-by-line translation of legacy `FindFeatureCentroids::find_centroids()`, including the identical Kahan compensated summation and `float64`/`float64`/`uint64` sum/compensation/count triplet. Port-time additions: SIMPLNX-only `Is Periodic` option, disabled `ParallelDataAlgorithm` scaffolding, `float64` voxel-center fetch (`Point3Dd`), and a FeatureIds→AttributeMatrix indexing guard. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** (confirmed 2026-07-07). 5 hand-derived toy fixtures A–E (centroid = mean of voxel centers, `voxel-center = origin + (index+0.5)·spacing`). Signed off by Michael Jackson (technical authority) 2026-07-16. |
 | Code paths enumerated  | **8 of 8 exercised** — range filter, range tracking, Kahan accumulate, `count>0` finalize, `count==0` skip, periodic-fires, periodic-not-fires, validation-error. |

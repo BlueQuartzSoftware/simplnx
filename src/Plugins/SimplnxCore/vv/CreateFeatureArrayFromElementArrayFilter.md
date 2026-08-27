@@ -1,8 +1,8 @@
 # V&V Report: CreateFeatureArrayFromElementArrayFilter
 
-| | |
-|---|---|
-| Plugin | SimplnxCore |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX Human Name | Create Feature Array from Element Array |
 | SIMPLNX UUID | `50e1be47-b027-4f40-8f70-1283682ee3e7` |
 | DREAM3D 6.5.171 equivalent | `CreateFeatureArrayFromElementArray` (SIMPL UUID `94438019-21bb-5b61-a7c3-66974b9a34dc`) |
@@ -12,8 +12,8 @@
 
 ## At a glance
 
-| Aspect | Current state |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** — the per-cell copy loop is a line-by-line translation of SIMPL `CreateFeatureArrayFromElementArray`. UUID changed from SIMPL; legacy alias maintained via `FromSIMPLJson()` and SIMPL conversion fixtures. The sizing logic differs only in the AM under-sized case: SIMPL errors; SIMPLNX resizes and succeeds (see D1 in deviations). All pipelines that succeeded in SIMPL produce bit-identical output in SIMPLNX. |
 | Oracle | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** — expected outputs hand-derived for 9-fixture AnalyticalFixtures suite (AF-1: single-component consistent, AF-2: single-component inconsistent/warning, AF-3: three-component consistent, AF-4: error -81880 all-negative featureIds, AF-5: error -81881 shrink-protection guard, AF-6: gap in FeatureIds range resize-grown tuple, AF-7: error -81882 empty featureIds, AF-8: error -81880 mixed-negative featureIds, AF-9: error -81883 preflight tuple count mismatch). Class 4 invariants: output array has `max(featureIds)+1` tuples; output data type and component shape match input; error codes for boundary inputs. Implemented as inline `REQUIRE` assertions in `test/CreateFeatureArrayFromElementArrayTest.cpp`. |
 | Code paths enumerated | **10 of 11 paths exercised; 1 uncovered:** cancel check. Error paths -81880 and -81881 covered by AF-4/AF-8 and AF-5; -81882 by AF-7; -81883 (preflight) by AF-9. |

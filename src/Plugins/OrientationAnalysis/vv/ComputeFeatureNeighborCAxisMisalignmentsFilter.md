@@ -1,19 +1,19 @@
 # V&V Report: ComputeFeatureNeighborCAxisMisalignmentsFilter
 
-|                            |                                                                                                                                                  |
-|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Plugin                     | OrientationAnalysis                                                                                                                              |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID               | `636ee030-9f07-4f16-a4f3-592eff8ef1ee`                                                                                                           |
 | SIMPLNX Human Name         | Compute Feature Neighbor C-Axis Misalignments                                                                                                    |
 | DREAM3D 6.5.171 equivalent | `FindFeatureNeighborCAxisMisalignments` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureNeighborCAxisMisalignments.{h,cpp}` (UUID `cdd50b83-ea09-5499-b008-4b253cf4c246`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                          |
-| Status                     | COMPLETE                                                                                                                                 |
+| Status | COMPLETE     |
 | Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion + divisor bug fix, 2026-06-04)*                                             |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port with one inherited bug corrected** — same outer/inner loop structure + hex-hex phase gate. `QuatF`→`QuatD`; hand-rolled 3×3 matrix math → Eigen; direct `arccos(c1·c2)` (scalar projection, not full crystal miso → not affected by EbsdLib 2.4.1 precision fix). D1 (divisor-loop bug) corrected during this V&V cycle. UUID reassigned; `Find`→`Compute` rename.       |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — 3 hand-derived data fixtures: a 2-feature sanity pair, a 10×10×1 6-feature realistic microstructure with mixed hex/non-hex phases that exercises 3 distinct bug-exposing per-feature configurations, and a 4-feature control case where the buggy code happens to produce the right answer. **Class 4 (Invariant) companion** — range bound `[0°, 90°]`, per-feature averaging formula `sum-of-non-NaN-entries / count-of-non-NaN-entries`, all-NaN-on-non-hex-focal invariant. Class 1 oracle uses pure Bunge ZXZ Euler rotations `(0, Φ, 0)` about x so that the crystal c-axis tilts by Φ degrees from world z. For two cells with tilts Φ_A and Φ_B, the c-axis misalignment is exactly `|Φ_A - Φ_B|` (folded to `[0°, 90°]`). |
 | Code paths enumerated  | 6 of 6 algorithmic paths exercised: (1) all-non-hex preflight early-exit returns error -1562 — *not exercised by V&V fixtures* (all fixtures contain at least one hex phase) but covered by the existing parameter-validation tests upstream; (2) mixed-phase warning -1563 emitted — exercised by the realistic-microstructure and mismatch-last-order fixtures; (3) per-feature outer loop with hex-hex same-phase neighbor → list-write + accumulate; (4) phase-mismatch branch → write `NaN` + decrement divisor; (5) `FindAvgMisals=true` finalize with `hexNeighborListSize > 0` → `avg = sum/divisor`; (6) `FindAvgMisals=true` finalize with `hexNeighborListSize == 0` → `avg = NaN` (entire neighbor list non-hex, exercised by F3 in the realistic-microstructure fixture). |
@@ -105,7 +105,7 @@ Recommended pending Joey Kleingers or another OA-domain engineer review. Two are
 ## Code path coverage
 
 | Path | Description                                                                                                                                                     | Exercised by |
-|------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+|------|-------------------------------|--------------|
 | 1    | All-non-hex preflight → error -1562 (no hex phases)                                                                                                             | *Not exercised by V&V fixtures*. Existing parameter-validation upstream tests cover this. |
 | 2    | Mixed-phase warning -1563 emitted                                                                                                                               | `Class 1 - Realistic Microstructure` (F3 is Cubic), `Class 1 - Mismatch Last Order` (F4 is Cubic) |
 | 3    | Per-feature outer loop with hex-hex same-phase neighbor → write angle to misoList + accumulate to avg                                                           | All 4 Class 1 fixtures |

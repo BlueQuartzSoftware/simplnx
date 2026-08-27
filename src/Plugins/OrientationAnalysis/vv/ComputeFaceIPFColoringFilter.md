@@ -1,18 +1,18 @@
 # V&V Report: ComputeFaceIPFColoringFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | 30759600-7c02-4650-b5ca-e7036d6b568e |
 | DREAM3D 6.5.171 equivalent | GenerateFaceIPFColoring (legacy SIMPL UUID `0a121e03-3922-5c29-962d-40d88653f4b6`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
+| Status | COMPLETE     |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** of legacy `GenerateFaceIPFColoring` — per-face IPF color math is line-for-line identical. Deltas: output split from one 6-component array into two 3-component arrays, an added Color Key choice (TSL/PUCM/Nolze-Hielscher), and the EbsdLib 3.0.0 API. The 2023 wrong-phase bug (issue #1635) was ported verbatim and is **fixed here**. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** + Class 4 companion — closed-form IPF corner colors (pure primaries) on a hand-built 4-face mixed cubic/hex mesh. Encoded as `Class 1 Oracle - mixed-phase analytical` (24 color-byte assertions), all pass; verified to **fail** when the bug is reintroduced. |
 | Code paths enumerated  | 10 of 13 exercised; 1 is unreachable dead code (`-2431`) and 2 are defensive guards (out-of-range crystal-structure index, out-of-range color key) noted below. |
@@ -60,20 +60,20 @@
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFaceIPFColoring.cpp` (191 lines), plus `ComputeFaceIPFColoringFilter.cpp` preflight/execute. Logical phases: (a) preflight validation, (b) execute color-key routing, (c) per-face label→phase resolution, (d) Phase-1 first-color, (e) Phase-2 second-color.
 
-| #  | Phase            | Path                                                                              | Test case                                                              |
+| #  | Phase            | Path          | Test case           |
 |----|------------------|-----------------------------------------------------------------------------------|------------------------------------------------------------------------|
-| 1  | (a) Preflight    | face label/normal tuple mismatch → error `-2430`                                  | `Invalid filter execution` — "Inconsistent face data tuple dimensions" |
-| 2  | (a) Preflight    | feature euler/phase tuple mismatch → error `-2432`                                | `Invalid filter execution` — "Inconsistent cell data tuple dimensions" |
-| 3  | (a) Preflight    | face labels array missing → error `-2431`                                         | *Unreachable dead code: the path is an `ArraySelectionParameter`, which guarantees existence before `preflightImpl` runs, and the `-2430` tuple validation would fail first anyway.* |
-| 4  | (b) Execute      | Color Key 0/1/2 → TSL/PUCM/Nolze-Hielscher                                         | `ColorKey choice reaches algorithm` — all three kinds                  |
-| 5  | (b) Execute      | Color Key out of [0,2] → error `-24340`                                           | *Not directly tested. `ChoicesParameter` constrains the index; low-value.* |
-| 6  | (c) Per-face     | `feature1 > 0` → `phase1 = m_Phases[feature1]`                                     | `Class 1 Oracle` — faces 0, 2, 3                                       |
-| 7  | (c) Per-face     | `feature1 <= 0` → `phase1 = 0`                                                     | `Class 1 Oracle` — face 1 (label −1)                                  |
-| 8  | (c) Per-face     | `feature2 > 0` / `feature2 <= 0` → `phase2` set or 0                               | `Class 1 Oracle` — faces 0/1 (valid), face 2 (−1)                     |
-| 9  | (d) First color  | `phase1 > 0` and crystal structure valid → own-phase IPF color                    | `Class 1 Oracle` — faces 0, 2 (cubic red), face 3 (cubic blue), face 4 (hex c-axis red) |
-| 10 | (d) First color  | `phase1 <= 0` → first color black                                                 | `Class 1 Oracle` — face 1 → (0,0,0)                                    |
+| 1  | (a) Preflight    | face label/normal tuple mismatch → error `-2430`| `Invalid filter execution` — "Inconsistent face data tuple dimensions" |
+| 2  | (a) Preflight    | feature euler/phase tuple mismatch → error `-2432`               | `Invalid filter execution` — "Inconsistent cell data tuple dimensions" |
+| 3  | (a) Preflight    | face labels array missing → error `-2431`       | *Unreachable dead code: the path is an `ArraySelectionParameter`, which guarantees existence before `preflightImpl` runs, and the `-2430` tuple validation would fail first anyway.* |
+| 4  | (b) Execute      | Color Key 0/1/2 → TSL/PUCM/Nolze-Hielscher       | `ColorKey choice reaches algorithm` — all three kinds |
+| 5  | (b) Execute      | Color Key out of [0,2] → error `-24340`         | *Not directly tested. `ChoicesParameter` constrains the index; low-value.* |
+| 6  | (c) Per-face     | `feature1 > 0` → `phase1 = m_Phases[feature1]`   | `Class 1 Oracle` — faces 0, 2, 3     |
+| 7  | (c) Per-face     | `feature1 <= 0` → `phase1 = 0`  | `Class 1 Oracle` — face 1 (label −1)|
+| 8  | (c) Per-face     | `feature2 > 0` / `feature2 <= 0` → `phase2` set or 0              | `Class 1 Oracle` — faces 0/1 (valid), face 2 (−1)    |
+| 9  | (d) First color  | `phase1 > 0` and crystal structure valid → own-phase IPF color   | `Class 1 Oracle` — faces 0, 2 (cubic red), face 3 (cubic blue), face 4 (hex c-axis red) |
+| 10 | (d) First color  | `phase1 <= 0` → first color black               | `Class 1 Oracle` — face 1 → (0,0,0)  |
 | 11 | (e) Second color | `phase2 > 0` and `CrystalStructures[phase2]` valid → **own-phase** IPF color (fix) | `Class 1 Oracle` — face 0 hex green, face 1 hex green, face 3 blue     |
-| 12 | (e) Second color | `phase2 <= 0` → second color black                                                | `Class 1 Oracle` — face 2 → (0,0,0)                                    |
+| 12 | (e) Second color | `phase2 <= 0` → second color black              | `Class 1 Oracle` — face 2 → (0,0,0)  |
 | 13 | (d/e)            | phase valid but `CrystalStructures[phase] >= LaueGroupEnd` → color left untouched | *Not directly tested. Low-value guard for a corrupt crystal-structure index.* |
 
 ## Test inventory

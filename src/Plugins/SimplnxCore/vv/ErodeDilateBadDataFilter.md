@@ -1,19 +1,19 @@
 # V&V Report: ErodeDilateBadDataFilter
 
-|                             |                                                                          |
-|-----------------------------|--------------------------------------------------------------------------|
-| Plugin                      | SimplnxCore                                                              |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID                | `7f2f7378-580e-4337-8c04-a29e7883db0b`                                   |
 | SIMPLNX Human Name          | Erode/Dilate Bad Data                                                    |
 | DREAM3D 6.5.171 equivalent  | `ErodeDilateBadData` — SIMPL UUID `3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254` |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | READY FOR REVIEW                                                         |
-| Sign-off                    | *pending*                                                                |
+| Status                      | READY FOR REVIEW    |
+| Sign-off                    | *pending*           |
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|----------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** — legacy `ErodeDilateBadData.{h,cpp}` was diffed line-by-line against `Algorithms/ErodeDilateBadData.cpp` this pass. Neighbor offsets, boundary-validity checks, vote/tie-break order, and transfer conditions are structurally identical. One divergence, since resolved — see Resolved Defects. |
 | Oracle (confirmed)     | **Class 2 (Reference implementation).** The 28 expected `FeatureIds`/`Misc` arrays (7 direction combinations × 2 operations × 2 iteration counts) are genuine DREAM3D 6.5.171 output, matched element-wise against SIMPLNX and compiled into `ErodeDilateBadDataTest.cpp` as constants so the comparison re-runs in CI without the legacy binary. Confirmed — `(Erode) Expanded` and `(Dilate) Expanded` pass, 28/28 combinations. |
 | Code paths enumerated  | **10 of 11 exercised.** All 6 face directions (-Z/-Y/-X/+X/+Y/+Z) confirmed hit by instrumentation. Only gap: the `m_ShouldCancel` early-exit (Path 11) — no test injects a cancel signal. |

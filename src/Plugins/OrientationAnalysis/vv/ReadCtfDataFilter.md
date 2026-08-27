@@ -1,19 +1,19 @@
 # V&V Report: ReadCtfDataFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `7751923c-afb9-4032-8372-8078325c69a4` |
 | SIMPLNX Human Name | Read Oxford Instr. EBSD Data (.ctf) |
 | DREAM3D 6.5.171 equivalent | `ReadCtfData` (SIMPL UUID `d1df969c-0428-53c3-b61d-99ea2bb6da28`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ReadCtfData.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — all V&V phases complete; verified-correct against independent oracle; second-engineer sign-off recorded at PR review. |
+| Status | COMPLETE |
 | Sign-off | Michael A. Jackson <mike.jackson@bluequartz.net> — 2026-07-24. Second engineer: Jared Duffey, 2026-07-28 (PR #1692 review). |
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes.** Faithful port of legacy `ReadCtfData` control flow with deliberate deltas: unindexed-point (Phase 0) remap removed (D1/D2, PR #937 — predates this pass), 3D multi-slice support restored (D4, resolved), five malformed-input guards added (D3), Euler math on double-precision intermediates (restores legacy bit-parity), and the legacy PIMPL file-cache dropped (no output effect). |
 | Oracle (confirmed)     | **Confirmed.** **Class 1 (analytical) + Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule — EbsdLib (vcpkg 3.1.0) owns `.ctf` parsing and is trusted (Class 2 boundary). Hand-authored inline toy `.ctf` fixtures (3×2 two-phase, 2×2×2 multi-slice; all values float32-exact) with every expected value hand-derived from the fixture text; the two angle transforms (+30° hex alignment, degrees→radians) are correctly-rounded IEEE-754 double-intermediate results derived independently with NumPy. Encoded as 12 TEST_CASEs in `test/ReadCtfDataTest.cpp`; all pass. SIMPLNX matched the oracle with zero discrepancies. |
 | Code paths enumerated  | 19 of 22 paths exercised (see Code path coverage); the gaps are the unreadable-header passthrough (needs permission manipulation), the file-changed phase-count guard `-19605` (race window inside a single execute; needs injection), and the cancel-signal paths (need injection; untested per scope). |

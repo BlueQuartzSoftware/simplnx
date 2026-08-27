@@ -1,27 +1,27 @@
 # V&V Report: ComputeAvgOrientationsFilter
 
-|                            |                                                                                   |
-|----------------------------|--------------------|
-| Plugin                     | OrientationAnalysis                                                               |
-| SIMPLNX UUID               | `086ddb9a-928f-46ab-bad6-b1498270d71e`                                            |
-| SIMPLNX Human Name         | Compute Feature Average Orientations                                              |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
+| SIMPLNX UUID               | `086ddb9a-928f-46ab-bad6-b1498270d71e`          |
+| SIMPLNX Human Name         | Compute Feature Average Orientations            |
 | DREAM3D 6.5.171 equivalent | `FindAvgOrientations` (SIMPL UUID `bf7036d8-25bd-540e-b6de-3a5ab0e42c5f`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgOrientations.{h,cpp}` |
-| Verified commit            | *<filled at SBIR deliverable assembly>*                                           |
-| Status                     | COMPLETE — 2026-07-16 |
-| Sign-off                   | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
+| Verified commit            | *<filled at SBIR deliverable assembly>*         |
+| Status | COMPLETE     |
+| Sign-off  | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                                                                                                                                                                                              |
-|------------------------|--------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** (Rodrigues method) **+ New** (vMF/Watson). The Rodrigues average is a faithful port of legacy `FindAvgOrientations::execute()` with 4 deliberate deltas (positive-orientation canonicalization, FeatureId==0 inclusion, divide-by-zero cleanup, EbsdLib library swap). The von Mises-Fisher and Watson methods are **new** (added PR #1577), have **no legacy equivalent**, are off by default, and delegate their EM math to EbsdLib `DirectionalStats`. |
 | Oracle (confirmed)     | **Confirmed.** Rodrigues → **Class 1 (analytical)** + **Class 4 (invariant)**; vMF/Watson → **Class 2 (EbsdLib reference, trusted, not re-tested)** + **Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule. Encoded as 2 oracle TEST_CASEs (+1 error test) in `test/ComputeAvgOrientationsTest.cpp`; all pass. SIMPLNX matches the oracle on every fixture. |
-| Code paths enumerated  | 10 of 11 paths exercised (see Code path coverage); the one gap is the Watson-only dispatch branch (low-value array-selection path).                                                                                                                                                                       |
+| Code paths enumerated  | 10 of 11 paths exercised (see Code path coverage); the one gap is the Watson-only dispatch branch (low-value array-selection path).              |
 | Tests today            | 9 test cases: Rodrigues analytical (Class 1+4), Rodrigues cubic-symmetry invariant (Class 4, #1660), Rodrigues voxel-ordering independence (Class 4), vMF/Watson EbsdLib-reference (Class 2+4), vMF/Watson phase-0 exclusion regression (#1659), crystal-structure/phase guard warnings (#1661), no-method-enabled error (preflight -54673 + runtime backstop -54670), cell-array tuple-mismatch error (-651, code asserted), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION). All inline hand-built data — no exemplar archive. Closes the GCOV vMF/Watson coverage gap.       |
-| Exemplar archive       | **None — retired `7_ComputeAvgOrientation_v2.tar.gz`** (it was a circular oracle regenerated from post-fix SIMPLNX output in PR #1577). Oracle is now inline in the test source. `download_test_data()` entry to be removed in Phase 10.                                                                  |
+| Exemplar archive       | **None — retired `7_ComputeAvgOrientation_v2.tar.gz`** (it was a circular oracle regenerated from post-fix SIMPLNX output in PR #1577). Oracle is now inline in the test source. `download_test_data()` entry to be removed in Phase 10.               |
 | Legacy comparison      | **Run (2026-06-30) vs the official DREAM3D 6.5.171 release.** Two fixtures. On the realistic 480k-cell / 408-feature input the two are **numerically equivalent on all real features** (`AvgQuats` ≤1e-6, zero sign flips; `AvgEulerAngles` max 4.77e-7). Divergences are confined to **feature-0 / unindexed-voxel handling**: **D3** (empty feature 0) and **D2** (FeatureId-0 voxels with phase>0 — demonstrated on a forcing fixture: NX computes the average, legacy writes `(0,0,0,0)`). **D4** sub-epsilon. **D1 downgraded** (no demonstrable divergence). vMF/Watson have no legacy equivalent (N/A). |
-| Bug flags              | One **legacy** bug, empirically confirmed: `ComputeAvgOrientationsFilter-D3` (6.5.171 leaves the zero-voxel feature 0 as `(0,0,0,0)` / divides zero-count features by zero; SIMPLNX writes a clean identity). D2 is a deliberate algorithmic-choice divergence (not a bug). One **SIMPLNX** bug found by the post-merge adversarial review and fixed 2026-07-08: **issue #1659** — the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average. Fixed by gating the gather identically to the counting pass; pinned by the `vMF/Watson Ignores Phase-0 Voxels` regression test.                  |
-| V&V phase              | **Phases 1, 3, 4, 5, 6, 7, 8, 9 complete** — oracle confirmed/reconciled, review fixes applied, all 5 tests pass (in-core `NX-Com-Qt69-Vtk95-Rel`, vcpkg EbsdLib 3.0.0), legacy comparison run (numerically equivalent). OOC build skipped (per maintainer). V&V complete and signed off 2026-07-16 (Michael Jackson, technical authority). Outstanding: 11 (doc deviation links), 12 (OneDrive archive), 13 (tracking).                  |
+| Bug flags              | One **legacy** bug, empirically confirmed: `ComputeAvgOrientationsFilter-D3` (6.5.171 leaves the zero-voxel feature 0 as `(0,0,0,0)` / divides zero-count features by zero; SIMPLNX writes a clean identity). D2 is a deliberate algorithmic-choice divergence (not a bug). One **SIMPLNX** bug found by the post-merge adversarial review and fixed 2026-07-08: **issue #1659** — the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average. Fixed by gating the gather identically to the counting pass; pinned by the `vMF/Watson Ignores Phase-0 Voxels` regression test. |
+| V&V phase              | **Phases 1, 3, 4, 5, 6, 7, 8, 9 complete** — oracle confirmed/reconciled, review fixes applied, all 5 tests pass (in-core `NX-Com-Qt69-Vtk95-Rel`, vcpkg EbsdLib 3.0.0), legacy comparison run (numerically equivalent). OOC build skipped (per maintainer). V&V complete and signed off 2026-07-16 (Michael Jackson, technical authority). Outstanding: 11 (doc deviation links), 12 (OneDrive archive), 13 (tracking). |
 
 ## Summary
 
@@ -93,24 +93,24 @@ All 9 test cases pass in the `NX-Com-Qt69-Vtk95-Rel` build. OOC dual-build was s
 
 *15 of 16 paths exercised. Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgOrientations.cpp`.* Logical phases: **(a)** `operator()` dispatch + output-array selection/validation, **(b)** Rodrigues two-pass average, **(c)** vMF/Watson per-feature EM (serial over features). Paths 12–16 were added by the #1659/#1661 follow-up work (2026-07-08).
 
-| #  | Phase            | Path                                                                                                                              | Test case            |
+| #  | Phase            | Path       | Test case            |
 |----|------------------|----|----------------------|
-| 1  | (a) Dispatch     | `avgEulerAnglesArrayPath` exists → use it to set `m_NumberOfFeatures` (Rodrigues enabled)                                         | `Rodrigues Analytical Oracle` (Rodrigues on) |
-| 2  | (a) Dispatch     | else `VMFEulerAnglesArrayPath` exists → use it (vMF enabled, Rodrigues off)                                                       | `vMF/Watson EbsdLib Reference Oracle` (Rodrigues off, vMF on) |
-| 3  | (a) Dispatch     | else `WatsonEulerAnglesArrayPath` exists → use it (Watson enabled, Rodrigues & vMF off)                                           | *Not directly tested. Low-value array-selection branch; only sets `m_NumberOfFeatures` source, equivalent to paths 1/2.* |
-| 4  | (a) Dispatch     | none exist → error `-54670` "A valid Feature level array … was not found"                                                         | `No Method Enabled Error` |
-| 5  | (b) Rodrigues    | `currentPhase > 0` → accumulate running nearest-quat average (incl. FeatureId 0)                                                  | `Rodrigues Analytical Oracle` — F1–F4 |
-| 6  | (b) Rodrigues    | `counts[fid] == 1` → reset running average to identity before getNearestQuat                                                      | `Rodrigues Analytical Oracle` — F1, F2 (single-voxel) |
-| 7  | (b) Rodrigues    | finalize `counts[fid] == 0` → write identity quat, `continue` (skip divide)                                                       | `Rodrigues Analytical Oracle` — F0, F5 (zero-voxel) |
-| 8  | (b) Rodrigues    | finalize `counts[fid] > 0` → divide, normalize, positiveOrientation, qu2eu                                                        | `Rodrigues Analytical Oracle` — F2, F3, F4 |
-| 9  | (c) vMF/Watson   | `featureNumVoxels[fid] == 0` → skip (output stays NaN from fill)                                                                  | both oracle tests — F0/F5 and background feature → NaN |
-| 10 | (c) vMF/Watson   | `fzQuats.size() == 1` → muhat = single FZ quat, kappa = 0 (EM skipped)                                                            | `Rodrigues Analytical Oracle` — F1, F2 (single-voxel) |
+| 1  | (a) Dispatch     | `avgEulerAnglesArrayPath` exists → use it to set `m_NumberOfFeatures` (Rodrigues enabled)       | `Rodrigues Analytical Oracle` (Rodrigues on) |
+| 2  | (a) Dispatch     | else `VMFEulerAnglesArrayPath` exists → use it (vMF enabled, Rodrigues off)    | `vMF/Watson EbsdLib Reference Oracle` (Rodrigues off, vMF on) |
+| 3  | (a) Dispatch     | else `WatsonEulerAnglesArrayPath` exists → use it (Watson enabled, Rodrigues & vMF off)         | *Not directly tested. Low-value array-selection branch; only sets `m_NumberOfFeatures` source, equivalent to paths 1/2.* |
+| 4  | (a) Dispatch     | none exist → error `-54670` "A valid Feature level array … was not found"      | `No Method Enabled Error` |
+| 5  | (b) Rodrigues    | `currentPhase > 0` → accumulate running nearest-quat average (incl. FeatureId 0)                | `Rodrigues Analytical Oracle` — F1–F4 |
+| 6  | (b) Rodrigues    | `counts[fid] == 1` → reset running average to identity before getNearestQuat   | `Rodrigues Analytical Oracle` — F1, F2 (single-voxel) |
+| 7  | (b) Rodrigues    | finalize `counts[fid] == 0` → write identity quat, `continue` (skip divide)    | `Rodrigues Analytical Oracle` — F0, F5 (zero-voxel) |
+| 8  | (b) Rodrigues    | finalize `counts[fid] > 0` → divide, normalize, positiveOrientation, qu2eu     | `Rodrigues Analytical Oracle` — F2, F3, F4 |
+| 9  | (c) vMF/Watson   | `featureNumVoxels[fid] == 0` → skip (output stays NaN from fill)               | both oracle tests — F0/F5 and background feature → NaN |
+| 10 | (c) vMF/Watson   | `fzQuats.size() == 1` → muhat = single FZ quat, kappa = 0 (EM skipped)         | `Rodrigues Analytical Oracle` — F1, F2 (single-voxel) |
 | 11 | (c) vMF/Watson   | `fzQuats.size() > 1` → `DirectionalStats::EMforDS` (VMF or WAT) → muhat, kappa; positiveOrientation; write quat/euler/kappa       | `vMF/Watson EbsdLib Reference Oracle` (22-quat feature) + `Rodrigues Analytical Oracle` F3/F4 |
 | 12 | (a) Preflight    | all three methods disabled → preflight error `-54673` (runtime `-54670` kept as backstop, pinned by direct algorithm invocation)  | `No Method Enabled Error` |
-| 13 | (b)+(c) Guards   | `Phases` value ≥ CrystalStructures tuple count → voxel excluded (no OOB read) + warning `-54672`                                  | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
+| 13 | (b)+(c) Guards   | `Phases` value ≥ CrystalStructures tuple count → voxel excluded (no OOB read) + warning `-54672`| `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
 | 14 | (b) Rodrigues    | crystal structure ≥ ops count (e.g. 999/Unknown) → voxel excluded + warning `-54671`; fully-excluded feature → identity           | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
-| 15 | (c) vMF/Watson   | crystal structure ≥ ops count → feature skipped (outputs stay NaN) + warning `-54671`                                             | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
-| 16 | (c) vMF/Watson   | gather loop excludes phase-0 / out-of-range-phase voxels (gate identical to counting pass; issue #1659)                           | `vMF/Watson Ignores Phase-0 Voxels` + guards test |
+| 15 | (c) vMF/Watson   | crystal structure ≥ ops count → feature skipped (outputs stay NaN) + warning `-54671`           | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
+| 16 | (c) vMF/Watson   | gather loop excludes phase-0 / out-of-range-phase voxels (gate identical to counting pass; issue #1659)          | `vMF/Watson Ignores Phase-0 Voxels` + guards test |
 
 ## Test inventory
 

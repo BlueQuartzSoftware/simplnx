@@ -1,10 +1,10 @@
-# Deviations from DREAM3D 6.5.171: GroupMicroTextureRegionsFilter
+# Deviations from DREAM.3D 6.5.171: GroupMicroTextureRegionsFilter
 
 This file lists every behavioral difference between the released SIMPLNX filter and its DREAM3D legacy equivalent (`Source/Plugins/Reconstruction/ReconstructionFilters/GroupMicroTextureRegions.{h,cpp}`, which inherits from the `GroupFeatures` base). It describes the **current state of the shipped code**, not the development history of either implementation.
 
 Entries are referenced by stable ID (`GroupMicroTextureRegionsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Which legacy build is the reference.** In DREAM3D 6.5.171 this filter is *unregistered* — it is listed in `_PrivateFilters`, so `ADD_SIMPL_FILTER(... FALSE)` emits no `fm->addFilterFactory()` call and the filter cannot be instantiated from the GUI or from a pipeline file. The same is true of every other tagged 6.x release. The filter **is** public and runnable throughout the **DREAM3D 6.6.x** line, which is therefore the reference used for all behavioral comparisons recorded here. Two 6.6.x builds were used: 6.6.379 (`5bd740812`) for the registration probes and the small analytical fixtures, and a `v6_6` build (`107b8d51b`) for the full-dataset comparison; the GMR algorithm is identical in both. The algorithm in 6.6.x is unchanged from 6.5.171 apart from the EbsdLib math-API migration, so these entries describe the 6.5.171 algorithm as well; they simply could not have been observed there. See the *Availability across DREAM3D versions* and *Legacy comparison (DREAM3D 6.6.x)* sections of the V&V report.
+**Legacy comparison target.** DREAM.3D 6.5.171 contains this filter in `_PrivateFilters`. The release compiles the source but does not register the filter for GUI or pipeline use. Therefore, a direct pipeline comparison is not possible. The empirical A/B comparison used DREAM.3D 6.6.382, built from commit `107b8d51b`, because that version registers the filter. Both implementations ran only Group MicroTexture Regions on byte-identical input. The independent Class 1 and Class 4 oracle establishes correctness. The DREAM.3D 6.6.382 comparison provides deviation and migration evidence.
 
 ---
 
@@ -52,7 +52,7 @@ Reserved ID, retained so cross-references do not dangle. The released SIMPLNX fi
 |------------------|--------------------------------------------------------------------------------|
 | **Deviation ID** | `GroupMicroTextureRegionsFilter-D3`                                            |
 | **Filter UUID**  | `3f695987-81b1-47c3-8cff-b49cfa219be0`                                         |
-| **Status**       | active — legacy bug, present in all legacy releases including DREAM3D 6.6.379   |
+| **Status**       | active — bug present in DREAM.3D 6.6.382                                      |
 
 **Deviation:** With `UseRunningAverage=true`, legacy validates the crystal structure of only **one** of the two features under consideration; SIMPLNX validates **both**. Consequently, on data containing more than one Laue class, legacy can place a non-hexagonal feature and a hexagonal feature in the same microtexture region. SIMPLNX cannot.
 
@@ -82,18 +82,10 @@ That is a strictly **weaker** condition than the intended one, so the legacy def
 
 **Observable scope.** None on single-phase hexagonal data — the ordinary MTR case — where the two conditions are equivalent and legacy and SIMPLNX agree exactly. The deviation appears only when a feature whose Laue class is *not* Hexagonal_High touches one that is. Two distinct *phases* that both resolve to Hexagonal_High (e.g. primary alpha and transformed beta) group together in **both** implementations; that is intended behaviour and was confirmed in external review.
 
-**Measured on DREAM3D 6.6.379** (`CAxisTolerance = 10°`, hand-built legacy fixtures):
+**Analytical discriminator.** The unit test contains 20 isolated touching pairs. Each pair contains one Cubic_High Feature and one Hexagonal_High Feature with aligned c-axes. The correct two-sided check rejects every pair. A temporary restoration of the one-sided condition caused 14 pair assertions to fail.
 
-| Fixture | legacy `UseRunningAverage=false` | legacy `UseRunningAverage=true` | SIMPLNX (either) |
-|---|---|---|---|
-| 5 hexagonal features, pure-Bunge Φ = 0/5/60/63/25°, chain neighbours F1–F2–F3–F4, F5 isolated | 3 groups: {F1,F2} {F3,F4} {F5} | 3 groups: {F1,F2} {F3,F4} {F5} | 3 groups: {F1,F2} {F3,F4} {F5} |
-| Same, but the hexagonal phase is ensemble index 2 and a Cubic_High phase occupies index 1 | 3 groups (unchanged) | 3 groups (unchanged) | 3 groups (unchanged) |
-| 20 independent touching pairs, each one Cubic_High feature + one Hexagonal_High feature, c-axes exactly aligned | 0 / 20 pairs merged | **19 / 20 pairs merged** | 0 / 20 pairs merged |
-
-The first two rows establish that grouping is unaffected on hexagonal data regardless of which ensemble index the hexagonal phase occupies. The third isolates the deviation.
-
-**Confirmed on real two-phase data (2026-08-25).** The fixture result above was reproduced at scale
-against DREAM3D 6.6.x on an alpha/beta titanium scan (`915C_50red`, Oxford `.h5oina`, 2,326,310
+**Confirmed on real two-phase data with DREAM.3D 6.6.382 (`107b8d51b`).** The result was reproduced at scale
+on an alpha/beta titanium scan (`915C_50red`, Oxford `.h5oina`, 2,326,310
 cells; Phase 1 `Ti-Hex` → `Hexagonal_High`, Phase 2 `Titanium cubic` → `Cubic_High`). Both
 implementations ran on a byte-identical shared input of **1,840,838 features** containing **106,731
 hexagonal/cubic touching pairs**, at `CAxisTolerance = 20°`:
@@ -108,8 +100,7 @@ hexagonal/cubic touching pairs**, at `CAxisTolerance = 20°`:
 This is the first observation of D3 on production data, and it accounts for the 884-group difference
 between the two as-shipped runs. With `UseRunningAverage=false` the same input yields **identical
 partitions** in both implementations (746,877 groups, zero differing pairs), confirming the defect is
-confined to the running-average path. Full method and controls: see the *Legacy comparison
-(DREAM3D 6.6.x)* section of the V&V report. (19 rather than roughly half of 20 because `getSeed()` scans forward from a random start index, so the lower-indexed cubic member of each pair is usually reached first and becomes the region seed.)
+confined to the running-average path. The archived comparison evidence contains the full method and controls.
 
 **Affected users:** Anyone running legacy `UseRunningAverage=true` on a scan that contains a non-hexagonal indexed phase adjacent to the hexagonal phase of interest. Users whose scans contain a single hexagonal phase — or several phases all of which are hexagonal — are unaffected and their historical results are correct.
 

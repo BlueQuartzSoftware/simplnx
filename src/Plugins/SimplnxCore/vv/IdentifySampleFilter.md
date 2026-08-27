@@ -1,8 +1,8 @@
 # V&V Report: IdentifySampleFilter
 
-| | |
-|---|---|
-| Plugin | `SimplnxCore` |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
 | DREAM3D 6.5.171 equivalent | `IdentifySample` — UUID `0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a` |
 | Verified commit | *pending* |
@@ -11,8 +11,8 @@
 
 ## At a glance
 
-| Aspect | State |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm relationship | **Port** (3D mode + connectivity) + **1 deviation** (hole-fill on 2D/1D, A/B-proven) + 1 SIMPLNX bug fixed to match legacy (single-voxel hole-fill) + new features (`SliceBySlice`, cancel checks) |
 | Oracle | **Class 1 (Analytical)** for 3 non-square 2D tests; **Validated-circular** for 12 archive tests (not legacy-equivalent) |
 | Code paths | **14 of 17** exercised; 3 gaps (1D dispatch, single-voxel, cancel-check) |

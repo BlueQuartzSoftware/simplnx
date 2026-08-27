@@ -1,10 +1,10 @@
 # V&V Report: FillBadDataFilter
 
-|                             |                                                                          |
-|-----------------------------|--------------------------------------------------------------------------|
-| Plugin                      | SimplnxCore                                                              |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID                | `a59eb864-9e6b-40bb-9292-e5281b0b4f3e`                                   |
-| SIMPLNX Human Name          | Fill Bad Data                                                            |
+| SIMPLNX Human Name          | Fill Bad Data       |
 | DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
 | Status                      | COMPLETE — 2026-07-16 |
@@ -12,8 +12,8 @@
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — 4-phase chunk-sequential CCL+Union-Find (OOC support); legacy used a simpler in-memory approach. Functional behavior preserved. |
 | Oracle                 | **Class 2** for `FillBadData_SmallIN100` (`6_5_exemplar.dream3d` from legacy 6.5 pipeline). **Class 1** for Tests 01–13 (hand-authored expected values serialized by a format-conversion script that never runs `FillBadDataFilter`). Circular-oracle concern resolved. |
 | Code paths             | **15 of 16** covered. Only gap: `m_ShouldCancel` cancel path in Phase 4 while-loop (Path 14). |

@@ -1,19 +1,19 @@
 # V&V Report: ComputeIPFColorsFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6` |
 | SIMPLNX Human Name | Compute IPF Colors |
 | DREAM3D 6.5.171 equivalent | `GenerateIPFColors` (SIMPL UUID `a50e6532-8075-5de5-ab63-945feb0de7f7`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateIPFColors.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
+| Status | COMPLETE     |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** of DREAM3D 6.5.171 `GenerateIPFColors`. The per-cell loop is a line-for-line translation; deltas are the color library (OrientationLib → EbsdLib), a new `Color Key` choice (TSL/PUCM/Nolze-Hielscher; legacy was TSL-only), bool-or-uint8 mask (legacy bool-only), and added cancel checks. |
 | Oracle (confirmed)     | **Class 1 + 4** (orchestration: mask→black, invalid crystal structure→black, refDir normalization, phase-out-of-range→`-48000`, output invariants) with **Class 2** (each colored cell == a direct in-process EbsdLib `generateIPFColor` call) and **Class 3** (identity cubic viewed down [001] = red IPF corner). 8 tests in `test/ComputeIPFColorsTest.cpp`, all pass in-core and OOC. |
 | Code paths enumerated  | 16 of 18 exercised. The 2 gaps are the mid-loop cancel branch and the unreachable `-23510` color-key default. |

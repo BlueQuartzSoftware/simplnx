@@ -1,19 +1,19 @@
 # V&V Report: RotateEulerRefFrameFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `0458edcd-3655-4465-adc8-b036d76138b5` |
 | SIMPLNX Human Name | Rotate Euler Reference Frame |
 | DREAM3D 6.5.171 equivalent | `RotateEulerRefFrame` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/RotateEulerRefFrame.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
+| Status | COMPLETE |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|--|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** of legacy `RotateEulerRefFrame::execute()`. Same per-tuple kernel `gNew = normalize_cols(eu2om(euler) * ax2om(axis, angle))` → `om2eu`; library swaps only (OrientationLib → EbsdLib, hand-rolled `MatrixMath` → Eigen) plus a double-precision degree→radian conversion and progress/cancel plumbing. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — 8 hand/script-derived fixtures (`AnalyticalFixtures::k_Fixtures`) with closed-form derivations for Z-axis (`phi1' = phi1 - w mod 2pi`), identity + X/111 axes, normalization, and zero-angle cases. **Class 4 (Invariant) companion** — output-range bounds, (n,w)/(-n,w) round-trip, 45°+45° = 90° composability. Cross-checked by an independent numpy script (Rowenhorst 2015 Eq. A.5/A.9 + first-principles frame-rotation derivation). All pass. |
 | Code paths enumerated  | 7 enumerated; **5 exercised**. The 2 gaps are both cancel branches (cancel-before-start and mid-loop cancel) — only their false path ever runs; taking the true path requires cancel-signal injection (same accepted gap as prior V&V reports). |

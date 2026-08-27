@@ -1,18 +1,18 @@
 # V&V Report: WritePoleFigureFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | 00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed |
 | DREAM3D 6.5.171 equivalent | WritePoleFigure (legacy SIMPL UUID `a10bb78e-fcff-553d-97d6-830a43c85385`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
+| Status | COMPLETE |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
 | Oracle (confirmed)     | **Class 5 (Expert-visual)** primary + **Class 4 (Invariant)** companions. Expert side-by-side sign-off of hex and cubic renders (6.5.171 / 6.5.172 / SIMPLNX). Invariants encoded in `WritePoleFigureTest.cpp` (mask-effectiveness, hex-convention plumbing) pass on EbsdLib 3.1.0. |
 | Code paths enumerated  | 10 of 13 simplnx-wrapper paths exercised in CI; the 3 uncovered are defensive/error branches noted below. (Per-Laue-class + pixel rendering is owned and byte-tested by EbsdLib upstream.) |

@@ -1,19 +1,19 @@
 # V&V Report: ReadAngDataFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `5b062816-79ac-47ce-93cb-e7966896bcbd` |
 | SIMPLNX Human Name | Read EDAX EBSD Data (.ang) |
 | DREAM3D 6.5.171 equivalent | `ReadAngData` (SIMPL UUID `b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ReadAngData.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — all V&V phases complete; verified-correct against independent oracle; legacy comparison bit-identical on numerics. |
+| Status | COMPLETE |
 | Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-07 |
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes.** Faithful port of legacy `ReadAngData` control flow with 4 deliberate deltas: material-name trim added (D1), TEM/ACOM Nanometer-units detection dropped (D2, obsolete file variants), non-contiguous phase-index handling fixed (D3, legacy crashes), and error-code renumbering (D4). The legacy PIMPL file-cache was dropped (no output effect). |
 | Oracle (confirmed)     | **Confirmed.** **Class 1 (analytical) + Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule — EbsdLib (vcpkg 3.0.0) owns `.ang` parsing and is trusted (Class 2 boundary). A hand-authored inline toy `.ang` (3×2 grid, 2 phases, phase-0 points, all values float32-exact) with every expected value hand-derived from the fixture text. Encoded as 7 TEST_CASEs in `test/ReadAngDataTest.cpp`; all pass. SIMPLNX matched the oracle on every fixture with zero discrepancies. |
 | Code paths enumerated  | 13 of 17 paths exercised (see Code path coverage); the gaps are one unreachable dead branch (`phases.empty()`), two file-changed/malformed-input guards (`-19503`, `-19504`), and the cancel-signal paths — all untestable without injection. |
