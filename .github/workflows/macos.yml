@@ -51,9 +51,6 @@ jobs:
       - name: Install Dependencies
         run: |
           brew install mono
-      - name: Install Sphinx
-        run: |
-          sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Setup NuGet Credentials
         shell: bash
         run: |
