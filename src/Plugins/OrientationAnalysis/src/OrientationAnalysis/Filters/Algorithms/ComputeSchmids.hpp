@@ -54,7 +54,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeSchmidsInputValues
 class ORIENTATIONANALYSIS_EXPORT ComputeSchmids
 {
 public:
-  ComputeSchmids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSchmidsInputValues* inputValues);
+  ComputeSchmids(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ComputeSchmidsInputValues* inputValues);
   ~ComputeSchmids() noexcept;
 
   ComputeSchmids(const ComputeSchmids&) = delete;
@@ -64,7 +64,7 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;
