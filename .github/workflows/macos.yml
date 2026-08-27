@@ -50,7 +50,7 @@ jobs:
         uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
       - name: Install Dependencies
         run: |
-          brew install ninja mono
+          brew install mono
       - name: Install Sphinx
         run: |
           sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
