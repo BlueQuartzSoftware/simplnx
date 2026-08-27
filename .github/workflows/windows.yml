@@ -29,10 +29,6 @@ jobs:
           submodules: true
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@541aa4360062d76d9620af6b8bd35cfa0c5ef19f
-      - name: Setup Build Environment
-        uses: ilammy/msvc-dev-cmd@v1.12.1
-        with:
-          vsversion: 2022
       - name: Setup NuGet Credentials
         shell: bash
         run: |
