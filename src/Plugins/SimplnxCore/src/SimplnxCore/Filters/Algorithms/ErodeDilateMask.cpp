@@ -69,6 +69,7 @@ Result<> ErodeDilateMask::operator()()
           {
             // Loop over the 6 face neighbors of the voxel
             std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            adjustValidNeighbors(isValidFaceNeighbor, m_InputValues->XDirOn, m_InputValues->YDirOn, m_InputValues->ZDirOn);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
