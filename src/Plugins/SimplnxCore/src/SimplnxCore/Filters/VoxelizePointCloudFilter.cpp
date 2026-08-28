@@ -4,13 +4,15 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
 using namespace nx::core;
@@ -44,9 +46,7 @@ std::string VoxelizePointCloudFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> VoxelizePointCloudFilter::defaultTags() const
 {
-  // TODO:
-  //  - Think of more tags
-  return {className(), "Core"};
+  return {className(), "Core", "Voxelize", "Point Cloud", "Image Geometry", "Conversion", "Mapping"};
 }
 
 //------------------------------------------------------------------------------
@@ -55,21 +55,24 @@ Parameters VoxelizePointCloudFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_UseExistingGeom_Key, "Use Existing Grid Geometry", "If true use an existing grid geometry, else create a new Image Geometry to wrap the Point Cloud", false));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_PointCloudGeometryPath_Key, "Target Point Cloud Geometry", "The selected Node-Based geometry that contains the point cloud", DataPath{},
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGeometry_Key, "Use Existing Grid Geometry",
+                                                                 "If true use an existing grid geometry, else create a new Image Geometry to wrap the Point Cloud", true));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputPointCloudGeometryPath_Key, "Target Point Cloud Geometry", "The selected Node-Based geometry that contains the point cloud",
+                                                             DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
-
-  params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
-  params.insert(std::make_unique<StringParameter>(k_MaskName_Key, "Voxel Mask Name", "Name of the array containing a mask of active voxels in the overlapped Geometries", "Shared Voxels Mask"));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_OutputGeometryPath_Key, "Destination Grid Geometry",
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedGridGeometryPath_Key, "Destination Grid Geometry",
                                                              "The destination grid geometry (cell data) that is the location for the voxel mask.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometryPath_Key, "New Image Geometry", "The path to the new geometry that will wrap the point cloud", DataPath({"Image Geometry"})));
 
-  params.linkParameters(k_UseExistingGeom_Key, k_OutputGeometryPath_Key, true);
-  params.linkParameters(k_UseExistingGeom_Key, k_NewGeometryPath_Key, false);
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_MaskArrayName_Key, "Voxel Mask Name", "Name of the array containing a mask of active voxels in the overlapped Geometries", "Shared Voxels Mask"));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "New Image Geometry", "The path to the new geometry that will wrap the point cloud", DataPath({"Image Geometry"})));
+
+  params.linkParameters(k_UseExistingGeometry_Key, k_SelectedGridGeometryPath_Key, true);
+  params.linkParameters(k_UseExistingGeometry_Key, k_CreatedImageGeometryPath_Key, false);
 
   return params;
 }
@@ -90,13 +93,24 @@ IFilter::UniquePointer VoxelizePointCloudFilter::clone() const
 IFilter::PreflightResult VoxelizePointCloudFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto pUseExistingGeomValue = filterArgs.value<BoolParameter::ValueType>(k_UseExistingGeom_Key);
-  const auto pPointCloudGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_PointCloudGeometryPath_Key);
-  const auto pOutputGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_OutputGeometryPath_Key);
-  const auto pMaskNameValue = filterArgs.value<StringParameter::ValueType>(k_MaskName_Key);
-  const auto pNewGeometryPathValue = filterArgs.value<DataGroupCreationParameter::ValueType>(k_NewGeometryPath_Key);
+  const auto pUseExistingGeomValue = filterArgs.value<BoolParameter::ValueType>(k_UseExistingGeometry_Key);
+  const auto pPointCloudGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputPointCloudGeometryPath_Key);
+  const auto pOutputGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGridGeometryPath_Key);
+  const auto pMaskNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_MaskArrayName_Key);
+  const auto pNewGeometryPathValue = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedImageGeometryPath_Key);
 
   Result<OutputActions> resultOutputActions;
+
+  const auto& pointCloudGeom = dataStructure.getDataRefAs<INodeGeometry0D>(pPointCloudGeometryPathValue);
+  if(pointCloudGeom.getVertices() == nullptr)
+  {
+    return MakePreflightErrorResult(-45985, fmt::format("The selected point cloud geometry '{}' does not have a shared vertex list assigned.", pPointCloudGeometryPathValue.toString()));
+  }
+  if(pointCloudGeom.getVertices()->getNumberOfComponents() != 3)
+  {
+    return MakePreflightErrorResult(-45989, fmt::format("The vertex list of '{}' has {} component(s) per vertex but exactly 3 (X, Y, Z) are required.", pPointCloudGeometryPathValue.toString(),
+                                                        pointCloudGeom.getVertices()->getNumberOfComponents()));
+  }
 
   DataPath maskParent{};
   ShapeType maskDims{1, 1, 1};
@@ -104,10 +118,42 @@ IFilter::PreflightResult VoxelizePointCloudFilter::preflightImpl(const DataStruc
   if(pUseExistingGeomValue)
   {
     const auto& destGeometry = dataStructure.getDataRefAs<IGridGeometry>(pOutputGeometryPathValue);
-    maskParent = destGeometry.getCellDataPath();
 
-    const auto& cellData = dataStructure.getDataAs<AttributeMatrix>(maskParent);
-    maskDims = cellData->getShape();
+    if(const auto* imageGeom = dynamic_cast<const ImageGeom*>(&destGeometry); imageGeom != nullptr)
+    {
+      const FloatVec3 spacing = imageGeom->getSpacing();
+      if(!(spacing[0] > 0.0f && spacing[1] > 0.0f && spacing[2] > 0.0f))
+      {
+        return MakePreflightErrorResult(-45983,
+                                        fmt::format("The selected Image Geometry has invalid spacing ({}, {}, {}). All spacing values must be greater than zero.", spacing[0], spacing[1], spacing[2]));
+      }
+    }
+
+    if(destGeometry.getCellData() == nullptr)
+    {
+      return MakePreflightErrorResult(-45984, fmt::format("The selected geometry '{}' does not have a cell attribute matrix assigned.", pOutputGeometryPathValue.toString()));
+    }
+
+    if(const auto* rectGrid = dynamic_cast<const RectGridGeom*>(&destGeometry); rectGrid != nullptr)
+    {
+      if(rectGrid->getXBounds() == nullptr || rectGrid->getYBounds() == nullptr || rectGrid->getZBounds() == nullptr)
+      {
+        return MakePreflightErrorResult(-45986, fmt::format("The selected RectGrid Geometry '{}' is missing one or more bounds arrays (X, Y, or Z).", pOutputGeometryPathValue.toString()));
+      }
+
+      const SizeVec3 rectDims = rectGrid->getDimensions();
+      if(rectGrid->getXBounds()->getNumberOfTuples() != rectDims[0] + 1 || rectGrid->getYBounds()->getNumberOfTuples() != rectDims[1] + 1 ||
+         rectGrid->getZBounds()->getNumberOfTuples() != rectDims[2] + 1)
+      {
+        return MakePreflightErrorResult(-45987, fmt::format("The selected RectGrid Geometry '{}' has bounds arrays whose sizes do not match its dimensions. "
+                                                            "Expected X/Y/Z bounds sizes of {}/{}/{} (dims + 1) but got {}/{}/{}.",
+                                                            pOutputGeometryPathValue.toString(), rectDims[0] + 1, rectDims[1] + 1, rectDims[2] + 1, rectGrid->getXBounds()->getNumberOfTuples(),
+                                                            rectGrid->getYBounds()->getNumberOfTuples(), rectGrid->getZBounds()->getNumberOfTuples()));
+      }
+    }
+
+    maskParent = destGeometry.getCellDataPath();
+    maskDims = destGeometry.getCellDataRef().getShape();
   }
   else
   {
@@ -133,18 +179,12 @@ Result<> VoxelizePointCloudFilter::executeImpl(DataStructure& dataStructure, con
 {
   VoxelizePointCloudInputValues inputValues;
 
-  inputValues.UseExistingGeom = filterArgs.value<BoolParameter::ValueType>(k_UseExistingGeom_Key);
-  inputValues.PointCloudGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_PointCloudGeometryPath_Key);
-  inputValues.OutputGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_OutputGeometryPath_Key);
-  inputValues.MaskName = filterArgs.value<StringParameter::ValueType>(k_MaskName_Key);
-  inputValues.NewGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_NewGeometryPath_Key);
+  inputValues.UseExistingGeom = filterArgs.value<BoolParameter::ValueType>(k_UseExistingGeometry_Key);
+  inputValues.PointCloudGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputPointCloudGeometryPath_Key);
+  inputValues.OutputGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGridGeometryPath_Key);
+  inputValues.MaskName = filterArgs.value<DataObjectNameParameter::ValueType>(k_MaskArrayName_Key);
+  inputValues.NewGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedImageGeometryPath_Key);
 
   return VoxelizePointCloud(dataStructure, messageHandler, shouldCancel, &inputValues)();
-}
-
-// No SIMPL implementation
-Result<Arguments> VoxelizePointCloudFilter::FromSIMPLJson(const nlohmann::json& json)
-{
-  return {VoxelizePointCloudFilter().getDefaultArguments()};
 }
 } // namespace nx::core
