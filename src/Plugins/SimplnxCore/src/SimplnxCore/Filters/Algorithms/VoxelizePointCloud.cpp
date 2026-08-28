@@ -219,7 +219,8 @@ Result<> VoxelizePointCloud::operator()()
   auto emitSkipWarning = [&](usize skipped) {
     if(skipped > 0)
     {
-      m_MessageHandler(IFilter::Message{IFilter::Message::Type::Warning, fmt::format("{} of {} point(s) had non-finite coordinates or fell outside the destination geometry and were not voxelized.", skipped, numPoints)});
+      m_MessageHandler(IFilter::Message{IFilter::Message::Type::Warning,
+                                        fmt::format("{} of {} point(s) had non-finite coordinates or fell outside the destination geometry and were not voxelized.", skipped, numPoints)});
     }
   };
 

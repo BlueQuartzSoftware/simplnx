@@ -10,24 +10,24 @@ This **Filter** maps a node-based point cloud geometry onto a regular grid and p
 
 The filter operates in two modes selected by the **Use Existing Grid Geometry** toggle. When using an existing geometry, behavior differs by destination type:
 
-### Auto-sized Image Geometry (default)
+### Auto-sized Image Geometry
 
 When **Use Existing Grid Geometry** is *false*, the filter creates a new **Image Geometry** that tightly wraps the input point cloud:
 
 1. The axis-aligned bounding box of the point cloud is computed.
-2. A padding of **0.1%** of each side length is added to both the minimum and maximum extents, ensuring boundary points are not clipped.
+2. A padding of **0.1%** of each side length is added to both the minimum and maximum extents. If the proportional padding is too small to affect the boundary float32 values (which occurs at very large coordinate magnitudes), the filter additionally expands by at least one float32 ULP per boundary face. This guarantees all input points fall strictly inside the generated bounds.
 3. Grid dimensions are computed as `ceil(padded_extent / spacing)` per axis, where spacing defaults to *1.0* in all axes.
 4. The origin is set to the padded minimum point.
 
-The half-open interval `[origin, origin + dims × spacing)` defines which points map into each cell. A point exactly on the maximum boundary is therefore excluded and falls outside the last cell. The 0.1% padding is designed to keep input points away from this boundary, though at very large coordinate magnitudes (≈ 1e5 and above) float32 precision limits may reduce its effect.
+The half-open interval `[origin, origin + dims × spacing)` defines which points map into each cell; a point exactly on the maximum boundary falls outside the last cell. The padding described above prevents input points from reaching this boundary.
 
 A zero-extent dimension — which occurs when the point cloud is degenerate (e.g., a single point or all points coplanar along an axis) — is clamped to 1, producing a geometry with a single-voxel slice along that axis. All input points still map into the resulting grid.
 
-### Existing Image Geometry
+### Existing Image Geometry (default)
 
-When **Use Existing Grid Geometry** is *true* and the destination is an **Image Geometry**, each point is mapped to a cell using the same half-open interval semantics as above. Points that fall outside the geometry's extent or have non-finite coordinates (NaN, ±Inf) are skipped and counted in the end-of-execution warning.
+When **Use Existing Grid Geometry** is *true* and the destination is an **Image Geometry**, each point is mapped to a cell using the same half-open interval semantics as above. Cell index per axis: `floor((point - origin) / spacing)`. The mask is written to the **Cell Data Attribute Matrix** of the destination geometry.
 
-Cell index per axis: `floor((point - origin) / spacing)`. The mask is written to the **Cell Data Attribute Matrix** of the destination geometry.
+Points that fall outside the geometry's extent or have non-finite coordinates (NaN, ±Inf) are skipped and counted in the end-of-execution warning.
 
 ### Existing Rectilinear Grid Geometry
 
@@ -46,11 +46,17 @@ When **Use Existing Grid Geometry** is *true* and the destination is a **RectGri
 
 ### Errors
 
-| Code | Severity | Condition |
-|------|----------|-----------|
-| -45980 | Error | Point cloud bounding box is invalid. The point cloud is empty or contains only non-finite coordinates. Auto-size path only. |
-| -45982 | Error | Grid allocation failed (`std::bad_alloc`). The point cloud extent relative to the current spacing produces a grid too large to fit in memory. Auto-size path only. |
-| -45988 | Error | Destination geometry type is not Image Geometry or RectGrid Geometry. Defensive; unreachable under normal operation because the parameter gates these types. |
+| Code | Phase | Condition |
+|------|-------|-----------|
+| -45980 | Execute | Point cloud bounding box is invalid. The point cloud is empty or contains only non-finite coordinates. Auto-size path only. |
+| -45982 | Execute | Grid allocation failed (`std::bad_alloc`). The point cloud extent relative to the current spacing produces a grid too large to fit in memory. Auto-size path only. |
+| -45983 | Preflight | The selected Image Geometry has invalid spacing. All three spacing values must be greater than zero. Existing Image Geometry path only. |
+| -45984 | Preflight | The selected destination geometry has no Cell Attribute Matrix assigned. Existing geometry path only. |
+| -45985 | Preflight | The selected point cloud geometry has no vertex list assigned. |
+| -45986 | Preflight | The selected RectGrid Geometry is missing one or more bounds arrays (X, Y, or Z). Existing RectGrid path only. |
+| -45987 | Preflight | The selected RectGrid Geometry bounds arrays are inconsistent with its declared dimensions; expected bounds array length = dims + 1 per axis. Existing RectGrid path only. |
+| -45988 | Execute | Destination geometry type is not Image Geometry or RectGrid Geometry. Defensive; unreachable under normal operation because the parameter gates these types. |
+| -45989 | Preflight | The point cloud vertex list does not have exactly 3 components per vertex (X, Y, Z). |
 
 A **warning** (no error code) is emitted after execution if any points were skipped. Skipped points include those with non-finite coordinates (NaN, ±Inf) and those that fall outside the destination geometry. The message reports the count of skipped points out of the total.
 
