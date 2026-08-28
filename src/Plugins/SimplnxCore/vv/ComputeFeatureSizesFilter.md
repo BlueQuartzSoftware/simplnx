@@ -1,8 +1,8 @@
 # V&V Report: ComputeFeatureSizes
 
-| | |
-|---|---|
-| Plugin | `SimplnxCore` |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID | `c666ee17-ca58-4969-80d0-819986c72485` |
 | DREAM3D 6.5.171 equivalent | `FindSizes` — UUID `656f144c-a120-5c3b-bee5-06deab438588` |
 | Verified commit | *pending* |
@@ -11,8 +11,8 @@
 
 ## At a glance
 
-| Aspect | State |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm relationship | **Port** of both `FindSizes::findSizesImage()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
 | Oracle | **Class 1 (Analytical)** — all test data inlined, hand-derived |
 | Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |

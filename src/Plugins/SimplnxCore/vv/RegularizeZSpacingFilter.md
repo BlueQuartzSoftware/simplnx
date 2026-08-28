@@ -1,8 +1,8 @@
 # V&V Report: RegularizeZSpacingFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | SimplnxCore |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID | `d6599986-1932-4bfc-993d-71eafefe6db0` |
 | DREAM3D 6.5.171 equivalent | `RegularizeZSpacing` — `Source/Plugins/Sampling/SamplingFilters/RegularizeZSpacing.{h,cpp}` (legacy UUID `bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
@@ -11,15 +11,15 @@
 
 ## At a glance
 
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** of legacy `RegularizeZSpacing::execute()` — identical Z-plane mapping rule and `floor(extent/newZRes)` dim math (independently hand-traced, including the strict-`>` boundary and clamp cases). Five port-time deltas (bulk copy, new-geometry output mode, preflight validation, parallelization, cell-AM binding); none change output for valid input. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** primary + **Class 4 (Invariant)** companion — closed-form indirection map `out[i] = in[map[i]]`. Element-wise Class 1 assertions in 2 fixtures (`Valid Execution (New Geometry)`, `Valid Execution (Spacing Exceeds Extent)`); Class 4 invariants across the valid fixtures. All pass in-core + OOC. |
 | Code paths enumerated  | 12 of 14 exercised; the 2 uncovered are the redundant file-open guard and the cancel check (reasons below).                  |
 | Tests today            | 5 TEST_CASEs (2 Class-1 valid + 1 in-place valid + 1 invalid-parameters with 6 SECTIONs + 1 SIMPL backwards-compat with 6.5/6.4 fixtures); every documented preflight error code asserted explicitly. |
 | Exemplar archive       | **None** — inline analytical fixtures (no `download_test_data`; avoids a circular oracle per project policy).                 |
 | Legacy comparison      | **Run** vs DREAM3D 6.5.171 on a synthetic multi-type fixture (int32 + bool + 3-component float). Bit-identical: legacy == SIMPLNX == Class-1 oracle on every array and on geometry (dims/spacing/origin). |
-| Bug flags              | None.                                                                                                                        |
+| Bug flags              | None.              |
 | V&V phase              | Oracle applied and reconciled; algorithm review + three independent adversarial reviews applied (fixes folded in); dual-build green; legacy A/B bit-identical with 0 deviations. **Outstanding:** second-engineer oracle review before COMPLETE. |
 
 ## Summary

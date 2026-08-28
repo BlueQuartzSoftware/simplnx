@@ -1,8 +1,8 @@
 # V&V Report: RequireMinNumNeighborsFilter
 
-| | |
-|---|---|
-| Plugin | SimplnxCore |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID | `4ab5153f-6014-4e6d-bbd6-194068620389` |
 | DREAM3D 6.5.171 equivalent | `MinNeighbors` (SIMPL UUID `dab5de3c-5f81-5bb5-8490-73521e1183ea`) - `Source/Plugins/Processing/ProcessingFilters/MinNeighbors.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
@@ -11,8 +11,8 @@
 
 ## At a glance
 
-| Aspect | Current state |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** - the NX port retains the legacy selection, coarsening, and feature-removal while incorporating bug fixes and minor code improvements. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - two mode-specific 4x1x1 inputs and one common 6x6x6 input check exact cell copying, phase selection, iterative coarsening, and feature compaction. |
 | Code paths enumerated | 13 of 18 paths are assertion-covered; cancellation and defensive error paths are not covered. |

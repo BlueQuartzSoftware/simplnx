@@ -1,19 +1,19 @@
 # V&V Report: WriteDREAM3DFilter
 
-|                             |                                                                             |
-|-----------------------------|-----------------------------------------------------------------------------|
-| Plugin                      | SimplnxCore                                                                |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
 | SIMPLNX UUID                | `b3a95784-2ced-41ec-8d3d-0242ac130003`                                     |
-| SIMPLNX Human Name          | Write DREAM3D-NX File                                                      |
+| SIMPLNX Human Name          | Write DREAM3D-NX File |
 | DREAM3D 6.5.171 equivalent  | `DataContainerWriter` — SIMPL UUID `3fcd4c43-9d75-5b86-aad4-4441bc914f37`  |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                   |
-| Status                      | COMPLETE — 2026-08-20                                                      |
+| Status                      | COMPLETE — 2026-08-20 |
 | Sign-off                    | Matthew Marine (V&V author, PR #1683). Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-20 (PR #1683 review). |
 
 ## At a glance
 
-| Aspect                 | Current state |
-|------------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same UUID/role as legacy `DataContainerWriter`, but the on-disk format is entirely new (v8 `DataStructure` HDF5 layout + `AtomicFile` atomic-write + optional gzip compression), not a translation of the legacy writer's code. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** — expected content is the hand-built in-memory `DataStructure`/`Pipeline` the test itself constructed; expected HDF5 physical layout (contiguous vs. chunked+deflate) is a closed-form function of array byte-size and the two compression parameters. 20 Write-related fixtures across `DREAM3DFileTest.cpp`, all pass. |
 | Code paths enumerated  | **15 of 19** exercised; the 4 remaining gaps are defensive/unreachable-via-public-API guards (see table). |
@@ -70,15 +70,15 @@
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D.cpp` (82 lines). Preflight guards below live in the sibling `Filters/WriteDREAM3DFilter.cpp` (`preflightImpl`), which the policy still treats as in-scope algorithm surface (parameter validation gates that the Algorithm class depends on).
 
-| #  | Phase              | Path                                                                                        | Test case |
+| #  | Phase              | Path                                   | Test case |
 |----|--------------------|----------------------------------------------------------------------------------------------|-----------|
-| 1  | Preflight          | `export_file_path` empty → error `-1`                                                        | `"WriteDREAM3DFilter:Invalid Parameters"` § `Empty FilePath` |
+| 1  | Preflight          | `export_file_path` empty → error `-1`   | `"WriteDREAM3DFilter:Invalid Parameters"` § `Empty FilePath` |
 | 2  | Preflight          | `use_compression=true`, `compression_level < 1` → error `-2`                                  | `"WriteDREAM3DFilter:Invalid Parameters"` § `Bad Compression Level`; `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=0) |
 | 3  | Preflight          | `use_compression=true`, `compression_level > 9` → error `-2`                                  | `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=10) |
 | 4  | Preflight          | `use_compression=false` → `compression_level` ignored even if out of `[1,9]`                  | `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=0, compression off) |
-| 5  | Preflight          | Valid parameters → success                                                                   | `"WriteDREAM3DFilter:Valid Parameters"`; implicitly, every passing execute-path test below |
+| 5  | Preflight          | Valid parameters → success              | `"WriteDREAM3DFilter:Valid Parameters"`; implicitly, every passing execute-path test below |
 | 6  | Execute — setup    | `AtomicFile::Create` fails (unwritable/invalid destination directory)                        | *Not directly tested.* Preflight only rejects an empty path; a directory-permission failure at execute time would require a filesystem fixture (e.g., a read-only directory) not set up by the current suite. |
-| 7  | Execute — setup    | `AtomicFile::Create` succeeds                                                                 | Every passing execute-path test |
+| 7  | Execute — setup    | `AtomicFile::Create` succeeds            | Every passing execute-path test |
 | 8  | Execute — pipeline | `PipelineNode != nullptr` and `getPrecedingPipeline()` returns `nullptr` → error `-15`         | *Not directly tested.* Only reachable if a `PipelineFilter` is detached from its parent `Pipeline`, which normal `filter.execute()`/`pipeline.execute()` usage never produces. |
 | 9  | Execute — pipeline | `PipelineNode != nullptr`, preceding pipeline retrieved successfully → embedded in file        | `"DREAM3DFileTest:Import/Export DREAM3D Filter Test"` (`exportPipeline.execute()`); `"DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test"` (`CreateMultiExportFiles()`) |
 | 10 | Execute — pipeline | `PipelineNode == nullptr` → empty pipeline written                                            | `"WriteDREAM3DFilter:Valid Parameters"`, `"DREAM3DFileTest::StringArray"`, all `Compression_*` tests (all call `filter.execute(ds, args)` directly) |
@@ -87,7 +87,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D
 | 13 | Execute — write    | `DREAM3D::WriteFile(...)` returns invalid → skip commit, return the error                     | `"WriteDREAM3DFilter:Unwritable DataObject Type"` — writes a `DataStructure` holding a `GridMontage`, a type with no registered HDF5 IO factory. Asserts preflight still succeeds, execute fails with exactly one error of code `-5` ("Could not find IO factory for datatype: …"), and the destination file does **not** exist afterward (i.e. the `AtomicFile` was never committed). See the capability-boundary note at the end of this section. |
 | 14 | Execute — write    | `DREAM3D::WriteFile(...)` returns valid → proceed to commit                                   | Every passing execute-path test |
 | 15 | Execute — commit   | `atomicFile.commit()` fails (rename onto final destination fails)                             | *Not directly tested.* Would require the destination path to become invalid between `AtomicFile::Create` and `commit()` (e.g., concurrent deletion of the parent directory) — a race not exercised by the suite. |
-| 16 | Execute — commit   | `atomicFile.commit()` succeeds                                                                | Every passing execute-path test (the output file is present and re-readable in every round-trip test) |
+| 16 | Execute — commit   | `atomicFile.commit()` succeeds           | Every passing execute-path test (the output file is present and re-readable in every round-trip test) |
 | 17 | Execute — xdmf     | `write_xdmf_file=true` → rename temp `.xdmf` into place, succeeds                              | `"DREAM3DFileTest:DREAM3D File IO Test"` (writeXdmf=true), `CreateExportPipeline()`/`CreateMultiExportFiles()` (`write_xdmf_file=true`) |
 | 18 | Execute — xdmf     | `write_xdmf_file=true`, rename fails → `MakeErrorResult` with system error message             | *Not directly tested.* Would require the `.xdmf` destination to become unwritable between the HDF5 write succeeding and the rename — not portably reproducible in the current suite. |
 | 19 | Execute — xdmf     | `write_xdmf_file=false` → skip rename, return `WriteFile`'s result directly                   | Most `Compression_*` tests, `"DREAM3DFileTest::StringArray"`, `"WriteDREAM3DFilter:Valid Parameters"` |

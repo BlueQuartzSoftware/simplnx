@@ -1,19 +1,19 @@
 # V&V Report: CopyFeatureArrayToElementArrayFilter
 
-|                             |                                                                                                      |
-|-----------------------------|------------------------------------------------------------------------------------------------------|
-| Plugin                      | SimplnxCore                                                                                          |
-| SIMPLNX UUID                | `4c8c976a-993d-438b-bd8e-99f71114b9a1`                                                               |
-| SIMPLNX Human Name          | Create Element Array from Feature Array                                                              |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
+| SIMPLNX UUID                | `4c8c976a-993d-438b-bd8e-99f71114b9a1`          |
+| SIMPLNX Human Name          | Create Element Array from Feature Array         |
 | DREAM3D 6.5.171 equivalent  | `CopyFeatureArrayToElementArray` (SIMPLib CoreFilters) — SIMPL UUID `99836b75-144b-5126-b261-b411133b5e8a` |
-| Verified commit             | *<filled at SBIR deliverable assembly>*                                                              |
+| Verified commit             | *<filled at SBIR deliverable assembly>*         |
 | Status                      | COMPLETE |
 | Sign-off                    | Michael A. Jackson <mike.jackson@bluequartz.net> (V&V author). Second engineer: Nathan Young, 2026-07-28 (PR #1689 review). |
 
 ## At a glance
 
-| Aspect                | Current state |
-|-----------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** — same indirection-copy kernel as SIMPL `CopyFeatureArrayToElementArray`; NX deliberately adds multi-array selection, suffix-based output naming, TBB parallelization, and different feature-count validation semantics. |
 | Oracle (confirmed)    | **Class 1 (Analytical)** — pure indirection lookup `out[i*C+c] = feature[featureIds[i]*C+c]`; hand-derived expected values on a 4×3×1 fixture (float32/1-comp, int32/3-comp, bool). **Class 4 (Invariant)** companion — piecewise constancy within each feature. Encoded as `CopyFeatureArrayToElementArrayTest.cpp::"Analytical Oracle (Class 1)"`; all pass. |
 | Code paths enumerated | 13 of 14 exercised; the uncovered path is the cancel check (excluded by engineer instruction — requires cancel-signal injection). Path 14 (virtual-store kernel fallback) is only partially covered pending the OOC-backend gap noted in *Tests today*. |
@@ -68,11 +68,11 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CopyFeatureA
 
 Logical phases: (a) parameter/preflight validation + output-array creation, (b) execute-time validation, (c) type-dispatched copy kernel (raw-pointer fast path for in-core `DataStore<T>`, virtual `AbstractDataStore` fallback otherwise).
 
-| #  | Phase         | Path                                                                                     | Test case |
+| #  | Phase         | Path                                | Test case |
 |----|---------------|-------------------------------------------------------------------------------------------|-----------|
 | 1  | (a) Preflight | empty selection list → error `k_Validate_Empty_Value` (filter's own guard, preflight AND execute) | `Preflight Error - Empty selection (filter guard)` — FeatureIds path is valid so parameter validation passes and the filter guard is what fires |
 | 2  | (a) Preflight | non-`IDataArray` selection (NeighborList/StringArray) → rejected by parameter validation. The `ArrayType::DataArray` constraint is what rejects it; `MultiArraySelectionParameter::AllowedDataTypes` is stored but not enforced by the framework | `Preflight Error - Non-DataArray selection rejected` |
-| 3  | (a) Preflight | suffix contains `/` → error -3021                                                         | `Preflight Error - Suffix contains '/' (-3021)` |
+| 3  | (a) Preflight | suffix contains `/` → error -3021    | `Preflight Error - Suffix contains '/' (-3021)` |
 | 4  | (a) Preflight | selected feature arrays disagree on tuple count → error -3020                             | `Preflight Error - Feature array tuple count mismatch (-3020)` |
 | 5  | (a) Preflight | valid → one `CreateArrayAction` per selected array (tuple shape from FeatureIds, component shape from source, name `<source><suffix>`) | `Analytical Oracle (Class 1)` — 3 arrays created in the Cell AM |
 | 6  | (a) Actions   | created path collides with an existing object → error -266 at action application (execute in unit tests; pipeline preflight in the GUI); original array untouched | `Execute Error - Created name collides with existing array (-266)` |

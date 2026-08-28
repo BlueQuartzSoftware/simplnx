@@ -1,18 +1,18 @@
 # V&V Report: ComputeFeaturePhasesFilter
 
-| | |
-|---|---|
-| **Plugin** | SimplnxCore |
-| **SIMPLNX UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
-| **DREAM3D 6.5.171 equivalent** | `FindFeaturePhases` (SIMPL UUID `6334ce16-cea5-5643-83b5-9573805873fa`) |
-| **Verified commit** | *pending* |
-| **Status** | COMPLETE |
-| **Sign-off** | Nathan Young - 7/15/2026 |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
+| SIMPLNX UUID | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
+| DREAM3D 6.5.171 equivalent | `FindFeaturePhases` (SIMPL UUID `6334ce16-cea5-5643-83b5-9573805873fa`) |
+| Verified commit | *pending* |
+| Status | COMPLETE |
+| Sign-off | Nathan Young - 7/15/2026 |
 
 ## At a glance
 
-| Aspect | State |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port with post-port hardening** — core algorithm identical; D1, D2, D3 hardening active. See §Algorithm Relationship. |
 | Oracle | **Class 1 + 4 (Analytical + Invariant)** — encoded. 10 inline TEST_CASEs cover all paths except cancel-signal injection. |
 | Tests | 10 inline TEST_CASEs (Cases 1–10). `SIMPL Backwards Compatibility` retained. Old `(Valid Parameters)` circular-oracle test **retired**. |

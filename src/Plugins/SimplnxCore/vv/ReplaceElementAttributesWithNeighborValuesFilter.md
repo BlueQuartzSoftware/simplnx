@@ -1,19 +1,19 @@
 # V&V Report: ReplaceElementAttributesWithNeighborValuesFilter
 
-|                             |                                                                                                   |
-|-----------------------------|---------------------------------------------------------------------------------------------------|
-| Plugin                      | SimplnxCore                                                                                       |
-| SIMPLNX UUID                | `65128c53-d3be-4a69-a559-32a48d603884`                                                            |
+|           |                  |
+|-----------|------------------|
+| Plugin    | SimplnxCore      |
+| SIMPLNX UUID                | `65128c53-d3be-4a69-a559-32a48d603884`       |
 | SIMPLNX Human Name          | Replace Element Attributes with Neighbor (Threshold)                                             |
 | DREAM3D 6.5.171 equivalent  | `ReplaceElementAttributesWithNeighborValues` — SIMPL UUID `17410178-4e5f-58b9-900e-8194c69200ab` |
-| Verified commit             | *<filled at SBIR deliverable assembly>*                                                           |
-| Status                      | **COMPLETE**                                                                                      |
-| Sign-off                    | Nathan Young, 07-21-2026                                                                                         |
+| Verified commit             | *<filled at SBIR deliverable assembly>*      |
+| Status                      | **COMPLETE**                                 |
+| Sign-off                    | Nathan Young, 07-21-2026                                    |
 
 ## At a glance
 
-| Aspect                | Current state |
-|-----------------------|---------------|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **Port** — direct translation of SIMPL `ReplaceElementAttributesWithNeighborValues`; same two-pass (scan → copy) + optional-loop structure. Legacy UUID cited in filter header. |
 | Oracle                | **Class 1 (Analytical)** — synthetic 3×3×3 grid, 4 SECTIONs with closed-form expected values. **Class 4 (Invariant)** companion — post-loop threshold saturation and multi-array copy. |
 | Code paths            | 16 of 17 directly tested; cancel path untestable (no cancel-signal injection in test framework). |
@@ -74,29 +74,29 @@ Multi-array copy verified via `Marker`: after replacement `markerStore[13] != 13
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp`
 
-| #  | Phase        | Path                                                                                               | Test coverage                                                                                         |
+| #  | Phase        | Path                                          | Test coverage                                    |
 |----|--------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| 1  | Loop         | Cancel check at top of `while(keepGoing)`                                                          | **Untestable** — no cancel-signal injection available.                                                |
-| 2  | (a) Scan     | Good voxel → skip; `count` not incremented                                                         | All 24 good voxels in each synthetic SECTION.                                                         |
-| 3  | (a) Scan     | Bad voxel → enter 6-neighbor search; `count++`                                                     | LessThan/GreaterThan: voxels {0,13,26}; loop=false: voxel 13.                                        |
-| 4  | (a) Scan     | -Z boundary guard (`plane == 0`) → skip                                                            | Voxel 0 at (0,0,0).                                                                                   |
-| 5  | (a) Scan     | -Y boundary guard (`row == 0`) → skip                                                              | Voxel 0 at (0,0,0).                                                                                   |
-| 6  | (a) Scan     | -X boundary guard (`column == 0`) → skip                                                           | Voxel 0 at (0,0,0).                                                                                   |
-| 7  | (a) Scan     | +X boundary guard (`column == dims[0]-1`) → skip                                                   | Voxel 26 at (2,2,2).                                                                                  |
-| 8  | (a) Scan     | +Y boundary guard (`row == dims[1]-1`) → skip                                                      | Voxel 26 at (2,2,2).                                                                                  |
-| 9  | (a) Scan     | +Z boundary guard (`plane == dims[2]-1`) → skip                                                    | Voxel 26 at (2,2,2).                                                                                  |
-| 10 | (a) Scan     | `compare1=true` AND `compare2=true` → update `best` + `bestNeighbor[i]`                           | First good face neighbor of each bad voxel.                                                           |
-| 11 | (a) Scan     | `compare1=false` → skip neighbor                                                                   | compare1=false SECTION: cluster bad={4,10,12,13,14,16,22}; all neighbors of voxel 13 fail compare1; `bestNeighbor[13]` stays -1. |
+| 1  | Loop         | Cancel check at top of `while(keepGoing)`     | **Untestable** — no cancel-signal injection available.                                                |
+| 2  | (a) Scan     | Good voxel → skip; `count` not incremented    | All 24 good voxels in each synthetic SECTION.    |
+| 3  | (a) Scan     | Bad voxel → enter 6-neighbor search; `count++`| LessThan/GreaterThan: voxels {0,13,26}; loop=false: voxel 13.                                        |
+| 4  | (a) Scan     | -Z boundary guard (`plane == 0`) → skip       | Voxel 0 at (0,0,0).                              |
+| 5  | (a) Scan     | -Y boundary guard (`row == 0`) → skip         | Voxel 0 at (0,0,0).                              |
+| 6  | (a) Scan     | -X boundary guard (`column == 0`) → skip      | Voxel 0 at (0,0,0).                              |
+| 7  | (a) Scan     | +X boundary guard (`column == dims[0]-1`) → skip                                                   | Voxel 26 at (2,2,2).                             |
+| 8  | (a) Scan     | +Y boundary guard (`row == dims[1]-1`) → skip | Voxel 26 at (2,2,2).                             |
+| 9  | (a) Scan     | +Z boundary guard (`plane == dims[2]-1`) → skip                                                    | Voxel 26 at (2,2,2).                             |
+| 10 | (a) Scan     | `compare1=true` AND `compare2=true` → update `best` + `bestNeighbor[i]`                           | First good face neighbor of each bad voxel.      |
+| 11 | (a) Scan     | `compare1=false` → skip neighbor              | compare1=false SECTION: cluster bad={4,10,12,13,14,16,22}; all neighbors of voxel 13 fail compare1; `bestNeighbor[13]` stays -1. |
 | 12 | (a) Scan     | `compare1=true` AND `compare2=false` → skip neighbor                                               | Voxel 13: first good neighbor sets `best=0.9`; remaining 5 at 0.9 fail `compare2(0.9 > 0.9)`.       |
 | 13 | (b) Copy     | `bestNeighbor[i] != -1` → `copyTuple` across all AttributeMatrix arrays                           | LessThan: voxels {0,13,26} replaced; `markerStore[13] != 13` confirms non-comparison array copied.   |
-| 14 | (b) Copy     | `bestNeighbor[i] == -1` → skip                                                                     | All 24 good voxels; also voxel 13 in the compare1=false SECTION.                                     |
+| 14 | (b) Copy     | `bestNeighbor[i] == -1` → skip                | All 24 good voxels; also voxel 13 in the compare1=false SECTION.                                     |
 | 15 | Loop control | `loopUntilDone && count > 0` → `keepGoing = true`                                                  | LessThan: iteration 1 has count=3; sets keepGoing=true.                                               |
-| 16 | Loop control | `count == 0` → exit while                                                                          | LessThan: second iteration has count=0.                                                               |
-| 17 | Loop control | `loop=false` → single pass only                                                                    | loop=false SECTION.                                                                                   |
+| 16 | Loop control | `count == 0` → exit while                     | LessThan: second iteration has count=0.          |
+| 17 | Loop control | `loop=false` → single pass only               | loop=false SECTION.                              |
 
 ## Test inventory
 
-| Test case (SECTION)                          | Oracle        | Parameters                                                              |
+| Test case (SECTION)                          | Oracle        | Parameters         |
 |----------------------------------------------|---------------|-------------------------------------------------------------------------|
 | Synthetic — LessThan                         | Class 1 + 4   | bad={0,13,26}, good=0.9, threshold=0.5, loop=true. All 27 ≥ threshold; `Marker[13]` copied. |
 | Synthetic — GreaterThan                      | Class 1 + 4   | bad={0,13,26}, good=0.1, threshold=0.5, loop=true. All 27 ≤ threshold. |

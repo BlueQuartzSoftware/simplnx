@@ -41,12 +41,12 @@ const std::string k_FeaturePhasesName = "FeaturePhases";
 const std::string k_VolumesName = "Volumes";
 const std::string k_AvgQuatsName = "AvgQuats";
 const std::string k_ContigNeighborListName = "ContiguousNeighborList";
+const std::string k_NonContigNeighborListName = "NonContiguousNeighborList";
 const std::string k_CrystalStructuresName = "CrystalStructures";
 
 const std::string k_NewFeatureAMName = "MicroTextureFeatureData";
 const std::string k_CellParentIdsName = "CellParentIds";
 const std::string k_FeatureParentIdsName = "FeatureParentIds";
-const std::string k_ActiveName = "Active";
 const std::string k_SeedArrayName = "GroupMicroTextureRegions_Seed";
 
 const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath(k_FeatureIdsName);
@@ -54,6 +54,7 @@ const DataPath k_FeaturePhasesPath = k_FeatureDataPath.createChildPath(k_Feature
 const DataPath k_VolumesPath = k_FeatureDataPath.createChildPath(k_VolumesName);
 const DataPath k_AvgQuatsPath = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
 const DataPath k_ContigNeighborListPath = k_FeatureDataPath.createChildPath(k_ContigNeighborListName);
+const DataPath k_NonContigNeighborListPath = k_FeatureDataPath.createChildPath(k_NonContigNeighborListName);
 const DataPath k_CrystalStructuresPath = k_EnsembleDataPath.createChildPath(k_CrystalStructuresName);
 const DataPath k_NewFeatureAMPath = k_ImageGeomPath.createChildPath(k_NewFeatureAMName);
 
@@ -80,6 +81,7 @@ struct FixtureData
   Float32Array* volumes = nullptr;
   Float32Array* avgQuats = nullptr;
   NeighborList<int32>* neighborList = nullptr;
+  NeighborList<int32>* nonContiguousNeighborList = nullptr;
   UInt32Array* crystalStructures = nullptr;
 };
 
@@ -92,7 +94,7 @@ FixtureData CreateScaffold(usize numFeatures)
   FixtureData td;
   const usize nX = numFeatures - 1; // one cell per real feature
   const usize numCells = nX;
-  const usize numCrystalStructures = 2;
+  const usize numCrystalStructures = 3;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   td.geom->setSpacing({1.0f, 1.0f, 1.0f});
@@ -108,6 +110,7 @@ FixtureData CreateScaffold(usize numFeatures)
   td.volumes = CreateTestDataArray<float32>(td.ds, k_VolumesName, {numFeatures}, {1}, td.featureAM->getId());
   td.avgQuats = CreateTestDataArray<float32>(td.ds, k_AvgQuatsName, {numFeatures}, {4}, td.featureAM->getId());
   td.neighborList = NeighborList<int32>::Create(td.ds, k_ContigNeighborListName, ShapeType{numFeatures}, td.featureAM->getId());
+  td.nonContiguousNeighborList = NeighborList<int32>::Create(td.ds, k_NonContigNeighborListName, ShapeType{numFeatures}, td.featureAM->getId());
   td.crystalStructures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensembleAM->getId());
 
   // One cell per real feature (cell k -> feature k+1).
@@ -142,10 +145,12 @@ FixtureData CreateScaffold(usize numFeatures)
   for(usize f = 0; f < numFeatures; f++)
   {
     td.neighborList->setList(static_cast<int32>(f), std::make_shared<std::vector<int32>>(std::vector<int32>{}));
+    td.nonContiguousNeighborList->setList(static_cast<int32>(f), std::make_shared<std::vector<int32>>(std::vector<int32>{}));
   }
 
   (*td.crystalStructures)[0] = 999u; // sentinel
   (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
+  (*td.crystalStructures)[2] = static_cast<uint32>(ebsdlib::CrystalStructure::Cubic_High);
 
   return td;
 }
@@ -161,6 +166,11 @@ void SetAvgQuat(FixtureData& td, usize featureIdx, const std::array<float32, 4>&
 void SetNeighbors(FixtureData& td, int32 featureIdx, std::vector<int32> neighbors)
 {
   td.neighborList->setList(featureIdx, std::make_shared<std::vector<int32>>(std::move(neighbors)));
+}
+
+void SetNonContiguousNeighbors(FixtureData& td, int32 featureIdx, std::vector<int32> neighbors)
+{
+  td.nonContiguousNeighborList->setList(featureIdx, std::make_shared<std::vector<int32>>(std::move(neighbors)));
 }
 
 // Build the canonical 5-feature pure-Phi Bunge fixture used by both the Pure-Phi Class 1 test
@@ -191,7 +201,7 @@ Arguments BuildArgs(float32 cAxisToleranceDeg, bool useRunningAverage, bool rand
 {
   Arguments args;
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
-  args.insertOrAssign(GroupMicroTextureRegionsFilter::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_ContigNeighborListPath));
+  args.insertOrAssign(GroupMicroTextureRegionsFilter::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_NonContigNeighborListPath));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_ContigNeighborListPath));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_UseRunningAverage_Key, std::make_any<bool>(useRunningAverage));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_CAxisTolerance_Key, std::make_any<float32>(cAxisToleranceDeg));
@@ -203,7 +213,6 @@ Arguments BuildArgs(float32 cAxisToleranceDeg, bool useRunningAverage, bool rand
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_NewFeatureAMPath));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_CellParentIdsArrayName_Key, std::make_any<std::string>(k_CellParentIdsName));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_FeatureParentIdsArrayName_Key, std::make_any<std::string>(k_FeatureParentIdsName));
-  args.insertOrAssign(GroupMicroTextureRegionsFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_RandomizeParentIds_Key, std::make_any<bool>(randomizeParentIds));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_UseSeed_Key, std::make_any<bool>(true));
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_SeedValue_Key, std::make_any<uint64>(seed));
@@ -272,10 +281,8 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   }
   CHECK(newFeatureAM.getNumberOfTuples() == static_cast<usize>(maxParent + 1));
 
-  // Active array: present and sized to AM, default value true everywhere.
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<BoolArray>(k_NewFeatureAMPath.createChildPath(k_ActiveName)));
-  const auto& active = td.ds.getDataRefAs<BoolArray>(k_NewFeatureAMPath.createChildPath(k_ActiveName));
-  CHECK(active.getNumberOfTuples() == newFeatureAM.getNumberOfTuples());
+  // The parent Attribute Matrix stores the number of microtexture regions. No unused Active array is created.
+  CHECK(td.ds.getDataAs<BoolArray>(k_NewFeatureAMPath.createChildPath("Active")) == nullptr);
 
   // Seed value array: written and contains the seed we asked for.
   REQUIRE_NOTHROW(td.ds.getDataRefAs<UInt64Array>(DataPath({k_SeedArrayName})));
@@ -393,12 +400,21 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   using namespace AnalyticalFixtures;
 
   // 3 real features on a chain F1 -- F2 -- F3. F1 c-axis at Phi=0, F2 at Phi=8, F3 at Phi=20.
-  //   - F1 -- F2 : 8 deg  -- under 10 deg tolerance -> GROUP
-  //   - F2 -- F3 : 12 deg -- over 10 deg tolerance using F2's c-axis (since UseRunningAverage=false,
-  //                          the algorithm compares each candidate to the BFS seed's c-axis, but
-  //                          inside the BFS walk over already-grouped features, comparison is from
-  //                          THAT feature's c-axis, not the original seed's) -> DO NOT BRIDGE
+  //
+  // With UseRunningAverage=false, determineGrouping() computes the reference c-axis from its
+  // referenceFeature argument, which execute() supplies as groupList[j] -- the current BFS frontier
+  // feature, NOT the seed and NOT a running average. (The local is named firstFeature, but groupList
+  // grows as neighbors are accepted, so it advances past the seed.) Grouping is therefore the
+  // transitive closure of the pairwise-tolerance relation along neighbor chains.
+  //
+  //   - F1 -- F2 : 8 deg,  compared from F1's c-axis -- under 10 deg tolerance -> GROUP
+  //   - F2 -- F3 : 12 deg, compared from F2's c-axis -- over 10 deg tolerance  -> DO NOT BRIDGE
+  //
   // Expected: 2 distinct groups -> {F1, F2}, {F3}.
+  //
+  // This expectation is independent of which feature getSeed() happens to pick first (it draws
+  // randomly among unparented features). Seeding at F1, F2, or F3 all produce the same partition,
+  // because the only bridging edge (F2--F3) exceeds tolerance when evaluated from either end.
   FixtureData td = CreateScaffold(/*numFeatures=*/4);
 
   SetAvgQuat(td, 1, QuatFromPhiDeg(0.0f));
@@ -428,11 +444,119 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
-TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Regression — runs in default UseNonContiguousNeighbors=false mode", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Regression]")
+TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Running Average)", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Class1]")
 {
-  // Pins the defect-A fix: prior to the fix, execute() unconditionally returned error -99345 when
-  // UseNonContiguousNeighbors=false because the null-pointer guard on the non-contiguous list was
-  // outside the if-block that populated it. Filter could not run in its primary mode.
+  using namespace AnalyticalFixtures;
+
+  // Three features form the chain F1 -- F2 -- F3, with c-axis tilts of 0, 9, and 18 degrees.
+  // Each touching pair is within the 10 degree tolerance, so neighbor-to-neighbor grouping would
+  // merge all three. Running-average grouping accepts one adjacent pair, then compares the remaining
+  // end member with the pair's 4.5 or 13.5 degree average. That 13.5 degree difference is outside the
+  // tolerance. The seed can change which adjacent pair forms, but every seed order produces two groups.
+  FixtureData td = CreateScaffold(/*numFeatures=*/4);
+
+  SetAvgQuat(td, 1, QuatFromPhiDeg(0.0f));
+  SetAvgQuat(td, 2, QuatFromPhiDeg(9.0f));
+  SetAvgQuat(td, 3, QuatFromPhiDeg(18.0f));
+
+  SetNeighbors(td, 1, {2});
+  SetNeighbors(td, 2, {1, 3});
+  SetNeighbors(td, 3, {2});
+
+  Arguments args = BuildArgs(10.0f, /*useRunningAverage=*/true, /*randomizeParentIds=*/false, /*seed=*/42ULL);
+
+  GroupMicroTextureRegionsFilter filter;
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName)));
+  const auto& featureParentIds = td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName));
+
+  CHECK(featureParentIds[1] != featureParentIds[3]);
+  CHECK((featureParentIds[1] == featureParentIds[2] || featureParentIds[2] == featureParentIds[3]));
+  std::set<int32> distinctParents{featureParentIds[1], featureParentIds[2], featureParentIds[3]};
+  CHECK(distinctParents.size() == 2);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Mixed-Laue Rejection)", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Class1][D3]")
+{
+  using namespace AnalyticalFixtures;
+
+  // Twenty isolated touching pairs reproduce the D3 discriminator. Each pair contains one
+  // Cubic_High feature and one Hexagonal_High feature with identical c-axes. The running-average
+  // path must reject every pair because both features must resolve to Hexagonal_High. The recorded
+  // legacy production comparison accepted 19 of 20 analogous pairs; this deterministic fixture
+  // detects the same one-sided-check defect without depending on that run's clock-derived seed.
+  constexpr int32 k_NumPairs = 20;
+  FixtureData td = CreateScaffold(/*numFeatures=*/2 * k_NumPairs + 1);
+
+  for(int32 pairIdx = 0; pairIdx < k_NumPairs; pairIdx++)
+  {
+    const int32 cubicFeature = 2 * pairIdx + 1;
+    const int32 hexFeature = cubicFeature + 1;
+    (*td.featurePhases)[cubicFeature] = 2;
+    (*td.featurePhases)[hexFeature] = 1;
+    SetNeighbors(td, cubicFeature, {hexFeature});
+    SetNeighbors(td, hexFeature, {cubicFeature});
+  }
+
+  Arguments args = BuildArgs(10.0f, /*useRunningAverage=*/true, /*randomizeParentIds=*/false, /*seed=*/42ULL);
+
+  GroupMicroTextureRegionsFilter filter;
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName)));
+  const auto& featureParentIds = td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName));
+  for(int32 pairIdx = 0; pairIdx < k_NumPairs; pairIdx++)
+  {
+    const int32 cubicFeature = 2 * pairIdx + 1;
+    const int32 hexFeature = cubicFeature + 1;
+    CHECK(featureParentIds[cubicFeature] != featureParentIds[hexFeature]);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Non-contiguous neighbor grouping", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Class1]")
+{
+  using namespace AnalyticalFixtures;
+
+  // The contiguous lists are empty. F1 and F2 can group only through the optional non-contiguous
+  // lists, so the equality assertion depends on the UseNonContiguousNeighbors=true path executing.
+  FixtureData td = CreateScaffold(/*numFeatures=*/3);
+  SetAvgQuat(td, 1, QuatFromPhiDeg(0.0f));
+  SetAvgQuat(td, 2, QuatFromPhiDeg(2.0f));
+  SetNonContiguousNeighbors(td, 1, {2});
+  SetNonContiguousNeighbors(td, 2, {1});
+
+  Arguments args = BuildArgs(10.0f, /*useRunningAverage=*/false, /*randomizeParentIds=*/false, /*seed=*/42ULL);
+  args.insertOrAssign(GroupMicroTextureRegionsFilter::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(true));
+
+  GroupMicroTextureRegionsFilter filter;
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName)));
+  const auto& featureParentIds = td.ds.getDataRefAs<Int32Array>(k_FeatureDataPath.createChildPath(k_FeatureParentIdsName));
+  CHECK(featureParentIds[1] == featureParentIds[2]);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Default contiguous-only neighbor mode", "[OrientationAnalysis][GroupMicroTextureRegionsFilter][Class4]")
+{
+  // Covers the default configuration: UseNonContiguousNeighbors=false, so only the contiguous
+  // neighbor list drives the BFS walk and the non-contiguous list is neither required nor read.
+  // This is the mode most users run, and it must preflight and execute cleanly.
   using namespace AnalyticalFixtures;
 
   FixtureData td = CreateScaffold(/*numFeatures=*/3);
@@ -483,7 +607,6 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: SIMPL Backwards 
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(GroupMicroTextureRegionsFilter::k_ActiveArrayName_Key) == "TestName");
       CHECK(args.value<DataPath>(GroupMicroTextureRegionsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<float32>(GroupMicroTextureRegionsFilter::k_CAxisTolerance_Key) == 2.5f);
       CHECK(args.value<std::string>(GroupMicroTextureRegionsFilter::k_CellParentIdsArrayName_Key) == "TestName");

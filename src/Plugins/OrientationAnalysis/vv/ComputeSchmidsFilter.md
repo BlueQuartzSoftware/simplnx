@@ -1,24 +1,24 @@
 # V&V Report: ComputeSchmidsFilter
 
-|        |              |
-|--------|--------------|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `b4681855-0a3d-4237-97f2-5aec509115c4` |
 | DREAM3D 6.5.171 equivalent | `FindSchmids` (SIMPL UUID `e67ca06a-176f-58fc-a676-d6ee5553511a`) - `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindSchmids.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | Pending second-engineer PR review. |
+| Status | COMPLETE     |
+| Sign-off  | *Michael Jackson <mike.jackson@bluequartz.net>*  |
 
 ## At a glance
 
-| Aspect | Current state |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | Port with with bug fixes. See 'Dependency' section |
 | Oracle (confirmed) | Class 1 (Analytical) - **12 value-asserting fixtures**: 5 auto-path loading directions, 4 exactly-representable quaternions, and 3 override-path cases. Class 4 assertions cover the physical bound `0 <= m <= 0.5`, angle-component relationships, fixed-point `Poles`, scale invariance, and cubic-symmetry invariance. The fixtures are inline and independent of archived filter output. |
 | Code paths enumerated | 20 of 21 paths exercised - only the cancel path is untested. |
 | Tests today | 6 inline test cases (**598 assertions**, measured): 3 Class 1 / Class 4 oracle cases, 1 options-and-guards case, 1 preflight-validation case, and 1 SIMPL backwards-compatibility case. |
 | Exemplar archive | **None for this filter.** The circular `6_6_stats_test_v2.tar.gz` comparison was retired. |
-| Legacy comparison | **Run — SIMPLNX vs DREAM3D 6.5.171; independently repeated during review.** One shared six-Feature input was exercised through 10 original pipeline pairs plus 3 zero-vector validation pairs. The independent rerun confirmed **291/291 expected relationships**: auto-path floats matched the exact D1 bias factors, auto-path `SlipSystems` and `Poles` were bit-identical, override-path floats agreed within `1.2e-7` relative, and D5 was traced to equivalent symmetry tables with different ordering and tied maxima. 6 deviations: **D1** truncated cubic normalizers; **D2** legacy `-301` skipped-row sentinel; **D3** undefined library outputs; **D4** mode-dependent angle units, names, and error reporting; **D5** table-relative override index; **D6** malformed-input validation. See the deviations document for root-cause detail. |
+| Legacy comparison | **Run — SIMPLNX vs DREAM3D 6.5.171** One shared six-Feature input was exercised through 10 original pipeline pairs plus 3 zero-vector validation pairs. The independent rerun confirmed **291/291 expected relationships**: auto-path floats matched the exact D1 bias factors, auto-path `SlipSystems` and `Poles` were bit-identical, override-path floats agreed within `1.2e-7` relative, and D5 was traced to equivalent symmetry tables with different ordering and tied maxima. 6 deviations: **D1** truncated cubic normalizers; **D2** legacy `-301` skipped-row sentinel; **D3** undefined library outputs; **D4** mode-dependent angle units, names, and error reporting; **D5** table-relative override index; **D6** malformed-input validation. See the deviations document for root-cause detail. |
 | Bug flags | **Four bugs resolved in SIMPLNX or EbsdLib:** `ComputeSchmidsFilter-D1` (truncated cubic normalizers), `ComputeSchmidsFilter-D2` (legacy `-301` skipped-row initialization), `ComputeSchmidsFilter-D3` (undefined orientation-library outputs), and `ComputeSchmidsFilter-D6` (missing malformed-input validation). |
 | V&V phase | **COMPLETE** |
 

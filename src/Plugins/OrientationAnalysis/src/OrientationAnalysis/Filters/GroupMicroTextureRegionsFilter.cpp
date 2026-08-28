@@ -58,7 +58,7 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_UseRunningAverage_Key, "Group C-Axes With Running Average", "Group C-Axes With Running Average", true));
-  params.insert(std::make_unique<Float32Parameter>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 20.0f));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
 
@@ -73,7 +73,9 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
       "When true, the final parent ids assigned to each group are randomly permuted. Disabled by default so identical inputs produce identical parent id assignments.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_UseSeed_Key, "Use Seed for Random Generation",
-      "When true the user-supplied Seed value is used for randomization and the random walk through the feature ids; otherwise the seed is derived from the system clock.", false));
+      "When true the user-supplied Seed value is used for randomization and the random walk through the feature ids; otherwise the seed is derived from the system clock. Enabled by "
+      "default so that repeated runs on the same input reproduce the same grouping.",
+      true));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "_Group_MicroTexture_Regions_Seed_Value_"));
 
@@ -98,7 +100,6 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureParentIdsArrayName_Key, "Feature Parent Ids Array Name", "Output Feature Parent Ids Data Array", "Feature Parent Ids"));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewCellFeatureAttributeMatrixName_Key, "Created Microtexture Feature Attribute Matrix",
                                                              "Output Feature Attribute Matrix for Microtexture Regions", DataPath{}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active Array Name", "Output Active Array", "Active"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseNonContiguousNeighbors_Key, k_NonContiguousNeighborListArrayPath_Key, true);
@@ -128,7 +129,6 @@ IFilter::PreflightResult GroupMicroTextureRegionsFilter::preflightImpl(const Dat
   auto pNewCellFeatureAMPath = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
   auto pCellParentIdsName = filterArgs.value<std::string>(k_CellParentIdsArrayName_Key);
   auto pFeatureParentIdsName = filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key);
-  auto pActiveName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
   auto pSeedArrayName = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   PreflightResult preflightResult;
@@ -150,11 +150,6 @@ IFilter::PreflightResult GroupMicroTextureRegionsFilter::preflightImpl(const Dat
     auto createAction = std::make_unique<CreateAttributeMatrixAction>(pNewCellFeatureAMPath, ShapeType{1});
     resultOutputActions.value().appendAction(std::move(createAction));
   }
-  {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{1}, std::vector<usize>{1}, pNewCellFeatureAMPath.createChildPath(pActiveName));
-    resultOutputActions.value().appendAction(std::move(createAction));
-  }
-
   {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayName}));
     resultOutputActions.value().appendAction(std::move(createAction));
@@ -202,7 +197,6 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_ActiveArrayNameKey = "ActiveArrayName";
 constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
 constexpr StringLiteral k_CAxisToleranceKey = "CAxisTolerance";
 constexpr StringLiteral k_CellParentIdsArrayNameKey = "CellParentIdsArrayName";
@@ -225,7 +219,6 @@ Result<Arguments> GroupMicroTextureRegionsFilter::FromSIMPLJson(const nlohmann::
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_CAxisToleranceKey, k_CAxisTolerance_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellParentIdsArrayNameKey, k_CellParentIdsArrayName_Key));

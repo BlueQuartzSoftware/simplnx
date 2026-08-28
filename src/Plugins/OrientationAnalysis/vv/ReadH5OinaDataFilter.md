@@ -1,18 +1,18 @@
 # V&V Report: ReadH5OinaDataFilter
 
-| | |
-|---|---|
-| Plugin | OrientationAnalysis |
+|           |                          |
+|-----------|--------------------------|
+| Plugin    | OrientationAnalysis      |
 | SIMPLNX UUID | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | DREAM.3D 6.5.171 equivalent | **None.** |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | Pending second-engineer PR review. |
+| Status | COMPLETE |
+| Sign-off | *Michael Jackson <mike.jackson@bluequartz.net>*  2026-08-24 |
 
 ## At a glance
 
-| Aspect | Current state |
-|---|---|
+| Aspect                 | Current state            |
+|------------------------|--------------------------|
 | Algorithm Relationship | **New filter, no legacy equivalent.** `ReadH5OinaDataFilter` was added in SIMPLNX and first shipped in DREAM3D-NX 7.0.0. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariant, with Class 2 independent h5py readback.** The tests create small H5OINA inputs and compare all imported values with independently derived values. |
 | Code paths enumerated | **26 of 33 paths exercised.** The uncovered paths require file-permission changes, file replacement during execution, cancel injection, or HDF5 objects that the fixture writer cannot create. |
