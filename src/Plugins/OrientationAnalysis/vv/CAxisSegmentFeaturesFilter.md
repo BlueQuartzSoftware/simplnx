@@ -133,3 +133,5 @@ Comparison run 2026-07-22, extended with a 3-D fixture and fully rerun 2026-07-2
 - `CAxisSegmentFeaturesFilter-D3` — SIMPLNX rejects non-hexagonal participating cells (`-8363`/`-8364`); legacy silently produced meaningless output — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D4` — pre-fix SIMPLNX spuriously rejected unindexed/masked cells — **resolved** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
 - `CAxisSegmentFeaturesFilter-D5` — pre-fix SIMPLNX crashed on RectGrid input — **resolved** — see `vv/deviations/CAxisSegmentFeaturesFilter.md`
+**Fixed in DREAM3D-NX 7.4.2:** `CAxisSegmentFeaturesFilter-D1`, `CAxisSegmentFeaturesFilter-D4`-`D5`.
+

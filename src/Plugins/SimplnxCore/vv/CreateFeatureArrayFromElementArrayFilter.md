@@ -7,7 +7,7 @@
 | SIMPLNX UUID | `50e1be47-b027-4f40-8f70-1283682ee3e7` |
 | DREAM3D 6.5.171 equivalent | `CreateFeatureArrayFromElementArray` (SIMPL UUID `94438019-21bb-5b61-a7c3-66974b9a34dc`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | **COMPLETE** |
+| Status | COMPLETE |
 | Sign-off | *Nathan Young, 07-28-2026* — second engineer: *Michael Jackson &lt;mike.jackson@bluequartz.net&gt;, 08-07-2026* |
 
 ## At a glance

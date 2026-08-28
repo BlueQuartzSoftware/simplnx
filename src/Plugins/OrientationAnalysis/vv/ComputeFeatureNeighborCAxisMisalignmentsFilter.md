@@ -145,3 +145,5 @@ See `vv/deviations/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the ca
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D6`** — Hexagonal_Low support gap (surfaced 2026-06-04). Legacy 6.5.171 restricts the hex-hex phase gate to Hex_High only; SIMPLNX correctly handles both Hex_High AND Hex_Low. Not observable on the F#6 fixture (no Hex_Low features), but a real behavior gap on wurtzite-class data.
 
 D3 (default output array name change from PR #1438) is documented as a non-deviation in the same file (user-facing migration noise, not a behavioral deviation).
+**SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `ComputeFeatureNeighborCAxisMisalignmentsFilter-D1`.
+

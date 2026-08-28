@@ -6,7 +6,7 @@
 | SIMPLNX UUID | `4246245e-1011-4add-8436-0af6bed19228` |
 | DREAM3D 6.5.171 equivalent | Two separate legacy filters, consolidated: **Threshold Objects** (`MultiThresholdObjects`, SIMPL UUID `014b7300-cf36-5ede-a751-5faf9b119dae`) and **Threshold Objects (Advanced)** (`MultiThresholdObjects2`, SIMPL UUID `686d5393-2b02-5c86-b887-dd81a8ae80f2`) — both mapped to this single filter's UUID in `SimplnxCoreLegacyUUIDMapping.hpp` (see Algorithm Relationship) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-08-19 |
+| Status | COMPLETE  |
 | Sign-off | Matthew Marine (V&V author, PR #1688). Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-19 (PR #1688 review). |
 
 ## At a glance
@@ -171,4 +171,6 @@ Legacy comparison **run and complete**: independent three-way A/B (DREAM3D 6.5.1
 - `MultiThresholdObjectsFilter-D4` — converting a legacy pipeline containing a nested threshold set flattened the nesting and reset every union operator to AND, so a converted `Threshold Objects (Advanced)` pipeline computed a plain AND over all leaves (55/100, 50/100 and 4/100 tuples wrong on `AB4`–`AB6`). Pre-existing on `develop`, in `src/simplnx/Parameters/ArrayThresholdsParameter.cpp`. **Fixed by this PR**, with in-repo regression coverage (`SIMPL Nested Set Conversion`).
 - `MultiThresholdObjectsFilter-D5` — the mask output `DataType` is selectable in SIMPLNX and defaults to `uint8`; both legacy filters always created a `DataArray<bool>`. Values are identical, the array type is not. Not a bug — set **Mask Type** to `boolean` when bit-for-bit legacy parity of the output file matters.
 - `MultiThresholdObjectsFilter-D6` — custom TRUE/FALSE mask values are SIMPLNX-only; neither legacy filter has the parameter. Not a bug; the defaults (1/0) reproduce legacy behavior.
+
+**Fixed in DREAM3D-NX 7.4.2:** `MultiThresholdObjectsFilter-D1`-`D2`, `MultiThresholdObjectsFilter-D4`.
 

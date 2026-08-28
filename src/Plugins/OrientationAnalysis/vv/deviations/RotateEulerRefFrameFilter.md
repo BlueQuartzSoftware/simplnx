@@ -57,7 +57,7 @@ Entries are referenced by stable ID (`RotateEulerRefFrameFilter-D<N>`) from the 
 |---|---|
 | **ID** | `RotateEulerRefFrameFilter-N3` (non-deviation; deliberate input-validation difference) |
 | **Filter UUID** | `0458edcd-3655-4465-adc8-b036d76138b5` |
-| **Status** | active |
+| **Status** | active; SIMPLNX-side fix ships in DREAM3D-NX **7.4.2** |
 
 **Symptom:** Given rotation axis (0,0,0), 6.5.171 silently fills the entire euler array with NaN (unguarded `axis/|axis|` division). SIMPLNX fails preflight with error `-96200` and a descriptive message.
 

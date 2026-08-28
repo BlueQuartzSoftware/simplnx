@@ -96,3 +96,5 @@ No new exemplar archive was created for this V&V cycle: the Class 1 oracle is en
 - **No deviations observed.** Comparison run on 6 axis/angle cases × 12 orientations (`Code_Review/RotateEulerRefFrame/euler_input.csv`); max wrap-aware difference 7.2e-7 rad. Two non-deviations documented for future-engineer awareness in `vv/deviations/RotateEulerRefFrameFilter.md`:
   - **N1 (precision)** — float vs double degree→radian conversion; ULP-level only.
   - **N2 (precision, representation)** — 0 vs 2π canonical representation at the exact wrap boundary (observed for input (π/2, π/4, ¾π) rotated z-90°). Same physical angle.
+**SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `Non-deviation`.
+

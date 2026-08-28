@@ -68,7 +68,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D1` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved in DREAM3D-NX **7.4.2** |
 
 **Symptom:** On `develop`, an `ArrayThresholdSet` whose children mix at least one leaf `ArrayThreshold` with at least one nested `ArrayThresholdSet` (e.g. `AB2`: `{leaf: Int32 > 20, nestedSet: (Float32 < 0.60 OR Int32 == 55)}`) produced an all-false mask, regardless of input data. Quantified on the `AB2` fixture: **38 of 100 tuples wrong** (all forced false) vs. legacy `Threshold Objects (Advanced)` and the numpy oracle.
 
@@ -88,7 +88,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D2` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved in DREAM3D-NX **7.4.2** |
 
 **Symptom:** On `develop`, a leaf combined with an inverted nested set (`AB3`: `{leaf: Int32 < 80, invertedNestedSet: NOT(Int32 > 30 AND Float32 < 0.95)}`) produced incorrect mask output. Quantified on the `AB3` fixture: **51 of 100 values differ** vs. legacy `Threshold Objects (Advanced)` and the numpy oracle. `AB3`'s shape overlaps with `D1`'s mixed-leaf/nested-set trigger, so this result is not a clean isolation of the inversion defect alone — both mechanisms plausibly contribute to the discrepancy.
 
@@ -126,7 +126,7 @@ Both bug-fix claims in the PR are real, and the fix restores legacy semantics: l
 |---|---|
 | **Deviation ID** | `MultiThresholdObjectsFilter-D4` |
 | **Filter UUID** | `4246245e-1011-4add-8436-0af6bed19228` |
-| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1688 (2026-08-20) — resolved in DREAM3D-NX **7.4.2** |
 
 **Symptom:** A legacy `Threshold Objects (Advanced)` pipeline whose thresholds contain a *nested* comparison set produced the wrong mask after conversion to SIMPLNX. The nesting was discarded and every union operator was reset to AND, so `A AND (B OR C)` was evaluated as `A AND B AND C`. Quantified on the `AB4`–`AB6` fixtures against real legacy output: **55/100, 50/100, and 4/100 tuples wrong** respectively. `AB6` degenerated to an all-false mask. Filters run from natively-authored SIMPLNX pipelines were never affected — only pipelines converted from SIMPL.
 

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name         | DBSCAN                                                                                    |
 | DREAM3D 6.5.172 equivalent | `DBSCAN` (SIMPL UUID `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e`) — legacy UUID mapped in `SimplnxCoreLegacyUUIDMapping.hpp` |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                   |
-| Status                     | IN-REVIEW                                  |
-| Sign-off                   | *Nathan Young, 8/7/2026*                                                                     |
+| Status                     | COMPLETE                                 |
+| Sign-off                   | *Nathan Young, 8/7/2026*  second engineer: *Michael Jackson &lt;mike.jackson@bluequartz.net&gt;, 08-28-2026* |
 
 ## At a glance
 
