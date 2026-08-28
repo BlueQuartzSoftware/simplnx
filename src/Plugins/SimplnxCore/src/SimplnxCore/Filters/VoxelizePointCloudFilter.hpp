@@ -25,18 +25,11 @@ public:
   VoxelizePointCloudFilter& operator=(VoxelizePointCloudFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_UseExistingGeom_Key = "use_existing_geom";
-  static constexpr StringLiteral k_PointCloudGeometryPath_Key = "point_cloud_geometry_path";
-  static constexpr StringLiteral k_OutputGeometryPath_Key = "output_geometry_path";
-  static constexpr StringLiteral k_MaskName_Key = "mask_name";
-  static constexpr StringLiteral k_NewGeometryPath_Key = "output_image_geometry_path";
-
-  /**
-   * @brief Reads SIMPL json and converts it simplnx Arguments.
-   * @param json
-   * @return Result<Arguments>
-   */
-  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+  static constexpr StringLiteral k_UseExistingGeometry_Key = "use_existing_geometry";
+  static constexpr StringLiteral k_InputPointCloudGeometryPath_Key = "input_point_cloud_geometry_path";
+  static constexpr StringLiteral k_SelectedGridGeometryPath_Key = "input_grid_geometry_path";
+  static constexpr StringLiteral k_MaskArrayName_Key = "mask_array_name";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -120,4 +113,3 @@ protected:
 } // namespace nx::core
 
 SIMPLNX_DEF_FILTER_TRAITS(nx::core, VoxelizePointCloudFilter, "10140e3c-84d4-43fc-889e-bbdd69b0c258");
-/* LEGACY UUID FOR THIS FILTER 52b2918a-4fb5-57aa-97d4-ccc084b89572 */
