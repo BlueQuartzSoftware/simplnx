@@ -153,9 +153,9 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(maskPath));
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
 
-    REQUIRE(mask.getNumberOfTuples() == 1331u);          // 11*11*11
+    REQUIRE(mask.getNumberOfTuples() == 1331u);             // 11*11*11
     REQUIRE(mask.getTupleShape() == ShapeType{11, 11, 11}); // {z, y, x} row-major
-    REQUIRE(CountMarked(dataStructure, maskPath) == 4u); // all 4 points included
+    REQUIRE(CountMarked(dataStructure, maskPath) == 4u);    // all 4 points included
 
     REQUIRE(mask[0] == 1u);    // (0,0,0)
     REQUIRE(mask[519] == 1u);  // (2,3,4)
@@ -713,9 +713,15 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: TriangleGeom source", "[Simpln
 
     auto* triGeom = TriangleGeom::Create(dataStructure, k_PointCloudName);
     auto* verts = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "SharedVertexList", {3}, {3}, triGeom->getId());
-    (*verts)[0] = 0.5f; (*verts)[1] = 0.5f; (*verts)[2] = 0.5f;
-    (*verts)[3] = 2.5f; (*verts)[4] = 1.5f; (*verts)[5] = 3.5f;
-    (*verts)[6] = 4.5f; (*verts)[7] = 4.5f; (*verts)[8] = 4.5f;
+    (*verts)[0] = 0.5f;
+    (*verts)[1] = 0.5f;
+    (*verts)[2] = 0.5f;
+    (*verts)[3] = 2.5f;
+    (*verts)[4] = 1.5f;
+    (*verts)[5] = 3.5f;
+    (*verts)[6] = 4.5f;
+    (*verts)[7] = 4.5f;
+    (*verts)[8] = 4.5f;
     triGeom->setVertices(*verts);
 
     const DataPath k_MaskPath = k_GridGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
@@ -833,9 +839,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Preflight validation", "[Simpl
     auto* geom = RectGridGeom::Create(dataStructure, k_GridGeomName);
     geom->setDimensions({2, 2, 2});
 
-    auto makeArr = [&](const std::string& name, usize n) {
-      return Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, name, {n}, {1}, geom->getId());
-    };
+    auto makeArr = [&](const std::string& name, usize n) { return Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, name, {n}, {1}, geom->getId()); };
     geom->setXBoundsId(makeArr("xBounds", 2)->getId()); // wrong: 2 instead of 3
     geom->setYBoundsId(makeArr("yBounds", 3)->getId());
     geom->setZBoundsId(makeArr("zBounds", 3)->getId());
