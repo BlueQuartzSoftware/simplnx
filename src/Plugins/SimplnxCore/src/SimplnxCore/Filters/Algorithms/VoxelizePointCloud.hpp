@@ -8,13 +8,17 @@
 
 namespace nx::core
 {
+/**
+ * @struct VoxelizePointCloudInputValues
+ * @brief Input parameters for the VoxelizePointCloud algorithm.
+ */
 struct SIMPLNXCORE_EXPORT VoxelizePointCloudInputValues
 {
-  bool UseExistingGeom;
-  DataPath PointCloudGeometryPath;
-  DataPath OutputGeometryPath;
-  std::string MaskName;
-  DataPath NewGeometryPath;
+  bool UseExistingGeom;          ///< If true, map points into an existing grid geometry; if false, auto-size a new ImageGeom around the point cloud.
+  DataPath PointCloudGeometryPath; ///< Path to the input node-based geometry whose vertex positions are voxelized.
+  DataPath OutputGeometryPath;   ///< Path to the existing destination grid geometry (Image or RectGrid). Used only when UseExistingGeom is true.
+  std::string MaskName;          ///< Name of the output UInt8 voxel mask array created inside the destination geometry's cell Attribute Matrix.
+  DataPath NewGeometryPath;      ///< Path at which the new auto-sized ImageGeom is created. Used only when UseExistingGeom is false.
 };
 
 /**
@@ -33,9 +37,11 @@ public:
   VoxelizePointCloud& operator=(const VoxelizePointCloud&) = delete;
   VoxelizePointCloud& operator=(VoxelizePointCloud&&) noexcept = delete;
 
+  /**
+   * @brief Executes the voxelization algorithm.
+   * @return A Result<> containing any errors or warnings produced during execution.
+   */
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

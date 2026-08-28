@@ -12,6 +12,8 @@ Additionally, the user may opt to use a mask; points for which the mask is false
 
 The per-vertex voxel indices produced by this filter are commonly used as the input to [Interpolate Point Cloud to Regular Grid](InterpolatePointCloudToRegularGridFilter.md), which transfers point-cloud attribute values onto the regular grid.
 
+**[Voxelize Point Cloud](VoxelizePointCloudFilter.md)** answers the inverse question: *for each voxel, does any point fall in it?* It writes a **uint8** occupancy flag per voxel into the cell Attribute Matrix, leaving the point cloud unchanged. Use that filter when you need a per-voxel occupancy mask; use this filter when you need per-point grid coordinates.
+
 ### Sampling Grid Type
 
 The *Sampling Grid Type* parameter controls how the target grid is defined:
