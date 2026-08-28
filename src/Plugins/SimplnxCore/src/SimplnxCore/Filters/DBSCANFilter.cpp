@@ -77,8 +77,11 @@ Parameters DBSCANFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32Parameter>(
       k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried (i.e., the maximum acceptable distance between points to be considered `connected`)", 0.0001f));
-  params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points",
-                                                 "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
+  params.insert(std::make_unique<Int32Parameter>(
+      k_MinPoints_Key, "Minimum Points",
+      "The minimum number of points that must fall inside a single grid cell (side length = Epsilon / sqrt(Dimensions)) for that cell to seed a cluster. Note this is a per-grid-cell occupancy "
+      "threshold, not a count of neighbors within Epsilon of an individual point. See the 'Known Differences from Traditional DBSCAN' section of the documentation",
+      2));
   params.insert(
       std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
                                          ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
@@ -90,7 +93,7 @@ Parameters DBSCANFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes(),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, GetAllNumericTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}, {3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -133,13 +136,13 @@ IFilter::UniquePointer DBSCANFilter::clone() const
 IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                      const ExecutionContext& executionContext) const
 {
-  auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
-  auto pEpsilonValue = filterArgs.value<float32>(k_Epsilon_Key);
-  auto pMinPointsValue = filterArgs.value<int32>(k_MinPoints_Key);
-  auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
-  auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
+  const auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
+  const auto pEpsilonValue = filterArgs.value<float32>(k_Epsilon_Key);
+  const auto pMinPointsValue = filterArgs.value<int32>(k_MinPoints_Key);
+  const auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  const auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  const auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
+  const auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
 
   if(pEpsilonValue <= 0.0f)
   {
@@ -150,17 +153,11 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
     return MakePreflightErrorResult(-7585, fmt::format("Minimum Points value {} must be greater than 0.", pMinPointsValue));
   }
 
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
+  Result<OutputActions> resultOutputActions;
 
-  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArray == nullptr)
+  const auto& clusterArray = dataStructure.getDataRefAs<IDataArray>(pSelectedArrayPathValue);
   {
-    return MakePreflightErrorResult(-7586, "Array to Cluster MUST be a valid DataPath.");
-  }
-
-  {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue),
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray.getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue),
                                                             CreateArrayAction::k_DefaultDataFormat, "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
@@ -169,7 +166,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray.getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
       resultOutputActions.value().appendAction(std::move(createAction));
     }
 
@@ -190,7 +187,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -225,7 +222,7 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.FeatureIdsArrayPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.FeatureAM = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   inputValues.ParseOrder = filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key);
-  inputValues.Seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  inputValues.Seed = seed;
 
   return DBSCAN(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

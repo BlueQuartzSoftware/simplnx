@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class DBSCANFilter
- * @brief This filter will ....
+ * @brief Clusters 2D or 3D point data using Grid-based DBSCAN (GDCF), grouping points by spatial density into labeled clusters with noise points assigned cluster ID 0.
  */
 class SIMPLNXCORE_EXPORT DBSCANFilter : public IFilter
 {

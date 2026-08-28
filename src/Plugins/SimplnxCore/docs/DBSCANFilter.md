@@ -39,7 +39,6 @@ An advantage of DBSCAN over other clustering approaches (e.g., [Compute K Means]
 All the available examples are 2D as they come from [Sci-Kit Learn Toy Datasets](https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html).
 
 Keeping in mind 0 is unlabeled, here is a table of the results:
-*Note: at the time of image capture a bug was showing the yellow as NaNs, but they were labeled with 3 in the cluster array.*
 
 | name            | Image                                                                          |
 |-----------------|--------------------------------------------------------------------------------|
@@ -96,6 +95,17 @@ Here are some additional visualization tips that make it easier to analyze the d
 - For datasets with less than 32 clusters, in the points view settings window, enabling `Interpret Values as Categories` is a great color scheme that shows clear distinctions between clusters
 - In the points view settings window, enabling `Color Legend` under `Annotations` helps distinguish clusters and process order.
 
+### Known Differences from Traditional DBSCAN
+
+This filter implements GDCF (Grid-based DBSCAN), which differs from the classic point-by-point DBSCAN algorithm in one important way: **core-object definition is at the grid-cell level, not the point level**.
+
+- **Traditional DBSCAN**: a data point `p` is a *core point* if its ε-ball contains ≥ `Minimum Points` data points (inclusive of `p` itself).
+- **This filter (GDCF)**: a *core grid* is a grid cell (side length = `Epsilon / sqrt(Dimensions)`) that contains ≥ `Minimum Points` data points.
+
+The consequence is that **very sparse micro-clusters may be classified as noise** in this filter even though traditional DBSCAN would find them. Specifically, if a small group of points individually have neighbors within ε but those neighbors span two adjacent grid cells (each with fewer than `Minimum Points` points), neither cell qualifies as a core grid. Traditional DBSCAN would still cluster these points. GDCF only recovers them if one of those cells is density-reachable from some other core grid, in which case they are absorbed as border points of that existing cluster; an isolated group with no core grid nearby is labeled noise instead of forming its own cluster.
+
+For dense, well-clustered data this difference is imperceptible. For data with significant variation in local density — particularly small clusters of 2–4 points embedded in otherwise sparse regions — results may differ from traditional DBSCAN implementations (e.g., scikit-learn's `DBSCAN`). In such cases, lowering `Minimum Points` (e.g., from 3 to 2 or 1) or increasing `Epsilon` slightly may recover the expected clusters.
+
 ### Hyperparameter Tuning
 
 This implementation of DBSCAN uses a grid approach to greatly increase the speed in which it is processed. This comes with a few caveats compared to the traditional algorithm, but in many ways it is easier to comprehend the effect of hyperparameter on the output. In this section we will be discussing just that, as well as how to optimize and quickly identify good initial guesses.
@@ -149,6 +159,12 @@ Additionally, oddities such as duplicates in the dataset or non-standardized dat
 
 **If your algorithm is excessively slow.**
 This can obviously be caused by large datasets, but it can be mitigated with some changes. Firstly, the "Parse Order" parameter can result in immediate speedups of 60% or more on a majority of datasets by switching to `Low Density First`. The idea being that lower density regions are cheaper for merge checks, so other denser core grids can be picked off early if they are close to sparser core grids, meaning that the expensive grids have less of a chance of running against one another. Another change is tightening the voxels grids by lowering the `Epsilon` and reducing the `Minimum Points` slightly. For ideal performance, in the vast majority of cases, you want to reach the lowest value for both of these that still produces expected clustering. This is because the most costly part is the distance check most of the time. Logically, grids with fewer points run less distance checks.
+
+**If your algorithm is consuming excessive memory.**
+Memory usage scales with the total number of grid cells — occupied and empty alike — proportional to `(bounding box per-axis range / cell side length)^D`, where cell side length is `Epsilon / sqrt(D)`. For 3D data this grows cubically. Two common causes:
+
+- **Small `Epsilon`**: reduces cell size, increasing total cell count across the bounding box.
+- **Extreme outlier points**: a single unmasked outlier far from the main dataset inflates the bounding box in one or more axes, multiplying total cell count. Consider masking or removing outliers before running the filter.
 
 **If your algorithm spends more time in "cluster expansion pass:" than "Identifying Qualifying Independent Clusters".** See output window.
 There are many datasets that this is normal in such as `No Structure` from **Examples**. This typically happens when `Minimum Points` is too high. This results in too few Core grids being identified. Since few clusters are able to be formed, most of the time is spent in iterative loops expanding the clusters rather than just performing the early merges in the Core grid step.
