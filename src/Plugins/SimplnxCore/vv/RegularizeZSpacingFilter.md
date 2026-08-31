@@ -6,8 +6,8 @@
 | SIMPLNX UUID | `d6599986-1932-4bfc-993d-71eafefe6db0` |
 | DREAM3D 6.5.171 equivalent | `RegularizeZSpacing` — `Source/Plugins/Sampling/SamplingFilters/RegularizeZSpacing.{h,cpp}` (legacy UUID `bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *Michael Jackson <mike.jackson@bluequartz.net> (port + V&V cycle, 2026-07-08); second-engineer oracle review pending* |
+| Status | COMPLETE |
+| Sign-off | *Michael Jackson <mike.jackson@bluequartz.net> (port + V&V cycle, 2026-07-08); |
 
 ## At a glance
 

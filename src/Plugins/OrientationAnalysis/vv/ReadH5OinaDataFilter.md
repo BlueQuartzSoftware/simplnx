@@ -169,6 +169,8 @@ DREAM.3D 6.5.171 has no H5OINA importer. Therefore, no legacy comparison is poss
 
 The deviations document compares this verified version with `ReadH5OinaDataFilter` as shipped in DREAM3D-NX 7.0.0 through 7.4.1. See `vv/deviations/ReadH5OinaDataFilter.md` for the root cause, affected users, and recommendation for each defect.
 
+**Fixed in DREAM3D-NX 7.4.2:** `ReadH5OinaDataFilter-D1`-`D13`.
+
 | Deviation | Observed difference |
 |---|---|
 | `ReadH5OinaDataFilter-D1` | Hexagonal `phi2` alignment uses 30 degrees instead of 30 radians. |

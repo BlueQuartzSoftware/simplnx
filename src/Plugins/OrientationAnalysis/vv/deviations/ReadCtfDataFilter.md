@@ -76,7 +76,7 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 |---|---|
 | **Deviation ID** | `ReadCtfDataFilter-D4` |
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
-| **Status** | retired 2026-07-24 (resolved during this V&V pass — recorded for the migration guide) |
+| **Status** | retired 2026-07-24 (resolved during this V&V pass — recorded for the migration guide) — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** Before this V&V pass, SIMPLNX imported only slice 0 of a multi-slice (3D) `.ctf` file (`ZCells > 1`) — silently — while 6.5.171 imported the full 3D volume.
 

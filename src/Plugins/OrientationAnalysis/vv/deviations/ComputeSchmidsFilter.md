@@ -72,7 +72,7 @@ SIMPLNX created all five arrays with `CreateArrayAction`'s default empty fill va
 |---|---|
 | **Deviation ID** | `ComputeSchmidsFilter-D3` |
 | **Filter UUID** | `b4681855-0a3d-4237-97f2-5aec509115c4` |
-| **Status** | active |
+| **Status** | resolved in EbsdLib 3.1.1 (pinned `>= 3.1.2` in `vcpkg.json`) — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** Two classes of undefined output from the orientation library's Schmid-factor routines, present in both 6.5.171's `OrientationLib` and EbsdLib through 3.1.0.
 

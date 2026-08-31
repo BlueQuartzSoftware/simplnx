@@ -131,3 +131,5 @@ Two deviations documented:
 
 - **Symptom:** Per-neighbor `MisorientationList` values and per-feature `AvgMisorientations` values differ between SIMPLNX (EbsdLib 2.4.1+) and DREAM3D 6.5.171 on real EBSD data containing cubic-phase features with grain-pair boundaries near cubic symmetry operators. On the V&V data fixtures, no observable deviation.
 - **Root cause:** **Precision** — propagation of the EbsdLib 2.4.1 `CubicOps::calculateMisorientationInternal` precision improvement, characterized in `vv/deviations/BadDataNeighborOrientationCheckFilter.md`. See `vv/deviations/ComputeFeatureNeighborMisorientationsFilter.md` for the per-filter context.
+**SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `ComputeFeatureNeighborMisorientationsFilter-D1`.
+

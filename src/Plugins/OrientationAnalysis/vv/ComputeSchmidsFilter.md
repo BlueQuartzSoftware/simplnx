@@ -180,6 +180,8 @@ The existing test archive contained output from an earlier run of this filter. I
 
 See `vv/deviations/ComputeSchmidsFilter.md` for the root cause, affected users, and recommendation for each deviation.
 
+**Fixed in DREAM3D-NX 7.4.2:** `ComputeSchmidsFilter-D3`.
+
 | Deviation | Observed difference |
 |---|---|
 | `ComputeSchmidsFilter-D1` | DREAM.3D 6.5.171 and DREAM3D-NX through v7.4.1 used truncated cubic normalizers. The calculated Schmid factor and angle components were too large. |

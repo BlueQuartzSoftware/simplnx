@@ -18,7 +18,7 @@ The gap recorded in the previous revision of this file ("no legacy comparison ha
 |---|---|
 | **Deviation ID** | `ErodeDilateBadDataFilter-D1` (formerly cited as `-B1`) |
 | **Filter UUID** | `7f2f7378-580e-4337-8c04-a29e7883db0b` |
-| **Status** | active in all releases through **7.4.1**; resolved in PR #1687 (2026-08-18) — resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in all releases through **7.4.1**; resolved in PR #1687 (2026-08-18) — resolved in DREAM3D-NX **7.4.2**|
 
 **Symptom:** In SIMPLNX releases prior to PR #1687, the *X Direction*, *Y Direction*, and *Z Direction* parameters had **no effect on the output**. They were parsed correctly from filter args into `ErodeDilateBadDataInputValues` (`ErodeDilateBadDataFilter.cpp:151-153`), but every face neighbor remained eligible — subject only to the geometry boundary — regardless of the flags. Disabling a direction silently produced the all-directions-on result. DREAM3D 6.5.171 honors the flags correctly, so any run with fewer than all three directions enabled diverges from legacy. This is also what produced the previous V&V pass's observation that "all 7 direction-combination fixtures encode byte-identical expected output": the fixture was not under-discriminating, the algorithm was ignoring direction entirely.
 

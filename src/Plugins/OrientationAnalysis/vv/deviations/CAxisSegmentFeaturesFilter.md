@@ -12,7 +12,7 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D1` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active in **DREAM3D-NX 7.4.1** only; **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in **DREAM3D-NX 7.4.1** only; Fixed in **DREAM3D-NX 7.4.2** |
 
 **Symptom:** PR #1466 (2025-11-14) introduced this, so **7.4.1 (2026-03-23) is the only affected release** — 7.4.0 (2025-10-27) and earlier predate it. In affected builds the filter could report one extra (empty) feature, shift every FeatureId up by one, or grow a feature from a masked-out / unindexed voxel — whenever voxel 0 of the image was not a legitimate seed. 6.5.171 never exhibits this.
 
@@ -66,7 +66,7 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D4` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active in all releases through **7.4.1**; resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`) |
+| **Status** | active in all releases through **7.4.1**; resolved in DREAM3D-NX **7.4.2** |
 
 **Symptom:** In every released version up to and including 7.4.1, SIMPLNX rejected (error `-8363`) any dataset containing unindexed (phase 0) cells — whose `CrystalStructures[0]` entry is the conventional `999` sentinel — or masked-out non-hexagonal cells; 6.5.171 processes such datasets normally.
 
@@ -84,7 +84,7 @@ Entries are referenced by stable ID (`CAxisSegmentFeaturesFilter-D<N>`) from the
 |---|---|
 | **Deviation ID** | `CAxisSegmentFeaturesFilter-D5` |
 | **Filter UUID** | `9fe07e17-aef1-4bf1-834c-d3a73dafc27d` |
-| **Status** | active in all releases through **7.4.1**; resolved after DREAM3D-NX **7.4.1** (2026-03-23); **no released version contains the fix** (see `docs/dream3d_nx_release_dates.md`). No legacy equivalent behavior |
+| **Status** | active in all releases through **7.4.1**; resolved in DREAM3D-NX **7.4.2** |
 
 **Symptom:** SIMPLNX accepts a RectGrid geometry as input (6.5.171 accepts only Image geometry); in every released version up to and including 7.4.1, selecting a RectGrid geometry passed preflight and then crashed at execute.
 

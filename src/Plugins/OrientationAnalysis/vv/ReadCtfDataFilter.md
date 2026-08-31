@@ -152,3 +152,5 @@ Five independent reviews were run after the deliverables were drafted; all findi
 - `ReadCtfDataFilter-D2` — Consequence of D1: legacy applies the hexagonal +30° φ2 shift to unindexed points; SIMPLNX never does. Exactly 0.5235988 rad on affected values. Trust SIMPLNX.
 - `ReadCtfDataFilter-D3` — Malformed-input behavior: legacy segfaults (missing column; empty phases — both demonstrated, exit 139) or silently emits heap-dependent output (out-of-range phase value — demonstrated, exit 0); SIMPLNX rejects with −19600…−19604. Trust SIMPLNX.
 - `ReadCtfDataFilter-D4` — *(retired)* Multi-slice `.ctf` silently truncated to slice 0 by earlier DREAM3D-NX releases; resolved, now bit-identical to legacy 3D output. Trust SIMPLNX (current).
+**Fixed in DREAM3D-NX 7.4.2:** `ReadCtfDataFilter-D4`.
+

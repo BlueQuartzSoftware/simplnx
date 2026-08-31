@@ -16,7 +16,7 @@ The legacy A/B comparison was performed by **source inspection** rather than emp
 |------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D1`                                                                                     |
 | **Filter UUID**  | `0b68fe25-b5ef-4805-ae32-20acb8d4e823`                                                                                               |
-| **Status**       | active (SIMPLNX fixed 2026-06-02; legacy 6.5.171 still has the bug)                                                                  |
+| **Status**       | active (SIMPLNX fixed 2026-06-02; legacy 6.5.171 still has the bug); SIMPLNX-side fix ships in DREAM3D-NX **7.4.2**                                                                  |
 
 **Symptom:** Per-feature `AvgMisorientations` (output of `ComputeAvgMisors=true` / legacy `FindAvgMisors=true`) differ between SIMPLNX (post-2026-06-02 fix) and DREAM3D 6.5.171 on any dataset where features have mixed-phase neighbor lists. The legacy result depends on the *order* in which neighbors appear in the per-feature `NeighborList`: if the last-iterated neighbor is a phase match, the divisor used is the full neighbor-list length (incorrect); if the last neighbor is a phase mismatch, the divisor is decremented by 1 from the full length (the per-mismatch decrement at line 90 happens to be the last write to `tempMisoList`). The legacy result is therefore correct in some cases by accident and wrong by up to `(N-K) / N` of the true value in others, where N is the neighbor count and K is the number of phase-matched neighbors.
 

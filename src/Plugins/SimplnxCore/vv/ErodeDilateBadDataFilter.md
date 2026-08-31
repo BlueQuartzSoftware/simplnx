@@ -7,8 +7,8 @@
 | SIMPLNX Human Name          | Erode/Dilate Bad Data                                                    |
 | DREAM3D 6.5.171 equivalent  | `ErodeDilateBadData` — SIMPL UUID `3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254` |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | READY FOR REVIEW    |
-| Sign-off                    | *pending*           |
+| Status                     | COMPLETE                                 |
+| Sign-off                   | *Matthew Marine, 8/7/2026*  second engineer: *Michael Jackson &lt;mike.jackson@bluequartz.net&gt;, 08-17-2026* |
 
 ## At a glance
 
@@ -140,3 +140,5 @@ One SIMPLNX-side defect, since resolved:
 - `ErodeDilateBadDataFilter-D1` — the `XDirOn`/`YDirOn`/`ZDirOn` parameters had no effect on which face neighbors participated — see [`deviations/ErodeDilateBadDataFilter.md`](deviations/ErodeDilateBadDataFilter.md)
 
 One hypothesis was investigated and disproven (Dilate tie-break order: legacy matches SIMPLNX's original last-write-wins behavior), and is recorded in the same file as a confirmed non-deviation so it is not relitigated.
+**Fixed in DREAM3D-NX 7.4.2:** `ErodeDilateBadDataFilter-D1`.
+
