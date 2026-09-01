@@ -54,6 +54,10 @@ namespace fs = std::filesystem;
 
 namespace
 {
+/**
+ * @namespace Constants
+ * @brief Provides temporary DREAM3D file names for this test translation unit.
+ */
 namespace Constants
 {
 const fs::path k_DataDir = "test/data";
@@ -113,8 +117,16 @@ const SizeVec3 k_ImageShape{1, 2, 3};
 constexpr int16 k_ListCount = 6;
 } // namespace Constants
 
+/**
+ * @var m_DataMutex
+ * @brief Serializes tests that use the same temporary DREAM3D file paths.
+ */
 std::mutex m_DataMutex;
 
+/**
+ * @namespace DataNames
+ * @brief Provides DataStructure and pipeline names for DREAM3D I/O tests.
+ */
 namespace DataNames
 {
 constexpr StringLiteral k_Group1Name = "Top-Level";
@@ -134,9 +146,14 @@ const FilterHandle k_CreateDataArrayHandle(Uuid::FromString("67041f9b-bdc6-4122-
 const FilterHandle k_ExportD3DHandle(Uuid::FromString("b3a95784-2ced-41ec-8d3d-0242ac130003").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
 const FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
 
+/**
+ * @brief Returns the binary test-output directory.
+ * @param app Application that establishes the test runtime.
+ * @return Binary test-output directory.
+ */
 fs::path GetDataDir(const Application& app)
 {
-  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
+  return fs::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetTestFilePath(const fs::path& filename)
@@ -182,6 +199,11 @@ fs::path GetXdmfPath(const fs::path& dream3dPath)
   return filePath;
 }
 
+/**
+ * @brief Returns the first single-export file path.
+ * @return Path in the binary test-output directory.
+ * @throws std::runtime_error If no Application instance exists.
+ */
 fs::path GetExportDataPath()
 {
   auto app = Application::Instance();
@@ -193,6 +215,11 @@ fs::path GetExportDataPath()
   return GetDataDir(*app) / Constants::k_ExportFilename1;
 }
 
+/**
+ * @brief Returns the re-exported single-file path.
+ * @return Path in the binary test-output directory.
+ * @throws std::runtime_error If no Application instance exists.
+ */
 fs::path GetReExportDataPath()
 {
   auto app = Application::Instance();
@@ -204,6 +231,11 @@ fs::path GetReExportDataPath()
   return GetDataDir(*app) / Constants::k_ExportFilename2;
 }
 
+/**
+ * @brief Returns the first multi-import source file path.
+ * @return Path in the binary test-output directory.
+ * @throws std::runtime_error If no Application instance exists.
+ */
 fs::path GetMultiExportDataPath1()
 {
   auto app = Application::Instance();
@@ -215,6 +247,11 @@ fs::path GetMultiExportDataPath1()
   return GetDataDir(*app) / Constants::k_MultiExportFilename1;
 }
 
+/**
+ * @brief Returns the second multi-import source file path.
+ * @return Path in the binary test-output directory.
+ * @throws std::runtime_error If no Application instance exists.
+ */
 fs::path GetMultiExportDataPath2()
 {
   auto app = Application::Instance();
@@ -226,6 +263,11 @@ fs::path GetMultiExportDataPath2()
   return GetDataDir(*app) / Constants::k_MultiExportFilename2;
 }
 
+/**
+ * @brief Returns the combined multi-import re-export path.
+ * @return Path in the binary test-output directory.
+ * @throws std::runtime_error If no Application instance exists.
+ */
 fs::path GetReMultiExportDataPath()
 {
   auto app = Application::Instance();
@@ -513,9 +555,8 @@ DataStructure CreateTestDataStructure()
   ShapeType tupleShape = {10};
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
 
-  Result<> arrayCreationResults =
-      ArrayCreationUtilities::CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}),
-                                                IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1");
+  Result<> arrayCreationResults = ArrayCreationUtilities::CreateArray<int8>(
+      dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}), IDataAction::Mode::Execute, "1");
 
   // Create Arrays and DataGroup
   auto* dataGroup = DataGroup::Create(dataStructure, Constants::k_DataContainer);
@@ -640,6 +681,10 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Creates a pipeline that builds test data and exports one DREAM3D file.
+ * @return The configured export pipeline.
+ */
 Pipeline CreateExportPipeline()
 {
   Pipeline pipeline("Export DREAM3D Pipeline 1");
@@ -669,6 +714,10 @@ Pipeline CreateExportPipeline()
   return pipeline;
 }
 
+/**
+ * @brief Creates a pipeline that imports selected paths and re-exports them.
+ * @return The configured import and re-export pipeline.
+ */
 Pipeline CreateImportPipeline()
 {
   Pipeline pipeline("Import DREAM3D Pipeline");
@@ -689,9 +738,12 @@ Pipeline CreateImportPipeline()
   return pipeline;
 }
 
+/**
+ * @brief Creates two DREAM3D files whose top-level groups have different names.
+ */
 void CreateMultiExportFiles()
 {
-  // Pipeline 1
+  // The first file contains Top-Level.
   {
     Pipeline pipeline("Export Multi DREAM3D Pipeline 1");
     {
@@ -707,7 +759,7 @@ void CreateMultiExportFiles()
     }
     REQUIRE(pipeline.execute());
   }
-  // Pipeline 2
+  // The second file contains Second-Level.
   {
     Pipeline pipeline("Export Multi DREAM3D Pipeline 2");
     {
@@ -725,6 +777,10 @@ void CreateMultiExportFiles()
   }
 }
 
+/**
+ * @brief Creates a pipeline that combines selected groups from two DREAM3D files.
+ * @return The configured multi-import and re-export pipeline.
+ */
 Pipeline CreateMultiImportPipeline()
 {
   Pipeline pipeline("Import DREAM3D Pipeline");
@@ -749,19 +805,26 @@ Pipeline CreateMultiImportPipeline()
   return pipeline;
 }
 
+/**
+ * @brief Creates matching pipeline and DataStructure content for direct writer tests.
+ * @return File data with the standard export pipeline and test DataStructure.
+ */
 DREAM3D::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
 }
 
-//------------------------------------------------------------------------------
-// Helpers below build a small, valid instance of every Geometry type. Each accepts an
-// optional parentId so the same geometry can be created at the top level or nested inside
-// a DataGroup. They exercise the read/write code paths covered by issue #1642.
+// Each geometry builder accepts an optional parent identifier.
+// This contract lets round-trip tests compare top-level and nested ownership paths.
 
 using MeshIndexType = IGeometry::MeshIndexType;
 
-// Creates a 4-vertex coordinate array as a child of the geometry and wires it in.
+/**
+ * @brief Creates a four-vertex array and attaches it to a node geometry.
+ * @param dataStructure Receives the array and AttributeMatrix.
+ * @param geometry Geometry that owns the new objects.
+ * @return The created vertex array.
+ */
 Float32Array* CreateVertexList(DataStructure& dataStructure, INodeGeometry0D& geometry)
 {
   auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, geometry.getId());
@@ -775,6 +838,13 @@ Float32Array* CreateVertexList(DataStructure& dataStructure, INodeGeometry0D& ge
   return vertices;
 }
 
+/**
+ * @brief Creates a valid VertexGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 VertexGeom* CreateVertexGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* vertexGeom = VertexGeom::Create(dataStructure, geomName, parentId);
@@ -782,6 +852,13 @@ VertexGeom* CreateVertexGeometry(DataStructure& dataStructure, const std::string
   return vertexGeom;
 }
 
+/**
+ * @brief Creates a valid EdgeGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 EdgeGeom* CreateEdgeGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* edgeGeom = EdgeGeom::Create(dataStructure, geomName, parentId);
@@ -798,6 +875,13 @@ EdgeGeom* CreateEdgeGeometry(DataStructure& dataStructure, const std::string& ge
   return edgeGeom;
 }
 
+/**
+ * @brief Creates a valid TriangleGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 TriangleGeom* CreateTriangleGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* triangleGeom = TriangleGeom::Create(dataStructure, geomName, parentId);
@@ -813,6 +897,13 @@ TriangleGeom* CreateTriangleGeometry(DataStructure& dataStructure, const std::st
   return triangleGeom;
 }
 
+/**
+ * @brief Creates a valid QuadGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 QuadGeom* CreateQuadGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* quadGeom = QuadGeom::Create(dataStructure, geomName, parentId);
@@ -829,6 +920,13 @@ QuadGeom* CreateQuadGeometry(DataStructure& dataStructure, const std::string& ge
   return quadGeom;
 }
 
+/**
+ * @brief Creates a valid TetrahedralGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 TetrahedralGeom* CreateTetrahedralGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* tetGeom = TetrahedralGeom::Create(dataStructure, geomName, parentId);
@@ -845,10 +943,17 @@ TetrahedralGeom* CreateTetrahedralGeometry(DataStructure& dataStructure, const s
   return tetGeom;
 }
 
+/**
+ * @brief Creates a valid HexahedralGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* hexGeom = HexahedralGeom::Create(dataStructure, geomName, parentId);
-  // A hexahedron references 8 vertices, so create 8 here instead of the default 4.
+  // One hexahedron requires eight vertices instead of the four-vertex helper fixture.
   auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {8}, {3}, hexGeom->getId());
   for(usize i = 0; i < vertices->getSize(); i++)
   {
@@ -869,6 +974,13 @@ HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std
   return hexGeom;
 }
 
+/**
+ * @brief Creates a valid ImageGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* imageGeom = ImageGeom::Create(dataStructure, geomName, parentId);
@@ -880,6 +992,13 @@ ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& 
   return imageGeom;
 }
 
+/**
+ * @brief Creates a valid RectGridGeom for round-trip tests.
+ * @param dataStructure Receives the geometry.
+ * @param geomName Geometry name.
+ * @param parentId Optional parent DataObject identifier.
+ * @return The created geometry.
+ */
 RectGridGeom* CreateRectGridGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* rectGridGeom = RectGridGeom::Create(dataStructure, geomName, parentId);
@@ -900,8 +1019,10 @@ RectGridGeom* CreateRectGridGeometry(DataStructure& dataStructure, const std::st
   return rectGridGeom;
 }
 
-// A single named geometry-builder + a type-checked verifier used to drive the parameterized
-// nested-geometry round-trip test below.
+/**
+ * @struct GeometryTestCase
+ * @brief Couples one named geometry builder with its concrete-type verifier.
+ */
 struct GeometryTestCase
 {
   std::string typeName;
@@ -909,6 +1030,13 @@ struct GeometryTestCase
   std::function<void(const DataStructure&, const DataPath&)> requireType;
 };
 
+/**
+ * @brief Creates a type-erased geometry round-trip test case.
+ * @tparam GeomType Specifies the expected concrete geometry type.
+ * @param typeName Geometry type label and generated object name.
+ * @param builder Creates the geometry at a selected parent.
+ * @return A test case with build and concrete-type verification callables.
+ */
 template <typename GeomType>
 GeometryTestCase MakeGeometryTestCase(std::string typeName, std::function<GeomType*(DataStructure&, const std::string&, const std::optional<DataObject::IdType>&)> builder)
 {
@@ -1152,13 +1280,16 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     }
   }
 
-  // Read .dream3d file
+  // Read the same file and validate both stored sections.
   {
     auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
-    auto fileResult = DREAM3D::ReadFile(fileReader);
-    SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+    auto pipelineResult = DREAM3D::ImportPipelineFromFile(fileReader);
+    SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+    auto pipeline = std::move(pipelineResult.value());
 
-    auto [pipeline, dataStructure] = fileResult.value();
+    auto dsResult = DREAM3D::LoadDataStructure(GetIODataPath());
+    SIMPLNX_RESULT_REQUIRE_VALID(dsResult);
+    DataStructure dataStructure = std::move(dsResult.value());
 
     CheckTestDataStructure(dataStructure);
 
@@ -1171,7 +1302,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     REQUIRE(attMatrix->getShape() == ShapeType{10});
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name})) != nullptr);
 
-    // Test reading the Pipeline
+    // The pipeline must retain its filters and arguments.
     REQUIRE(pipeline.size() == 3);
     REQUIRE(pipeline[0]->getName() == DataNames::k_CreateDataFilterName.str());
     REQUIRE(pipeline[2]->getName() == DataNames::k_ExportD3DFilterName.str());
@@ -1256,23 +1387,20 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
 {
   UnitTest::LoadPlugins();
 
-  // geoms.dream3d ships one geometry of every type whose connectivity was formerly registered as
-  // "required" preflight data: node geometries (vertex/edge/face/polyhedron lists) and a rectilinear
-  // grid (X/Y/Z bounds). A metadata-only preflight must import all of these exactly like ordinary
-  // attribute arrays: as empty stores that carry only shape and type, never eagerly bulk-read from disk.
+  // geoms.dream3d contains each node-connectivity type and RectGrid bounds.
+  // Metadata-only preflight must import these arrays without reading their values.
+  // Each empty store must still provide its array shape and value type.
   const fs::path inputFilePath = fs::path(unit_test::k_SimplnxTestDataSourceDir.view()) / "geoms.dream3d";
 
-  // {connectivity array path, expected tuple count}
+  // Each case contains a connectivity-array path and its expected tuple count.
   const std::vector<std::pair<DataPath, usize>> connectivityPaths = {
       {DataPath({"EdgeGeometry", "Verts"}), 10},       {DataPath({"EdgeGeometry", "Edges"}), 5},       {DataPath({"TriangleGeometry", "Verts"}), 10}, {DataPath({"TriangleGeometry", "Triangles"}), 4},
       {DataPath({"QuadGeometry", "Quads"}), 2},        {DataPath({"TetrahedralGeometry", "Tets"}), 1}, {DataPath({"HexahedralGeometry", "Hexs"}), 3}, {DataPath({"RectGridGeometry", "XBounds"}), 10},
       {DataPath({"RectGridGeometry", "YBounds"}), 10}, {DataPath({"RectGridGeometry", "ZBounds"}), 10}};
 
-  const auto isEmptyStore = [](const IDataStore* store) {
-    return store != nullptr && (store->getStoreType() == IDataStore::StoreType::Empty || store->getStoreType() == IDataStore::StoreType::EmptyOutOfCore);
-  };
+  const auto isEmptyStore = [](const IDataStore* store) { return store != nullptr && store->getStoreType() == IDataStore::StoreType::Empty; };
 
-  // Preflight (useEmptyDataStores == true): connectivity must remain an empty, metadata-only store.
+  // With useEmptyDataStores enabled, connectivity must remain metadata-only.
   {
     auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
@@ -1286,13 +1414,13 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
         REQUIRE(dataArray != nullptr);
         REQUIRE(isEmptyStore(dataArray->getIDataStore()));
 
-        // Shape metadata is still available from the empty store, which is all preflight requires.
+        // Preflight requires shape metadata but does not require stored values.
         REQUIRE(dataArray->getNumberOfTuples() == numTuples);
       }
     }
   }
 
-  // Execute (useEmptyDataStores == false): connectivity is fully read from disk into a real store.
+  // With useEmptyDataStores disabled, each connectivity array must load its values.
   {
     auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/false);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
@@ -1310,9 +1438,8 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
     }
   }
 
-  // Read directly through the DataStructureReader path overload with useEmptyDataStores == true. This
-  // overload must honor the flag when it delegates to the FileIO overload; connectivity must come back
-  // as an empty, metadata-only store rather than being fully read from disk.
+  // The path overload must preserve useEmptyDataStores when it delegates to FileIO.
+  // Thus, connectivity from this overload must also remain metadata-only.
   {
     auto readResult = HDF5::DataStructureReader::ReadFile(inputFilePath, /*useEmptyDataStores=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
@@ -1538,7 +1665,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[Sim
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<ReadDREAM3DFilter>::uuid);
 
-      // Complex parameter type (DataContainerReaderFilterParameterConverter) - verified by successful pipeline loading
+      // Successful pipeline loading verifies the DataContainerReaderFilterParameterConverter value.
     }
   }
 }
@@ -1593,8 +1720,7 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   DataStructure dataStructure;
   const DataPath arrayPath({"LargeArray"});
   constexpr usize k_Tuples = 500'000; // 2 MB, above the 16 KiB small-array bypass
-  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute,
-                                                                ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(createRes);
   {
     auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1617,12 +1743,7 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   REQUIRE(info->hasDeflate);
   REQUIRE(info->deflateLevel == 5);
 
-  auto fileReader = HDF5::FileIO::ReadFile(outPath);
-  REQUIRE(fileReader.isValid());
-  auto fileResult = DREAM3D::ReadFile(fileReader);
-  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-  auto [pipeline, importedDs] = std::move(fileResult.value());
-  (void)pipeline;
+  DataStructure importedDs = UnitTest::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(importedDs.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& imported = importedDs.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& original = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1639,8 +1760,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
 
   DataStructure ds;
   const DataPath arrayPath({"A"});
-  auto cr =
-      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1.5");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
 
   WriteDREAM3DFilter filter;
@@ -1667,8 +1787,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
 
   DataStructure ds;
   const DataPath arrayPath({"A"});
-  auto cr =
-      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
   {
     auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1695,11 +1814,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   REQUIRE(info->hasDeflate);
   REQUIRE(info->deflateLevel == 5);
 
-  auto fr = nx::core::HDF5::FileIO::ReadFile(outPath);
-  auto fileResult = nx::core::DREAM3D::ReadFile(fr);
-  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-  auto [unusedPipeline, imported] = std::move(fileResult.value());
-  (void)unusedPipeline;
+  DataStructure imported = UnitTest::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& importedArr = imported.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& originalArr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1714,11 +1829,9 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   fs::remove(outPath);
 
   DataStructure ds;
-  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute,
-                                                              ArrayCreationUtilities::k_DefaultDataFormat, "2");
+  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
   SIMPLNX_RESULT_REQUIRE_VALID(crSmall);
-  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute,
-                                                            ArrayCreationUtilities::k_DefaultDataFormat, "3");
+  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
   SIMPLNX_RESULT_REQUIRE_VALID(crBig);
 
   WriteDREAM3DFilter filter;
@@ -1745,8 +1858,8 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
 {
   UnitTest::LoadPlugins();
 
-  // Accumulate sizes across a single TEST_CASE run so the monotonicity check at the end actually fires.
-  // (DYNAMIC_SECTION would restart the body per section, losing accumulated state.)
+  // One TEST_CASE invocation retains all file sizes for the final monotonicity check.
+  // DYNAMIC_SECTION would restart the body and discard that accumulated state.
   std::vector<std::uintmax_t> sizesByLevel;
   const std::vector<int32> levels = {1, 5, 9};
 
@@ -1757,8 +1870,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
 
     DataStructure ds;
     const DataPath arrayPath({"A"});
-    auto cr =
-        ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+    auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
     SIMPLNX_RESULT_REQUIRE_VALID(cr);
     {
       auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1778,21 +1890,16 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
     auto r = filter.execute(ds, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-    auto fr = HDF5::FileIO::ReadFile(outPath);
-    REQUIRE(fr.isValid());
-    auto fileResult = DREAM3D::ReadFile(fr);
-    SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-    auto [unusedPipeline, imported] = std::move(fileResult.value());
-    (void)unusedPipeline;
+    DataStructure imported = UnitTest::LoadDataStructure(outPath);
     REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
     UnitTest::CompareDataArrays<float32>(ds.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
 
-    // Push after round-trip validation — a corrupt level entry should not enter the monotonicity check.
+    // Add a size only after its file passes round-trip validation.
     sizesByLevel.push_back(fs::file_size(outPath));
   }
 
-  // Size non-increasing as level rises. Probabilistic in the general case but reliable for the i%1024 pattern
-  // used here (small symbol alphabet, long runs → deflate dictionary is very effective).
+  // Higher compression levels must not increase size for this repeating 1,024-value pattern.
+  // Its small symbol set and long runs make the deflate result deterministic for this check.
   REQUIRE(sizesByLevel.size() == levels.size());
   REQUIRE(sizesByLevel[0] >= sizesByLevel[1]);
   REQUIRE(sizesByLevel[1] >= sizesByLevel[2]);
@@ -1820,8 +1927,8 @@ TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREA
       const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("nested_geometry_{}.dream3d", testCase.typeName);
       fs::remove(outPath);
 
-      // Build a DataStructure with the geometry at the top level (control) and an identical
-      // geometry nested inside a DataGroup (the case that previously crashed).
+      // Build one top-level geometry as a control and one equal geometry in a DataGroup.
+      // The nested object verifies that ownership depth does not change round-trip behavior.
       DataStructure dataStructure;
       const std::string topName = "Top";
       const std::string nestName = "Nested";
@@ -1829,7 +1936,7 @@ TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREA
       auto* group = DataGroup::Create(dataStructure, "Grp");
       testCase.build(dataStructure, nestName, group->getId());
 
-      // Write the file
+      // Write both ownership layouts to one file.
       {
         WriteDREAM3DFilter writeFilter;
         Arguments writeArgs;
@@ -1839,7 +1946,7 @@ TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREA
         SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
       }
 
-      // Read the file back. This must not crash and must succeed.
+      // Read both layouts through the normal DREAM3D reader.
       DataStructure importDataStructure;
       {
         ReadDREAM3DFilter readFilter;
@@ -1850,8 +1957,7 @@ TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREA
         SIMPLNX_RESULT_REQUIRE_VALID(readResult);
       }
 
-      // Both the nested geometry and the top-level control must survive the round trip with
-      // the correct concrete type.
+      // Both layouts must retain the selected concrete geometry type.
       const DataPath nestedPath({"Grp", nestName});
       testCase.requireType(importDataStructure, nestedPath);
       testCase.requireType(importDataStructure, DataPath({topName}));
@@ -1869,7 +1975,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
 
   WriteDREAM3DFilter filter;
 
-  // use_compression=true + level below [1,9] -> preflight error
+  // Enabled compression rejects a level below the valid range [1, 9].
   {
     Arguments args;
     args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
@@ -1879,7 +1985,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     REQUIRE(filter.preflight(ds, args).outputActions.invalid());
   }
 
-  // use_compression=true + level above [1,9] -> preflight error
+  // Enabled compression rejects a level above the valid range [1, 9].
   {
     Arguments args;
     args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
@@ -1889,7 +1995,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     REQUIRE(filter.preflight(ds, args).outputActions.invalid());
   }
 
-  // use_compression=false -> level is ignored, even if out of range
+  // Disabled compression ignores the level value, including an out-of-range value.
   {
     Arguments args;
     args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
@@ -1904,8 +2010,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  // Build and write a small file, then backdate its mtime past the cache's
-  // trust window so hit/miss behavior is deterministic.
+  // Backdate the small input past the cache trust window for deterministic hit and miss counts.
   DataStructure writtenData;
   auto* group = DataGroup::Create(writtenData, "CacheGroup");
   auto floatStore = std::make_shared<DataStore<float32>>(ShapeType{16}, ShapeType{1}, 2.5f);
@@ -1920,7 +2025,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   cache.resetStats();
   HDF5::FileIO::ResetReadOpenCount();
 
-  // Pipeline with a single ReadDREAM3DFilter, exactly as the GUI/nxrunner run it.
+  // A one-filter pipeline matches the GUI and nxrunner preflight path.
   Pipeline pipeline;
   Arguments args;
   Dream3dImportParameter::ImportData importData(filePath);
@@ -1929,31 +2034,28 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   filterNode->setArguments(args);
   pipeline.push_back(std::move(filterNode));
 
-  // Preflight #1 populates the cache: exactly one miss (the filter's fetch reads
-  // the file's metadata once). The import action's fetch on the same file is a
-  // hit, so it performs no second metadata traversal.
+  // The first preflight has one miss when the filter reads file metadata.
+  // The import action then hits the same cache entry and avoids a second traversal.
   REQUIRE(pipeline.preflight());
   REQUIRE(cache.missCount() == 1);
 
-  // Preflight #2 is the per-edit path. The cache serves the metadata, so there
-  // is no new miss and no metadata re-traversal -- the property that keeps
-  // re-preflight cheap on high-latency storage.
+  // The second preflight represents an edit-triggered repeat.
+  // The cache serves its metadata without another miss or traversal.
   HDF5::FileIO::ResetReadOpenCount();
   REQUIRE(pipeline.preflight());
   REQUIRE(cache.missCount() == 1);
-  // A fully-cached preflight opens the file zero times: Dream3dImportParameter's
-  // validate() only stats the path (no HDF5 open), and the cache serves the
-  // filter's metadata fetch from memory instead of re-reading the file.
+  // A fully cached preflight does not open the HDF5 file.
+  // Parameter validation only reads file status, and the filter gets metadata from memory.
   REQUIRE(HDF5::FileIO::GetReadOpenCount() == 0);
 
-  // Execute: bulk data must still be read correctly from disk.
+  // Execution must still read the complete array values from disk.
   REQUIRE(pipeline.execute());
   const DataStructure executed = pipeline[0]->getDataStructure();
   const auto* readFloats = executed.getDataAs<Float32Array>(DataPath({"CacheGroup", "CacheFloats"}));
   REQUIRE(readFloats != nullptr);
   REQUIRE((*readFloats)[0] == 2.5f);
 
-  // Rewriting the file must invalidate: preflight sees the new content.
+  // Rewriting the file must invalidate the cache so preflight sees its new content.
   DataStructure newData;
   auto* group2 = DataGroup::Create(newData, "CacheGroup");
   auto intStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, 9);

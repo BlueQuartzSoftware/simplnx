@@ -3,18 +3,57 @@
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
+
+#include <algorithm>
+#include <cstdio>
+#include <limits>
+#include <memory>
+
+#include <nonstd/span.hpp>
+
+#if !defined(_MSC_VER)
+#include <sys/types.h>
+#endif
 
 using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Seeks to one unsigned 64-bit byte offset when the platform supports it.
+ * @param file Specifies an open binary stream.
+ * @param offset Specifies an absolute byte offset.
+ * @return True after a successful seek.
+ *
+ * Windows uses _fseeki64. POSIX platforms use fseeko with off_t range validation.
+ */
+bool SeekToOffset(FILE* file, uint64 offset)
+{
 #if defined(_MSC_VER)
-#define FSEEK64 _fseeki64
+  using FileOffset = int64;
 #else
-#define FSEEK64 std::fseek
+  using FileOffset = off_t;
 #endif
 
-// -----------------------------------------------------------------------------
+  if(offset > static_cast<uint64>(std::numeric_limits<FileOffset>::max()))
+  {
+    return false;
+  }
+
+#if defined(_MSC_VER)
+  return ::_fseeki64(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+#else
+  return ::fseeko(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+#endif
+}
+
+/**
+ * @brief Rejects a file smaller than its declared payload.
+ * @param allocatedBytes Specifies declared payload bytes.
+ * @param fileSize Specifies actual file bytes.
+ * @return Error for a short file, or success when sufficient bytes exist.
+ */
 Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fileSize)
 {
   if(fileSize < allocatedBytes)
@@ -22,29 +61,52 @@ Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fi
     return MakeErrorResult(-4000, fmt::format("File size ({} bytes) is less than allocated size ({} bytes).", fileSize, allocatedBytes));
   }
 
-  // File Size and Allocated Size are equal, so we  are good to go
   return {};
 }
 
-// -----------------------------------------------------------------------------
+/**
+ * @brief Imports cropped CT rows from one or more binary data files.
+ * @param dataStructure Receives density values and geometry units.
+ * @param messageHandler Receives slice progress.
+ * @param shouldCancel Stops before later source slices when true.
+ * @param inputValues Specifies file layout, crop bounds, units, and output paths.
+ * @return File, seek, read, or destination-write error, or success after cancellation.
+ *
+ * Destination initialization does not inspect cancellation.
+ */
 Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ReadBinaryCTNorthstarInputValues* inputValues)
 {
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
   geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
 
   auto& density = dataStructure.getDataAs<Float32Array>(inputValues->DensityArrayPath)->getDataStoreRef();
-  density.fill(0xABCDEF);
+  const usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;
 
-  usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;
+  // Initialize through slice-sized writes so an incomplete import retains sentinel values.
+  const usize sliceSize = inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1];
+  auto initializationBuffer = std::make_unique<float32[]>(sliceSize);
+  std::fill_n(initializationBuffer.get(), sliceSize, static_cast<float32>(0xABCDEF));
+  for(usize offset = 0; offset < density.getSize(); offset += sliceSize)
+  {
+    const usize count = std::min(sliceSize, density.getSize() - offset);
+    const Result<> initializeResult = density.copyFromBuffer(offset, nonstd::span<const float32>(initializationBuffer.get(), count));
+    if(initializeResult.invalid())
+    {
+      return initializeResult;
+    }
+  }
 
   usize zShift = 0;
   // int32 fileIndex = 1;
+
+  MessageHelper messageHelper(messageHandler);
+  auto throttledMessenger = messageHelper.createThrottledMessenger();
 
   for(const auto& dataFileInput : inputValues->DataFilePaths)
   {
     fs::path dataFilePath = inputValues->InputHeaderFile.parent_path() / dataFileInput.first;
     const usize fileSize = fs::file_size(dataFilePath);
-    // allocated bytes should be the x * y dims * number of slices in the current data file....not necessarily the size of the whole density array
+    // Validate this file against its declared slice count, not the complete output size.
     usize allocatedBytes = inputValues->OriginalGeometryDims[0] * inputValues->OriginalGeometryDims[1] * dataFileInput.second * sizeof(float32);
 
     Result<> result = SanityCheckFileSizeVersusAllocatedSize(allocatedBytes, fileSize);
@@ -64,17 +126,22 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
 
     usize fileZSlice = 0;
 
-    // Now start reading the data in chunks if needed.
+    // One row buffer makes each destination write contiguous.
     std::vector<float32> buffer(deltaX);
 
     for(usize z = zShift; z < (zShift + dataFileInput.second); z++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
+
       if(inputValues->ImportSubvolume && (z < inputValues->StartVoxelCoord[2] || z > inputValues->EndVoxelCoord[2]))
       {
         fileZSlice++;
         continue;
       }
-      messageHandler(fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z));
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z); });
       for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
       {
         if(inputValues->ImportSubvolume && (y < inputValues->StartVoxelCoord[1] || y > inputValues->EndVoxelCoord[1]))
@@ -82,9 +149,10 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
           continue;
         }
 
-        usize fpOffset = ((inputValues->OriginalGeometryDims[1] * inputValues->OriginalGeometryDims[0] * fileZSlice) + (inputValues->OriginalGeometryDims[0] * y) + inputValues->StartVoxelCoord[0]) *
-                         sizeof(float32);
-        if(FSEEK64(f, static_cast<int32>(fpOffset), SEEK_SET) != 0)
+        const uint64 fpOffset = ((static_cast<uint64>(inputValues->OriginalGeometryDims[1]) * inputValues->OriginalGeometryDims[0] * fileZSlice) +
+                                 (static_cast<uint64>(inputValues->OriginalGeometryDims[0]) * y) + static_cast<uint64>(inputValues->StartVoxelCoord[0])) *
+                                sizeof(float32);
+        if(!SeekToOffset(f, fpOffset))
         {
           return MakeErrorResult(-38707, fmt::format("Could not seek to position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
@@ -96,9 +164,10 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
           return MakeErrorResult(-38708, fmt::format("Error reading file at position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
 
-        for(usize i = index; i < deltaX + index; i++)
+        const Result<> copyResult = density.copyFromBuffer(index, nonstd::span<const float32>(buffer.data(), deltaX));
+        if(copyResult.invalid())
         {
-          density[i] = buffer[i - index];
+          return copyResult;
         }
       }
       fileZSlice++;
@@ -116,7 +185,6 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 ReadBinaryCTNorthstar::ReadBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                              ReadBinaryCTNorthstarInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -126,16 +194,13 @@ ReadBinaryCTNorthstar::ReadBinaryCTNorthstar(DataStructure& dataStructure, const
 {
 }
 
-// -----------------------------------------------------------------------------
 ReadBinaryCTNorthstar::~ReadBinaryCTNorthstar() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ReadBinaryCTNorthstar::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ReadBinaryCTNorthstar::operator()()
 {
   Result<> result = ReadBinaryCTFiles(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);

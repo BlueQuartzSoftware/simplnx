@@ -43,7 +43,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
     geometry->setUnits(static_cast<IGeometry::LengthUnit>(value));
   }
 
-  // Read Dimensions
+  // Read the geometry dimensions.
   auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
   if(volumeDimensionsResult.invalid())
   {
@@ -53,7 +53,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   geometry->setDimensions(volumeDimensions);
 
-  // Read DataObject IDs
+  // Read the bounds array identifiers.
   geometry->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
   geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
@@ -84,7 +84,7 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
       geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
     }
 
-    // Read Dimensions
+    // Read the geometry dimensions.
     auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
     if(volumeDimensionsResult.invalid())
     {
@@ -108,7 +108,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
 
   auto groupWriter = parentGroup.createGroup(geometry.getName());
 
-  // Write dimensions
+  // Write the geometry dimensions.
   auto dimensions = geometry.getDimensions();
   std::vector<size_t> dimsVector(3);
   for(size_t i = 0; i < 3; i++)
@@ -121,7 +121,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   {
     return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write dimensions for RectGridGeom '{}'", geometry.getName()));
   }
-  // Write DataObject IDs
+  // Write the bounds array identifiers.
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);
   if(result.invalid())
   {

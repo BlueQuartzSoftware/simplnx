@@ -10,14 +10,19 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
-#include <random>
 #include <vector>
 
 namespace nx::core
 {
 
 class IGridGeometry;
+template <typename T>
+class AbstractDataStore;
 
+/**
+ * @namespace segment_features
+ * @brief Defines neighbor-scheme parameter labels and indexes.
+ */
 namespace segment_features
 {
 inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
@@ -29,84 +34,123 @@ inline constexpr ChoicesParameter::ValueType k_6NeighborIndex = 0ULL;
 inline constexpr ChoicesParameter::ValueType k_26NeighborIndex = 1ULL;
 } // namespace segment_features
 
+/**
+ * @class SegmentFeatures
+ * @brief Base class for grid segmentation algorithms that share a scanline
+ * connected-component-labeling engine.
+ *
+ * Subclasses provide voxel validity, neighbor similarity, and optional slice
+ * preloading. The forward scan keeps two label slices in RAM. OOC input stores
+ * equivalence and final-label state in temporary record stores.
+ */
 class SIMPLNX_EXPORT SegmentFeatures
 {
 
 public:
-  using SeedGenerator = std::mt19937_64;
-
+  /**
+   * @brief Creates a shared connected-component-labeling engine.
+   * @param dataStructure Provides subclass input and output arrays.
+   * @param shouldCancel Stops before later slices or resolution chunks when true.
+   * @param mesgHandler Receives phase and periodic-boundary messages.
+   */
   SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
+  /**
+   * @brief Destroys the non-owning segmentation engine.
+   */
   virtual ~SegmentFeatures();
 
-  SegmentFeatures(const SegmentFeatures&) = delete;            // Copy Constructor Not Implemented
-  SegmentFeatures(SegmentFeatures&&) = delete;                 // Move Constructor Not Implemented
-  SegmentFeatures& operator=(const SegmentFeatures&) = delete; // Copy Assignment Not Implemented
-  SegmentFeatures& operator=(SegmentFeatures&&) = delete;      // Move Assignment Not Implemented
+  SegmentFeatures(const SegmentFeatures&) = delete;
+  SegmentFeatures(SegmentFeatures&&) = delete;
+  SegmentFeatures& operator=(const SegmentFeatures&) = delete;
+  SegmentFeatures& operator=(SegmentFeatures&&) = delete;
 
+  /**
+   * @enum NeighborScheme
+   * @brief Selects face-only or complete 26-neighbor connectivity.
+   */
   enum class NeighborScheme : ChoicesParameter::ValueType
   {
-    Face = 0,
-    FaceEdgeVertex = 1
+    Face = 0,          ///< Uses six face neighbors.
+    FaceEdgeVertex = 1 ///< Uses all face, edge, and vertex neighbors.
   };
 
   /**
-   * @brief execute
-   * @param gridGeom
-   * @return
+   * @brief Segments the grid into features using connected-component labeling.
+   *
+   * Voxels use Z-Y-X order and one rolling label-slice pair. External scratch
+   * stores worst-case equivalence and final-label state for genuine OOC input.
+   *
+   * @param gridGeom Provides dimensions and coordinate topology.
+   * @param featureIdsStore Receives provisional and final Feature IDs.
+   * @param usesOutOfCoreInput Requires external scratch when true. False permits
+   * resident fallback for forced-path tests.
+   * @return Scratch, subclass, or Feature-ID I/O error, or success after cancellation.
+   *
+   * Cancellation can retain provisional or partially resolved Feature IDs.
    */
-  Result<> execute(IGridGeometry* gridGeom);
+  Result<> executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore, bool usesOutOfCoreInput = false);
 
   /**
-   * @brief Returns the seed for the specified values.
-   * @param data
-   * @param args
-   * @param gnum
-   * @param nextSeed
-   * @return int64
-   */
-  virtual int64_t getSeed(int32_t gnum, int64 nextSeed) const;
-
-  /**
-   * @brief Determines the grouping for the specified values.
-   * @param data
-   * @param args
-   * @param referencePoint
-   * @param neighborPoint
-   * @param gnum
-   * @return bool
-   */
-  virtual bool determineGrouping(int64_t referencePoint, int64_t neighborPoint, int32_t gnum) const;
-
-  /**
-   * @brief
-   * @param featureIds
-   * @param totalFeatures
-   * @param distribution
+   * @brief Applies a random permutation to positive feature IDs after segmentation.
+   * @param featureIds Provides and receives output labels. Feature ID 0 remains background.
+   * @param totalFeatures Specifies generated positive features.
+   *
+   * This method does not check cancellation or return DataStore errors.
    */
   void randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures);
 
   /**
-   * @brief
-   * @return
-   */
-  virtual SeedGenerator initializeStaticVoxelSeedGenerator() const;
-
-  /* from http://www.newty.de/fpt/functor.html */
-  /**
-   * @brief The CompareFunctor class serves as a functor superclass for specific implementations
-   * of performing scalar comparisons
+   * @class CompareFunctor
+   * @brief Defines a type-independent neighbor-comparison interface.
    */
   class CompareFunctor
   {
   public:
+    /**
+     * @brief Destroys the comparison interface.
+     */
     virtual ~CompareFunctor() = default;
 
-    virtual bool operator()(int64 index, int64 neighIndex, int32 gnum) // call using () operator
+    /**
+     * @brief Tests whether two voxels belong to the same feature.
+     * @param index Specifies the first voxel.
+     * @param neighIndex Specifies its neighbor.
+     * @return False by default.
+     */
+    virtual bool compare(int64 index, int64 neighIndex)
     {
       return false;
     }
   };
+
+  /**
+   * @brief Tests whether one voxel can belong to a feature.
+   * @param point Specifies the flat voxel index.
+   * @return True by default.
+   */
+  virtual bool isValidVoxel(int64 point) const;
+
+  /**
+   * @brief Tests whether two adjacent voxels belong to the same feature.
+   * @param point1 Specifies the first flat voxel index.
+   * @param point2 Specifies the second flat voxel index.
+   * @return False by default.
+   */
+  virtual bool areNeighborsSimilar(int64 point1, int64 point2) const;
+
+  /**
+   * @brief Prepares subclass data for one Z slice.
+   *
+   * Subclasses can load bounded input buffers before neighbor comparisons. The
+   * default implementation performs no work.
+   * @param iz Specifies the current Z index.
+   * @param dimX Specifies X cells.
+   * @param dimY Specifies Y cells.
+   * @param dimZ Specifies Z cells.
+   * @return Subclass preparation error, or success.
+   */
+  virtual Result<> prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ);
 
 protected:
   DataStructure& m_DataStructure;

@@ -192,6 +192,37 @@ The *Distance Metric* parameter provides the following choices:
 
 The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Three parse order options are available: *Low Density First* (deterministic, no seed needed), *Random* (non-deterministic, uses a time-based seed), and *Seeded Random* (deterministic, uses a user-supplied seed value for reproducibility). Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. It accesses array elements via direct per-element operator[] calls, which are optimal for in-memory data.
+
+The grid-based DBSCAN algorithm proceeds in three phases:
+
+1. **Grid construction**: The input array is scanned to determine coordinate bounds, create a regular grid with cell side length epsilon / sqrt(dimensions), and bin each data point into a grid cell. Bit-packed adjacency tables are built for fast neighbor grid queries.
+2. **Clustering**: Core grid cells (those with >= minPoints) are identified and processed according to the selected parse order. Adjacent grid cells are merged into the same cluster if any pair of points between them has distance < epsilon. Non-core cells are then expanded into nearby clusters.
+3. **Labeling**: Final cluster IDs are written to the output array. Points in unassigned cells become outliers (cluster 0).
+
+### Out-of-Core Algorithm (Scanline)
+
+When the selected coordinates, optional mask, or created cluster IDs use chunked on-disk storage, the **Scanline** algorithm uses bounded external scratch storage. The registered out-of-core backend must provide external sorting and temporary record storage; the standard out-of-core configuration supplies both capabilities.
+
+The Scanline algorithm avoids keeping data proportional to the number of input points or active grid cells in memory:
+
+- **Bounded input scans** read coordinates and masks in fixed-size tuple windows. Selected points are written to an externally sorted membership stream, preserving the original coordinate type for distance calculations.
+- **Disk-backed grid indexes and cluster state** represent active cells, occupied coordinate ranks, parse order, and cluster relationships. Small bounded page caches provide random lookup without a resident grid-sized table.
+- **Tiled distance checks** compare fixed-size point-record tiles, so a densely populated grid cell does not require a cell-sized allocation.
+- **Bounded output writes** externally restore tuple order and write complete fixed-size windows to the cluster ID **Data Array**. Masked and unassigned points remain cluster 0.
+
+Temporary records are released when execution ends. They are implementation scratch data and do not appear in the output **Data Structure**.
+
+### Performance
+
+The in-core Direct algorithm is faster for in-memory data due to its lower bookkeeping overhead. For on-disk arrays, the Scanline algorithm replaces per-point store accesses and resident point/grid indexes with bounded bulk I/O and disk-backed scratch records. Both implementations preserve the same grid ordering, parse-order behavior, distance calculations, mask semantics, and cluster labels.
+
 % Auto generated parameter table will be inserted here
 
 ## References

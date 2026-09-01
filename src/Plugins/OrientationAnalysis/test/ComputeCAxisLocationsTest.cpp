@@ -268,9 +268,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
   crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
   crystalStructures->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
 
-  // Alternate hexagonal (phase 1) and cubic (phase 2) cells so a single execution exercises
-  // both the computed c-axis path and the non-hexagonal NaN path, and verifies the NaN
-  // branch does not disturb neighboring computed values.
+  // Alternate hexagonal and cubic cells in one execution.
+  // This checks computed c-axes, non-hexagonal NaNs, and neighboring values.
   Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
   for(usize i = 0; i < size; i++)
   {

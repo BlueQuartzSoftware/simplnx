@@ -44,7 +44,7 @@ are kept, so Features flush with the box stay closed, and no rim is eroded. This
 same rule as the **Bounding Box Skin** option's **Background-Backed Walls Only** mode on the
 surface meshing filters, and is the better choice for meshes that already exist.
 
-% Auto generated parameter table will be inserted here
+### Required Input Sources
 
 - **Triangle Geometry** -- the surface mesh to process, typically produced by [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
 - **Node Types** -- the per-vertex node classification array, produced by the same surface-meshing filter that created the geometry.

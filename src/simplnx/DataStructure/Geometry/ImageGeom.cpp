@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -67,7 +68,7 @@ DataObject* ImageGeom::shallowCopy()
 std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with identifier since it will get created when inserting into data structure
+  // The non-import constructor generates an identifier for the copied geometry.
   auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName()));
   copy->setOrigin(m_Origin);
   copy->setSpacing(m_Spacing);
@@ -79,7 +80,7 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
     if(m_CellDataId.has_value())
     {
       const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      // Copy cell data only when this geometry does not already parent it.
       if(!isParentOf(getCellData()))
       {
         const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
@@ -156,32 +157,29 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   if(m_Spacing[0] <= 0.0f || m_Spacing[1] <= 0.0f || m_Spacing[2] <= 0.0f)
   {
     m_ElementSizesId.reset();
-    // Used to be error code `-1`
     return MakeErrorResult(-1530, fmt::format("ImageGeom Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", m_Spacing[0], m_Spacing[1], m_Spacing[2]));
   }
 
-  // This value will be filled with area if 2D or volume if 3D
+  // The product retains supplied empty-axis thickness for one- and two-dimensional grids.
   const float32 singleVoxelSize = m_Spacing[0] * m_Spacing[1] * m_Spacing[2];
 
-  // if true first instance, else recalculate
   if(voxelSizes == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, singleVoxelSize);
+    // The resolver selects a disk-backed store for a large grid when a compatible
+    // OOC manager is registered.
+    std::vector<DataPath> geomPaths = getDataPaths();
+    DataPath voxelSizesPath = geomPaths.empty() ? DataPath({getName(), k_VoxelSizes}) : geomPaths.front().createChildPath(k_VoxelSizes);
+    auto dataStore = DataStoreUtilities::CreateDataStore<float32>(*getDataStructure(), voxelSizesPath, std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, IDataAction::Mode::Execute);
     voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
     if(voxelSizes == nullptr)
     {
       m_ElementSizesId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-1532, "ImageGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
     m_ElementSizesId = voxelSizes->getId();
   }
-  else
-  {
-    voxelSizes->fill(singleVoxelSize);
-  }
+  voxelSizes->fill(singleVoxelSize);
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -200,7 +198,7 @@ void ImageGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shap
   sm = 1.0 - pCoords[1];
   tm = 1.0 - pCoords[2];
 
-  // r derivatives
+  // Derivatives with respect to r.
   shape[0] = -sm * tm;
   shape[1] = sm * tm;
   shape[2] = -pCoords[1] * tm;
@@ -210,7 +208,7 @@ void ImageGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shap
   shape[6] = -pCoords[1] * pCoords[2];
   shape[7] = pCoords[1] * pCoords[2];
 
-  // s derivatives
+  // Derivatives with respect to s.
   shape[8] = -rm * tm;
   shape[9] = -pCoords[0] * tm;
   shape[10] = rm * tm;
@@ -220,7 +218,7 @@ void ImageGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shap
   shape[14] = rm * pCoords[2];
   shape[15] = pCoords[0] * pCoords[2];
 
-  // t derivatives
+  // Derivatives with respect to t.
   shape[16] = -rm * sm;
   shape[17] = -pCoords[0] * sm;
   shape[18] = -rm * pCoords[1];

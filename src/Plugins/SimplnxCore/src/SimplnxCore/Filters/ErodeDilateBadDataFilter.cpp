@@ -28,42 +28,36 @@ constexpr int32 k_NoGeometryDimensionsError = -14602;
 namespace nx::core
 {
 
-//------------------------------------------------------------------------------
 std::string ErodeDilateBadDataFilter::name() const
 {
   return FilterTraits<ErodeDilateBadDataFilter>::name.str();
 }
 
-//------------------------------------------------------------------------------
 std::string ErodeDilateBadDataFilter::className() const
 {
   return FilterTraits<ErodeDilateBadDataFilter>::className;
 }
 
-//------------------------------------------------------------------------------
 Uuid ErodeDilateBadDataFilter::uuid() const
 {
   return FilterTraits<ErodeDilateBadDataFilter>::uuid;
 }
 
-//------------------------------------------------------------------------------
 std::string ErodeDilateBadDataFilter::humanName() const
 {
   return "Erode/Dilate Bad Data";
 }
 
-//------------------------------------------------------------------------------
 std::vector<std::string> ErodeDilateBadDataFilter::defaultTags() const
 {
   return {className(), "Processing", "Cleanup", "Erode", "Dilate"};
 }
 
-//------------------------------------------------------------------------------
 Parameters ErodeDilateBadDataFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
+  // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate or erode", 0ULL, detail::k_OperationChoices));
@@ -85,19 +79,16 @@ Parameters ErodeDilateBadDataFilter::parameters() const
   return params;
 }
 
-//------------------------------------------------------------------------------
 IFilter::VersionType ErodeDilateBadDataFilter::parametersVersion() const
 {
   return 1;
 }
 
-//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateBadDataFilter::clone() const
 {
   return std::make_unique<ErodeDilateBadDataFilter>();
 }
 
-//------------------------------------------------------------------------------
 IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
@@ -132,15 +123,14 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
 
-  // Inform users that the following arrays are going to be modified in place
-  // Cell Data is going to be modified
+  // Report arrays that the filter modifies in place.
+  // Cell Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), pIgnoredDataArrayPathsValue);
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  // Return actions and updated preflight values.
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-//------------------------------------------------------------------------------
 Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {

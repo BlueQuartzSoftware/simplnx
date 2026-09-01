@@ -13,6 +13,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct PartitionGeometryInputValues
+ * @brief Stores partition-grid settings, paths, IDs, and mask options.
+ */
 struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 {
   ChoicesParameter::ValueType PartitioningMode;
@@ -37,26 +41,31 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 
 /**
  * @class PartitionGeometry
- * @brief This algorithm generates the image geometry information necessary to
- * split a given geometry into partitions, using one of the three partitioning modes.
+ * @brief Dispatches geometry partitioning from selected array storage.
  *
- * In the Basic partitioning mode, it calculates the dimensions, origin, and spacing
- * of the partitioning scheme using the input geometry and the number of partitions per axis.
- *
- * In the Advanced mode, it uses the number of partitions per axis, partitioning scheme
- * origin, and length per partition inputs as the dimensions, origin, and spacing, respectively.
- *
- * In the Bounding Box mode, it calculates the dimensions, origin, and spacing of the
- * partitioning scheme using the input geometry, the number of partitions per axis, and
- * a set of bounding box points.
+ * Dispatch targets include output IDs, created partition-grid IDs, node vertices,
+ * and an optional vertex mask. RectGrid coordinate arrays are not dispatch targets.
  */
-
 class SIMPLNXCORE_EXPORT PartitionGeometry
 {
 public:
+  /**
+   * @brief Defines the scalar store used for node coordinates.
+   */
   using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
+  /**
+   * @brief Creates a geometry-partition dispatcher.
+   * @param dataStructure Provides input geometry and partition outputs.
+   * @param msgHandler Is retained for the dispatched interface.
+   * @param shouldCancel Stops later initialization or partition work when true.
+   * @param inputValues Specifies validated paths and partition settings. The caller
+   * must keep this object alive for the dispatcher lifetime.
+   */
   PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning dispatcher.
+   */
   ~PartitionGeometry() noexcept;
 
   PartitionGeometry(const PartitionGeometry&) = delete;
@@ -64,6 +73,10 @@ public:
   PartitionGeometry& operator=(const PartitionGeometry&) = delete;
   PartitionGeometry& operator=(PartitionGeometry&&) noexcept = delete;
 
+  /**
+   * @struct PSGeomInfo
+   * @brief Stores dimensions and spatial metadata for a partition grid.
+   */
   struct PSGeomInfo
   {
     USizeVec3 geometryDims;
@@ -72,56 +85,20 @@ public:
     IGeometry::LengthUnit geometryUnits;
   };
 
+  /**
+   * @brief Selects direct or scanline partitioning from dispatch-target storage.
+   * @return Error for an unknown geometry or bulk I/O, or success after cancellation.
+   *
+   * Cancellation or an I/O error can retain partial partition IDs. Created
+   * partition-grid Feature IDs can also remain partial.
+   */
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;
-  const PartitionGeometryInputValues* m_InputValues = nullptr;
+  PartitionGeometryInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  /**
-   * @brief Partitions a cell-based input geometry according to the partitioning
-   * scheme geometry provided, and stores the partition ids in the partitionIds array.
-   *
-   * If a given cell is outside the partitioning scheme bounds and an out of bounds value
-   * is provided, the cell will be labeled with the out of bounds value.  Otherwise,
-   * the function will return an invalid Result with an error message.
-   *
-   * @param inputGeometry The cell-based input geometry that is being partitioned.
-   * @param partitionIdsStore The partition ids array that stores the results.
-   * @param psImageGeom The partitioning scheme image geometry that is used
-   * to partition the cell-based input geometry.
-   * @param outOfBoundsValue Value that out-of-bounds cells will be
-   * labeled with
-   * @return The result of the partitioning algorithm.  Valid if successful, invalid
-   * if there was an error.
-   */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
-
-  /**
-   * @brief Partitions a vertex list (typically from a node-based geometry) according to
-   * the partitioning scheme geometry provided, and stores the partition ids in the
-   * partitionIds array.
-   *
-   * If a given vertex is outside the partitioning scheme bounds and an out of bounds value
-   * is provided, the vertex will be labeled with the out of bounds value.  Otherwise,
-   * the function will return an invalid Result with an error message.
-   *
-   * @param vertexListStore The list of vertices from the node-based geometry
-   * @param partitionIdsStore The partition ids array that stores the results.
-   * @param psImageGeom The partitioning scheme image geometry that is used
-   * to partition the vertex list.
-   * @param outOfBoundsValue Value that out-of-bounds vertices will be
-   * labeled with
-   * @param maskArrayOpt Optional mask array
-   * @return The result of the partitioning algorithm.  Valid if successful, invalid
-   * if there was an error.
-   */
-  Result<> partitionNodeBasedGeometry(const VertexStore& vertexListStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
-                                      const std::optional<const BoolArray>& maskArrayOpt);
 };
 
 } // namespace nx::core

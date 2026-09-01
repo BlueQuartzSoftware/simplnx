@@ -17,6 +17,10 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 
+/**
+ * @struct ReadChannel5DataInputValues
+ * @brief Identifies Channel 5 reader inputs.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ReadChannel5DataInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
@@ -27,6 +31,10 @@ struct ORIENTATIONANALYSIS_EXPORT ReadChannel5DataInputValues
   bool CreateCompatibleArrays;
 };
 
+/**
+ * @struct Ang_Private_Data
+ * @brief Stores parsed Channel 5 metadata.
+ */
 struct ORIENTATIONANALYSIS_EXPORT Ang_Private_Data
 {
   std::array<size_t, 3> dims = {0, 0, 0};
@@ -37,7 +45,8 @@ struct ORIENTATIONANALYSIS_EXPORT Ang_Private_Data
 };
 
 /**
- * @brief The ReadChannel5DataPrivate class is a private implementation of the ReadChannel5Data class
+ * @class ReadChannel5DataPrivate
+ * @brief Caches Channel 5 reader metadata.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadChannel5DataPrivate
 {
@@ -45,10 +54,10 @@ public:
   ReadChannel5DataPrivate() = default;
   ~ReadChannel5DataPrivate() = default;
 
-  ReadChannel5DataPrivate(const ReadChannel5DataPrivate&) = delete;            // Copy Constructor Not Implemented
-  ReadChannel5DataPrivate(ReadChannel5DataPrivate&&) = delete;                 // Move Constructor Not Implemented
-  ReadChannel5DataPrivate& operator=(const ReadChannel5DataPrivate&) = delete; // Copy Assignment Not Implemented
-  ReadChannel5DataPrivate& operator=(ReadChannel5DataPrivate&&) = delete;      // Move Assignment Not Implemented
+  ReadChannel5DataPrivate(const ReadChannel5DataPrivate&) = delete;
+  ReadChannel5DataPrivate(ReadChannel5DataPrivate&&) = delete;
+  ReadChannel5DataPrivate& operator=(const ReadChannel5DataPrivate&) = delete;
+  ReadChannel5DataPrivate& operator=(ReadChannel5DataPrivate&&) = delete;
 
   Ang_Private_Data m_Data;
 
@@ -58,20 +67,41 @@ public:
 
 /**
  * @class ReadChannel5Data
- * @brief This filter will read a single .ang file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate
- * .h5ebsd file.
+ * @brief Reads an Oxford Channel 5 .cpr/.crc pair into an Image Geometry.
+ *
+ * EbsdLib owns full reader buffers. Simplnx transfers fields in bounded chunks
+ * and does not add a second cell-sized staging buffer. Destination bulk-write
+ * Result values are not inspected.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadChannel5Data
 {
 public:
+  /**
+   * @brief Initializes Channel 5 file reading.
+   * @param dataStructure Provides output arrays.
+   * @param msgHandler Supplies progress messages.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies input and output paths.
+   * @pre dataStructure, msgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   ReadChannel5Data(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadChannel5DataInputValues* inputValues);
+  /**
+   * @brief Destroys the Channel 5 reader.
+   */
   ~ReadChannel5Data() noexcept;
 
-  ReadChannel5Data(const ReadChannel5Data&) = delete;            // Copy Constructor Not Implemented
-  ReadChannel5Data(ReadChannel5Data&&) = delete;                 // Move Constructor Not Implemented
-  ReadChannel5Data& operator=(const ReadChannel5Data&) = delete; // Copy Assignment Not Implemented
-  ReadChannel5Data& operator=(ReadChannel5Data&&) = delete;      // Move Assignment Not Implemented
+  ReadChannel5Data(const ReadChannel5Data&) = delete;
+  ReadChannel5Data(ReadChannel5Data&&) = delete;
+  ReadChannel5Data& operator=(const ReadChannel5Data&) = delete;
+  ReadChannel5Data& operator=(ReadChannel5Data&&) = delete;
 
+  /**
+   * @brief Reads Channel 5 data into output arrays.
+   * @return Success, or an EbsdLib reader error.
+   *
+   * When a cancellation checkpoint observes the signal, the function returns success. Data copied before that checkpoint remains in the output arrays. Later data is not copied.
+   */
   Result<> operator()();
 
 private:
@@ -81,15 +111,15 @@ private:
   const ReadChannel5DataInputValues* m_InputValues = nullptr;
 
   /**
-   * @brief
-   * @param reader
-   * @return Error code.
+   * @brief Loads ensemble data from the parsed reader.
+   * @param reader Provides parsed Channel 5 data.
+   * @return Reader error code and message.
    */
   std::pair<int32, std::string> loadMaterialInfo(ebsdlib::CprReader* reader) const;
 
   /**
-   * @brief
-   * @param reader
+   * @brief Transfers parsed cell data through bounded bulk I/O.
+   * @param reader Provides parsed Channel 5 data.
    */
   void copyRawEbsdData(ebsdlib::CprReader* reader) const;
 };

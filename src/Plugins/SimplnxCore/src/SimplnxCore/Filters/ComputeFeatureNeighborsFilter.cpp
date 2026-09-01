@@ -127,38 +127,31 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
 
   const ShapeType cDims{1};
 
-  // Create output Cell Data Arrays (if the user requested it)
   if(storeBoundaryCells)
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int8, tupleShape, cDims, boundaryCellsPath);
     actions.appendAction(std::move(action));
   }
 
-  // Feature Data:
-  // Validating the Feature Attribute Matrix and trying to find a child of the Group
-  // that is an IDataArray subclass, so we can get the proper tuple shape
+  // Feature output uses the feature AttributeMatrix tuple shape.
   const auto& featureAttrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(featureAttrMatrixPath);
   tupleShape = featureAttrMatrix.getShape();
 
-  // Create the NumNeighbors Output Data Array in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, cDims, numNeighborsPath);
     actions.appendAction(std::move(action));
   }
-  // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, tupleShape, neighborListPath);
     actions.appendAction(std::move(action));
   }
-  // And we do the same for the SharedSurfaceArea list in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleShape, sharedSurfaceAreaPath);
     actions.appendAction(std::move(action));
   }
-  // Create the SurfaceFeatures Output Data Array in the Feature Attribute Matrix
   if(storeSurfaceFeatures)
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath, CreateArrayAction::k_DefaultDataFormat, "false");
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath, "", "false");
     actions.appendAction(std::move(action));
   }
 
@@ -171,18 +164,14 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 {
   ComputeFeatureNeighborsInputValues inputValues;
 
-  // Options
   inputValues.StoreBoundaryCells = filterArgs.value<BoolParameter::ValueType>(k_StoreBoundary_Key);
   inputValues.StoreSurfaceFeatures = filterArgs.value<BoolParameter::ValueType>(k_StoreSurface_Key);
 
-  // Geometry
   inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
 
-  // Cell Data
   inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
   inputValues.BoundaryCellsPath = inputValues.FeatureIdsPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellsName_Key));
 
-  // Feature Data
   inputValues.CellFeatureArrayPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeaturesPath_Key);
   inputValues.NumberOfNeighborsPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumNeighborsName_Key));
   inputValues.NeighborListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NeighborListName_Key));

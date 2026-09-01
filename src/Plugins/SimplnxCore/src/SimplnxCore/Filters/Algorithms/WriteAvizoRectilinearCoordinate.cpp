@@ -7,23 +7,19 @@
 
 using namespace nx::core;
 
-// -----------------------------------------------------------------------------
 WriteAvizoRectilinearCoordinate::WriteAvizoRectilinearCoordinate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                  AvizoWriterInputValues* inputValues)
 : AvizoWriter(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
-// -----------------------------------------------------------------------------
 WriteAvizoRectilinearCoordinate::~WriteAvizoRectilinearCoordinate() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinate::operator()()
 {
   return AvizoWriter::execute();
 }
 
-// -----------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
@@ -55,7 +51,8 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
   fprintf(outputFile, "         Author \"DREAM3D-NX SimplnxCore Version 7.0.0\",\n");
   const std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   const std::string timeString = std::ctime(&currentTime);
-  fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str()); // remove the \n character from the time string
+  // ctime() includes a final newline that is not part of the quoted value.
+  fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str());
   fprintf(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->FeatureIdsArrayPath.toString().c_str());
   fprintf(outputFile, "     }\n");
 
@@ -74,7 +71,6 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
   return {};
 }
 
-// -----------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
@@ -84,29 +80,52 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 
   fprintf(outputFile, "@1 # FeatureIds in z, y, x with X moving fastest, then Y, then Z\n");
 
-  const auto& featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)->template getIDataStoreRefAs<DataStore<int32>>();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const usize totalPoints = featureIds.getNumberOfTuples();
+
+  // Source and file-write results are currently discarded.
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> buffer(k_ChunkSize);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
 
   if(m_InputValues->WriteBinaryFile)
   {
-    fwrite(featureIds.data(), sizeof(int32_t), totalPoints, outputFile);
+    for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
+    {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      const usize count = std::min(k_ChunkSize, totalPoints - offset);
+      featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buffer.data(), count));
+      fwrite(buffer.data(), sizeof(int32), count, outputFile);
+    }
   }
   else
   {
-    // The "20 Items" is purely arbitrary and is put in to try and save some space in the ASCII file
-    int count = 0;
-    for(size_t i = 0; i < totalPoints; ++i)
+    // Current counter placement inserts a newline after 21 ASCII values.
+    int itemCount = 0;
+    for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {
-      fprintf(outputFile, "%d", featureIds[i]);
-      if(count < 20)
+      if(m_ShouldCancel)
       {
-        fprintf(outputFile, " ");
-        count++;
+        return {};
       }
-      else
+      const usize count = std::min(k_ChunkSize, totalPoints - offset);
+      featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buffer.data(), count));
+      for(usize i = 0; i < count; ++i)
       {
-        fprintf(outputFile, "\n");
-        count = 0;
+        fprintf(outputFile, "%d", buffer[i]);
+        if(itemCount < 20)
+        {
+          fprintf(outputFile, " ");
+          itemCount++;
+        }
+        else
+        {
+          fprintf(outputFile, "\n");
+          itemCount = 0;
+        }
       }
     }
   }
@@ -118,12 +137,12 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
   {
     for(int d = 0; d < 3; ++d)
     {
-      std::vector<float> coords(dims[d]);
-      for(size_t i = 0; i < dims[d]; ++i)
+      std::vector<float32> coords(dims[d]);
+      for(usize i = 0; i < dims[d]; ++i)
       {
         coords[i] = origin[d] + (res[d] * i);
       }
-      fwrite(reinterpret_cast<char*>(coords.data()), sizeof(char), sizeof(char) * sizeof(float) * dims[d], outputFile);
+      fwrite(reinterpret_cast<char*>(coords.data()), sizeof(char), sizeof(char) * sizeof(float32) * dims[d], outputFile);
       fprintf(outputFile, "\n");
     }
   }
@@ -131,7 +150,7 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
   {
     for(int d = 0; d < 3; ++d)
     {
-      for(size_t i = 0; i < dims[d]; ++i)
+      for(usize i = 0; i < dims[d]; ++i)
       {
         fprintf(outputFile, "%f ", origin[d] + (res[d] * i));
       }

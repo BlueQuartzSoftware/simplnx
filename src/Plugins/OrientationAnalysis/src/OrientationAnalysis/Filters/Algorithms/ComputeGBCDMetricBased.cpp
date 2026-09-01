@@ -31,8 +31,8 @@ constexpr float64 k_BallVolumesM3M[ComputeGBCDMetricBased::k_NumberResolutionCho
 namespace GBCDMetricBased
 {
 /**
- * @brief The TriAreaAndNormals struct defines a container that stores the area of a given triangle
- * and the two normals for grains on either side of the triangle
+ * @struct TriAreaAndNormals
+ * @brief Stores one triangle area and its grain normals.
  */
 struct TriAreaAndNormals
 {
@@ -58,8 +58,12 @@ struct TriAreaAndNormals
 };
 
 /**
- * @brief The TrianglesSelector class implements a threaded algorithm that determines which triangles to
- * include in the GBCD calculation
+ * @class TrianglesSelector
+ * @brief Selects triangles for metric-based GBCD calculation.
+ *
+ * Feature Euler angles and phases are local caches. The worker reads triangle
+ * arrays through specialized resident access. This does not establish generic
+ * DataArray or DataStore thread safety.
  */
 class TrianglesSelector
 {
@@ -70,24 +74,23 @@ public:
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    std::vector<int8>& triIncluded, float64 misResolution, int32 phaseOfInterest, const Matrix3dR& gFixedT, const UInt32Array& crystalStructures, const Float32Array& euler,
-                    const Int32Array& phases, const Int32Array& faceLabels, const Float64Array& faceNormals, const Float64Array& faceAreas)
+                    float64 misResolution, int32 phaseOfInterest, const Matrix3dR& gFixedT, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32Array& faceLabels,
+                    const Float64Array& faceNormals, const Float64Array& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
   , m_NodeTypes(nodeTypes)
   , m_SelectedTriangles(selectedTriangles)
-  , m_TriIncluded(triIncluded)
   , m_MisResolution(misResolution)
   , m_PhaseOfInterest(phaseOfInterest)
   , m_GFixedT(gFixedT)
-  , m_Euler(euler)
-  , m_Phases(phases)
+  , m_EulerCache(eulerCache)
+  , m_PhasesCache(phasesCache)
   , m_FaceLabels(faceLabels)
   , m_FaceNormals(faceNormals)
   , m_FaceAreas(faceAreas)
   {
     m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-    m_Crystal = crystalStructures[phaseOfInterest];
+    m_Crystal = crystalStruct;
     m_NSym = m_OrientationOps[m_Crystal]->getNumSymOps();
   }
 
@@ -121,11 +124,11 @@ public:
       {
         continue;
       }
-      if(m_Phases[feature1] != m_Phases[feature2])
+      if(m_PhasesCache[feature1] != m_PhasesCache[feature2])
       {
         continue;
       }
-      if(m_Phases[feature1] != m_PhaseOfInterest || m_Phases[feature2] != m_PhaseOfInterest)
+      if(m_PhasesCache[feature1] != m_PhaseOfInterest || m_PhasesCache[feature2] != m_PhaseOfInterest)
       {
         continue;
       }
@@ -138,16 +141,14 @@ public:
         }
       }
 
-      m_TriIncluded[triIdx] = 1;
-
       normalLab[0] = (m_FaceNormals[3 * triIdx]);
       normalLab[1] = (m_FaceNormals[3 * triIdx + 1]);
       normalLab[2] = (m_FaceNormals[3 * triIdx + 2]);
 
       for(int whichEa = 0; whichEa < 3; whichEa++)
       {
-        g1ea[whichEa] = m_Euler[3 * feature1 + whichEa];
-        g2ea[whichEa] = m_Euler[3 * feature2 + whichEa];
+        g1ea[whichEa] = m_EulerCache[3 * feature1 + whichEa];
+        g2ea[whichEa] = m_EulerCache[3 * feature2 + whichEa];
       }
 
       auto oMatrix1 = ebsdlib::EulerDType(g1ea[0], g1ea[1], g1ea[2]).toOrientationMatrix();
@@ -219,7 +220,6 @@ private:
 #else
   std::vector<TriAreaAndNormals>& m_SelectedTriangles;
 #endif
-  std::vector<int8_t>& m_TriIncluded;
   float64 m_MisResolution;
   int32 m_PhaseOfInterest;
   const Matrix3dR& m_GFixedT;
@@ -228,16 +228,16 @@ private:
   uint32 m_Crystal;
   int32 m_NSym;
 
-  const Float32Array& m_Euler;
-  const Int32Array& m_Phases;
+  const float32* m_EulerCache;
+  const int32* m_PhasesCache;
   const Int32Array& m_FaceLabels;
   const Float64Array& m_FaceNormals;
   const Float64Array& m_FaceAreas;
 };
 
 /**
- * @brief The ProbeDistribution class implements a threaded algorithm that determines the distribution values
- * for the GBCD
+ * @class ProbeDistribution
+ * @brief Calculates metric-based GBCD values at sample points.
  */
 class ProbeDistribution
 {
@@ -326,7 +326,6 @@ private:
 
 } // namespace GBCDMetricBased
 
-// -----------------------------------------------------------------------------
 ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                ComputeGBCDMetricBasedInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -336,20 +335,16 @@ ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, con
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeGBCDMetricBased::~ComputeGBCDMetricBased() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDMetricBased::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ComputeGBCDMetricBased::operator()()
 {
-  // -------------------- check if directories are ok and if output files can be opened -----------
-  // Make sure the file name ends with _1 so the GMT scripts work correctly
+  // GMT scripts require the _1 filename suffix.
   fs::path distributionOutput = m_InputValues->DistOutputFile;
   std::string distFName = m_InputValues->DistOutputFile.stem().string();
   if(!distFName.empty() && !StringUtilities::ends_with(distFName, "_1"))
@@ -366,8 +361,7 @@ Result<> ComputeGBCDMetricBased::operator()()
     errorOutput = fs::path(m_InputValues->ErrOutputFile.parent_path() / errFName);
   }
 
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
+  // Create requested output directories before opening files.
   Result<> createDirectoriesResult = CreateOutputDirectories(distributionOutput.parent_path());
   if(createDirectoriesResult.invalid())
   {
@@ -399,11 +393,33 @@ Result<> ComputeGBCDMetricBased::operator()()
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
+  // Bulk-read feature-level arrays (Euler angles, phases) into local vectors.
+  // The parallel TrianglesSelector accesses these randomly by feature ID from
+  // triangle face labels — leaving them in OOC DataStores would cause thrashing.
+  const usize numEulerElements = eulerAngles.getSize();
+  std::vector<float32> eulerCache(numEulerElements);
+  eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulerCache.data(), numEulerElements));
+
+  const usize numPhaseElements = phases.getSize();
+  std::vector<int32> phasesCache(numPhaseElements);
+  phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phasesCache.data(), numPhaseElements));
+
+  // Bulk-read ensemble-level crystal structures (tiny, typically < 10 entries)
+  const usize numCrystalStructures = crystalStructures.getSize();
+  std::vector<uint32> crystalStructuresCache(numCrystalStructures);
+  crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numCrystalStructures));
+
+  // Bulk-read feature-face labels for the distinct boundary count loop below.
+  // This is O(feature_faces) which is much smaller than O(mesh_triangles).
+  const usize numFeatureFaceElements = featureFaceLabels.getSize();
+  std::vector<int32> featureFaceLabelsCache(numFeatureFaceElements);
+  featureFaceLabels.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(featureFaceLabelsCache.data(), numFeatureFaceElements));
+
   // ------------------- before computing the distribution, we must find normalization factors -----
   float64 ballVolume = k_BallVolumesM3M[m_InputValues->ChosenLimitDists];
   {
     std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
-    auto crystalStruct = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
+    auto crystalStruct = static_cast<int32>(crystalStructuresCache[m_InputValues->PhaseOfInterest]);
     const int32 nSym = ops[crystalStruct]->getNumSymOps();
 
     if(crystalStruct != 1)
@@ -470,13 +486,17 @@ Result<> ComputeGBCDMetricBased::operator()()
   std::vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);
 #endif
 
-  std::vector<int8> triIncluded(numMeshTriangles, 0);
-
   usize triChunkSize = 50000;
   if(numMeshTriangles < triChunkSize)
   {
     triChunkSize = numMeshTriangles;
   }
+
+  // Accumulate totalFaceArea by re-checking geometric filter conditions per
+  // chunk, rather than storing an O(n) triIncluded mask. This trades a small
+  // amount of redundant computation for eliminating a large boolean array
+  // that would also need OOC-safe access patterns.
+  float64 totalFaceArea = 0.0;
 
   for(usize i = 0; i < numMeshTriangles; i += triChunkSize)
   {
@@ -486,16 +506,48 @@ Result<> ComputeGBCDMetricBased::operator()()
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)",
                                                                static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
-    if(i + triChunkSize >= numMeshTriangles)
+    usize currentChunkSize = triChunkSize;
+    if(i + currentChunkSize >= numMeshTriangles)
     {
-      triChunkSize = numMeshTriangles - i;
+      currentChunkSize = numMeshTriangles - i;
     }
 
     ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(i, i + triChunkSize);
+    dataAlg.setRange(i, i + currentChunkSize);
     dataAlg.setParallelizationEnabled(true);
-    dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, triIncluded, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
-                                                       crystalStructures, eulerAngles, phases, faceLabels, faceNormals, faceAreas));
+    dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
+                                                       crystalStructuresCache[m_InputValues->PhaseOfInterest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
+
+    // Bulk-read this chunk's face labels and areas for totalFaceArea accumulation.
+    // Re-applies the same geometric filter conditions that TrianglesSelector uses.
+    {
+      std::vector<int32> labelsBuf(currentChunkSize * 2);
+      std::vector<float64> areasBuf(currentChunkSize);
+      faceLabels.getDataStoreRef().copyIntoBuffer(i * 2, nonstd::span<int32>(labelsBuf.data(), currentChunkSize * 2));
+      faceAreas.getDataStoreRef().copyIntoBuffer(i, nonstd::span<float64>(areasBuf.data(), currentChunkSize));
+
+      for(usize j = 0; j < currentChunkSize; j++)
+      {
+        const int32 feature1 = labelsBuf[2 * j];
+        const int32 feature2 = labelsBuf[2 * j + 1];
+        if(feature1 < 1 || feature2 < 1)
+        {
+          continue;
+        }
+        if(phasesCache[feature1] != m_InputValues->PhaseOfInterest || phasesCache[feature2] != m_InputValues->PhaseOfInterest)
+        {
+          continue;
+        }
+        if(m_InputValues->ExcludeTripleLines)
+        {
+          if(nodeTypes[triangles[(i + j) * 3]] != 2 || nodeTypes[triangles[(i + j) * 3 + 1]] != 2 || nodeTypes[triangles[(i + j) * 3 + 2]] != 2)
+          {
+            continue;
+          }
+        }
+        totalFaceArea += areasBuf[j];
+      }
+    }
   }
 
   // ------------------------  find the number of distinct boundaries ------------------------------
@@ -509,30 +561,23 @@ Result<> ComputeGBCDMetricBased::operator()()
       return {};
     }
 
-    const int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
-    const int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
+    const int32 feature1 = featureFaceLabelsCache[2 * featureFaceIdx];
+    const int32 feature2 = featureFaceLabelsCache[2 * featureFaceIdx + 1];
 
     if(feature1 < 1 || feature2 < 1)
     {
       continue;
     }
-    if(phases[feature1] != phases[feature2])
+    if(phasesCache[feature1] != phasesCache[feature2])
     {
       continue;
     }
-    if(phases[feature1] != m_InputValues->PhaseOfInterest || phases[feature2] != m_InputValues->PhaseOfInterest)
+    if(phasesCache[feature1] != m_InputValues->PhaseOfInterest || phasesCache[feature2] != m_InputValues->PhaseOfInterest)
     {
       continue;
     }
 
     numDistinctGBs++;
-  }
-
-  // ----------------- determining distribution values at the sampling points (and their errors) ---
-  float64 totalFaceArea = 0.0;
-  for(usize triIdx = 0; triIdx < numMeshTriangles; triIdx++)
-  {
-    totalFaceArea += faceAreas[triIdx] * static_cast<float64>(triIncluded.at(triIdx));
   }
 
   std::vector<float64> distributionValues(samplePtsX.size(), 0.0);

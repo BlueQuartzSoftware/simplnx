@@ -3,10 +3,18 @@
 #include "SimplnxCore/Filters/ExtractFeatureBoundaries2DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <array>
 #include <filesystem>
+#include <memory>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -18,20 +26,78 @@ const DataPath k_FeatureIdsPath({"ImageGeometry", "Cell Data", "FeatureIds"});
 const DataPath k_OutputEdgeGeometryPath({"Computed Feature Boundaries"});
 const DataPath k_ExemplarEdgeGeometryPath({"Feature Boundaries"});
 
+// This filter requires a single Z plane. A 2048x2048 plane exercises 4,194,304 cells,
+// comparable to a large 3D benchmark without allocating untouched Z slices.
+constexpr usize k_BenchmarkDimX = 2048;
+constexpr usize k_BenchmarkDimY = 2048;
+constexpr usize k_BenchmarkCellCount = k_BenchmarkDimX * k_BenchmarkDimY;
+constexpr usize k_BenchmarkMidX = k_BenchmarkDimX / 2;
+constexpr usize k_BenchmarkMidY = k_BenchmarkDimY / 2;
+constexpr float32 k_BenchmarkOriginX = 10.0F;
+constexpr float32 k_BenchmarkOriginY = -20.0F;
+constexpr float32 k_BenchmarkSpacingX = 0.5F;
+constexpr float32 k_BenchmarkSpacingY = 0.25F;
+constexpr float32 k_BenchmarkZ = 7.5F;
+
+void BuildBenchmarkInput(DataStructure& dataStructure)
+{
+  const ShapeType cellTupleShape = {1, k_BenchmarkDimY, k_BenchmarkDimX};
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions({k_BenchmarkDimX, k_BenchmarkDimY, 1});
+  imageGeom->setOrigin({k_BenchmarkOriginX, k_BenchmarkOriginY, 5.0F});
+  imageGeom->setSpacing({k_BenchmarkSpacingX, k_BenchmarkSpacingY, 2.0F});
+
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellData->getId());
+  REQUIRE(featureIds != nullptr);
+
+  auto rowBuffer = std::make_unique<int32[]>(k_BenchmarkDimX);
+  for(usize y = 0; y < k_BenchmarkDimY; y++)
+  {
+    const int32 yRegion = y < k_BenchmarkMidY ? 0 : 2;
+    for(usize x = 0; x < k_BenchmarkDimX; x++)
+    {
+      rowBuffer[x] = 1 + yRegion + (x < k_BenchmarkMidX ? 0 : 1);
+    }
+
+    const Result<> writeResult = featureIdsStore->copyFromBuffer(y * k_BenchmarkDimX, nonstd::span<const int32>(rowBuffer.get(), k_BenchmarkDimX));
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+}
+
+void RequireEdgeCoordinates(const EdgeGeom& edgeGeom, usize edgeIndex, const std::array<float32, 3>& expectedStart, const std::array<float32, 3>& expectedEnd)
+{
+  const auto& edges = edgeGeom.getEdgesRef();
+  const auto& vertices = edgeGeom.getVerticesRef();
+  REQUIRE(edgeIndex < edgeGeom.getNumberOfEdges());
+
+  const usize startVertex = edges[edgeIndex * 2];
+  const usize endVertex = edges[edgeIndex * 2 + 1];
+  for(usize component = 0; component < 3; component++)
+  {
+    REQUIRE(vertices[startVertex * 3 + component] == expectedStart[component]);
+    REQUIRE(vertices[endVertex * 3 + component] == expectedEnd[component]);
+  }
+}
+
 /**
- * @brief Verifies the computed Edge Geometry against the exemplar Edge Geometry
- * @param dataStructure
- * @param exemplarDataPath
- * @param computedDataPath
+ * @brief Verifies the computed Edge Geometry against the exemplar Edge Geometry.
+ * @param dataStructure Contains computed and exemplar geometries.
+ * @param exemplarDataPath Exemplar EdgeGeom path.
+ * @param computedDataPath Computed EdgeGeom path.
  */
 void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDataPath, const DataPath& computedDataPath)
 {
-  // Verify the output edge geometry was created
+  // The filter must create the output edge geometry.
   const auto* computedEdgeGeom = dataStructure.getDataAs<EdgeGeom>(computedDataPath);
   REQUIRE(computedEdgeGeom != nullptr);
 
   // const DataPath exemplarDataPath({"Feature Boundaries Max Z"});
-  //  Compare Geometries
+  // Compare geometry metadata and arrays.
   {
     const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
     REQUIRE(exemplarGeom != nullptr);

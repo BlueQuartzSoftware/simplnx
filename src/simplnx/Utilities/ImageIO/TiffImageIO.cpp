@@ -22,21 +22,21 @@ constexpr int32_t k_ErrorUnsupportedFormat = -20104;
 constexpr int32_t k_ErrorBufferSizeMismatch = -20105;
 
 /**
- * @brief Single RAII wrapper that opens a TIFF file with a per-handle error handler,
- * owns the TIFF* until destruction, and exposes the captured error string.
+ * @class TiffFile
+ * @brief Owns one TIFF handle and its per-handle diagnostic state.
  *
- * The constructor handles the full sequence (allocate TIFFOpenOptions, register the
- * per-handle error/warning handlers, call TIFFOpenExt, free the options) so each
- * call site reduces to one local. The TIFFOpenOptions* is freed inside the
- * constructor — libtiff copies its contents into the TIFF* on open, so the options
- * object only needs to live across the open call.
- *
- * Non-copyable AND non-movable: libtiff stores &m_ErrorMessage as opaque
- * user_data, so the address must stay stable for the lifetime of the TIFF*.
+ * The constructor owns the open-options sequence and frees the options after open.
+ * libtiff copies the options into the TIFF handle. libtiff stores the address of
+ * m_ErrorMessage as user data. Therefore, this object is not copyable or movable.
  */
 class TiffFile
 {
 public:
+  /**
+   * @brief Opens one TIFF file with local error and warning handlers.
+   * @param pathStr Supplies the narrow native file path.
+   * @param mode Supplies the libtiff open mode.
+   */
   TiffFile(const std::string& pathStr, const char* mode)
   {
     TIFFOpenOptions* opts = TIFFOpenOptionsAlloc();
@@ -74,17 +74,15 @@ public:
     return m_Tiff != nullptr;
   }
 
-  // Returns the most recent libtiff error captured by the handler, or
-  // "unknown error" if libtiff failed without producing a string.
+  // Use a stable fallback when libtiff fails without a diagnostic string.
   std::string_view errorMessage() const
   {
     return m_ErrorMessage.empty() ? std::string_view{"unknown error"} : std::string_view{m_ErrorMessage};
   }
 
 private:
-  // Reports each libtiff error into the std::string pointed to by user_data.
-  // Returning 1 tells libtiff the error was handled so it will not call the
-  // global error handler (avoids stderr spam in library consumers).
+  // Store the diagnostic in this handle's user data. Returning one prevents
+  // libtiff from forwarding the same error to its global stderr handler.
   static int errorHandler(TIFF* /*tif*/, void* user_data, const char* /*module*/, const char* formatStr, va_list args)
   {
     if(user_data == nullptr || formatStr == nullptr)
@@ -97,7 +95,7 @@ private:
     return 1;
   }
 
-  // Intentionally suppress warnings.
+  // Suppress optional libtiff warnings so library consumers receive Result diagnostics only.
   static int warningHandler(TIFF* /*tif*/, void* /*user_data*/, const char* /*module*/, const char* /*formatStr*/, va_list /*args*/)
   {
     return 1;
@@ -107,10 +105,15 @@ private:
   std::string m_ErrorMessage;
 };
 
-// Maps the TIFF (bits-per-sample, sample-format) pair to the DataTypes the
-// image-IO backends support. Other combinations (e.g. 1-bit bilevel, 4-bit
-// palette, int32, double) are explicitly rejected rather than silently falling
-// through to uint8.
+/**
+ * @brief Converts supported TIFF sample tags to a simplnx data type.
+ * @param tiff Supplies an open TIFF handle.
+ * @return uint8, uint16, or float32, or an unsupported-format error.
+ * @pre tiff is valid.
+ *
+ * The function rejects bilevel, palette, int32, float64, and unknown combinations.
+ * It does not silently convert them to uint8.
+ */
 Result<DataType> DetermineTiffDataType(TIFF* tiff)
 {
   uint16_t bitsPerSample = 8;
@@ -141,7 +144,6 @@ Result<DataType> DetermineTiffDataType(TIFF* tiff)
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& filePath) const
 {
   std::string pathStr = filePath.string();
@@ -160,9 +162,8 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
     return MakeErrorResult<ImageMetadata>(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  // SamplesPerPixel is required by the TIFF 6.0 spec (Section 7). Treat absence as an error
-  // rather than silently defaulting to 1, which would mis-read multi-channel images that lack
-  // the tag.
+  // TIFF defines a default of one, but this backend requires an explicit tag.
+  // This restriction avoids treating malformed multi-channel data as grayscale.
   uint16_t samplesPerPixel = 0;
   if(TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesPerPixel) == 0)
   {
@@ -182,7 +183,7 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   metadata.dataType = dataTypeResult.value();
   metadata.numPages = static_cast<usize>(TIFFNumberOfDirectories(tiff));
 
-  // Read optional origin (TIFF X/Y position tags)
+  // X and Y position tags supply optional origin metadata.
   float xPosition = 0.0f;
   float yPosition = 0.0f;
   bool hasOrigin = false;
@@ -199,7 +200,7 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
     metadata.origin = FloatVec3(xPosition, yPosition, 0.0f);
   }
 
-  // Read optional spacing (TIFF resolution tags)
+  // X and Y resolution tags supply optional spacing metadata.
   float xRes = 0.0f;
   float yRes = 0.0f;
   bool hasSpacing = false;
@@ -213,7 +214,7 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   }
   if(hasSpacing)
   {
-    // Resolution is in pixels-per-unit; spacing is the inverse
+    // Resolution is pixels per unit. Spacing is its inverse.
     float32 xSpacing = (xRes > 0.0f) ? (1.0f / xRes) : 1.0f;
     float32 ySpacing = (yRes > 0.0f) ? (1.0f / yRes) : 1.0f;
     metadata.spacing = FloatVec3(xSpacing, ySpacing, 1.0f);
@@ -222,10 +223,33 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   return {std::move(metadata)};
 }
 
-// -----------------------------------------------------------------------------
 Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const
 {
-  std::string pathStr = filePath.string();
+  Result<ImageMetadata> metadataResult = readMetadata(filePath);
+  if(metadataResult.invalid())
+  {
+    return ConvertResult(std::move(metadataResult));
+  }
+  const ImageMetadata& metadata = metadataResult.value();
+  const usize bytesPerElement = GetDataTypeSize(metadata.dataType);
+  const usize rowBytes = metadata.width * metadata.numComponents * bytesPerElement;
+  const usize expectedSize = rowBytes * metadata.height;
+  if(buffer.size() != expectedSize)
+  {
+    return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for TIFF image '{}'", buffer.size(), expectedSize, filePath.string()));
+  }
+
+  return readPixelDataRows(filePath, [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels) -> Result<> {
+    const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bytesPerElement;
+    const usize byteCount = pixelCount * metadata.numComponents * bytesPerElement;
+    std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
+    return {};
+  });
+}
+
+Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const
+{
+  const std::string pathStr = filePath.string();
   TiffFile tiffFile(pathStr, "r");
   if(!tiffFile.valid())
   {
@@ -233,19 +257,12 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
   }
 
   TIFF* tiff = tiffFile.get();
-
   uint32_t width = 0;
   uint32_t height = 0;
-  if(TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width) == 0 || TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height) == 0)
-  {
-    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, tiffFile.errorMessage()));
-  }
-
-  // SamplesPerPixel is required by the TIFF 6.0 spec (Section 7). See readMetadata().
   uint16_t samplesPerPixel = 0;
-  if(TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesPerPixel) == 0)
+  if(TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width) == 0 || TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height) == 0 || TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samplesPerPixel) == 0)
   {
-    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Required TIFF tag SamplesPerPixel is missing from '{}'", pathStr));
+    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Failed to read required TIFF dimensions/components from '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   Result<DataType> dataTypeResult = DetermineTiffDataType(tiff);
@@ -253,75 +270,71 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
   {
     return ConvertResult(std::move(dataTypeResult));
   }
-  DataType dataType = dataTypeResult.value();
-  usize bpe = GetDataTypeSize(dataType);
+  const usize bytesPerElement = GetDataTypeSize(dataTypeResult.value());
+  const usize pixelBytes = static_cast<usize>(samplesPerPixel) * bytesPerElement;
 
-  usize expectedSize = static_cast<usize>(width) * static_cast<usize>(height) * static_cast<usize>(samplesPerPixel) * bpe;
-  if(buffer.size() != expectedSize)
+  uint16_t planarConfig = PLANARCONFIG_CONTIG;
+  TIFFGetFieldDefaulted(tiff, TIFFTAG_PLANARCONFIG, &planarConfig);
+  if(planarConfig != PLANARCONFIG_CONTIG)
   {
-    return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for TIFF image '{}'", buffer.size(), expectedSize, pathStr));
+    return MakeErrorResult(k_ErrorUnsupportedFormat, fmt::format("Planar-separate TIFF data is not supported for '{}'.", pathStr));
   }
 
-  // Check if the image is tiled
   if(TIFFIsTiled(tiff) != 0)
   {
-    // For tiled TIFFs, use TIFFReadRGBAImageOriented as a fallback.
-    // This converts to uint8 RGBA, so it only works well for uint8 images.
-    if(dataType != DataType::uint8)
+    uint32_t tileWidth = 0;
+    uint32_t tileHeight = 0;
+    if(TIFFGetField(tiff, TIFFTAG_TILEWIDTH, &tileWidth) == 0 || TIFFGetField(tiff, TIFFTAG_TILELENGTH, &tileHeight) == 0 || tileWidth == 0 || tileHeight == 0)
     {
-      return MakeErrorResult(k_ErrorUnsupportedFormat, fmt::format("Tiled TIFF with non-uint8 data is not supported for '{}'. Convert to stripped TIFF first.", pathStr));
+      return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Failed to read valid TIFF tile dimensions from '{}': {}", pathStr, tiffFile.errorMessage()));
     }
 
-    std::vector<uint32_t> raster(static_cast<usize>(width) * static_cast<usize>(height));
-    if(TIFFReadRGBAImageOriented(tiff, width, height, raster.data(), ORIENTATION_TOPLEFT, 0) == 0)
+    const tmsize_t encodedTileSize = TIFFTileSize(tiff);
+    const usize tileRowBytes = static_cast<usize>(tileWidth) * pixelBytes;
+    const usize computedTileSize = tileRowBytes * static_cast<usize>(tileHeight);
+    if(encodedTileSize <= 0)
     {
-      return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read tiled TIFF pixel data from '{}': {}", pathStr, tiffFile.errorMessage()));
+      return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("TIFFTileSize returned {} for '{}': {}", encodedTileSize, pathStr, tiffFile.errorMessage()));
     }
+    // One reusable tile buffer bounds memory for tiled input. The computed size
+    // protects row access when libtiff reports a smaller encoded size.
+    std::vector<uint8> tileBuffer(std::max(static_cast<usize>(encodedTileSize), computedTileSize));
 
-    // TIFFReadRGBAImageOriented produces ABGR uint32 packed pixels.
-    // Extract the requested number of components.
-    usize pixelCount = static_cast<usize>(width) * static_cast<usize>(height);
-    for(usize i = 0; i < pixelCount; i++)
+    for(uint32_t tileY = 0; tileY < height; tileY += tileHeight)
     {
-      uint32_t pixel = raster[i];
-      uint8 r = TIFFGetR(pixel);
-      uint8 g = TIFFGetG(pixel);
-      uint8 b = TIFFGetB(pixel);
-      uint8 a = TIFFGetA(pixel);
+      for(uint32_t tileX = 0; tileX < width; tileX += tileWidth)
+      {
+        if(TIFFReadTile(tiff, tileBuffer.data(), tileX, tileY, 0, 0) < 0)
+        {
+          return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read tile at ({}, {}) from TIFF '{}': {}", tileX, tileY, pathStr, tiffFile.errorMessage()));
+        }
 
-      usize offset = i * samplesPerPixel;
-      if(samplesPerPixel >= 1)
-      {
-        buffer[offset] = r;
-      }
-      if(samplesPerPixel >= 2)
-      {
-        buffer[offset + 1] = g;
-      }
-      if(samplesPerPixel >= 3)
-      {
-        buffer[offset + 2] = b;
-      }
-      if(samplesPerPixel >= 4)
-      {
-        buffer[offset + 3] = a;
+        const usize validWidth = std::min<usize>(tileWidth, static_cast<usize>(width - tileX));
+        const usize validHeight = std::min<usize>(tileHeight, static_cast<usize>(height - tileY));
+        for(usize localRow = 0; localRow < validHeight; ++localRow)
+        {
+          const uint8* rowData = tileBuffer.data() + localRow * tileRowBytes;
+          Result<> result = callback(static_cast<usize>(tileY) + localRow, tileX, validWidth, std::span<const uint8>(rowData, validWidth * pixelBytes));
+          if(result.invalid())
+          {
+            return result;
+          }
+        }
       }
     }
-
     return {};
   }
 
-  // Scanline-based reading. TIFFScanlineSize returns tsize_t (signed); libtiff returns 0 or -1
-  // on failure. Without an explicit guard, the cast to usize below would treat -1 as ~16 EiB
-  // and std::vector::vector would throw std::bad_alloc.
+  // TIFFScanlineSize has a signed return type. Reject nonpositive values before
+  // conversion to usize. Otherwise, -1 can request an extremely large allocation.
   tsize_t scanlineSize = TIFFScanlineSize(tiff);
   if(scanlineSize <= 0)
   {
     return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("TIFFScanlineSize returned {} for '{}': {}", scanlineSize, pathStr, tiffFile.errorMessage()));
   }
-  usize rowBytes = static_cast<usize>(width) * static_cast<usize>(samplesPerPixel) * bpe;
+  usize rowBytes = static_cast<usize>(width) * pixelBytes;
 
-  // Use the larger of TIFFScanlineSize and our computed row size
+  // libtiff can include row padding. Allocate the larger reported or packed row size.
   usize scanlineBufSize = std::max(static_cast<usize>(scanlineSize), rowBytes);
   std::vector<uint8> scanlineBuf(scanlineBufSize);
 
@@ -331,13 +344,16 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
     {
       return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read scanline {} from TIFF '{}': {}", row, pathStr, tiffFile.errorMessage()));
     }
-    std::memcpy(buffer.data() + (static_cast<usize>(row) * rowBytes), scanlineBuf.data(), rowBytes);
+    Result<> result = callback(row, 0, width, std::span<const uint8>(scanlineBuf.data(), rowBytes));
+    if(result.invalid())
+    {
+      return result;
+    }
   }
 
   return {};
 }
 
-// -----------------------------------------------------------------------------
 Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const
 {
   if(metadata.dataType != DataType::uint8 && metadata.dataType != DataType::uint16 && metadata.dataType != DataType::float32)
@@ -365,7 +381,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   uint32_t h = static_cast<uint32_t>(metadata.height);
   uint16_t comp = static_cast<uint16_t>(metadata.numComponents);
 
-  // TIFFSetField returns 0 on failure; most failures here indicate an unwritable handle.
+  // TIFFSetField returns zero on failure. Most required-tag failures indicate an unwritable handle.
   if(TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, w) == 0 || TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, h) == 0 || TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, comp) == 0 ||
      TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 0 || TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 0 ||
      TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW) == 0 || TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tiff, 0)) == 0)
@@ -373,7 +389,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
     return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set required TIFF tags for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  // Set bits per sample and sample format based on data type
+  // The value type determines the bit width and TIFF sample format.
   bool fieldsSet = false;
   switch(metadata.dataType)
   {
@@ -395,31 +411,30 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
     return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF sample format tags for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  // Set photometric interpretation
+  // One component is grayscale. Three and four components use RGB photometric interpretation.
   uint16_t photometric = (comp == 1) ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB;
   if(TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, photometric) == 0)
   {
     return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF photometric tag for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  // For 4-component RGBA output, declare the 4th sample as unassociated alpha so readers interpret it
-  // correctly rather than treating the extra channel as an undefined sample.
+  // Declare the fourth RGBA sample as unassociated alpha. Otherwise, readers can
+  // interpret it as an undefined extra channel.
   if(comp == 4)
   {
     const uint16_t extraSamples[1] = {EXTRASAMPLE_UNASSALPHA};
     TIFFSetField(tiff, TIFFTAG_EXTRASAMPLES, 1, extraSamples);
   }
 
-  // Write optional origin
+  // Position tags are optional. A tag failure does not invalidate pixel output.
   if(metadata.origin.has_value())
   {
     const FloatVec3& origin = metadata.origin.value();
-    // Position tags are optional metadata; ignore failure so writing still succeeds on uncommon variants.
     TIFFSetField(tiff, TIFFTAG_XPOSITION, origin[0]);
     TIFFSetField(tiff, TIFFTAG_YPOSITION, origin[1]);
   }
 
-  // Write optional spacing as resolution
+  // Store positive spacing as its pixels-per-unit resolution.
   if(metadata.spacing.has_value())
   {
     const FloatVec3& spacing = metadata.spacing.value();
@@ -430,12 +445,11 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
     TIFFSetField(tiff, TIFFTAG_RESOLUTIONUNIT, RESUNIT_NONE);
   }
 
-  // Write scanlines
   usize rowBytes = static_cast<usize>(w) * static_cast<usize>(comp) * bpe;
   for(uint32_t row = 0; row < h; row++)
   {
     const uint8* rowData = buffer.data() + (static_cast<usize>(row) * rowBytes);
-    // TIFFWriteScanline takes a non-const void* but does not modify the data
+    // libtiff does not modify the row, but its C API accepts a non-const pointer.
     if(TIFFWriteScanline(tiff, const_cast<uint8*>(rowData), row) < 0)
     {
       return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to write scanline {} to TIFF '{}': {}", row, pathStr, tiffFile.errorMessage()));
@@ -445,15 +459,13 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   return {};
 }
 
-// -----------------------------------------------------------------------------
 std::set<DataType> TiffImageIO::supportedWriteDataTypes() const
 {
   return {DataType::uint8, DataType::uint16, DataType::float32};
 }
 
-// -----------------------------------------------------------------------------
 std::set<usize> TiffImageIO::supportedWriteComponentCounts() const
 {
-  // 1 = grayscale (PHOTOMETRIC_MINISBLACK), 3 = RGB, 4 = RGBA (RGB + one declared extra sample).
+  // Supported layouts are grayscale, RGB, and RGBA with declared alpha.
   return {1, 3, 4};
 }

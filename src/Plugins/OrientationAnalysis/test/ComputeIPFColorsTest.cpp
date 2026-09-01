@@ -1,34 +1,13 @@
 /**
  * @file ComputeIPFColorsTest.cpp
  *
- * V&V oracle for ComputeIPFColorsFilter.
+ * @brief Verifies simplnx routing around EbsdLib IPF color calculation.
  *
- * ComputeIPFColors is a thin orchestration layer on top of EbsdLib's
- * LaueOps::generateIPFColor(). The per-Laue-class correctness of the actual
- * color math (TSL / PUCM / Nolze-Hielscher) is verified upstream by EbsdLib's
- * own suite (TSLColorKeyTest, PUCMColorKeyTest, NolzeHielscherColorKeyTest,
- * ColorKeyKindTest). This file therefore V&Vs only the SIMPLNX *value-add* --
- * the per-cell dispatch, indexing, masking, reference-direction normalization,
- * phase bounds handling, and output packing -- NOT the color algorithm itself.
- *
- * Oracle design (see src/Plugins/OrientationAnalysis/vv/ComputeIPFColorsFilter.md):
- *   Class 1 (Analytical) : masked cell -> (0,0,0); invalid crystal structure ->
- *                          (0,0,0); reference-direction normalization; phase out
- *                          of range -> error -48000.
- *   Class 2 (Reference)  : colored cell == a direct in-process EbsdLib
- *                          generateIPFColor() call on the same inputs. Verifies
- *                          the filter routes data correctly, without re-testing
- *                          EbsdLib's color math.
- *   Class 3 (Paper/std)  : identity-orientation cubic cell viewed down [001]
- *                          is the red corner of the standard IPF triangle
- *                          (per EbsdLib TSLColorKeyTest: [001] -> r=1,g=0,b=0).
- *   Class 4 (Invariant)  : output is 3-component uint8; non-colored cells are
- *                          exactly (0,0,0); colored cells are non-black.
- *
- * The dataset is built entirely in-line (no exemplar archive) so no golden file
- * captured from legacy DREAM3D or a prior SIMPLNX run can act as a circular
- * oracle. The retired archive-based comparison used so3_cubic_high_ipf_001.dream3d
- * whose IPFColors array was produced by legacy SIMPL/DREAM3D itself.
+ * EbsdLib TSLColorKeyTest, PUCMColorKeyTest, NolzeHielscherColorKeyTest, and
+ * ColorKeyKindTest verify per-Laue-class color math. This file verifies simplnx
+ * dispatch, indexing, masking, direction normalization, phase bounds, and
+ * output packing. The inline fixture avoids a circular oracle from legacy or
+ * prior simplnx output.
  */
 
 #include "OrientationAnalysis/Filters/ComputeIPFColorsFilter.hpp"
@@ -44,6 +23,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -61,22 +41,8 @@ namespace
 {
 namespace CS = ebsdlib::CrystalStructure;
 
-//------------------------------------------------------------------------------
-// Inline analytical dataset. 6 cells, chosen so that each code path in
-// ComputeIPFColors::convert() is exercised. Crystal-structure ensemble:
-//   ensemble 0 -> UnknownCrystalStructure (999)  (the conventional DREAM3D
-//                 "invalid phase" placeholder; >= LaueGroupEnd, so never colored)
-//   ensemble 1 -> Cubic_High (1)
-//   ensemble 2 -> Hexagonal_High (0)
-//
-//  cell phase crystalStruct       euler (rad)     mask   role
-//   0    1    Cubic_High          (0,0,0)         true   Class 3 identity -> red corner
-//   1    1    Cubic_High          (0.3,0.4,0.5)   true   Class 2 arbitrary cubic
-//   2    2    Hexagonal_High      (0.1,0.2,0.3)   true   Class 2 arbitrary hex (2nd Laue class)
-//   3    1    Cubic_High          (0.3,0.4,0.5)   false  Class 1 masked -> black
-//   4    0    Unknown (999)       (0.3,0.4,0.5)   true   Class 1 invalid crystal structure -> black
-//   5    2    Hexagonal_High      (0.7,0.8,0.9)   true   Class 2 arbitrary hex
-//------------------------------------------------------------------------------
+// Six cells cover cubic and hexagonal colors, mask suppression, and an invalid
+// crystal structure. Cell zero is the cubic [001] reference case.
 constexpr usize k_NumCells = 6;
 constexpr usize k_NumEnsembles = 3;
 
@@ -90,7 +56,7 @@ const DataPath k_CrystalStructuresPath = k_GeomPath.createChildPath("CellEnsembl
 const std::string k_IpfColorsName = "IPFColors";
 const DataPath k_IpfColorsPath = k_CellDataPath.createChildPath(k_IpfColorsName);
 
-// Cells that must receive a real (non-black) IPF color when the mask is on.
+// These cells must receive non-black colors when the mask is enabled.
 constexpr std::array<usize, 4> k_ColoredCells = {0, 1, 2, 5};
 constexpr usize k_MaskedCell = 3;    // masked "bad" -> black
 constexpr usize k_InvalidCsCell = 4; // crystal structure 999 -> black
@@ -111,9 +77,9 @@ DataStructure BuildAnalyticalDataset()
   auto* crystalStructuresArray = CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {k_NumEnsembles}, {1}, ensembleAM->getId());
 
   auto& csStore = crystalStructuresArray->getDataStoreRef();
-  csStore[0] = CS::UnknownCrystalStructure; // 999
-  csStore[1] = CS::Cubic_High;              // 1
-  csStore[2] = CS::Hexagonal_High;          // 0
+  csStore[0] = CS::UnknownCrystalStructure;
+  csStore[1] = CS::Cubic_High;
+  csStore[2] = CS::Hexagonal_High;
 
   auto& eulerStore = eulersArray->getDataStoreRef();
   auto setEuler = [&](usize cell, float32 p1, float32 p, float32 p2) {
@@ -147,8 +113,7 @@ DataStructure BuildAnalyticalDataset()
   return dataStructure;
 }
 
-// Build the base filter arguments for the analytical dataset. refDir defaults to
-// [0,0,1] (already unit length so the reference call needs no separate normalize).
+// The baseline [0,0,1] reference direction is already normalized.
 Arguments MakeArgs(bool useMask, const DataPath& maskPath, const std::vector<float32>& refDir, ChoicesParameter::ValueType colorKey, const std::string& outputName)
 {
   Arguments args;
@@ -163,9 +128,7 @@ Arguments MakeArgs(bool useMask, const DataPath& maskPath, const std::vector<flo
   return args;
 }
 
-// The Class 2 reference: a direct, independent EbsdLib call reproducing what the
-// filter should compute for one colored cell. This is EbsdLib the trusted
-// reference implementation (Class 2), not the filter's own output.
+// Use EbsdLib directly to verify filter routing without retesting color math.
 std::array<uint8, 3> EbsdLibReferenceColor(const std::array<double, 3>& euler, uint32 crystalStruct, const std::array<double, 3>& refDir, ebsdlib::ColorKeyKind kind)
 {
   std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -178,6 +141,11 @@ std::array<uint8, 3> EbsdLibReferenceColor(const std::array<double, 3>& euler, u
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inline analytical dataset)", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
@@ -187,16 +155,16 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath));
   const auto& colors = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath);
-  // Class 4: output is 3-component uint8 with the parent tuple count.
+  // Class 4 checks the output shape.
   REQUIRE(colors.getNumberOfTuples() == k_NumCells);
   REQUIRE(colors.getNumberOfComponents() == 3);
 
-  // Pull the inputs back out so the reference call is driven by the same data the filter saw.
+  // Use the filter inputs for the independent EbsdLib reference.
   const auto& eulerStore = dataStructure.getDataRefAs<Float32Array>(k_EulersPath).getDataStoreRef();
   const auto& phaseStore = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath).getDataStoreRef();
   const auto& csStore = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath).getDataStoreRef();
@@ -207,9 +175,9 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
 
   SECTION("Class 3 - identity cubic orientation viewed down [001] is the red IPF corner")
   {
-    // Per EbsdLib TSLColorKeyTest: the [001] direction maps to r=1,g=0,b=0.
+    // EbsdLib maps [001] to the red TSL IPF corner.
     const std::array<uint8, 3> c0 = colorAt(0);
-    REQUIRE(c0[0] >= 250); // red channel saturated (allow rounding at the exact corner)
+    REQUIRE(c0[0] >= 250); // Allow rounding at the exact red corner.
     REQUIRE(c0[1] == 0);
     REQUIRE(c0[2] == 0);
   }
@@ -224,7 +192,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
       const std::array<uint8, 3> actual = colorAt(cell);
       INFO("cell " << cell);
       REQUIRE(actual == expected);
-      // Class 4: a colored cell must not be black.
+      // Class 4 requires a colored cell to be non-black.
       REQUIRE((actual[0] != 0 || actual[1] != 0 || actual[2] != 0));
     }
   }
@@ -244,23 +212,27 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: uint8 mask array drives the black-out path", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
   ComputeIPFColorsFilter filter;
-  // Same as the main oracle but the mask is a uint8 array -> exercises convert<uint8>.
+  // A uint8 mask selects the uint8 conversion path.
   const Arguments args = MakeArgs(true, k_MaskU8Path, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& colorStore = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath).getDataStoreRef();
   auto colorAt = [&](usize cell) { return std::array<uint8, 3>{colorStore[cell * 3], colorStore[cell * 3 + 1], colorStore[cell * 3 + 2]}; };
 
-  // The uint8-masked "bad" cell is black; a good cell is colored.
   REQUIRE(colorAt(k_MaskedCell) == std::array<uint8, 3>{0, 0, 0});
   const std::array<uint8, 3> c0 = colorAt(0);
   REQUIRE((c0[0] != 0 || c0[1] != 0 || c0[2] != 0));
@@ -270,19 +242,22 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: uint8 mask array drives 
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors every valid cell", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
   ComputeIPFColorsFilter filter;
-  // useMask == false -> the algorithm's goodVoxels pointer is null (convert<bool>
-  // with a null mask). Cell 3, which was masked-black in the main oracle, must now
-  // be colored; cell 4 (invalid crystal structure) is still black.
+  // A null mask colors cell three but keeps the invalid crystal structure black.
   const Arguments args = MakeArgs(false, DataPath{}, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& eulerStore = dataStructure.getDataRefAs<Float32Array>(k_EulersPath).getDataStoreRef();
@@ -291,7 +266,6 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors ever
   const auto& colorStore = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath).getDataStoreRef();
   auto colorAt = [&](usize cell) { return std::array<uint8, 3>{colorStore[cell * 3], colorStore[cell * 3 + 1], colorStore[cell * 3 + 2]}; };
 
-  // Cell 3 is now colored and matches the EbsdLib reference (mask no longer suppresses it).
   const std::array<double, 3> euler3 = {eulerStore[k_MaskedCell * 3], eulerStore[k_MaskedCell * 3 + 1], eulerStore[k_MaskedCell * 3 + 2]};
   const std::array<uint8, 3> expected3 = EbsdLibReferenceColor(euler3, csStore[phaseStore[k_MaskedCell]], {0.0, 0.0, 1.0}, ebsdlib::ColorKeyKind::TSL);
   REQUIRE(colorAt(k_MaskedCell) == expected3);
@@ -302,19 +276,23 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors ever
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: reference direction is normalized", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
   ComputeIPFColorsFilter filter;
-  // A non-unit reference direction [0,0,5] must produce exactly the same colors as
-  // the unit direction [0,0,1] because the algorithm normalizes it first.
+  // Normalization makes [0,0,5] and [0,0,1] produce identical colors.
   auto runWith = [&](const std::vector<float32>& refDir, const std::string& outputName) {
     ComputeIPFColorsFilter f;
     const Arguments args = MakeArgs(true, k_MaskPath, refDir, 0 /*TSL*/, outputName);
     auto preflightResult = f.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = f.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(f, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
 
@@ -331,13 +309,16 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: reference direction is n
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: phase index out of range returns -48000", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
-  // Corrupt one cell's phase to reference an ensemble index that does not exist
-  // (numEnsembles == 3, so phase 5 is out of range). The per-cell loop increments
-  // the phase-warning count and the algorithm returns error -48000.
+  // Phase five exceeds the three-entry ensemble array and must report -48000.
   auto& phaseStore = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath).getDataStoreRef();
   phaseStore[0] = 5;
 
@@ -346,20 +327,20 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: phase index out of range
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -48000);
 }
 
-// -----------------------------------------------------------------------------
-// Plumbing test: the k_ColorKey_Key choice index must route through executeImpl's
-// switch into the right ebsdlib::ColorKeyKind and reach generateIPFColor. The
-// per-Laue-class correctness of TSL / PUCM / Nolze-Hielscher is covered by
-// EbsdLib's color-key tests; here we only assert that the simplnx side wiring is
-// intact -- non-default choices must produce a different output array than the
-// default (TSL) run on the same input data.
+// Verify that ColorKey selection reaches EbsdLib. EbsdLib tests the color math.
+// This fixture requires non-default keys to differ from TSL.
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches algorithm", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
@@ -369,7 +350,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
     const Arguments args = MakeArgs(true, k_MaskPath, {0.0F, 0.0F, 1.0F}, kindIndex, outputName);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
 
@@ -384,8 +365,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
   REQUIRE(tslColors.getSize() == pucmColors.getSize());
   REQUIRE(tslColors.getSize() == nhColors.getSize());
 
-  // If the switch in executeImpl ever silently collapsed every kind onto TSL,
-  // these arrays would be identical.
+  // Identical arrays would show that dispatch collapsed every key to TSL.
   REQUIRE(!std::equal(tslColors.cbegin(), tslColors.cend(), pucmColors.cbegin()));
   REQUIRE(!std::equal(tslColors.cbegin(), tslColors.cend(), nhColors.cbegin()));
 }
@@ -394,10 +374,8 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
 {
   UnitTest::LoadPlugins();
 
-  // Build a minimal synthetic DataStructure where the two cell-level arrays that are
-  // validated together (Euler Angles and Phases) do NOT share the same tuple count.
-  // This drives the validateNumberOfTuples() guard in preflightImpl that emits -651.
-  // The mask is left disabled so only Euler Angles + Phases participate in the check.
+  // EulerAngles and Phases have different tuple counts. The disabled mask keeps
+  // the preflight check limited to these two arrays.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeom->setDimensions({10, 1, 1});
@@ -405,8 +383,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
   auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
   UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {10}, {3}, cellAM->getId());
 
-  // Phases lives in a separate AttributeMatrix with a deliberately different tuple
-  // count (9 != 10) so the cross-array tuple-count check fails.
+  // The separate group makes Phases contain nine tuples instead of ten.
   auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
 
@@ -462,7 +439,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatib
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
+      // Pipeline loading verifies FloatVec3FilterParameterConverter.
       CHECK(args.value<bool>(ComputeIPFColorsFilter::k_UseMask_Key) == true);
       CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

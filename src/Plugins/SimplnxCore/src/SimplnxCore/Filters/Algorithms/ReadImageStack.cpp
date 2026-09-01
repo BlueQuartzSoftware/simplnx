@@ -19,6 +19,7 @@
 #include <fmt/format.h>
 
 #include <filesystem>
+#include <memory>
 
 namespace fs = std::filesystem;
 
@@ -37,8 +38,6 @@ Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config)
   args.insertOrAssign(ReadImageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<BoolParameter::ValueType>(config.changeDataType));
   args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(ImageDataTypeToChoice(config.imageDataType)));
-  // Only forward the overrides when the stack filter is configured for Preprocessed; otherwise the stack
-  // filter applies the override itself via a deferred UpdateImageGeomAction after cropping/resampling.
   const bool forwardOrigin = config.changeOrigin && config.originSpacingProcessing == OriginSpacingProcessing::Preprocessed;
   const bool forwardSpacing = config.changeSpacing && config.originSpacingProcessing == OriginSpacingProcessing::Preprocessed;
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(forwardOrigin));
@@ -59,66 +58,112 @@ const ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
+/**
+ * @brief Reverses tuple order within each image row.
+ * @tparam T Specifies the image scalar type.
+ * @param dataArray Provides and receives one image slice.
+ * @param dims Specifies slice dimensions.
+ * @return First row read or write error, or success.
+ *
+ * One typed row buffer bounds scratch memory.
+ */
 template <class T>
-void FlipAboutYAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
+Result<> FlipAboutYAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 {
   AbstractDataStore<T>& dataStoreRef = dataArray.getDataStoreRef();
 
-  usize numComp = dataStoreRef.getNumberOfComponents();
-  std::vector<T> currentRowBuffer(dims[0] * dataArray.getNumberOfComponents());
+  const usize numComp = dataStoreRef.getNumberOfComponents();
+  const usize rowElements = dims[0] * numComp;
+  auto currentRowBuffer = std::make_unique<T[]>(rowElements);
 
   for(usize row = 0; row < dims[1]; row++)
   {
-    // Copy the current row into a temp buffer
-    typename AbstractDataStore<T>::Iterator startIter = dataStoreRef.begin() + (dims[0] * numComp * row);
-    typename AbstractDataStore<T>::Iterator endIter = startIter + dims[0] * numComp;
-    std::copy(startIter, endIter, currentRowBuffer.begin());
-
-    // Starting at the last tuple in the buffer
-    usize bufferIndex = (dims[0] - 1) * numComp;
-    usize dataStoreIndex = row * dims[0] * numComp;
-
-    for(usize tupleIdx = 0; tupleIdx < dims[0]; tupleIdx++)
+    const usize rowOffset = row * rowElements;
+    Result<> readResult = dataStoreRef.copyIntoBuffer(rowOffset, nonstd::span<T>(currentRowBuffer.get(), rowElements));
+    if(readResult.invalid())
     {
-      for(usize cIdx = 0; cIdx < numComp; cIdx++)
+      return readResult;
+    }
+
+    for(usize leftTuple = 0, rightTuple = dims[0] - 1; leftTuple < rightTuple; leftTuple++, rightTuple--)
+    {
+      for(usize component = 0; component < numComp; component++)
       {
-        dataStoreRef.setValue(dataStoreIndex, currentRowBuffer[bufferIndex + cIdx]);
-        dataStoreIndex++;
+        std::swap(currentRowBuffer[leftTuple * numComp + component], currentRowBuffer[rightTuple * numComp + component]);
       }
-      bufferIndex = bufferIndex - numComp;
+    }
+
+    Result<> writeResult = dataStoreRef.copyFromBuffer(rowOffset, nonstd::span<const T>(currentRowBuffer.get(), rowElements));
+    if(writeResult.invalid())
+    {
+      return writeResult;
     }
   }
+  return {};
 }
 
+/**
+ * @brief Swaps mirrored image rows.
+ * @tparam T Specifies the image scalar type.
+ * @param dataArray Provides and receives one image slice.
+ * @param dims Specifies slice dimensions.
+ * @return First row read or write error, or success.
+ *
+ * Two row buffers bound scratch memory. An odd middle row remains unchanged.
+ */
 template <class T>
-void FlipAboutXAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
+Result<> FlipAboutXAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 {
   AbstractDataStore<T>& dataStoreRef = dataArray.getDataStoreRef();
-  usize numComp = dataStoreRef.getNumberOfComponents();
-  // Only iterate half the rows; the inner swap pairs each top row with its bottom mirror.
-  // Odd height leaves the middle row untouched.
+  const usize numComp = dataStoreRef.getNumberOfComponents();
+  const usize rowElements = dims[0] * numComp;
+  auto topRowBuffer = std::make_unique<T[]>(rowElements);
+  auto bottomRowBuffer = std::make_unique<T[]>(rowElements);
   const usize rowSwapCount = dims[1] / 2;
-  usize bottomRow = dims[1] - 1;
 
-  for(usize row = 0; row < rowSwapCount; row++)
+  for(usize topRow = 0; topRow < rowSwapCount; topRow++)
   {
-    // Copy the "top" row into a temp buffer
-    usize topStartIter = 0 + (dims[0] * numComp * row);
-    usize topEndIter = topStartIter + dims[0] * numComp;
-    usize bottomStartIter = 0 + (dims[0] * numComp * bottomRow);
+    const usize bottomRow = dims[1] - 1 - topRow;
+    const usize topOffset = topRow * rowElements;
+    const usize bottomOffset = bottomRow * rowElements;
 
-    // Copy from bottom to top and then temp to bottom
-    for(usize eleIndex = topStartIter; eleIndex < topEndIter; eleIndex++)
+    Result<> topReadResult = dataStoreRef.copyIntoBuffer(topOffset, nonstd::span<T>(topRowBuffer.get(), rowElements));
+    if(topReadResult.invalid())
     {
-      T value = dataStoreRef.getValue(eleIndex);
-      dataStoreRef[eleIndex] = dataStoreRef[bottomStartIter];
-      dataStoreRef[bottomStartIter] = value;
-      bottomStartIter++;
+      return topReadResult;
     }
-    bottomRow--;
+    Result<> bottomReadResult = dataStoreRef.copyIntoBuffer(bottomOffset, nonstd::span<T>(bottomRowBuffer.get(), rowElements));
+    if(bottomReadResult.invalid())
+    {
+      return bottomReadResult;
+    }
+    Result<> topWriteResult = dataStoreRef.copyFromBuffer(topOffset, nonstd::span<const T>(bottomRowBuffer.get(), rowElements));
+    if(topWriteResult.invalid())
+    {
+      return topWriteResult;
+    }
+    Result<> bottomWriteResult = dataStoreRef.copyFromBuffer(bottomOffset, nonstd::span<const T>(topRowBuffer.get(), rowElements));
+    if(bottomWriteResult.invalid())
+    {
+      return bottomWriteResult;
+    }
   }
+  return {};
 }
 
+/**
+ * @brief Reads, optionally converts/resamples/flips, and appends stack slices for one destination value type.
+ * @tparam T Specifies the destination image scalar type.
+ * @param dataStructure Provides the destination stack.
+ * @param inputValues Specifies files, transforms, crop, and output settings.
+ * @param messageHandler Receives per-file and phase messages.
+ * @param shouldCancel Stops after the current slice copy when true.
+ * @return First validation, delegated-filter, or bulk-I/O error, or accumulated warnings.
+ *
+ * Each decoded slice is consumed before the next file is opened. Final flips
+ * and slice copies use row/slice bulk transfers, so no complete stack copy is
+ * created even when the destination store is disk-backed.
+ */
 template <class T>
 Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
@@ -163,9 +208,8 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     SizeVec3 destDims = initialImageGeom.getDimensions();
     FloatVec3 destOrigin = initialImageGeom.getOrigin();
 
-    // ImageGeom::getIndex returns nullopt if the physical coordinates fall outside the geometry.
-    // Treat that as a hard error rather than silently falling back to the full slice range —
-    // the prior behavior produced the wrong volume without warning.
+    // Reject physical crop bounds outside the geometry. A full-range fallback
+    // would silently create the wrong output volume.
     std::optional<usize> result = initialImageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[0]);
     if(!result.has_value())
     {
@@ -222,7 +266,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       ResampleImageGeomFilter resampleImageGeomFilter;
       if(resample == k_ScalingModeIndex)
       {
-        // 100% means no scaling, so we skip the resample step entirely
+        // A 100 percent scale preserves the decoded slice and needs no resampling.
         if(scalingFactor != 100.0f)
         {
           Arguments resampleImageGeomArgs;
@@ -255,8 +299,8 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
         }
       }
 
-      // The preflight creates the resampled geometry at a "_resampled" path; the final rename back happens in a
-      // deferred action after execute completes, so during algorithm execution we write to the "_resampled" path.
+      // The resample filter defers its final rename. Use the temporary path until
+      // deferred actions complete.
       destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});
     }
 
@@ -316,16 +360,23 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
 
     if(transformType == ImageFlipTransform::FlipAboutYAxis)
     {
-      FlipAboutYAxis<T>(srcData, destDims);
+      Result<> flipResult = FlipAboutYAxis<T>(srcData, destDims);
+      if(flipResult.invalid())
+      {
+        return flipResult;
+      }
     }
     else if(transformType == ImageFlipTransform::FlipAboutXAxis)
     {
-      FlipAboutXAxis<T>(srcData, destDims);
+      Result<> flipResult = FlipAboutXAxis<T>(srcData, destDims);
+      if(flipResult.invalid())
+      {
+        return flipResult;
+      }
     }
 
-    // When grayscale conversion is requested, the preflight creates the destination array with a
-    // "grayscale_" prefix and renames it back via a deferred action after execute completes, so
-    // the algorithm writes to the prefixed path here.
+    // Grayscale preflight creates a prefixed array and defers its final rename.
+    // Write the stack to that temporary path during execution.
     DataPath destImageDataPath = convertToGrayscale ? destImageGeomPath.createChildPath(cellDataName).createChildPath("grayscale_" + imageArrayName) :
                                                       destImageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
     auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(destImageDataPath);
@@ -347,8 +398,21 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
   return outputResult;
 }
 
+/**
+ * @struct ReadImageStackDispatchFunctor
+ * @brief Dispatches the destination type to the bounded stack reader.
+ */
 struct ReadImageStackDispatchFunctor
 {
+  /**
+   * @brief Invokes the complete typed stack reader.
+   * @tparam T Specifies the destination image scalar type.
+   * @param dataStructure Provides the destination stack.
+   * @param inputValues Specifies files, transforms, crop, and output settings.
+   * @param messageHandler Receives per-file and phase messages.
+   * @param shouldCancel Stops after the current slice copy when true.
+   * @return First error or accumulated warning result.
+   */
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const ReadImageStackInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
@@ -357,7 +421,6 @@ struct ReadImageStackDispatchFunctor
 };
 } // namespace
 
-// -----------------------------------------------------------------------------
 ReadImageStack::ReadImageStack(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadImageStackInputValues& inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -366,13 +429,10 @@ ReadImageStack::ReadImageStack(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-// -----------------------------------------------------------------------------
 ReadImageStack::~ReadImageStack() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ReadImageStack::operator()()
 {
-  // Determine the DataType of the final destination DataArray from the DataStructure
   const std::string& imageArrayName = m_InputValues.imageDataArrayName;
   const std::string& cellDataName = m_InputValues.cellDataName;
   DataPath destImageGeomPath = m_InputValues.imageGeometryPath;

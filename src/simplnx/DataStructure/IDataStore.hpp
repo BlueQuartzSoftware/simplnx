@@ -6,152 +6,146 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
 namespace nx::core
 {
 /**
+ * @namespace nx::core
+ * @brief Contains simplnx core types and functions.
+ */
+
+/**
  * @class IDataStore
- * @brief The IDataStore class serves as an interface class for the
- * various types of data stores used in DataArrays. The basic API and iterators
- * are defined but the specifics relating to how data is stored are implemented
- * in subclasses.
+ * @brief Defines shared metadata and lifecycle operations for data stores.
  */
 class SIMPLNX_EXPORT IDataStore
 {
 public:
+  /**
+   * @enum StoreType
+   * @brief Identifies the data-store residency state.
+   *
+   * Algorithms select storage-aware access paths from this state. Empty stores
+   * preserve preflight metadata without values.
+   * In-memory stores provide direct resident access.
+   * Out-of-core stores use backing storage and benefit from bulk access instead of per-value I/O.
+   * Execution replaces an empty store with its planned concrete storage before value access.
+   */
   enum class StoreType : int32
   {
-    InMemory = 0,
-    OutOfCore,
-    Empty,
-    EmptyOutOfCore
+    InMemory = 0, ///< Selects resident data storage.
+    OutOfCore,    ///< Selects nonresident backing storage.
+    Empty         ///< Identifies a preflight metadata placeholder.
   };
 
+  /**
+   * @brief Destroys the data store.
+   */
   virtual ~IDataStore() = default;
 
-  /**
-   * @brief Returns the number of tuples in the DataStore.
-   * @return usize
-   */
   virtual usize getNumberOfTuples() const = 0;
   /**
-   * @brief Returns the dimensions of the Tuples
-   * @return
+   * @brief Returns the tuple shape.
+   * @return Reference that remains valid until the store changes shape or is destroyed.
    */
   virtual const ShapeType& getTupleShape() const = 0;
 
-  /**
-   * @brief Returns the number of components.
-   * @return usize
-   */
   virtual usize getNumberOfComponents() const = 0;
 
   /**
-   * @brief Returns the dimensions of the Components
-   * @return
+   * @brief Returns the component shape.
+   * @return Reference that remains valid until the store is destroyed.
    */
   virtual const ShapeType& getComponentShape() const = 0;
 
-  /**
-   * @brief Returns the chunk shape if the DataStore is separated into chunks.
-   * If the DataStore does not have chunks, this method returns a null optional.
-   * @return optional Shapetype
-   */
-  virtual std::optional<ShapeType> getChunkShape() const = 0;
-
-  /**
-   * @brief Returns the number of values stored within the DataStore.
-   * @return usize
-   */
   usize getSize() const
   {
     return getNumberOfTuples() * getNumberOfComponents();
   }
 
-  /**
-   * @brief Returns the number of values stored within the DataStore.
-   * @return usize
-   */
   usize size() const
   {
     return getSize();
   }
 
-  /**
-   * @brief Returns if there are any elements in the array object
-   * @return bool, true if the DataStore has a size() == 0
-   */
   bool empty() const
   {
     return getNumberOfTuples() == 0;
   }
 
   /**
-   * @brief Resizes the DataStore to handle the specified number of tuples.
-   * @param numTuples
+   * @brief Changes the tuple shape.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
    */
   virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
-  /**
-   * @brief Returns the DataStore's DataType as an enum
-   * @return DataType
-   */
   virtual DataType getDataType() const = 0;
 
-  /**
-   * @brief Returns the store type e.g. in memory, out of core, etc.
-   * @return StoreType
-   */
   virtual StoreType getStoreType() const = 0;
 
   /**
-   * @brief Returns the data format used for storing the array data.
-   * @return data format as string
+   * @brief Returns the store type that materializes after preflight.
+   *
+   * Real stores return their current type. EmptyDataStore exposes the planned
+   * in-memory or out-of-core type without allocating data.
+   * @return Current or planned store type.
    */
+  virtual StoreType getPlannedStoreType() const
+  {
+    return getStoreType();
+  }
+
   virtual std::string getDataFormat() const
   {
     return "";
   }
 
   /**
-   * @brief Returns the size of the stored type of the data store.
-   * @return usize
+   * @brief Returns metadata that reconnects a store after recovery.
+   *
+   * In-memory stores return no metadata because recovery stores their values.
+   * Out-of-core stores return the information needed to reopen backing data.
+   * The recovery writer stores these pairs as HDF5 attributes.
+   * The loader reconstructs the store without materializing its complete backing data.
+   * @return Key-value recovery metadata.
    */
+  virtual std::map<std::string, std::string> getRecoveryMetadata() const = 0;
+
   virtual usize getTypeSize() const = 0;
 
   /**
-   * @brief Returns a deep copy of the data store and all its data.
-   * @return std::unique_ptr<IDataStore>
+   * @brief Makes an independent copy of the data store.
+   * @return Owning copy of this store.
    */
   virtual std::unique_ptr<IDataStore> deepCopy() const = 0;
 
   /**
-   * @brief Returns a data store of the same type as this but with default initialized data.
-   * @return std::unique_ptr<IDataStore>
+   * @brief Creates a store of the same concrete type.
+   * @return Owning store with default values.
    */
   virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
 
   /**
-   * @brief Writes a binary file to the specified file path.
-   * @param absoluteFilePath
-   * @return std::pair<int32, std::string>
+   * @brief Writes store values to a binary file.
+   * @param absoluteFilePath Destination file path.
+   * @return Error code and message.
    */
   virtual std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const = 0;
 
   /**
-   * @brief Writes a binary file using the specified output stream.
-   * @param outputStream
-   * @return std::pair<int32, std::string>
+   * @brief Writes store values to a binary stream.
+   * @param outputStream Destination stream.
+   * @return Error code and message.
    */
   virtual std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const = 0;
 
 protected:
   /**
-   * @brief Default constructor
+   * @brief Creates a data store.
    */
   IDataStore() = default;
 };

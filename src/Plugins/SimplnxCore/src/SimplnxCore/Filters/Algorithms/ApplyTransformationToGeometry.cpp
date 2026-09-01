@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -9,7 +10,6 @@
 
 using namespace nx::core;
 
-// -----------------------------------------------------------------------------
 ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                              ApplyTransformationToGeometryInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -19,25 +19,22 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 {
 }
 
-// -----------------------------------------------------------------------------
 ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 {
-  // Pure translation for Image Geom, just return
+  // Preflight actions already apply translation through the image origin.
   if(m_InputValues->TransformationSelection == detail::k_TranslationIdx)
   {
     return {};
   }
 
-  // Pure Scale for image geom, just return
+  // Preflight actions already apply scale through image origin and spacing.
   if(m_InputValues->TransformationSelection == detail::k_ScaleIdx)
   {
     return {};
@@ -46,7 +43,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   DataPath destImagePath;
   if(m_InputValues->RemoveOriginalGeometry)
   {
-    // Create an Image Geometry name with a "." as a prefix to the original Image Geometry Name
+    // Preflight creates a dot-prefixed temporary geometry for replacement.
     std::vector<std::string> tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
     tempPathVector.back() = "." + tempPathVector.back();
     destImagePath = DataPath({tempPathVector});
@@ -62,10 +59,8 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
-  // The actual rotating of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
+  // Resident image arrays can resample in independent tasks.
   ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(true);
 
   const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
@@ -74,7 +69,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   if(m_InputValues->TransformationSelection == detail::k_PrecomputedTransformationMatrixIdx)
   {
-    // Adjust the destination objects because we didn't have the transformation matrix values during preflight
+    // Preflight cannot inspect a runtime matrix, so update destination metadata here.
     auto& destCellDataAM = destImageGeom.getCellDataRef();
     const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
     const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
@@ -83,12 +78,26 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     origin[1] = rotateArgs.outputYMin;
     origin[2] = rotateArgs.outputZMin;
 
-    std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX), opposite of ImageGeometry dimensions
+    // Array tuple dimensions use ZYX order, opposite ImageGeom XYZ order.
+    std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]};
     destImageGeom.setDimensions(dims);
     destImageGeom.setOrigin(origin);
     destImageGeom.setSpacing(spacing);
     destCellDataAM.resizeTuples(dataArrayShape);
   }
+
+  // Serialize out-of-core array transforms so bounded page and output-slice
+  // buffers do not multiply by the number of cell arrays.
+  bool usesOutOfCoreStore = false;
+  for(const auto& [dataId, srcDataObject] : srcCellDataAM)
+  {
+    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArray) || IsOutOfCore(*destDataArray);
+  }
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  taskRunner.setParallelizationEnabled(!useOutOfCoreAlgorithm);
 
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
@@ -121,13 +130,12 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     }
   }
 
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  taskRunner.wait();
 
   // Surface any error/warning a parallel resample task reported through the shared callback.
   return filterProgressCallback.takeResult();
 }
 
-// -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
   auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
@@ -136,7 +144,8 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
-  // Allow data-based parallelization
+  // Node geometry uses direct disjoint vertex ranges. Generic DataArray and
+  // DataStore concurrent access is not guaranteed.
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, vertexList.getNumberOfTuples());
   dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
@@ -144,7 +153,6 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
   return {};
 }
 
-// -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::operator()()
 {
   if(!m_InputValues->RemoveOriginalGeometry)
@@ -186,7 +194,6 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   }
 
-  // Apply geometry transformation
   auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
   auto* nodeGeometry0D = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   if(m_InputValues->TranslateGeometryToGlobalOrigin)
@@ -198,8 +205,7 @@ Result<> ApplyTransformationToGeometry::operator()()
     m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
   }
 
-  // If asked to do so, save the transformation matrix as a flattened 1x16 array where we raster
-  // along the columns the fastest then the the rows (Same as an image with its origin in the upper left
+  // Store the matrix in row-major order with columns changing fastest.
   if(m_InputValues->SaveTransformMatrix)
   {
     auto& transformMatrix = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->TransformMatrixPath);
@@ -215,12 +221,7 @@ Result<> ApplyTransformationToGeometry::operator()()
 
   if(imageGeometryPtr == nullptr)
   {
-    applyNodeGeometryTransformation();
+    return applyNodeGeometryTransformation();
   }
-  else
-  {
-    applyImageGeometryTransformation();
-  }
-
-  return {};
+  return applyImageGeometryTransformation();
 }

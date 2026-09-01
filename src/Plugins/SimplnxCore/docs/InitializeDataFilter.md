@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** overwrites every tuple in a **Data Array** with a value chosen by one of four initialization modes. Multi-component arrays can be initialized either uniformly (one value applied to every component) or per-component (a semicolon-separated list).
 
+All initialization modes generate values in bounded contiguous blocks and write them through bulk storage transfers. The resident working set therefore stays fixed for both in-memory and disk-backed arrays, including Boolean and multi-component arrays. Incremental and seeded random modes retain tuple-major, component-minor generation order, so chunk boundaries do not change their results.
+
 ### Initialization Type
 
 The *Initialization Type* parameter provides four modes:

@@ -12,6 +12,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ComputeBoundaryElementFractionsInputValues
+ * @brief Identifies cell inputs and the feature-level fraction output.
+ */
 struct SIMPLNXCORE_EXPORT ComputeBoundaryElementFractionsInputValues
 {
   DataObjectNameParameter::ValueType BoundaryCellFractionsArrayName;
@@ -22,12 +26,28 @@ struct SIMPLNXCORE_EXPORT ComputeBoundaryElementFractionsInputValues
 
 /**
  * @class ComputeBoundaryElementFractions
- * @brief This algorithm implements support code for the ComputeBoundaryElementFractionsFilter
+ * @brief Computes each feature's fraction of cells that are boundary cells.
+ *
+ * Cell arrays are streamed through bounded bulk-I/O buffers so out-of-core
+ * stores avoid per-cell chunk-cache access while feature-level counts remain
+ * in memory. Memory scales with the feature count plus 65,536 cell tuples.
+ *
+ * Counts use Float32 and can lose integer precision for large features. Feature
+ * zero retains its existing output value. A positive feature with no cells
+ * produces NaN through zero division.
  */
 
 class SIMPLNXCORE_EXPORT ComputeBoundaryElementFractions
 {
 public:
+  /**
+   * @brief Initializes boundary-fraction calculation.
+   * @param dataStructure Provides cell arrays and feature output.
+   * @param mesgHandler Supplies the filter message handler.
+   * @param shouldCancel Signals cancellation between pages.
+   * @param inputValues Identifies input and output paths.
+   * @pre All arguments outlive this executor.
+   */
   ComputeBoundaryElementFractions(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   ComputeBoundaryElementFractionsInputValues* inputValues);
   ~ComputeBoundaryElementFractions() noexcept;
@@ -37,6 +57,14 @@ public:
   ComputeBoundaryElementFractions& operator=(const ComputeBoundaryElementFractions&) = delete;
   ComputeBoundaryElementFractions& operator=(ComputeBoundaryElementFractions&&) noexcept = delete;
 
+  /**
+   * @brief Counts boundary cells and writes one fraction per positive feature.
+   * @return Source or destination bulk-I/O errors.
+   * @pre Cell arrays have equal tuple counts.
+   * @pre Every Feature ID is nonnegative and less than the output tuple count.
+   *
+   * Cancellation returns success before any locally accumulated output is written.
+   */
   Result<> operator()();
 
 private:

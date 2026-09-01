@@ -2,8 +2,15 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
+
+#include <array>
+#include <cmath>
+#include <memory>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
@@ -130,13 +137,65 @@ void FillArgs(Arguments& args)
 const std::function<void(Arguments&)> k_FillBaseArgs = [](Arguments& args) { FillArgs<false, false>(args); };
 const std::function<void(Arguments&)> k_FillAllExceptModeArgs = [](Arguments& args) { FillArgs<true, false>(args); };
 const std::function<void(Arguments&)> k_FillAllArgs = [](Arguments& args) { FillArgs<true, true>(args); };
+
+constexpr usize k_BenchmarkDim = 200;
+constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
+constexpr usize k_BenchmarkNumBounds = 4;
+constexpr usize k_BenchmarkBoundsComponents = 6;
+constexpr std::array<int32, 5> k_BenchmarkStripeValues = {1, 1, 1, 2, 3};
+
+void BuildBenchmarkDataStructure(DataStructure& dataStructure)
+{
+  const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto inputStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_InputArrayPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* inputArray = Int32Array::Create(dataStructure, k_InputArrayName, inputStore, cellAM->getId());
+  REQUIRE(inputArray != nullptr);
+
+  auto sliceBuffer = std::make_unique<int32[]>(k_BenchmarkSliceTuples);
+  for(usize y = 0; y < k_BenchmarkDim; y++)
+  {
+    for(usize x = 0; x < k_BenchmarkDim; x++)
+    {
+      sliceBuffer[(y * k_BenchmarkDim) + x] = k_BenchmarkStripeValues[x % k_BenchmarkStripeValues.size()];
+    }
+  }
+  for(usize z = 0; z < k_BenchmarkDim; z++)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(inputStore->copyFromBuffer(z * k_BenchmarkSliceTuples, nonstd::span<const int32>(sliceBuffer.get(), k_BenchmarkSliceTuples)));
+  }
+
+  auto* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {k_BenchmarkNumBounds}, imageGeom->getId());
+  auto boundsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_UnifiedBoundsPath, {k_BenchmarkNumBounds}, {k_BenchmarkBoundsComponents}, IDataAction::Mode::Execute);
+  auto* boundsArray = Float32Array::Create(dataStructure, k_UnifiedBoundsName, boundsStore, featureAM->getId());
+  REQUIRE(boundsArray != nullptr);
+
+  const std::array<float32, k_BenchmarkNumBounds * k_BenchmarkBoundsComponents> bounds = {
+      0.0f,   0.0f,   0.0f,   200.0f, 200.0f, 200.0f, // Full volume
+      50.0f,  40.0f,  25.0f,  150.0f, 160.0f, 175.0f, // Aligned interior
+      2.0f,   20.0f,  30.0f,  8.0f,   180.0f, 190.0f, // Unaligned interior
+      -20.0f, -20.0f, -20.0f, -1.0f,  -1.0f,  -1.0f   // Empty outside bound
+  };
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsStore->copyFromBuffer(0, nonstd::span<const float32>(bounds.data(), bounds.size())));
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -159,16 +218,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
     Arguments args;
     k_FillAllArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -237,9 +294,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mode - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -262,16 +322,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     Arguments args;
     k_FillAllExceptModeArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -334,9 +392,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -359,16 +420,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
     Arguments args;
     k_FillBaseArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -423,9 +482,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
@@ -448,16 +510,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
     Arguments args;
     k_FillAllArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -526,9 +586,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mode - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
@@ -551,16 +614,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     Arguments args;
     k_FillAllExceptModeArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -623,9 +684,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
@@ -648,16 +712,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
     Arguments args;
     k_FillBaseArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArray != nullptr);
@@ -712,9 +774,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -737,16 +802,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
     Arguments args;
     k_FillAllArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* boundsHasDataArray = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArray != nullptr);
@@ -803,9 +866,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -828,16 +894,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
     Arguments args;
     k_FillAllExceptModeArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* boundsHasDataArray = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArray != nullptr);
@@ -891,9 +955,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  // Setup Unified Bounds Array
+  // Configure the unified bounds array.
   {
     auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
@@ -916,16 +983,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
     Arguments args;
     k_FillBaseArgs(args);
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
+  // Compare the generated values.
   {
     auto* boundsHasDataArray = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArray != nullptr);
@@ -975,6 +1040,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling Checks - Create")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   constexpr StringLiteral k_NewAMName = "newAM";
@@ -1010,12 +1078,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_MedianName_Key, std::make_any<std::string>(k_Median));
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_ModeName_Key, std::make_any<std::string>(k_Mode));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
   const DataPath newAMPath = k_GeomPath.createChildPath(k_NewAMName);
@@ -1064,7 +1130,6 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_UnifiedBoundsPath_Key, std::make_any<DataPath>(k_UnifiedBoundsPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }

@@ -355,6 +355,11 @@ function(create_simplnx_plugin_unit_test)
     ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
   )
 
+  # Record every plugin unit-test target on a global property so consumer builds
+  # (which include simplnx via add_subdirectory) can attach additional sources or
+  # settings to the test executables without simplnx knowing about the consumer.
+  set_property(GLOBAL APPEND PROPERTY SIMPLNX_UNIT_TEST_TARGETS ${UNIT_TEST_TARGET})
+
   target_link_libraries(${UNIT_TEST_TARGET}
     PRIVATE
       simplnx
@@ -389,6 +394,7 @@ function(create_simplnx_plugin_unit_test)
   target_compile_definitions(${UNIT_TEST_TARGET}
     PRIVATE
       SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
+      SIMPLNX_TEST_ALGORITHM_PATH=${SIMPLNX_TEST_ALGORITHM_PATH}
   )
 
   target_compile_options(${UNIT_TEST_TARGET}

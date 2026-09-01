@@ -15,6 +15,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -25,7 +26,10 @@
 #include <cstdlib>
 #include <filesystem>
 #include <limits>
+#include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -34,6 +38,15 @@ namespace fs = std::filesystem;
 
 namespace
 {
+template <class FilterT>
+auto ExecuteDispatchedFilter(FilterT& filter, DataStructure& dataStructure, const Arguments& args)
+{
+  const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  return scope.executeFilter(filter, dataStructure, args);
+}
+
 // Independent structural validation of an M3C output mesh (does NOT rely on the exemplar oracle):
 //  - no degenerate triangles and all vertex indices in range,
 //  - FaceLabels ordered (smaller feature id in component 0, per the output convention),
@@ -164,13 +177,16 @@ void CheckMeshWithinVolume(const DataStructure& dataStructure, const DataPath& t
   }
 }
 
-// Runs M3C on the shared QuickSurfaceMesh Small IN100 test dataset and returns nothing;
-// asserts a valid, non-empty, well-formed mesh. `repairWinding` toggles the winding pass.
+/**
+ * @brief Runs M3C on Small IN100 data and verifies the generated mesh and transfers.
+ * @param repairWinding True to run the triangle-winding repair pass.
+ * @param outputName Optional manual-output file name.
+ */
 void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
 {
   UnitTest::LoadPlugins();
 
-  // Reuse the QuickSurfaceMesh test data (Small IN100 segmented volume).
+  // The QuickSurfaceMesh fixture supplies a segmented Small IN100 volume.
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
   auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -185,7 +201,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
 
-  // Transfer every Cell and Feature attribute array (mirrors the QuickSurfaceMesh test).
+  // Transfer every cell and feature array to exercise both transfer paths.
   MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
   for(const auto& [id, child] : dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath))
   {
@@ -215,7 +231,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -223,8 +239,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
 #endif
   }
 
-  // There is no M3C exemplar yet, so validate that the mesh is present and well-formed:
-  // non-empty, and every triangle references a vertex index in range.
+  // Structural checks establish basic validity without depending on an exemplar.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
   auto& vertStore = triangleGeom.getVertices()->getDataStoreRef();
@@ -234,22 +249,21 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   REQUIRE(numTriangles > 0);
   REQUIRE(numVertices > 0);
 
-  // FaceLabels (int32 x2) and NodeTypes (int8) should be tuple-consistent with the geometry.
+  // FaceLabels and NodeTypes must use the triangle and vertex tuple counts.
   const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(faceGroupDataPath.createChildPath(k_Face_Labels));
   const auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(vertexGroupDataPath.createChildPath(k_NodeTypeArrayName));
   REQUIRE(faceLabels.getNumberOfTuples() == numTriangles);
   REQUIRE(faceLabels.getNumberOfComponents() == 2);
   REQUIRE(nodeTypes.getNumberOfTuples() == numVertices);
 
-  // FaceLabels must have the smaller feature id in component 0 (QuickSurfaceMesh/SurfaceNets convention).
+  // The output convention puts the smaller feature identifier in component 0.
   const auto& faceLabelsStore = faceLabels.getDataStoreRef();
   for(usize i = 0; i < numTriangles; i++)
   {
     REQUIRE(faceLabelsStore[i * 2] <= faceLabelsStore[i * 2 + 1]);
   }
 
-  // Each transferred Cell/Feature array must exist on the face group with the component shape
-  // doubled (one value per side of the face) and one tuple per triangle.
+  // Each face stores transferred values for both sides of its interface.
   auto checkTransferred = [&](const std::vector<DataPath>& selectedPaths) {
     for(const auto& sourcePath : selectedPaths)
     {
@@ -289,9 +303,18 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Winding", "[SimplnxCore][M3CSur
 
 namespace
 {
-// Builds a small in-memory ImageGeom + FeatureIds volume from a labeling functor, runs M3C, and
-// asserts a valid, non-empty, well-formed mesh. Used for tiny toy datasets that deterministically
-// exercise specific get_square_index cases (saddles, quad points, triple lines) with no data file.
+/**
+ * @brief Runs M3C on a generated label volume and verifies mesh integrity.
+ * @tparam LabelFuncT Specifies the coordinate-to-feature callable type.
+ * @param xDim Number of cells on the X axis.
+ * @param yDim Number of cells on the Y axis.
+ * @param zDim Number of cells on the Z axis.
+ * @param labeler Returns a feature identifier for each cell coordinate.
+ * @param outputName Optional manual-output file name.
+ *
+ * Small generated volumes exercise selected marching-square configurations
+ * without an external data file.
+ */
 template <typename LabelFuncT>
 void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[maybe_unused]] const std::string& outputName)
 {
@@ -339,7 +362,7 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
@@ -356,8 +379,8 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
     }
   }
 
-  // Coordinate alignment: with unit spacing and origin 0, mesh vertices must lie within the padded
-  // volume envelope [-1, dim] per axis. A one-cell coordinate offset would push the maximum past dim.
+  // Unit spacing and zero origin put vertices inside the padded range [-1, dimension].
+  // A one-cell coordinate offset would exceed the upper limit.
   auto& vertStore = triangleGeom.getVertices()->getDataStoreRef();
   const float dimF[3] = {static_cast<float>(xDim), static_cast<float>(yDim), static_cast<float>(zDim)};
   for(usize i = 0; i < numVertices; i++)
@@ -378,41 +401,161 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
 }
 } // namespace
 
-// 3D 2-label checkerboard: every marching square has corners [A,B,A,B] (aBit[0..3]=1, both
-// diagonals equal) => get_square_index == 15 => treat_anomaly runs on EVERY effective square.
-// This is the minimal deterministic regression for the null-neighbor crash in treat_anomaly.
+// Every checkerboard square has alternating corners and square index 15.
+// This fixture runs treat_anomaly() on each effective square and detects a null-neighbor failure.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Checkerboard Saddle", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(((x + y + z) & 1U) + 1); }, "M3CSurfaceMeshingFilterTest_Checkerboard.dream3d");
 }
 
-// 8-label octant pattern (1 + x%2 + 2*(y%2) + 4*(z%2)): a repeating 2x2x2 of 8 distinct labels, so
-// squares present 4 distinct corners (quad points, get_square_index == 19) plus triple configs.
+// The repeating 2-cubed pattern contains eight labels.
+// Its squares include four-corner quad points with square index 19 and triple-line configurations.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Octant Quad Points", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return static_cast<int32>(1 + (x & 1U) + 2 * (y & 1U) + 4 * (z & 1U)); }, "M3CSurfaceMeshingFilterTest_Octant.dream3d");
 }
 
-// Three regions meeting along a vertical line (L-shaped split) => triple lines
-// (get_square_index in {7,11,13,14}) plus ordinary binary interfaces.
+// Three regions meet along a vertical line in this L-shaped split.
+// The fixture produces triple-line square indices 7, 11, 13, and 14.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Triple Line", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   RunM3COnToy(8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (x < 4) ? 1 : ((y < 4) ? 2 : 3); }, "M3CSurfaceMeshingFilterTest_TripleLine.dream3d");
 }
 
-// Single isolated interior voxel in a uniform matrix: the four neighboring squares are [B,A,A,A]
-// rotations, exercising get_square_index in {3,6,9,12} (the single-corner binary configurations).
+// One isolated interior voxel produces each single-corner binary rotation.
+// The related square indices are 3, 6, 9, and 12.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Single Voxel Inclusion", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   RunM3COnToy(8, 8, 8, [](usize x, usize y, usize z) -> int32 { return (x == 4 && y == 4 && z == 4) ? 2 : 1; }, "M3CSurfaceMeshingFilterTest_Inclusion.dream3d");
 }
 
-// Interleaved 3-label tiling (rows "1 2" / "3 1"): squares [1,2,1,3] and [2,1,3,1] have all edges
-// differing with exactly one diagonal equal, exercising get_square_index 17 and 18.
+// The interleaved three-label tiling has different labels across every edge.
+// Exactly one diagonal matches, which produces square indices 17 and 18.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Toy Interleaved Diagonal", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   RunM3COnToy(8, 8, 8, [](usize x, usize y, usize /*z*/) -> int32 { return (y % 2 == 0) ? ((x % 2 == 0) ? 1 : 2) : ((x % 2 == 0) ? 3 : 1); }, "M3CSurfaceMeshingFilterTest_Interleaved.dream3d");
 }
+
+#if SIMPLNX_TEST_ALGORITHM_PATH == 1
+namespace
+{
+const DataPath k_ParityGeomPath({"Parity Image"});
+const DataPath k_ParityCellDataPath = k_ParityGeomPath.createChildPath("Cell Data");
+const DataPath k_ParityFeatureDataPath = k_ParityGeomPath.createChildPath("Feature Data");
+const DataPath k_ParityFeatureIdsPath = k_ParityCellDataPath.createChildPath("FeatureIds");
+const DataPath k_ParityCellVectorsPath = k_ParityCellDataPath.createChildPath("CellVectors");
+const DataPath k_ParityFeatureValuesPath = k_ParityFeatureDataPath.createChildPath("FeatureValues");
+const DataPath k_ParityMeshPath({"Parity Mesh"});
+const DataPath k_ParityFacesPath = k_ParityMeshPath.createChildPath(TriangleGeom::k_SharedFacesListName);
+const DataPath k_ParityVerticesPath = k_ParityMeshPath.createChildPath(TriangleGeom::k_SharedVertexListName);
+const DataPath k_ParityNodeTypesPath = k_ParityMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
+const DataPath k_ParityFaceLabelsPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+const DataPath k_ParityCellOutputPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath("CellVectors");
+const DataPath k_ParityFeatureOutputPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath("FeatureValues");
+
+/**
+ * @brief Builds deterministic M3C input and transfer arrays for algorithm parity tests.
+ * @param useConfiguredCellStores True to create cell arrays with configured OOC stores.
+ * @return The populated parity DataStructure.
+ */
+DataStructure CreateM3CParityData(bool useConfiguredCellStores)
+{
+  constexpr usize k_Dim = 8;
+  constexpr usize k_CellCount = k_Dim * k_Dim * k_Dim;
+  const ShapeType tupleShape = {k_Dim, k_Dim, k_Dim};
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_ParityGeomPath.getTargetName());
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
+  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellData = AttributeMatrix::Create(dataStructure, k_ParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
+  auto* featureData = AttributeMatrix::Create(dataStructure, k_ParityFeatureDataPath.getTargetName(), {4}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  REQUIRE(featureData != nullptr);
+  imageGeom->setCellData(*cellData);
+
+  std::shared_ptr<AbstractDataStore<int32>> featureIdsStore;
+  std::shared_ptr<AbstractDataStore<int32>> cellVectorsStore;
+  if(useConfiguredCellStores)
+  {
+    featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_ParityFeatureIdsPath, tupleShape, {1}, IDataAction::Mode::Execute);
+    cellVectorsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_ParityCellVectorsPath, tupleShape, {2}, IDataAction::Mode::Execute);
+  }
+  else
+  {
+    featureIdsStore = std::make_shared<Int32DataStore>(tupleShape, ShapeType{1}, std::optional<int32>{});
+    cellVectorsStore = std::make_shared<Int32DataStore>(tupleShape, ShapeType{2}, std::optional<int32>{});
+  }
+  auto* featureIds = Int32Array::Create(dataStructure, k_ParityFeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
+  auto* cellVectors = Int32Array::Create(dataStructure, k_ParityCellVectorsPath.getTargetName(), cellVectorsStore, cellData->getId());
+  auto* featureValues = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_ParityFeatureValuesPath.getTargetName(), {4}, {1}, featureData->getId());
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(cellVectors != nullptr);
+  REQUIRE(featureValues != nullptr);
+
+  std::array<int32, k_CellCount> featureIdValues{};
+  std::array<int32, k_CellCount * 2> cellVectorValues{};
+  usize index = 0;
+  for(usize z = 0; z < k_Dim; z++)
+  {
+    for(usize y = 0; y < k_Dim; y++)
+    {
+      for(usize x = 0; x < k_Dim; x++)
+      {
+        featureIdValues[index] = (x < 4) ? 1 : ((y < 4) ? 2 : 3);
+        cellVectorValues[index * 2] = static_cast<int32>(index);
+        cellVectorValues[index * 2 + 1] = static_cast<int32>(1000 + index);
+        index++;
+      }
+    }
+  }
+  const std::array<float32, 4> featureValueBuffer = {0.0F, 1.25F, 2.5F, 3.75F};
+  SIMPLNX_RESULT_REQUIRE_VALID(featureIds->getDataStoreRef().copyFromBuffer(0, featureIdValues));
+  SIMPLNX_RESULT_REQUIRE_VALID(cellVectors->getDataStoreRef().copyFromBuffer(0, cellVectorValues));
+  SIMPLNX_RESULT_REQUIRE_VALID(featureValues->getDataStoreRef().copyFromBuffer(0, featureValueBuffer));
+  return dataStructure;
+}
+
+/**
+ * @brief Creates M3C arguments for algorithm and storage parity tests.
+ * @return Configured arguments with cell and feature transfer arrays.
+ */
+Arguments CreateM3CParityArguments()
+{
+  Arguments args;
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_ParityGeomPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ParityFeatureIdsPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({k_ParityCellVectorsPath}));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({k_ParityFeatureValuesPath}));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ParityMeshPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  return args;
+}
+
+/**
+ * @brief Executes one selected M3C algorithm path and verifies mesh integrity.
+ * @param dataStructure Contains parity input and receives the mesh.
+ * @param scope Selects and verifies the algorithm path.
+ */
+void ExecuteM3CParityCase(DataStructure& dataStructure, AlgorithmTestScope& scope)
+{
+  M3CSurfaceMeshingFilter filter;
+  const Arguments args = CreateM3CParityArguments();
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  CheckMeshIntegrity(dataStructure, k_ParityMeshPath, k_ParityFaceLabelsPath, k_ParityNodeTypesPath);
+}
+} // namespace
+
+#endif
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][M3CSurfaceMeshingFilter][BackwardsCompatibility]")
 {
@@ -447,13 +590,16 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility",
 
 namespace
 {
-// Self-generated ("circular") regression oracle: the exemplar is produced BY this filter, so it only
-// guards against future *changes* to the output, not against correctness of the current output. It
-// should be replaced by an independent oracle (e.g. legacy DREAM3D M3C output) when available.
+// The golden exemplar comes from this filter, so it detects output changes but
+// cannot establish correctness independently. CheckMeshIntegrity() supplies
+// independent structural invariants for the same output.
 const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar_v2" / "M3CSurfaceMeshingExemplar_v2.dream3d";
 const DataPath k_ExemplarMeshPath({"Computed M3C Mesh"});
 
-// Runs M3C (winding repair on) on an already-loaded Small IN100 input, creating k_ExemplarMeshPath.
+/**
+ * @brief Runs M3C with winding repair on an already loaded Small IN100 input.
+ * @param dataStructure Contains the input and receives k_ExemplarMeshPath.
+ */
 void RunM3COnSmallIn100(DataStructure& dataStructure)
 {
   Arguments args;
@@ -469,10 +615,14 @@ void RunM3COnSmallIn100(DataStructure& dataStructure)
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
+/**
+ * @brief Loads the Small IN100 input from the extracted QuickSurfaceMesh fixture.
+ * @return The loaded DataStructure.
+ */
 DataStructure LoadSmallIn100Input()
 {
   auto inputPath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -484,8 +634,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 {
   UnitTest::LoadPlugins();
 
-  // Tuple-mismatch error (-90200): a selected Cell transfer array whose tuple count (5) differs from
-  // the FeatureIds tuple count (8) must fail preflight.
+  // Error -90200 requires selected cell arrays and FeatureIds to have equal tuple counts.
   SECTION("Cell transfer array tuple mismatch -> error -90200")
   {
     DataStructure dataStructure;
@@ -496,7 +645,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, imageGeom->getId());
     imageGeom->setCellData(*cellAM);
     Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAM->getId());
-    // A Cell array with a deliberately wrong tuple count (5 != 8).
+    // This transfer array has five tuples, while FeatureIds has eight.
     auto* badAM = AttributeMatrix::Create(dataStructure, "Bad", std::vector<usize>{5}, imageGeom->getId());
     Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "BadArray", std::vector<usize>{5}, std::vector<usize>{1}, badAM->getId());
 
@@ -524,8 +673,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     REQUIRE(has90200);
   }
 
-  // RectGrid geometries are rejected by the geometry parameter (M3C node coordinates assume uniform
-  // cell spacing, so only ImageGeom is an allowed input type).
+  // M3C node coordinates require uniform cell spacing, so preflight rejects RectGridGeom input.
   SECTION("RectGrid geometry -> preflight fails")
   {
     DataStructure dataStructure;
@@ -584,8 +732,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGen
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
-  // Drop everything except the generated mesh (the input file also carries QuickMesh exemplar
-  // geometries) so the exemplar archive holds only the M3C output.
+  // Remove input and QuickSurfaceMesh exemplars so this archive contains only M3C output.
   for(DataObject* topLevelPtr : dataStructure.getTopLevelData())
   {
     if(topLevelPtr->getName() != k_ExemplarMeshPath.getTargetName())
@@ -669,7 +816,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
@@ -745,7 +892,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);

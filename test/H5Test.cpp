@@ -66,13 +66,13 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir()
 {
-  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
+  return fs::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetLegacyFilepath()
 {
   std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
-  return std::filesystem::path(path);
+  return fs::path(path);
 }
 
 fs::path GetComplexH5File()
@@ -200,7 +200,7 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
-  // Now create some "Cell" data for the Vertex Geometry
+  // Create cell-level arrays for the Vertex Geometry.
   ShapeType tupleShape = {vertexGeometry->getNumberOfVertices()};
   usize numComponents = 1;
   Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
@@ -634,10 +634,10 @@ H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedCl
 TEST_CASE("Read Legacy DREAM3D-NX Data")
 {
   auto app = Application::GetOrCreateInstance();
-  std::filesystem::path filepath = GetLegacyFilepath();
+  fs::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   {
-    Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
+    Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filepath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     DataStructure dataStructure = result.value();
 
@@ -737,9 +737,8 @@ TEST_CASE("ImageGeometryIO")
   }
 }
 
-// Reading an attribute from an invalid HDF5 object must return a recoverable error rather
-// than throwing an uncaught exception. Previously the error-message formatting called
-// GetNameFromBuffer() on an empty name, which threw and aborted the process. See issue #1642.
+// Invalid HDF5 objects must return recoverable attribute errors instead of throwing.
+// This test exercises the empty-name formatting path.
 TEST_CASE("HDF5 ObjectIO: Invalid object reads recover gracefully")
 {
   auto app = Application::GetOrCreateInstance();
@@ -1069,8 +1068,8 @@ TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter]
 
 TEST_CASE("DataStructureAppend")
 {
-  const std::filesystem::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
-  const std::filesystem::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
+  const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
+  const fs::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
   const DataPath originalArrayPath({"foo"});
 
   DataStructure baseDataStructure;
@@ -1083,9 +1082,7 @@ TEST_CASE("DataStructureAppend")
   Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, false);
-  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-  DataStructure exemplarDataStructure = std::move(readResult.value());
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(inputFilePath);
 
   usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
   for(const DataObject* object : exemplarDataStructure.getTopLevelData())
@@ -1095,10 +1092,7 @@ TEST_CASE("DataStructureAppend")
     auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
-    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath, false);
-    SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
-
-    DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
+    DataStructure appendedDataStructure = UnitTest::LoadDataStructure(outputFilePath);
 
     currentTopLevelSize++;
 
@@ -1209,11 +1203,8 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
 TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][HDF5]")
 {
 #ifdef H5Support_USE_MUTEX
-  // Regression guard for the original H5SUPPORT_MUTEX_LOCK() bug: the macro used to
-  // declare a fresh per-call local std::mutex (serializing nothing). Hammer a shared
-  // counter from many threads under the macro — a real lock on the one shared ApiLock
-  // yields exactly threads*iters with no lost updates; the old no-op macro would lose
-  // updates (and the unsynchronized increments would be a data race).
+  // Each thread increments one shared counter under H5SUPPORT_MUTEX_LOCK().
+  // The exact total proves that one shared ApiLock protects every update.
   constexpr int k_Threads = 8;
   constexpr int k_Iters = 20000;
   int counter = 0;

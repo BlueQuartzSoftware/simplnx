@@ -1,33 +1,11 @@
-/* ============================================================================
- * ReadAngData V&V test suite.
- *
- * Verification is established INDEPENDENTLY of legacy DREAM3D, per the V&V
- * policy (src/Plugins/OrientationAnalysis/vv/ReadAngDataFilter.md):
- *
- *  - .ang parsing        : Class 2 (EbsdLib reference, trusted & NOT re-tested).
- *                          EbsdLib's AngReader owns header parsing, data-column
- *                          parsing, grid-order fix-up and its own error codes.
- *                          We do not re-test any of that here.
- *  - SIMPLNX value-add   : Class 1 (analytical) + Class 4 (invariant). The
- *                          filter's value-add is deterministic data plumbing on
- *                          top of AngReader: geometry construction from header
- *                          values, per-column array creation, phase<1 -> 1
- *                          remap, Euler-angle interleave, ensemble slot-0
- *                          defaults, symmetry -> LaueOps index mapping,
- *                          material-name trimming and lattice-constant copy.
- *                          The toy .ang fixture below is hand-authored and every
- *                          expected value is hand-derived from the fixture text.
- *
- * The Euler/IQ/CI/position/fit column values are exactly representable in
- * float32 (multiples of 1/8), so they are asserted with exact equality. The
- * lattice constants (e.g. 3.520, 2.950, 4.680) are NOT exact float32 values;
- * they compare equal because runtime strtof and the compiler's parse of the
- * same decimal literal round identically to the same float32 bit pattern.
- *
- * The prior exemplar archive read_ang_test.tar.gz was a CIRCULAR ORACLE (the
- * exemplar .dream3d was generated from this filter's own output) and has been
- * retired in favor of the inline oracle below.
- * ========================================================================== */
+/*
+ * This suite validates the ReadAngDataFilter value-add independently of EbsdLib parsing.
+ * The inline oracle checks geometry construction, array creation, phase remapping,
+ * Euler interleaving, ensemble defaults, symmetry mapping, name trimming, and lattice copying.
+ * EbsdLib remains the reference for .ang parsing and parser error codes.
+ * Most fixture values are exact float32 values. Lattice constants use exact
+ * decimal-to-float32 comparisons because both paths use the same literals.
+ */
 
 #include "OrientationAnalysis/Filters/ReadAngDataFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -107,9 +85,8 @@ const std::string k_SparsePhaseBlock = R"(# Phase 2
 #
 )";
 
-// A "# Phase 0" section. DREAM3D 6.5.171 tolerated this (it wrote Phase 0 into ensemble slot 0),
-// but .ang phase numbering starts at 1, so SIMPLNX rejects it at execute with -19502. A static
-// fixture trips this deterministically — no file-mutation injection is needed.
+// A "# Phase 0" section is invalid because .ang phase numbering starts at 1.
+// Execution must return -19502 for this static fixture.
 const std::string k_Phase0Block = R"(# Phase 0
 # MaterialName  Nickel
 # Formula     Ni
@@ -188,11 +165,7 @@ void CompareArrayValues(const DataStructure& dataStructure, const DataPath& arra
 }
 } // namespace
 
-//------------------------------------------------------------------------------
-// Class 1 (analytical) + Class 4 (invariant) oracle. Every expected value below
-// is hand-derived from the fixture text at the top of this file; none of it was
-// produced by running DREAM3D (any version).
-//------------------------------------------------------------------------------
+// The analytical and invariant oracle uses values derived from the fixture text.
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "[OrientationAnalysis][ReadAngDataFilter]")
 {
   UnitTest::LoadPlugins();
@@ -258,9 +231,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
   CompareArrayValues<float32>(dataStructure, ensembleAMPath.createChildPath("LatticeConstants"),
                               {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 3.52F, 3.52F, 3.52F, 90.0F, 90.0F, 90.0F, 2.95F, 2.95F, 4.68F, 90.0F, 90.0F, 120.0F});
 
-  // MaterialName (Class 1): slot 0 is the "Invalid Phase" default; EbsdLib's
-  // AngPhase::parseMaterialName() rejoins tokens with a TRAILING space
-  // ("Nickel ", "Titanium (Alpha) ") and the filter's value-add trims it.
+  // Slot 0 uses the invalid-phase name. The filter trims trailing spaces from phase names.
   {
     const DataPath materialNamePath = ensembleAMPath.createChildPath("MaterialName");
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(materialNamePath));
@@ -274,13 +245,8 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-//------------------------------------------------------------------------------
-// Class 4 invariant: a file whose phase indices do NOT start at 1 (only a
-// "# Phase 2" section) must still produce ensemble arrays sized to
-// maxPhaseIndex + 1, with every slot not covered by a phase section holding
-// the "Invalid Phase" defaults. Regression pin for the out-of-bounds ensemble
-// write found during the V&V algorithm review.
-//------------------------------------------------------------------------------
+// A file with only phase 2 must size ensemble arrays to maxPhaseIndex + 1.
+// Unused slots must retain invalid-phase defaults.
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index", "[OrientationAnalysis][ReadAngDataFilter]")
 {
   UnitTest::LoadPlugins();

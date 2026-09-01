@@ -3,12 +3,39 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <memory>
+
 namespace nx::core
 {
-bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
-                           size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bool>& activeObjects)
 {
-  // Get the DataGroup that holds all the feature Data
+  FeatureRenumbering result;
+  result.newNames.assign(activeObjects.size(), 0);
+  result.keepList.reserve(activeObjects.size());
+
+  size_t goodCount = 1;
+  for(size_t i = 1; i < activeObjects.size(); i++)
+  {
+    if(activeObjects[i])
+    {
+      result.newNames[i] = goodCount;
+      goodCount++;
+      result.keepList.push_back(i);
+    }
+    else
+    {
+      result.newNames[i] = 0;
+      result.anyRemoved = true;
+    }
+  }
+  return result;
+}
+
+bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
+                           size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, bool cellFeatureIdsRenumbered)
+{
   const auto* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
 
   if(nullptr == featureLevelBaseGroup)
@@ -17,8 +44,8 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
   }
   const DataMap& featureDataMap = featureLevelBaseGroup->getDataMap();
 
-  // Loop over all the paths from the feature group and remove the data arrays that do NOT have the
-  // same number of Tuples as the 'activeObjects' vector
+  // Only arrays with one tuple for each active flag contain feature-level data
+  // that this operation can compact.
   std::vector<std::shared_ptr<IDataArray>> matchingDataArrayPtrs;
 
   for(const auto& entry : featureDataMap)
@@ -36,29 +63,14 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
   size_t totalTuples = currentFeatureCount;
   if(activeObjects.size() == totalTuples)
   {
-    size_t goodCount = 1;
-    std::vector<size_t> newNames(totalTuples, 0);
-    std::vector<size_t> removeList;
-    std::vector<size_t> keepList;
-    keepList.reserve(activeObjects.size());
-
-    for(int32_t i = 1; i < activeObjects.size(); i++)
-    {
-      if(activeObjects[i])
-      {
-        newNames[i] = goodCount;
-        goodCount++;
-        keepList.push_back(i);
-      }
-      else
-      {
-        removeList.push_back(i);
-        newNames[i] = 0;
-      }
-    }
+    // Use one mapping for the feature arrays and the optional cell-ID pass.
+    // A fused caller can apply this mapping before it calls this function.
+    const FeatureRenumbering renumbering = ComputeFeatureRenumbering(activeObjects);
+    const std::vector<size_t>& newNames = renumbering.newNames;
+    const std::vector<size_t>& keepList = renumbering.keepList;
 
     std::vector<usize> newShape = {keepList.size() + 1};
-    if(!removeList.empty())
+    if(renumbering.anyRemoved)
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
       {
@@ -66,33 +78,54 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
         {
           return false;
         }
-        // Do the update "in place". This works because the keepList _should_ be sorted lowest to
-        // highest. So we are constantly grabbing values from further in the array and copying
-        // them to location to the front of the array.
+        // keepList is ascending. Each source is at or after its destination, so
+        // forward in-place copies cannot overwrite an unread source tuple.
         size_t destIdx = 1;
         for(const auto& keepIdx : keepList)
         {
           dataArray->copyTuple(keepIdx, destIdx);
           destIdx++;
         }
-        // Now chop off the end of the copy and modified array
+        // The AttributeMatrix resize below resizes all child arrays together.
+        // Keep this direct-resize alternative disabled to preserve group consistency.
         // dataArray->getIDataStore()->resizeTuples(newShape);
       }
 
-      // Loop over all the points and correct all the feature names
-      size_t totalPoints = cellFeatureIds.getNumberOfTuples();
       bool featureIdsChanged = false;
-      for(size_t i = 0; i < totalPoints; i++)
+      if(!cellFeatureIdsRenumbered)
       {
-        if(cellFeatureIds[i] >= 0 && cellFeatureIds[i] < newNames.size())
+        // Fixed-size bulk transfers avoid one disk-backed access for each cell.
+        constexpr size_t k_ChunkSize = 65536;
+        size_t totalPoints = cellFeatureIds.getNumberOfTuples();
+        auto chunkBuf = std::make_unique<int32_t[]>(k_ChunkSize);
+        for(size_t offset = 0; offset < totalPoints; offset += k_ChunkSize)
         {
-          cellFeatureIds.setValue(i, static_cast<int32_t>(newNames[cellFeatureIds[i]]));
-          featureIdsChanged = true;
+          if(shouldCancel)
+          {
+            return false;
+          }
+          size_t count = std::min(k_ChunkSize, totalPoints - offset);
+          cellFeatureIds.copyIntoBuffer(offset, nonstd::span<int32_t>(chunkBuf.get(), count));
+          bool chunkModified = false;
+          for(size_t i = 0; i < count; i++)
+          {
+            if(chunkBuf[i] >= 0 && static_cast<size_t>(chunkBuf[i]) < newNames.size())
+            {
+              chunkBuf[i] = static_cast<int32_t>(newNames[chunkBuf[i]]);
+              chunkModified = true;
+            }
+          }
+          if(chunkModified)
+          {
+            cellFeatureIds.copyFromBuffer(offset, nonstd::span<const int32_t>(chunkBuf.get(), count));
+            featureIdsChanged = true;
+          }
         }
-        if(shouldCancel)
-        {
-          return false;
-        }
+      }
+      else
+      {
+        // An upstream cell-ID pass also invalidates feature neighbor lists.
+        featureIdsChanged = true;
       }
 
       if(featureIdsChanged)
@@ -110,8 +143,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
       }
     }
 
-    // Now resize the attribute matrix, which will resize the DataArrays contained
-    // in the attribute matrix
+    // Resizing the attribute matrix applies the compacted shape to all children.
     auto* featureAttMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureDataGroupPath);
     if(featureAttMatrixPtr != nullptr)
     {
@@ -125,7 +157,6 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
   return true;
 }
 
-// -----------------------------------------------------------------------------
 std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<std::shared_ptr<IDataArray>> arrays;

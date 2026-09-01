@@ -1,36 +1,100 @@
 #pragma once
 
+#include "simplnx/simplnx_export.hpp"
+
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/INeighborList.hpp"
 
 #include <initializer_list>
+#include <utility>
+#include <vector>
 
 namespace nx::core
 {
 
 /**
- * @brief Checks whether an IDataArray is backed by out-of-core (chunked) storage.
- *
- * Returns true when the array's data store reports a chunk shape (e.g. ZarrStore),
- * indicating that data lives on disk in compressed chunks rather than in a
- * contiguous in-memory buffer.
- *
- * @param array The data array to check
- * @return true if the array uses chunked/OOC storage
+ * @namespace nx::core
+ * @brief Contains simplnx core types and functions.
+ */
+
+/**
+ * @brief Checks the data-store type.
+ * @param array Array to inspect.
+ * @return True when the data store is out-of-core.
  */
 inline bool IsOutOfCore(const IDataArray& array)
 {
-  return array.getIDataStoreRef().getChunkShape().has_value();
+  return array.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore;
 }
 
 /**
- * @brief Checks whether any of the given IDataArrays are backed by out-of-core storage.
+ * @brief Checks the storage type of an array.
  *
- * Filters often operate on multiple input and output arrays. If any of them use
- * chunked storage, the OOC algorithm path should be used to avoid chunk thrashing.
+ * IDataArray instances use IDataStore residency. INeighborList instances use
+ * IListStore residency. Other IArray types do not expose residency and are
+ * treated as in-core for dispatch.
+ * @param array Array to inspect.
+ * @return True when the array is out-of-core.
+ */
+inline bool IsOutOfCore(const IArray& array)
+{
+  if(const auto* dataArray = dynamic_cast<const IDataArray*>(&array); dataArray != nullptr)
+  {
+    return IsOutOfCore(*dataArray);
+  }
+  if(const auto* neighborList = dynamic_cast<const INeighborList*>(&array); neighborList != nullptr)
+  {
+    const auto* listStore = neighborList->getIListStore();
+    return listStore != nullptr && listStore->isOutOfCore();
+  }
+  return false;
+}
+
+/**
+ * @class AlgorithmArrayTargets
+ * @brief Stores mixed array targets for dispatch selection.
  *
- * @param arrays List of pointers to data arrays to check (nullptrs are skipped)
- * @return true if any non-null array uses chunked/OOC storage
+ * The wrapper owns the pointer list. It does not own the target arrays.
+ * It allows mixed braced IArray and INeighborList targets. IDataArray-only and
+ * empty braced lists retain their existing overload resolution.
+ */
+class AlgorithmArrayTargets
+{
+public:
+  /**
+   * @brief Copies non-owning array targets.
+   * @param arrays Array targets to copy.
+   */
+  AlgorithmArrayTargets(std::initializer_list<const IArray*> arrays)
+  : m_Arrays(arrays)
+  {
+  }
+
+  /**
+   * @brief Stores non-owning array targets.
+   * @param arrays Array targets to move.
+   */
+  explicit AlgorithmArrayTargets(std::vector<const IArray*> arrays)
+  : m_Arrays(std::move(arrays))
+  {
+  }
+
+  const std::vector<const IArray*>& arrays() const noexcept
+  {
+    return m_Arrays;
+  }
+
+private:
+  std::vector<const IArray*> m_Arrays;
+};
+
+/**
+ * @brief Checks the storage types of data arrays.
+ * @param arrays Array pointers to inspect. Null pointers are skipped.
+ * @return True when an array is out-of-core.
  */
 inline bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays)
 {
@@ -45,41 +109,70 @@ inline bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays)
 }
 
 /**
- * @brief Returns a reference to the global flag that forces DispatchAlgorithm
- *        to always select the out-of-core algorithm, regardless of storage type.
- *
- * This is primarily used in unit tests to exercise the OOC algorithm path
- * even when data is stored in-core. Use ForceOocAlgorithmGuard for RAII-safe
- * toggling in tests.
- *
- * @return Reference to the static force flag
+ * @brief Checks the storage types of mixed array targets.
+ * @param targets Array pointers to inspect. Null pointers are skipped.
+ * @return True when a target is out-of-core.
  */
-inline bool& ForceOocAlgorithm()
+inline bool AnyOutOfCore(const AlgorithmArrayTargets& targets)
 {
-  static bool s_force = false;
-  return s_force;
+  for(const auto* array : targets.arrays())
+  {
+    if(array != nullptr && IsOutOfCore(*array))
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
- * @brief RAII guard that sets ForceOocAlgorithm() on construction and
- *        restores the previous value on destruction.
+ * @brief Returns the force-out-of-core test flag.
  *
- * Usage in tests with Catch2 GENERATE:
- * @code
- *   bool forceOoc = GENERATE(false, true);
- *   const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
- *   // ... test body runs with both algorithm paths ...
- * @endcode
+ * The flag has process-wide mutable state. Set the flag before parallel work starts.
+ * ForceOocAlgorithm() and ForceInCoreAlgorithm() select algorithm paths but do
+ * not prove a storage and algorithm-path combination. Filter tests use
+ * UnitTest::AlgorithmTestScope. The scope controls storage and checks execution
+ * witnesses.
+ * @warning The flag is not thread-safe.
+ * @return Reference to the force-out-of-core test flag.
+ */
+SIMPLNX_EXPORT bool& ForceOocAlgorithm();
+
+/**
+ * @def SIMPLNX_TEST_ALGORITHM_PATH
+ * @brief Selects filter-test algorithm scenarios.
+ *
+ * Value 0 selects both requested scenarios. Value 1 selects out-of-core
+ * scenarios. Value 2 selects in-core scenarios.
+ */
+#ifndef SIMPLNX_TEST_ALGORITHM_PATH
+#define SIMPLNX_TEST_ALGORITHM_PATH 0
+#endif
+
+/**
+ * @class ForceOocAlgorithmGuard
+ * @brief Restores the force-out-of-core test flag at scope exit.
+ *
+ * The guard changes the flag during its lifetime. It restores the prior value
+ * when it is destroyed.
+ * @warning The guard is not thread-safe. Use it before parallel work starts.
  */
 class ForceOocAlgorithmGuard
 {
 public:
+  /**
+   * @brief Sets the force-out-of-core test flag.
+   * @param force Test flag value to set.
+   */
   ForceOocAlgorithmGuard(bool force)
   : m_Original(ForceOocAlgorithm())
   {
     ForceOocAlgorithm() = force;
   }
 
+  /**
+   * @brief Restores the prior force-out-of-core test flag.
+   */
   ~ForceOocAlgorithmGuard()
   {
     ForceOocAlgorithm() = m_Original;
@@ -91,38 +184,171 @@ public:
   ForceOocAlgorithmGuard& operator=(ForceOocAlgorithmGuard&&) = delete;
 
 private:
-  bool m_Original;
+  bool m_Original = false;
 };
 
 /**
- * @brief Dispatches between two algorithm classes based on whether any of the
- *        given data arrays use out-of-core (chunked) storage, or if the global
- *        ForceOocAlgorithm() flag is set.
+ * @brief Returns the force-in-core test flag.
  *
- * Some algorithms that perform well on in-memory data (e.g. BFS flood fill with
- * random access) become extremely slow when data is stored in disk-backed chunks,
- * because each random access may trigger a chunk load/evict cycle. In these cases,
- * a different algorithm (e.g. scanline CCL with sequential chunk access) can be
- * orders of magnitude faster for OOC data.
+ * The in-core flag overrides storage detection and the out-of-core flag.
+ * @warning The flag is not thread-safe.
+ * @return Reference to the force-in-core test flag.
+ */
+SIMPLNX_EXPORT bool& ForceInCoreAlgorithm();
+
+/**
+ * @class ForceInCoreAlgorithmGuard
+ * @brief Restores the force-in-core test flag at scope exit.
  *
- * This function checks the storage type of the given arrays and the global force
- * flag. If *any* array is out-of-core or ForceOocAlgorithm() is true, the OOC
- * algorithm is selected. Callers should pass all input and output arrays the
- * filter operates on. Both algorithm classes must:
- *   - Be constructible from the same ArgsT... parameter pack
- *   - Provide operator()() returning Result<>
+ * The guard forces the in-core algorithm during its lifetime.
+ * @warning The guard is not thread-safe. Use it before parallel work starts.
+ */
+class ForceInCoreAlgorithmGuard
+{
+public:
+  /**
+   * @brief Forces the in-core test path.
+   */
+  ForceInCoreAlgorithmGuard()
+  : m_Original(ForceInCoreAlgorithm())
+  {
+    ForceInCoreAlgorithm() = true;
+  }
+
+  /**
+   * @brief Restores the prior force-in-core test flag.
+   */
+  ~ForceInCoreAlgorithmGuard()
+  {
+    ForceInCoreAlgorithm() = m_Original;
+  }
+
+  ForceInCoreAlgorithmGuard(const ForceInCoreAlgorithmGuard&) = delete;
+  ForceInCoreAlgorithmGuard(ForceInCoreAlgorithmGuard&&) = delete;
+  ForceInCoreAlgorithmGuard& operator=(const ForceInCoreAlgorithmGuard&) = delete;
+  ForceInCoreAlgorithmGuard& operator=(ForceInCoreAlgorithmGuard&&) = delete;
+
+private:
+  bool m_Original = false;
+};
+
+/**
+ * @enum AlgorithmPath
+ * @brief The enum identifies an implementation selected by a dispatched algorithm.
+ */
+enum class AlgorithmPath : uint8
+{
+  InCore,   ///< Selects the in-core algorithm.
+  OutOfCore ///< Selects the out-of-core algorithm.
+};
+
+/**
+ * @struct AlgorithmPathExecutionCounts
+ * @brief The struct stores the number of times each dispatched implementation runs.
+ */
+struct AlgorithmPathExecutionCounts
+{
+  uint64 InCore = 0;
+  uint64 OutOfCore = 0;
+  uint64 InCoreOnInMemoryStore = 0;
+  uint64 InCoreOnOutOfCoreStore = 0;
+  uint64 OutOfCoreOnInMemoryStore = 0;
+  uint64 OutOfCoreOnOutOfCoreStore = 0;
+};
+
+/**
+ * @brief Records a dispatch path and storage type.
+ * @param path Selected algorithm path.
+ * @param usesOutOfCoreStore True when a dispatch target is out-of-core.
  *
- * @tparam InCoreAlgo Algorithm class optimized for in-memory data
- * @tparam OocAlgo Algorithm class optimized for out-of-core (chunked) data
- * @tparam ArgsT Constructor argument types (must be identical for both algorithms)
- * @param arrays The data arrays used to detect storage type (OOC if any is OOC)
- * @param args Constructor arguments forwarded to the selected algorithm
- * @return Result<> from the selected algorithm's operator()()
+ * Relaxed atomic counters make concurrent recording data-race-free. The counters
+ * are test witnesses and do not synchronize algorithm work.
+ */
+SIMPLNX_EXPORT void RecordAlgorithmPathExecution(AlgorithmPath path, bool usesOutOfCoreStore);
+
+/**
+ * @brief Resets dispatch execution counts.
+ *
+ * Call this function only when dispatch recording is idle if tests require one
+ * coherent multi-counter state.
+ */
+SIMPLNX_EXPORT void ResetAlgorithmPathExecutionCounts();
+
+/**
+ * @brief Replaces dispatch execution counts.
+ * @param counts Replacement count values.
+ *
+ * Unit tests use this function to restore state after execution. Production
+ * algorithms call RecordAlgorithmPathExecution() instead.
+ * Individual stores are atomic, but replacement of all counters is not one
+ * atomic transaction. Call this function when dispatch recording is idle.
+ */
+SIMPLNX_EXPORT void SetAlgorithmPathExecutionCounts(const AlgorithmPathExecutionCounts& counts);
+
+/**
+ * @brief Returns dispatch execution counts.
+ * @return Aggregate and algorithm-store combination counts.
+ *
+ * Individual loads are atomic. Concurrent recording can produce a snapshot whose
+ * fields represent different instants.
+ */
+SIMPLNX_EXPORT AlgorithmPathExecutionCounts GetAlgorithmPathExecutionCounts();
+
+/**
+ * @brief Dispatches between in-core and out-of-core algorithms.
+ *
+ * The selected algorithm receives forwarded constructor arguments. The function
+ * records the selected path for the unit-test execution witness.
+ *
+ * In-core algorithms can use random access. Random access on disk-backed chunks
+ * can repeat load and eviction cycles. Out-of-core algorithms use
+ * chunk-sequential or local access.
+ *
+ * ForceInCoreAlgorithm() has precedence over storage detection and
+ * ForceOocAlgorithm(). The function otherwise selects OocAlgo when an array is
+ * out-of-core or ForceOocAlgorithm() is true.
+ *
+ * @tparam InCoreAlgo In-core algorithm class.
+ * @tparam OocAlgo Out-of-core algorithm class.
+ * @tparam ArgsT Forwarded constructor argument types.
+ * @param arrays Arrays for storage detection.
+ * @param args Arguments for the selected constructor.
+ * @return Result from the selected algorithm.
  */
 template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(std::initializer_list<const IDataArray*> arrays, ArgsT&&... args)
 {
-  if(AnyOutOfCore(arrays) || ForceOocAlgorithm())
+  const bool usesOutOfCoreStore = AnyOutOfCore(arrays);
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+
+  if(useOutOfCoreAlgorithm)
+  {
+    return OocAlgo(std::forward<ArgsT>(args)...)();
+  }
+  return InCoreAlgo(std::forward<ArgsT>(args)...)();
+}
+
+/**
+ * @brief Dispatches between algorithms for mixed array targets.
+ *
+ * The in-core flag has precedence. An out-of-core target or flag selects the
+ * out-of-core algorithm. The function records the selected path for tests.
+ * @tparam InCoreAlgo In-core algorithm class.
+ * @tparam OocAlgo Out-of-core algorithm class.
+ * @tparam ArgsT Forwarded constructor argument types.
+ * @param targets Arrays for storage detection.
+ * @param args Arguments for the selected constructor.
+ * @return Result from the selected algorithm.
+ */
+template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
+Result<> DispatchAlgorithm(const AlgorithmArrayTargets& targets, ArgsT&&... args)
+{
+  const bool usesOutOfCoreStore = AnyOutOfCore(targets);
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+
+  if(useOutOfCoreAlgorithm)
   {
     return OocAlgo(std::forward<ArgsT>(args)...)();
   }

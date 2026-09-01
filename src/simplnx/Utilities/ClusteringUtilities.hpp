@@ -11,16 +11,30 @@
 
 namespace nx::core::ClusterUtilities
 {
+/**
+ * @enum DistanceMetric
+ * @brief Selects the distance calculation for two numeric vectors.
+ */
 enum DistanceMetric
 {
-  Euclidean,
-  SquaredEuclidean,
-  Manhattan,
-  Cosine,
-  Pearson,
-  SquaredPearson
+  Euclidean,        ///< Calculates the square root of the squared differences.
+  SquaredEuclidean, ///< Calculates the sum of squared differences.
+  Manhattan,        ///< Calculates the sum of absolute differences.
+  Cosine,           ///< Calculates one minus cosine similarity.
+  Pearson,          ///< Calculates one minus Pearson correlation.
+  SquaredPearson    ///< Calculates one minus squared Pearson correlation.
 };
 
+/**
+ * @brief Creates a deterministic shuffled index sequence.
+ * @tparam T Specifies the index value type.
+ * @param numElements Specifies the sequence length.
+ * @param startingValue Specifies the first value before shuffling.
+ * @return Shuffled values from startingValue through the sequence end.
+ * @pre The complete sequence is representable by T.
+ *
+ * The fixed default seed makes the sequence reproducible.
+ */
 template <typename T>
 std::vector<T> CreateRandomizedIndex(usize numElements, T startingValue)
 {
@@ -32,9 +46,18 @@ std::vector<T> CreateRandomizedIndex(usize numElements, T startingValue)
 }
 
 /**
- * @brief The DistanceTemplate class contains a templated function getDistance to find the distance, via a variety of
- * metrics, between two vectors of arbitrary dimensions. The developer should ensure that the pointers passed to
- * getDistance do indeed contain vectors of the same component dimensions and start at the desired tuples.
+ * @brief Calculates the selected distance between two numeric vector ranges.
+ * @tparam leftDataType Specifies the left random-access container type.
+ * @tparam rightDataType Specifies the right random-access container type.
+ * @param leftVector Supplies left vector values.
+ * @param leftOffset Identifies the first left component.
+ * @param rightVector Supplies right vector values.
+ * @param rightOffset Identifies the first right component.
+ * @param compDims Specifies the common component count.
+ * @param distMetric Selects the distance calculation.
+ * @return Calculated distance.
+ * @pre compDims is nonzero. Both offset ranges contain compDims values.
+ * @pre distMetric is a declared DistanceMetric value.
  */
 template <typename leftDataType, typename rightDataType>
 float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDataType& rightVector, usize rightOffset, usize compDims, DistanceMetric distMetric)
@@ -145,28 +168,32 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
   }
   }
 
-  // Return the correct primitive type for distance
   return dist;
 }
 
 /**
- * @brief Randomize the provided Feature IDs.
- * @param featureIds the array that maps cell data to feature data via IDs
- * @param totalFeatures the total feature count in the feature ids array (equivalent to max value in feature ids + 1)
- * (Note: this can be derived implicitly, however,the calling functions should have already have this value so we are saving additional parsing)
- * @return void
+ * @brief Applies a deterministic random permutation to cell feature IDs.
+ * @param featureIds Cell-to-feature ID store to update.
+ * @param totalFeatures Total feature count, including feature zero.
+ * @pre totalFeatures is nonzero and totalFeatures - 1 fits int32.
+ * @pre Each feature ID is in the range [0, totalFeatures). Bulk store operations succeed.
+ *
+ * Feature zero remains fixed. The supplied count avoids an additional full-store scan.
  */
 SIMPLNX_EXPORT void RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures);
 
 /**
- * @brief Randomize the provided Feature IDs and update supplied feature IArray data.
- * Assumption: Every array in `featureIArrays` are at least the length of totalFeatures
- * @param featureIds the array that maps cell data to feature data via IDs
- * @param totalFeatures the total feature count in the feature ids array (equivalent to max value in feature ids + 1)
- * (Note: this can be derived implicitly, however,the calling functions should have already have this value so we are saving additional parsing)
- * @param featureIArrays a vector of pointers to the IArrays in the Feature Attribute Matrix
- * (Note: These are not found from a datapath, so calling functions can threshold out feature arrays if necessary)
- * @return void
+ * @brief Permutes cell feature IDs and applies matching pairwise feature-tuple swaps.
+ * @param featureIds Cell-to-feature ID store to update.
+ * @param totalFeatures Total feature count, including feature zero.
+ * @param featureIArrays Non-owning feature arrays to permute.
+ * @pre totalFeatures is nonzero and totalFeatures - 1 fits int32.
+ * @pre Each feature ID is in the range [0, totalFeatures). Bulk store operations succeed.
+ * @pre Each array pointer is non-null and contains at least totalFeatures tuples.
+ *
+ * The caller supplies the feature arrays so it can omit arrays that must not move.
+ * Feature zero remains fixed. The implementation derives a deterministic swap
+ * sequence from the same feature-ID mapping.
  */
 SIMPLNX_EXPORT void RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
 } // namespace nx::core::ClusterUtilities

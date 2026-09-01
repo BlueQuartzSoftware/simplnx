@@ -13,73 +13,97 @@
 namespace nx::core::OStreamUtilities
 {
 /**
- * @brief enum for accepted output delimiters in DREAM3D
+ * @enum Delimiter
+ * @brief Selects one supported text delimiter.
+ *
+ * The numeric values index the delimiter lookup table. Keep their order stable.
  */
 enum class Delimiter : uint64
 {
-  Space = 0,
-  Semicolon = 1,
-  Comma = 2,
-  Colon = 3,
-  Tab = 4
-}; // Don't reorder
+  Space = 0,     ///< Selects one space.
+  Semicolon = 1, ///< Selects a semicolon.
+  Comma = 2,     ///< Selects a comma.
+  Colon = 3,     ///< Selects a colon.
+  Tab = 4        ///< Selects one tab.
+};
 
 /**
- * @brief turns the enum in this API to respective character as a string
- * @param delim the underlying value of the enum type
+ * @brief Converts a delimiter value to text.
+ * @param delim Specifies a Delimiter underlying value.
+ * @return Selected delimiter string.
+ * @pre delim is not greater than the Tab underlying value.
  */
 SIMPLNX_EXPORT std::string DelimiterToString(uint64 delim);
 
 /**
- * @brief [BINARY CAPABLE, unless neighborlist][Multiple File Output] | Writes out to multiple files | !!!!endianess must be addressed in calling class!!!!
- * @param objectPaths The vector of datapaths for respective dataObjects to be written out
- * @param dataStructure The simplnx datastructure where *objectPaths* datacontainers are stored
- * @param directoryPath The path to the directory to write files to | used to create outputStrm paths for ofstream
- * @param mesgHandler The handler to send progress updates to
- * @param shouldCancel The atomic boolean that determines cancel
- * //params with defaults
- * @param fileExtension The extension to create and write to files with
- * @param exportToBinary The boolean that determines if it writes out binary
- * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
- * @param includeIndex The boolean that determines if "Feature_IDs" are printed | leave blank if binary is end output
- * @param includeHeaders The boolean that determines if headers are printed | leave blank if binary is end output
- * @param componentsPerLine The amount of elements to be inserted before newline character | leave blank if binary is end output
+ * @brief Writes each selected data object to its own text or binary file.
+ * @param objectPaths Identifies numeric arrays, string arrays, or neighbor lists.
+ * @param dataStructure Supplies the selected data objects.
+ * @param directoryPath Identifies an existing output directory.
+ * @param mesgHandler Receives progress messages.
+ * @param shouldCancel Supplies the cancellation flag.
+ * @param fileExtension Specifies the suffix for each generated file.
+ * @param exportToBinary True to write numeric arrays as raw binary values.
+ * @param delimiter Specifies text output separation.
+ * @param includeIndex True to include neighbor-list indices.
+ * @param includeHeaders True to include neighbor-list headers.
+ * @param componentsPerLine Specifies numeric-array tuples per text line. Zero selects one.
+ * @param swapEndian True to byte-swap temporary numeric pages for binary output.
+ * @return First numeric storage, binary stream, atomic-file, or commit error.
+ * @throws std::runtime_error If directoryPath is not a directory or binary output selects a neighbor list.
+ *
+ * Each output uses AtomicFile and commits only after its stream closes. Numeric
+ * arrays use bounded pages, and byte swapping never modifies the source. Cancellation
+ * returns a valid result without committing the current temporary file.
+ * @pre componentsPerLine fits int32.
+ *
+ * Text stream failures are not reported. Binary stream failures return an error.
  */
 SIMPLNX_EXPORT Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath,
                                                      const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& fileExtension = ".txt",
                                                      bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
-                                                     size_t componentsPerLine = 0);
+                                                     size_t componentsPerLine = 0, bool swapEndian = false);
 
 /**
- * @brief [Single Output][Custom OStream] | Writes one IArray child to some OStream
- * @param outputStrm The already opened output string to write to
- * @param objectPath The datapath for respective dataObject to be written out
- * @param dataStructure The simplnx datastructure where *objectPath* datacontainer is stored
- * //params with defaults
- * @param delimiter The delimiter to be inserted into string
- * @param includeIndex The boolean that determines if "Feature_IDs" are printed
- * @param includeHeaders The boolean that determines if headers are printed
- * @param componentsPerLine The amount of elements to be inserted before newline character
+ * @brief Writes one supported data object to a caller-owned text stream.
+ * @param outputStrm Receives output and must already be open.
+ * @param objectPath Identifies a numeric array, string array, or neighbor list.
+ * @param dataStructure Supplies the selected object.
+ * @param mesgHandler Receives progress messages.
+ * @param shouldCancel Supplies the cancellation flag.
+ * @param delimiter Specifies value separation.
+ * @param includeIndex True to include neighbor-list indices.
+ * @param includeHeaders True to include neighbor-list headers.
+ * @param componentsPerLine Specifies numeric-array tuples per line. Zero selects one.
+ *
+ * This void API does not report store or stream failures. Cancellation can leave
+ * partial output in outputStrm.
+ * @pre componentsPerLine fits int32.
  */
 SIMPLNX_EXPORT void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                           const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
                                           size_t componentsPerLine = 0);
 
 /**
- * @brief [Single Output][Custom OStream] | writes out multiple arrays to ostream
- * @param outputStrm The already opened output string to write to
- * @param objectPaths The vector of datapaths for respective dataObjects to be written out
- * @param dataStructure The simplnx datastructure where *objectPaths* datacontainers are stored
- * @param mesgHandler The handler to send progress updates to
- * @param shouldCancel The atomic boolean that determines cancel
- * //params with defaults
- * @param delimiter The delimiter to be inserted into string
- * @param includeIndex The boolean that determines if "Feature_IDs" are printed
- * @param writeFirstIndex Write the first tuple of the arrays. For Feature based data, this would be FeatureId = 0.
- * @paragraph indexName The name of the "Index" column
- * @param includeHeaders The boolean that determines if headers are printed
- * @param neighborLists The list of dataPaths of neighborlists to include
- * @param writeNumOfFeatures The amount of elements per tuple printed at top
+ * @brief Interleaves selected arrays into one caller-owned text stream.
+ * @param outputStrm Receives output and must already be open.
+ * @param objectPaths Identifies numeric and string arrays to interleave.
+ * @param dataStructure Supplies all selected objects.
+ * @param mesgHandler Receives progress messages.
+ * @param shouldCancel Supplies the cancellation flag.
+ * @param delimiter Specifies column separation.
+ * @param includeIndex True to write a tuple-index column.
+ * @param includeHeaders True to write array and component column names.
+ * @param writeFirstIndex True to include tuple zero.
+ * @param indexName Specifies the tuple-index header.
+ * @param neighborLists Identifies neighbor lists to append after the table.
+ * @param writeNumOfFeatures True to write the exported tuple count first.
+ * @pre objectPaths is nonempty. All selected arrays have at least the first array's tuple count.
+ * @pre If tuple zero is omitted and writeNumOfFeatures is true, the first array is nonempty.
+ *
+ * Numeric writers use bounded forward caches. A numeric store-read failure throws
+ * std::runtime_error. This void API does not report stream failures. Cancellation
+ * can leave partial output in outputStrm.
  */
 SIMPLNX_EXPORT void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                               const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,

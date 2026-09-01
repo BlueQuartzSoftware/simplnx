@@ -24,6 +24,10 @@ public:
   ReadH5OinaData& operator=(const ReadH5OinaData&) = delete;
   ReadH5OinaData& operator=(ReadH5OinaData&&) noexcept = delete;
 
+  /**
+   * @brief Imports each selected scan through IEbsdOemReader.
+   * @return Reader, destination transfer, or missing-pattern-data errors.
+   */
   Result<> operator()();
 
   Result<> copyRawEbsdData(int scanIndex) override;

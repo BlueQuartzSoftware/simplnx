@@ -1,4 +1,7 @@
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
+
+#include <array>
 
 #include "SimplnxCore/Filters/Algorithms/ComputeCoordinateThreshold.hpp"
 #include "SimplnxCore/Filters/ComputeCoordinateThresholdFilter.hpp"
@@ -11,6 +14,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -28,11 +32,10 @@ const DataPath k_MaskPath({k_MaskName});
 
 void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32Parameter::ValueType& sphereInfo)
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, std::make_any<bool>(shouldInvert));
@@ -41,22 +44,19 @@ void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const 
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32Parameter::ValueType& minPoint, const VectorFloat32Parameter::ValueType& maxPoint)
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, std::make_any<bool>(shouldInvert));
@@ -66,11 +66,9 @@ void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, con
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -100,11 +98,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
   VectorFloat32Parameter::ValueType minCoord = {3.5f, 3.5f, 3.5f};
   VectorFloat32Parameter::ValueType maxCoord = {-1.0f, -1.0f, -1.0f};
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -113,7 +110,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
@@ -143,11 +139,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
 
   VectorFloat32Parameter::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, -1.75f};
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -155,7 +150,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
@@ -183,11 +177,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
   VectorFloat32Parameter::ValueType minCoord = {5.5f, 5.5f, 1.5f};
   VectorFloat32Parameter::ValueType maxCoord = {6.5f, 6.5f, 1.5f};
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -196,7 +189,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
@@ -223,11 +215,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
 
   VectorFloat32Parameter::ValueType sphereInfo = {5.5f, 5.5f, 1.5f, 0.5f};
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -235,7 +226,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
@@ -278,11 +268,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
     maxCoord = {-1.0f, -1.0f, -1.0f};
   }
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -291,11 +280,9 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -327,11 +314,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
 
   VectorFloat32Parameter::ValueType sphereInfo = {6.0f, 6.0f, 6.0f, 0.75f};
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
@@ -339,11 +325,9 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -354,6 +338,10 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure;
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
@@ -375,7 +363,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
 
   SECTION("Baseline")
   {
-    RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
+    scope.execute([&] { RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord); });
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
 
@@ -412,7 +400,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
 
   SECTION("Inverted")
   {
-    RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
+    scope.execute([&] { RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord); });
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
 
@@ -452,6 +440,9 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
@@ -472,7 +463,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
 
   SECTION("Baseline")
   {
-    SphereExecuteFilter(dataStructure, false, sphereInfo);
+    scope.execute([&] { SphereExecuteFilter(dataStructure, false, sphereInfo); });
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
 
@@ -509,7 +500,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
 
   SECTION("Inverted")
   {
-    SphereExecuteFilter(dataStructure, true, sphereInfo);
+    scope.execute([&] { SphereExecuteFilter(dataStructure, true, sphereInfo); });
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
 
@@ -543,6 +534,33 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
     REQUIRE(mask[23] == 1);
     REQUIRE(mask[24] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Chunk Boundary", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr std::array<usize, 3> k_Dimensions = {257, 257, 1};
+  imageGeom->setDimensions(k_Dimensions);
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+
+  const VectorFloat32Parameter::ValueType minCoord = {1.0f, 255.0f, 0.0f};
+  const VectorFloat32Parameter::ValueType maxCoord = {2.0f, 256.0f, 1.0f};
+  scope.execute([&] { RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord); });
+
+  const UInt8Array* mask = nullptr;
+  REQUIRE_NOTHROW(mask = &dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+  constexpr usize k_FirstTupleAfterChunkBoundary = 65536;
+  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary - 1] == 0);
+  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary] == 1);
+  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary + 1] == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

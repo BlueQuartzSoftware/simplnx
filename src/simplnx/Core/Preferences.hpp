@@ -15,93 +15,101 @@ namespace nx::core
 class AbstractPlugin;
 
 /**
+ * @enum DataStorageMode
+ * @brief Selects storage intent for new data arrays.
+ *
+ * The core library stores intent instead of a concrete out-of-core format. An
+ * OOC-enabled build resolves compatible modes to its registered storage format.
+ * The persisted integer values must remain stable.
+ */
+enum class DataStorageMode : int
+{
+  Adaptive,      ///< Selects storage from the array-size threshold.
+  ForceInCore,   ///< Requests in-core storage regardless of array size.
+  ForceOutOfCore ///< Requests out-of-core storage regardless of array size.
+};
+
+/**
  * @class Preferences
- * @brief Manages application and plugin-specific preferences with support for default values and file persistence.
- * Handles both global application preferences and plugin-specific settings, including out-of-core data management.
+ * @brief Stores application and plugin preference values.
+ *
+ * The class merges explicit values with defaults and persists explicit values.
+ * It represents storage intent without requiring an out-of-core implementation.
  */
 class SIMPLNX_EXPORT Preferences
 {
   friend class AbstractPlugin;
 
 public:
-  static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";                   // bytes
-  static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";      // string
-  static inline constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size"; // bytes
-  static inline constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";                     // boolean
-  static inline constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";    // Out-of-Core temp directory
+  static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
+
+  // Migration reads this legacy key. The core does not write it.
+  static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
+
+  // Migration maps this legacy format value to ForceInCore.
+  static inline constexpr StringLiteral k_InMemoryFormat = "Simplnx-Default-In-Memory";
+
+  static inline constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size";
+
+  // Migration reads this legacy key. The core does not write it.
+  static inline constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";
+
+  // The persisted value is the DataStorageMode integer.
+  static inline constexpr StringLiteral k_DataStorageMode_Key = "data_storage_mode";
+
+  static inline constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";
+
+  static inline constexpr StringLiteral k_AutoRangeComputation_Key = "auto_range_computation";
+
+  static inline constexpr StringLiteral k_CacheMemoryBudgetBytes_Key = "cache_memory_budget_bytes";
+
+  // Migration reads this legacy key. The core does not write it.
+  static inline constexpr StringLiteral k_LegacyMemoryBudgetBytes_Key = "memory_budget_bytes";
 
   /**
-   * @brief Returns the default file path for storing preferences based on the application name.
-   * @param applicationName The name of the application
-   * @return Default filesystem path for the preferences file
+   * @brief Returns the default per-user preferences path.
+   * @param applicationName Application name used in the path.
+   * @return Platform-specific preferences.json path.
+   *
+   * macOS uses Library/Preferences, Windows uses AppData/Local, and other
+   * platforms use .config below the home directory.
    */
   static std::filesystem::path DefaultFilePath(const std::string& applicationName);
 
-  /**
-   * @brief Default constructor initializes preferences with default values.
-   */
   Preferences();
 
-  /**
-   * @brief Destructor cleans up preferences resources.
-   */
   ~Preferences() noexcept;
 
   /**
-   * @brief Checks if a preference with the given name exists.
-   * @param name The name of the preference to check
-   * @return True if the preference exists, false otherwise
+   * @brief Tests whether an explicit top-level preference exists.
+   * @param name Preference key to test.
+   * @return True when m_Values contains name.
+   *
+   * Default values do not make this method return true.
    */
   bool contains(const std::string& name) const;
 
-  /**
-   * @brief Checks if a plugin-specific preference exists.
-   * @param pluginName The name of the plugin
-   * @param name The name of the preference within the plugin
-   * @return True if the plugin preference exists, false otherwise
-   */
+  void removeValue(std::string_view name);
+
   bool pluginContains(const std::string& pluginName, const std::string& name) const;
 
-  /**
-   * @brief Checks if a default value exists for a plugin-specific preference.
-   * @param pluginName The name of the plugin
-   * @param name The name of the preference within the plugin
-   * @return True if a default value exists for the plugin preference, false otherwise
-   */
   bool pluginContainsDefault(const std::string& pluginName, const std::string& name) const;
 
   /**
-   * @brief Retrieves the value of a preference as a JSON object.
-   * @param name The name of the preference
-   * @return The preference value as a JSON object
+   * @brief Returns an explicit preference or its default value.
+   * @param name Preference key to read.
+   * @return Explicit value, default value, or empty JSON when no value exists.
    */
   nlohmann::json value(const std::string& name) const;
 
-  /**
-   * @brief Retrieves the value of a preference and converts it to the specified type.
-   * @tparam T The type to convert the preference value to
-   * @param name The name of the preference
-   * @return The preference value converted to type T
-   */
   template <typename T>
   T valueAs(const std::string& name) const
   {
     return value(name).get<T>();
   }
 
-  /**
-   * @brief Retrieves the default value of a preference as a JSON object.
-   * @param name The name of the preference
-   * @return The default preference value as a JSON object
-   */
   nlohmann::json defaultValue(const std::string& name) const;
 
-  /**
-   * @brief Retrieves the default value of a preference and converts it to the specified type.
-   * @tparam T The type to convert the default value to
-   * @param name The name of the preference
-   * @return The default preference value converted to type T
-   */
   template <typename T>
   T defaultValueAs(const std::string& name) const
   {
@@ -109,27 +117,22 @@ public:
   }
 
   /**
-   * @brief Sets the value of a preference.
-   * @param name The name of the preference
-   * @param value The new value as a JSON object
+   * @brief Stores an explicit top-level preference value.
+   * @param name Preference key to update.
+   * @param value New JSON value.
+   *
+   * Updating the large-data threshold also recomputes memory defaults.
    */
   void setValue(const std::string& name, const nlohmann::json& value);
 
   /**
-   * @brief Retrieves a plugin-specific preference value as a JSON object.
-   * @param pluginName The name of the plugin
-   * @param valueName The name of the preference within the plugin
-   * @return The plugin preference value as a JSON object
+   * @brief Returns an explicit plugin preference or its default value.
+   * @param pluginName Plugin preference group.
+   * @param valueName Preference key within pluginName.
+   * @return Explicit value, default value, or empty JSON when no value exists.
    */
   nlohmann::json pluginValue(const std::string& pluginName, const std::string& valueName) const;
 
-  /**
-   * @brief Retrieves a plugin-specific preference value and converts it to the specified type.
-   * @tparam T The type to convert the preference value to
-   * @param pluginName The name of the plugin
-   * @param valueName The name of the preference within the plugin
-   * @return The plugin preference value converted to type T
-   */
   template <typename T>
   T pluginValueAs(const std::string& pluginName, const std::string& valueName) const
   {
@@ -137,140 +140,118 @@ public:
   }
 
   /**
-   * @brief Retrieves the default value of a plugin-specific preference as a JSON object.
-   * @param pluginName The name of the plugin
-   * @param name The name of the preference within the plugin
-   * @return The default plugin preference value as a JSON object
+   * @brief Returns a default value from the plugin-default object.
+   * @param pluginName Ignored by the current implementation.
+   * @param name Key to read directly from the plugin-default object.
+   * @return Matching JSON value, or empty JSON when name is absent.
+   *
+   * The implementation does not index the default object by pluginName.
    */
   nlohmann::json defaultPluginValue(const std::string& pluginName, const std::string& name) const;
 
-  /**
-   * @brief Retrieves the default value of a plugin-specific preference and converts it to the specified type.
-   * @tparam T The type to convert the default value to
-   * @param pluginName The name of the plugin
-   * @param name The name of the preference within the plugin
-   * @return The default plugin preference value converted to type T
-   */
   template <typename T>
   T defaultPluginValueAs(const std::string& pluginName, const std::string& name) const
   {
     return defaultPluginValue(pluginName, name).get<T>();
   }
 
-  /**
-   * @brief Sets a plugin-specific preference value.
-   * @param pluginName The name of the plugin
-   * @param valueName The name of the preference within the plugin
-   * @param value The new value as a JSON object
-   */
   void setPluginValue(const std::string& pluginName, const std::string& valueName, const nlohmann::json& value);
 
   /**
-   * @brief Clears all preference values (does not affect default values).
+   * @brief Clears explicit preference values.
+   *
+   * The method recreates the plugin group and recomputes memory defaults.
    */
   void clear();
 
   /**
-   * @brief Saves the current preferences to a file.
-   * @param filepath The filesystem path where preferences will be saved
-   * @return Result indicating success or failure of the save operation
+   * @brief Writes explicit preferences to a JSON file.
+   * @param filepath Destination file path.
+   * @return Error when the parent directory or output file cannot open.
+   *
+   * The method creates missing parent directories. Default values are not written.
    */
   Result<> saveToFile(const std::filesystem::path& filepath) const;
 
   /**
-   * @brief Loads preferences from a file.
-   * @param filepath The filesystem path from which preferences will be loaded
-   * @return Result indicating success or failure of the load operation
+   * @brief Reads explicit preferences from a JSON file.
+   * @param filepath Source file path.
+   * @return Error when the file is absent, cannot open, or contains invalid JSON.
+   *
+   * The method migrates legacy cache and storage keys before updating memory defaults.
    */
   Result<> loadFromFile(const std::filesystem::path& filepath);
 
   /**
-   * @brief Gets the default format for large data storage.
-   * @return String representing the default large data format
-   */
-  std::string defaultLargeDataFormat() const;
-
-  /**
-   * @brief Sets the default format for large data storage.
-   * @param dataFormat The format to use as default for large data
-   */
-  void setDefaultLargeDataFormat(std::string dataFormat);
-
-  /**
-   * @brief Gets the current format for large data storage.
-   * @return String representing the current large data format
-   */
-  std::string largeDataFormat() const;
-
-  /**
-   * @brief Sets the format for large data storage.
-   * @param dataFormat The format to use for large data
-   */
-  void setLargeDataFormat(std::string dataFormat);
-
-  /**
-   * @brief Checks if out-of-core (OOC) data mode is being used.
-   * @return True if OOC data mode is enabled, false otherwise
+   * @brief Reports whether storage intent permits out-of-core storage.
+   *
+   * Adaptive and ForceOutOfCore return true. This preference does not prove
+   * that an out-of-core manager is registered.
+   * @return True unless dataStorageMode() is DataStorageMode::ForceInCore.
    */
   bool useOocData() const;
 
   /**
-   * @brief Checks if out-of-core (OOC) data mode is forced.
-   * @return True if OOC data mode is forced, false otherwise
+   * @brief Returns the canonical tri-state storage preference.
+   *
+   * An explicit canonical value takes precedence. Legacy force-out-of-core and
+   * format values preserve the equivalent intent. Unrecognized values and fresh
+   * preferences use Adaptive.
+   * @return Active storage mode.
    */
-  bool forceOocData() const;
+  DataStorageMode dataStorageMode() const;
 
   /**
-   * @brief Sets whether to force out-of-core (OOC) data mode.
-   * @param forceOoc True to force OOC mode, false otherwise
+   * @brief Stores the canonical tri-state storage preference.
+   *
+   * The method writes only the canonical key. Legacy keys remain unchanged to
+   * keep concrete out-of-core formats outside simplnx core.
+   * @param mode Storage mode to persist.
    */
-  void setForceOocData(bool forceOoc);
+  void setDataStorageMode(DataStorageMode mode);
 
   /**
-   * @brief Updates memory-related default values based on system capabilities.
+   * @brief Recomputes the default whole-data-structure size threshold.
+   *
+   * The threshold reserves two single-array limits for the operating system and
+   * application. Low-memory systems use half of physical RAM instead.
    */
   void updateMemoryDefaults();
 
-  /**
-   * @brief Gets the size threshold for large data structures.
-   * @return Size threshold in bytes for considering a data structure as large
-   */
   uint64 largeDataStructureSize() const;
 
-  /**
-   * @brief Gets the temporary directory path for out-of-core data.
-   * @return String representing the OOC temporary directory path
-   */
   std::string oocTempDirectory() const;
 
   /**
-   * @brief Sets the temporary directory path for out-of-core data.
-   * @param path The directory path to use for OOC temporary files
+   * @brief Stores the out-of-core temporary directory.
+   * @param path Directory for session backing files.
+   *
+   * The method propagates path to registered data-I/O managers through the
+   * global Application instance.
    */
   void setOocTempDirectory(const std::string& path);
 
-protected:
+  bool autoRangeComputation() const;
+
+  void setAutoRangeComputation(bool enabled);
+
+  uint64 cacheMemoryBudgetBytes() const;
+
   /**
-   * @brief Initializes all default preference values for the application.
+   * @brief Stores the shared cache-memory budget preference.
+   * @param bytes Requested cache budget in bytes.
+   *
+   * This method does not reconfigure CacheMemoryBudgetManager.
    */
+  void setCacheMemoryBudgetBytes(uint64 bytes);
+
+protected:
   void setDefaultValues();
 
-  /**
-   * @brief Adds a default value for a plugin-specific preference.
-   * @param pluginName The name of the plugin
-   * @param valueName The name of the preference within the plugin
-   * @param value The default value as a JSON object
-   */
   void addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value);
-
-  /**
-   * @brief Checks and updates whether out-of-core mode should be used based on current settings.
-   */
-  void checkUseOoc();
 
 private:
   nlohmann::json m_DefaultValues;
   nlohmann::json m_Values;
-  bool m_UseOoc = false;
 };
 } // namespace nx::core

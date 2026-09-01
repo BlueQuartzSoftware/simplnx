@@ -7,68 +7,70 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <numbers>
-#include <stack>
 #include <stdexcept>
 
 using namespace nx::core;
 
-// ===========================================================================
-// Anonymous namespace: ParsedItem, helper functions, functors
-// ===========================================================================
 namespace
 {
 
-// ---------------------------------------------------------------------------
-// Intermediate representation used between parsing and shunting-yard.
-// Includes parentheses and commas that the final RpnItem list does not.
-// ---------------------------------------------------------------------------
+// The evaluator transfers at most this many values per batch. Component count lowers the tuple count.
+// Bounded buffers keep out-of-core scratch independent of array size. Bulk transfers avoid one store call per value.
+constexpr usize k_ChunkSize = 65536;
+
+/**
+ * @struct ParsedItem
+ * @brief Stores an infix item before reverse-polish conversion.
+ *
+ * Parentheses and commas remain in this representation so the parser can
+ * validate function arguments before conversion.
+ */
 struct ParsedItem
 {
+  /**
+   * @enum Kind
+   * @brief Identifies the parsed item category.
+   */
   enum class Kind
   {
-    Scalar,
-    ArrayRef,
-    Operator,
-    LParen,
-    RParen,
-    Comma,
-    ComponentExtract,
-    TupleComponentExtract
+    Scalar,               ///< Stores a scalar literal.
+    ArrayRef,             ///< Stores array validation metadata.
+    Operator,             ///< Stores an operator definition.
+    LParen,               ///< Stores an opening parenthesis.
+    RParen,               ///< Stores a closing parenthesis.
+    Comma,                ///< Stores a function argument separator.
+    ComponentExtract,     ///< Stores a component extraction.
+    TupleComponentExtract ///< Stores a tuple and component extraction.
   } kind;
 
-  // Scalar
   float64 scalarValue = 0.0;
 
-  // ArrayRef: metadata for validation (no data allocated)
+  // This metadata validates shapes without reading array data.
   DataPath arrayPath;
   DataType sourceDataType = DataType::float64;
   std::vector<usize> arrayTupleShape;
   std::vector<usize> arrayCompShape;
 
-  // Operator
   const OperatorDef* op = nullptr;
   bool isNegativePrefix = false;
 
-  // ComponentExtract / TupleComponentExtract
   usize componentIndex = std::numeric_limits<usize>::max();
   usize tupleIndex = std::numeric_limits<usize>::max();
 };
 
-// ---------------------------------------------------------------------------
-// The static unary negative OperatorDef (not in the registry)
-// ---------------------------------------------------------------------------
+// The parser uses this static definition to disambiguate unary minus.
 const OperatorDef& getUnaryNegativeOp()
 {
   static const OperatorDef s_UnaryNeg = {"neg", OperatorDef::UnaryPrefix, 4, 1, OperatorDef::Right, OperatorDef::None, [](double x) { return -x; }, nullptr};
   return s_UnaryNeg;
 }
 
-// ---------------------------------------------------------------------------
-// Look up an operator/function in the registry by exact token match
-// ---------------------------------------------------------------------------
 const OperatorDef* findOperatorByToken(const std::string& token)
 {
   const auto& registry = getOperatorRegistry();
@@ -82,9 +84,6 @@ const OperatorDef* findOperatorByToken(const std::string& token)
   return nullptr;
 }
 
-// ---------------------------------------------------------------------------
-// Map single-character TokenType to the operator registry token string
-// ---------------------------------------------------------------------------
 const OperatorDef* operatorDefForSymbolToken(TokenType type)
 {
   switch(type)
@@ -106,15 +105,11 @@ const OperatorDef* operatorDefForSymbolToken(TokenType type)
   }
 }
 
-// ---------------------------------------------------------------------------
-// Search the entire DataStructure for IDataArrays with a given name.
-// Returns all DataPaths where a matching array is found.
-// ---------------------------------------------------------------------------
+// The unscoped fallback collects every match so parsing can report ambiguity.
 std::vector<DataPath> findArraysByName(const DataStructure& ds, const std::string& name)
 {
   std::vector<DataPath> results;
 
-  // Search recursively from the root
   auto allPaths = GetAllChildDataPathsRecursive(ds, DataPath{}, DataObject::Type::DataArray);
   if(allPaths.has_value())
   {
@@ -130,39 +125,18 @@ std::vector<DataPath> findArraysByName(const DataStructure& ds, const std::strin
   return results;
 }
 
-// ---------------------------------------------------------------------------
-// Functor to copy an IDataArray of any numeric type into a Float64Array
-// ---------------------------------------------------------------------------
-struct CopyToFloat64Functor
-{
-  template <typename T>
-  void operator()(const IDataArray& sourceArray, Float64Array& destArray)
-  {
-    const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
-    const usize totalElements = typedSource.getSize();
-    for(usize i = 0; i < totalElements; i++)
-    {
-      destArray[i] = static_cast<double>(typedSource.at(i));
-    }
-  }
-};
-
-// ---------------------------------------------------------------------------
-// Check whether the previous ParsedItem is a binary operator
-// ---------------------------------------------------------------------------
 bool isBinaryOp(const ParsedItem& item)
 {
   return item.kind == ParsedItem::Kind::Operator && item.op != nullptr && item.op->kind == OperatorDef::BinaryInfix && !item.isNegativePrefix;
 }
 
-// ---------------------------------------------------------------------------
-// WrapFunctionArguments: for each function call in the parsed item list,
-// wrap each comma-separated argument in extra parentheses so that the
-// shunting-yard algorithm processes them correctly.
-//
-// Example: sin(a + b) stays as sin((a + b))
-//          log(a, b)  becomes log((a), (b))
-// ---------------------------------------------------------------------------
+/**
+ * @brief Groups function arguments for reverse-polish conversion.
+ * @param items Receives parsed infix items and inserts argument parentheses.
+ *
+ * Extra parentheses preserve comma-delimited function boundaries during
+ * shunting-yard conversion.
+ */
 void wrapFunctionArguments(std::vector<ParsedItem>& items)
 {
   std::vector<ParsedItem> out;
@@ -172,16 +146,13 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
   {
     const auto& item = items[i];
 
-    // Detect: Function operator followed by LParen
     if(item.kind == ParsedItem::Kind::Operator && item.op != nullptr && item.op->kind == OperatorDef::Function && i + 1 < items.size() && items[i + 1].kind == ParsedItem::Kind::LParen)
     {
-      // Copy function and '('
       out.push_back(item);
       out.push_back(items[++i]);
       int depth = 1;
       size_t argStart = out.size();
 
-      // Process until matching ')'
       for(++i; i < items.size() && depth > 0; ++i)
       {
         const auto& cur = items[i];
@@ -195,7 +166,6 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
           --depth;
           if(depth == 0)
           {
-            // Close last argument with wrapping parens
             ParsedItem lp;
             lp.kind = ParsedItem::Kind::LParen;
             out.insert(out.begin() + static_cast<std::ptrdiff_t>(argStart), lp);
@@ -209,7 +179,6 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
         }
         else if(cur.kind == ParsedItem::Kind::Comma && depth == 1)
         {
-          // End this argument, copy comma, start next argument
           ParsedItem rp;
           rp.kind = ParsedItem::Kind::RParen;
           out.push_back(rp);
@@ -236,24 +205,112 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
   items.swap(out);
 }
 
-// ---------------------------------------------------------------------------
-// Functor to copy a Float64Array result into the output DataArray of any
-// numeric type, performing static_cast on each element.
-// ---------------------------------------------------------------------------
-struct CopyResultFunctor
+/**
+ * @struct ReadSingleElementFunctor
+ * @brief Reads one typed source value as float64.
+ *
+ * The reduction pass makes expression-sized reads. The streaming loop does not
+ * use this functor.
+ */
+struct ReadSingleElementFunctor
 {
-  // Full array copy (non-float64 output)
+  /**
+   * @brief Reads one source value.
+   * @tparam T Specifies the source element type.
+   * @param sourceArray Contains the typed source values.
+   * @param flatIndex Identifies the source value.
+   * @return Source value converted to float64.
+   */
   template <typename T>
-  void operator()(DataStructure& ds, const DataPath& outputPath, const Float64Array* resultArray, bool /*unused*/)
+  float64 operator()(const IDataArray& sourceArray, usize flatIndex)
   {
-    auto& output = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
-    for(usize i = 0; i < output.getSize(); i++)
+    const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
+    return static_cast<float64>(typedSource.at(flatIndex));
+  }
+};
+
+/**
+ * @struct ReadChunkToFloat64Functor
+ * @brief Converts one bounded source range to float64 values.
+ *
+ * The source buffer matches the caller chunk. One bulk read avoids per-value
+ * out-of-core access.
+ */
+struct ReadChunkToFloat64Functor
+{
+  /**
+   * @brief Reads one bounded source range.
+   * @tparam T Specifies the source element type.
+   * @param sourceArray Contains the typed source values.
+   * @param startIndex Identifies the first source value.
+   * @param destBuffer Receives converted values.
+   */
+  template <typename T>
+  void operator()(const IDataArray& sourceArray, usize startIndex, nonstd::span<float64> destBuffer)
+  {
+    const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
+    const auto& sourceStore = typedSource.getDataStoreRef();
+    const usize count = destBuffer.size();
+
+    // The bool vector specialization has no contiguous data. This buffer avoids that specialization.
+    auto rawBuf = std::make_unique<T[]>(count);
+    sourceStore.copyIntoBuffer(startIndex, nonstd::span<T>(rawBuf.get(), count));
+    for(usize i = 0; i < count; i++)
     {
-      output[i] = static_cast<T>(resultArray->at(i));
+      destBuffer[i] = static_cast<float64>(rawBuf[i]);
     }
   }
+};
 
-  // Scalar fill
+/**
+ * @struct WriteChunkFromFloat64Functor
+ * @brief Converts one bounded float64 range to the output type.
+ *
+ * The output buffer matches the caller chunk. One bulk write avoids per-value
+ * out-of-core access.
+ */
+struct WriteChunkFromFloat64Functor
+{
+  /**
+   * @brief Writes one bounded output range.
+   * @tparam T Specifies the output element type.
+   * @param ds Contains the output array.
+   * @param outputPath Identifies the output array.
+   * @param startIndex Identifies the first output value.
+   * @param srcBuffer Supplies float64 values.
+   */
+  template <typename T>
+  void operator()(DataStructure& ds, const DataPath& outputPath, usize startIndex, nonstd::span<const float64> srcBuffer)
+  {
+    auto& outputStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+    const usize count = srcBuffer.size();
+
+    // The bool vector specialization has no contiguous data. This buffer avoids that specialization.
+    auto writeBuf = std::make_unique<T[]>(count);
+    for(usize i = 0; i < count; i++)
+    {
+      writeBuf[i] = static_cast<T>(srcBuffer[i]);
+    }
+    outputStore.copyFromBuffer(startIndex, nonstd::span<const T>(writeBuf.get(), count));
+  }
+};
+
+/**
+ * @struct FillScalarResultFunctor
+ * @brief Fills one output array with a scalar result.
+ *
+ * A scalar expression evaluates once. The array fill then broadcasts that value
+ * without a per-element calculator loop.
+ */
+struct FillScalarResultFunctor
+{
+  /**
+   * @brief Fills the output array.
+   * @tparam T Specifies the output element type.
+   * @param ds Contains the output array.
+   * @param outputPath Identifies the output array.
+   * @param scalarValue Supplies the result value.
+   */
   template <typename T>
   void operator()(DataStructure& ds, const DataPath& outputPath, float64 scalarValue)
   {
@@ -262,281 +319,346 @@ struct CopyResultFunctor
   }
 };
 
-} // anonymous namespace
-
-// ===========================================================================
-// CalcBuffer implementation
-// ===========================================================================
-
-CalcBuffer::CalcBuffer(CalcBuffer&& other) noexcept
-: m_Storage(other.m_Storage)
-, m_BorrowedArray(other.m_BorrowedArray)
-, m_TempDS(other.m_TempDS)
-, m_ArrayId(other.m_ArrayId)
-, m_OwnedArray(other.m_OwnedArray)
-, m_OutputArray(other.m_OutputArray)
-, m_IsScalar(other.m_IsScalar)
+/**
+ * @brief Computes the first item index for each reverse-polish subexpression.
+ * @param rpn Supplies a valid reverse-polish sequence.
+ * @return Start index for the value produced by each reverse-polish item.
+ *
+ * Reverse-polish subexpressions are contiguous. The reduction and scalar
+ * evaluators use these starts without traversing source arrays.
+ */
+std::vector<usize> computeSpanStarts(const std::vector<RpnItem>& rpn)
 {
-  other.m_TempDS = nullptr;
-  other.m_BorrowedArray = nullptr;
-  other.m_OwnedArray = nullptr;
-  other.m_OutputArray = nullptr;
+  std::vector<usize> spanStart(rpn.size(), 0);
+  std::vector<usize> pending; // The stack stores start indices for pending values.
+
+  for(usize i = 0; i < rpn.size(); i++)
+  {
+    const RpnItem& item = rpn[i];
+    const bool isBinaryOperator = item.type == RpnItem::Type::Operator && item.op != nullptr && item.op->numArgs == 2;
+    const bool consumesOneOperand = (item.type == RpnItem::Type::Operator && !isBinaryOperator) || item.type == RpnItem::Type::ComponentExtract || item.type == RpnItem::Type::TupleComponentExtract;
+
+    usize myStart = i;
+    if(isBinaryOperator)
+    {
+      pending.pop_back(); // right operand's start -- the span still begins at the left operand
+      myStart = pending.back();
+      pending.pop_back();
+    }
+    else if(consumesOneOperand)
+    {
+      myStart = pending.back();
+      pending.pop_back();
+    }
+    // Scalar and ArrayRef items are leaves, so myStart remains i.
+
+    spanStart[i] = myStart;
+    pending.push_back(myStart);
+  }
+
+  return spanStart;
 }
 
-CalcBuffer& CalcBuffer::operator=(CalcBuffer&& other) noexcept
+/**
+ * @brief Evaluates one reverse-polish subexpression at one tuple and component.
+ * @param dataStructure Resolves source arrays.
+ * @param rpn Supplies reverse-polish items.
+ * @param nodeIndex Identifies the subexpression result item.
+ * @param spanStart Supplies subexpression start indices.
+ * @param tupleIdx Identifies the source tuple.
+ * @param compIdx Identifies the source component.
+ * @param units Selects trigonometric angle units.
+ * @return Scalar value, or an evaluation error.
+ *
+ * The reduction pass reads at most one value from each source leaf. The
+ * streaming loop does not call this function. Component extraction applies its
+ * literal index to the complete operand subtree.
+ */
+Result<float64> evaluateSingleValue(const DataStructure& dataStructure, const std::vector<RpnItem>& rpn, usize nodeIndex, const std::vector<usize>& spanStart, usize tupleIdx, usize compIdx,
+                                    CalculatorParameter::AngleUnits units)
 {
-  if(this != &other)
+  const RpnItem& item = rpn[nodeIndex];
+
+  switch(item.type)
   {
-    // Clean up current state
-    if(m_Storage == Storage::Owned && m_TempDS != nullptr)
+  case RpnItem::Type::Scalar:
+    return {item.scalarValue};
+
+  case RpnItem::Type::ArrayRef: {
+    const auto* sourceArray = dataStructure.getDataAs<IDataArray>(item.arrayPath);
+    if(sourceArray == nullptr)
     {
-      m_TempDS->removeData(m_ArrayId);
+      return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
+                                      fmt::format("Internal error: array '{}' could not be resolved during evaluation.", item.arrayPath.toString()));
+    }
+    const usize numComps = sourceArray->getNumberOfComponents();
+    const usize flatIndex = tupleIdx * numComps + compIdx;
+    const float64 value = ExecuteDataFunction(ReadSingleElementFunctor{}, item.sourceDataType, *sourceArray, flatIndex);
+    return {value};
+  }
+
+  case RpnItem::Type::Operator: {
+    const OperatorDef* op = item.op;
+    if(op == nullptr)
+    {
+      return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), "Internal error: null operator encountered during scalar evaluation.");
     }
 
-    m_Storage = other.m_Storage;
-    m_BorrowedArray = other.m_BorrowedArray;
-    m_TempDS = other.m_TempDS;
-    m_ArrayId = other.m_ArrayId;
-    m_OwnedArray = other.m_OwnedArray;
-    m_OutputArray = other.m_OutputArray;
-    m_IsScalar = other.m_IsScalar;
+    if(op->numArgs == 1)
+    {
+      Result<float64> operandResult = evaluateSingleValue(dataStructure, rpn, nodeIndex - 1, spanStart, tupleIdx, compIdx, units);
+      if(operandResult.invalid())
+      {
+        return operandResult;
+      }
+      float64 val = operandResult.value();
+      if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+      {
+        val = val * (std::numbers::pi / 180.0);
+      }
+      float64 res = op->unaryOp(val);
+      if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+      {
+        res = res * (180.0 / std::numbers::pi);
+      }
+      return {res};
+    }
 
-    other.m_TempDS = nullptr;
-    other.m_BorrowedArray = nullptr;
-    other.m_OwnedArray = nullptr;
-    other.m_OutputArray = nullptr;
+    // The right operand start identifies the end of the left operand.
+    const usize rightIdx = nodeIndex - 1;
+    const usize rightStart = spanStart[rightIdx];
+    const usize leftIdx = rightStart - 1;
+
+    Result<float64> rightResult = evaluateSingleValue(dataStructure, rpn, rightIdx, spanStart, tupleIdx, compIdx, units);
+    if(rightResult.invalid())
+    {
+      return rightResult;
+    }
+    Result<float64> leftResult = evaluateSingleValue(dataStructure, rpn, leftIdx, spanStart, tupleIdx, compIdx, units);
+    if(leftResult.invalid())
+    {
+      return leftResult;
+    }
+    return {op->binaryOp(leftResult.value(), rightResult.value())};
   }
-  return *this;
+
+  case RpnItem::Type::ComponentExtract: {
+    // The literal index applies to the complete operand subtree.
+    return evaluateSingleValue(dataStructure, rpn, nodeIndex - 1, spanStart, tupleIdx, item.componentIndex, units);
+  }
+
+  case RpnItem::Type::TupleComponentExtract:
+    return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), "Internal error: nested TupleComponentExtract encountered during scalar evaluation.");
+  }
+
+  return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), "Internal error: unrecognized RPN item type during scalar evaluation.");
 }
 
-CalcBuffer::~CalcBuffer()
+/**
+ * @struct RpnNodeShape
+ * @brief Stores one simulated reverse-polish value shape.
+ *
+ * Shape simulation reads array metadata only. It does not read array values.
+ */
+struct RpnNodeShape
 {
-  if(m_Storage == Storage::Owned && m_TempDS != nullptr)
+  bool isScalar = false;
+  usize numComponents = 1;
+};
+
+/**
+ * @struct ShapeSimResult
+ * @brief Stores simulated result shape and bounded buffer limits.
+ */
+struct ShapeSimResult
+{
+  RpnNodeShape finalShape;
+  usize maxStackDepth = 0;
+  usize maxComponents = 1;
+};
+
+/**
+ * @brief Simulates the shape of one reverse-polish subexpression.
+ * @param dataStructure Resolves source array metadata.
+ * @param rpn Supplies reverse-polish items.
+ * @param startIndex Identifies the first subexpression item.
+ * @param endIndex Identifies the final subexpression item.
+ * @return Simulated shape and bounded stack requirements, or a component error.
+ *
+ * The simulation applies chunk-evaluation broadcast rules without reading
+ * values. It validates component extraction after operand shape is available.
+ */
+Result<ShapeSimResult> simulateShapes(const DataStructure& dataStructure, const std::vector<RpnItem>& rpn, usize startIndex, usize endIndex)
+{
+  ShapeSimResult out;
+  std::vector<RpnNodeShape> stack;
+
+  for(usize i = startIndex; i <= endIndex; i++)
   {
-    m_TempDS->removeData(m_ArrayId);
+    const RpnItem& item = rpn[i];
+    switch(item.type)
+    {
+    case RpnItem::Type::Scalar:
+      stack.push_back({true, 1});
+      break;
+
+    case RpnItem::Type::ArrayRef: {
+      const auto* sourceArray = dataStructure.getDataAs<IDataArray>(item.arrayPath);
+      const usize numComps = (sourceArray != nullptr) ? sourceArray->getNumberOfComponents() : 1;
+      stack.push_back({false, numComps});
+      break;
+    }
+
+    case RpnItem::Type::Operator: {
+      const OperatorDef* op = item.op;
+      if(op != nullptr && op->numArgs == 2)
+      {
+        const RpnNodeShape right = stack.back();
+        stack.pop_back();
+        const RpnNodeShape left = stack.back();
+        stack.pop_back();
+        const bool resultScalar = left.isScalar && right.isScalar;
+        const usize numComps = left.isScalar ? right.numComponents : left.numComponents;
+        stack.push_back({resultScalar, resultScalar ? 1 : numComps});
+      }
+      else
+      {
+        const RpnNodeShape operand = stack.back();
+        stack.pop_back();
+        stack.push_back({operand.isScalar, operand.isScalar ? 1 : operand.numComponents});
+      }
+      break;
+    }
+
+    case RpnItem::Type::ComponentExtract: {
+      const RpnNodeShape operand = stack.back();
+      stack.pop_back();
+      const usize numComps = operand.isScalar ? 1 : operand.numComponents;
+      if(item.componentIndex >= numComps)
+      {
+        return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::ComponentOutOfRange),
+                                               fmt::format("Component index {} is out of range for array with {} components.", item.componentIndex, numComps));
+      }
+      // Extracting component zero from a scalar preserves scalar broadcasting.
+      stack.push_back({operand.isScalar, 1});
+      break;
+    }
+
+    case RpnItem::Type::TupleComponentExtract:
+      return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), "Internal error: unresolved TupleComponentExtract encountered during shape simulation.");
+    }
+
+    out.maxStackDepth = std::max(out.maxStackDepth, stack.size());
+    out.maxComponents = std::max(out.maxComponents, stack.back().numComponents);
   }
+
+  out.finalShape = stack.back();
+  return {out};
 }
 
-CalcBuffer CalcBuffer::borrow(const Float64Array& source)
+/**
+ * @brief Finds the tuple count of one reverse-polish operand.
+ * @param dataStructure Resolves source arrays.
+ * @param rpn Supplies reverse-polish items.
+ * @param startIndex Identifies the first operand item.
+ * @param endIndex Identifies the final operand item.
+ * @return First source-array tuple count, or one for a scalar-only operand.
+ *
+ * Tuple extraction uses this result to validate its literal tuple index.
+ */
+usize findOperandNumTuples(const DataStructure& dataStructure, const std::vector<RpnItem>& rpn, usize startIndex, usize endIndex)
 {
-  CalcBuffer buf;
-  buf.m_Storage = Storage::Borrowed;
-  buf.m_BorrowedArray = &source;
-  buf.m_IsScalar = false;
-  return buf;
-}
-
-CalcBuffer CalcBuffer::convertFrom(DataStructure& tempDS, const IDataArray& source, const std::string& name)
-{
-  std::vector<usize> tupleShape = source.getTupleShape();
-  std::vector<usize> compShape = source.getComponentShape();
-  Float64Array* destArr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, tupleShape, compShape);
-
-  ExecuteDataFunction(CopyToFloat64Functor{}, source.getDataType(), source, *destArr);
-
-  CalcBuffer buf;
-  buf.m_Storage = Storage::Owned;
-  buf.m_TempDS = &tempDS;
-  buf.m_ArrayId = destArr->getId();
-  buf.m_OwnedArray = destArr;
-  buf.m_IsScalar = false;
-  return buf;
-}
-
-CalcBuffer CalcBuffer::scalar(DataStructure& tempDS, float64 value, const std::string& name)
-{
-  Float64Array* arr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, std::vector<usize>{1}, std::vector<usize>{1});
-  (*arr)[0] = value;
-
-  CalcBuffer buf;
-  buf.m_Storage = Storage::Owned;
-  buf.m_TempDS = &tempDS;
-  buf.m_ArrayId = arr->getId();
-  buf.m_OwnedArray = arr;
-  buf.m_IsScalar = true;
-  return buf;
-}
-
-CalcBuffer CalcBuffer::allocate(DataStructure& tempDS, const std::string& name, std::vector<usize> tupleShape, std::vector<usize> compShape)
-{
-  Float64Array* arr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, tupleShape, compShape);
-
-  CalcBuffer buf;
-  buf.m_Storage = Storage::Owned;
-  buf.m_TempDS = &tempDS;
-  buf.m_ArrayId = arr->getId();
-  buf.m_OwnedArray = arr;
-  buf.m_IsScalar = false;
-  return buf;
-}
-
-CalcBuffer CalcBuffer::wrapOutput(DataArray<float64>& outputArray)
-{
-  CalcBuffer buf;
-  buf.m_Storage = Storage::OutputDirect;
-  buf.m_OutputArray = &outputArray;
-  buf.m_IsScalar = false;
-  return buf;
-}
-
-float64 CalcBuffer::read(usize index) const
-{
-  switch(m_Storage)
+  for(usize i = startIndex; i <= endIndex; i++)
   {
-  case Storage::Borrowed:
-    return m_BorrowedArray->at(index);
-  case Storage::Owned:
-    return m_OwnedArray->at(index);
-  case Storage::OutputDirect:
-    return m_OutputArray->at(index);
+    if(rpn[i].type == RpnItem::Type::ArrayRef)
+    {
+      const auto* sourceArray = dataStructure.getDataAs<IDataArray>(rpn[i].arrayPath);
+      if(sourceArray != nullptr)
+      {
+        return sourceArray->getNumberOfTuples();
+      }
+    }
   }
-  return 0.0;
+  return 1;
 }
 
-void CalcBuffer::write(usize index, float64 value)
+/**
+ * @brief Reduces literal tuple and component extraction to scalar items.
+ * @param dataStructure Resolves source arrays.
+ * @param rpn Receives reverse-polish items to reduce.
+ * @param units Selects trigonometric angle units.
+ * @return Success, or a tuple, component, or evaluation error.
+ *
+ * Inner extractions are reduced first. Each resolution reads only one value per
+ * source leaf and does not materialize an array-sized temporary buffer.
+ */
+Result<> resolveTupleComponentExtracts(const DataStructure& dataStructure, std::vector<RpnItem>& rpn, CalculatorParameter::AngleUnits units)
 {
-  switch(m_Storage)
+  while(true)
   {
-  case Storage::Owned:
-    (*m_OwnedArray)[index] = value;
-    return;
-  case Storage::OutputDirect:
-    (*m_OutputArray)[index] = value;
-    return;
-  case Storage::Borrowed:
-    throw std::runtime_error("CalcBuffer::write() called on a read-only Borrowed buffer");
-  }
-}
+    usize tceIndex = rpn.size();
+    for(usize i = 0; i < rpn.size(); i++)
+    {
+      if(rpn[i].type == RpnItem::Type::TupleComponentExtract)
+      {
+        tceIndex = i;
+        break;
+      }
+    }
+    if(tceIndex == rpn.size())
+    {
+      break; // All literal tuple/component extractions are resolved.
+    }
 
-void CalcBuffer::fill(float64 value)
-{
-  switch(m_Storage)
-  {
-  case Storage::Owned:
-    m_OwnedArray->fill(value);
-    return;
-  case Storage::OutputDirect:
-    m_OutputArray->fill(value);
-    return;
-  case Storage::Borrowed:
-    throw std::runtime_error("CalcBuffer::fill() called on a read-only Borrowed buffer");
-  }
-}
+    const std::vector<usize> spanStart = computeSpanStarts(rpn);
+    const usize operandIdx = tceIndex - 1;
+    const usize operandStart = spanStart[operandIdx];
 
-usize CalcBuffer::size() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return m_BorrowedArray->getSize();
-  case Storage::Owned:
-    return m_OwnedArray->getSize();
-  case Storage::OutputDirect:
-    return m_OutputArray->getSize();
-  }
-  return 0;
-}
+    const usize tupleIdx = rpn[tceIndex].tupleIndex;
+    const usize compIdx = rpn[tceIndex].componentIndex;
 
-usize CalcBuffer::numTuples() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return m_BorrowedArray->getNumberOfTuples();
-  case Storage::Owned:
-    return m_OwnedArray->getNumberOfTuples();
-  case Storage::OutputDirect:
-    return m_OutputArray->getNumberOfTuples();
-  }
-  return 0;
-}
+    const usize numTuplesOperand = findOperandNumTuples(dataStructure, rpn, operandStart, operandIdx);
+    if(tupleIdx >= numTuplesOperand)
+    {
+      return MakeErrorResult(static_cast<int32>(CalculatorErrorCode::TupleOutOfRange), fmt::format("Tuple index {} is out of range for array with {} tuples.", tupleIdx, numTuplesOperand));
+    }
 
-usize CalcBuffer::numComponents() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return m_BorrowedArray->getNumberOfComponents();
-  case Storage::Owned:
-    return m_OwnedArray->getNumberOfComponents();
-  case Storage::OutputDirect:
-    return m_OutputArray->getNumberOfComponents();
-  }
-  return 0;
-}
+    Result<ShapeSimResult> shapeResult = simulateShapes(dataStructure, rpn, operandStart, operandIdx);
+    if(shapeResult.invalid())
+    {
+      return ConvertResult(std::move(shapeResult));
+    }
+    const usize numCompsOperand = shapeResult.value().finalShape.isScalar ? 1 : shapeResult.value().finalShape.numComponents;
+    if(compIdx >= numCompsOperand)
+    {
+      return MakeErrorResult(static_cast<int32>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numCompsOperand));
+    }
 
-std::vector<usize> CalcBuffer::tupleShape() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return m_BorrowedArray->getTupleShape();
-  case Storage::Owned:
-    return m_OwnedArray->getTupleShape();
-  case Storage::OutputDirect:
-    return m_OutputArray->getTupleShape();
+    Result<float64> valueResult = evaluateSingleValue(dataStructure, rpn, operandIdx, spanStart, tupleIdx, compIdx, units);
+    if(valueResult.invalid())
+    {
+      return ConvertResult(std::move(valueResult));
+    }
+
+    RpnItem scalarItem;
+    scalarItem.type = RpnItem::Type::Scalar;
+    scalarItem.scalarValue = valueResult.value();
+
+    rpn.erase(rpn.begin() + static_cast<std::ptrdiff_t>(operandStart), rpn.begin() + static_cast<std::ptrdiff_t>(tceIndex) + 1);
+    rpn.insert(rpn.begin() + static_cast<std::ptrdiff_t>(operandStart), scalarItem);
   }
+
   return {};
 }
 
-std::vector<usize> CalcBuffer::compShape() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return m_BorrowedArray->getComponentShape();
-  case Storage::Owned:
-    return m_OwnedArray->getComponentShape();
-  case Storage::OutputDirect:
-    return m_OutputArray->getComponentShape();
-  }
-  return {};
-}
+} // anonymous namespace
 
-bool CalcBuffer::isScalar() const
-{
-  return m_IsScalar;
-}
-
-bool CalcBuffer::isOwned() const
-{
-  return m_Storage == Storage::Owned;
-}
-
-bool CalcBuffer::isOutputDirect() const
-{
-  return m_Storage == Storage::OutputDirect;
-}
-
-void CalcBuffer::markAsScalar()
-{
-  m_IsScalar = true;
-}
-
-const Float64Array& CalcBuffer::array() const
-{
-  switch(m_Storage)
-  {
-  case Storage::Borrowed:
-    return *m_BorrowedArray;
-  case Storage::Owned:
-    return *m_OwnedArray;
-  case Storage::OutputDirect:
-    return *m_OutputArray;
-  }
-  throw std::runtime_error("CalcBuffer::array() called on buffer with unknown storage mode");
-}
-
-// ---------------------------------------------------------------------------
-// getOperatorRegistry
-// ---------------------------------------------------------------------------
 const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
 {
   static const std::vector<OperatorDef> s_Registry = []() {
     std::vector<OperatorDef> reg;
     reg.reserve(23);
 
-    // ---- Binary infix operators ----
     reg.push_back({"+", OperatorDef::BinaryInfix, 1, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return a + b; }});
     reg.push_back({"-", OperatorDef::BinaryInfix, 1, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return a - b; }});
     reg.push_back({"*", OperatorDef::BinaryInfix, 2, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return a * b; }});
@@ -544,7 +666,6 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
     reg.push_back({"%", OperatorDef::BinaryInfix, 2, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return std::fmod(a, b); }});
     reg.push_back({"^", OperatorDef::BinaryInfix, 3, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return std::pow(a, b); }});
 
-    // ---- Unary functions (1-arg) ----
     reg.push_back({"abs", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::None, [](double x) { return std::abs(x); }, nullptr});
     reg.push_back({"sqrt", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::None, [](double x) { return std::sqrt(x); }, nullptr});
     reg.push_back({"ceil", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::None, [](double x) { return std::ceil(x); }, nullptr});
@@ -553,19 +674,14 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
     reg.push_back({"ln", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::None, [](double x) { return std::log(x); }, nullptr});
     reg.push_back({"log10", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::None, [](double x) { return std::log10(x); }, nullptr});
 
-    // ---- Trig functions (1-arg, ForwardTrig) ----
     reg.push_back({"sin", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::ForwardTrig, [](double x) { return std::sin(x); }, nullptr});
     reg.push_back({"cos", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::ForwardTrig, [](double x) { return std::cos(x); }, nullptr});
     reg.push_back({"tan", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::ForwardTrig, [](double x) { return std::tan(x); }, nullptr});
 
-    // ---- Inverse trig functions (1-arg, InverseTrig) ----
     reg.push_back({"asin", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::InverseTrig, [](double x) { return std::asin(x); }, nullptr});
     reg.push_back({"acos", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::InverseTrig, [](double x) { return std::acos(x); }, nullptr});
     reg.push_back({"atan", OperatorDef::Function, 5, 1, OperatorDef::Left, OperatorDef::InverseTrig, [](double x) { return std::atan(x); }, nullptr});
 
-    // ---- Binary functions (2-arg) ----
-    // NOTE: log (2-arg) must come AFTER log10 so that prefix matching during
-    //       identifier resolution checks "log10" before "log".
     reg.push_back({"log", OperatorDef::Function, 5, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double base, double val) { return std::log(val) / std::log(base); }});
     reg.push_back({"root", OperatorDef::Function, 5, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double val, double n) { return std::pow(val, 1.0 / n); }});
     reg.push_back({"min", OperatorDef::Function, 5, 2, OperatorDef::Left, OperatorDef::None, nullptr, [](double a, double b) { return std::min(a, b); }});
@@ -577,9 +693,6 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
   return s_Registry;
 }
 
-// ---------------------------------------------------------------------------
-// ArrayCalculatorParser
-// ---------------------------------------------------------------------------
 ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, const std::atomic_bool& shouldCancel)
 : m_DataStructure(dataStructure)
 , m_SelectedGroupPath(selectedGroupPath)
@@ -588,7 +701,6 @@ ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure,
 {
 }
 
-// ---------------------------------------------------------------------------
 std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
 {
   std::vector<Token> tokens;
@@ -599,14 +711,12 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
   {
     const char c = equation[i];
 
-    // 1. Skip whitespace
     if(std::isspace(static_cast<unsigned char>(c)))
     {
       ++i;
       continue;
     }
 
-    // 2. Numbers: starts with digit, or dot followed by a digit
     if(std::isdigit(static_cast<unsigned char>(c)) || (c == '.' && i + 1 < len && std::isdigit(static_cast<unsigned char>(equation[i + 1]))))
     {
       size_t start = i;
@@ -627,7 +737,6 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
       continue;
     }
 
-    // 3. Identifiers: start with letter or underscore
     if(std::isalpha(static_cast<unsigned char>(c)) || c == '_')
     {
       size_t start = i;
@@ -639,7 +748,6 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
       continue;
     }
 
-    // 4. Quoted strings
     if(c == '"')
     {
       size_t start = i;
@@ -658,7 +766,6 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
       continue;
     }
 
-    // 5. Single-character operators
     TokenType opType;
     bool isOperator = true;
     switch(c)
@@ -708,7 +815,7 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
       continue;
     }
 
-    // 6. Unknown characters: produce an Identifier token
+    // Parsing reports unknown characters with the surrounding expression context.
     tokens.push_back({TokenType::Identifier, std::string(1, c), i});
     ++i;
   }
@@ -716,24 +823,17 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
   return tokens;
 }
 
-// ---------------------------------------------------------------------------
-// parse() -- the core parsing pipeline
-// ---------------------------------------------------------------------------
 Result<> ArrayCalculatorParser::parse()
 {
   Result<> result;
 
-  // === Step 1: Tokenize ===
   std::vector<Token> tokens = tokenize(m_InfixEquation);
   if(tokens.empty())
   {
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::EmptyEquation), "The infix expression is empty.");
   }
 
-  // === Step 2: Multi-word identifier merging ===
-  // Walk the token list. When consecutive Identifier tokens appear, try
-  // merging them with spaces (greedy longest-first) and check if the
-  // merged name matches an array name.
+  // Merge unquoted multiword array names before resolving built-ins and paths.
   {
     std::vector<Token> merged;
     merged.reserve(tokens.size());
@@ -742,7 +842,6 @@ Result<> ArrayCalculatorParser::parse()
     {
       if(tokens[i].type == TokenType::Identifier)
       {
-        // Find the run of consecutive Identifier tokens
         size_t runStart = i;
         size_t runEnd = i + 1;
         while(runEnd < tokens.size() && tokens[runEnd].type == TokenType::Identifier)
@@ -753,20 +852,18 @@ Result<> ArrayCalculatorParser::parse()
 
         if(runLen > 1)
         {
-          // Greedy: try longest merge first
+          // Longest matches preserve an array name that contains a shorter name.
           bool foundMatch = false;
           for(size_t len = runLen; len >= 2; --len)
           {
             for(size_t start = runStart; start + len <= runEnd; ++start)
             {
-              // Build the merged name
               std::string mergedName = tokens[start].text;
               for(size_t k = start + 1; k < start + len; ++k)
               {
                 mergedName += " " + tokens[k].text;
               }
 
-              // Check if this name matches an array
               bool found = false;
               if(!m_SelectedGroupPath.empty())
               {
@@ -780,14 +877,11 @@ Result<> ArrayCalculatorParser::parse()
 
               if(found)
               {
-                // Add tokens before the match
                 for(size_t k = runStart; k < start; ++k)
                 {
                   merged.push_back(tokens[k]);
                 }
-                // Add the merged token
                 merged.push_back({TokenType::Identifier, mergedName, tokens[start].position});
-                // Add tokens after the match
                 for(size_t k = start + len; k < runEnd; ++k)
                 {
                   merged.push_back(tokens[k]);
@@ -804,7 +898,6 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(!foundMatch)
           {
-            // No merge found; copy all identifiers as-is
             for(size_t k = runStart; k < runEnd; ++k)
             {
               merged.push_back(tokens[k]);
@@ -827,26 +920,22 @@ Result<> ArrayCalculatorParser::parse()
     tokens = std::move(merged);
   }
 
-  // === Steps 3+4: Identifier resolution, token conversion, and bracket indexing ===
-  // These steps are combined so brackets can reference the array they follow.
+  // Resolve identifiers and attach following bracket indexing in one pass.
   std::vector<ParsedItem> items;
   items.reserve(tokens.size());
 
-  // Combined Step 3+4: resolve identifiers and handle brackets inline
   for(size_t i = 0; i < tokens.size(); ++i)
   {
     const Token& tok = tokens[i];
 
-    // Check if this token starts a bracket expression [...]
     if(tok.type == TokenType::LBracket)
     {
-      // Parse bracket contents: [Number] or [Number, Number]
+      // Bracket indexes accept [C] or [T, C].
       if(items.empty())
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OrphanedComponent), "Index operator '[' is not paired with a valid array name or closing parenthesis.");
       }
 
-      // Collect tokens until matching ']'
       std::vector<std::string> bracketNumbers;
       size_t j = i + 1;
       while(j < tokens.size() && tokens[j].type != TokenType::RBracket)
@@ -857,7 +946,6 @@ Result<> ArrayCalculatorParser::parse()
         }
         else if(tokens[j].type == TokenType::Comma)
         {
-          // skip comma
         }
         else
         {
@@ -869,13 +957,10 @@ Result<> ArrayCalculatorParser::parse()
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses), "Missing closing bracket ']'.");
       }
-      // j now points to ']'
-
       ParsedItem& prevItem = items.back();
 
       if(prevItem.kind == ParsedItem::Kind::ArrayRef)
       {
-        // Case A: Array[C] or Array[T, C]
         usize numComponents = 1;
         for(usize d : prevItem.arrayCompShape)
         {
@@ -889,7 +974,6 @@ Result<> ArrayCalculatorParser::parse()
 
         if(bracketNumbers.size() == 1)
         {
-          // [C]: component extraction
           usize compIdx = 0;
           try
           {
@@ -905,7 +989,6 @@ Result<> ArrayCalculatorParser::parse()
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
           }
 
-          // Emit a ComponentExtract after the ArrayRef
           ParsedItem ce;
           ce.kind = ParsedItem::Kind::ComponentExtract;
           ce.componentIndex = compIdx;
@@ -913,7 +996,6 @@ Result<> ArrayCalculatorParser::parse()
         }
         else if(bracketNumbers.size() == 2)
         {
-          // [T, C]: tuple+component extraction
           usize tupleIdx = 0;
           usize compIdx = 0;
           try
@@ -947,10 +1029,8 @@ Result<> ArrayCalculatorParser::parse()
       }
       else if(prevItem.kind == ParsedItem::Kind::RParen)
       {
-        // Case B: )[C] or )[T, C] -- extraction on sub-expression result
         if(bracketNumbers.size() == 1)
         {
-          // )[C]: component extraction
           usize compIdx = 0;
           try
           {
@@ -967,7 +1047,6 @@ Result<> ArrayCalculatorParser::parse()
         }
         else if(bracketNumbers.size() == 2)
         {
-          // )[T, C]: tuple+component extraction (produces scalar)
           usize tupleIdx = 0;
           usize compIdx = 0;
           try
@@ -995,11 +1074,10 @@ Result<> ArrayCalculatorParser::parse()
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OrphanedComponent), fmt::format("Index operator '{}' is not paired with a valid array name or closing parenthesis.", tok.text));
       }
 
-      i = j; // skip past ']'
+      i = j;
       continue;
     }
 
-    // Normal token processing (same as step 3 above but now with brackets handled separately)
     switch(tok.type)
     {
     case TokenType::Number: {
@@ -1017,7 +1095,6 @@ Result<> ArrayCalculatorParser::parse()
       pi.scalarValue = numValue;
       items.push_back(pi);
 
-      // Ambiguous name warning
       {
         bool arrayExists = false;
         if(!m_SelectedGroupPath.empty())
@@ -1097,7 +1174,6 @@ Result<> ArrayCalculatorParser::parse()
       }
       else
       {
-        // Try as array name
         if(!m_SelectedGroupPath.empty() && ContainsDataArrayName(m_DataStructure, m_SelectedGroupPath, tok.text))
         {
           DataPath arrayPath = m_SelectedGroupPath.createChildPath(tok.text);
@@ -1182,7 +1258,7 @@ Result<> ArrayCalculatorParser::parse()
 
       DataPath quotedPath(pathComponents);
 
-      // If single component, try as child of selected group first
+      // A single quoted component resolves in the selected group before a DataStructure path lookup.
       if(pathComponents.size() == 1 && !m_SelectedGroupPath.empty())
       {
         DataPath childPath = m_SelectedGroupPath.createChildPath(pathComponents[0]);
@@ -1220,7 +1296,6 @@ Result<> ArrayCalculatorParser::parse()
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidSymbol), fmt::format("Unknown operator symbol '{}'.", tok.text));
       }
 
-      // Check if the operator symbol is also the name of an array
       {
         bool arrayExists = false;
         if(!m_SelectedGroupPath.empty())
@@ -1270,14 +1345,12 @@ Result<> ArrayCalculatorParser::parse()
 
     case TokenType::LBracket:
     case TokenType::RBracket: {
-      // Should not reach here since brackets are handled at the top of the loop
       return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Unexpected bracket token encountered.");
     }
-
-    } // end switch
+    }
   }
 
-  // === Step 5: Minus sign disambiguation ===
+  // A leading minus or a minus after an operator, parenthesis, or comma is unary.
   for(size_t i = 0; i < items.size(); ++i)
   {
     auto& item = items[i];
@@ -1290,7 +1363,6 @@ Result<> ArrayCalculatorParser::parse()
       continue;
     }
 
-    // Determine if this is a unary negative
     bool isUnary = false;
     if(i == 0)
     {
@@ -1324,24 +1396,20 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // === Step 6: WrapFunctionArguments ===
+  // Parentheses make each function argument an independent RPN expression.
   wrapFunctionArguments(items);
 
-  // === Step 7: Validation ===
-
-  // 7a-1: Check for function/unary operators: opening/closing paren, argument count, empty args
+  // Validate function structure before operator and shape constraints.
   for(size_t i = 0; i < items.size(); ++i)
   {
     const auto& item = items[i];
     if(item.kind == ParsedItem::Kind::Operator && item.op != nullptr && item.op->kind == OperatorDef::Function)
     {
-      // A function operator must be followed by LParen
       if(i + 1 >= items.size() || items[i + 1].kind != ParsedItem::Kind::LParen)
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoOpeningParen), fmt::format("The operator/function '{}' does not have a valid opening parenthesis.", item.op->token));
       }
 
-      // Find the matching RParen and count commas/values at depth 1
       int depth = 0;
       bool foundClose = false;
       size_t closeIdx = 0;
@@ -1377,20 +1445,16 @@ Result<> ArrayCalculatorParser::parse()
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoClosingParen), fmt::format("The operator/function '{}' does not have a valid closing parenthesis.", item.op->token));
       }
 
-      // Check for empty function call: func() with no values or commas inside
       if(!hasValueInside && commaCount == 0)
       {
-        // For 2-arg functions with empty parens: NotEnoughArguments
         if(item.op->numArgs == 2)
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments),
                                  fmt::format("The function '{}' requires {} arguments, but none were provided.", item.op->token, item.op->numArgs));
         }
-        // For 1-arg functions with empty parens: NoNumericArguments
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
-      // Check for commas in the empty-value case: func(,) -- commas but no real values
       if(!hasValueInside && commaCount > 0)
       {
         if(item.op->numArgs == 1)
@@ -1398,11 +1462,9 @@ Result<> ArrayCalculatorParser::parse()
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TooManyArguments),
                                  fmt::format("The function '{}' requires {} argument, but more were provided.", item.op->token, item.op->numArgs));
         }
-        // For 2-arg functions: NoNumericArguments (commas but no values)
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
-      // Argument count: numArgs from OperatorDef, commaCount gives (numArgs-1)
       int providedArgs = commaCount + 1;
       if(item.op->numArgs == 1 && commaCount > 0)
       {
@@ -1417,12 +1479,10 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7a-1b: Check for commas inside non-function parentheses (NoPrecedingUnaryOperator)
   for(size_t i = 0; i < items.size(); ++i)
   {
     if(items[i].kind == ParsedItem::Kind::Comma)
     {
-      // Walk backwards to find the opening paren at the same depth, and check if preceded by a function
       int depth = 0;
       bool foundFunction = false;
       for(int j = static_cast<int>(i) - 1; j >= 0; --j)
@@ -1435,7 +1495,6 @@ Result<> ArrayCalculatorParser::parse()
         {
           if(depth == 0)
           {
-            // Found the opening paren; check if preceded by a function
             if(j > 0 && items[j - 1].kind == ParsedItem::Kind::Operator && items[j - 1].op != nullptr && items[j - 1].op->kind == OperatorDef::Function)
             {
               foundFunction = true;
@@ -1452,7 +1511,6 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7a-2: Check for binary operators missing left or right operands
   for(size_t i = 0; i < items.size(); ++i)
   {
     const auto& item = items[i];
@@ -1460,7 +1518,6 @@ Result<> ArrayCalculatorParser::parse()
     {
       continue;
     }
-    // Check left: the item before must be a value or RParen (something that produces a value)
     bool hasLeft = false;
     if(i > 0)
     {
@@ -1475,7 +1532,6 @@ Result<> ArrayCalculatorParser::parse()
     {
       return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoLeftValue), fmt::format("The binary operator '{}' does not have a valid left-hand value.", item.op->token));
     }
-    // Check right: the item after must be a value, LParen, or unary operator (something that produces a value)
     bool hasRight = false;
     if(i + 1 < items.size())
     {
@@ -1486,7 +1542,7 @@ Result<> ArrayCalculatorParser::parse()
       }
       else if(next.kind == ParsedItem::Kind::Operator && next.op != nullptr)
       {
-        hasRight = true; // Could be a unary prefix or function
+        hasRight = true;
       }
     }
     if(!hasRight)
@@ -1495,7 +1551,6 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7a-3: Check for unary negative with no right operand
   for(size_t i = 0; i < items.size(); ++i)
   {
     const auto& item = items[i];
@@ -1511,7 +1566,7 @@ Result<> ArrayCalculatorParser::parse()
         }
         else if(next.kind == ParsedItem::Kind::Operator && next.op != nullptr)
         {
-          hasRight = true; // e.g. -sin(...)
+          hasRight = true;
         }
       }
       if(!hasRight)
@@ -1521,7 +1576,6 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7a-4: Check matched parentheses (generic, after operator-specific checks)
   {
     int parenDepth = 0;
     for(const auto& item : items)
@@ -1546,7 +1600,7 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7b: Collect array-type values and verify consistent tuple/component info
+  // Component and tuple extraction change the effective shape of an array operand.
   std::vector<usize> arrayTupleShape;
   std::vector<usize> arrayCompShape;
   usize arrayNumTuples = 0;
@@ -1566,16 +1620,13 @@ Result<> ArrayCalculatorParser::parse()
       std::vector<usize> ts = item.arrayTupleShape;
       std::vector<usize> cs = item.arrayCompShape;
 
-      // If this ArrayRef is immediately followed by ComponentExtract or
-      // TupleComponentExtract, adjust the effective shape accordingly.
       if(vi + 1 < items.size() && items[vi + 1].kind == ParsedItem::Kind::ComponentExtract)
       {
         cs = {1};
       }
       else if(vi + 1 < items.size() && items[vi + 1].kind == ParsedItem::Kind::TupleComponentExtract)
       {
-        // TupleComponentExtract reduces to a scalar — skip this array from
-        // shape consistency checks entirely (it won't contribute shape).
+        // A literal tuple/component extraction is scalar and does not supply output shape.
         continue;
       }
 
@@ -1608,15 +1659,12 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // 7c: Ensure at least one numeric argument exists
   if(!hasNumericValue)
   {
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), "The expression does not have any arguments that simplify down to a number.");
   }
 
-  // Check if there is a ComponentExtract or TupleComponentExtract item in the parsed list.
-  // ComponentExtract produces a single-component array.
-  // TupleComponentExtract produces a scalar (single tuple, single component).
+  // Extraction determines whether the output has one component or one tuple.
   bool hasComponentExtract = false;
   bool hasTupleComponentExtract = false;
   for(const auto& item : items)
@@ -1631,10 +1679,8 @@ Result<> ArrayCalculatorParser::parse()
     }
   }
 
-  // Store the parsed shape info for use by parseAndValidate()
   if(hasTupleComponentExtract)
   {
-    // TupleComponentExtract produces a scalar
     m_ParsedTupleShape = {1};
     m_ParsedComponentShape = {1};
   }
@@ -1652,12 +1698,11 @@ Result<> ArrayCalculatorParser::parse()
   }
   else
   {
-    // All scalars: output is {1} tuples, {1} components
     m_ParsedTupleShape = {1};
     m_ParsedComponentShape = {1};
   }
 
-  // === Convert ParsedItems to RPN using shunting-yard ===
+  // Convert the validated infix items to reverse-polish notation.
   m_RpnItems.clear();
   std::vector<ParsedItem> opStack;
 
@@ -1688,7 +1733,6 @@ Result<> ArrayCalculatorParser::parse()
     }
 
     case ParsedItem::Kind::RParen: {
-      // Pop operators to output until we find the matching LParen
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
@@ -1703,13 +1747,11 @@ Result<> ArrayCalculatorParser::parse()
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses),
                                fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
       }
-      // Discard the LParen
       opStack.pop_back();
       break;
     }
 
     case ParsedItem::Kind::Comma: {
-      // Pop operators to output until we find the LParen (but don't discard it)
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
@@ -1767,11 +1809,9 @@ Result<> ArrayCalculatorParser::parse()
       m_RpnItems.push_back(rpn);
       break;
     }
-
-    } // end switch
+    }
   }
 
-  // Pop remaining operators from the stack
   while(!opStack.empty())
   {
     const auto& top = opStack.back();
@@ -1790,7 +1830,6 @@ Result<> ArrayCalculatorParser::parse()
   return result;
 }
 
-// ---------------------------------------------------------------------------
 Result<> ArrayCalculatorParser::parseAndValidate(std::vector<usize>& outTupleShape, std::vector<usize>& outComponentShape)
 {
   Result<> parseResult = parse();
@@ -1805,285 +1844,247 @@ Result<> ArrayCalculatorParser::parseAndValidate(std::vector<usize>& outTupleSha
   return parseResult;
 }
 
-// ---------------------------------------------------------------------------
 Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units)
 {
-  // 1. Parse (populates m_RpnItems via shunting-yard)
   Result<> parseResult = parse();
   if(parseResult.invalid())
   {
     return parseResult;
   }
 
-  // 2. Create local temp DataStructure for intermediate arrays
-  DataStructure tempDS;
-  usize scratchCounter = 0;
-  auto nextScratchName = [&scratchCounter]() -> std::string { return "_calc_" + std::to_string(scratchCounter++); };
+  const DataType outputDataType = ConvertNumericTypeToDataType(scalarType);
 
-  // 3. Pre-scan RPN to find the index of the last operator/extract item
-  //    for the OutputDirect optimization
-  DataType outputDataType = ConvertNumericTypeToDataType(scalarType);
-  bool outputIsFloat64 = (outputDataType == DataType::float64);
-  int64 lastOpIndex = -1;
-  for(int64 idx = static_cast<int64>(m_RpnItems.size()) - 1; idx >= 0; --idx)
+  // A local RPN copy permits literal tuple/component reduction without changing parser state.
+  std::vector<RpnItem> rpn = m_RpnItems;
+  Result<> reduceResult = resolveTupleComponentExtracts(m_DataStructure, rpn, units);
+  if(reduceResult.invalid())
   {
-    RpnItem::Type t = m_RpnItems[static_cast<usize>(idx)].type;
-    if(t == RpnItem::Type::Operator || t == RpnItem::Type::ComponentExtract || t == RpnItem::Type::TupleComponentExtract)
+    return reduceResult;
+  }
+
+  Result<ShapeSimResult> shapeResult = simulateShapes(m_DataStructure, rpn, 0, rpn.size() - 1);
+  if(shapeResult.invalid())
+  {
+    return ConvertResult(std::move(shapeResult));
+  }
+  const ShapeSimResult& shapeInfo = shapeResult.value();
+
+  if(shapeInfo.finalShape.isScalar)
+  {
+    const std::vector<usize> spanStart = computeSpanStarts(rpn);
+    Result<float64> scalarResult = evaluateSingleValue(m_DataStructure, rpn, rpn.size() - 1, spanStart, 0, 0, units);
+    if(scalarResult.invalid())
     {
-      lastOpIndex = idx;
-      break;
+      return ConvertResult(std::move(scalarResult));
+    }
+    ExecuteDataFunction(FillScalarResultFunctor{}, outputDataType, dataStructure, outputPath, scalarResult.value());
+    return parseResult;
+  }
+
+  // Array-valued evaluation reuses buffers bounded by chunk size and RPN stack depth.
+  auto& outputArray = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  const usize outputNumTuples = outputArray.getNumberOfTuples();
+  const usize outputNumComps = outputArray.getNumberOfComponents();
+  const usize tuplesPerChunk = std::max<usize>(1, k_ChunkSize / std::max<usize>(1, outputNumComps));
+
+  // Resolve paths once so chunk evaluation does not repeat DataStructure lookup.
+  std::vector<const IDataArray*> resolvedArrays(rpn.size(), nullptr);
+  for(usize i = 0; i < rpn.size(); i++)
+  {
+    if(rpn[i].type == RpnItem::Type::ArrayRef)
+    {
+      resolvedArrays[i] = m_DataStructure.getDataAs<IDataArray>(rpn[i].arrayPath);
+      if(resolvedArrays[i] == nullptr)
+      {
+        return MakeErrorResult(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
+                               fmt::format("Internal error: array '{}' could not be resolved during evaluation.", rpn[i].arrayPath.toString()));
+      }
     }
   }
 
-  // 4. Walk the RPN items using a CalcBuffer evaluation stack
-  std::stack<CalcBuffer> evalStack;
+  /**
+   * @struct ChunkStackEntry
+   * @brief Stores one reusable value during chunk evaluation.
+   *
+   * Capacity stays bounded by one chunk and the maximum expression component count.
+   */
+  struct ChunkStackEntry
+  {
+    bool isScalar = false;
+    float64 scalarValue = 0.0;
+    usize numComponents = 1;
+    std::vector<float64> buffer;
+  };
+  std::vector<ChunkStackEntry> stack(shapeInfo.maxStackDepth);
+  for(auto& entry : stack)
+  {
+    entry.buffer.reserve(tuplesPerChunk * shapeInfo.maxComponents);
+  }
+  std::vector<float64> outWriteBuf;
+  outWriteBuf.reserve(tuplesPerChunk * outputNumComps);
 
-  for(usize rpnIdx = 0; rpnIdx < m_RpnItems.size(); ++rpnIdx)
+  for(usize tupleStart = 0; tupleStart < outputNumTuples; tupleStart += tuplesPerChunk)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
+    const usize tupleCount = std::min(tuplesPerChunk, outputNumTuples - tupleStart);
+    usize depth = 0;
 
-    const RpnItem& rpnItem = m_RpnItems[rpnIdx];
-    bool isLastOp = (static_cast<int64>(rpnIdx) == lastOpIndex);
-
-    switch(rpnItem.type)
+    for(usize rpnIdx = 0; rpnIdx < rpn.size(); rpnIdx++)
     {
-    case RpnItem::Type::Scalar: {
-      evalStack.push(CalcBuffer::scalar(tempDS, rpnItem.scalarValue, nextScratchName()));
-      break;
-    }
-
-    case RpnItem::Type::ArrayRef: {
-      if(rpnItem.sourceDataType == DataType::float64)
+      const RpnItem& item = rpn[rpnIdx];
+      switch(item.type)
       {
-        const auto& sourceArray = m_DataStructure.getDataRefAs<Float64Array>(rpnItem.arrayPath);
-        evalStack.push(CalcBuffer::borrow(sourceArray));
-      }
-      else
-      {
-        const auto& sourceArray = m_DataStructure.getDataRefAs<IDataArray>(rpnItem.arrayPath);
-        evalStack.push(CalcBuffer::convertFrom(tempDS, sourceArray, nextScratchName()));
-      }
-      break;
-    }
-
-    case RpnItem::Type::Operator: {
-      const OperatorDef* op = rpnItem.op;
-      if(op == nullptr)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: null operator in RPN evaluation.");
+      case RpnItem::Type::Scalar: {
+        stack[depth].isScalar = true;
+        stack[depth].scalarValue = item.scalarValue;
+        depth++;
+        break;
       }
 
-      if(op->numArgs == 1)
-      {
-        if(evalStack.empty())
+      case RpnItem::Type::ArrayRef: {
+        ChunkStackEntry& entry = stack[depth];
+        const IDataArray* sourceArray = resolvedArrays[rpnIdx];
+        const usize numComps = sourceArray->getNumberOfComponents();
+        const usize count = tupleCount * numComps;
+        entry.isScalar = false;
+        entry.numComponents = numComps;
+        entry.buffer.resize(count);
+        if(item.sourceDataType == DataType::float64)
         {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for unary operator.");
-        }
-        CalcBuffer operand = std::move(evalStack.top());
-        evalStack.pop();
-
-        std::vector<usize> resultTupleShape = operand.tupleShape();
-        std::vector<usize> resultCompShape = operand.compShape();
-        usize totalSize = operand.size();
-
-        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
-                                                            CalcBuffer::allocate(tempDS, nextScratchName(), resultTupleShape, resultCompShape);
-
-        for(usize i = 0; i < totalSize; i++)
-        {
-          float64 val = operand.read(i);
-
-          if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
-          {
-            val = val * (std::numbers::pi / 180.0);
-          }
-
-          float64 res = op->unaryOp(val);
-
-          if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
-          {
-            res = res * (180.0 / std::numbers::pi);
-          }
-
-          result.write(i, res);
-        }
-
-        bool wasScalar = operand.isScalar();
-        if(wasScalar)
-        {
-          result.markAsScalar();
-        }
-        // operand destroyed here, RAII cleans up
-        evalStack.push(std::move(result));
-      }
-      else if(op->numArgs == 2)
-      {
-        if(evalStack.size() < 2)
-        {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for binary operator.");
-        }
-        CalcBuffer right = std::move(evalStack.top());
-        evalStack.pop();
-        CalcBuffer left = std::move(evalStack.top());
-        evalStack.pop();
-
-        // Determine output shape: use the array operand's shape (broadcast scalars)
-        std::vector<usize> outTupleShape;
-        std::vector<usize> outCompShape;
-        if(!left.isScalar())
-        {
-          outTupleShape = left.tupleShape();
-          outCompShape = left.compShape();
+          const auto& typedArray = dynamic_cast<const Float64Array&>(*sourceArray);
+          typedArray.getDataStoreRef().copyIntoBuffer(tupleStart * numComps, nonstd::span<float64>(entry.buffer.data(), count));
         }
         else
         {
-          outTupleShape = right.tupleShape();
-          outCompShape = right.compShape();
+          ExecuteDataFunction(ReadChunkToFloat64Functor{}, item.sourceDataType, *sourceArray, tupleStart * numComps, nonstd::span<float64>(entry.buffer.data(), count));
         }
-
-        usize totalSize = 1;
-        for(usize d : outTupleShape)
-        {
-          totalSize *= d;
-        }
-        for(usize d : outCompShape)
-        {
-          totalSize *= d;
-        }
-
-        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
-                                                            CalcBuffer::allocate(tempDS, nextScratchName(), outTupleShape, outCompShape);
-
-        bool leftIsScalar = left.isScalar();
-        bool rightIsScalar = right.isScalar();
-
-        for(usize i = 0; i < totalSize; i++)
-        {
-          float64 lv = left.read(leftIsScalar ? 0 : i);
-          float64 rv = right.read(rightIsScalar ? 0 : i);
-          result.write(i, op->binaryOp(lv, rv));
-        }
-
-        if(leftIsScalar && rightIsScalar)
-        {
-          result.markAsScalar();
-        }
-        // left and right destroyed here, RAII cleans up owned temps
-        evalStack.push(std::move(result));
+        depth++;
+        break;
       }
-      else
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Internal error: operator '{}' has unsupported numArgs={}.", op->token, op->numArgs));
+
+      case RpnItem::Type::Operator: {
+        const OperatorDef* op = item.op;
+        if(op->numArgs == 1)
+        {
+          ChunkStackEntry& operand = stack[depth - 1];
+          if(operand.isScalar)
+          {
+            float64 val = operand.scalarValue;
+            if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+            {
+              val = val * (std::numbers::pi / 180.0);
+            }
+            float64 res = op->unaryOp(val);
+            if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+            {
+              res = res * (180.0 / std::numbers::pi);
+            }
+            operand.scalarValue = res;
+          }
+          else
+          {
+            const usize count = tupleCount * operand.numComponents;
+            for(usize i = 0; i < count; i++)
+            {
+              float64 val = operand.buffer[i];
+              if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+              {
+                val = val * (std::numbers::pi / 180.0);
+              }
+              float64 res = op->unaryOp(val);
+              if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+              {
+                res = res * (180.0 / std::numbers::pi);
+              }
+              operand.buffer[i] = res;
+            }
+          }
+        }
+        else
+        {
+          ChunkStackEntry& right = stack[depth - 1];
+          ChunkStackEntry& left = stack[depth - 2];
+          depth--; // pop right; the result replaces left, which becomes the new top of stack
+
+          if(left.isScalar && right.isScalar)
+          {
+            left.scalarValue = op->binaryOp(left.scalarValue, right.scalarValue);
+          }
+          else
+          {
+            const bool leftWasScalar = left.isScalar;
+            const bool rightWasScalar = right.isScalar;
+            const float64 leftScalarVal = left.scalarValue;
+            const float64 rightScalarVal = right.scalarValue;
+            const usize numComps = leftWasScalar ? right.numComponents : left.numComponents;
+            const usize count = tupleCount * numComps;
+
+            left.buffer.resize(count);
+            for(usize i = 0; i < count; i++)
+            {
+              const float64 lv = leftWasScalar ? leftScalarVal : left.buffer[i];
+              const float64 rv = rightWasScalar ? rightScalarVal : right.buffer[i];
+              left.buffer[i] = op->binaryOp(lv, rv);
+            }
+            left.isScalar = false;
+            left.numComponents = numComps;
+          }
+        }
+        break;
       }
-      break;
+
+      case RpnItem::Type::ComponentExtract: {
+        ChunkStackEntry& operand = stack[depth - 1];
+        const usize compIdx = item.componentIndex;
+        if(!operand.isScalar)
+        {
+          const usize numComps = operand.numComponents;
+          for(usize t = 0; t < tupleCount; t++)
+          {
+            operand.buffer[t] = operand.buffer[t * numComps + compIdx];
+          }
+          operand.buffer.resize(tupleCount);
+          operand.numComponents = 1;
+        }
+        // Component zero does not change a scalar operand.
+        break;
+      }
+
+      case RpnItem::Type::TupleComponentExtract:
+        // Reduction removes tuple/component extraction items before chunk evaluation.
+        break;
+      }
     }
 
-    case RpnItem::Type::ComponentExtract: {
-      if(evalStack.empty())
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for component extraction.");
-      }
-      CalcBuffer operand = std::move(evalStack.top());
-      evalStack.pop();
-
-      usize numComps = operand.numComponents();
-      usize numTuples = operand.numTuples();
-      usize compIdx = rpnItem.componentIndex;
-
-      if(compIdx >= numComps)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
-      }
-
-      CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
-                                                          CalcBuffer::allocate(tempDS, nextScratchName(), operand.tupleShape(), std::vector<usize>{1});
-
-      for(usize t = 0; t < numTuples; ++t)
-      {
-        result.write(t, operand.read(t * numComps + compIdx));
-      }
-
-      evalStack.push(std::move(result));
-      break;
-    }
-
-    case RpnItem::Type::TupleComponentExtract: {
-      if(evalStack.empty())
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for tuple+component extraction.");
-      }
-      CalcBuffer operand = std::move(evalStack.top());
-      evalStack.pop();
-
-      usize numComps = operand.numComponents();
-      usize numTuples = operand.numTuples();
-      usize tupleIdx = rpnItem.tupleIndex;
-      usize compIdx = rpnItem.componentIndex;
-
-      if(tupleIdx >= numTuples)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TupleOutOfRange), fmt::format("Tuple index {} is out of range for array with {} tuples.", tupleIdx, numTuples));
-      }
-      if(compIdx >= numComps)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
-      }
-
-      float64 value = operand.read(tupleIdx * numComps + compIdx);
-      // operand destroyed, RAII cleans up
-      evalStack.push(CalcBuffer::scalar(tempDS, value, nextScratchName()));
-      break;
-    }
-
-    } // end switch
-  }
-
-  // 5. Final result
-  if(evalStack.size() != 1)
-  {
-    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Internal error: evaluation stack has {} items remaining; expected exactly 1.", evalStack.size()));
-  }
-
-  CalcBuffer finalResult = std::move(evalStack.top());
-  evalStack.pop();
-
-  // 6. Copy/cast result into the output array (checked in order, first match wins)
-  if(finalResult.isScalar())
-  {
-    // Fill entire output with the scalar value
-    float64 scalarVal = finalResult.read(0);
-    ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, scalarVal);
-  }
-  else if(finalResult.isOutputDirect())
-  {
-    // Data is already in the output array — nothing to do
-  }
-  else if(outputIsFloat64)
-  {
-    // Direct float64-to-float64 copy via operator[] (no type cast)
-    auto& outputArray = dataStructure.getDataRefAs<DataArray<float64>>(outputPath);
-    usize totalSize = finalResult.size();
-    for(usize i = 0; i < totalSize; i++)
+    const ChunkStackEntry& result = stack[0];
+    outWriteBuf.resize(tupleCount * outputNumComps);
+    if(result.isScalar)
     {
-      outputArray[i] = finalResult.read(i);
+      std::fill(outWriteBuf.begin(), outWriteBuf.end(), result.scalarValue);
     }
-  }
-  else
-  {
-    // Type-casting copy via CopyResultFunctor
-    const Float64Array& resultArray = finalResult.array();
-    ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, &resultArray, false);
+    else
+    {
+      std::copy(result.buffer.begin(), result.buffer.begin() + static_cast<std::ptrdiff_t>(tupleCount * outputNumComps), outWriteBuf.begin());
+    }
+
+    if(outputDataType == DataType::float64)
+    {
+      auto& outputStore = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+      outputStore.copyFromBuffer(tupleStart * outputNumComps, nonstd::span<const float64>(outWriteBuf.data(), tupleCount * outputNumComps));
+    }
+    else
+    {
+      ExecuteDataFunction(WriteChunkFromFloat64Functor{}, outputDataType, dataStructure, outputPath, tupleStart * outputNumComps,
+                          nonstd::span<const float64>(outWriteBuf.data(), tupleCount * outputNumComps));
+    }
   }
 
   return parseResult;
 }
 
-// ---------------------------------------------------------------------------
-// ArrayCalculator
-// ---------------------------------------------------------------------------
 ArrayCalculator::ArrayCalculator(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ArrayCalculatorInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -2092,16 +2093,13 @@ ArrayCalculator::ArrayCalculator(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-// ---------------------------------------------------------------------------
 ArrayCalculator::~ArrayCalculator() noexcept = default;
 
-// ---------------------------------------------------------------------------
 const std::atomic_bool& ArrayCalculator::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// ---------------------------------------------------------------------------
 Result<> ArrayCalculator::operator()()
 {
   ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, m_ShouldCancel);

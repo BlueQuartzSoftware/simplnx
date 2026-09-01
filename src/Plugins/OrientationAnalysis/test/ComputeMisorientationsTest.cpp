@@ -4,16 +4,21 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
+#include <array>
 #include <filesystem>
+#include <memory>
 using namespace nx::core::UnitTest;
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -30,11 +35,8 @@ std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
 
 } // namespace compute_misorientations_test
 
-/**
- * This whole section is being left in here in case we hae to regenerate the test files
- * again. After generation the developer will need to hand validate the output from
- * these functions are correct. The hand verification was performed by MAJ in March 2025
- */
+// MAJ manually verified generated reference values in March 2025. Regeneration
+// requires fresh human validation before test data publication.
 #ifdef GENERATE_TEST_DATA
 Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
 {
@@ -110,7 +112,6 @@ void GenerateReferenceOrientationTestData()
     ComputeMisorientationsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
@@ -118,11 +119,9 @@ void GenerateReferenceOrientationTestData()
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
@@ -155,7 +154,6 @@ void GenerateTestDataInputArrays()
     ComputeMisorientationsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -164,11 +162,9 @@ void GenerateTestDataInputArrays()
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
@@ -201,7 +197,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     ComputeMisorientationsFilter filter;
     Arguments args;
     std::string computedArrayName = "Computed Values";
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -210,11 +205,9 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
@@ -246,7 +239,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     Arguments args;
 
     std::string computedArrayName = "Computed Values";
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -255,11 +247,9 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 

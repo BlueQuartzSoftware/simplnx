@@ -12,6 +12,12 @@
 
 namespace nx::core
 {
+/**
+ * @struct MergeTwinsInputValues
+ * @brief Identifies twin-merging inputs.
+ *
+ * AxisTolerance and AngleTolerance are in degrees.
+ */
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
   DataPath ContiguousNeighborListArrayPath;
@@ -30,12 +36,29 @@ struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 };
 
 /**
- * @class
+ * @class MergeTwins
+ * @brief Groups neighboring sigma-3 twins into parent features.
+ *
+ * Cubic features compare average orientations to the 60-degree [111]
+ * relationship. Cell parent IDs use 65,536-tuple bulk transfers. Feature
+ * parent IDs stay local for random cell-to-feature lookup.
  */
 class ORIENTATIONANALYSIS_EXPORT MergeTwins
 {
 public:
+  /**
+   * @brief Initializes twin merging.
+   * @param dataStructure Provides selected arrays.
+   * @param mesgHandler Supplies progress messages.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies selected arrays and tolerances.
+   * @pre dataStructure, mesgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeTwinsInputValues* inputValues);
+  /**
+   * @brief Destroys the twin-merging executor.
+   */
   ~MergeTwins() noexcept;
 
   MergeTwins(const MergeTwins&) = delete;
@@ -43,8 +66,16 @@ public:
   MergeTwins& operator=(const MergeTwins&) = delete;
   MergeTwins& operator=(MergeTwins&&) noexcept = delete;
 
+  /**
+   * @brief Merges twin features and assigns parent IDs.
+   * @return Result from grouping and cell-parent assignment.
+   */
   Result<> operator()();
 
+  /**
+   * @brief Returns the retained cancellation flag.
+   * @return Reference to the cancellation flag supplied at construction.
+   */
   const std::atomic_bool& getCancel();
 
 private:

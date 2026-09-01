@@ -21,11 +21,10 @@ namespace nx::core
 {
 
 /**
- * @brief Inputs to `BuildReadImageFilterArgs()`.
+ * @struct ReadImageSubFilterConfig
+ * @brief Stores options forwarded to one ReadImageFilter execution.
  *
- * Captures exactly the subset of per-slice options the stack filter forwards to the single-image
- * ReadImageFilter. Used by both `ReadImageStackFilter::preflightImpl` (first-slice preflight) and
- * `ReadImageStack::operator()` (per-slice execute) so the two paths stay in sync.
+ * Preflight and execution use this shared subset so their per-slice configuration stays equal.
  */
 struct SIMPLNXCORE_EXPORT ReadImageSubFilterConfig
 {
@@ -44,14 +43,21 @@ struct SIMPLNXCORE_EXPORT ReadImageSubFilterConfig
 };
 
 /**
- * @brief Builds the `Arguments` object used to invoke `ReadImageFilter` on a single slice file.
+ * @brief Builds arguments for one delegated ReadImageFilter execution.
+ * @param config Specifies file, output, type, crop, and spatial settings.
+ * @return Arguments for one input slice.
  *
- * When `originSpacingProcessing` is `Postprocessed` the sub-filter is told NOT to apply the
- * origin/spacing override — the stack filter's final `UpdateImageGeomAction` handles that after
- * cropping and resampling.
+ * Preprocessed spatial overrides go to the delegated reader. Deferred overrides
+ * stay at stack level so they apply after crop and resampling.
  */
 SIMPLNXCORE_EXPORT Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config);
 
+/**
+ * @struct ReadImageStackInputValues
+ * @brief Stores file-list, output, transform, crop, resample, and conversion settings.
+ *
+ * resampleImagesChoice maps 0 to none, 1 to scaling, and 2 to exact dimensions.
+ */
 struct SIMPLNXCORE_EXPORT ReadImageStackInputValues
 {
   std::vector<std::string> fileList;
@@ -66,7 +72,7 @@ struct SIMPLNXCORE_EXPORT ReadImageStackInputValues
   ImageFlipTransform imageTransform = ImageFlipTransform::None;
   bool convertToGrayScale = false;
   VectorFloat32Parameter::ValueType colorWeights;
-  usize resampleImagesChoice = 0; // 0=None, 1=Scaling, 2=ExactDims (kept as index until the resample filter's enum is shared too)
+  usize resampleImagesChoice = 0;
   float32 scaling = 100.0f;
   VectorUInt64Parameter::ValueType exactXYDimensions;
   bool changeDataType = false;
@@ -76,14 +82,28 @@ struct SIMPLNXCORE_EXPORT ReadImageStackInputValues
 
 /**
  * @class ReadImageStack
- * @brief This algorithm reads a numbered sequence of 2D image files into a 3D DataArray
- * using ReadImageFilter as a sub-filter for per-slice reading. Supports resampling,
- * grayscale conversion, flip transforms, origin/spacing overrides, and Z-slice cropping.
+ * @brief Reads an ordered image-file sequence into a three-dimensional DataArray.
+ *
+ * Each file uses a temporary DataStructure and delegated filters. The completed
+ * slice then moves to the destination through one checked slice transfer.
+ *
+ * Flip operations use one or two row buffers. No complete duplicate stack is created.
  */
 class SIMPLNXCORE_EXPORT ReadImageStack
 {
 public:
+  /**
+   * @brief Creates an image-stack reader.
+   * @param dataStructure Receives the destination stack.
+   * @param mesgHandler Receives per-file messages.
+   * @param shouldCancel Stops after the current slice transfer when true.
+   * @param inputValues Specifies validated stack settings. The caller must keep
+   * this object alive for the reader lifetime.
+   */
   ReadImageStack(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadImageStackInputValues& inputValues);
+  /**
+   * @brief Destroys the non-owning reader.
+   */
   ~ReadImageStack() noexcept;
 
   ReadImageStack(const ReadImageStack&) = delete;
@@ -91,6 +111,12 @@ public:
   ReadImageStack& operator=(const ReadImageStack&) = delete;
   ReadImageStack& operator=(ReadImageStack&&) noexcept = delete;
 
+  /**
+   * @brief Reads and appends all selected slices in file order.
+   * @return Validation, delegated-filter, or bulk-I/O error, or accumulated warnings.
+   *
+   * Cancellation returns success after the current slice and retains earlier slices.
+   */
   Result<> operator()();
 
 private:

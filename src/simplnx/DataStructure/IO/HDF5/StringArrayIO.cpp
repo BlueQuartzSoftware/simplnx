@@ -1,7 +1,7 @@
 #include "StringArrayIO.hpp"
-#include <numeric>
 
 #include "DataStructureReader.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
@@ -34,7 +34,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   auto datasetReader = parentGroup.openDataset(objectName);
   std::string dataArrayName = datasetReader.getName();
 
-  // Check ability to import the data
+  // The importable attribute excludes values unavailable in this file.
   auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
   if(importableResult.invalid())
   {
@@ -52,10 +52,24 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   {
     tupleShape = std::move(tupleShapeResult.value());
   }
-  usize numValues = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), 1ULL, std::multiplies<>());
 
-  std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
-  const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+  StringArray* data = nullptr;
+  if(useEmptyDataStore)
+  {
+    // Metadata-only import replaces its temporary empty store before access.
+    // This avoids allocating strings that finalization loads later.
+    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
+    if(data != nullptr)
+    {
+      auto emptyStore = std::make_shared<EmptyStringStore>(tupleShape);
+      data->setStore(emptyStore);
+    }
+  }
+  else
+  {
+    std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
+    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+  }
 
   if(data == nullptr)
   {
@@ -69,7 +83,7 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
 {
   auto datasetWriter = parentGroup.createDataset(stringArray.getName());
 
-  // writeVectorOfStrings may resize the collection
+  // writeVectorOfStrings can modify its argument, so write a copy of the values.
   data_type::collection_type strings = stringArray.values();
   auto result = datasetWriter.writeVectorOfStrings(strings);
   if(result.invalid())
@@ -77,7 +91,7 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
     return result;
   }
 
-  // Write the number of values as an attribute for quicker preflight times
+  // Tuple dimensions let metadata-only import create a placeholder without values.
   {
     result = datasetWriter.writeVectorAttribute<usize>(k_TupleDimsAttrName, stringArray.getTupleShape());
     if(result.invalid())

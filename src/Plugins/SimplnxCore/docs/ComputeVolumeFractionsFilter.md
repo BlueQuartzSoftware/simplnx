@@ -16,6 +16,10 @@ The result is written to the *Volume Fractions* array in the selected **Ensemble
 
 - **Cell Phases** -- a per-**Cell** integer array specifying which **Ensemble** each **Cell** belongs to. This array is typically read directly from EBSD data; the related feature-level array is produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
+## Algorithm
+
+Cell phase IDs are read in fixed-size sequential batches. Only one count per ensemble and one output value per ensemble are retained in memory, so working memory does not scale with the number of **Cells**. The resulting ensemble array is written with one checked bulk transfer. This same path is used for in-memory and disk-backed arrays and propagates all storage failures.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

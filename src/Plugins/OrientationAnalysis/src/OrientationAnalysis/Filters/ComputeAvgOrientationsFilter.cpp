@@ -115,9 +115,9 @@ Parameters ComputeAvgOrientationsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeAvgOrientationsFilter::parametersVersion() const
 {
+  // Version 2 adds von Mises-Fisher and Watson averages.
+  // It also adds an option to omit Euler and quaternion outputs from the original algorithm.
   return 2;
-  // Version 2 adds the ability to compute the von Mises-Fisher average and the Watson sampling average
-  // Version 2 also adds the option to NOT compute the Eulers/Quats from the original algorithm
 }
 
 //------------------------------------------------------------------------------
@@ -150,8 +150,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto pWatsonEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgEulerArrayName_Key));
   auto pWatsonKappaArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonKappaArrayName_Key));
 
-  // With no method enabled the filter would produce nothing and was guaranteed to fail at
-  // runtime (-54670); reject it here so the GUI surfaces the problem before execution.
+  // Require at least one averaging method before execution.
   if(!pUseRodriguesAverage_Key && !pUseVonMisesFisher && !pUseWatson)
   {
     return {

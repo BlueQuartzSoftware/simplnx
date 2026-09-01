@@ -82,6 +82,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <EbsdLib/IO/HKL/H5OINAReader.h>
+#include <EbsdLib/IO/TSL/AngFields.h>
 #include <fmt/format.h>
 
 #include <array>

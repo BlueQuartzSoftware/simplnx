@@ -1,3 +1,4 @@
+#include "FeatureRemovalTestUtils.hpp"
 #include "SimplnxCore/Filters/RequireMinimumSizeFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -13,6 +14,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 
@@ -28,11 +30,11 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
 
-  // Read Exemplar DREAM3D File Filter
+  // Load the expected feature arrays from the output exemplar.
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_min_size_output.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  // Read the Small IN100 Data set
+  // Load the Small IN100 input before feature removal.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_min_size_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -49,9 +51,8 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
   {
     RequireMinimumSizeFeaturesFilter filter;
 
-    // Parameter Keys
     Arguments args;
-    // Create default Parameters for the filter.
+    // Configure the minimum size and the feature arrays that compaction updates.
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_SinglePhaseNumber_Key, std::make_any<int32>(1));
@@ -60,21 +61,19 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
+  // Compare each generated feature array with its corresponding exemplar array.
   {
     auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellFeatureAttributeMatrix);
     std::vector<DataPath> selectedCellArrays;
 
-    // Create the vector of selected cell DataPaths
+    // Snapshot the generated child paths before comparisons start.
     for(auto& child : cellDataGroup)
     {
       selectedCellArrays.push_back(k_CellFeatureAttributeMatrix.createChildPath(child.second->getName()));
@@ -85,12 +84,12 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
       const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
       DataType type = generatedDataArray.getDataType();
 
-      // Now generate the path to the exemplar data set in the exemplar data structure.
+      // The exemplar uses a different top-level container but the same child path.
       std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
       generatedPathVector[0] = k_ExemplarDataContainer;
       DataPath exemplarDataArrayPath(generatedPathVector);
 
-      // Check to see if there is something to compare against in the exemplar file.
+      // An absent exemplar array means that this generated array has no reference.
       if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
       {
         continue;

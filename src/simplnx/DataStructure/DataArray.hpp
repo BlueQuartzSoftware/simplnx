@@ -7,25 +7,35 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <vector>
 
+/**
+ * @namespace nx::core
+ * @brief Contains simplnx core types and functions.
+ */
 namespace nx::core
 {
 template <typename T>
 class NeighborList;
 
+/**
+ * @namespace DataArrayConstants
+ * @brief Contains DataArray constants.
+ */
 namespace DataArrayConstants
 {
+/**
+ * @brief Names the generic DataArray type.
+ */
 constexpr StringLiteral k_TypeName = "DataArray<T>";
-}
+} // namespace DataArrayConstants
 
 /**
  * @class DataArray
- * @brief The DataArray class is a type of DataObject that exists to store and
- * retrieve array data within the DataStructure. The DataArray is designed to
- * allow expandability into multiple sources of data, including out-of-core data,
- * through the use of derived DataStore classes.
+ * @brief Stores typed array values through a storage-neutral data store.
+ * @tparam T Stored value type.
  */
 template <class T>
 class DataArray : public IDataArray
@@ -33,35 +43,46 @@ class DataArray : public IDataArray
   friend class NeighborList<T>;
 
 public:
+  /**
+   * @brief Names the storage-neutral data-store type.
+   */
   using store_type = AbstractDataStore<T>;
+
+  /**
+   * @brief Names the stored value type.
+   */
   using value_type = typename store_type::value_type;
+
+  /**
+   * @brief Names the mutable value-proxy type.
+   */
   using reference = typename store_type::reference;
+
+  /**
+   * @brief Names a non-owning data-store observer type.
+   */
   using weak_store = std::weak_ptr<store_type>;
+
+  /**
+   * @brief Names the mutable data-store iterator type.
+   */
   using Iterator = typename store_type::Iterator;
+
+  /**
+   * @brief Names the read-only data-store iterator type.
+   */
   using ConstIterator = typename store_type::ConstIterator;
 
   /**
-   * @brief Attempts to create a DataArray with the specified values and add
-   * it to the DataStructure. If a parentId is provided, then the DataArray
-   * is created with the target DataObject as its parent. Otherwise, the
-   * created DataArray is nested directly within the DataStructure.
+   * @brief Creates and inserts a typed array.
    *
-   * In either case, the DataArray is then owned by the DataStructure and will
-   * be cleaned up when the DataStructure is finished with it. As such, it is
-   * not recommended that the returned pointer be stored outside of the scope
-   * in which it is created. Use the object's ID or DataPath to retrieve the
-   * DataArray if it is needed after the program has left the current scope.
-   *
-   * Returns a pointer to the created DataArray if the process succeeds.
-   * Returns nullptr otherwise.
-   *
-   * +++ The created DataArray takes ownership of the provided DataStore. +++
-   *
-   * @param dataStructure The parent DataStructure that will own the DataArray
-   * @param name The name of the DataArray
-   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore Pointer.
-   * @param parentId = {}
-   * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
+   * DataStructure owns the array. The array shares ownership of store. A null
+   * store creates an EmptyDataStore for metadata-only preflight.
+   * @param dataStructure Data structure that owns the array.
+   * @param name Array name.
+   * @param store Shared data store.
+   * @param parentId Optional parent object identifier.
+   * @return Array owned by dataStructure, or nullptr if insertion fails.
    */
   static DataArray* Create(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
@@ -74,15 +95,14 @@ public:
   }
 
   /**
-   * @brief Creates a DataArray instance backed by the IDataStore type from the template argument
-   * @tparam DataStoreType The concrete implementation of an IDataStore class
-   * @param dataStructure The parent DataStructure that will own the DataArray
-   * @param name The name of the DataArray
-   * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
-   * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
-   * if you want to store a 3Rx4C matrix then it would be {3, 4}.
-   * @param parentId The DataObject that will own the DataArray instance.
-   * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
+   * @brief Creates and inserts an array with a selected store type.
+   * @tparam DataStoreType Concrete AbstractDataStore implementation for T.
+   * @param dataStructure Data structure that owns the array.
+   * @param name Array name.
+   * @param tupleShape Tuple dimensions in slowest-to-fastest order.
+   * @param componentShape Component dimensions in slowest-to-fastest order.
+   * @param parentId Optional parent object identifier.
+   * @return Array owned by dataStructure, or nullptr if insertion fails.
    */
   template <typename DataStoreType>
   static DataArray* CreateWithStore(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<IdType>& parentId = {})
@@ -109,30 +129,16 @@ public:
   }
 
   /**
-   * @brief Attempts to create a DataArray with the specified values and add
-   * it to the DataStructure. If a parentId is provided, then the DataArray
-   * is created with the target DataObject as its parent. Otherwise, the
-   * created DataArray is nested directly within the DataStructure.
+   * @brief Imports and inserts a typed array with a fixed object identifier.
    *
-   * In either case, the DataArray is then owned by the DataStructure and will
-   * be cleaned up when the DataStructure is finished with it. As such, it is
-   * not recommended that the returned pointer be stored outside of the scope
-   * in which it is created. Use the object's ID or DataPath to retrieve the
-   * DataArray if it is needed after the program has left the current scope.
-   *
-   * Unlike Create, Import allows the DataObject ID to be set for use in
-   * importing data.
-   *
-   * Returns a pointer to the created DataArray if the process succeeds.
-   * Returns nullptr otherwise.
-   *
-   * The created DataArray takes ownership of the provided DataStore.
-   * @param dataStructure The parent DataStructure that will own the DataArray
-   * @param name The name of the DataArray
-   * @param importId The import ID to assign to the DataArray
-   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore
-   * @param parentId Optional ID of the parent DataObject. Defaults to no parent.
-   * @return DataArray<T>* Pointer to the created DataArray, or nullptr if creation failed
+   * DataStructure owns the array. The array shares ownership of store. A null
+   * store creates an EmptyDataStore for metadata-only preflight.
+   * @param dataStructure Data structure that owns the array.
+   * @param name Array name.
+   * @param importId Imported object identifier.
+   * @param store Shared data store.
+   * @param parentId Optional parent object identifier.
+   * @return Array owned by dataStructure, or nullptr if insertion fails.
    */
   static DataArray* Import(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
@@ -145,10 +151,8 @@ public:
   }
 
   /**
-   * @brief Creates a copy of the specified tuple getSize, count, and smart
-   * pointer to the target DataStore. This copy is not added to the
-   * DataStructure.
-   * @param other
+   * @brief Copies an array and shares its data store.
+   * @param other Source array.
    */
   DataArray(const DataArray<T>& other)
   : IDataArray(other)
@@ -157,8 +161,8 @@ public:
   }
 
   /**
-   * @brief Move constructor moves the data from the provided DataArray.
-   * @param other
+   * @brief Moves an array and its data-store ownership.
+   * @param other Source array.
    */
   DataArray(DataArray<T>&& other)
   : IDataArray(std::move(other))
@@ -167,32 +171,23 @@ public:
   }
 
   /**
-   * @brief Destroys the DataArray and the contained DataStore.
+   * @brief Destroys the array.
    */
   ~DataArray() override = default;
 
-  /**
-   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return DataObject::Type The type enumeration for this DataArray
-   */
   DataObject::Type getDataObjectType() const override
   {
     return Type::DataArray;
   }
 
-  /**
-   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return ArrayType The array type enumeration for this DataArray
-   */
   ArrayType getArrayType() const override
   {
     return ArrayType::DataArray;
   }
 
   /**
-   * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
-   * MUST DISPOSE OF THE RETURNED OBJECT.
-   * @return DataObject*
+   * @brief Creates an array that shares this data store.
+   * @return Caller-owned shallow array copy.
    */
   DataObject* shallowCopy() override
   {
@@ -200,10 +195,12 @@ public:
   }
 
   /**
-   * @brief Returns a deep copy of the DataArray including a deep copy of the
-   * data store. The object will be owned by the DataStructure.
-   * @param copyPath The DataPath where the copy should be placed in the DataStructure
-   * @return std::shared_ptr<DataObject> Pointer to the deep-copied DataArray, or nullptr if the copy failed
+   * @brief Creates and inserts an independent array copy.
+   *
+   * Empty stores remain metadata placeholders. Other copies resolve destination
+   * storage and use bounded bulk pages to avoid full out-of-core materialization.
+   * @param copyPath Destination array path.
+   * @return Shared inserted copy, or nullptr if creation fails.
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
@@ -212,9 +209,31 @@ public:
     {
       return nullptr;
     }
-    const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
-    std::shared_ptr<store_type> dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
-    // Don't construct with identifier since it will get created when inserting into data structure
+
+    std::shared_ptr<store_type> dataStore;
+    if(getDataStore()->getStoreType() == IDataStore::StoreType::Empty)
+    {
+      // Preflight copies must preserve metadata-only storage.
+      const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
+      dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
+    }
+    else
+    {
+      // A DataArray copy has destination context that IDataStore::deepCopy()
+      // does not. Resolve that destination's storage, then transfer through
+      // bounded bulk pages so an OOC array never materializes in full.
+      dataStore = DataStoreUtilities::CreateDataStore<T>(dataStruct, copyPath, getTupleShape(), getComponentShape());
+      if(dataStore == nullptr || dataStore->copyFrom(0, *getDataStore(), 0, getNumberOfTuples()).invalid())
+      {
+        return nullptr;
+      }
+    }
+
+    if(dataStore == nullptr)
+    {
+      return nullptr;
+    }
+    // Insertion assigns the destination identifier.
     std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), dataStore));
     if(dataStruct.insert(copy, copyPath.getParent()))
     {
@@ -223,59 +242,36 @@ public:
     return nullptr;
   }
 
-  /**
-   * @brief Returns the number of elements in the DataArray.
-   * @return usize
-   */
   usize getSize() const override
   {
     return getNumberOfTuples() * getNumberOfComponents();
   }
 
-  /**
-   * @brief Returns the number of elements in the DataArray.
-   * @return usize
-   */
   usize size() const override
   {
     return getNumberOfTuples() * getNumberOfComponents();
   }
 
-  /**
-   * @brief Returns if there are any elements in the array object
-   * @return bool, true if the DataArray has a size() == 0
-   */
   bool empty() const override
   {
     return m_DataStore->getNumberOfTuples() == 0;
   }
 
-  /**
-   * @brief Returns the number of tuples in the DataArray.
-   * @return usize
-   */
   size_t getNumberOfTuples() const override
   {
     return m_DataStore->getNumberOfTuples();
   }
 
-  /**
-   * @brief Returns the total number of components
-   * @return usize
-   */
   size_t getNumberOfComponents() const override
   {
     return m_DataStore->getNumberOfComponents();
   }
 
   /**
-   * @brief Returns a reference to the value found at the specified index of
-   * the data array. This can be used to edit the value found at the specified
-   * index.
-   *
-   * Throws an exception if the DataStore has not been allocated.
-   * @param index
-   * @return reference
+   * @brief Returns a mutable proxy at a flat index.
+   * @param index Flat value index.
+   * @return Mutable value proxy.
+   * @throws std::runtime_error If the data store is null.
    */
   reference operator[](usize index)
   {
@@ -288,9 +284,9 @@ public:
   }
 
   /**
-   * @brief Sets every value of a Tuple to the value
-   * @param tupleIndex Index of the Tuple
-   * @param value Value to set
+   * @brief Sets every component in a tuple.
+   * @param tupleIndex Tuple index.
+   * @param value Value to store in each component.
    */
   void initializeTuple(usize tupleIndex, T value)
   {
@@ -298,8 +294,8 @@ public:
   }
 
   /**
-   * @brief Sets ALL values in the DataArray to "value"
-   * @param value The value to set ALL elements of the array to.
+   * @brief Sets every array value.
+   * @param value Value to store.
    */
   void fill(T value)
   {
@@ -307,11 +303,11 @@ public:
   }
 
   /**
-   * @brief Copies values from one tuple to another within the same DataArray.
+   * @brief Copies one tuple to another tuple.
+   * @param from Source tuple index.
+   * @param to Destination tuple index.
    *
-   * NOTE: THERE IS NO ATTEMPT to check that either index is within bounds for the array.
-   * @param from Index to copy data FROM
-   * @param to Index to copy data TO
+   * The method does not check either index.
    */
   void copyTuple(usize from, usize to) override
   {
@@ -330,9 +326,11 @@ public:
   }
 
   /**
-   * @brief Swaps the tuple values between the 2 indices
-   * @param index0 The first index to swap
-   * @param index1 The second index to swap
+   * @brief Swaps two tuples.
+   * @param index0 First tuple index.
+   * @param index1 Second tuple index.
+   *
+   * The method does not check either index.
    */
   void swapTuples(usize index0, usize index1) override
   {
@@ -353,7 +351,7 @@ public:
   }
 
   /**
-   * @brief Byte swaps all elements in the data array
+   * @brief Swaps the byte order of every value.
    */
   void byteSwapElements()
   {
@@ -364,13 +362,10 @@ public:
   }
 
   /**
-   * @brief Returns const reference to the value found at the specified index
-   * of the data array. This cannot be used to edit the value found at the
-   * specified index.
-   *
-   * Throws an exception if the DataStore has not been allocated.
-   * @param index
-   * @return value_type
+   * @brief Returns a value at a flat index.
+   * @param index Flat value index.
+   * @return Stored value.
+   * @throws std::runtime_error If the data store is null.
    */
   value_type operator[](usize index) const
   {
@@ -383,12 +378,10 @@ public:
   }
 
   /**
-   * @brief Returns the value at the specified index.
-   *
-   * Throws an exception if the DataStore has not been allocated.
-   * @param index The index of the value to retrieve
-   * @return value_type The value at the specified index
-   * @throws std::runtime_error if the DataStore is null
+   * @brief Returns a value at a flat index.
+   * @param index Flat value index.
+   * @return Stored value.
+   * @throws std::runtime_error If the data store is null.
    */
   value_type getValue(usize index) const
   {
@@ -401,13 +394,11 @@ public:
   }
 
   /**
-   * @brief Returns a const reference to the value found at the specified index
-   * of the data array. This cannot be used to edit the value found at the
-   * specified index.
-   *
-   * Throws an exception if the DataStore has not been allocated.
-   * @param index
-   * @return value_type
+   * @brief Returns a bounds-checked value at a flat index.
+   * @param index Flat value index.
+   * @return Stored value.
+   * @throws std::runtime_error If the data store is null.
+   * @throws std::out_of_range If index is not valid.
    */
   value_type at(usize index) const
   {
@@ -420,30 +411,34 @@ public:
   }
 
   /**
-   * @brief Returns the value at the tuple and component index as a std::string.
-   *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
-   * @param tupleIndex
-   * @param compIndex
-   * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
-   * @return std::string
+   * @brief Formats a tuple component as text.
+   * @param tupleIndex Tuple index.
+   * @param compIndex Component index.
+   * @param format fmt format used for floating-point values.
+   * @return Formatted component value.
+   *
+   * Integer values use the default format. Avoid this conversion in tight loops.
    */
   std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const override;
 
   /**
-   * @brief Sets the value at the tuple and component index to the value parsed as the appropriate type.
-   *        If the value cannot be properly parsed as the appropriate type, nothing is changed.
-   * @param tupleIndex
-   * @param compIndex
-   * @param value
-   * @return bool
+   * @brief Parses and stores a tuple component value.
+   * @param tupleIndex Tuple index.
+   * @param compIndex Component index.
+   * @param value Text to parse.
+   * @return True if parsing and storage succeed.
+   *
+   * The array remains unchanged when parsing fails.
    */
   bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
 
   /**
-   * @brief Returns the value of a specific component within a tuple.
-   * @param tupleIndex The index of the tuple
-   * @param componentIndex The index of the component within the tuple
-   * @return value_type The value at the specified tuple and component index
+   * @brief Returns a component value from a tuple.
+   * @param tupleIndex Tuple index.
+   * @param componentIndex Component index.
+   * @return Stored component value.
+   *
+   * The method does not check either index.
    */
   value_type getComponent(usize tupleIndex, usize componentIndex)
   {
@@ -452,10 +447,12 @@ public:
   }
 
   /**
-   * @brief Sets the value of a specific component within a tuple.
-   * @param tupleIndex The index of the tuple
-   * @param componentIndex The index of the component within the tuple
-   * @param value The value to set at the specified location
+   * @brief Stores a component value in a tuple.
+   * @param tupleIndex Tuple index.
+   * @param componentIndex Component index.
+   * @param value Value to store.
+   *
+   * The method does not check either index.
    */
   void setComponent(usize tupleIndex, usize componentIndex, value_type value)
   {
@@ -464,9 +461,9 @@ public:
   }
 
   /**
-   * @brief Sets the value at the specified index.
-   * @param index The index where the value should be set
-   * @param value The value to set at the specified index
+   * @brief Stores a value at a flat index.
+   * @param index Flat value index.
+   * @param value Value to store.
    */
   void setValue(usize index, value_type value)
   {
@@ -474,9 +471,8 @@ public:
   }
 
   /**
-   * @brief Returns a const pointer to the DataStore for read-only access.
-   * Returns nullptr if no DataStore is available.
-   * @return DataStore<T>*
+   * @brief Returns the read-only data store pointer.
+   * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
   const store_type* getDataStore() const
   {
@@ -484,8 +480,8 @@ public:
   }
 
   /**
-   * @brief Returns a raw pointer to the DataStore.
-   * @return DataStore<T>*
+   * @brief Returns the mutable data store pointer.
+   * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
   store_type* getDataStore()
   {
@@ -493,8 +489,8 @@ public:
   }
 
   /**
-   * @brief Returns a pointer to the array's IDataStore.
-   * @return const IDataStore*
+   * @brief Returns the mutable storage-neutral data store pointer.
+   * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
   IDataStore* getIDataStore() override
   {
@@ -502,8 +498,8 @@ public:
   }
 
   /**
-   * @brief Returns a pointer to the array's IDataStore.
-   * @return const IDataStore*
+   * @brief Returns the read-only storage-neutral data store pointer.
+   * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
   const IDataStore* getIDataStore() const override
   {
@@ -511,8 +507,9 @@ public:
   }
 
   /**
-   * @brief Returns a reference to the DataStore.
-   * @return DataStore<T>&
+   * @brief Returns the mutable data store.
+   * @return Reference valid while this array retains the store.
+   * @throws std::runtime_error If the data store is null.
    */
   store_type& getDataStoreRef()
   {
@@ -524,8 +521,9 @@ public:
   }
 
   /**
-   * @brief Returns a reference to the DataStore.
-   * @return const DataStore<T>&
+   * @brief Returns the read-only data store.
+   * @return Reference valid while this array retains the store.
+   * @throws std::runtime_error If the data store is null.
    */
   const store_type& getDataStoreRef() const
   {
@@ -537,8 +535,8 @@ public:
   }
 
   /**
-   * @brief Returns a std::weak_ptr for the stored DataStore.
-   * @return std::weak_ptr<DataStore<T>>
+   * @brief Returns a non-owning data-store observer.
+   * @return Weak pointer that expires when no array or caller owns the store.
    */
   weak_store getDataStorePtr() const
   {
@@ -555,10 +553,11 @@ public:
   //  }
 
   /**
-   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
-   * is deleted if there are no other references. To save the existing DataStore
-   * before replacing it, call releaseDataStore() before setting the new DataStore.
-   * @param store
+   * @brief Replaces the shared data store.
+   * @param store New shared data store, or null for an EmptyDataStore.
+   *
+   * Other owners retain the previous store. A null store preserves metadata-only
+   * preflight behavior.
    */
   void setDataStore(std::shared_ptr<store_type> store)
   {
@@ -569,21 +568,16 @@ public:
     }
   }
 
-  /**
-   * @brief Returns the data format used for storing the array data.
-   * @return data format as string
-   */
   std::string getDataFormat() const override
   {
     return m_DataStore->getDataFormat();
   }
 
   /**
-   * @brief Returns the first item in the array.
-   *
-   * This method requires the DataArray to have at least one value in the
-   * DataStore. Otherwise, this throws a runtime exception.
-   * @return value_type
+   * @brief Returns the first value.
+   * @return First stored value.
+   * @throws std::out_of_range If the array is empty.
+   * @throws std::runtime_error If the current store has no values.
    */
   value_type front() const
   {
@@ -591,88 +585,50 @@ public:
   }
 
   /**
-   * @brief Returns the last item in the array.
-   *
-   * This method requires the DataArray to have at least one value in the
-   * DataStore. Otherwise, this throws a runtime exception.
-   * @return value_type
+   * @brief Returns the last value.
+   * @return Last stored value.
+   * @throws std::out_of_range If the array is empty.
+   * @throws std::runtime_error If the current store has no values.
    */
   value_type back() const
   {
     return at(getSize() - 1);
   }
 
-  /**
-   * @brief Returns an iterator to the begining of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return Iterator
-   */
   Iterator begin()
   {
     return getDataStore()->begin();
   }
 
-  /**
-   * @brief Returns an iterator to the end of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return Iterator
-   */
   Iterator end()
   {
     return getDataStore()->end();
   }
 
-  /**
-   * @brief Returns a const iterator to the begining of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return ConstIterator
-   */
   ConstIterator begin() const
   {
     return getDataStore()->begin();
   }
 
-  /**
-   * @brief Returns a const iterator to the end of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return ConstIterator
-   */
   ConstIterator end() const
   {
     return getDataStore()->end();
   }
 
-  /**
-   * @brief Returns a const iterator to the begining of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return ConstIterator
-   */
   ConstIterator cbegin() const
   {
     return getDataStore()->cbegin();
   }
 
-  /**
-   * @brief Returns a const iterator to the end of the DataArray.
-   *
-   * This method will fail if no DataStore has been set.
-   * @return ConstIterator
-   */
   ConstIterator cend() const
   {
     return getDataStore()->cend();
   }
 
   /**
-   * @brief Copies the specified DataArray's std::shared_ptr<DataStore> into
-   * the current DataArray.
-   * @param rhs
-   * @return DataArray&
+   * @brief Shares the source data store.
+   * @param rhs Source array.
+   * @return This array.
    */
   DataArray& operator=(const DataArray& rhs)
   {
@@ -681,9 +637,9 @@ public:
   }
 
   /**
-   * @brief Moves the specified DataArray's DataStore into the current DataArray.
-   * @param rhs
-   * @return DataArray&
+   * @brief Moves the source data store.
+   * @param rhs Source array.
+   * @return This array.
    */
   DataArray& operator=(DataArray&& rhs) noexcept
   {
@@ -691,10 +647,6 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Static function to get the typename
-   * @return std::string The type name as a string (e.g., "DataArray<int32>")
-   */
   static std::string GetTypeName()
   {
     if constexpr(std::is_same_v<T, int8>)
@@ -747,18 +699,15 @@ public:
     }
   }
 
-  /**
-   * @brief Returns the typename for this DataArray instance.
-   * @return std::string The type name as a string (e.g., "DataArray<int32>")
-   */
   std::string getTypeName() const override
   {
     return GetTypeName();
   }
 
   /**
-   * @brief Flushes the DataObject to its respective target.
-   * In-memory DataObjects are not affected.
+   * @brief Flushes data-store changes to its backing target.
+   *
+   * In-memory stores do not have a backing target.
    */
   void flush() const override
   {
@@ -766,8 +715,8 @@ public:
   }
 
   /**
-   * @brief Returns the amount of memory used by this DataArray.
-   * @return uint64 The memory usage in bytes
+   * @brief Returns data-store memory usage in bytes.
+   * @return Approximate memory usage in bytes.
    */
   uint64 memoryUsage() const override
   {
@@ -776,13 +725,10 @@ public:
 
 protected:
   /**
-   * @brief Constructs a DataArray with the specified name and DataStore.
-   *
-   * The DataArray takes ownership of the DataStore. If none is provided,
-   * an EmptyDataStore is used instead.
-   * @param dataStructure
-   * @param name
-   * @param store
+   * @brief Creates an array with a shared data store.
+   * @param dataStructure Parent data structure.
+   * @param name Array name.
+   * @param store Shared data store, or null for an EmptyDataStore.
    */
   DataArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store = nullptr)
   : IDataArray(dataStructure, std::move(name))
@@ -791,14 +737,11 @@ protected:
   }
 
   /**
-   * @brief Constructs a DataArray with the specified name and DataStore.
-   *
-   * The DataArray takes ownership of the DataStore. If none is provided,
-   * an EmptyDataStore is used instead.
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param store
+   * @brief Creates an imported array with a shared data store.
+   * @param dataStructure Parent data structure.
+   * @param name Array name.
+   * @param importId Imported object identifier.
+   * @param store Shared data store, or null for an EmptyDataStore.
    */
   DataArray(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store = nullptr)
   : IDataArray(dataStructure, std::move(name), importId)
@@ -834,19 +777,58 @@ extern template bool DataArray<float32>::setValueFromString(usize tupleIndex, us
 extern template bool DataArray<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
 extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
 
-// Declare aliases
+/**
+ * @brief Names a uint8 data array.
+ */
 using UInt8Array = DataArray<uint8>;
+
+/**
+ * @brief Names a uint16 data array.
+ */
 using UInt16Array = DataArray<uint16>;
+
+/**
+ * @brief Names a uint32 data array.
+ */
 using UInt32Array = DataArray<uint32>;
+
+/**
+ * @brief Names a uint64 data array.
+ */
 using UInt64Array = DataArray<uint64>;
 
+/**
+ * @brief Names an int8 data array.
+ */
 using Int8Array = DataArray<int8>;
+
+/**
+ * @brief Names an int16 data array.
+ */
 using Int16Array = DataArray<int16>;
+
+/**
+ * @brief Names an int32 data array.
+ */
 using Int32Array = DataArray<int32>;
+
+/**
+ * @brief Names an int64 data array.
+ */
 using Int64Array = DataArray<int64>;
 
+/**
+ * @brief Names a float32 data array.
+ */
 using Float32Array = DataArray<float32>;
+
+/**
+ * @brief Names a float64 data array.
+ */
 using Float64Array = DataArray<float64>;
 
+/**
+ * @brief Names a bool data array.
+ */
 using BoolArray = DataArray<bool>;
 } // namespace nx::core

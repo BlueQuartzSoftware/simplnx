@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
+#include <new>
 #include <sstream>
 #include <vector>
 
@@ -14,6 +15,13 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Moves a Result's diagnostics into aggregate vectors.
+ * @tparam T Result value type.
+ * @param result Source result.
+ * @param errors Receives errors when result is invalid.
+ * @param warnings Receives all warnings.
+ */
 template <class T>
 void moveResult(nx::core::Result<T>& result, std::vector<nx::core::Error>& errors, std::vector<nx::core::Warning>& warnings)
 {
@@ -30,6 +38,14 @@ void moveResult(nx::core::Result<T>& result, std::vector<nx::core::Error>& error
   }
 }
 
+/**
+ * @brief Resolves defaults and constructs filter arguments.
+ * @param filterArgs Supplied filter arguments.
+ * @param params Filter parameter definitions.
+ * @param filter Filter that owns params.
+ * @param executionContext Context for parameter construction.
+ * @return Constructed arguments and warnings for unknown supplied keys.
+ */
 std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& filterArgs, const Parameters& params, const IFilter& filter, const ExecutionContext& executionContext)
 {
   Arguments resolvedArgs;
@@ -64,6 +80,12 @@ std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& filt
   return {std::move(constructedArgs), std::move(warnings)};
 }
 
+/**
+ * @brief Groups parameters and identifies ungrouped parameters.
+ * @param params Filter parameter definitions.
+ * @param args Unused resolved arguments.
+ * @return Group-to-child map and ungrouped parameter keys.
+ */
 std::pair<std::map<std::string, std::vector<std::string>>, std::set<std::string>> GetGroupedParameters(const Parameters& params, const Arguments& args)
 {
   std::set<std::string> ungroupedParameters;
@@ -89,6 +111,17 @@ std::pair<std::map<std::string, std::vector<std::string>>, std::set<std::string>
   return {std::move(groupedParameters), std::move(ungroupedParameters)};
 }
 
+/**
+ * @brief Validates one constructed filter argument.
+ * @param name Parameter key.
+ * @param parameter Parameter definition.
+ * @param args Constructed arguments.
+ * @param data Data structure to validate data selections.
+ * @param filter Filter that owns parameter.
+ * @return Parameter validation errors or warnings.
+ * @throws std::invalid_argument if the argument type is not accepted.
+ * @throws std::runtime_error if the parameter category is invalid.
+ */
 Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter, const Arguments& args, const DataStructure& data, const IFilter& filter)
 {
   const auto& arg = args.at(name);
@@ -148,7 +181,7 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     {
       continue;
     }
-    // Only validate dependent parameters if their parent is valid
+    // A dependent parameter is valid only after its parent parameter is valid.
     for(const auto& key : dependentKeys)
     {
       const auto& dependentParameter = params.at(key);
@@ -164,7 +197,6 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     }
   }
 
-  // Validate ungrouped parameters
   for(const auto& name : ungroupedParameters)
   {
     const auto& parameter = params.at(name);
@@ -218,10 +250,32 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   }
 
   Parameters params = parameters();
-  // We can discard the warnings since they're already reported in preflight
+  // Preflight already reports argument-resolution warnings.
   auto [resolvedArgs, warnings] = GetResolvedArgs(filterArgs, params, *this, executionContext);
 
-  Result<> executeImplResult = executeImpl(dataStructure, resolvedArgs, pipelineFilter, messageHandler, shouldCancel, executionContext);
+  Result<> executeImplResult;
+  try
+  {
+    executeImplResult = executeImpl(dataStructure, resolvedArgs, pipelineFilter, messageHandler, shouldCancel, executionContext);
+  } catch(const std::bad_alloc&)
+  {
+    // Convert catchable allocation failures to a pipeline error. Formatting the
+    // detailed message can allocate, so a nested fallback protects this handler.
+    // Linux heuristic overcommit can invoke the OOM killer without std::bad_alloc.
+    // Earlier output arrays can remain uninitialized. The pipeline executor owns
+    // rollback after an execution error.
+    std::string message;
+    try
+    {
+      message = fmt::format("Filter '{}' ran out of memory while executing. "
+                            "Consider enabling out-of-core storage or reducing the data size.",
+                            humanName());
+    } catch(...)
+    {
+      message = "A filter ran out of memory while executing.";
+    }
+    return {MakeErrorResult(-272, std::move(message))};
+  }
   if(shouldCancel)
   {
     return {MakeErrorResult(-1, "Filter cancelled")};
@@ -233,14 +287,11 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   {
     return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
   }
-  // Apply any deferred actions
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
 
-  // Validate the Geometry and Attribute Matrix objects
   Result<> validGeometryAndAttributeMatrices = MergeResults(dataStructure.validateGeometries(), dataStructure.validateAttributeMatrices());
   validGeometryAndAttributeMatrices = MergeResults(validGeometryAndAttributeMatrices, deferredActionsResult);
 
-  // Merge all the results together.
   Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(validGeometryAndAttributeMatrices));
 
   return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
@@ -283,7 +334,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   std::vector<std::string> paramKeyNotFound;
   std::vector<std::string> jsonKeyNotFound;
 
-  // Check that each key from the filter's parameters appears in the JSON.
+  // Missing keys use parameter defaults so older pipelines remain loadable.
   for(const auto& [name, param] : params)
   {
     if(!json.contains(name))
@@ -303,7 +354,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     args.insert(name, std::move(jsonResult.value()));
   }
 
-  // Check if any keys from the JSON do NOT appear in the Filter's set of parameters
+  // Unknown keys become warnings instead of preventing compatible pipeline loads.
   for(auto& [key, val] : json.items())
   {
     if(key != "parameters_version" && !params.contains(key))
@@ -314,10 +365,8 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     }
   }
 
-  // Now run an N^2 comparison between those to try and find any commonality, i.e.,
-  // is one of the keys pretty "close" to another key. That is what is going to be
-  // suggested below. This relies on an algorithm to determine what is "close". This
-  // may not be correct or even remotely close.
+  // Suggest closest known parameter keys for unknown JSON keys. The heuristic can
+  // produce an unrelated suggestion.
   auto bestMatches = StringUtilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
   for(const auto& match : bestMatches)
   {

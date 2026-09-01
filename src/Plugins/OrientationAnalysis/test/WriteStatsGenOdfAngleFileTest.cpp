@@ -1,19 +1,28 @@
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <nonstd/span.hpp>
 #include <sstream>
+#include <string_view>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -22,9 +31,14 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
 {
   UnitTest::LoadPlugins();
 
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz", "write_stats_gen_odf_angle_file");
 
-  // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/write_stats_gen_odf_angle_file/write_stats_gen_odf_angle_file.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
@@ -48,7 +62,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key,
@@ -57,10 +71,11 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(false));
   preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-  executeResult = filter.execute(dataStructure, args);
+  executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::vector<size_t> linesToSkip{1, 2}; // Skip the lines that have "DREAM3D" in them.
+  // The first two lines contain variable DREAM3D metadata.
+  std::vector<size_t> linesToSkip{1, 2};
   std::ifstream computedFile1(computedOutput1Path);
   std::ifstream exemplarFile1(exemplarOutput1Path);
   UnitTest::CompareAsciiFiles(computedFile1, exemplarFile1, linesToSkip);
@@ -77,7 +92,6 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz", "write_stats_gen_odf_angle_file");
 
-  // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/write_stats_gen_odf_angle_file/write_stats_gen_odf_angle_file.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 

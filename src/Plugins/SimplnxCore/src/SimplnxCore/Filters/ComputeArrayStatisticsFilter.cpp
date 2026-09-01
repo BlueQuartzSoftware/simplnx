@@ -8,7 +8,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
-#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -26,9 +25,17 @@ using namespace nx::core;
 
 namespace
 {
-const DataPath k_TempMaskPath = DataPath{{"!_!__Internal__Temp_MASK_Path__Internal__!_!"}};
+/**
+ * @struct IsIntegerType
+ * @brief Tests whether a dispatched type supports mode calculation.
+ */
 struct IsIntegerType
 {
+  /**
+   * @brief Tests the dispatched type.
+   * @tparam T Specifies the candidate element type.
+   * @return True for non-boolean integral types.
+   */
   template <typename T>
   bool operator()()
   {
@@ -36,6 +43,16 @@ struct IsIntegerType
   }
 };
 
+/**
+ * @brief Creates output actions for selected statistics.
+ * @param dataStructure Resolves the selected input array.
+ * @param filterArgs Selects statistics and output names.
+ * @param tupleDims Specifies output tuple dimensions.
+ * @return Actions for the destination group and selected output arrays.
+ *
+ * Per-index output uses the supplied tuple dimensions. Standardized output
+ * retains the input tuple count.
+ */
 OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims)
 {
   auto findLength = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
@@ -75,15 +92,6 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
         auto arrayPath = destinationAttributeMatrixValue.createChildPath(filterArgs.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureIdsIndexingName_Key));
         auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, arrayPath);
         actions.appendAction(std::move(action));
-      }
-
-      {
-        auto action = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, k_TempMaskPath);
-        actions.appendAction(std::move(action));
-      }
-      {
-        auto action = std::make_unique<DeleteDataAction>(k_TempMaskPath);
-        actions.appendDeferredAction(std::move(action));
       }
     }
   }
@@ -191,7 +199,6 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -258,7 +265,6 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumUniqueValuesName_Key, "Number of Unique Values Array Name", "The name of the array which stores the calculated number of unique values",
                                                           "NumUniqueValues"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindLength_Key, k_LengthArrayName_Key, true);
   params.linkParameters(k_FindMin_Key, k_MinimumArrayName_Key, true);
   params.linkParameters(k_FindMax_Key, k_MaximumArrayName_Key, true);
@@ -438,11 +444,6 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)"));
   }
 
-  if(pFindNumUniqueValuesValue && !pFindLengthValue)
-  {
-    return MakePreflightErrorResult(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)"));
-  }
-
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
     return MakePreflightErrorResult(-57211, "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).");
@@ -495,7 +496,6 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
 
   inputValues.RangeType = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
   inputValues.Range = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
-  inputValues.TempMaskArrayPath = k_TempMaskPath;
   inputValues.FeatureIdMapArrayPath = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureIdsIndexingName_Key));
 
   return ComputeArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();

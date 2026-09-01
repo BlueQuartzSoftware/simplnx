@@ -61,6 +61,22 @@ This filter requires that several prior operations have already been run:
 - **&Sigma;3 only.** Other CSL boundaries (&Sigma;5, &Sigma;7, &Sigma;9, etc.) are not detected.
 - **Requires well-computed average orientations.** The twin detection is only as accurate as the input *Average Quaternions*. If twin variants were segmented together with the parent (too-loose segmentation tolerance), the average orientation will be wrong and this filter will not reliably detect twins.
 
+## Algorithm
+
+The algorithm uses a seed-and-grow approach analogous to feature segmentation. A random unassigned feature is selected as a seed and assigned a new parent ID. The seed's contiguous neighbors are examined: if the misorientation between the seed and a neighbor is within tolerance of the Sigma 3 twin relationship (60 degrees about <111>), the neighbor is added to the same parent group. This process repeats for newly grouped features until no more twins are found, then a new seed is selected. After grouping, cell-level parent IDs are assigned by looking up each cell's feature ID in the feature-to-parent map.
+
+### In-Core Path
+
+Feature-level arrays (phases, parent IDs, average quaternions, crystal structures) are accessed through the AbstractDataStore API. The contiguous neighbor list provides adjacency information. Cell-level arrays are written directly.
+
+### Out-of-Core Path
+
+The cell-level parent ID array is initialized in 64K-element chunks via `copyFromBuffer` to avoid a single large fill operation on an OOC store. After the feature grouping phase completes, the feature-to-parent map is cached locally. Cell-level feature IDs are then read in 64K-tuple chunks via `copyIntoBuffer`, translated to parent IDs using the local cache, and the results are bulk-written via `copyFromBuffer`.
+
+### Performance
+
+The feature-level grouping algorithm involves random access to feature arrays (phases, quaternions, parent IDs), but feature counts are small enough (thousands) that this does not cause OOC bottlenecks. The cell-level pass, which touches millions of voxels, uses sequential chunked I/O to avoid per-element OOC overhead.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

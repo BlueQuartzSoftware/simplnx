@@ -17,11 +17,25 @@
 #include <string>
 #include <vector>
 
+/**
+ * @def H5_BOOL_TYPE
+ * @brief Maps Boolean storage to the HDF5-compatible UInt8 type.
+ */
 #define H5_BOOL_TYPE uint8
 
+/**
+ * @namespace nx::core::HDF5
+ * @brief Provides locked HDF5 object wrappers and data transfers.
+ */
 namespace nx::core::HDF5
 {
 class GroupIO;
+/**
+ * @struct ChunkedDataInfo
+ * @brief Owns handles used by incremental chunk reads and writes.
+ *
+ * closeChunkedDataset() releases these handles.
+ */
 struct SIMPLNX_EXPORT ChunkedDataInfo
 {
   hid_t dataType = 0;
@@ -31,6 +45,13 @@ struct SIMPLNX_EXPORT ChunkedDataInfo
   hid_t chunkProp = 0;
 };
 
+/**
+ * @class DatasetIO
+ * @brief Reads, writes, and inspects one HDF5 dataset.
+ *
+ * Public methods manage the process-wide nonrecursive HDF5 API lock. Internal
+ * code must not hold that lock while it calls another public wrapper method.
+ */
 class SIMPLNX_EXPORT DatasetIO : public ObjectIO
 {
 public:
@@ -41,13 +62,27 @@ public:
    */
   DatasetIO();
 
+  /**
+   * @brief Creates a dataset wrapper under one HDF5 parent.
+   * @param parentId Specifies the parent HDF5 object.
+   * @param dataName Specifies the dataset name.
+   */
   DatasetIO(hid_t parentId, const std::string& dataName);
 
   DatasetIO(const DatasetIO& other) = delete;
 
+  /**
+   * @brief Moves dataset ownership.
+   * @param other Provides dataset state.
+   */
   DatasetIO(DatasetIO&& other) noexcept;
 
   DatasetIO& operator=(const DatasetIO& rhs) = delete;
+  /**
+   * @brief Replaces this wrapper with moved dataset ownership.
+   * @param rhs Provides dataset state.
+   * @return This wrapper.
+   */
   DatasetIO& operator=(DatasetIO&& rhs) noexcept;
 
   /**
@@ -56,9 +91,8 @@ public:
   ~DatasetIO() noexcept override;
 
   /**
-   * @brief Attempts to determine the HDF5 data type for the dataset.
-   * Returns an invalid Result if the process fails.
-   * @return Result<HDF5::Type>
+   * @brief Converts the dataset type to an NX DataType.
+   * @return Converted type or HDF5/type error.
    */
   Result<nx::core::DataType> getDataType() const;
 
@@ -69,77 +103,71 @@ public:
   size_t getTypeSize() const;
 
   /**
-   * @brief Returns the number of elements in the attribute.
-   * @return size_t
+   * @brief Returns the total dataset element count.
+   * @return Element count, or 0 for an invalid dataset.
    */
   size_t getNumElements() const;
 
   /**
-   * @brief Returns the number of elements in the attribute.
-   * @return size_t
+   * @brief Returns elements in one configured HDF5 chunk.
+   * @return Chunk element count, or 0 for a contiguous or invalid dataset.
    */
   size_t getNumChunkElements() const;
 
   /**
-   * @brief Returns a string value for the dataset.
-   * Returns an empty string if no dataset exists or the dataset is not a
-   * string.
-   * @return std::string
+   * @brief Reads one string value.
+   * @return String value, or empty string for an invalid or incompatible dataset.
    */
   std::string readAsString() const;
 
   /**
-   * @brief Returns a vector of string values for the dataset.
-   * Returns an empty string if no dataset exists or the dataset is not a
-   * string.
-   * @return std::vector<std::string>
+   * @brief Reads all string values.
+   * @return String values, or an empty vector for an invalid or incompatible dataset.
    */
   std::vector<std::string> readAsVectorOfStrings() const;
 
   /**
-   * @brief Returns a vector of values for the attribute.
-   * Returns an empty vector if no attribute exists or the attribute is not of
-   * the specified type.
-   * @tparam T
-   * @return std::vector<T>
+   * @brief Reads all dataset values into a vector.
+   * @tparam T Specifies the destination scalar type.
+   * @return Values, or an empty vector after a read failure.
    */
   template <typename T>
   std::vector<T> readAsVector() const;
 
   /**
-   * @brief Reads the dataset into the given span. Requires the span to be the
-   * correct size. Returns false if unable to read.
-   * @tparam T
-   * @param data
+   * @brief Reads the complete dataset into a caller span.
+   * @tparam T Specifies the destination scalar type.
+   * @param data Receives exactly the dataset element count.
+   * @return Shape, codec, or HDF5 read error, or success.
    */
   template <class T>
   nx::core::Result<> readIntoSpan(nonstd::span<T> data) const;
 
   /**
-   * @brief Returns an AbstractDataStore of values for the existing data.
-   * @tparam T
-   * @return std::shared_ptr<AbstractDataStore<T>>
+   * @brief Reads the complete dataset into a flat in-memory DataStore.
+   * @tparam T Specifies the scalar type.
+   * @return DataStore or null after a read failure.
    */
   template <typename T>
   std::shared_ptr<AbstractDataStore<T>> readAsDataStore() const;
 
   /**
-   * @brief Returns an AbstractDataStore of values for the existing data.
-   * Returns nullptr if the data does not match the specified number of elements.
-   * @tparam T
-   * @param tupleDims
-   * @param componentDims
-   * @return std::shared_ptr<AbstractDataStore<T>>
+   * @brief Reads the complete dataset into a shaped in-memory DataStore.
+   * @tparam T Specifies the scalar type.
+   * @param tupleDims Specifies tuple dimensions.
+   * @param componentDims Specifies component dimensions.
+   * @return DataStore or null after size mismatch or read failure.
    */
   template <typename T>
   std::shared_ptr<AbstractDataStore<T>> readAsDataStore(const ShapeType& tupleDims, const ShapeType& componentDims) const;
 
   /**
-   * @brief Reads the dataset into the given span. Requires the span to be the
-   * correct size. Returns false if unable to read.
-   * Contains optional start and end positions for the existing HDF5 dataset.
-   * @tparam T
-   * @param data
+   * @brief Reads an optional HDF5 hyperslab into a caller span.
+   * @tparam T Specifies the destination scalar type.
+   * @param data Receives selected values.
+   * @param start Optionally specifies N-dimensional start offsets.
+   * @param count Optionally specifies N-dimensional extents.
+   * @return Selection, shape, or HDF5 read error, or success.
    */
   template <class T>
   nx::core::Result<> readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const;
@@ -156,96 +184,123 @@ public:
 #endif
 
   /**
-   * @brief Returns the current chunk dimensions as a vector.
-   *
-   * Returns an empty vector if no chunkShape could be found.
-   * @return std::vector<usize>
+   * @brief Returns configured HDF5 chunk dimensions.
+   * @return Chunk dimensions, or empty vector for a contiguous or invalid dataset.
    */
   std::vector<usize> getChunkDimensions() const;
 
   /**
-   * @brief Returns a vector of the sizes of the dimensions for the dataset
-   * Returns empty vector if unable to read.
+   * @brief Returns dataset dimensions.
+   * @return Dimensions, or empty vector after a query failure.
    */
   std::vector<usize> getDimensions() const;
 
   /**
-   * @brief Writes a given string to the dataset. Returns the HDF5 error,
-   * should one occur.
+   * @brief Creates or replaces the dataset with one string.
+   * @param text Specifies the value.
+   * @return HDF5 create/write error, or success.
    *
-   * Any one of the write* methods must be called before adding attributes to
-   * the HDF5 dataset.
-   * @param text
-   * @return nx::core::Result<>
+   * Write dataset content before dataset attributes.
    */
   nx::core::Result<> writeString(const std::string& text);
 
   /**
-   * @brief Writes a vector of strings to the dataset. Returns the HDF5 error,
-   * should one occur.
+   * @brief Creates or replaces the dataset with string values.
+   * @param text Specifies values.
+   * @return HDF5 create/write error, or success.
    *
-   * Any one of the write* methods must be called before adding attributes to
-   * the HDF5 dataset.
-   * @param text
-   * @return nx::core::Result<>
+   * Write dataset content before dataset attributes.
    */
   nx::core::Result<> writeVectorOfStrings(const std::vector<std::string>& text);
 
   /**
-   * @brief Sets the gzip compression level used by the next writeSpan call.
-   *        0 = no compression (contiguous); 1-9 = chunked + deflate at that level.
-   * @param level Gzip level in [0, 9]. Out-of-range values are ignored.
+   * @brief Sets gzip compression for later writeSpan() calls.
+   * @param level Specifies 0 for contiguous output or 1 through 9 for deflate.
+   *
+   * Values outside [0, 9] are ignored.
    */
   void setCompressionLevel(int32 level) noexcept;
 
   /**
-   * @brief Returns the currently configured compression level.
-   * @return Gzip level in [0, 9]; default is 0 (no compression).
+   * @brief Returns configured gzip compression.
+   * @return Level in [0, 9]. Default 0 disables compression.
    */
   int32 getCompressionLevel() const noexcept;
 
   /**
-   * @brief Writes a span of values to the dataset. Returns the HDF5 error,
-   * should one occur.
+   * @brief Creates or replaces the dataset with typed values.
+   * @tparam T Specifies the scalar type.
+   * @param dims Specifies N-dimensional dataset shape.
+   * @param values Provides exactly the shape's element count.
+   * @return Shape, codec, or HDF5 create/write error, or success.
    *
-   * Any one of the write* methods must be called before adding attributes to
-   * the HDF5 dataset.
-   * @tparam T
-   * @param dims
-   * @param values
-   * @return nx::core::Result<>
+   * Compressed eligible datasets use parallel chunk compression outside the HDF5 lock.
    */
   template <typename T>
   nx::core::Result<> writeSpan(const DimsType& dims, nonstd::span<const T> values);
 
+  /**
+   * @brief Creates a typed dataset without writing values.
+   * @tparam T Specifies the scalar type.
+   * @param dims Specifies N-dimensional dataset shape.
+   * @return Shape or HDF5 creation error, or success.
+   *
+   * OOC writers call this before region-by-region writeSpanHyperslab() transfers.
+   */
+  template <typename T>
+  nx::core::Result<> createEmptyDataset(const DimsType& dims);
+
+  /**
+   * @brief Writes one typed hyperslab to an existing dataset.
+   * @tparam T Specifies the scalar type.
+   * @param values Provides the selected element count.
+   * @param start Specifies N-dimensional start offsets.
+   * @param count Specifies N-dimensional extents.
+   * @return Selection, shape, or HDF5 write error, or success.
+   * @pre createEmptyDataset() or writeSpan() created the dataset.
+   */
+  template <typename T>
+  nx::core::Result<> writeSpanHyperslab(nonstd::span<const T> values, const std::vector<uint64>& start, const std::vector<uint64>& count);
+
+  /**
+   * @brief Creates a dataset and opens handles for direct chunk transfers.
+   * @tparam T Specifies the scalar type.
+   * @param dims Specifies full dataset shape.
+   * @param chunkDims Specifies nominal chunk shape.
+   * @return Open chunk handles or HDF5 setup error.
+   */
   template <typename T>
   Result<ChunkedDataInfo> initChunkedDataset(const DimsType& dims, const DimsType& chunkDims) const;
+  /**
+   * @brief Closes handles from initChunkedDataset().
+   * @param datasetInfo Provides handles to close.
+   * @return First HDF5 close error, or success.
+   */
   nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const;
 
   /**
-   * @brief Writes a span of values to the dataset. Returns the HDF5 error,
-   * should one occur.
-   *
-   * Any one of the write* methods must be called before adding attributes to
-   * the HDF5 dataset.
-   * @tparam T
-   * @param dims
-   * @param values
-   * @return nx::core::Result<>
+   * @brief Reads one chunk selection through open chunk handles.
+   * @tparam T Specifies the scalar type.
+   * @param chunkInfo Provides open dataset handles.
+   * @param dims Specifies full dataset shape.
+   * @param values Receives selected values.
+   * @param chunkDims Specifies selected chunk shape.
+   * @param offset Specifies chunk-grid offsets.
+   * @return Selection, shape, or HDF5 read error, or success.
    */
   template <typename T>
   nx::core::Result<> readChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<T> values, const DimsType& chunkDims, nonstd::span<const usize> offset) const;
 
   /**
-   * @brief Writes a span of values to the dataset. Returns the HDF5 error,
-   * should one occur.
-   *
-   * Any one of the write* methods must be called before adding attributes to
-   * the HDF5 dataset.
-   * @tparam T
-   * @param dims
-   * @param values
-   * @return nx::core::Result<>
+   * @brief Writes one chunk selection through open chunk handles.
+   * @tparam T Specifies the scalar type.
+   * @param chunkInfo Provides open dataset handles.
+   * @param dims Specifies full dataset shape.
+   * @param values Provides selected values.
+   * @param chunkDims Specifies nominal chunk shape.
+   * @param trueChunkDims Specifies clipped boundary shape.
+   * @param offset Specifies chunk-grid offsets.
+   * @return Selection, shape, or HDF5 write error, or success.
    */
   template <typename T>
   nx::core::Result<> writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, const DimsType& trueChunkDims,
@@ -481,21 +536,40 @@ public:
 
   /**
    * @brief Checks if the dataset already exists in HDF5 file.
-   * @return Returns true if it exists, otherwise this method returns false.
+   * @return True if the dataset exists.
    */
   bool exists() const;
 
   std::string getFilterName() const;
 
 protected:
+  /**
+   * @brief Opens an existing dataset or creates one with supplied properties.
+   * @param typeId Specifies HDF5 scalar type.
+   * @param dataspaceId Specifies HDF5 dataspace.
+   * @param propertiesId Specifies dataset creation properties.
+   * @return Open dataset ID, or a negative HDF5 error value.
+   */
   hid_t createOrOpenDataset(hid_t typeId, hid_t dataspaceId, hid_t propertiesId = H5P_DEFAULT) const;
 
+  /**
+   * @brief Opens or creates a dataset for a C++ scalar type.
+   * @tparam T Specifies the scalar type.
+   * @param dataspaceId Specifies HDF5 dataspace.
+   * @param propertiesId Specifies dataset creation properties.
+   * @return Open dataset ID, or a negative HDF5 error value.
+   */
   template <typename T>
   hid_t createOrOpenDataset(hid_t dataspaceId, hid_t propertiesId = H5P_DEFAULT) const
   {
     return createOrOpenDataset(HdfTypeForPrimitive<T>(), dataspaceId, propertiesId);
   }
 
+  /**
+   * @brief Deletes one dataset attribute when it exists.
+   * @param name Specifies the attribute.
+   * @return HDF5 deletion error or success.
+   */
   nx::core::Result<> deleteH5Attribute(const std::string& name);
 
 #if 0
@@ -507,14 +581,22 @@ protected:
   nx::core::Result<> findAndDeleteAttribute();
 #endif
 
+  /**
+   * @brief Creates chunked deflate properties for one chunk shape.
+   * @param chunkDims Specifies chunk dimensions.
+   * @return Property-list ID, or a negative HDF5 error value.
+   */
   static hid_t CreateH5DatasetChunkProperties(const DimsType& chunkDims);
 
   /**
-   * @brief Opens and returns the target HDF5 DataSet.
-   * @return hid_t
+   * @brief Opens the target HDF5 dataset.
+   * @return Dataset ID, or a negative HDF5 error value.
    */
   hid_t open() const override;
 
+  /**
+   * @brief Closes the owned dataset handle.
+   */
   void close() override;
 
 private:

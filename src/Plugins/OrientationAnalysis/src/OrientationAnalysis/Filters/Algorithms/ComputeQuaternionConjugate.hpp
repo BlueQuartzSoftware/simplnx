@@ -5,24 +5,14 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ComputeQuaternionConjugateInputValues inputValues;
-
-  inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_QuaternionDataArrayPath_Key);
-  inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
-  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
-
-  return ComputeQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
 
 namespace nx::core
 {
 
+/**
+ * @struct ComputeQuaternionConjugateInputValues
+ * @brief Identifies quaternion-conjugation inputs.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateInputValues
 {
   DataPath QuaternionDataArrayPath;
@@ -31,12 +21,28 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateInputValues
 };
 
 /**
- * @class
+ * @class ComputeQuaternionConjugate
+ * @brief Dispatches quaternion conjugation.
+ *
+ * The direct path uses direct array access. The scanline path uses bounded
+ * bulk buffers for OOC targets.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugate
 {
 public:
+  /**
+   * @brief Initializes quaternion-conjugation dispatch.
+   * @param dataStructure Provides selected arrays.
+   * @param mesgHandler Supplies the filter message handler.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies input and output arrays.
+   * @pre dataStructure, mesgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   ComputeQuaternionConjugate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeQuaternionConjugateInputValues* inputValues);
+  /**
+   * @brief Destroys the quaternion-conjugation dispatcher.
+   */
   ~ComputeQuaternionConjugate() noexcept;
 
   ComputeQuaternionConjugate(const ComputeQuaternionConjugate&) = delete;
@@ -44,8 +50,16 @@ public:
   ComputeQuaternionConjugate& operator=(const ComputeQuaternionConjugate&) = delete;
   ComputeQuaternionConjugate& operator=(ComputeQuaternionConjugate&&) noexcept = delete;
 
+  /**
+   * @brief Dispatches quaternion conjugation.
+   * @return Result from the selected executor.
+   */
   Result<> operator()();
 
+  /**
+   * @brief Returns the retained cancellation flag.
+   * @return Reference to the cancellation flag supplied at construction.
+   */
   const std::atomic_bool& getCancel();
 
 private:

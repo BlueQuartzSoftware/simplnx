@@ -11,7 +11,19 @@ using namespace nx::core;
 
 namespace
 {
-// -----------------------------------------------------------------------------
+/**
+ * @brief Creates a normalized random-reference distance distribution.
+ * @param minDistance Identifies the first RDF distance.
+ * @param maxDistance Identifies the last RDF distance.
+ * @param numBins Identifies the requested RDF bin count.
+ * @param boxDims Supplies physical ImageGeom dimensions.
+ * @param boxRes Supplies ImageGeom spacing.
+ * @param userSeedValue Seeds the reference distribution.
+ * @return Normalized random-reference bin frequencies.
+ *
+ * The fixed 1,000-point sample gives reproducible normalization from userSeedValue.
+ * This reference calculation does not inspect cancellation.
+ */
 std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 maxDistance, int32 numBins, const std::array<float32, 3>& boxDims, const std::array<float32, 3>& boxRes,
                                                 uint64 userSeedValue)
 {
@@ -21,8 +33,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   constexpr usize largeNumber = 1000;
   constexpr usize numDistances = largeNumber * (largeNumber - 1);
 
-  // boxDims are the dimensions of the box in microns
-  // boxRes is the resolution of the box in microns
+  // Random positions use physical ImageGeom dimensions and spacing.
   const auto xPoints = static_cast<usize>(boxDims[0] / boxRes[0]);
   const auto yPoints = static_cast<usize>(boxDims[1] / boxRes[1]);
   const auto zPoints = static_cast<usize>(boxDims[2] / boxRes[2]);
@@ -33,14 +44,13 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   const float32 maxBoxDistance = sqrtf((boxDims[0] * boxDims[0]) + (boxDims[1] * boxDims[1]) + (boxDims[2] * boxDims[2]));
   const auto currentNumBins = static_cast<usize>(ceil((maxBoxDistance - minDistance) / stepSize));
 
-  freq.resize(static_cast<size_t>(currentNumBins + 1));
+  freq.resize(static_cast<usize>(currentNumBins + 1));
 
-  std::mt19937_64 generator(userSeedValue); // Standard mersenne_twister_engine seeded
+  std::mt19937_64 generator(userSeedValue);
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   randomCentroids.resize(largeNumber * 3);
 
-  // Generating all the random points and storing their coordinates in randomCentroids
   for(usize i = 0; i < largeNumber; i++)
   {
     const auto featureOwnerIdx = static_cast<usize>(distribution(generator) * totalPoints);
@@ -49,9 +59,9 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
     const usize row = (featureOwnerIdx / xPoints) % yPoints;
     const usize plane = featureOwnerIdx / (xPoints * yPoints);
 
-    const auto xc = static_cast<float>(column * boxRes[0]);
-    const auto yc = static_cast<float>(row * boxRes[1]);
-    const auto zc = static_cast<float>(plane * boxRes[2]);
+    const auto xc = static_cast<float32>(column * boxRes[0]);
+    const auto yc = static_cast<float32>(row * boxRes[1]);
+    const auto zc = static_cast<float32>(plane * boxRes[2]);
 
     randomCentroids[3 * i] = xc;
     randomCentroids[3 * i + 1] = yc;
@@ -60,14 +70,13 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   distanceList.resize(largeNumber);
 
-  // Calculating all the distances and storing them in the distance list
-  for(size_t i = 1; i < largeNumber; i++)
+  for(usize i = 1; i < largeNumber; i++)
   {
     const float32 x = randomCentroids[3 * i];
     const float32 y = randomCentroids[3 * i + 1];
     const float32 z = randomCentroids[3 * i + 2];
 
-    for(size_t j = i + 1; j < largeNumber; j++)
+    for(usize j = i + 1; j < largeNumber; j++)
     {
 
       const float32 xn = randomCentroids[3 * j];
@@ -81,7 +90,6 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
     }
   }
 
-  // bin up the distance list
   for(usize i = 0; i < largeNumber; i++)
   {
     for(const auto distance : distanceList[i])
@@ -98,8 +106,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
     }
   }
 
-  // Normalize the frequencies
-  for(size_t i = 0; i < currentNumBins + 1; i++)
+  for(usize i = 0; i < currentNumBins + 1; i++)
   {
     freq[i] /= numDistances;
   }
@@ -108,7 +115,6 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 ComputeFeatureClustering::ComputeFeatureClustering(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                    ComputeFeatureClusteringInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -118,25 +124,35 @@ ComputeFeatureClustering::ComputeFeatureClustering(DataStructure& dataStructure,
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeFeatureClustering::~ComputeFeatureClustering() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeFeatureClustering::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ComputeFeatureClustering::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
-  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+
+  // Local feature arrays remove store access from the quadratic distance loop.
+  const usize numPhases = featurePhasesStoreRef.getSize();
+  std::vector<int32> featurePhasesCache(numPhases);
+  featurePhasesStoreRef.copyIntoBuffer(0, nonstd::span<int32>(featurePhasesCache.data(), numPhases));
+
+  const usize numCentroidValues = centroidsStoreRef.getSize();
+  std::vector<float32> centroidsCache(numCentroidValues);
+  centroidsStoreRef.copyIntoBuffer(0, nonstd::span<float32>(centroidsCache.data(), numCentroidValues));
 
   auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->ClusteringListArrayName);
   auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
   auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
+
+  // A local RDF cache avoids a DataStore operation for each pair distance.
+  const usize rdfSize = rdfStore.getSize();
+  std::vector<float32> rdfCache(rdfSize, 0.0f);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   if(m_InputValues->RemoveBiasedFeatures)
   {
@@ -145,8 +161,7 @@ Result<> ComputeFeatureClustering::operator()()
       maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->BiasedFeaturesArrayPath);
     } catch(const std::out_of_range& exception)
     {
-      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      // A direct caller can bypass preflight. This guard reports an invalid mask path or type.
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->BiasedFeaturesArrayPath.toString());
       return MakeErrorResult(-54070, message);
     }
@@ -166,7 +181,7 @@ Result<> ComputeFeatureClustering::operator()()
   std::vector<float32> oldCount(m_InputValues->NumberOfBins);
   std::vector<float32> randomRDF;
 
-  const usize totalFeatures = featurePhasesStore.getNumberOfTuples();
+  const usize totalFeatures = numPhases;
 
   SizeVec3 dims = imageGeometry.getDimensions();
   FloatVec3 spacing = imageGeometry.getSpacing();
@@ -175,13 +190,13 @@ Result<> ComputeFeatureClustering::operator()()
   const float32 sizeY = dims[1] * spacing[1];
   const float32 sizeZ = dims[2] * spacing[2];
 
-  // initialize boxDims and boxRes vectors
+  // The random reference uses the physical ImageGeom extent and spacing.
   const std::array<float32, 3> boxDims = {sizeX, sizeY, sizeZ};
   const std::array<float32, 3> boxRes = {spacing[0], spacing[1], spacing[2]};
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
     {
       totalPptFeatures++;
     }
@@ -195,24 +210,24 @@ Result<> ComputeFeatureClustering::operator()()
     {
       return {};
     }
-    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
     {
       if(i % 1000 == 0)
       {
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
       }
 
-      x = centroidsStore[3 * i];
-      y = centroidsStore[3 * i + 1];
-      z = centroidsStore[3 * i + 2];
+      x = centroidsCache[3 * i];
+      y = centroidsCache[3 * i + 1];
+      z = centroidsCache[3 * i + 2];
 
       for(usize j = i + 1; j < totalFeatures; j++)
       {
-        if(featurePhasesStore[i] == featurePhasesStore[j])
+        if(featurePhasesCache[i] == featurePhasesCache[j])
         {
-          xn = centroidsStore[3 * j];
-          yn = centroidsStore[3 * j + 1];
-          zn = centroidsStore[3 * j + 2];
+          xn = centroidsCache[3 * j];
+          yn = centroidsCache[3 * j + 1];
+          zn = centroidsCache[3 * j + 2];
 
           r = sqrtf((x - xn) * (x - xn) + (y - yn) * (y - yn) + (z - zn) * (z - zn));
 
@@ -229,7 +244,7 @@ Result<> ComputeFeatureClustering::operator()()
     {
       return {};
     }
-    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
     {
       for(auto value : clusters[i])
       {
@@ -258,7 +273,7 @@ Result<> ComputeFeatureClustering::operator()()
       {
         return {};
       }
-      if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+      if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
       {
         if(maskCompare->isTrue(i))
         {
@@ -267,13 +282,13 @@ Result<> ComputeFeatureClustering::operator()()
 
         for(usize j = 0; j < clusters[i].size(); j++)
         {
-          ensemble = featurePhasesStore[i];
+          ensemble = featurePhasesCache[i];
           bin = (clusters[i][j] - min) / stepSize;
           if(bin >= m_InputValues->NumberOfBins)
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin].inc();
+          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
         }
       }
     }
@@ -286,39 +301,40 @@ Result<> ComputeFeatureClustering::operator()()
       {
         return {};
       }
-      if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+      if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
       {
         for(usize j = 0; j < clusters[i].size(); j++)
         {
-          ensemble = featurePhasesStore[i];
+          ensemble = featurePhasesCache[i];
           bin = (clusters[i][j] - min) / stepSize;
           if(bin >= m_InputValues->NumberOfBins)
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin].inc();
+          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
         }
       }
     }
   }
 
-  // Generate random distribution based on same box size and same stepSize
   const float32 maxBoxDistance = sqrtf((sizeX * sizeX) + (sizeY * sizeY) + (sizeZ * sizeZ));
   const int32 currentNumBins = ceilf((maxBoxDistance - min) / (stepSize));
 
   randomRDF.resize(currentNumBins + 1);
-  // Call this function to generate the random distribution, which is normalized by the total number of distances
   randomRDF = GenerateRandomDistribution(min, max, m_InputValues->NumberOfBins, boxDims, boxRes, m_InputValues->SeedValue);
 
-  // Scale the random distribution by the number of distances in this particular instance
+  // Scale the random reference to the selected phase pair count.
   const float32 normFactor = totalPptFeatures * (totalPptFeatures - 1);
   std::transform(randomRDF.begin(), randomRDF.end(), randomRDF.begin(), [normFactor](float32 value) { return value * normFactor; });
 
   for(usize i = 0; i < m_InputValues->NumberOfBins; i++)
   {
-    oldCount[i] = rdfStore[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
-    rdfStore[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
+    oldCount[i] = rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
+    rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
   }
+
+  // Publish the RDF after all bins are normalized.
+  rdfStore.copyFromBuffer(0, nonstd::span<const float32>(rdfCache.data(), rdfSize));
 
   clusteringList.setLists(clusters);
 

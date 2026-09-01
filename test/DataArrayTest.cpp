@@ -3,11 +3,13 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <cmath>
 #include <vector>
 
@@ -55,6 +57,24 @@ TEST_CASE("DataArrayCreation")
   REQUIRE(numTuples == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("nx::core::IDataStore getPlannedStoreType", "[simplnx][DataStore]")
+{
+  // A real in-memory DataStore reports InMemory for both its actual and planned store type.
+  DataStore<int32> inMemoryStore(ShapeType{4}, ShapeType{1}, 0);
+  REQUIRE(inMemoryStore.getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(inMemoryStore.getPlannedStoreType() == IDataStore::StoreType::InMemory);
+
+  // An Empty placeholder with no data format is destined for in-memory storage.
+  EmptyDataStore<int32> emptyInMemory(ShapeType{4}, ShapeType{1});
+  REQUIRE(emptyInMemory.getStoreType() == IDataStore::StoreType::Empty);
+  REQUIRE(emptyInMemory.getPlannedStoreType() == IDataStore::StoreType::InMemory);
+
+  // An Empty placeholder stamped with an out-of-core data format is destined for out-of-core storage.
+  EmptyDataStore<int32> emptyOutOfCore(ShapeType{4}, ShapeType{1}, "SomeOutOfCoreFormat");
+  REQUIRE(emptyOutOfCore.getStoreType() == IDataStore::StoreType::Empty);
+  REQUIRE(emptyOutOfCore.getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
 }
 
 TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
@@ -134,6 +154,68 @@ TEST_CASE("DataStore Test")
   dataStore.setComponent(2, 2, 99);
   REQUIRE(dataStore[8] == 99);
   REQUIRE(dataStore.getComponentValue(2, 2) == 99);
+}
+
+TEST_CASE("DataStore caller-owned extent buffers preserve values and validate before writing", "[simplnx][DataStore]")
+{
+  DataStore<int32> dataStore(ShapeType{2, 3, 4}, ShapeType{2}, 0);
+  for(usize tupleIndex = 0; tupleIndex < dataStore.getNumberOfTuples(); ++tupleIndex)
+  {
+    dataStore[tupleIndex * 2] = static_cast<int32>(tupleIndex * 10);
+    dataStore[tupleIndex * 2 + 1] = static_cast<int32>(tupleIndex * 10 + 1);
+  }
+
+  const Extent mainExtent({0, 0, 1}, {1, 2, 3}, {1, 2, 1});
+  const std::vector<int32> expectedMain = {10, 11, 20, 21, 30, 31, 90, 91, 100, 101, 110, 111, 130, 131, 140, 141, 150, 151, 210, 211, 220, 221, 230, 231};
+  std::vector<int32> mainValues(expectedMain.size(), -1);
+  dataStore.readExtentIntoBuffer(mainExtent, nonstd::span<int32>(mainValues.data(), mainValues.size()));
+  REQUIRE(mainValues == expectedMain);
+
+  const Extent faceExtent({1, 1, 0}, {1, 2, 3});
+  const std::vector<int32> expectedFace = {160, 161, 170, 171, 180, 181, 190, 191, 200, 201, 210, 211, 220, 221, 230, 231};
+  std::vector<int32> multiMain(expectedMain.size(), -1);
+  std::vector<int32> faceValues(expectedFace.size(), -1);
+  std::array<Extent, 2> extents = {mainExtent, faceExtent};
+  std::array<nonstd::span<int32>, 2> destinations = {
+      nonstd::span<int32>(multiMain.data(), multiMain.size()),
+      nonstd::span<int32>(faceValues.data(), faceValues.size()),
+  };
+  dataStore.readExtentsIntoBuffers(nonstd::span<const Extent>(extents.data(), extents.size()), nonstd::span<nonstd::span<int32>>(destinations.data(), destinations.size()));
+  REQUIRE(multiMain == expectedMain);
+  REQUIRE(faceValues == expectedFace);
+
+  std::vector<int32> countMismatchValues(expectedMain.size(), -777);
+  std::array<nonstd::span<int32>, 1> countMismatchDestination = {nonstd::span<int32>(countMismatchValues.data(), countMismatchValues.size())};
+  REQUIRE_THROWS_AS(
+      dataStore.readExtentsIntoBuffers(nonstd::span<const Extent>(extents.data(), extents.size()), nonstd::span<nonstd::span<int32>>(countMismatchDestination.data(), countMismatchDestination.size())),
+      std::invalid_argument);
+  REQUIRE(countMismatchValues == std::vector<int32>(expectedMain.size(), -777));
+
+  std::vector<int32> shortMain(expectedMain.size() - 1, -777);
+  std::vector<int32> untouchedFace(expectedFace.size(), -777);
+  std::array<nonstd::span<int32>, 2> sizeMismatchDestinations = {
+      nonstd::span<int32>(shortMain.data(), shortMain.size()),
+      nonstd::span<int32>(untouchedFace.data(), untouchedFace.size()),
+  };
+  REQUIRE_THROWS_AS(
+      dataStore.readExtentsIntoBuffers(nonstd::span<const Extent>(extents.data(), extents.size()), nonstd::span<nonstd::span<int32>>(sizeMismatchDestinations.data(), sizeMismatchDestinations.size())),
+      std::invalid_argument);
+  REQUIRE(shortMain == std::vector<int32>(expectedMain.size() - 1, -777));
+  REQUIRE(untouchedFace == std::vector<int32>(expectedFace.size(), -777));
+}
+
+TEST_CASE("DataStore caller-owned extent buffers support two-dimensional stores", "[simplnx][DataStore]")
+{
+  DataStore<int32> dataStore(ShapeType{3, 4}, ShapeType{1}, 0);
+  for(usize valueIndex = 0; valueIndex < dataStore.getSize(); ++valueIndex)
+  {
+    dataStore[valueIndex] = static_cast<int32>(valueIndex);
+  }
+
+  const Extent extent({0, 1}, {2, 3}, {2, 1});
+  std::vector<int32> values(6, -1);
+  dataStore.readExtentIntoBuffer(extent, nonstd::span<int32>(values.data(), values.size()));
+  REQUIRE(values == std::vector<int32>{1, 2, 3, 9, 10, 11});
 }
 
 TEST_CASE("Copy DataStore", "DataArray")

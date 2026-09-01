@@ -8,15 +8,27 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
 
+#include <cstring>
+
 using namespace nx::core;
 
 namespace
 {
 const std::string k_TempGeometryName = ".cropped_image_geometry";
+// A larger source slab reduces HDF5 calls but increases scratch for each array task.
+constexpr uint64 k_ZSliceBatch = 32;
 
 /**
- * @brief
- * @tparam T
+ * @class CropImageGeomDataArray
+ * @brief Copies one cell array through Z-slice slab transfers.
+ * @tparam T Cell-array value type.
+ *
+ * Per-task scratch is at most 32 source slices plus 32 cropped destination
+ * slices. ParallelTaskAlgorithm can run several array tasks at the same time,
+ * so total scratch is the sum of active tasks.
+ *
+ * Bulk-transfer Result values are ignored because the worker interface returns
+ * void. Cancellation leaves the destination fill value and completed slabs.
  */
 template <typename T>
 class CropImageGeomDataArray
@@ -46,32 +58,82 @@ public:
 protected:
   void convert() const
   {
-    size_t numComps = m_OldCellStore.getNumberOfComponents();
+    const usize numComps = m_OldCellStore.getNumberOfComponents();
 
     m_NewCellStore.fill(static_cast<T>(-1));
 
-    auto srcDims = m_SrcImageGeom.getDimensions();
+    const auto srcDims = m_SrcImageGeom.getDimensions();
+    const uint64 srcDimX = srcDims[0];
+    const uint64 srcDimY = srcDims[1];
+    const uint64 srcDimZ = srcDims[2];
 
-    uint64 destTupleIndex = 0;
-    for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
+    // Read the half-open copy bounds prepared by the outer executor.
+    const uint64 xMin = m_Bounds[0];
+    const uint64 xMax = m_Bounds[1];
+    const uint64 yMin = m_Bounds[2];
+    const uint64 yMax = m_Bounds[3];
+    const uint64 zMin = m_Bounds[4];
+    const uint64 zMax = m_Bounds[5];
+    const uint64 cropX = xMax - xMin;
+    const uint64 cropY = yMax - yMin;
+    const uint64 cropZ = zMax - zMin;
+
+    // Read full source slices and extract cropped rows before one slab write.
+    const uint64 srcSliceTuples = srcDimX * srcDimY;
+    const uint64 dstSliceTuples = cropX * cropY;
+    const uint64 rowTuples = cropX;
+    const uint64 rowElements = rowTuples * numComps;
+    const usize rowBytes = rowElements * sizeof(T);
+
+    // Do not allocate a full batch for a shallow crop.
+    const uint64 initialBatch = std::min<uint64>(k_ZSliceBatch, cropZ);
+    auto srcSlab = std::make_unique<T[]>(initialBatch * srcSliceTuples * numComps);
+    auto dstSlab = std::make_unique<T[]>(initialBatch * dstSliceTuples * numComps);
+    uint64 allocatedBatch = initialBatch;
+
+    for(uint64 zStart = zMin; zStart < zMax; zStart += k_ZSliceBatch)
     {
       if(m_ShouldCancel)
       {
         return;
       }
-      for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
+      const uint64 batch = std::min<uint64>(k_ZSliceBatch, zMax - zStart);
+
+      // Reuse slab buffers. Grow only when a later batch is larger.
+      if(batch > allocatedBatch)
       {
-        for(uint64 xIndex = m_Bounds[0]; xIndex < m_Bounds[1]; xIndex++)
+        srcSlab = std::make_unique<T[]>(batch * srcSliceTuples * numComps);
+        dstSlab = std::make_unique<T[]>(batch * dstSliceTuples * numComps);
+        allocatedBatch = batch;
+      }
+
+      const usize srcSlabElements = batch * srcSliceTuples * numComps;
+      const usize dstSlabElements = batch * dstSliceTuples * numComps;
+
+      // Read consecutive source slices in one transfer.
+      const uint64 srcStartTuple = zStart * srcSliceTuples;
+      m_OldCellStore.copyIntoBuffer(srcStartTuple * numComps, nonstd::span<T>(srcSlab.get(), srcSlabElements));
+
+      // Extract cropped rows from the resident source slab.
+      for(uint64 dz = 0; dz < batch; dz++)
+      {
+        const T* const srcSliceBase = srcSlab.get() + dz * srcSliceTuples * numComps;
+        T* const dstSliceBase = dstSlab.get() + dz * dstSliceTuples * numComps;
+        for(uint64 yIdx = 0; yIdx < cropY; yIdx++)
         {
-          uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
-          for(size_t compIndex = 0; compIndex < numComps; compIndex++)
-          {
-            m_NewCellStore.setValue(destTupleIndex * numComps + compIndex, m_OldCellStore.getValue(srcIndex * numComps + compIndex));
-          }
-          destTupleIndex++;
+          const T* const srcRow = srcSliceBase + ((yMin + yIdx) * srcDimX + xMin) * numComps;
+          T* const dstRow = dstSliceBase + (yIdx * cropX) * numComps;
+          std::memcpy(dstRow, srcRow, rowBytes);
         }
       }
+
+      // Write consecutive destination slices in one transfer.
+      const uint64 dstStartTuple = (zStart - zMin) * dstSliceTuples;
+      m_NewCellStore.copyFromBuffer(dstStartTuple * numComps, nonstd::span<const T>(dstSlab.get(), dstSlabElements));
     }
+
+    // Copy bounds already constrain Z. Suppress the unused dimension value.
+    (void)srcDimZ;
   }
 
 private:
@@ -114,7 +176,7 @@ Result<> CropImageGeometry::operator()()
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-  // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
+  // Source and destination paths are resolved before array tasks start.
   SizeVec3 udims = srcImageGeom.getDimensions();
 
   int64 dims[3] = {
@@ -165,8 +227,7 @@ Result<> CropImageGeometry::operator()()
 
   std::array<uint64, 6> bounds = {xMin, xMax + 1, yMin, yMax + 1, zMin, zMax + 1};
 
-  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
+  // Each task owns one source and destination array. Arrays can copy in parallel.
   ParallelTaskAlgorithm taskRunner;
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
@@ -185,17 +246,14 @@ Result<> CropImageGeometry::operator()()
     m_MessageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
     ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, m_ShouldCancel);
   }
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  taskRunner.wait();
 
   if(m_ShouldCancel)
   {
     return {};
   }
 
-  // Careful with this next section. We purposefully copy in the original dataStructure arrays
-  // into the destination feature attribute matrix so that we have somewhere to start.
-  // During the renumbering phase is when those copied arrays will get potentially resized
-  // to their proper number of tuples.
+  // Copy feature arrays before renumbering so each tuple supplies initial data.
   if(shouldRenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
@@ -219,11 +277,8 @@ Result<> CropImageGeometry::operator()()
       dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
     }
 
-    // Loop over all the DataPaths and do a deep copy on each DataArray|StringArray
-    // so that the updating of the Feature level data can happen. We do a bit of
-    // under-the-covers where we actually remove the existing array that preflight
-    // created, so we can use the convenience of the DataArray.deepCopy() function.
-    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
+    // DeepCopy replaces preflight outputs before renumbering resizes feature data.
+    for(usize index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
       DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
       if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
@@ -244,7 +299,7 @@ Result<> CropImageGeometry::operator()()
       }
     }
 
-    // NOW DO THE ACTUAL RENUMBERING and updating.
+    // Renumber copied feature data and cropped cell Feature IDs together.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
     return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }

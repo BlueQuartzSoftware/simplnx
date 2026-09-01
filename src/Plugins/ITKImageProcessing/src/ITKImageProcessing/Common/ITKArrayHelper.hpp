@@ -35,6 +35,14 @@ namespace nx::core::ITK
 {
 namespace detail
 {
+/**
+ * @struct TypeConversionValidateFunctor
+ * @brief Tests whether the limited preflight conversion supports two scalar types.
+ * @tparam OriginT Source scalar type.
+ *
+ * The conversion path accepts different unsigned integer types. It rejects
+ * identity, signed, floating-point, and Boolean conversions.
+ */
 template <typename OriginT>
 struct TypeConversionValidateFunctor
 {
@@ -43,7 +51,7 @@ struct TypeConversionValidateFunctor
   {
     if constexpr(std::is_same_v<OriginT, DestT>)
     {
-      // This won't actually fail, but it prevents an unnecessary copy
+      // An identical type does not need a conversion copy.
       return false;
     }
     if constexpr(std::is_signed_v<OriginT> || std::is_signed_v<DestT>)
@@ -60,6 +68,10 @@ struct TypeConversionValidateFunctor
   }
 };
 
+/**
+ * @struct PreflightTypeConversionValidateFunctor
+ * @brief Dispatches a runtime destination type to the conversion support test.
+ */
 struct PreflightTypeConversionValidateFunctor
 {
   template <typename OriginT>
@@ -72,6 +84,13 @@ struct PreflightTypeConversionValidateFunctor
 DataType ConvertChoiceToDataType(usize choice);
 } // namespace detail
 
+/**
+ * @struct ImageGeomData
+ * @brief Stores the image metadata needed by compile-time ITK dispatch.
+ *
+ * This value snapshot lets dispatch code use geometry metadata without retaining
+ * an ImageGeom reference.
+ */
 struct ImageGeomData
 {
   SizeVec3 dims{};
@@ -160,9 +179,9 @@ inline constexpr int32 k_OutOfCoreDataNotSupported = -2002;
 } // namespace Constants
 
 /**
- * @brief Attempts to convert itk::IOComponentEnum to nx::core::NumericType
- * @param component
- * @return
+ * @brief Converts an ITK I/O component type to a simplnx numeric type.
+ * @param component ITK component type to convert.
+ * @return Matching numeric type, or std::nullopt for an unsupported component.
  */
 inline constexpr std::optional<NumericType> ConvertIOComponentToNumericType(itk::ImageIOBase::IOComponentEnum component) noexcept
 {
@@ -207,9 +226,9 @@ inline constexpr std::optional<NumericType> ConvertIOComponentToNumericType(itk:
 }
 
 /**
- * @brief Attempts to convert itk::IOComponentEnum to nx::core::DataType
- * @param component
- * @return
+ * @brief Converts an ITK I/O component type to a simplnx data type.
+ * @param component ITK component type to convert.
+ * @return Matching data type, or std::nullopt for an unsupported component.
  */
 inline constexpr std::optional<DataType> ConvertIOComponentToDataType(itk::ImageIOBase::IOComponentEnum component) noexcept
 {
@@ -254,8 +273,14 @@ inline constexpr std::optional<DataType> ConvertIOComponentToDataType(itk::Image
 }
 
 /**
- * @brief CastVec3ToITK Input type should be FloatVec3Type or IntVec3Type, Output
-   type should be some kind of ITK "array" (itk::Size, itk::Index,...)
+ * @brief Copies up to three vector components into an ITK fixed-size value.
+ * @tparam OutputType ITK size, index, point, or similar fixed-size type.
+ * @tparam ComponentType Destination component type.
+ * @tparam InputType Three-component simplnx vector type.
+ * @param inputVec3 Source vector.
+ * @param dimension Number of components to copy in the range [0, 3].
+ * @return Output value with copied components.
+ * @pre OutputType has at least dimension components.
  */
 template <class OutputType, class ComponentType, class InputType>
 OutputType CastVec3ToITK(const InputType& inputVec3, uint32 dimension)
@@ -277,11 +302,11 @@ OutputType CastVec3ToITK(const InputType& inputVec3, uint32 dimension)
 }
 
 /**
- * @brief Checks that the data array at the given path belongs to one of the given types.
- * @param types
- * @param dataStructure
- * @param path
- * @return
+ * @brief Validates that an array has one of the permitted data types.
+ * @param types Permitted data types.
+ * @param dataStructure Data structure that contains the array.
+ * @param path Array path to validate.
+ * @return Success, or an error when the path is not an array or its type is not permitted.
  */
 Result<> CheckImageType(const std::vector<DataType>& types, const DataStructure& dataStructure, const DataPath& path);
 
@@ -299,15 +324,18 @@ std::vector<usize> GetComponentDimensions()
 }
 
 /**
- * @brief Wraps an in-memory DataStore in an ITK ImportImageFilter image,
- *        giving ITK a zero-copy view of the store's data buffer.
+ * @brief Gives an ITK image a zero-copy view of an in-memory data store.
  *
- * @pre @p dataStore must be an in-memory DataStore (not out-of-core).
- * @tparam PixelT     ITK pixel type.
+ * @tparam PixelT ITK pixel type.
  * @tparam Dimensions Image dimensionality (2 or 3).
- * @param dataStore   In-memory data store whose buffer is imported.
- * @param imageGeom   Geometry providing origin, spacing, and dimensions.
- * @return Smart pointer to the constructed ITK image. The DataStore retains ownership of the buffer.
+ * @param dataStore In-memory store whose buffer supplies the pixels.
+ * @param imageGeom Supplies dimensions, origin, and spacing.
+ * @return ITK image that refers to the data-store buffer.
+ * @pre Dimensions is 2 or 3, and the geometry dimensions fit the store.
+ * @pre dataStore outlives the returned image and all filters that use it.
+ *
+ * The data store retains buffer ownership. ITK must not release the imported
+ * pointer.
  */
 template <class PixelT, uint32 Dimensions>
 typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeomData& imageGeom)
@@ -363,15 +391,17 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
 }
 
 /**
- * @brief Transfers ownership of an ITK image's pixel buffer into an in-memory DataStore.
- *        After this call the ITK image no longer manages the buffer; the DataStore is the sole owner.
+ * @brief Transfers an ITK image buffer to an in-memory data store.
  *
- * @pre @p dataStore must be an in-memory DataStore (not out-of-core).
- * @tparam PixelT   ITK pixel type.
+ * @tparam PixelT ITK pixel type.
  * @tparam Dimension Image dimensionality (2 or 3).
- * @param image     Source ITK image whose buffer is transferred. The image should be disconnected
- *                  from the ITK pipeline (DisconnectPipeline()) before calling this function.
- * @param dataStore Destination in-memory DataStore that will take ownership of the buffer.
+ * @param image Source image whose buffer transfers.
+ * @param dataStore Destination store that takes sole buffer ownership.
+ * @pre The image is disconnected from its ITK pipeline.
+ * @pre ITK allocated the buffer with the global array-new allocator.
+ *
+ * The method disables pixel-container ownership before it installs the buffer
+ * in dataStore. The image does not manage the buffer after this operation.
  */
 template <class PixelT, uint32 Dimension>
 void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, DataStore<UnderlyingType_t<PixelT>>& dataStore)
@@ -386,15 +416,23 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, DataStore<Und
     tDims.insert(tDims.begin(), 1);
   }
   typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
-  // ITK use the global new allocator
+  // ITK uses the global array-new allocator, so DataStore can own this buffer.
   auto* bufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
   pixelContainer->ContainerManageMemoryOff();
   std::unique_ptr<T[]> newDataPtr(bufferPtr);
   dataStore = DataStore<T>(std::move(newDataPtr), std::move(tDims), std::move(cDims));
 }
 
-// Could replace with class type non-type template parameters in C++20
-
+/**
+ * @struct ArrayComponentOptions
+ * @brief Selects scalar, vector, and color component dispatch at compile time.
+ * @tparam UseScalarV True to enable one-component scalar pixels.
+ * @tparam UseVectorV True to enable supported itk::Vector component counts.
+ * @tparam UseRgbRgbaV True to enable RGB and RGBA pixels.
+ *
+ * Vector and color modes cannot both be active because a three-component array
+ * would have two meanings.
+ */
 template <bool UseScalarV, bool UseVectorV, bool UseRgbRgbaV>
 struct ArrayComponentOptions
 {
@@ -402,13 +440,23 @@ struct ArrayComponentOptions
   static inline constexpr bool UsingVector = UseVectorV;
   static inline constexpr bool UsingRgbRgba = UseRgbRgbaV;
 
-  /*
-   * The original implementation seemed to short circuit to vector if both were activated, but it's
-   * unknown if that was the intended behavior.
-   */
   static_assert(!(UsingVector && UsingRgbRgba), "ITKArrayHelper: Vector and RGB/RGBA support cannot both be enabled at the same time");
 };
 
+/**
+ * @struct ArrayTypeOptions
+ * @brief Selects scalar storage types for compile-time ITK dispatch.
+ * @tparam UseInt8V True to enable int8.
+ * @tparam UseUInt8V True to enable uint8.
+ * @tparam UseInt16V True to enable int16.
+ * @tparam UseUInt16V True to enable uint16.
+ * @tparam UseInt32V True to enable int32.
+ * @tparam UseUInt32V True to enable uint32.
+ * @tparam UseInt64V True to enable int64.
+ * @tparam UseUInt64V True to enable uint64.
+ * @tparam UseFloat32V True to enable float32.
+ * @tparam UseFloat64V True to enable float64.
+ */
 template <bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
 struct ArrayTypeOptions
 {
@@ -424,6 +472,12 @@ struct ArrayTypeOptions
   static inline constexpr bool UsingFloat64 = UseFloat64V;
 };
 
+/**
+ * @struct ArrayOptions
+ * @brief Combines component and scalar-type dispatch policies.
+ * @tparam ComponentOptionsT ArrayComponentOptions policy.
+ * @tparam TypeOptionsT ArrayTypeOptions policy.
+ */
 template <class ComponentOptionsT, class TypeOptionsT>
 struct ArrayOptions
 {
@@ -458,6 +512,23 @@ using SignedScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseSig
 
 namespace detail
 {
+/**
+ * @brief Dispatches an ITK functor for a supported component representation.
+ * @tparam InputT Input scalar type.
+ * @tparam OutputT Output scalar type.
+ * @tparam Dimensions Image rank.
+ * @tparam ComponentOptionsT Enabled component representations.
+ * @tparam ResultT Functor result value type.
+ * @tparam FunctorT ITK operation template.
+ * @tparam ArgsT Forwarded operation argument types.
+ * @param nComp Input component count.
+ * @param errorCode Error code for an unsupported component count.
+ * @param args Arguments passed to the selected operation.
+ * @return Selected operation result, or an unsupported-component error.
+ *
+ * Vector dispatch supports 2, 3, 10, 11, and 36 components. Color dispatch
+ * supports RGB and RGBA representations.
+ */
 template <class InputT, class OutputT, usize Dimensions, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
 Result<ResultT> ArraySwitchFuncComponentImpl(usize nComp, int32 errorCode, ArgsT&&... args)
 {
@@ -525,6 +596,24 @@ Result<ResultT> ArraySwitchFuncComponentImpl(usize nComp, int32 errorCode, ArgsT
                                               nComp));
 }
 
+/**
+ * @brief Selects two- or three-dimensional ITK dispatch from geometry metadata.
+ * @tparam InputT Input scalar type.
+ * @tparam OutputT Output scalar type.
+ * @tparam ComponentOptionsT Enabled component representations.
+ * @tparam ResultT Functor result value type.
+ * @tparam FunctorT ITK operation template.
+ * @tparam ArgsT Forwarded operation argument types.
+ * @param dataStore Supplies the component shape.
+ * @param imageGeom Supplies image dimensions.
+ * @param errorCode Error code for unsupported components.
+ * @param args Arguments passed to the selected operation.
+ * @return Selected operation result or dispatch error.
+ * @pre dataStore has at least one component dimension.
+ *
+ * A Z dimension of one selects a two-dimensional ITK image. Other Z dimensions
+ * select a three-dimensional image.
+ */
 template <class InputT, class OutputT, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
 Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const ImageGeomData& imageGeom, int32 errorCode, ArgsT&&... args)
 {
@@ -542,6 +631,20 @@ Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const Image
   return ArraySwitchFuncComponentImpl<InputT, OutputT, 3, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
 }
 
+/**
+ * @brief Validates one dispatched ITK input and describes its output array.
+ * @tparam InputPixelT Dispatched ITK input pixel type.
+ * @tparam OutputPixelT Dispatched ITK output pixel type.
+ * @tparam Dimension ITK image rank.
+ * @param dataStructure Contains the geometry and input array.
+ * @param inputArrayPath Input array path.
+ * @param imageGeomPath Input ImageGeom path.
+ * @param outputArrayPath Output array path.
+ * @return Output creation action or a dimension error.
+ *
+ * The output requests the input store format. An empty format delegates storage
+ * selection to the data-structure resolver.
+ */
 template <class InputPixelT, class OutputPixelT, uint32 Dimension>
 Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
 {
@@ -584,6 +687,13 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
   return {std::move(outputActions)};
 }
 
+/**
+ * @struct DataCheckImplFunctor
+ * @brief Adapts DataCheckImpl() to the array-dispatch interface.
+ * @tparam InputT Dispatched input pixel type.
+ * @tparam OutputT Dispatched output pixel type.
+ * @tparam Dimension ITK image rank.
+ */
 template <class InputT, class OutputT, uint32 Dimension>
 struct DataCheckImplFunctor
 {
@@ -593,7 +703,11 @@ struct DataCheckImplFunctor
   }
 };
 
-// Could be replaced with concepts in c++20
+/**
+ * @struct ITKFilterFunctorResult
+ * @brief Selects void when an ITK filter-creation functor has no Measurements type.
+ * @tparam T Filter-creation functor type.
+ */
 template <class T, class = void>
 struct ITKFilterFunctorResult
 {
@@ -603,6 +717,11 @@ struct ITKFilterFunctorResult
 template <class T>
 using Measurements_t = typename T::Measurements;
 
+/**
+ * @struct ITKFilterFunctorResult
+ * @brief Selects a filter-creation functor's Measurements type when it exists.
+ * @tparam T Filter-creation functor type.
+ */
 template <class T>
 struct ITKFilterFunctorResult<T, std::void_t<Measurements_t<T>>>
 {
@@ -616,6 +735,11 @@ using ITKFilterFunctorResult_t = typename ITKFilterFunctorResult<T>::type;
 template <class T>
 inline constexpr bool HasMeasurements_v = !std::is_same_v<ITKFilterFunctorResult_t<T>, void>;
 
+/**
+ * @struct HasIntermediateTypeHelper
+ * @brief Selects void when a filter-creation functor has no IntermediateType.
+ * @tparam T Filter-creation functor type.
+ */
 template <class T, class = void>
 struct HasIntermediateTypeHelper
 {
@@ -625,6 +749,11 @@ struct HasIntermediateTypeHelper
 template <class T>
 using IntermediateType_t = typename T::IntermediateType;
 
+/**
+ * @struct HasIntermediateTypeHelper
+ * @brief Selects a filter-creation functor's IntermediateType when it exists.
+ * @tparam T Filter-creation functor type.
+ */
 template <class T>
 struct HasIntermediateTypeHelper<T, std::void_t<IntermediateType_t<T>>>
 {
@@ -638,6 +767,18 @@ using HasInterMediateTypeHelper_t = typename HasIntermediateTypeHelper<T>::type;
 template <class T>
 inline constexpr bool HasIntermediateType_v = !std::is_same_v<HasInterMediateTypeHelper_t<T>, void>;
 
+/**
+ * @struct ITKFilterFunctor
+ * @brief Executes an ITK filter against contiguous simplnx buffers.
+ * @tparam InputT ITK input pixel type.
+ * @tparam OutputT ITK output pixel type.
+ * @tparam Dimension ITK image rank.
+ *
+ * The input store supplies a zero-copy ITK view. The output ITK buffer transfers
+ * to the output store. Both IDataStore references must have concrete DataStore
+ * dynamic types. The cancellation observer asks ITK to abort during a progress
+ * event; ITK controls when that event occurs and whether Update() throws.
+ */
 template <class InputT, class OutputT, uint32 Dimension>
 struct ITKFilterFunctor
 {
@@ -745,6 +886,19 @@ template <class T>
 using DefaultOutput_t = std::void_t<T>;
 } // namespace detail
 
+/**
+ * @brief Dispatches an operation from runtime store type, image rank, and component count.
+ * @tparam FunctorT ITK operation template.
+ * @tparam ArrayOptionsT Enabled scalar types and component representations.
+ * @tparam ResultT Operation result value type.
+ * @tparam OutputT Maps the input scalar type to an output scalar type.
+ * @tparam ArgsT Forwarded operation argument types.
+ * @param dataStore Supplies runtime scalar type and component shape.
+ * @param imageGeom Supplies image dimensions.
+ * @param errorCode Error code for an unsupported component representation.
+ * @param args Arguments passed to the selected operation.
+ * @return Selected operation result, or a dispatch error.
+ */
 template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = detail::DefaultOutput_t, class... ArgsT>
 Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeomData& imageGeom, int32 errorCode, ArgsT&&... args)
 {
@@ -833,6 +987,19 @@ Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& im
   return ArraySwitchFunc<FunctorT, ArrayOptionsT, ResultT, OutputT>(dataStore, ImageGeomData(imageGeom), errorCode, args...);
 }
 
+/**
+ * @brief Validates an ITK input and creates the output-array action.
+ * @tparam ArrayOptionsT Enabled scalar types and component representations.
+ * @tparam OutputT Maps the input scalar type to an output scalar type.
+ * @param dataStructure Contains the input array and image geometry.
+ * @param inputArrayPath Input array path.
+ * @param imageGeomPath Input ImageGeom path.
+ * @param outputArrayPath Output array path.
+ * @return Output action or a type, shape, or storage error.
+ *
+ * ITK needs a contiguous input buffer. The method rejects a store whose physical
+ * store type is OutOfCore instead of inferring residency from a format name.
+ */
 template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t>
 Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
 {
@@ -840,7 +1007,8 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const auto& inputDataStore = inputArray.getIDataStoreRef();
 
-  if(!inputArray.getDataFormat().empty())
+  // ITK imports a contiguous pointer and cannot consume a disk-backed store.
+  if(inputArray.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     return MakeErrorResult<OutputActions>(Constants::k_OutOfCoreDataNotSupported,
                                           fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
@@ -849,6 +1017,26 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
   return ArraySwitchFunc<detail::DataCheckImplFunctor, ArrayOptionsT, OutputActions, OutputT>(inputDataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
 }
 
+/**
+ * @brief Executes a dispatched ITK filter against simplnx arrays.
+ * @tparam ArrayOptionsT Enabled scalar types and component representations.
+ * @tparam OutputT Maps the input scalar type to an output scalar type.
+ * @tparam FilterCreationFunctorT Creates and optionally reads the ITK filter.
+ * @param dataStructure Contains the input, output, and geometry objects.
+ * @param inputArrayPath Input array path.
+ * @param imageGeomPath Input ImageGeom path.
+ * @param outputArrayPath Output array path.
+ * @param filterCreationFunctor Creates the selected ITK filter.
+ * @param shouldCancel Supplies cancellation state to an ITK progress observer.
+ * @param progressObserver Optional ITK progress observer.
+ * @return Filter measurements, success, or an ITK and dispatch error.
+ * @pre The input and output stores have concrete in-memory DataStore dynamic types.
+ * @pre The referenced arrays, geometry, cancellation flag, and observer outlive this call.
+ *
+ * The method rejects an OutOfCore input store. It does not check the output
+ * store type before ITKFilterFunctor casts it to DataStore. Only ITK exceptions
+ * become Result errors; other C++ exceptions propagate.
+ */
 template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t, class FilterCreationFunctorT>
 Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
                                                                          FilterCreationFunctorT&& filterCreationFunctor, const std::atomic_bool& shouldCancel,
@@ -862,7 +1050,8 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
 
   using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
 
-  if(!inputArray.getDataFormat().empty())
+  // ITK imports a contiguous pointer and cannot consume a disk-backed store.
+  if(inputArray.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     return MakeErrorResult(Constants::k_OutOfCoreDataNotSupported, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
   }

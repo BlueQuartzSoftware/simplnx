@@ -48,7 +48,6 @@ Parameters CreateFeatureArrayFromElementArrayFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Data to Copy to Feature Data", "Element Data to Copy to Feature Data", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -96,11 +95,11 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
   }
 
   Result<OutputActions> resultOutputActions;
-  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
+  const auto& featureAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
   {
     DataType dataType = selectedCellArray.getDataType();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureAttributeMatrixPtr->getShape(), selectedCellArrayStore.getComponentShape(),
-                                                                 pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureAttributeMatrix.getShape(), selectedCellArrayStore.getComponentShape(),
+                                                                 pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

@@ -105,9 +105,8 @@ bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature
   return false;
 }
 
-// -----------------------------------------------------------------------------
 void MergeTwins::groupFeaturesExecute()
-{ // This code used to be in GroupFeatures Superclass
+{
   auto& conNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
   std::vector<int32_t> groupList;
 
@@ -171,7 +170,6 @@ void MergeTwins::groupFeaturesExecute()
   }
 }
 
-// -----------------------------------------------------------------------------
 Result<> MergeTwins::operator()()
 {
   Result result = {};
@@ -183,10 +181,25 @@ Result<> MergeTwins::operator()()
    * There is code later on to ensure that only m3m Laue class is used.
    */
   auto& laueClasses = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& cellParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellParentIdsArrayPath)->getDataStoreRef();
-  cellParentIds.fill(-1);
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto& cellParentIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellParentIdsArrayPath)->getDataStoreRef();
   auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
+
+  usize totalPoints = cellParentIdsStore.getNumberOfTuples();
+
+  // Initialize cellParentIds to -1 using chunked bulk writes. For OOC stores,
+  // a single fill() call would trigger per-element virtual dispatch; chunked
+  // copyFromBuffer amortizes the overhead over 64K-tuple writes.
+  {
+    constexpr usize k_FillChunk = 65536;
+    std::vector<int32> fillBuf(k_FillChunk, -1);
+    for(usize offset = 0; offset < totalPoints; offset += k_FillChunk)
+    {
+      usize count = std::min(k_FillChunk, totalPoints - offset);
+      cellParentIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(fillBuf.data(), count));
+    }
+  }
+
   featureParentIds.fill(-1);
 
   for(usize i = 1; i < laueClasses.getSize(); i++)
@@ -200,16 +213,11 @@ Result<> MergeTwins::operator()()
 
   featureParentIds[0] = 0; // set feature 0 to be parent 0
 
-  // This kicks off the main clustering algorithm. This was taken from SIMPL::GroupFeatures
-  // with sections of the function removed that would _never_ get hit.
   groupFeaturesExecute();
 
-  // Now that the newly created Feature Attribute Matrix is sized correctly, fill
-  // the `Active` array with True values
   auto& active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
   active.fill(true);
 
-  // Check the number of Parents that were created....
   usize totalFeatures = active.getNumberOfTuples();
   if(totalFeatures < 2)
   {
@@ -217,21 +225,39 @@ Result<> MergeTwins::operator()()
         result, ConvertResult(MakeErrorResult<OutputActions>(-23501, "The number of grouped Features was 0 or 1 which means no grouped Features were detected. A grouping value may be set too high")));
   }
 
-  // Update data arrays.
-  int32 numParents = 0;
-  usize totalPoints = featureIds.getNumberOfTuples();
-  for(usize k = 0; k < totalPoints; k++)
-  {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
+  // The local feature-parent cache avoids random OOC lookup in the cell loop.
+  const usize numFeatures = featureParentIds.getNumberOfTuples();
+  std::vector<int32> featureParentIdsCache(numFeatures);
+  featureParentIds.copyIntoBuffer(0, nonstd::span<int32>(featureParentIdsCache.data(), numFeatures));
 
-    int32 featureName = featureIds[k];
-    cellParentIds[k] = featureParentIds[featureName];
-    if(featureParentIds[featureName] > numParents)
+  // Chunked cells use the local feature-parent cache.
+  int32 numParents = 0;
+  {
+    constexpr usize k_ChunkSize = 65536;
+    std::vector<int32> featureIdsBuf(k_ChunkSize);
+    std::vector<int32> cellParentIdsBuf(k_ChunkSize);
+
+    for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {
-      numParents = featureParentIds[featureName];
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
+      usize count = std::min(k_ChunkSize, totalPoints - offset);
+      featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdsBuf.data(), count));
+
+      for(usize i = 0; i < count; i++)
+      {
+        int32 featureName = featureIdsBuf[i];
+        cellParentIdsBuf[i] = featureParentIdsCache[featureName];
+        if(featureParentIdsCache[featureName] > numParents)
+        {
+          numParents = featureParentIdsCache[featureName];
+        }
+      }
+
+      cellParentIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(cellParentIdsBuf.data(), count));
     }
   }
   numParents += 1;

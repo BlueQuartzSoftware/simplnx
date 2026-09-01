@@ -28,6 +28,15 @@ target_sources(nxrunner
 
 target_link_libraries(nxrunner PRIVATE simplnx::simplnx)
 
+if(BUILD_TESTING)
+  add_test(
+    NAME "nxrunner cache memory budget CLI"
+    COMMAND ${CMAKE_COMMAND}
+      "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/test/CacheMemoryBudgetCliTest.cmake"
+  )
+endif()
+
 source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
 if(SIMPLNX_EMBED_PYTHON)

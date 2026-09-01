@@ -18,9 +18,8 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   if(!fs::exists(outputPath))
   {
     std::error_code errorCode;
-    // So this looks weird but this can happen on
-    // platforms where /tmp is a symlink to /private/tmp. So the original path is
-    // /tmp/foo but what was created was /private/tmp/foo. This logic should fix that issue.
+    // Another process or a symlink can create the directory between the checks.
+    // Verify existence again before reporting an error.
     if(!fs::create_directories(outputPath, errorCode) && !fs::exists(outputPath))
     {
       return MakeErrorResult(-4010, fmt::format("Unable to create output directory {}. Error code from operating system is {}", outputPath.string(), errorCode.value(), errorCode.message()));
@@ -60,7 +59,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 
   DataPath featureGroupDataPath = numNeighborsPath.getParent();
 
-  // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
+  // Report that existing NeighborList arrays will be removed.
   std::string ss = fmt::format("This filter will REMOVE all arrays of type NeighborList from the feature Attribute Matrix '{}'.  These arrays are:\n", featureGroupDataPath.toString());
 
   auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
@@ -77,8 +76,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
     resultOutputActions.value().deferredActions.emplace_back(std::move(action));
   }
 
-  // Inform users that the following arrays are going to be modified in place
-  // Feature Data is going to be modified
+  // Report modified feature arrays.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
 
   // Only warn when there is actually something to remove. Warning unconditionally announced that

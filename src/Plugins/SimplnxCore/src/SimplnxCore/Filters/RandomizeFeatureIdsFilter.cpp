@@ -9,6 +9,8 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <limits>
+#include <memory>
 #include <stdexcept>
 
 using namespace nx::core;
@@ -88,10 +90,9 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Inform users that the following arrays are going to be modified in place
-  // FeatureIds array is going to be remapped
+  // Preflight reports that execution remaps Feature IDs in place.
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, featureIdsPath);
-  // Feature Attribute Matrix arrays are going to be reordered
+  // Preflight reports that execution reorders Feature AttributeMatrix arrays in place.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAMPath, {});
 
   return {std::move(resultOutputActions)};
@@ -106,13 +107,35 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
-  usize totalFeatures = (*std::max_element(featureIdsStore.begin(), featureIdsStore.end())) + 1;
+  // Discover the maximum ID with one-mebibyte bulk reads. Iterating the store
+  // element by element would repeatedly enter the OOC cache and dominate this
+  // otherwise inexpensive permutation filter.
+  constexpr usize k_TargetBufferBytes = 1024 * 1024;
+  const usize totalElements = featureIdsStore.getSize();
+  const usize bufferElements = std::max<usize>(1, std::min(totalElements, k_TargetBufferBytes / sizeof(int32)));
+  auto buffer = std::make_unique<int32[]>(bufferElements);
+  int32 maxFeatureId = std::numeric_limits<int32>::lowest();
+  for(usize offset = 0; offset < totalElements; offset += bufferElements)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const usize count = std::min(bufferElements, totalElements - offset);
+    Result<> readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buffer.get(), count));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    maxFeatureId = std::max(maxFeatureId, *std::max_element(buffer.get(), buffer.get() + count));
+  }
+  const usize totalFeatures = static_cast<usize>(maxFeatureId) + 1;
 
   const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
   if(totalFeatures > featureAM->getNumberOfTuples())
   {
-    return MakeErrorResult(-82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumberOfTuples(),
-                                               totalFeatures - 1));
+    return MakeErrorResult(
+        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumberOfTuples(), maxFeatureId));
   }
 
   std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);

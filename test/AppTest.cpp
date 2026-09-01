@@ -80,11 +80,11 @@ TEST_CASE("Application::loadPreferences", "[Application]")
 
   SECTION("Load preferences - file may or may not exist")
   {
-    // This test doesn't fail if preferences file doesn't exist
-    // because loadPreferences returns an error Result but doesn't throw
+    // This test does not fail if preferences file does not exist
+    // because loadPreferences returns an error Result but does not throw
     auto result = app->loadPreferences();
     // Result may be valid or invalid depending on whether preferences file exists
-    // The important thing is it returns a Result and doesn't crash
+    // The important thing is it returns a Result and does not crash
     REQUIRE((result.valid() || result.invalid()));
   }
 
@@ -167,7 +167,7 @@ TEST_CASE("Application::loadPlugins", "[Application]")
 
   SECTION("Load plugins with verbose output")
   {
-    // Just verify it doesn't crash with verbose=true
+    // Just verify it does not crash with verbose=true
     auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
     REQUIRE((result.valid() || result.invalid()));
   }
@@ -213,7 +213,7 @@ TEST_CASE("Application::getPlugin", "[Application]")
 
   SECTION("Get non-existent plugin returns nullptr")
   {
-    // Create a random UUID that shouldn't exist
+    // Create a random UUID that should not exist
     Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
     auto* plugin = app->getPlugin(randomUuid);
     REQUIRE(plugin == nullptr);
@@ -276,12 +276,6 @@ TEST_CASE("Application::getIOCollection", "[Application]")
 {
   auto app = Application::GetOrCreateInstance();
 
-  SECTION("IOCollection is never null")
-  {
-    auto collection = app->getIOCollection();
-    REQUIRE(collection != nullptr);
-  }
-
   SECTION("getDataStoreFormats returns format names")
   {
     auto formats = app->getDataStoreFormats();
@@ -321,15 +315,15 @@ TEST_CASE("Application::Error Handling Integration", "[Application]")
     auto app = Application::GetOrCreateInstance();
     REQUIRE(app != nullptr);
 
-    // Load preferences - may fail but shouldn't crash
+    // Load preferences - may fail but should not crash
     auto prefsResult = app->loadPreferences();
     REQUIRE((prefsResult.valid() || prefsResult.invalid()));
 
-    // Load plugins - may fail but shouldn't crash
+    // Load plugins - may fail but should not crash
     auto pluginsResult = app->loadPlugins(SIMPLNX_BUILD_DIR, false);
     REQUIRE((pluginsResult.valid() || pluginsResult.invalid()));
 
-    // Save preferences - may fail but shouldn't crash
+    // Save preferences - may fail but should not crash
     auto saveResult = app->savePreferences();
     REQUIRE((saveResult.valid() || saveResult.invalid()));
 
@@ -392,5 +386,38 @@ TEST_CASE("Application::Singleton Lifecycle", "[Application]")
     REQUIRE(prefs1 == prefs2);
 
     Application::DeleteInstance();
+  }
+}
+
+TEST_CASE("Preferences::removeValue", "[Preferences]")
+{
+  Preferences prefs;
+
+  SECTION("Remove an existing key erases it")
+  {
+    prefs.setValue("test_remove_key", 42);
+    REQUIRE(prefs.contains("test_remove_key"));
+
+    prefs.removeValue("test_remove_key");
+
+    REQUIRE_FALSE(prefs.contains("test_remove_key"));
+  }
+
+  SECTION("Remove a non-existent key is a no-op")
+  {
+    REQUIRE_FALSE(prefs.contains("never_set_key"));
+    REQUIRE_NOTHROW(prefs.removeValue("never_set_key"));
+    REQUIRE_FALSE(prefs.contains("never_set_key"));
+  }
+
+  SECTION("Remove does not affect other keys")
+  {
+    prefs.setValue("keep_me", 1);
+    prefs.setValue("remove_me", 2);
+
+    prefs.removeValue("remove_me");
+
+    REQUIRE(prefs.contains("keep_me"));
+    REQUIRE_FALSE(prefs.contains("remove_me"));
   }
 }

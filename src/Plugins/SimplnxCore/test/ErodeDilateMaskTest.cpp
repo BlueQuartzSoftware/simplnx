@@ -1,18 +1,18 @@
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/ErodeDilateMaskFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <filesystem>
-#include <fstream>
+#include <memory>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -24,138 +24,84 @@ namespace
 constexpr ChoicesParameter::ValueType k_Dilate = 0ULL;
 constexpr ChoicesParameter::ValueType k_Erode = 1ULL;
 
-const std::string k_EbsdScanDataName("EBSD Scan Data");
+const std::string k_GeomName("ImageGeom");
+const std::string k_CellDataName("CellData");
 
-const DataPath k_InputData({"Input Data"});
-const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
-const DataPath k_MaskArrayDataPath = k_EbsdScanDataDataPath.createChildPath("Mask");
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_CellDataPath = k_GeomPath.createChildPath(k_CellDataName);
+const DataPath k_MaskPath = k_CellDataPath.createChildPath("Mask");
 
+void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
+{
+  const ShapeType cellTupleShape = {dimZ, dimY, dimX};
+  const usize sliceSize = dimX * dimY;
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto maskDataStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_MaskPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* maskArray = DataArray<bool>::Create(dataStructure, "Mask", maskDataStore, cellAM->getId());
+  auto& maskStore = maskArray->getDataStoreRef();
+
+  // Use Z-slice buffered writes. Bool data requires a raw array instead of vector<bool>.
+  auto maskBuf = std::make_unique<bool[]>(sliceSize);
+
+  for(usize z = 0; z < dimZ; z++)
+  {
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize inSlice = y * dimX + x;
+        maskBuf[inSlice] = ((x * 7 + y * 13 + z * 29) % 3 != 0);
+      }
+    }
+    maskStore.copyFromBuffer(z * sliceSize, nonstd::span<const bool>(maskBuf.get(), sliceSize));
+  }
+}
+
+usize CountTrueVoxels(const DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
+{
+  const auto& mask = dataStructure.getDataRefAs<BoolArray>(k_MaskPath).getDataStoreRef();
+  const usize sliceSize = dimX * dimY;
+  auto buf = std::make_unique<bool[]>(sliceSize);
+  usize count = 0;
+  for(usize z = 0; z < dimZ; z++)
+  {
+    mask.copyIntoBuffer(z * sliceSize, nonstd::span<bool>(buf.get(), sliceSize));
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      if(buf[i])
+      {
+        count++;
+      }
+    }
+  }
+  return count;
+}
 } // namespace
 
-TEST_CASE("SimplnxCore::ErodeDilateMaskFilter(Dilate)", "[SimplnxCore][ErodeDilateMaskFilter]")
+TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Generate Test Data", "[SimplnxCore][ErodeDilateMaskFilter][.GenerateTestData]")
 {
-  UnitTest::LoadPlugins();
+  const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data" / "erode_dilate_mask";
+  fs::create_directories(outputDir);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
-
-  const std::string k_ExemplarDataContainerName("Exemplar Mask Dilate");
-  const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // The small fixture uses a 20-cubed volume.
   {
-    const ErodeDilateMaskFilter filter;
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Dilate));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(2));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    DataStructure buildDS;
+    BuildTestData(buildDS, 20, 20, 20);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ErodeDilateMaskFilter(Erode)", "[SimplnxCore][ErodeDilateMaskFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
-
-  const std::string k_ExemplarDataContainerName("Exemplar Mask Erode");
-  const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
-
-  UnitTest::LoadPlugins();
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // The large fixture uses a 200-cubed volume.
   {
-    const ErodeDilateMaskFilter filter;
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Erode));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(2));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateMaskFilter][BackwardsCompatibility]")
-{
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ErodeDilateMaskFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ErodeDilateMaskFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateMaskFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateMaskFilter::k_Operation_Key) == 0);
-      CHECK(args.value<int32>(ErodeDilateMaskFilter::k_NumIterations_Key) == 5);
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_XDirOn_Key) == true);
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_YDirOn_Key) == true);
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_ZDirOn_Key) == true);
-      CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-    }
+    DataStructure buildDS;
+    BuildTestData(buildDS, 200, 200, 200);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
   }
 }

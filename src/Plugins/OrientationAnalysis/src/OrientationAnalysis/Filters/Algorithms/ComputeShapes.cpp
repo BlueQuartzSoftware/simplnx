@@ -12,18 +12,23 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
+#include <nonstd/span.hpp>
+
 #include <array>
 #include <numbers>
 #include <utility>
+#include <vector>
 
 namespace
 {
 /**
- * @brief Sorts the 3 values
- * @param a First Value
- * @param b Second Value
- * @param c Third Value
- * @return The indices in their sorted order
+ * @brief Sorts three values by index.
+ * @tparam T Specifies the comparable value type.
+ * @param a Identifies the first value.
+ * @param b Identifies the second value.
+ * @param c Identifies the third value.
+ * @param lowToHigh Selects ascending order.
+ * @return Indices in the selected order.
  */
 template <typename T>
 std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
@@ -200,6 +205,19 @@ void ComputeShapes::findMoments()
   float xdist1 = 0.0f, xdist2 = 0.0f, xdist3 = 0.0f, xdist4 = 0.0f, xdist5 = 0.0f, xdist6 = 0.0f, xdist7 = 0.0f, xdist8 = 0.0f;
   float ydist1 = 0.0f, ydist2 = 0.0f, ydist3 = 0.0f, ydist4 = 0.0f, ydist5 = 0.0f, ydist6 = 0.0f, ydist7 = 0.0f, ydist8 = 0.0f;
   float zdist1 = 0.0f, zdist2 = 0.0f, zdist3 = 0.0f, zdist4 = 0.0f, zdist5 = 0.0f, zdist6 = 0.0f, zdist7 = 0.0f, zdist8 = 0.0f;
+  // The local centroid cache avoids random feature lookup in the voxel loop.
+  std::vector<float32> localCentroids(numfeatures * 3);
+  centroids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(localCentroids.data(), localCentroids.size()));
+
+  // Local counts avoid per-voxel volume writes.
+  std::vector<float32> featureVoxelCounts(numfeatures, 0.0f);
+
+  // Read FeatureIds one Z-slice at a time: a single bulk read per slice replaces one store access per
+  // voxel. The buffer is sized to a single slice (xPoints * yPoints), never the whole volume.
+  const usize sliceSize = xPoints * yPoints;
+  std::vector<int32> featureIdsSlice(sliceSize);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+
   size_t zStride = 0, yStride = 0;
   for(size_t i = 0; i < zPoints; i++)
   {
@@ -209,12 +227,13 @@ void ComputeShapes::findMoments()
     }
 
     zStride = i * xPoints * yPoints;
+    featureIdsStore.copyIntoBuffer(zStride, nonstd::span<int32>(featureIdsSlice.data(), sliceSize));
     for(size_t j = 0; j < yPoints; j++)
     {
       yStride = j * xPoints;
       for(size_t k = 0; k < xPoints; k++)
       {
-        int32_t gnum = featureIds[zStride + yStride + k];
+        int32_t gnum = featureIdsSlice[yStride + k];
         FloatVec3 voxelCenter = imageGeom.getCoordsf(k, j, i);
         x = voxelCenter[0] * static_cast<float>(m_ScaleFactor);
         y = voxelCenter[1] * static_cast<float>(m_ScaleFactor);
@@ -226,31 +245,31 @@ void ComputeShapes::findMoments()
         z1 = z + (modZRes / 4.0f);
         z2 = z - (modZRes / 4.0f);
 
-        xdist1 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist1 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist1 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist1 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist1 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist1 = (z1 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
 
-        xdist2 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist2 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist2 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist3 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist3 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist3 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist4 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist4 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist4 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist5 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist5 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist5 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist6 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist6 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist6 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist7 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist7 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist7 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
-        xdist8 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-        ydist8 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-        zdist8 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist2 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist2 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist2 = (z2 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist3 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist3 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist3 = (z1 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist4 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist4 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist4 = (z2 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist5 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist5 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist5 = (z1 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist6 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist6 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist6 = (z2 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist7 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist7 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist7 = (z1 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+        xdist8 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+        ydist8 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+        zdist8 = (z2 - (localCentroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
 
         xx = ((ydist1) * (ydist1)) + ((zdist1) * (zdist1)) + ((ydist2) * (ydist2)) + ((zdist2) * (zdist2)) + ((ydist3) * (ydist3)) + ((zdist3) * (zdist3)) + ((ydist4) * (ydist4)) +
              ((zdist4) * (zdist4)) + ((ydist5) * (ydist5)) + ((zdist5) * (zdist5)) + ((ydist6) * (ydist6)) + ((zdist6) * (zdist6)) + ((ydist7) * (ydist7)) + ((zdist7) * (zdist7)) +
@@ -274,10 +293,19 @@ void ComputeShapes::findMoments()
         m_FeatureMoments[gnum * 6 + 3] = m_FeatureMoments[gnum * 6 + 3] + static_cast<double>(xy);
         m_FeatureMoments[gnum * 6 + 4] = m_FeatureMoments[gnum * 6 + 4] + static_cast<double>(yz);
         m_FeatureMoments[gnum * 6 + 5] = m_FeatureMoments[gnum * 6 + 5] + static_cast<double>(xz);
-        volumes[gnum] = volumes[gnum] + 1.0;
+        featureVoxelCounts[gnum] += 1.0f;
       }
     }
   }
+
+  // Write the accumulated raw voxel counts back to the volumes array (feature-level, one pass).
+  // The feature loop below reads these counts in place and rescales them to physical volumes,
+  // reproducing the original per-voxel accumulation exactly.
+  for(size_t featureId = 0; featureId < numfeatures; featureId++)
+  {
+    volumes[featureId] = featureVoxelCounts[featureId];
+  }
+
   double sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
   // constant for moments because voxels are broken into smaller voxels
   double konst1 = static_cast<double>((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
@@ -302,7 +330,7 @@ void ComputeShapes::findMoments()
     m_FeatureMoments[featureId * 6 + 4] = -m_FeatureMoments[featureId * 6 + 4] * konst1;
     m_FeatureMoments[featureId * 6 + 5] = -m_FeatureMoments[featureId * 6 + 5] * konst1;
 
-    // Now store the 3x3 Matrix for the Eigen Value/Vectors
+    // Assemble the moment matrix for eigen analysis.
     Eigen::Matrix3f moment;
     /* clang-format off */
     moment <<
@@ -320,8 +348,7 @@ void ComputeShapes::findMoments()
     m_FeatureEigenVals[featureId * 3 + 1] = eigenValues[idxs[1]].real();
     m_FeatureEigenVals[featureId * 3 + 2] = eigenValues[idxs[2]].real();
 
-    // These values will be used to compute the axis eulers
-    // EigenVector associated with the largest EigenValue goes in the 3rd column
+    // The largest eigenvector becomes the third reference-frame column.
     auto col = eigenVectors.col(idxs[0]);
     m_EFVec[featureId * 9 + 2] = col(0).real();
     m_EFVec[featureId * 9 + 5] = col(1).real();
@@ -408,6 +435,18 @@ void ComputeShapes::findMoments2D()
     m_FeatureMoments[featureId] = 0.0;
   }
 
+  // Cache the feature-level centroids locally to keep the per-cell centroid reads in RAM rather than
+  // routing each through the (out-of-core-capable) store. Sized by feature count.
+  std::vector<float32> localCentroids(numfeatures * 3);
+  centroids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(localCentroids.data(), localCentroids.size()));
+
+  // Accumulate voxel counts locally, written back to the volumes array once after the scan.
+  std::vector<float32> featureVoxelCounts(numfeatures, 0.0f);
+
+  // Read FeatureIds one row (xPoints) at a time via a bounded buffer, replacing one store access per cell.
+  std::vector<int32> featureIdsRow(xPoints);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+
   size_t yStride = 0;
   for(size_t yPoint = 0; yPoint < yPoints; yPoint++)
   {
@@ -417,32 +456,40 @@ void ComputeShapes::findMoments2D()
     }
 
     yStride = yPoint * xPoints;
+    featureIdsStore.copyIntoBuffer(yStride, nonstd::span<int32>(featureIdsRow.data(), xPoints));
     for(size_t xPoint = 0; xPoint < xPoints; xPoint++)
     {
-      int32_t gnum = featureIds[yStride + xPoint];
+      int32_t gnum = featureIdsRow[xPoint];
       float x = static_cast<float>(xPoint * modXRes) + (origin[0] * static_cast<float>(m_ScaleFactor));
       float y = static_cast<float>(yPoint * modYRes) + (origin[1] * static_cast<float>(m_ScaleFactor));
       float x1 = x + (modXRes / 4.0f);
       float x2 = x - (modXRes / 4.0f);
       float y1 = y + (modYRes / 4.0f);
       float y2 = y - (modYRes / 4.0f);
-      float xdist1 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist1 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist2 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist2 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist3 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist3 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist4 = (x2 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist4 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist1 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+      float ydist1 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist2 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+      float ydist2 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist3 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+      float ydist3 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist4 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
+      float ydist4 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
       xx = ((ydist1) * (ydist1)) + ((ydist2) * (ydist2)) + ((ydist3) * (ydist3)) + ((ydist4) * (ydist4));
       yy = ((xdist1) * (xdist1)) + ((xdist2) * (xdist2)) + ((xdist3) * (xdist3)) + ((xdist4) * (xdist4));
       xy = ((xdist1) * (ydist1)) + ((xdist2) * (ydist2)) + ((xdist3) * (ydist3)) + ((xdist4) * (ydist4));
       m_FeatureMoments[gnum * 6 + 0] = m_FeatureMoments[gnum * 6 + 0] + xx;
       m_FeatureMoments[gnum * 6 + 1] = m_FeatureMoments[gnum * 6 + 1] + yy;
       m_FeatureMoments[gnum * 6 + 2] = m_FeatureMoments[gnum * 6 + 2] + xy;
-      volumes[gnum] = volumes[gnum] + 1.0;
+      featureVoxelCounts[gnum] += 1.0f;
     }
   }
+
+  // The feature loop rescales raw counts to physical area.
+  for(size_t featureId = 0; featureId < numfeatures; featureId++)
+  {
+    volumes[featureId] = featureVoxelCounts[featureId];
+  }
+
   double konst1 = static_cast<double>((modXRes / 2.0f) * (modYRes / 2.0f));
   double konst2 = static_cast<double>(spacing[0] * spacing[1]);
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
@@ -604,8 +651,7 @@ void ComputeShapes::findAxisEulers()
       return;
     }
 
-    // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
-    // (Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
+    // Principal vectors define the feature reference frame.
     /* clang-format off */
     size_t idx = featureId*9;
     ebsdlib::OrientationMatrixDType g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],

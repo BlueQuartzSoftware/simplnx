@@ -1,7 +1,9 @@
 #include "Preferences.hpp"
 
+#include "simplnx/Common/SimplnxConfig.hpp"
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/Plugin/AbstractPlugin.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 
 #include <fstream>
@@ -22,10 +24,10 @@ namespace nx::core
 namespace
 {
 constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
-constexpr StringLiteral k_LargeDataFormat = "";
 constexpr StringLiteral k_Plugin_Key = "plugins";
 constexpr StringLiteral k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
+constexpr bool k_AutoRangeComputationDefault = false;
 
 constexpr int32 k_FailedToCreateDirectory_Code = -585;
 constexpr int32 k_FileDoesNotExist_Code = -586;
@@ -37,6 +39,10 @@ constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not 
 constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
 constexpr StringLiteral k_JsonParseError_Message = "Parsing the JSON Preferences file failed.";
 
+/**
+ * @brief Returns the current user's home directory.
+ * @return Home directory from the platform environment or account database.
+ */
 std::filesystem::path getHomeDirectory()
 {
 #ifdef _WIN32
@@ -66,7 +72,6 @@ std::filesystem::path Preferences::DefaultFilePath(const std::string& applicatio
 Preferences::Preferences()
 {
   setDefaultValues();
-  checkUseOoc();
 }
 
 Preferences::~Preferences() noexcept = default;
@@ -77,42 +82,18 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_Plugin_Key] = nlohmann::json::object();
 
   m_DefaultValues[k_LargeDataSize_Key] = k_LargeDataSize;
-  m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
 
   {
-    // Set a default value for out-of-core temp directory.
     std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "simplnx";
     m_DefaultValues[k_OoCTempDirectory_ID] = tempDir.string();
   }
 
   updateMemoryDefaults();
 
-#ifdef SIMPLNX_FORCE_OUT_OF_CORE_DATA
-  m_DefaultValues[k_ForceOocData_Key] = true;
-#else
-  m_DefaultValues[k_ForceOocData_Key] = false;
-#endif
-}
+  // Adaptive keeps core storage intent independent of a concrete OOC format.
+  m_DefaultValues[k_DataStorageMode_Key] = static_cast<int>(DataStorageMode::Adaptive);
 
-std::string Preferences::defaultLargeDataFormat() const
-{
-  return m_DefaultValues[k_PreferredLargeDataFormat_Key].get<std::string>();
-}
-
-void Preferences::setDefaultLargeDataFormat(std::string dataFormat)
-{
-  m_DefaultValues[k_PreferredLargeDataFormat_Key] = dataFormat;
-  checkUseOoc();
-}
-
-std::string Preferences::largeDataFormat() const
-{
-  return valueAs<std::string>(k_PreferredLargeDataFormat_Key);
-}
-void Preferences::setLargeDataFormat(std::string dataFormat)
-{
-  m_Values[k_PreferredLargeDataFormat_Key] = dataFormat;
-  checkUseOoc();
+  m_DefaultValues[k_AutoRangeComputation_Key] = k_AutoRangeComputationDefault;
 }
 
 void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
@@ -136,6 +117,12 @@ bool Preferences::contains(const std::string& name) const
 {
   return m_Values.contains(name);
 }
+
+void Preferences::removeValue(std::string_view name)
+{
+  m_Values.erase(std::string(name));
+}
+
 bool Preferences::pluginContains(const std::string& pluginName, const std::string& name) const
 {
   if(!m_Values[k_Plugin_Key].contains(pluginName))
@@ -182,7 +169,7 @@ void Preferences::setValue(const std::string& name, const nlohmann::json& value)
 {
   m_Values[name] = value;
 
-  // Check if out-of-core values need to be updated.
+  // The single-array threshold determines the whole-data-structure default.
   if(name == k_LargeDataSize_Key)
   {
     updateMemoryDefaults();
@@ -255,44 +242,86 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 
   m_Values = parsedResult;
 
-  checkUseOoc();
+  // Preserve a canonical value when both keys exist. Remove the legacy key so
+  // later saves retain only the cache-specific preference.
+  if(!m_Values.contains(k_CacheMemoryBudgetBytes_Key) && m_Values.contains(k_LegacyMemoryBudgetBytes_Key))
+  {
+    m_Values[k_CacheMemoryBudgetBytes_Key] = m_Values[k_LegacyMemoryBudgetBytes_Key];
+  }
+  m_Values.erase(k_LegacyMemoryBudgetBytes_Key);
+
+  // Remove empty legacy values so migration does not infer ForceInCore. Preserve
+  // the in-memory sentinel and concrete format values for compatible migration.
+  if(m_Values.contains(k_PreferredLargeDataFormat_Key) && m_Values[k_PreferredLargeDataFormat_Key].is_string())
+  {
+    const std::string savedFormat = m_Values[k_PreferredLargeDataFormat_Key].get<std::string>();
+    if(savedFormat.empty() || savedFormat == "In-Memory")
+    {
+      m_Values.erase(k_PreferredLargeDataFormat_Key);
+    }
+  }
+
   updateMemoryDefaults();
   return {};
 }
 
-void Preferences::checkUseOoc()
-{
-  m_UseOoc = !value(k_PreferredLargeDataFormat_Key).get<std::string>().empty();
-}
-
 bool Preferences::useOocData() const
 {
-  return m_UseOoc;
+  return dataStorageMode() != DataStorageMode::ForceInCore;
 }
 
-bool Preferences::forceOocData() const
+DataStorageMode Preferences::dataStorageMode() const
 {
-  if(!m_UseOoc)
+  // Resolve storage intent in priority order: canonical value, legacy values,
+  // then the Adaptive default.
+  if(m_Values.contains(k_DataStorageMode_Key))
   {
-    return false;
+    // An unrecognized persisted value uses Adaptive to avoid an invalid enum.
+    const int raw = valueAs<int>(k_DataStorageMode_Key);
+    if(raw < static_cast<int>(DataStorageMode::Adaptive) || raw > static_cast<int>(DataStorageMode::ForceOutOfCore))
+    {
+      return DataStorageMode::Adaptive;
+    }
+    return static_cast<DataStorageMode>(raw);
   }
-  return valueAs<bool>(k_ForceOocData_Key);
+
+  if(m_Values.contains(k_ForceOocData_Key) || m_Values.contains(k_PreferredLargeDataFormat_Key))
+  {
+    // The saved force-out-of-core flag overrides legacy format selection.
+    if(m_Values.contains(k_ForceOocData_Key) && m_Values[k_ForceOocData_Key].is_boolean() && m_Values[k_ForceOocData_Key].get<bool>())
+    {
+      return DataStorageMode::ForceOutOfCore;
+    }
+
+    // Empty and in-memory values select ForceInCore. Other formats select Adaptive.
+    std::string format;
+    if(m_Values.contains(k_PreferredLargeDataFormat_Key) && m_Values[k_PreferredLargeDataFormat_Key].is_string())
+    {
+      format = m_Values[k_PreferredLargeDataFormat_Key].get<std::string>();
+    }
+    if(format.empty() || format == k_InMemoryFormat)
+    {
+      return DataStorageMode::ForceInCore;
+    }
+    return DataStorageMode::Adaptive;
+  }
+
+  return static_cast<DataStorageMode>(m_DefaultValues[k_DataStorageMode_Key].get<int>());
 }
 
-void Preferences::setForceOocData(bool forceOoc)
+void Preferences::setDataStorageMode(DataStorageMode mode)
 {
-  if(!m_UseOoc)
-  {
-    return;
-  }
-  setValue(k_ForceOocData_Key, forceOoc);
+  setValue(k_DataStorageMode_Key, static_cast<int>(mode));
 }
 
 void Preferences::updateMemoryDefaults()
 {
+  // Reserve two single-array thresholds for the operating system and application.
   const uint64 minimumRemaining = 2 * defaultValueAs<uint64>(k_LargeDataSize_Key);
   const uint64 totalMemory = Memory::GetTotalMemory();
   uint64 targetValue = totalMemory - minimumRemaining;
+
+  // Low-memory systems use half of RAM when the reservation is too large.
   if(minimumRemaining >= totalMemory)
   {
     targetValue = totalMemory / 2;
@@ -314,10 +343,29 @@ std::string Preferences::oocTempDirectory() const
 void Preferences::setOocTempDirectory(const std::string& path)
 {
   setValue(k_OoCTempDirectory_ID, path);
-  auto plugins = Application::Instance()->getPluginList();
-  for(AbstractPlugin* plugin : plugins)
-  {
-    plugin->setOocTempDirectory(path);
-  }
+  // Registered managers use this base directory for session backing files. In-core
+  // builds have no out-of-core manager, so the collection update has no effect.
+  Application::GetOrCreateInstance()->getIOCollection().setBaseDirectory(std::filesystem::path(path));
+}
+
+bool Preferences::autoRangeComputation() const
+{
+  return value(k_AutoRangeComputation_Key).get<bool>();
+}
+
+void Preferences::setAutoRangeComputation(bool enabled)
+{
+  setValue(k_AutoRangeComputation_Key, enabled);
+}
+
+uint64 Preferences::cacheMemoryBudgetBytes() const
+{
+  // Read m_Values directly so the fallback uses the current system-RAM default.
+  return m_Values.value(k_CacheMemoryBudgetBytes_Key, CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+void Preferences::setCacheMemoryBudgetBytes(uint64 bytes)
+{
+  m_Values[k_CacheMemoryBudgetBytes_Key] = bytes;
 }
 } // namespace nx::core

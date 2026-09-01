@@ -3,6 +3,8 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeFeatureBounds.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureBoundsFilter.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
@@ -10,9 +12,17 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
+#include <nonstd/span.hpp>
+
+#include <array>
+#include <cmath>
+#include <memory>
 
 using namespace nx::core;
 
@@ -26,10 +36,63 @@ const DataPath k_VertexGeomPath{std::vector<std::string>{"VertexGeom"}};
 const DataPath k_VertexDataPath = k_VertexGeomPath.createChildPath(k_VertexAttributeMatrixName);
 const DataPath k_CroppedGeomPath{std::vector<std::string>{"Cropped VertexGeom"}};
 const std::vector<DataPath> targetDataArrays{k_VertexDataPath.createChildPath("DataArray")};
+
+constexpr usize k_BenchmarkDim = 200;
+constexpr usize k_BenchmarkBlockSize = k_BenchmarkDim / 2;
+constexpr usize k_BenchmarkFeatureCount = 8;
+const std::string k_BenchmarkGeomName = "Benchmark ImageGeom";
+const std::string k_BenchmarkCellDataName = "Cell Data";
+const std::string k_BenchmarkFeatureDataName = "Feature Data";
+const std::string k_BenchmarkFeatureIdsName = "FeatureIds";
+const DataPath k_BenchmarkGeomPath({k_BenchmarkGeomName});
+const DataPath k_BenchmarkCellDataPath = k_BenchmarkGeomPath.createChildPath(k_BenchmarkCellDataName);
+const DataPath k_BenchmarkFeatureDataPath = k_BenchmarkGeomPath.createChildPath(k_BenchmarkFeatureDataName);
+const DataPath k_BenchmarkFeatureIdsPath = k_BenchmarkCellDataPath.createChildPath(k_BenchmarkFeatureIdsName);
+
+void BuildBenchmarkInput(DataStructure& dataStructure)
+{
+  const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
+  imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
+  imageGeom->setOrigin({-10.0f, 2.0f, 5.0f});
+  imageGeom->setSpacing({0.5f, 1.5f, 2.0f});
+
+  auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIds = Int32Array::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellData->getId());
+  auto& featureIdsStoreRef = featureIds->getDataStoreRef();
+
+  constexpr usize k_SliceSize = k_BenchmarkDim * k_BenchmarkDim;
+  auto sliceBuffer = std::make_unique<int32[]>(k_SliceSize);
+  for(usize z = 0; z < k_BenchmarkDim; z++)
+  {
+    const int32 zBlock = z >= k_BenchmarkBlockSize ? 4 : 0;
+    for(usize y = 0; y < k_BenchmarkDim; y++)
+    {
+      const int32 yBlock = y >= k_BenchmarkBlockSize ? 2 : 0;
+      for(usize x = 0; x < k_BenchmarkDim; x++)
+      {
+        const int32 xBlock = x >= k_BenchmarkBlockSize ? 1 : 0;
+        sliceBuffer[(y * k_BenchmarkDim) + x] = 1 + zBlock + yBlock + xBlock;
+      }
+    }
+
+    const Result<> writeResult = featureIdsStoreRef.copyFromBuffer(z * k_SliceSize, nonstd::span<const int32>(sliceBuffer.get(), k_SliceSize));
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  AttributeMatrix::Create(dataStructure, k_BenchmarkFeatureDataName, {k_BenchmarkFeatureCount + 1}, imageGeom->getId());
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Image Geom/Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "ImageGeom";
@@ -68,11 +131,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
@@ -85,12 +147,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>("EdgeAM"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreatedFeatureIdsArrayName_Key, std::make_any<std::string>("feature_ids"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -129,7 +189,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
 
   for(usize i = 0; i < sharedEdgeList.getNumberOfTuples(); i++)
   {
-    // Start from 1 because feature 0 is junk
+    // Feature 0 is reserved, so begin comparisons at feature 1.
     REQUIRE(edgeFeatureIds[i] == 1);
 
     REQUIRE(sharedEdgeList[(i * 2) + 0] == expectedEdges[i][0]);
@@ -141,6 +201,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
@@ -180,30 +243,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
   AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
   const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
-  // Start from 1 because feature 0 is junk
+  // Feature 0 is reserved, so begin comparisons at feature 1.
   for(usize j = 0; j < 6; j++)
   {
     REQUIRE(unified[6 + j] == expectedValues[j]);
@@ -214,6 +274,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
@@ -253,11 +316,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
   AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
@@ -265,12 +327,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -295,6 +355,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
@@ -317,23 +380,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
   AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom"})));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom", k_VertexAttributeMatrixName, "feature_ids"})));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom", "feature_data"})));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -354,6 +414,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
@@ -376,11 +439,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
   AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom"})));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom", k_VertexAttributeMatrixName, "feature_ids"})));
@@ -388,12 +450,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -422,6 +482,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "EdgeGeom";
@@ -459,23 +522,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_EdgeAMPath.createChildPath("feature_ids")));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -496,6 +556,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "EdgeGeom";
@@ -533,11 +596,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_EdgeAMPath.createChildPath("feature_ids")));
@@ -545,12 +607,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -579,6 +639,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "TriangleGeom";
@@ -615,23 +678,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -652,6 +712,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "TriangleGeom";
@@ -688,11 +751,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
@@ -700,12 +762,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -734,6 +794,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "QuadGeom";
@@ -770,23 +833,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -807,6 +867,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "QuadGeom";
@@ -843,11 +906,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
@@ -855,12 +917,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -913,11 +973,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"feature_ids"})));
@@ -925,7 +984,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
@@ -935,6 +993,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM Size Invalid", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string k_GeomName = "TriangleGeom";
@@ -971,11 +1032,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
 
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Configure the filter arguments.
     ComputeFeatureBoundsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
@@ -983,12 +1043,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
