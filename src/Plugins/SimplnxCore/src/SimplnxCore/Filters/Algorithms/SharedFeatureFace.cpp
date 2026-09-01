@@ -192,7 +192,18 @@ Result<> SharedFeatureFace::operator()()
   // Grain Boundary Attribute Matrix
   auto& faceFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->GrainBoundaryAttributeMatrixPath);
   ShapeType tDims = {static_cast<usize>(index)};
+  // This line has a Wstringop-overflow warning starting in gcc 12.4 in release configuration
+  // This is a false positive that eventually disappears in gcc 15
+  // Likely related to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94335
+  // Minimum reproducible example: https://godbolt.org/z/qTr8hPo1e
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
   faceFeatureAttrMat.resizeTuples(tDims);
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
+#pragma GCC diagnostic pop
+#endif
 
   auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath)->getDataStoreRef();
   auto& surfaceMeshFeatureFaceNumTriangles = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath)->getDataStoreRef();
