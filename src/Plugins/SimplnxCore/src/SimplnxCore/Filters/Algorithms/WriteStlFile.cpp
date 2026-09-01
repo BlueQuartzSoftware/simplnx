@@ -82,7 +82,6 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
 
   if(filePtr == nullptr)
   {
-    fclose(filePtr);
     return {MakeWarningVoidResult(-27886, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", path.string(), path.filename().string()))};
   }
 
@@ -252,7 +251,6 @@ public:
 
     if(filePtr == nullptr)
     {
-      fclose(filePtr);
       m_Filter->sendThreadSafeProgressMessage(
           {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", activePath.string(), activePath.filename().string()))});
       return;

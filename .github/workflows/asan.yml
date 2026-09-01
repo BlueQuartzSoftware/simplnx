@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           submodules: true
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: '3.10'
       - name: Install Python dependencies
@@ -25,18 +25,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/gcc-problem-matcher@0.2.0
-      - name: Install Dependencies
-        run: |
-          sudo apt-get -y install ninja-build
+        uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
       - name: Install mono
-        shell: bash
         run: |
-          sudo apt-get -y install ca-certificates gnupg
-          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-          sudo apt-get -y update
-          sudo apt-get -y install mono-complete
+          sudo apt-get update
+          sudo apt-get install mono-complete
       - name: Setup NuGet Credentials
         shell: bash
         run: |
