@@ -20,11 +20,11 @@ jobs:
         os:
           - ubuntu-24.04
         cxx:
-          - g++-14
+          - g++-13
           - clang++-16
         include:
-          - cxx: g++-14
-            cc: gcc-14
+          - cxx: g++-13
+            cc: gcc-13
           - cxx: clang++-16
             cc: clang-16
     runs-on: ${{matrix.os}}
