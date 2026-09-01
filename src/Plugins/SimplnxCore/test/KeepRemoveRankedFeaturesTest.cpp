@@ -497,9 +497,11 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Invariants", "[SimplnxCo
     // Keeping 2 gives {1, 4}; keeping 3 gives {1, 4, 3}. Compare cell-wise: every cell surviving
     // under k=2 must also survive under k=3.
     DataStructure smallDs = BuildFiveFeatureData();
-    SIMPLNX_RESULT_REQUIRE_VALID(filter.execute(smallDs, MakeArgs(0ULL, 0ULL, 2ULL)).result);
+    auto smallDsResult = filter.execute(smallDs, MakeArgs(0ULL, 0ULL, 2ULL)).result;
+    SIMPLNX_RESULT_REQUIRE_VALID(smallDsResult);
     DataStructure largeDs = BuildFiveFeatureData();
-    SIMPLNX_RESULT_REQUIRE_VALID(filter.execute(largeDs, MakeArgs(0ULL, 0ULL, 3ULL)).result);
+    auto largeDsResult = filter.execute(largeDs, MakeArgs(0ULL, 0ULL, 3ULL)).result;
+    SIMPLNX_RESULT_REQUIRE_VALID(largeDsResult);
 
     const std::vector<int32> smallIds = ReadFeatureIds(smallDs);
     const std::vector<int32> largeIds = ReadFeatureIds(largeDs);

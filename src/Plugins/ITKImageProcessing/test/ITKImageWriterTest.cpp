@@ -385,8 +385,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: RGBA Image Output", "[ITKIm
   args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
   args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
-  SIMPLNX_RESULT_REQUIRE_VALID(filter.preflight(dataStructure, args).outputActions);
-  SIMPLNX_RESULT_REQUIRE_VALID(filter.execute(dataStructure, args).result);
+  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
+  auto executeResult = filter.execute(dataStructure, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
 
   using ImageType = itk::Image<itk::RGBAPixel<uint8>, 2>;
   auto reader = itk::ImageFileReader<ImageType>::New();
