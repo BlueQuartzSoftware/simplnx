@@ -120,11 +120,11 @@ SchmidFixture MakeFixture(usize numFeatures, usize numEnsembles = 2)
   auto* featureAMPtr = AttributeMatrix::Create(fixture.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeomPtr->getId());
   auto* ensembleAMPtr = AttributeMatrix::Create(fixture.ds, k_EnsembleAMName, ShapeType{numEnsembles}, imageGeomPtr->getId());
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>({numFeatures}, {1}, IDataAction::Mode::Execute);
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.ds, k_FeatureAMPath.createChildPath(k_PhasesName), {numFeatures}, {1}, IDataAction::Mode::Execute);
   fixture.featurePhasesPtr = Int32Array::Create(fixture.ds, k_PhasesName, featurePhasesStore, featureAMPtr->getId());
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>({numFeatures}, {4}, IDataAction::Mode::Execute);
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(fixture.ds, k_FeatureAMPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4}, IDataAction::Mode::Execute);
   fixture.avgQuatsPtr = Float32Array::Create(fixture.ds, k_AvgQuatsName, avgQuatsStore, featureAMPtr->getId());
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>({numEnsembles}, {1}, IDataAction::Mode::Execute);
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(fixture.ds, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {numEnsembles}, {1}, IDataAction::Mode::Execute);
   fixture.crystalStructuresPtr = UInt32Array::Create(fixture.ds, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
 
   for(usize featureIdx = 0; featureIdx < numFeatures; ++featureIdx)
@@ -700,13 +700,13 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     imageGeomPtr->setDimensions({1, 1, 1});
 
     auto* phasesAMPtr = AttributeMatrix::Create(dataStructure, "Phases Data", ShapeType{2}, imageGeomPtr->getId());
-    auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>({2}, {1}, IDataAction::Mode::Execute);
+    auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({k_GeomName, "Phases Data", k_PhasesName}), {2}, {1}, IDataAction::Mode::Execute);
     Int32Array::Create(dataStructure, k_PhasesName, featurePhasesStore, phasesAMPtr->getId());
     auto* quatsAMPtr = AttributeMatrix::Create(dataStructure, "Quaternions Data", ShapeType{6}, imageGeomPtr->getId());
-    auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>({6}, {4}, IDataAction::Mode::Execute);
+    auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({k_GeomName, "Quaternions Data", k_AvgQuatsName}), {6}, {4}, IDataAction::Mode::Execute);
     Float32Array::Create(dataStructure, k_AvgQuatsName, avgQuatsStore, quatsAMPtr->getId());
     auto* ensembleAMPtr = AttributeMatrix::Create(dataStructure, k_EnsembleAMName, ShapeType{2}, imageGeomPtr->getId());
-    auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>({2}, {1}, IDataAction::Mode::Execute);
+    auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {2}, {1}, IDataAction::Mode::Execute);
     UInt32Array::Create(dataStructure, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
 
     ComputeSchmidsFilter filter;

@@ -8,10 +8,16 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <algorithm>
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -46,7 +52,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
 {
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
 
   DataStructure dataStructure = CreateTestDataStructure<uint8_t>();
   Arguments args;
@@ -54,13 +60,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
 
   MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
   args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
   args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
   args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -137,13 +141,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -162,13 +164,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -187,13 +187,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -212,13 +210,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -237,13 +233,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -262,13 +256,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -287,13 +279,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -312,13 +302,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -337,13 +325,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -362,13 +348,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -387,13 +371,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Arguments args;
     CombineAttributeArraysFilter filter;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
     args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
@@ -404,6 +386,48 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::CombineAttributeArrays: Normalization", "[SimplnxCore][CombineAttributeArrays]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* array1 = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Array1, {3}, {1}, 0.0F);
+  auto* array2 = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Array2, {3}, {2}, 0.0F);
+
+  (*array1)[0] = -2.0F;
+  (*array1)[1] = 0.0F;
+  (*array1)[2] = 2.0F;
+  (*array2)[0] = 5.0F;
+  (*array2)[1] = 10.0F;
+  (*array2)[2] = 7.0F;
+  (*array2)[3] = 10.0F;
+  (*array2)[4] = 9.0F;
+  (*array2)[5] = 10.0F;
+
+  Arguments args;
+  args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({k_Array1}), DataPath({k_Array2})}));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
+
+  CombineAttributeArraysFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  Float32Array* output = nullptr;
+  REQUIRE_NOTHROW(output = &dataStructure.getDataRefAs<Float32Array>(k_OutputArrayPath));
+  const std::array<float32, 9> expected = {0.0F, 0.0F, 0.0F, 0.5F, 0.5F, 0.0F, 1.0F, 1.0F, 0.0F};
+  REQUIRE(output->getSize() == expected.size());
+  for(usize index = 0; index < expected.size(); index++)
+  {
+    REQUIRE((*output)[index] == expected[index]);
   }
 }
 
@@ -445,7 +469,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArraysFilter: SIMPL Backwards Compatibil
         CHECK(args.value<bool>(CombineAttributeArraysFilter::k_MoveValues_Key) == true);
       }
       CHECK(args.value<bool>(CombineAttributeArraysFilter::k_NormalizeData_Key) == true);
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+      // Successful pipeline loading verifies the MultiDataArraySelectionFilterParameterConverter value.
       CHECK(args.value<std::string>(CombineAttributeArraysFilter::k_StackedDataArrayName_Key) == "TestName");
     }
   }

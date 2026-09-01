@@ -6,6 +6,7 @@
 
 #include <H5Apublic.h>
 #include <H5Epublic.h>
+#include <H5Ipublic.h>
 #include <H5Opublic.h>
 #include <H5Ppublic.h>
 #include <H5Spublic.h>
@@ -17,33 +18,76 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
+/**
+ * @def HDF_ERROR_HANDLER_OFF
+ * @brief Saves and disables the current HDF5 error callback in the active scope.
+ */
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
   void* _oldHDF_error_client_data;                                                                                                                                                                     \
   H5Eget_auto(H5E_DEFAULT, &_oldHDF_error_func, &_oldHDF_error_client_data);                                                                                                                           \
   H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
 
+/**
+ * @def HDF_ERROR_HANDLER_ON
+ * @brief Restores the HDF5 error callback saved by HDF_ERROR_HANDLER_OFF.
+ */
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
+/**
+ * @namespace nx::core::HDF5
+ * @brief Provides process-locked HDF5 object wrappers.
+ */
 namespace nx::core::HDF5
 {
 class FileIO;
 class GroupIO;
 
+/**
+ * @namespace Support
+ * @brief Provides shared HDF5 synchronization support.
+ */
+namespace Support
+{
+/**
+ * @brief Returns the process-wide nonrecursive HDF5 API mutex.
+ * @return Shared mutex.
+ *
+ * This forward declaration avoids an H5Support include cycle.
+ */
+SIMPLNX_EXPORT std::mutex& ApiLock();
+} // namespace Support
+
+/**
+ * @class ObjectIO
+ * @brief Base wrapper for one HDF5 file, group, or dataset object.
+ *
+ * Public HDF5 operations use Support::ApiLock(). A public wrapper method must
+ * not run while the caller holds that nonrecursive lock.
+ */
 class SIMPLNX_EXPORT ObjectIO
 {
 public:
+  /**
+   * @enum ObjectType
+   * @brief Identifies the wrapped HDF5 object category.
+   */
   enum class ObjectType
   {
-    File,
-    Group,
-    Dataset,
-    Unknown
+    File,    ///< Identifies a file wrapper.
+    Group,   ///< Identifies a group wrapper.
+    Dataset, ///< Identifies a dataset wrapper.
+    Unknown  ///< Identifies no known wrapper category.
   };
 
+  /**
+   * @typedef DimsType
+   * @brief Defines an HDF5 dimension vector.
+   */
   using DimsType = std::vector<usize>;
 
   /**
@@ -52,9 +96,18 @@ public:
   ObjectIO();
 
   ObjectIO(const ObjectIO& other) = delete;
+  /**
+   * @brief Moves wrapped object ownership.
+   * @param other Provides object state.
+   */
   ObjectIO(ObjectIO&& other) noexcept;
 
   ObjectIO& operator=(const ObjectIO& other) = delete;
+  /**
+   * @brief Replaces this wrapper with moved object ownership.
+   * @param other Provides object state.
+   * @return This wrapper.
+   */
   ObjectIO& operator=(ObjectIO&& other) noexcept;
 
   /**
@@ -63,81 +116,91 @@ public:
   virtual ~ObjectIO() noexcept;
 
   /**
-   * @brief Returns true if the ObjectIO has a valid target. Otherwise,
-   * this method returns false.
-   * @return bool
+   * @brief Tests whether this wrapper has a valid target.
+   * @return True for a valid target.
    */
   virtual bool isValid() const;
 
   /**
-   * @brief Returns the HDF5 object name. Returns an empty string if the file
-   * is invalid.
-   * @return std::string
+   * @brief Returns the HDF5 object name.
+   * @return Name, or empty string for an invalid object.
    */
   virtual std::string getName() const;
 
   /**
-   * @brief Returns the HDF5 object path name from the parent ID.
-   * Returns an empty string if the file.
-   * is invalid.
-   * @return std::string
+   * @brief Returns the HDF5 path from the parent ID.
+   * @return Path, or empty string for an invalid object.
    */
   virtual std::string getNamePath() const;
 
   /**
-   * Returns the HDF5 object path.
-   * @return std::string
+   * @brief Returns the stored HDF5 object path.
+   * @return Object path.
    */
   virtual std::string getObjectPath() const;
 
   /**
-   * @brief Returns the IO Classes ObjectType
-   * @return ObjectType
+   * @brief Returns the wrapper category.
+   * @return Object type.
    */
   ObjectType getObjectType() const;
 
   /**
-   * @brief Returns the name of the parent object. Returns an empty string if
-   * the writer is invalid.
-   * @return std::string
+   * @brief Returns the parent object name.
+   * @return Name, or empty string for an invalid object.
    */
   std::string getParentName() const;
 
   /**
-   * @brief Returns the number of attributes in the object. Returns 0 if the
-   * object is not valid.
-   * @return usize
+   * @brief Returns object attribute count.
+   * @return Attribute count, or 0 for an invalid object.
    */
   usize getNumAttributes() const;
 
   /**
-   * @brief Returns a vector with each attribute name.
-   * @return std::vector<std::string>
+   * @brief Returns all attribute names.
+   * @return Names, or empty vector for an invalid object.
    */
   std::vector<std::string> getAttributeNames() const;
 
+  /**
+   * @brief Returns one attribute name by index.
+   * @param id Specifies the zero-based attribute index.
+   * @return Name, or empty string for an invalid index.
+   */
   std::string getAttributeNameByIndex(int64 id) const;
 
   /**
-   * @brief Deletes the attribute with the specified name.
-   * @param name
+   * @brief Deletes one attribute.
+   * @param name Specifies the attribute.
    */
   void deleteAttribute(const std::string& name);
 
+  /**
+   * @brief Tests whether one attribute exists.
+   * @param name Specifies the attribute.
+   * @return True if the attribute exists.
+   */
   bool hasAttribute(const std::string& name) const;
 
   /**
-   * Deletes all attributes.
+   * @brief Deletes all object attributes.
    */
   void deleteAttributes();
 
   /**
-   * @brief Reads a string attribute with the specified name.
-   * @param attributeName
-   * @param value
+   * @brief Reads one string attribute.
+   * @param attributeName Specifies the attribute.
+   * @return String value or HDF5 read error.
    */
   Result<std::string> readStringAttribute(const std::string& attributeName) const;
 
+  /**
+   * @brief Reads one scalar attribute.
+   * @tparam T Specifies the scalar type.
+   * @param attributeName Specifies the attribute.
+   * @return Scalar value, shape error, or HDF5 read error.
+   */
   template <typename T>
   Result<T> readScalarAttribute(const std::string& attributeName) const
   {
@@ -162,27 +225,47 @@ public:
     return {vector[0]};
   }
 
+  /**
+   * @brief Reads one vector attribute.
+   * @tparam T Specifies the scalar type.
+   * @param attributeName Specifies the attribute.
+   * @return Values or HDF5 read error.
+   */
   template <typename T>
   Result<std::vector<T>> readVectorAttribute(const std::string& attributeName) const
   {
-    if(getId() <= 0)
+    // getId() self-locks; resolve it before the leaf locks below. HDF5 is not thread-safe, so
+    // every bare H5A* call must run under Support::ApiLock().
+    const hid_t objectId = getId();
+    if(objectId <= 0)
     {
       return MakeErrorResult<std::vector<T>>(-1, fmt::format("Cannot Read Attribute '{}' within Invalid Object '{}'", attributeName, getName()));
     }
 
-    HDF_ERROR_HANDLER_OFF
-    hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
-    HDF_ERROR_HANDLER_ON
+    hid_t attribId = H5I_INVALID_HID;
+    {
+      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      HDF_ERROR_HANDLER_OFF
+      attribId = H5Aopen(objectId, attributeName.c_str(), H5P_DEFAULT);
+      HDF_ERROR_HANDLER_ON
+    }
     if(attribId < 0)
     {
       return MakeErrorResult<std::vector<T>>(attribId, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
     }
-    hid_t typeId = H5Aget_type(attribId);
+
+    // getNumElementsInAttribute() self-locks, so it runs between the leaf locks (holding the open
+    // attribId across it needs no lock — only the H5 calls do).
     std::vector<T> values(getNumElementsInAttribute(attribId));
 
-    herr_t error = H5Aread(attribId, typeId, values.data());
-    H5Aclose(attribId);
-    H5Tclose(typeId);
+    herr_t error = 0;
+    {
+      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      const hid_t typeId = H5Aget_type(attribId);
+      error = H5Aread(attribId, typeId, values.data());
+      H5Aclose(attribId);
+      H5Tclose(typeId);
+    }
     if(error != 0)
     {
       std::string ss = fmt::format("Error Reading Vector Attribute '{}'.", attributeName);
@@ -192,8 +275,21 @@ public:
     return {values};
   }
 
+  /**
+   * @brief Creates or replaces one string attribute.
+   * @param attributeName Specifies the attribute.
+   * @param value Specifies the string value.
+   * @return HDF5 create/write error, or success.
+   */
   Result<> writeStringAttribute(const std::string& attributeName, const std::string& value);
 
+  /**
+   * @brief Creates or replaces one scalar attribute.
+   * @tparam T Specifies the scalar type.
+   * @param attributeName Specifies the attribute.
+   * @param value Specifies the scalar value.
+   * @return HDF5 create/write/close error, or success.
+   */
   template <typename T>
   Result<> writeScalarAttribute(const std::string& attributeName, const T& value)
   {
@@ -209,14 +305,20 @@ public:
     /* Create the data space for the attribute. */
     int32_t rank = 1;
     hsize_t dims = 1;
-    hid_t dataspaceId = H5Screate_simple(rank, &dims, nullptr);
+    hid_t dataspaceId = H5I_INVALID_HID;
+    {
+      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      dataspaceId = H5Screate_simple(rank, &dims, nullptr);
+    }
     if(dataspaceId >= 0)
     {
       // Delete existing attribute
       deleteAttribute(attributeName);
+      const hid_t selfId = getId();
       {
+        std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
         /* Create the attribute. */
-        hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        hid_t attributeId = H5Acreate(selfId, attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
         if(attributeId >= 0)
         {
           /* Write the attribute data. */
@@ -232,12 +334,12 @@ public:
         {
           returnError = MakeErrorResult(error, "Error Closing Attribute");
         }
-      }
-      /* Close the dataspace. */
-      error = H5Sclose(dataspaceId);
-      if(error < 0)
-      {
-        returnError = MakeErrorResult(error, "Error Closing Dataspace");
+        /* Close the dataspace. */
+        error = H5Sclose(dataspaceId);
+        if(error < 0)
+        {
+          returnError = MakeErrorResult(error, "Error Closing Dataspace");
+        }
       }
     }
     else
@@ -248,6 +350,13 @@ public:
     return returnError;
   }
 
+  /**
+   * @brief Creates or replaces one vector attribute.
+   * @tparam T Specifies the scalar type.
+   * @param attributeName Specifies the attribute.
+   * @param value Specifies vector values.
+   * @return HDF5 create/write/close error, or success.
+   */
   template <typename T>
   Result<> writeVectorAttribute(const std::string& attributeName, const std::vector<T>& value)
   {
@@ -264,14 +373,20 @@ public:
     }
     std::vector<hsize_t> hDims(dims.size());
     std::transform(dims.begin(), dims.end(), hDims.begin(), [](usize x) { return static_cast<hsize_t>(x); });
-    hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
+    hid_t dataspaceId = H5I_INVALID_HID;
+    {
+      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
+    }
     if(dataspaceId >= 0)
     {
       // Delete any existing attribute
       deleteAttribute(attributeName);
+      const hid_t selfId = getId();
       {
+        std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
         /* Create the attribute. */
-        hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        hid_t attributeId = H5Acreate(selfId, attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
         if(attributeId >= 0)
         {
           /* Write the attribute data. */
@@ -287,12 +402,12 @@ public:
         {
           returnError = MakeErrorResult(error, "Error Closing Attribute");
         }
-      }
-      /* Close the dataspace. */
-      error = H5Sclose(dataspaceId);
-      if(error < 0)
-      {
-        returnError = MakeErrorResult(error, "Error Closing Dataspace");
+        /* Close the dataspace. */
+        error = H5Sclose(dataspaceId);
+        if(error < 0)
+        {
+          returnError = MakeErrorResult(error, "Error Closing Dataspace");
+        }
       }
     }
     else
@@ -304,13 +419,14 @@ public:
   }
 
   /**
-   * @brief Returns the HDF5 filepath
+   * @brief Returns the HDF5 file path.
+   * @return File path, or empty path when unavailable.
    */
   std::filesystem::path getFilePath() const;
 
   /**
-   * @brief Returns a pointer to the parent FileIO. Returns null if the object is a file.
-   * @return FileIO*
+   * @brief Returns the parent FileIO.
+   * @return Parent pointer, or null when this object is a file.
    */
   virtual FileIO* parentFile() const;
 
@@ -332,9 +448,9 @@ public:
 #endif
 
   /**
-   * @param Returns the HDF5 object id.
-   * Should only be called by HDF5 IO wrapper classes.
-   * @return hid_t
+   * @brief Returns or opens the HDF5 object ID.
+   * @return Object ID, or a negative HDF5 error value.
+   * @note Use only from HDF5 wrapper classes.
    */
   hid_t getId() const;
 
@@ -342,9 +458,10 @@ public:
 
 protected:
   /**
-   * @brief Returns the HDF Type for a given primitive value.
-   * Cannot include H5Support due to circular reverences.
-   * @return The H5 native type for the value
+   * @brief Maps a C++ scalar type to its native HDF5 type.
+   * @tparam T Specifies the scalar type.
+   * @return Native HDF5 type ID.
+   * @throws std::runtime_error If T is unsupported.
    */
   template <typename T>
   static inline hid_t HdfTypeForPrimitive()
@@ -416,56 +533,84 @@ protected:
   }
 
   /**
-   * @brief Constructs an ObjectIO that wraps a target HDF5 object
-   * belonging to the specified filepath and target data path.
-   * @param filepath
-   * @param objectPath
+   * @brief Creates a wrapper from file and object paths.
+   * @param filepath Specifies the HDF5 file.
+   * @param objectPath Specifies the object path.
    */
   ObjectIO(const std::filesystem::path& filepath, const std::string& objectPath);
+  /**
+   * @brief Creates a wrapper from a parent ID and child name.
+   * @param parentId Specifies the parent HDF5 object.
+   * @param objectName Specifies the child object name.
+   */
   ObjectIO(hid_t parentId, const std::string& objectName);
 
   /**
-   * @brief Overwrites the filepath to the target HDF5 file.
-   * @param filepath
+   * @brief Sets the target HDF5 file path.
+   * @param filepath Specifies the file.
    */
   void setFilePath(const std::filesystem::path& filepath);
 
   /**
-   * @brief Sets the HDF5 object's name.
-   * @param name.
+   * @brief Sets the HDF5 object name.
+   * @param name Specifies the name.
    */
   void setName(const std::string& name);
 
   /**
-   * @brief Moves the HDF5 object's values.
-   * @param rhs
+   * @brief Moves another wrapper's state into this object.
+   * @param rhs Provides object state.
    */
   void moveObj(ObjectIO&& rhs) noexcept;
 
+  /**
+   * @brief Sets the wrapped HDF5 object ID.
+   * @param id Specifies the object ID.
+   */
   void setId(hid_t id) const;
 
+  /**
+   * @brief Sets the parent HDF5 object ID.
+   * @param parentId Specifies the parent ID.
+   */
   void setParentId(hid_t parentId);
 
   /**
-   * @brief Reads and returns the string attribute with the target ID.
-   * @param id
-   * @return
+   * @brief Reads a string attribute by HDF5 attribute ID.
+   * @param id Specifies the attribute ID.
+   * @return String value, or empty string after a read failure.
    */
   std::string readStringAttribute(int64 id) const;
 
   /**
-   * @brief Attempts to write a string attribute. Returns a Result<> with any errors encountered.
-   * @param objectId
-   * @param attributeName
-   * @param str
-   * @return Result<>
+   * @brief Creates or replaces a string attribute on one HDF5 object.
+   * @param objectId Specifies the object ID.
+   * @param attributeName Specifies the attribute.
+   * @param str Specifies the value.
+   * @return HDF5 create/write error, or success.
    */
   Result<> writeStringAttribute(int64 objectId, const std::string& attributeName, const std::string& str);
 
+  /**
+   * @brief Tests whether the target HDF5 object is open.
+   * @return True for an open object.
+   */
   bool isOpen() const;
+  /**
+   * @brief Opens the target HDF5 object.
+   * @return Object ID, or a negative HDF5 error value.
+   */
   virtual hid_t open() const = 0;
+  /**
+   * @brief Closes the wrapped HDF5 object.
+   */
   virtual void close() = 0;
 
+  /**
+   * @brief Returns the element count for one open attribute.
+   * @param attribId Specifies the attribute ID.
+   * @return Element count, or 0 after a query failure.
+   */
   usize getNumElementsInAttribute(hid_t attribId) const;
 
 private:

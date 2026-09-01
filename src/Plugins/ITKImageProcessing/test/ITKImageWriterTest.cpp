@@ -62,7 +62,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
     REQUIRE(std::filesystem::remove(imagePath));
   }
 
-  // Now make sure there are no files left in the directory.
+  // Confirm that the directory contains no files.
   int count = 0;
   for(const auto& entry : std::filesystem::directory_iterator(tempDirPath))
   {
@@ -70,7 +70,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   }
   REQUIRE(count == 0);
 
-  // Now delete the temp directory
+  // Delete the temporary directory.
   try
   {
     std::filesystem::remove_all(tempDirPath);

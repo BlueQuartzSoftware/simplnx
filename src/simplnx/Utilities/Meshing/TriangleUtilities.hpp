@@ -109,40 +109,78 @@ inline static constexpr usize k_21 = 7;
 inline static constexpr usize k_22 = 8;
 
 /**
- * @brief This function calculates the volume of a supplied triangle
- * @param vertIndices The indices that make up the points of a triangle
- * @param vertices The SharedVertexList of the parent geometry
- * @returns INodeGeometry2D::SharedVertexList::value_type the calculated volume
+ * @brief Calculates one triangle's signed origin-based volume contribution.
+ * @param vertIndices Specifies three vertex indexes.
+ * @param vertices Provides flat XYZ coordinates.
+ * @return Signed volume contribution.
  */
 SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
 } // namespace detail
 
 /**
- * @brief This function attempts to make winding as consistent as possible.
- * NOTE: This algorithm requires that there are NO DUPLICATE vertices in the mesh
- * @param triangles The SharedFaceList that may be modified
- * @param neighbors The element neighbors adjacency list
- * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
- * @param shouldCancel
- * @param mesgHandler
- * @returns Result<usize> This result will contain the number of triangles that could not be repaired
+ * @brief Makes triangle winding as consistent as mesh topology permits.
+ * @param triangles Provides and receives triangle connectivity.
+ * @param neighbors Provides adjacent triangles.
+ * @param idsStore Provides two face labels or one region ID per triangle.
+ * @param shouldCancel Stops before later traversal work when true.
+ * @param mesgHandler Receives progress messages.
+ * @return Error, warning for unrepaired triangles, or success after cancellation.
+ * @pre The mesh has no duplicate vertices.
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
                                               const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
- * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
- * triangle for a set of triangles
+ * @brief Attempts to make triangle winding consistent without materializing mesh-sized face, label,
+ * connectivity, traversal-state, or queue arrays in memory.
+ *
+ * This storage-neutral variant reconstructs the same triangle-neighbor order as the legacy
+ * connectivity path through bounded external sorts. Mutable traversal state and the FIFO queue are
+ * held in temporary record stores, while face and ID DataStores are accessed through bounded page
+ * caches. A registered I/O manager that provides external sorting and temporary record storage is
+ * required.
+ *
+ * @param triangles The SharedFaceList that may be modified.
+ * @param idsStore Face labels (2 components) or region IDs (1 component).
+ * @param shouldCancel Cooperative cancellation flag.
+ * @param mesgHandler Progress-message callback.
+ * @return Provider, sort, cache, topology, or DataStore error, or success after cancellation.
+ */
+SIMPLNX_EXPORT Result<> RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+                                                      const IFilter::MessageHandler& mesgHandler);
+
+/**
+ * @class CalculateNormalsImpl
+ * @brief Computes triangle normals over scheduler ranges.
  */
 class SIMPLNX_EXPORT CalculateNormalsImpl
 {
 public:
+  /**
+   * @brief Creates a borrowed normal-calculation worker.
+   * @param triangles Provides triangle connectivity.
+   * @param verts Provides vertex coordinates.
+   * @param normals Receives three values per triangle.
+   * @param shouldCancel Stops before later triangles when true.
+   */
   CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
                        const std::atomic_bool& shouldCancel);
+  /**
+   * @brief Destroys the borrowed worker.
+   */
   ~CalculateNormalsImpl() = default;
 
+  /**
+   * @brief Computes normals for one triangle range.
+   * @param start Specifies the first triangle.
+   * @param end Specifies the exclusive last triangle.
+   */
   void generate(usize start, usize end) const;
 
+  /**
+   * @brief Computes normals for one scheduler range.
+   * @param range Specifies the triangle range.
+   */
   void operator()(const Range& range) const;
 
 private:
@@ -153,14 +191,17 @@ private:
 };
 
 /**
- * @brief This function calculates feature volumes without any bound check applied
- * @tparam ContainerT the type of the array to be filled; must have operator[] defined
- * @param triangles The SharedFaceList of the target geometry
- * @param verts The SharedVertexList of the target geometry
- * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
- * @param volumes This the array that will be filled with volumes (no bounds check, size > max feature expected)
- * @param shouldCancel Atomic Bool to check if the algorithm should exit early
- * @returns Result<usize> function result
+ * @brief Accumulates signed triangle volume contributions by feature ID.
+ * @tparam ContainerT Specifies a random-access volume container.
+ * @param triangles Provides triangle connectivity.
+ * @param verts Provides vertex coordinates.
+ * @param idsStore Provides two face labels or one region ID per triangle.
+ * @param volumes Receives accumulated volumes.
+ * @param shouldCancel Stops before later triangles when true.
+ * @return Error for an invalid ID component count, or success after cancellation.
+ * @pre volumes contains every nonnegative ID when idsStore has one component.
+ *
+ * The method uses direct per-value DataStore access and does not report I/O errors.
  */
 template <class ContainerT>
 Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& idsStore,

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -33,6 +35,7 @@
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -40,29 +43,60 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
+/**
+ * @def SIMPLNX_RESULT_CATCH_PRINT
+ * @brief Adds all warnings and errors from a Result to the current Catch2 test.
+ * @param result Result expression to evaluate once and report.
+ */
 #define SIMPLNX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
-  for(const auto& warning : (result).warnings())                                                                                                                                                       \
+  do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    WARN(fmt::format("{} : {}", warning.code, warning.message));                                                                                                                                       \
-  }                                                                                                                                                                                                    \
-  if((result).invalid())                                                                                                                                                                               \
-  {                                                                                                                                                                                                    \
-    for(const auto& error : (result).errors())                                                                                                                                                         \
+    auto&& simplnxResultToPrint = (result);                                                                                                                                                            \
+    for(const auto& warning : simplnxResultToPrint.warnings())                                                                                                                                         \
     {                                                                                                                                                                                                  \
-      UNSCOPED_INFO(fmt::format("{} : {}", error.code, error.message));                                                                                                                                \
+      WARN(fmt::format("{} : {}", warning.code, warning.message));                                                                                                                                     \
     }                                                                                                                                                                                                  \
-  }
+    if(simplnxResultToPrint.invalid())                                                                                                                                                                 \
+    {                                                                                                                                                                                                  \
+      for(const auto& error : simplnxResultToPrint.errors())                                                                                                                                           \
+      {                                                                                                                                                                                                \
+        UNSCOPED_INFO(fmt::format("{} : {}", error.code, error.message));                                                                                                                              \
+      }                                                                                                                                                                                                \
+    }                                                                                                                                                                                                  \
+  } while(false)
 
+/**
+ * @def SIMPLNX_RESULT_REQUIRE_VALID
+ * @brief Reports a Result and requires it to be valid.
+ * @param result Result expression to evaluate once and verify.
+ */
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
-  SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE((result).valid());
+  do                                                                                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
+    SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
+    REQUIRE(simplnxCheckedResult.valid());                                                                                                                                                             \
+  } while(false);
 
+/**
+ * @def SIMPLNX_RESULT_REQUIRE_INVALID
+ * @brief Reports a Result and requires it to be invalid.
+ * @param result Result expression to evaluate once and verify.
+ */
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
-  SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE((result).invalid());
+  do                                                                                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
+    SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
+    REQUIRE(simplnxCheckedResult.invalid());                                                                                                                                                           \
+  } while(false);
 
 namespace nx::core
 {
+/**
+ * @namespace nx::core::Constants
+ * @brief Provides common names and paths for simplnx unit tests.
+ */
 namespace Constants
 {
 inline constexpr StringLiteral k_DataContainer("DataContainer");
@@ -184,10 +218,9 @@ inline constexpr StringLiteral k_ArrayLName("L");
 inline constexpr StringLiteral k_ArrayMName("M");
 inline constexpr StringLiteral k_ArrayNName("N");
 
-// Data Container DataPath
+// These paths select the common test data container and its child objects.
 const DataPath k_DataContainerPath({k_DataContainer});
 
-// Cell Attribute Matrix DataPaths
 const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath(k_CellData);
 const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(k_EulerAngles);
 const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
@@ -199,12 +232,10 @@ const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
 const DataPath k_FitArrayPath = k_CellAttributeMatrix.createChildPath(k_Fit);
 const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPath(k_SEMSignal);
 
-// Cell Ensemble Data DataPaths
 const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
 const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrixPath.createChildPath(k_CrystalStructures);
 const DataPath k_CalculatedShiftsPath = k_DataContainerPath.createChildPath(k_CalculatedShifts);
 
-// Cell Feature Attribute Matrix DataPaths
 const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_Grain_Data);
 const DataPath k_ActiveArrayPath = k_CellFeatureAttributeMatrix.createChildPath(k_ActiveName);
 const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
@@ -212,15 +243,31 @@ const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPat
 
 const DataPath k_CellFeatureDataPath = k_DataContainerPath.createChildPath(k_CellFeatureData);
 
-// Exemplar DataStructure
+// This path selects the top-level exemplar data container.
 const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 
 } // namespace Constants
 
+/**
+ * @namespace nx::core::UnitTest
+ * @brief Provides common data builders and assertions for simplnx unit tests.
+ */
 namespace UnitTest
 {
-inline constexpr float EPSILON = 0.0001;
+/**
+ * @brief Default absolute tolerance for unit-test comparisons.
+ */
+inline constexpr float32 EPSILON = 0.0001;
 
+/**
+ * @brief Computes an MD5 digest from a vector's object representation.
+ * @tparam T Specifies the vector element type.
+ * @param outputDataArray Values to hash.
+ * @return Lowercase hexadecimal MD5 digest.
+ *
+ * The digest depends on the host representation of T, including byte order and
+ * any padding bytes.
+ */
 template <class T>
 std::string ComputeMD5Hash(const std::vector<T>& outputDataArray)
 {
@@ -233,36 +280,44 @@ std::string ComputeMD5Hash(const std::vector<T>& outputDataArray)
 }
 
 /**
- * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when
- * then class goes out of scope the extracted contents will be deleted from disk.
+ * @class TestFileSentinel
+ * @brief Decompresses a tar.gz archive for a test and optionally removes its output.
+ *
+ * The destructor removes only the expected top-level output path. The archive
+ * can contain more entries, so callers must supply an output name that owns all
+ * extracted content.
  */
 class TestFileSentinel
 {
 public:
   /**
-   * @brief Construct a File Sentinel object that will decompress on construction and remove the
-   * contents on destruction.
+   * @brief Configures archive extraction and optional output removal.
    *
-   * @param testFilesDir The directory where the archive is located
-   * @param inputArchiveName The full name of the archive. The location is assumed to be in the TestFiles directory
-   * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
-   * that only a single file or single directory are part of the archive. In the case of a directory, the
-   * directory itself can have as many subdirectories as needed.
-   * @param decompressFiles Decompress the archive
-   * @param removeTemp delete files that were decompressed
+   * @param testFilesDir Directory that contains the archive and receives extracted entries.
+   * @param inputArchiveName Archive file name relative to testFilesDir.
+   * @param expectedTopLevelOutput Path that the destructor can remove relative to testFilesDir.
+   * @param decompressFiles True to extract the archive during construction.
+   * @param removeTemp True to remove expectedTopLevelOutput during destruction.
+   * @note Construction prints an extraction error but does not fail the test.
    */
   TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles = true, bool removeTemp = true);
 
+  /**
+   * @brief Removes the configured top-level output when removal is enabled.
+   */
   ~TestFileSentinel();
 
-  TestFileSentinel(const TestFileSentinel&) = delete;            // Copy Constructor Not Implemented
-  TestFileSentinel(TestFileSentinel&&) = delete;                 // Move Constructor Not Implemented
-  TestFileSentinel& operator=(const TestFileSentinel&) = delete; // Copy Assignment Not Implemented
-  TestFileSentinel& operator=(TestFileSentinel&&) = delete;      // Move Assignment Not Implemented
+  TestFileSentinel(const TestFileSentinel&) = delete;
+  TestFileSentinel(TestFileSentinel&&) = delete;
+  TestFileSentinel& operator=(const TestFileSentinel&) = delete;
+  TestFileSentinel& operator=(TestFileSentinel&&) = delete;
 
   /**
-   * @brief Does the actual decompression of the archive.
-   * @return
+   * @brief Extracts regular files and directories from the configured gzip tar archive.
+   * @return An error code if the archive cannot be opened, read, or validated.
+   *
+   * The extractor skips links and unsupported entry types. It supports GNU long
+   * names and validates each tar header checksum.
    */
   std::error_code decompress();
 
@@ -272,45 +327,50 @@ private:
   std::string m_ExpectedTopLevelOutput;
   bool m_Decompress;
   bool m_RemoveTemp;
+  std::filesystem::path m_HolderFile;
 };
 
 /**
- * @brief This class provides RAII-style management of Preferences for unit tests.
- * It preserves the current preference values on construction, sets new test-specific values,
- * and restores the original values on destruction (even if the test fails).
+ * @class PreferencesSentinel
+ * @brief Applies temporary storage preferences to the process-wide Application.
+ *
+ * The constructor saves and changes the selected preferences. The destructor
+ * restores the saved values in memory, including during stack unwinding.
+ *
+ * @warning Concurrent instances can interfere because they change the same process-wide preferences.
  */
 class PreferencesSentinel
 {
 public:
   /**
-   * @brief Construct a Preferences Sentinel that saves current preferences, sets new values,
-   * and restores original values on destruction.
-   *
-   * @param largeDataFormat The large data format to use (e.g., "Zarr", "FileStore")
-   * @param largeDataSize The large data size threshold in bytes
-   * @param forceOocData Whether to force out-of-core data storage
+   * @brief Saves the current preferences and applies test-specific storage values.
+   * @param mode Storage mode to use during the sentinel lifetime.
+   * @param largeDataSize Large-data threshold in bytes.
    */
-  PreferencesSentinel(std::string largeDataFormat, int64 largeDataSize, bool forceOocData);
+  PreferencesSentinel(nx::core::DataStorageMode mode, int64 largeDataSize);
 
+  /**
+   * @brief Restores the saved storage preferences without writing a preferences file.
+   */
   ~PreferencesSentinel();
 
-  PreferencesSentinel(const PreferencesSentinel&) = delete;            // Copy Constructor Not Implemented
-  PreferencesSentinel(PreferencesSentinel&&) = delete;                 // Move Constructor Not Implemented
-  PreferencesSentinel& operator=(const PreferencesSentinel&) = delete; // Copy Assignment Not Implemented
-  PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;      // Move Assignment Not Implemented
+  PreferencesSentinel(const PreferencesSentinel&) = delete;
+  PreferencesSentinel(PreferencesSentinel&&) = delete;
+  PreferencesSentinel& operator=(const PreferencesSentinel&) = delete;
+  PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;
 
 private:
-  std::string m_OriginalFormat;
+  nx::core::DataStorageMode m_OriginalMode;
   int64 m_OriginalSize;
-  bool m_OriginalForceOoc;
 };
 
 /**
- * @brief closeEnough
- * @param a
- * @param b
- * @param epsilon
- * @return
+ * @brief Tests whether two values differ by less than a tolerance.
+ * @tparam K Specifies the value and tolerance type.
+ * @param a First value.
+ * @param b Second value.
+ * @param epsilon Exclusive absolute-difference limit.
+ * @return True if `abs(a - b) < epsilon`.
  */
 template <typename K>
 bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
@@ -319,11 +379,12 @@ bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
 }
 
 /**
- * @brief closeEnough
- * @param a
- * @param b
- * @param epsilon
- * @return
+ * @brief Tests whether two value magnitudes differ by less than a tolerance.
+ * @tparam K Specifies the value and tolerance type.
+ * @param a First value.
+ * @param b Second value.
+ * @param epsilon Exclusive magnitude-difference limit.
+ * @return True if `abs(abs(a) - abs(b)) < epsilon`.
  */
 template <typename K>
 bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
@@ -332,16 +393,20 @@ bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
 }
 
 /**
- * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
- * @param filepath
- * @return DataStructure
+ * @brief Loads a .dream3d file into a DataStructure for a unit test.
+ * @param filepath Existing .dream3d file path.
+ * @return The loaded DataStructure.
+ *
+ * The helper loads plugins first. It fails the current Catch2 test if the path
+ * does not exist or the DREAM3D reader returns an error.
  */
 DataStructure LoadDataStructure(const fs::path& filepath);
 
 /**
- * @brief Loads all simplnx plugins using singleton pattern.
- * Plugins are loaded only once per test execution, subsequent calls return immediately.
- * Thread-safe initialization guaranteed by C++11 static local variable initialization.
+ * @brief Loads all simplnx plugins once for the current process.
+ *
+ * C++ static initialization serializes the first call. Later calls reuse the
+ * completed result without loading the plugins again.
  */
 inline void LoadPlugins()
 {
@@ -350,13 +415,13 @@ inline void LoadPlugins()
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     return true;
   }();
-  (void)pluginsLoaded; // Suppress unused variable warning
+  (void)pluginsLoaded;
 }
 
 /**
- * @brief Writes out a DataStructure to a .dream3d file at the given file path
- * @param dataStructure
- * @param filepath
+ * @brief Writes a DataStructure to a .dream3d file and requires success.
+ * @param dataStructure DataStructure to write.
+ * @param filepath Destination file path.
  */
 inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
@@ -366,10 +431,10 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 }
 
 /**
- * @brief Compares two Image Geometries
- * @param exemplarGeom
- * @param computedGeom
- * @param threshold
+ * @brief Requires two ImageGeom objects to have equal dimensions and compatible coordinates.
+ * @param exemplarGeom Non-null exemplar geometry.
+ * @param computedGeom Non-null computed geometry.
+ * @param threshold Inclusive absolute tolerance for each spacing and origin component.
  */
 inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom, float32 threshold = 0.0f)
 {
@@ -394,10 +459,11 @@ inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom*
 }
 
 /**
- * @brief Compares two Image Geometries
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two ImageGeom objects that are stored in one DataStructure.
+ * @param dataStructure Contains both geometries.
+ * @param exemplaryDataPath Exemplar ImageGeom path.
+ * @param computedPath Computed ImageGeom path.
+ * @param threshold Inclusive absolute tolerance for each spacing and origin component.
  */
 inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, float32 threshold = 0.0f)
 {
@@ -408,10 +474,10 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
 }
 
 /**
- * @brief Compares two IGeometries (HELPER FUNCTION)
- * @param geom1
- * @param geom2
- * @returns bool true if equivalent
+ * @brief Requires two geometries to have equal type, dimensions, cells, arrays, and center.
+ * @param geom1 Non-null first geometry.
+ * @param geom2 Non-null second geometry.
+ * @return True if all Catch2 requirements continue.
  */
 inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
 {
@@ -426,9 +492,9 @@ inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
 }
 
 /**
- * @brief Compares two Montages
- * @param exemplar
- * @param generated
+ * @brief Requires equal montage tile counts and a generated match for each exemplar geometry.
+ * @param exemplar Exemplar montage.
+ * @param generated Generated montage.
  */
 inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontage& generated)
 {
@@ -456,53 +522,88 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
 }
 
 /**
- * @brief Compares IDataArray
- * @tparam T
- * @param left
- * @param right
+ * @brief Compares two IDataArray objects in bounded blocks.
+ *
+ * The helper uses 40,000-element bulk reads to keep memory bounded and avoid
+ * per-value OOC access. It treats two NaN values as equal for floating-point
+ * arrays.
+ *
+ * @tparam T Specifies the array element type.
+ * @param left Exemplar array.
+ * @param right Computed array.
+ * @param start Zero-based first element to compare.
  */
 template <typename T>
 void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
 {
   const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize end = oldDataStore.getSize();
+  const usize totalSize = oldDataStore.getSize();
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
-  T oldVal;
-  T newVal;
-  bool failed = false;
-  for(usize i = start; i < end; i++)
-  {
-    oldVal = oldDataStore[i];
-    newVal = newDataStore[i];
-    if(oldVal != newVal)
-    {
-      UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", i, oldVal, newVal));
+  REQUIRE(totalSize == newDataStore.getSize());
 
-      if constexpr(std::is_floating_point_v<T>)
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  bool failed = false;
+  usize failIndex = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize offset = start; offset < totalSize && !failed; offset += k_ChunkSize)
+  {
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldDataStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newDataStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    for(usize i = 0; i < count; i++)
+    {
+      const T oldVal = oldBuf[i];
+      const T newVal = newBuf[i];
+      if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
-        if(diff > EPSILON)
+        if constexpr(std::is_floating_point_v<T>)
         {
-          failed = true;
-          break;
+          // Two NaN values represent the same missing result for this test helper.
+          if(std::isnan(oldVal) && std::isnan(newVal))
+          {
+            continue;
+          }
+          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
+          if(diff <= EPSILON)
+          {
+            continue;
+          }
         }
-      }
-      else
-      {
         failed = true;
+        failIndex = offset + i;
+        failOld = oldVal;
+        failNew = newVal;
+        break;
       }
-      break;
     }
+  }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
   }
   REQUIRE(!failed);
 }
 
 /**
- * @brief Wrapper for CompareDataArrays to use with the ExecuteDataFunction
+ * @struct CompareArraysFunctor
+ * @brief Adapts CompareDataArrays for ExecuteDataFunction type dispatch.
  */
 struct CompareArraysFunctor
 {
+  /**
+   * @brief Dispatches a typed array comparison.
+   * @tparam T Specifies the dispatched array element type.
+   * @param left Exemplar array.
+   * @param right Computed array.
+   */
   template <typename T>
   void operator()(const IDataArray& left, const IDataArray& right) const
   {
@@ -511,12 +612,12 @@ struct CompareArraysFunctor
 };
 
 /**
- * @brief Compares IDataArrays by a specific component
- * @tparam T
- * @param left
- * @param right
- * @param startTuple
- * @param component
+ * @brief Compares one component of two IDataArray objects in bounded blocks.
+ * @tparam T Specifies the array element type.
+ * @param left Exemplar array.
+ * @param right Computed array.
+ * @param startTuple Zero-based first tuple to compare.
+ * @param component Zero-based component to compare.
  */
 template <typename T>
 void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& right, const usize startTuple = 0, const usize component = 0)
@@ -528,47 +629,64 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
   REQUIRE(startTuple < tupleCount);
   REQUIRE(component < componentCount);
-  T oldVal;
-  T newVal;
-  bool failed = false;
-  for(usize t = startTuple; t < tupleCount; t++)
-  {
-    oldVal = oldDataStore[t * componentCount + component];
-    newVal = newDataStore[t * componentCount + component];
-    if(oldVal != newVal)
-    {
-      UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", t, component, oldVal, newVal));
 
-      if constexpr(std::is_floating_point_v<T>)
+  constexpr usize k_ChunkTuples = 40000;
+  const usize chunkElements = k_ChunkTuples * componentCount;
+  auto oldBuf = std::make_unique<T[]>(chunkElements);
+  auto newBuf = std::make_unique<T[]>(chunkElements);
+
+  bool failed = false;
+  usize failTuple = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize tStart = startTuple; tStart < tupleCount && !failed; tStart += k_ChunkTuples)
+  {
+    const usize tCount = std::min(k_ChunkTuples, tupleCount - tStart);
+    const usize elemCount = tCount * componentCount;
+    oldDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(oldBuf.get(), elemCount));
+    newDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(newBuf.get(), elemCount));
+
+    for(usize t = 0; t < tCount; t++)
+    {
+      const T oldVal = oldBuf[t * componentCount + component];
+      const T newVal = newBuf[t * componentCount + component];
+      if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
-        if(diff > EPSILON)
+        if constexpr(std::is_floating_point_v<T>)
         {
-          failed = true;
-          break;
+          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
+          if(diff <= EPSILON)
+          {
+            continue;
+          }
         }
-      }
-      else
-      {
         failed = true;
+        failTuple = tStart + t;
+        failOld = oldVal;
+        failNew = newVal;
+        break;
       }
-      break;
     }
+  }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", failTuple, component, failOld, failNew));
   }
   REQUIRE(!failed);
 }
 
 /**
- * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
- * @tparam T
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two numeric DataArray objects with the default absolute tolerance.
+ * @tparam T Specifies the array element type.
+ * @param dataStructure Contains both arrays.
+ * @param exemplaryDataPath Exemplar array path.
+ * @param computedPath Computed array path.
  */
 template <typename T>
 void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
   INFO(fmt::format("Exemplary Data Array:'{}'\n  Computed DataArray: '{}'\n   bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
@@ -577,26 +695,57 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   const auto& computedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
   REQUIRE(exemplaryDataArray.getNumberOfTuples() == computedDataArray.getNumberOfTuples());
 
-  usize start = 0;
-  usize end = exemplaryDataArray.getSize();
-  for(usize i = start; i < end; i++)
+  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
+  const auto& newStore = computedDataArray.getDataStoreRef();
+  const usize totalSize = oldStore.getSize();
+
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  bool failed = false;
+  usize failIndex = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize offset = 0; offset < totalSize && !failed; offset += k_ChunkSize)
   {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = computedDataArray[i];
-    if(oldVal != newVal)
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    for(usize i = 0; i < count; i++)
     {
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
+      if(oldBuf[i] != newBuf[i])
+      {
+        float32 diff = std::fabs(static_cast<float32>(oldBuf[i] - newBuf[i]));
+        if(diff >= EPSILON)
+        {
+          failed = true;
+          failIndex = offset + i;
+          failOld = oldBuf[i];
+          failNew = newBuf[i];
+          break;
+        }
+      }
     }
   }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
+  }
+  REQUIRE(!failed);
 }
 
 /**
- * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
- * @tparam T
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two floating-point DataArray objects and reports their largest difference.
+ * @tparam T Specifies the floating-point element type.
+ * @param dataStructure Contains both arrays.
+ * @param exemplaryDataPath Exemplar array path.
+ * @param computedPath Computed array path.
+ * @param epsilon Exclusive absolute-difference limit.
+ * @param checkNans True to compare NaN positions; false to omit values where either array has NaN.
  */
 template <typename T>
 void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
@@ -611,30 +760,48 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
 
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
+  const auto& newStore = generatedDataArray.getDataStoreRef();
+  const usize totalSize = oldStore.getSize();
+
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  // The full scan reports the largest difference for the V&V diagnostic.
+  // Bounded bulk reads keep memory independent of the total element count.
+  // The difference uses T to preserve the input array precision.
   T maxDiff = 0;
   usize maxDiffIndex = 0;
-  usize start = 0;
-  usize end = exemplaryDataArray.getSize();
-  for(usize i = start; i < end; i++)
+
+  for(usize offset = 0; offset < totalSize; offset += k_ChunkSize)
   {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = generatedDataArray[i];
-    if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    for(usize i = 0; i < count; i++)
     {
-      continue;
-    }
-    if(std::isnan(oldVal) && std::isnan(newVal))
-    {
-      // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
-      continue;
-    }
-    if(oldVal != newVal)
-    {
-      T diff = std::fabs(static_cast<T>(oldVal - newVal));
-      if(diff > maxDiff)
+      const T oldVal = oldBuf[i];
+      const T newVal = newBuf[i];
+      if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
       {
-        maxDiff = diff;
-        maxDiffIndex = i;
+        continue;
+      }
+      if(std::isnan(oldVal) && std::isnan(newVal))
+      {
+        // Two NaN values represent the same missing result for this test helper.
+        continue;
+      }
+      if(oldVal != newVal)
+      {
+        const T diff = std::fabs(static_cast<T>(oldVal - newVal));
+        if(diff > maxDiff)
+        {
+          maxDiff = diff;
+          maxDiffIndex = offset + i;
+        }
       }
     }
   }
@@ -643,11 +810,13 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
 }
 
 /**
- * @brief Compares 2 NeighborList arrays using an EPSILON value. Useful for floating point comparisons
- * @tparam T
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two floating-point NeighborList arrays without depending on list order.
+ * @tparam T Specifies the floating-point element type.
+ * @param dataStructure Contains both lists.
+ * @param exemplaryDataPath Exemplar NeighborList path.
+ * @param computedPath Computed NeighborList path.
+ * @param epsilon Exclusive absolute-difference limit.
+ * @param checkNans True to compare NaN positions; false to omit values where either list has NaN.
  */
 template <typename T>
 void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
@@ -678,12 +847,12 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
         }
         if(std::isnan(exemplaryVal) && std::isnan(computedVal))
         {
-          // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+          // Two NaN values represent the same missing result for this test helper.
           continue;
         }
         if(exemplaryVal != computedVal)
         {
-          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
                            computedPath.toString(), computed.size()));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
@@ -697,10 +866,11 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
 }
 
 /**
- * @brief
- * @tparam T
- * @param exemplaryData
- * @param computedData
+ * @brief Compares two NeighborList objects without depending on list order.
+ * @tparam T Specifies the list element type.
+ * @param exemplaryData Non-null exemplar list.
+ * @param computedData Non-null computed list.
+ * @note The helper reports Boolean lists as unsupported without failing the test.
  */
 template <typename T>
 void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborList* computedData)
@@ -733,7 +903,7 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
           auto computedVal = computed.at(j);
           if(exemplaryVal != computedVal)
           {
-            float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+            float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
             INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryList.getDataPaths()[0].toString(),
                              exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
             INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
@@ -748,11 +918,11 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
 }
 
 /**
- * @brief
- * @tparam T
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two NeighborList objects that are stored in one DataStructure.
+ * @tparam T Specifies the list element type.
+ * @param dataStructure Contains both lists.
+ * @param exemplaryDataPath Exemplar NeighborList path.
+ * @param computedPath Computed NeighborList path.
  */
 template <typename T>
 void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
@@ -782,7 +952,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
         auto computedVal = computed.at(j);
         if(exemplaryVal != computedVal)
         {
-          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
           REQUIRE(diff < EPSILON);
@@ -794,10 +964,17 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
 }
 
 /**
- * @brief Wrapper for CompareNeighborLists to use with the ExecuteDataFunction
+ * @struct CompareNeighborListsFunctor
+ * @brief Adapts CompareNeighborLists for ExecuteDataFunction type dispatch.
  */
 struct CompareNeighborListsFunctor
 {
+  /**
+   * @brief Dispatches a typed NeighborList comparison.
+   * @tparam T Specifies the dispatched list element type.
+   * @param left Exemplar list.
+   * @param right Computed list.
+   */
   template <typename T>
   void operator()(const INeighborList* left, const INeighborList* right) const
   {
@@ -806,10 +983,10 @@ struct CompareNeighborListsFunctor
 };
 
 /**
- * @brief Compares the referenced StringArray objects in the dataStructure for any differences
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Requires equal values in two StringArray objects from one DataStructure.
+ * @param dataStructure Contains both arrays.
+ * @param exemplaryDataPath Exemplar StringArray path.
+ * @param computedPath Computed StringArray path.
  */
 inline void CompareStringArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
@@ -833,9 +1010,9 @@ inline void CompareStringArrays(const DataStructure& dataStructure, const DataPa
 }
 
 /**
- * @brief Compares the referenced StringArray objects for any differences
- * @param exemplar
- * @param computed
+ * @brief Requires equal values in two StringArray objects.
+ * @param exemplar Exemplar array.
+ * @param computed Computed array.
  */
 inline void CompareStringArrays(const StringArray& exemplar, const StringArray& computed)
 {
@@ -852,12 +1029,12 @@ inline void CompareStringArrays(const StringArray& exemplar, const StringArray& 
 }
 
 /**
- * @brief Compares the referenced DynamicListArray objects in the dataStructure for any differences
- * @tparam T index type
- * @tparam K value type
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @brief Compares two DynamicListArray objects with the default absolute tolerance.
+ * @tparam T Specifies the list index type.
+ * @tparam K Specifies the list value type.
+ * @param dataStructure Contains both arrays.
+ * @param exemplaryDataPath Exemplar DynamicListArray path.
+ * @param computedPath Computed DynamicListArray path.
  */
 template <typename T, typename K>
 void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
@@ -881,7 +1058,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
     T newNumCells = newEltList.numCells;
     if(oldNumCells != newNumCells)
     {
-      float diff = std::fabs(static_cast<float>(oldNumCells - newNumCells));
+      float32 diff = std::fabs(static_cast<float32>(oldNumCells - newNumCells));
       REQUIRE(diff < EPSILON);
     }
     for(T j = 0; j < oldNumCells; ++j)
@@ -890,13 +1067,20 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
       auto newVal = newEltList.cells[j];
       if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
         REQUIRE(diff < EPSILON);
       }
     }
   }
 }
 
+/**
+ * @brief Compares two IArray objects after validating their runtime array and value types.
+ * @tparam T Specifies the dispatched numeric element type.
+ * @param generatedArray Non-null computed array.
+ * @param exemplarArray Non-null exemplar array.
+ * @note A type mismatch writes a diagnostic and returns without failing the test.
+ */
 template <typename T>
 void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
 {
@@ -950,6 +1134,15 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   }
 }
 
+/**
+ * @brief Recursively compares supported objects in two DataStructure trees.
+ * @param dataStructureA First DataStructure.
+ * @param dataStructureB Second DataStructure.
+ * @param parentGroup Group path to compare, or an empty path for the roots.
+ *
+ * The helper compares geometry metadata and typed array values. Unsupported
+ * DynamicListArray, ScalarData, and AbstractMontage objects are not compared.
+ */
 inline void CompareDataStructures(const DataStructure& dataStructureA, const DataStructure& dataStructureB, const DataPath& parentGroup = DataPath{})
 {
   try
@@ -1121,16 +1314,16 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
         switch(objectADataObjectType)
         {
         case nx::core::DataObject::Type::DynamicListArray: {
-          // TODO: ??
+          // This recursive helper does not compare DynamicListArray objects.
           break;
         }
         case nx::core::DataObject::Type::ScalarData: {
-          // TODO: ??
+          // This recursive helper reports ScalarData objects without comparing values.
           std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
           break;
         }
         case nx::core::DataObject::Type::AbstractMontage: {
-          // TODO: ??
+          // This recursive helper does not compare AbstractMontage objects.
           break;
         }
         case nx::core::DataObject::Type::IDataArray:
@@ -1204,15 +1397,14 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
 } // namespace UnitTest
 
 /**
- * @brief Creates a DataArray backed by a DataStore (in memory).
- * @tparam T The primitive type to use, i.e. int8, float, double
- * @param dataStructure The DataStructure to use
- * @param name The name of the DataArray
- * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
- * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
- * if you want to store a 3Rx4C matrix then it would be {3, 4}.
- * @param parentId The DataObject that will own the DataArray instance.
- * @return
+ * @brief Creates a zero-filled DataArray with an in-memory DataStore.
+ * @tparam T Specifies the primitive element type.
+ * @param dataStructure Receives the array.
+ * @param name Array name.
+ * @param tupleShape Tuple dimensions from slowest to fastest.
+ * @param componentShape Component dimensions from slowest to fastest.
+ * @param parentId Identifier of the parent DataObject.
+ * @return The created array, which the DataStructure owns.
  */
 template <typename T>
 DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId = {})
@@ -1225,6 +1417,15 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::strin
   return dataArray;
 }
 
+/**
+ * @brief Creates an empty NeighborList with a selected tuple count.
+ * @tparam T Specifies the list element type.
+ * @param dataStructure Receives the NeighborList.
+ * @param name NeighborList name.
+ * @param numTuples Number of lists to create.
+ * @param parentId Identifier of the parent DataObject.
+ * @return The created NeighborList, which the DataStructure owns.
+ */
 template <typename T>
 NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
 {
@@ -1234,8 +1435,8 @@ NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std:
 }
 
 /**
- * @brief Creates a DataStructure that mimics an EBSD data set
- * @return
+ * @brief Creates a small DataStructure that represents an EBSD data set.
+ * @return The populated test DataStructure.
  */
 inline DataStructure CreateDataStructure()
 {
@@ -1243,19 +1444,17 @@ inline DataStructure CreateDataStructure()
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
   DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
-  // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, scanData->getId());
   imageGeom->setSpacing({0.25f, 0.55f, 1.86});
   imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
   SizeVec3 imageGeomDims = {40, 60, 80};
-  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+  imageGeom->setDimensions(imageGeomDims); // ImageGeom dimensions use {X, Y, Z} order.
 
-  // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
-  // it into another shared_ptr<>
+  // The DataStructure owns each array. Local raw pointers remain non-owning.
   usize numComponents = 1;
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* ci_data = CreateTestDataArray<float32>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
   Int32Array* phases_data = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanData->getId());
   UInt64Array* voxelIndices = CreateTestDataArray<uint64>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
@@ -1265,15 +1464,14 @@ inline DataStructure CreateDataStructure()
 
   numComponents = 3;
   UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataStructure, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
-  Float32Array* euler_data = CreateTestDataArray<float>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
+  Float32Array* euler_data = CreateTestDataArray<float32>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
 
-  // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
+  // The ensemble group stores phase-level data, such as the Laue class.
   DataGroup* ensembleGroup = DataGroup::Create(dataStructure, "Phase Data", topLevelGroup->getId());
   numComponents = 1;
   usize numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32>(dataStructure, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
 
-  // Create a Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry, scanData->getId());
   vertexGeom->setVertices(*euler_data);
 
@@ -1283,9 +1481,9 @@ inline DataStructure CreateDataStructure()
 }
 
 /**
- * @brief Creates a DataStructure with 2 groups. one group has a DataArray of each primitive type with 1 component and the
- * other group has a DataArray of each primitive type with 3 components.
- * @return
+ * @brief Creates scalar and three-component arrays for each supported primitive type.
+ * @param tupleShape Tuple dimensions for every created array.
+ * @return A DataStructure with separate scalar and three-component groups.
  */
 inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
 {
@@ -1305,7 +1503,7 @@ inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
   //  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
 
   // DataStore<usize>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  // Create Scalar type data
+  // The first child group contains scalar arrays.
   ShapeType componentShape = {1ULL};
 
   CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
@@ -1323,7 +1521,7 @@ inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
   CreateTestDataArray<float32>(dataStructure, Constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
   CreateTestDataArray<float64>(dataStructure, Constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
 
-  // Create Vector/RGB type of data
+  // The second child group contains three-component arrays.
   componentShape = {3ULL};
   CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
   CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
@@ -1344,28 +1542,44 @@ inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
 }
 
 /**
- * @brief Adds an ImageGeometry of the prescribed size to a group in the DataStructure.
+ * @brief Adds an ImageGeom with selected dimensions and coordinates to a DataGroup.
+ * @param dataStructure Receives the ImageGeom.
+ * @param imageGeomDims Geometry dimensions in {X, Y, Z} order.
+ * @param spacing Voxel spacing in geometry units.
+ * @param origin Geometry origin in geometry units.
+ * @param dataGroup Parent group for the ImageGeom.
+ * @throws std::runtime_error If the ImageGeom cannot be created.
  */
 inline void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup)
 {
-  // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, dataGroup.getId());
   if(imageGeom == nullptr)
   {
     throw std::runtime_error("UnitTestCommon: Unable to create ImageGeom");
   }
-  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+  imageGeom->setDimensions(imageGeomDims);
   imageGeom->setSpacing(spacing);
   imageGeom->setOrigin(origin);
 }
 
+/**
+ * @brief Compares arrays in corresponding exemplar and computed AttributeMatrix objects.
+ * @param exemplarDataStructure Contains the exemplar AttributeMatrix.
+ * @param exemplarAttributeMatrix Exemplar AttributeMatrix path.
+ * @param computedDataStructure Contains the computed AttributeMatrix.
+ * @param computedAttributeMatrix Computed AttributeMatrix path.
+ * @param allMustMatch True to require each corresponding array to exist.
+ *
+ * When allMustMatch is false, the helper omits a comparison if either array is
+ * absent. Runtime array and value types select the applicable comparison.
+ */
 inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataStructure, const DataPath& exemplarAttributeMatrix, const DataStructure& computedDataStructure,
                                                      const DataPath& computedAttributeMatrix, bool allMustMatch = false)
 {
   auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
   // std::vector<DataPath> selectedCellArrays;
 
-  // Create the vector of all cell DataPaths from the exemplar data structure
+  // Each exemplar child selects the corresponding computed array by name.
   for(auto& exemplarArrayPath : exemplarAttrMatr)
   {
 
@@ -1376,7 +1590,7 @@ inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exempl
     const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
     const auto* computedArrayPtr = computedDataStructure.getDataAs<IArray>(computedDataArrayPath);
 
-    // Check to see if there is something to compare against in the exemplar file.
+    // Optional mode omits arrays that are absent from either DataStructure.
     if(nullptr == exemplarArrayPtr && !allMustMatch)
     {
       continue;
@@ -1456,13 +1670,23 @@ inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exempl
   }
 }
 
+/**
+ * @brief Compares generated AttributeMatrix arrays with arrays in an exemplar container.
+ * @param dataStructure Contains the generated AttributeMatrix.
+ * @param exemplarDataStructure Contains the exemplar arrays.
+ * @param attributeMatrix Generated AttributeMatrix path.
+ * @param exemplarDataContainerName Top-level exemplar group that replaces the generated path root.
+ *
+ * The helper omits generated arrays that have no exemplar array. Runtime array
+ * and value types select the applicable comparison.
+ */
 inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath& attributeMatrix,
                                            const std::string& exemplarDataContainerName)
 {
   auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
   std::vector<DataPath> selectedCellArrays;
 
-  // Create the vector of selected cell DataPaths
+  // Snapshot the child paths before the comparison starts.
   for(auto& child : cellDataGroup)
   {
     selectedCellArrays.push_back(attributeMatrix.createChildPath(child.second->getName()));
@@ -1471,13 +1695,13 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
   for(const auto& cellArrayPath : selectedCellArrays)
   {
     const auto* generatedArray = dataStructure.getDataAs<IArray>(cellArrayPath);
-    // Now generate the path to the exemplar data set in the exemplar data structure.
+    // The exemplar uses a different top-level container but the same child path.
     std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
     generatedPathVector[0] = exemplarDataContainerName;
     DataPath exemplarDataArrayPath(generatedPathVector);
     const auto* exemplarArray = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
 
-    // Check to see if there is something to compare against in the exemplar file.
+    // An absent exemplar array means that this generated array has no reference.
     if(nullptr == exemplarArray)
     {
       continue;
@@ -1547,7 +1771,15 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
   }
 }
 
-inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exemplarFile, const std::vector<size_t>& lineIndicesToSkip)
+/**
+ * @brief Requires equal lines in two text streams except at selected indices.
+ * @param computedFile Computed text stream, positioned before its first line.
+ * @param exemplarFile Exemplar text stream, positioned before its first line.
+ * @param lineIndicesToSkip Zero-based line indices to omit from value comparison.
+ *
+ * The streams must contain the same number of lines, including omitted lines.
+ */
+inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exemplarFile, const std::vector<usize>& lineIndicesToSkip)
 {
   std::vector<std::string> computedLines;
   std::vector<std::string> exemplarLines;
@@ -1561,7 +1793,7 @@ inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exempl
   }
 
   REQUIRE(computedLines.size() == exemplarLines.size());
-  for(size_t i = 0; i < computedLines.size(); ++i)
+  for(usize i = 0; i < computedLines.size(); ++i)
   {
     if(std::find(begin(lineIndicesToSkip), end(lineIndicesToSkip), i) != std::end(lineIndicesToSkip))
     {
@@ -1573,8 +1805,12 @@ inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exempl
 }
 
 /**
- * Here's the DataStructure we will be working with:
+ * @brief Creates a multi-parent DataStructure graph for hierarchy tests.
+ * @return The populated graph.
  *
+ * The returned DataStructure has this topology:
+ *
+ * @code
  *     A   B          Level Zero
  *    / \ /|\
  *   H   C | F        Level One
@@ -1582,19 +1818,20 @@ inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exempl
  * N   D   E   G      Level Two
  *    / \ / \ /|\
  *   I   J   K L M    Level Three
+ * @endcode
  */
 inline DataStructure CreateComplexMultiLevelDataGraph()
 {
   DataStructure dataStructure;
 
-  // Level Zero //
+  // Create the two root groups.
   auto* groupA = DataGroup::Create(dataStructure, Constants::k_GroupAName);
   auto* groupB = DataGroup::Create(dataStructure, Constants::k_GroupBName);
 
   auto groupAPath = DataPath({groupA->getName()});
   auto groupBPath = DataPath({groupB->getName()});
 
-  // Level One //
+  // Create level-one groups, including shared group C.
   auto* groupH = DataGroup::Create(dataStructure, Constants::k_GroupHName, groupA->getId());
   auto* groupC = DataGroup::Create(dataStructure, Constants::k_GroupCName, groupA->getId());
   groupB->insert(dataStructure.getSharedData(groupC->getId()));
@@ -1607,7 +1844,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
   auto groupBFPath = groupBPath.createChildPath(groupF->getName());
 
-  // Level Two //
+  // Create level-two groups, including shared group E.
   auto* groupD = DataGroup::Create(dataStructure, Constants::k_GroupDName, groupC->getId());
   auto* groupE = DataGroup::Create(dataStructure, Constants::k_GroupEName, groupC->getId());
   groupB->insert(dataStructure.getSharedData(groupE->getId()));
@@ -1627,7 +1864,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
   auto groupBFGPath = groupBFPath.createChildPath(groupG->getName());
 
-  // Level Three //
+  // Create arrays that can have paths through more than one parent.
   auto* arrayI = CreateTestDataArray<uint8>(dataStructure, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupD->getId());
   auto* arrayJ = CreateTestDataArray<float32>(dataStructure, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
   groupE->insert(dataStructure.getSharedData(arrayJ->getId()));
@@ -1657,6 +1894,11 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   return dataStructure;
 }
 
+/**
+ * @brief Requires each child array to use its parent AttributeMatrix tuple shape.
+ * @param dataStructure DataStructure to inspect.
+ * @param ignoredPaths Array paths to omit from the check.
+ */
 inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::vector<DataPath>& ignoredPaths = {})
 {
   std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
@@ -1675,13 +1917,27 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, cons
   }
 }
 
+/**
+ * @namespace nx::core::UnitTest::Cropping
+ * @brief Provides input generators and labels for crop-geometry tests.
+ */
 namespace Cropping
 {
+/**
+ * @brief Converts a Boolean value to the title-case text used in test labels.
+ * @param v Boolean value.
+ * @return `True` or `False`.
+ */
 inline std::string BoolToString(bool v)
 {
   return v ? "True" : "False";
 }
 
+/**
+ * @brief Converts a crop type to the identifier text used in test labels.
+ * @param t Crop type.
+ * @return The enumerator name, or `Unknown` for an unsupported value.
+ */
 inline std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t)
 {
   using T = CropGeometryParameter::CropValues::TypeEnum;
@@ -1697,6 +1953,10 @@ inline std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum 
   return "Unknown";
 }
 
+/**
+ * @struct AxisBoundsChoices
+ * @brief Stores candidate voxel and physical bounds for each geometry axis.
+ */
 struct AxisBoundsChoices
 {
   std::vector<SizeVec2> voxelX;
@@ -1707,12 +1967,17 @@ struct AxisBoundsChoices
   std::vector<FloatVec2Type> physZ;
 };
 
-//------------------------------------------------------------------------------
+/**
+ * @brief Generates crop values for each supported axis and bounds combination.
+ * @param C Candidate voxel and physical bounds.
+ * @param is2D True to omit Z-axis cropping combinations.
+ * @return Crop values in deterministic flag and bounds order.
+ */
 inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C, bool is2D = false)
 {
   std::vector<CropGeometryParameter::ValueType> out;
 
-  // NoCropping
+  // The first value represents the no-cropping case.
   {
     CropGeometryParameter::ValueType cv;
     cv.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
@@ -1723,16 +1988,13 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
     out.push_back(cv);
   }
 
-  // Flag combinations
-  // 2D: only X/Y combinations, Z always false
-  // 3D: original full set
+  // Two-dimensional cases use only X and Y combinations. Three-dimensional
+  // cases use each nonempty combination of X, Y, and Z.
   const std::vector<std::tuple<bool, bool, bool>> flagOrder = is2D ? std::vector<std::tuple<bool, bool, bool>>{{false, true, false}, {true, false, false}, {true, true, false}} :
                                                                      std::vector<std::tuple<bool, bool, bool>>{{false, false, true}, {false, true, false}, {false, true, true}, {true, false, false},
                                                                                                                {true, false, true},  {true, true, false},  {true, true, true}};
 
-  // --------------------
-  // Voxel subvolumes
-  // --------------------
+  // Generate the voxel-bounds combinations first.
   for(const auto& [cx, cy, cz] : flagOrder)
   {
     std::vector<std::optional<SizeVec2>> xOpts = cx ? std::vector<std::optional<SizeVec2>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
@@ -1763,7 +2025,7 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
             cv.yBoundVoxels = *yb;
           }
 
-          // Z never set in 2D
+          // Two-dimensional crop values never set a Z bound.
           if(!is2D && zb)
           {
             cv.zBoundVoxels = *zb;
@@ -1776,9 +2038,7 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
     }
   }
 
-  // --------------------
-  // Physical subvolumes
-  // --------------------
+  // Generate the physical-bounds combinations after the voxel combinations.
   for(const auto& [cx, cy, cz] : flagOrder)
   {
     std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
@@ -1810,7 +2070,7 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
             cv.yBoundPhysical = *yb;
           }
 
-          // Z never set in 2D
+          // Two-dimensional crop values never set a Z bound.
           if(!is2D && zb)
           {
             cv.zBoundPhysical = *zb;
@@ -1829,21 +2089,47 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
 
 } // namespace UnitTest
 
-// Make sure we can load the needed filters from the plugins
+/**
+ * @var k_SimplnxCorePluginId
+ * @brief Identifies the SimplnxCore plugin during unit-test filter lookup.
+ */
 constexpr Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-// Make sure we can instantiate the MultiThreshold Objects Filter
+/**
+ * @var k_MultiThresholdObjectsId
+ * @brief Identifies MultiThresholdObjectsFilter during unit-test lookup.
+ */
 constexpr Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
+/**
+ * @var k_MultiThresholdObjectsFilterHandle
+ * @brief Selects MultiThresholdObjectsFilter from the SimplnxCore plugin.
+ */
 const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the IdentifySampleFilter
+/**
+ * @var k_IdentifySampleFilterId
+ * @brief Identifies IdentifySampleFilter during unit-test lookup.
+ */
 constexpr Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
+/**
+ * @var k_IdentifySampleFilterHandle
+ * @brief Selects IdentifySampleFilter from the SimplnxCore plugin.
+ */
 const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_SimplnxCorePluginId);
 
 } // namespace nx::core
 
+/**
+ * @namespace SmallIn100
+ * @brief Provides compatibility helpers for the Small IN100 exemplar data.
+ */
 namespace SmallIn100
 {
-// These paths are excluded because they come from a version prior to
-// NeighborList and StringArray having multidimensional tuple capability
+/**
+ * @brief Paths omitted from tuple-shape checks for the legacy Small IN100 exemplar.
+ *
+ * The exemplar predates multidimensional tuple support for NeighborList and
+ * StringArray objects. Their stored tuple shapes therefore cannot satisfy the
+ * current AttributeMatrix contract.
+ */
 const std::vector<DataPath> k_TupleCheckIgnoredPaths{{{"MirroredXDataContainer", "CellData", "NeighborList"}},
                                                      {{"MirroredXDataContainer", "CellData", "StringArray"}},
                                                      {{"MirroredXInconsistentArrays", "CellData", "NeighborList"}},
@@ -1869,16 +2155,15 @@ const std::vector<DataPath> k_TupleCheckIgnoredPaths{{{"MirroredXDataContainer",
                                                      {{"ZInconsistentArrays", "CellData", "NeighborList"}},
                                                      {{"ZInconsistentArrays", "CellData", "StringArray"}}};
 
-//------------------------------------------------------------------------------
 /**
- * @brief Runs the Multithreshold objects filter. For backwards compatibility the `useBoolOutputType` parameter is available and defaulted to `true`.
+ * @brief Executes MultiThresholdObjectsFilter with the Small IN100 thresholds.
  *
- * If a newer exemplar data set needs to have the filter generate `uint8` values, then set the argument to false. The filter
- * will by default create uint8 values.
+ * Legacy exemplar files store the mask as Boolean. New filter behavior uses
+ * uint8 unless the helper adds the Boolean output argument.
  *
- * @param dataStructure
- * @param filterList
- * @param useBoolOutputType This is set to true for legacy support where exemplar data sets created boolean arrays.
+ * @param dataStructure Contains the Small IN100 arrays and receives the mask.
+ * @param filterList Creates the filter instance.
+ * @param useBoolOutputType True to match the Boolean mask in legacy exemplars.
  */
 inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList, bool useBoolOutputType = true)
 {
@@ -1917,25 +2202,29 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
     args.insertOrAssign(k_CreatedMaskType_Key, std::make_any<DataTypeParameter::ValueType>(DataType::boolean));
   }
 
-  // Preflight the filter and check result
+  // Preflight verifies that the exemplar contains the required threshold arrays.
   auto preflightResult = filter->preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  // Execute the filter and check the result
+  // Execution creates the compatibility mask and must preserve tuple shapes.
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
-//------------------------------------------------------------------------------
+/**
+ * @brief Executes IdentifySampleFilter on the Small IN100 mask.
+ * @param dataStructure Contains the image geometry and mask to update.
+ * @param filterList Creates the filter instance.
+ */
 inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
 {
   INFO(fmt::format("Error creating Filter '{}'  ", k_IdentifySampleFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
   REQUIRE(nullptr != filter);
 
-  // Parameter Keys
+  // These keys select the inputs used by the legacy Small IN100 workflow.
   constexpr StringLiteral k_FillHoles_Key = "fill_holes";
   constexpr StringLiteral k_ImageGeom_Key = "input_image_geometry_path";
   constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
@@ -1945,11 +2234,11 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
   args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(nx::core::Constants::k_DataContainerPath));
   args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(nx::core::Constants::k_MaskArrayPath));
 
-  // Preflight the filter and check result
+  // Preflight verifies the legacy image geometry and mask paths.
   auto preflightResult = filter->preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  // Execute the filter and check the result
+  // Execution updates the mask and must preserve tuple shapes.
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 

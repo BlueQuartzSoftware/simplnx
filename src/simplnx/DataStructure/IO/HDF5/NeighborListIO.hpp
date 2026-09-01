@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 
 #include <vector>
@@ -16,25 +17,38 @@ namespace nx::core
 {
 namespace HDF5
 {
+
+/**
+ * @class NeighborListIO
+ * @brief Reads and writes one NeighborList value type.
+ * @tparam T Neighbor value type registered with this I/O factory.
+ */
 template <typename T>
 class NeighborListIO : public IDataIO
 {
 public:
   using data_type = NeighborList<T>;
+
   using store_type = typename data_type::store_type;
+
   using shared_vector_type = typename data_type::SharedVectorType;
 
   NeighborListIO() = default;
+
   ~NeighborListIO() noexcept override = default;
 
   /**
-   * @brief Attempts to read the NeighborList<T> data from HDF5.
-   * Returns a Result<> with any errors or warnings encountered during the process.
-   * @param parentGroup
-   * @param dataReader
-   * @return Result<>
+   * @brief Reads packed neighbor values and their companion counts.
+   * @param parentGroup HDF5 group that owns both datasets.
+   * @param dataReader Packed neighbor-value dataset.
+   * @param useEmptyDataStore True for metadata-only import.
+   * @param warnings Receives recovery-placeholder warnings.
+   * @return List store, or nullptr for a failure or recovery placeholder.
+   *
+   * The NumNeighbors companion array maps flat values to ragged tuple vectors.
+   * Metadata import returns EmptyListStore until finishImportingData().
    */
-  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore = false)
+  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
   {
     try
     {
@@ -58,8 +72,17 @@ public:
         return std::make_shared<EmptyListStore<T>>(tupleDimsResult.value());
       }
 
-      auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
-      auto& numNeighborsStore = *numNeighborsPtr.get();
+      auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+      for(auto&& warning : numNeighborsResult.warnings())
+      {
+        warnings.push_back(std::move(warning));
+      }
+      if(numNeighborsResult.value() == nullptr)
+      {
+        // A placeholder count array cannot define ragged-list boundaries.
+        return nullptr;
+      }
+      auto& numNeighborsStore = *numNeighborsResult.value();
 
       auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
       if(flatDataStorePtr == nullptr)
@@ -75,7 +98,9 @@ public:
 
       usize offset = 0;
       const auto numTuples = numNeighborsStore.getNumberOfTuples();
-      auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
+      // The higher import layer selects out-of-core stores. This branch
+      // materializes an in-memory ListStore.
+      auto listStorePtr = std::make_shared<ListStore<T>>(numNeighborsStore.getTupleShape());
       AbstractListStore<T>& listStore = *listStorePtr.get();
       for(usize i = 0; i < numTuples; i++)
       {
@@ -98,36 +123,49 @@ public:
   }
 
   /**
-   * @brief Attempts to read the NeighborList<T> from HDF5.
-   * Returns a Result<> with any errors or warnings encountered during the process.
-   * @param dataStructureReader
-   * @param parentGroup
-   * @param objectName
-   * @param importId
-   * @param parentId
-   * @param useEmptyDataStore = false
-   * @return Result<>
+   * @brief Imports a NeighborList from HDF5.
+   * @param dataStructureReader Destination reader context.
+   * @param parentGroup HDF5 group that owns the datasets.
+   * @param objectName NeighborList name.
+   * @param importId Imported object identifier.
+   * @param parentId Optional parent object identifier.
+   * @param useEmptyDataStore True for metadata-only import.
+   * @return Import warnings or errors.
    */
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
-    auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore);
+    std::vector<Warning> warnings;
+    auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore, warnings);
+
+    Result<> result;
+    result.m_Warnings = std::move(warnings);
+
+    if(listStorePtr == nullptr && !result.m_Warnings.empty())
+    {
+      // A recovery placeholder cannot materialize a NeighborList.
+      return result;
+    }
+
     auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
     if(dataObject == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
       return MakeErrorResult(-505, ss);
     }
-    return {};
+    return result;
   }
 
   /**
-   * @brief Replaces the AbstractListStore using data from the HDF5 dataset.
-   * @param dataStructure
-   * @param dataPath
-   * @param dataStructureReader
-   * @return Result<>
+   * @brief Materializes a deferred NeighborList import.
+   * @param dataStructure Destination data structure.
+   * @param dataPath Imported NeighborList path.
+   * @param parentGroup HDF5 group that owns the datasets.
+   * @return Read warnings or errors.
+   *
+   * The method reconstructs tuple vectors from packed values and companion
+   * counts. A higher import layer selects an out-of-core store when applicable.
    */
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
   {
@@ -147,10 +185,27 @@ public:
     }
     numNeighborsName = std::move(numNeighborsNameResult.value());
 
+    // The companion count array maps flat values to per-tuple list boundaries.
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
-    auto& numNeighborsStore = *numNeighborsPtr.get();
+    auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
 
+    Result<> result;
+    for(auto&& warning : numNeighborsResult.warnings())
+    {
+      result.m_Warnings.push_back(std::move(warning));
+    }
+    if(numNeighborsResult.value() == nullptr)
+    {
+      // A placeholder count array cannot define ragged-list boundaries.
+      return result;
+    }
+    auto& numNeighborsStore = *numNeighborsResult.value();
+
+    const auto numTuples = numNeighborsStore.getNumberOfTuples();
+    const auto tupleShape = numNeighborsStore.getTupleShape();
+
+    // The higher import layer selects out-of-core stores. This branch reads the
+    // packed values and reconstructs an in-memory ListStore.
     auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
     if(flatDataStorePtr == nullptr)
     {
@@ -163,8 +218,8 @@ public:
     }
 
     usize offset = 0;
-    const auto numTuples = numNeighborsStore.getNumberOfTuples();
-    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
+    // This eager HDF5 path materializes an in-memory ListStore.
+    auto listStorePtr = std::make_shared<ListStore<T>>(tupleShape);
     AbstractListStore<T>& listStore = *listStorePtr.get();
     for(usize i = 0; i < numTuples; i++)
     {
@@ -179,22 +234,23 @@ public:
     }
 
     neighborList.setStore(listStorePtr);
-    return {};
+    return result;
   }
 
   /**
-   * @brief Attempts to write the NeighborList<T> to HDF5.
-   * @param dataStructureWriter
-   * @param neighborList
-   * @param parentGroupWriter
-   * @param importable
-   * @return Result<>
+   * @brief Writes packed neighbor values and their companion counts.
+   * @param dataStructureWriter Writer that supplies options.
+   * @param neighborList Source NeighborList.
+   * @param parentGroupWriter Destination HDF5 group.
+   * @param importable Stored importable state.
+   * @return Write warnings or errors.
+   * @pre Each list size fits int32 and the packed value count fits usize.
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, group_writer_type& parentGroupWriter, bool importable) const
   {
     DataStructure tmp;
 
-    // Create NumNeighbors DataStore
+    // Store list lengths separately so the reader can rebuild ragged vectors.
     const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
     auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
@@ -207,7 +263,6 @@ public:
       totalItems += numNeighbors;
     }
 
-    // Write NumNeighbors data
     DataArrayIO<int32> dataArrayIO;
     Result<> result = dataArrayIO.writeData(dataStructureWriter, *numNeighborsArray, parentGroupWriter, false);
     if(result.invalid())
@@ -215,7 +270,6 @@ public:
       return result;
     }
 
-    // Create flattened neighbor DataStore
     DataStore<T> flattenedData(totalItems, static_cast<T>(0));
     usize offset = 0;
     for(const auto& segment : neighborData)
@@ -233,8 +287,8 @@ public:
       offset += numElements;
     }
 
-    // Write flattened array to HDF5 as a separate array. NeighborLists can be very large
-    // (millions of ints across all tuples), so apply the configured compression level here too.
+    // Neighbor values can be large. Apply the configured compression level to
+    // the packed array as well as the companion counts.
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
     datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
     result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
@@ -251,13 +305,11 @@ public:
   }
 
   /**
-   * @brief Attempts to write the DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to a NeighborList<T>.
-   * Otherwise, this method returns writeData(...)
-   * @param dataStructureWriter
-   * @param dataObject
-   * @param parentWriter
-   * @return Result<>
+   * @brief Writes a DataObject after verifying the handled NeighborList type.
+   * @param dataStructureWriter Writer that supplies options.
+   * @param dataObject Object to write.
+   * @param parentWriter Destination HDF5 group.
+   * @return Type-validation or write errors.
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
   {

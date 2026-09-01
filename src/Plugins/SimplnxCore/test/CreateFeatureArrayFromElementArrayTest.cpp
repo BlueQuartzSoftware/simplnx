@@ -569,11 +569,9 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error path featureIds tuple count mismatch", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
-  // Oracle class: Class 4 (Invariant)
-  // cellArray: 4 tuples (in CellAM); featureIds: 2 tuples (in a separate smaller AM)
-  // Loop bound is cellArray.getNumberOfTuples()=4; featureIds[2] and featureIds[3] are OOB
-  // without the preflight check.
-  // Expected: preflight fails with error code -81883
+  // The cell array has four tuples. FeatureIds has two tuples in a separate AttributeMatrix.
+  // Preflight must reject the mismatch before execution reads featureIds[2] or featureIds[3].
+  // The expected error code is -81883.
   DataStructure ds;
   const DataPath k_SmallerAMPath = AnalyticalFixtures::k_ParentDGPath.createChildPath("SmallerAM");
   const DataPath k_MismatchedFeatureIdsPath = k_SmallerAMPath.createChildPath(Constants::k_FeatureIds);

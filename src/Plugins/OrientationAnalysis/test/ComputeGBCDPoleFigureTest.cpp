@@ -10,6 +10,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -41,9 +42,14 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
 {
   UnitTest::LoadPlugins();
 
+  // AlgorithmTestScope forces the selected path and records its target-call
+  // witness.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
-  // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
@@ -68,7 +74,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   DataPath nxPoleFigureSigma9({"NX GBCD Pole Figure [Sigma 9]"});
   DataPath nxPoleFigureSigma11({"NX GBCD Pole Figure [Sigma 11]"});
 
-  // Create the Pole Figures for Sigma 3  60@[111]
+  // Sigma 3 uses a 60-degree rotation about [111].
   {
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
@@ -82,16 +88,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma3));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Compare the Output Pole Figure for Sigma 3
   {
     const DataPath k_GeneratedDataPath = nxPoleFigureSigma3.createChildPath(Constants::k_CellData).createChildPath(k_Sigma3);
     const DataPath k_ExemplarArrayPath({k_PoleFigureSigma3, k_ExemplarCellData, k_MRD});
@@ -99,7 +102,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-  // Create the Pole Figures for Sigma 9  39@[110]
+  // Sigma 9 uses a 39-degree rotation about [110].
   {
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
@@ -113,16 +116,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma9));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Compare the Output Pole Figure for Sigma 9
   {
     const DataPath k_GeneratedDataPath = nxPoleFigureSigma9.createChildPath(Constants::k_CellData).createChildPath(k_Sigma9);
     const DataPath k_ExemplarArrayPath({k_PoleFigureSigma9, k_ExemplarCellData, k_MRD});
@@ -130,7 +130,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-  // Create the Pole Figures for Sigma 11  50.5@[110]
+  // Sigma 11 uses a 50.5-degree rotation about [110].
   {
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
@@ -144,16 +144,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma11));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Compare the Output Pole Figure for Sigma 11
   {
     const DataPath k_GeneratedDataPath = nxPoleFigureSigma11.createChildPath(Constants::k_CellData).createChildPath(k_Sigma11);
     const DataPath k_ExemplarArrayPath({k_PoleFigureSigma11, k_ExemplarCellData, k_MRD});
@@ -208,7 +205,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Com
         CHECK(args.value<std::string>(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key) == "TestName");
       }
       CHECK(args.value<int32>(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key) == 5);
-      // Complex type (AxisAngleFilterParameterConverter<float32>) - verified by successful pipeline loading
+      // Pipeline loading verifies AxisAngleFilterParameterConverter<float32>.
       CHECK(args.value<DataPath>(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key) == DataPath({"DataContainer"}));

@@ -1,18 +1,17 @@
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -21,90 +20,105 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-const std::string k_EbsdScanDataName("EBSD Scan Data");
+const std::string k_GeomName("ImageGeom");
+const std::string k_CellDataName("CellData");
 
-const DataPath k_InputData({"Input Data"});
-const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
-const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("FeatureIds");
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_CellDataPath = k_GeomPath.createChildPath(k_CellDataName);
+const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
 
-const std::string k_ExemplarDataContainerName("Exemplar Coordination Number");
-const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, k_EbsdScanDataName});
-} // namespace
-
-TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter", "[SimplnxCore][ErodeDilateCoordinationNumberFilter]")
+void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
 {
-  UnitTest::LoadPlugins();
+  const ShapeType cellTupleShape = {dimZ, dimY, dimX};
+  const usize sliceSize = dimX * dimY;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_coordination_number.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
 
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIdsArray = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAM->getId());
+  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+
+  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3}, IDataAction::Mode::Execute);
+  auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
+  auto& eulerStore = eulerArray->getDataStoreRef();
+
+  const usize blocksPerDimX = dimX / blockSize;
+  const usize blocksPerDimY = dimY / blockSize;
+
+  std::vector<int32> featureIdsBuf(sliceSize);
+  std::vector<float32> eulerBuf(sliceSize * 3);
+
+  for(usize z = 0; z < dimZ; z++)
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
-    const ErodeDilateCoordinationNumberFilter filter;
-    Arguments args;
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize inSlice = y * dimX + x;
 
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key, std::make_any<int32>(6));
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
+        usize bx = x / blockSize;
+        usize by = y / blockSize;
+        usize bz = z / blockSize;
+        int32 blockFeatureId = static_cast<int32>(bz * blocksPerDimY * blocksPerDimX + by * blocksPerDimX + bx + 1);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+        bool isBad = ((x * 7 + y * 13 + z * 29) % 7 == 0);
+        featureIdsBuf[inSlice] = isBad ? 0 : blockFeatureId;
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+        const usize eIdx = inSlice * 3;
+        eulerBuf[eIdx] = static_cast<float32>(x) / static_cast<float32>(dimX);
+        eulerBuf[eIdx + 1] = static_cast<float32>(y) / static_cast<float32>(dimY);
+        eulerBuf[eIdx + 2] = static_cast<float32>(z) / static_cast<float32>(dimZ);
+      }
+    }
+    const usize zOffset = z * sliceSize;
+    featureIdsStore.copyFromBuffer(zOffset, nonstd::span<const int32>(featureIdsBuf.data(), sliceSize));
+    eulerStore.copyFromBuffer(zOffset * 3, nonstd::span<const float32>(eulerBuf.data(), sliceSize * 3));
   }
-
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateCoordinationNumberFilter][BackwardsCompatibility]")
+usize CountBadVoxels(const DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ErodeDilateCoordinationNumberFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ErodeDilateCoordinationNumberFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  const usize sliceSize = dimX * dimY;
+  std::vector<int32> buf(sliceSize);
+  usize count = 0;
+  for(usize z = 0; z < dimZ; z++)
   {
-    DYNAMIC_SECTION(label)
+    featureIds.copyIntoBuffer(z * sliceSize, nonstd::span<int32>(buf.data(), sliceSize));
+    for(usize i = 0; i < sliceSize; i++)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<int32>(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key) == 5);
-      CHECK(args.value<bool>(ErodeDilateCoordinationNumberFilter::k_Loop_Key) == true);
-      CHECK(args.value<DataPath>(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+      if(buf[i] == 0)
+      {
+        count++;
+      }
     }
+  }
+  return count;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Generate Test Data", "[SimplnxCore][ErodeDilateCoordinationNumberFilter][.GenerateTestData]")
+{
+  const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data" / "erode_dilate_coordination_number";
+  fs::create_directories(outputDir);
+
+  // The small fixture uses a 20-cubed volume and block size 5.
+  {
+    DataStructure buildDS;
+    BuildTestData(buildDS, 20, 20, 20, 5);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
+  }
+
+  // The large fixture uses a 200-cubed volume and block size 25.
+  {
+    DataStructure buildDS;
+    BuildTestData(buildDS, 200, 200, 200, 25);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
   }
 }

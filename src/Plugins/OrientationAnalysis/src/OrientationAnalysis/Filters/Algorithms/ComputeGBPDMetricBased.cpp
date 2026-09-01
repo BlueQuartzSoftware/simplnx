@@ -26,8 +26,8 @@ using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 namespace gbpd_metric_based
 {
 /**
- * @brief The TriAreaAndNormals class defines a container that stores the area of a given triangle
- * and the two normals for grains on either side of the triangle
+ * @class TriAreaAndNormals
+ * @brief Stores one triangle area and its grain normals.
  */
 class TriAreaAndNormals
 {
@@ -59,8 +59,11 @@ public:
 };
 
 /**
- * @brief The TrianglesSelector class implements a threaded algorithm that determines which triangles to
- * include in the GBPD calculation
+ * @class TrianglesSelector
+ * @brief Selects triangles for GBPD calculation.
+ *
+ * The worker reads triangle arrays through specialized resident access. This
+ * does not establish generic DataArray or DataStore thread safety.
  */
 class TrianglesSelector
 {
@@ -71,21 +74,21 @@ public:
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    int32_t phaseOfInterest, const UInt32Array& crystalStructures, const Float32Array& euler, const Int32Array& phases, const Int32Array& faceLabels, const Float64Array& faceNormals,
+                    int32 phaseOfInterest, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32Array& faceLabels, const Float64Array& faceNormals,
                     const Float64Array& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
   , m_NodeTypes(nodeTypes)
   , m_SelectedTriangles(selectedTriangles)
   , m_PhaseOfInterest(phaseOfInterest)
-  , m_EulerAngles(euler)
-  , m_Phases(phases)
+  , m_EulerCache(eulerCache)
+  , m_PhasesCache(phasesCache)
   , m_FaceLabels(faceLabels)
   , m_FaceNormals(faceNormals)
   , m_FaceAreas(faceAreas)
   {
     m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-    m_Crystal = crystalStructures[phaseOfInterest];
+    m_Crystal = crystalStruct;
     m_NSym = m_OrientationOps[m_Crystal]->getNumSymOps();
   }
 
@@ -106,11 +109,11 @@ public:
       {
         continue;
       }
-      if(m_Phases[feature1] != m_Phases[feature2])
+      if(m_PhasesCache[feature1] != m_PhasesCache[feature2])
       {
         continue;
       }
-      if(m_Phases[feature1] != m_PhaseOfInterest || m_Phases[feature2] != m_PhaseOfInterest)
+      if(m_PhasesCache[feature1] != m_PhaseOfInterest || m_PhasesCache[feature2] != m_PhaseOfInterest)
       {
         continue;
       }
@@ -129,8 +132,8 @@ public:
 
       for(int32 whichEa = 0; whichEa < 3; whichEa++)
       {
-        g1ea[whichEa] = m_EulerAngles[3 * feature1 + whichEa];
-        g2ea[whichEa] = m_EulerAngles[3 * feature2 + whichEa];
+        g1ea[whichEa] = m_EulerCache[3 * feature1 + whichEa];
+        g2ea[whichEa] = m_EulerCache[3 * feature2 + whichEa];
       }
 
       auto oMatrix1 = ebsdlib::EulerDType(g1ea[0], g1ea[1], g1ea[2]).toOrientationMatrix();
@@ -149,7 +152,6 @@ public:
   }
 
 private:
-  // corresponding to Phase of Interest
   bool m_ExcludeTripleLines;
   const IGeometry::SharedFaceList& m_Triangles;
   const Int8Array& m_NodeTypes;
@@ -162,16 +164,16 @@ private:
   LaueOpsContainerType m_OrientationOps;
   uint32 m_Crystal;
   int32 m_NSym;
-  const Float32Array& m_EulerAngles;
-  const Int32Array& m_Phases;
+  const float32* m_EulerCache;
+  const int32* m_PhasesCache;
   const Int32Array& m_FaceLabels;
   const Float64Array& m_FaceNormals;
   const Float64Array& m_FaceAreas;
 };
 
 /**
- * @brief The ProbeDistribution class implements a threaded algorithm that determines the distribution values
- * for the GBPD
+ * @class ProbeDistribution
+ * @brief Calculates GBPD values at sample points.
  */
 class ProbeDistribution
 {
@@ -232,7 +234,7 @@ public:
 
             if(gamma1 < m_LimitDist)
             {
-              // Kahan summation algorithm
+              // Kahan summation reduces area-accumulation error.
               const float64 y = selectedTriangle.Area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
@@ -281,7 +283,6 @@ private:
 
 } // namespace gbpd_metric_based
 
-// -----------------------------------------------------------------------------
 ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                ComputeGBPDMetricBasedInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -291,16 +292,13 @@ ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, con
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeGBPDMetricBased::~ComputeGBPDMetricBased() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBPDMetricBased::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ComputeGBPDMetricBased::operator()()
 {
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -315,16 +313,28 @@ Result<> ComputeGBPDMetricBased::operator()()
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
+  // Feature and ensemble caches prevent random per-triangle OOC access.
+  const usize numEulerElements = eulerAngles.getSize();
+  std::vector<float32> eulerCache(numEulerElements);
+  eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulerCache.data(), numEulerElements));
+
+  const usize numPhaseElements = phases.getSize();
+  std::vector<int32> phasesCache(numPhaseElements);
+  phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phasesCache.data(), numPhaseElements));
+
+  const usize numCrystalStructures = crystalStructures.getSize();
+  std::vector<uint32> crystalStructuresCache(numCrystalStructures);
+  crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numCrystalStructures));
+
   const float64 limitDist = m_InputValues->LimitDist * Constants::k_PiOver180D;
 
-  if(crystalStructures[m_InputValues->PhaseOfInterest] > 10)
+  if(crystalStructuresCache[m_InputValues->PhaseOfInterest] > 10)
   {
     return MakeErrorResult(
-        -8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructures[m_InputValues->PhaseOfInterest]), m_InputValues->PhaseOfInterest));
+        -8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructuresCache[m_InputValues->PhaseOfInterest]), m_InputValues->PhaseOfInterest));
   }
 
-  // -------------------- check if directories are ok and if output files can be opened -----------
-  // Make sure the file name ends with _1 so the GMT scripts work correctly
+  // GMT scripts require the _1 filename suffix.
   fs::path distributionOutput = m_InputValues->DistOutputFile;
   std::string distFName = m_InputValues->DistOutputFile.stem().string();
   if(!distFName.empty() && !StringUtilities::ends_with(distFName, "_1"))
@@ -368,15 +378,15 @@ Result<> ComputeGBPDMetricBased::operator()()
 
   // ------------------- before computing the distribution, we must find normalization factors -----
   std::vector<ebsdlib::LaueOps::Pointer> mOrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-  auto crystal = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
+  auto crystal = static_cast<int32>(crystalStructuresCache[m_InputValues->PhaseOfInterest]);
   const int32 nSym = mOrientationOps[crystal]->getNumSymOps();
   auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
 
   // ------------------------------ generation of sampling points ----------------------------------
   m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
 
-  // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
-  const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
+  // The golden-section spiral distributes points across the sphere.
+  const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts;
   std::vector<float64> samplePtsXHemisphere(0);
   std::vector<float64> samplePtsYHemisphere(0);
   std::vector<float64> samplePtsZHemisphere(0);
@@ -407,7 +417,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     }
   }
 
-  // now, select the points from the SST
+  // Select points inside the fundamental symmetry triangle.
   for(usize ptIdxHemisphere = 0; ptIdxHemisphere < samplePtsXHemisphere.size(); ptIdxHemisphere++)
   {
     if(getCancel())
@@ -562,7 +572,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 120.0 * Constants::k_PiOver180D, limitDist);
   }
 
-  // ---------  find triangles corresponding to Phase of Interests, and their normals in crystal reference frames ---------
+  // Select phase-of-interest triangles and transform their normals.
   const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -591,8 +601,8 @@ Result<> ComputeGBPDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + triChunkSize);
-    dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest, crystalStructures, eulerAngles,
-                                                         phases, faceLabels, faceNormals, faceAreas));
+    dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest,
+                                                         crystalStructuresCache[m_InputValues->PhaseOfInterest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
   }
 
   // ------------------------  find the number of distinct boundaries ------------------------------
@@ -613,11 +623,11 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       continue;
     }
-    if(phases[feature1] != phases[feature2])
+    if(phasesCache[feature1] != phasesCache[feature2])
     {
       continue;
     }
-    if(phases[feature1] != m_InputValues->PhaseOfInterest || phases[feature2] != m_InputValues->PhaseOfInterest)
+    if(phasesCache[feature1] != m_InputValues->PhaseOfInterest || phasesCache[feature2] != m_InputValues->PhaseOfInterest)
     {
       continue;
     }
@@ -715,7 +725,6 @@ Result<> ComputeGBPDMetricBased::operator()()
   return {};
 }
 
-// -----------------------------------------------------------------------------
 void ComputeGBPDMetricBased::AppendSamplePtsFixedZenith(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 theta, float64 minPhi, float64 maxPhi, float64 step)
 {
   for(float64 phi = minPhi; phi <= maxPhi; phi += step)
@@ -729,7 +738,6 @@ void ComputeGBPDMetricBased::AppendSamplePtsFixedZenith(std::vector<float64>& xV
   zVec.push_back(std::cos(theta));
 }
 
-// -----------------------------------------------------------------------------
 void ComputeGBPDMetricBased::AppendSamplePtsFixedAzimuth(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 phi, float64 minTheta, float64 maxTheta,
                                                          float64 step)
 {

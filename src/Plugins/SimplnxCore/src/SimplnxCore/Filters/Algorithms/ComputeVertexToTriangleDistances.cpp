@@ -9,6 +9,10 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/RTree.hpp"
 
+#include <algorithm>
+#include <array>
+#include <numeric>
+
 using namespace nx::core;
 
 namespace
@@ -18,13 +22,24 @@ using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
 using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
 /**
- * @brief Take from https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h
- * Which has an apache license.
- * @param p
- * @param a
- * @param b
- * @param c
- * @return
+ * @brief Caps candidate-box expansion attempts.
+ *
+ * Exhaustion indicates degenerate geometry, such as nonfinite coordinates,
+ * because 64 doublings exceed any practical finite triangle bound.
+ */
+constexpr int32 k_MaxBoxExpansions = 64;
+
+/**
+ * @brief Returns the closest point on a triangle.
+ * @param p Specifies the query point.
+ * @param a Specifies the first triangle vertex.
+ * @param b Specifies the second triangle vertex.
+ * @param c Specifies the third triangle vertex.
+ * @return Point on the triangle nearest to p.
+ *
+ * This implementation derives from
+ * https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h,
+ * which has an Apache license.
  */
 Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const Matrix3X1f& b, const Matrix3X1f& c)
 {
@@ -84,13 +99,24 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
   return pointInTriangle;
 }
 
+/**
+ * @brief Computes the signed squared distance from a point to a triangle.
+ * @param point Specifies the query point.
+ * @param vert0 Specifies the first triangle vertex.
+ * @param vert1 Specifies the second triangle vertex.
+ * @param vert2 Specifies the third triangle vertex.
+ * @param triangle Identifies the triangle normal.
+ * @param normals Provides three normal components per triangle.
+ * @return Squared distance, negative on the normal's back side.
+ *
+ * The caller takes the square root after it chooses the closest triangle.
+ */
 float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, const Matrix3X1f& vert1, const Matrix3X1f& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
 {
-
   Matrix3X1f closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
 
-  auto diffPoint = point - closestPointInTriangle; // Gives a vector pointing from the closest point in triangle to point
-  // Only do the dot-product of the vector with itself, so we don't incur the penalty of a square root that we might not need
+  auto diffPoint = point - closestPointInTriangle;
+  // The squared form avoids square roots for nonwinning candidates.
   float dist = diffPoint.dot(diffPoint);
 
   Matrix3X1f normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
@@ -105,12 +131,112 @@ float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, 
   return dist;
 }
 
+/**
+ * @brief Finds triangle bounds that overlap a cubic query box.
+ * @param rtree Provides triangle bounds.
+ * @param center Specifies the box center.
+ * @param halfExtent Specifies the box half extent.
+ * @return Overlapping triangle indexes in RTree traversal order.
+ */
+std::vector<size_t> FindTrianglesWithinBox(const RTreeType& rtree, const Matrix3X1f& center, float32 halfExtent)
+{
+  std::vector<size_t> candidateIds;
+  std::function<bool(size_t)> collect = [&candidateIds](size_t triangleIndex) {
+    candidateIds.push_back(triangleIndex);
+    return true;
+  };
+
+  const std::array<float32, 3> minCorner = {center.getX() - halfExtent, center.getY() - halfExtent, center.getZ() - halfExtent};
+  const std::array<float32, 3> maxCorner = {center.getX() + halfExtent, center.getY() + halfExtent, center.getZ() + halfExtent};
+  rtree.Search(minCorner.data(), maxCorner.data(), collect);
+  return candidateIds;
+}
+
+/**
+ * @brief Finds an initial triangle candidate set with an expanding query box.
+ * @param rtree Provides triangle bounds.
+ * @param center Specifies the source point.
+ * @param initialHalfExtent Specifies the initial box half extent.
+ * @return Candidate indexes in RTree traversal order, or empty for degenerate geometry.
+ *
+ * A real box finds triangles near a point because a zero-volume query rarely
+ * overlaps a tight triangle bound. A later radius query provides the exact result.
+ */
+std::vector<size_t> FindCandidateTrianglesByExpandingBox(const RTreeType& rtree, const Matrix3X1f& center, float32 initialHalfExtent)
+{
+  float32 halfExtent = initialHalfExtent;
+  for(int32 attempt = 0; attempt < k_MaxBoxExpansions; attempt++)
+  {
+    std::vector<size_t> candidateIds = FindTrianglesWithinBox(rtree, center, halfExtent);
+    if(!candidateIds.empty())
+    {
+      return candidateIds;
+    }
+    halfExtent *= 2.0f;
+  }
+  return {};
+}
+
+/**
+ * @brief Retains the closest triangle from sorted candidates.
+ * @param candidateIds Specifies ascending triangle indexes to test.
+ * @param point Specifies the source vertex position.
+ * @param triangleList Provides three vertex indexes per triangle.
+ * @param triangleVertices Provides triangle vertex positions.
+ * @param normals Provides normals that sign distances.
+ * @param bestSignedSquaredDistance Receives the best signed squared distance.
+ * @param bestTriangleId Receives the triangle index, or -1 when none exists.
+ *
+ * Ascending indexes and strict comparison retain the lowest index for an exact
+ * distance tie. This matches an ascending brute-force scan.
+ */
+void EvaluateClosestCandidate(nonstd::span<const size_t> candidateIds, const Matrix3X1f& point, const SharedTriListT& triangleList, const SharedVertexListT& triangleVertices,
+                              const Float64AbstractDataStore& normals, float32& bestSignedSquaredDistance, int64& bestTriangleId)
+{
+  for(const size_t t : candidateIds)
+  {
+    const auto p = static_cast<int64>(triangleList[t * 3 + 0]);
+    const auto q = static_cast<int64>(triangleList[t * 3 + 1]);
+    const auto r = static_cast<int64>(triangleList[t * 3 + 2]);
+    const Matrix3X1f v0(triangleVertices[p * 3 + 0], triangleVertices[p * 3 + 1], triangleVertices[p * 3 + 2]);
+    const Matrix3X1f v1(triangleVertices[q * 3 + 0], triangleVertices[q * 3 + 1], triangleVertices[q * 3 + 2]);
+    const Matrix3X1f v2(triangleVertices[r * 3 + 0], triangleVertices[r * 3 + 1], triangleVertices[r * 3 + 2]);
+
+    const float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), normals);
+    if(std::abs(d) < std::abs(bestSignedSquaredDistance))
+    {
+      bestSignedSquaredDistance = d;
+      bestTriangleId = static_cast<int64>(t);
+    }
+  }
+}
+
+/**
+ * @class ComputeVertexToTriangleDistancesImpl
+ * @brief Calculates distances for a parallel vertex range.
+ *
+ * The current worker concurrently accesses shared DataStore instances. DataStore
+ * does not generally guarantee concurrent access. This is an existing limitation.
+ */
 class ComputeVertexToTriangleDistancesImpl
 {
 public:
+  /**
+   * @brief Creates a parallel distance worker.
+   * @param filter Provides cancellation state.
+   * @param triangles Provides triangle vertex indexes.
+   * @param vertices Provides triangle vertex positions.
+   * @param sourcePoints Provides source vertex positions.
+   * @param distances Receives signed distances.
+   * @param closestTri Receives closest triangle indexes.
+   * @param normals Provides triangle normals.
+   * @param rtree Provides triangle bounds.
+   * @param initialSearchHalfExtent Seeds candidate-box expansion.
+   * @param progressMessageHelper Creates range-local progress messengers.
+   */
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
                                        Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
-                                       ProgressMessageHelper& progressMessageHelper)
+                                       float32 initialSearchHalfExtent, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
@@ -119,16 +245,29 @@ public:
   , m_ClosestTri(closestTri)
   , m_Normals(normals)
   , m_RTree(rtree)
+  , m_InitialSearchHalfExtent(initialSearchHalfExtent)
   , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
+  /**
+   * @brief Destroys the non-owning parallel worker.
+   */
   virtual ~ComputeVertexToTriangleDistancesImpl() = default;
 
+  /**
+   * @brief Processes one parallel vertex range.
+   * @param range Specifies the half-open vertex-index range.
+   */
   void operator()(const Range& range) const
   {
     compute(range.min(), range.max());
   }
 
+  /**
+   * @brief Calculates nearest-triangle distances for a vertex range.
+   * @param start Specifies the first vertex index.
+   * @param end Specifies the exclusive vertex index.
+   */
   void compute(usize start, usize end) const
   {
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
@@ -136,69 +275,57 @@ public:
     int64 counter = 0;
     auto progIncrement = static_cast<int64>((end - start) / 100);
 
-    size_t numTuples = m_SharedTriangleList.getNumberOfTuples(); // allocate vector of all possible indexes
+    const size_t numTuples = m_SharedTriangleList.getNumberOfTuples();
     for(usize v = start; v < end; v++)
     {
-      Matrix3X1f sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
-
-      std::vector<size_t> hitTriangleIds;
-      std::function<bool(size_t)> func = [&](size_t triangleIndex) {
-        hitTriangleIds.push_back(triangleIndex);
-        return true; // keep going
-      };
-
-      int32 nhits = m_RTree.Search(sourcePoint.data(), sourcePoint.data(), func);
-      if(nhits > 0) // Point is within the RTree bounding box so just loop over those triangles that are in the RTree
+      if(m_Filter->getCancel())
       {
-        for(const auto t : hitTriangleIds)
+        return;
+      }
+
+      const Matrix3X1f sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
+
+      float32 bestSignedSquaredDistance = std::numeric_limits<float32>::max();
+      int64 bestTriangleId = -1;
+
+      if(numTuples > 0)
+      {
+        // An expanding box cheaply finds a first candidate set.
+        std::vector<size_t> candidateIds = FindCandidateTrianglesByExpandingBox(m_RTree, sourcePoint, m_InitialSearchHalfExtent);
+        if(candidateIds.empty())
         {
-          if(m_Filter->getCancel())
-          {
-            return;
-          }
+          // Degenerate geometry has no finite bound hit. The exhaustive fallback
+          // still produces a result for this vertex.
+          candidateIds.resize(numTuples);
+          std::iota(candidateIds.begin(), candidateIds.end(), size_t{0});
+        }
+        else
+        {
+          std::sort(candidateIds.begin(), candidateIds.end());
+        }
+        EvaluateClosestCandidate(candidateIds, sourcePoint, m_SharedTriangleList, m_TriangleVertices, m_Normals, bestSignedSquaredDistance, bestTriangleId);
 
-          auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
-          auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
-          auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Matrix3X1f point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Matrix3X1f v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Matrix3X1f v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Matrix3X1f v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+        // The first candidate distance bounds the exact radius-refine query.
+        // Every closer triangle bound must overlap that query box.
+        const float32 bestAbsSquaredDistance = std::abs(bestSignedSquaredDistance);
+        if(bestTriangleId >= 0 && bestAbsSquaredDistance > 0.0f)
+        {
+          // The pad prevents square-root rounding from excluding a bound that
+          // touches the exact query boundary.
+          const float32 radius = std::sqrt(bestAbsSquaredDistance) * (1.0f + 1.0e-4f);
+          std::vector<size_t> refinedCandidateIds = FindTrianglesWithinBox(m_RTree, sourcePoint, radius);
+          std::sort(refinedCandidateIds.begin(), refinedCandidateIds.end());
 
-          float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
-
-          if(std::abs(d) < std::abs(m_Distances[v]))
-          {
-            m_Distances[v] = d;
-            m_ClosestTri[v] = static_cast<int64>(t);
-          }
+          bestSignedSquaredDistance = std::numeric_limits<float32>::max();
+          bestTriangleId = -1;
+          EvaluateClosestCandidate(refinedCandidateIds, sourcePoint, m_SharedTriangleList, m_TriangleVertices, m_Normals, bestSignedSquaredDistance, bestTriangleId);
         }
       }
-      else // Point was not in the RTree, so we need to search against every triangle
+
+      if(bestTriangleId >= 0)
       {
-        for(size_t t = 0; t < numTuples; t++)
-        {
-          if(m_Filter->getCancel())
-          {
-            return;
-          }
-
-          auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
-          auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
-          auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Matrix3X1f point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Matrix3X1f v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Matrix3X1f v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Matrix3X1f v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
-
-          float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
-
-          if(std::abs(d) < std::abs(m_Distances[v]))
-          {
-            m_Distances[v] = d;
-            m_ClosestTri[v] = static_cast<int64>(t);
-          }
-        }
+        m_Distances[v] = bestSignedSquaredDistance;
+        m_ClosestTri[v] = bestTriangleId;
       }
 
       if(m_Distances[v] >= 0.0f)
@@ -231,9 +358,17 @@ private:
   Int64AbstractDataStore& m_ClosestTri;
   const Float64AbstractDataStore& m_Normals;
   const RTreeType m_RTree;
+  const float32 m_InitialSearchHalfExtent;
   ProgressMessageHelper& m_ProgressMessageHelper;
 };
 
+/**
+ * @brief Stores one triangle's axis-aligned bounds.
+ * @param triList Provides triangle vertex indexes.
+ * @param vertList Provides vertex positions.
+ * @param triId Identifies the triangle.
+ * @param bounds Receives [xmin, ymin, zmin, xmax, ymax, zmax].
+ */
 void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT& vertList, size_t triId, nonstd::span<float> bounds)
 {
   size_t v0Index = triList[triId * 3 + 0] * 3;
@@ -252,7 +387,6 @@ void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT&
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 ComputeVertexToTriangleDistances::ComputeVertexToTriangleDistances(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                    ComputeVertexToTriangleDistancesInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -262,16 +396,13 @@ ComputeVertexToTriangleDistances::ComputeVertexToTriangleDistances(DataStructure
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeVertexToTriangleDistances::~ComputeVertexToTriangleDistances() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeVertexToTriangleDistances::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> ComputeVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
@@ -284,30 +415,43 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   const SharedVertexListT& vertices = triangleGeom.getVertices()->getDataStoreRef();
 
   RTreeType m_RTree;
-  // Populate the RTree
+  // The largest bound extent seeds the first candidate box and reduces later
+  // expansion attempts.
   std::vector<float> triBoundsArray(numTris * 6, 0.0F);
+  float32 initialSearchHalfExtent = 0.0f;
   for(size_t triIndex = 0; triIndex < numTris; triIndex++)
   {
     GetBoundingBoxAtTri(triangles, vertices, triIndex, {triBoundsArray.data() + (6 * triIndex), 6});
-    m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex); // Note, all values including zero are fine in this version
+    m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex);
+
+    const float32 extentX = triBoundsArray[6 * triIndex + 3] - triBoundsArray[6 * triIndex + 0];
+    const float32 extentY = triBoundsArray[6 * triIndex + 4] - triBoundsArray[6 * triIndex + 1];
+    const float32 extentZ = triBoundsArray[6 * triIndex + 5] - triBoundsArray[6 * triIndex + 2];
+    initialSearchHalfExtent = std::max({initialSearchHalfExtent, extentX, extentY, extentZ});
+  }
+  if(initialSearchHalfExtent <= 0.0f)
+  {
+    // A nonzero seed lets the search start for zero-area triangles.
+    initialSearchHalfExtent = 1.0f;
   }
 
   const auto& normalsArray = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsArrayPath)->getDataStoreRef();
   auto& distancesArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->DistancesArrayPath)->getDataStoreRef();
   distancesArray.fill(std::numeric_limits<float32>::max());
   auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath)->getDataStoreRef();
-  closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
+  closestTriangleIdsArray.fill(-1); // No closest triangle found.
 
   MessageHelper messageHelper(m_MessageHandler);
   ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalElements);
   progressMessageHelper.setProgressMessageTemplate("Finding Distances || {:.2f}% Completed");
 
-  // Allow data-based parallelization
+  // This remains direct parallel DataStore access. See the worker limitation.
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, totalElements);
-  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, progressMessageHelper));
+  dataAlg.execute(
+      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, initialSearchHalfExtent, progressMessageHelper));
 
   return {};
 }

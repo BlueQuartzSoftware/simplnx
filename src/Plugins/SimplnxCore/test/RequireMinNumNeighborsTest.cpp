@@ -1,3 +1,4 @@
+#include "FeatureRemovalTestUtils.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/RequireMinNumNeighborsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -16,6 +17,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -27,18 +29,33 @@ using namespace nx::core::Constants;
 
 namespace
 {
+/**
+ * @namespace DiscriminatingFixture
+ * @brief Defines an analytical coarsening fixture with boundary and tie cases.
+ */
 namespace DiscriminatingFixture
 {
 constexpr usize k_Dimension = 6;
 constexpr usize k_CellCount = k_Dimension * k_Dimension * k_Dimension;
 constexpr usize k_FeatureCount = 6;
 
+/**
+ * @struct Coordinate
+ * @brief Stores one zero-based cell coordinate in the fixture volume.
+ */
 struct Coordinate
 {
   usize x = 0;
   usize y = 0;
   usize z = 0;
 
+  /**
+   * @brief Tests whether this coordinate equals selected axis values.
+   * @param pointX X coordinate to test.
+   * @param pointY Y coordinate to test.
+   * @param pointZ Z coordinate to test.
+   * @return True if all three coordinates are equal.
+   */
   constexpr bool isAt(usize pointX, usize pointY, usize pointZ) const
   {
     return x == pointX && y == pointY && z == pointZ;
@@ -53,26 +70,59 @@ constexpr Coordinate k_Feature3Seed = {5, 5, 4};
 constexpr Coordinate k_Feature4Seed = {5, 4, 5};
 constexpr std::array<float32, 3> k_VectorOffsets = {0.25F, 0.5F, 0.75F};
 
+/**
+ * @brief Converts fixture coordinates to a row-major cell index.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return Linear cell index.
+ */
 constexpr usize GetIndex(usize x, usize y, usize z)
 {
   return z * k_Dimension * k_Dimension + y * k_Dimension + x;
 }
 
+/**
+ * @brief Converts a fixture Coordinate to a row-major cell index.
+ * @param coordinate Coordinate to convert.
+ * @return Linear cell index.
+ */
 constexpr usize GetIndex(const Coordinate& coordinate)
 {
   return GetIndex(coordinate.x, coordinate.y, coordinate.z);
 }
 
+/**
+ * @brief Tests whether a cell belongs to the rejected 3-cubed center feature.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return True for a cell in the center cube.
+ */
 constexpr bool IsRejectedCubeCell(usize x, usize y, usize z)
 {
   return x >= 1 && x <= 3 && y >= 1 && y <= 3 && z >= 1 && z <= 3;
 }
 
+/**
+ * @brief Tests whether a cell belongs to any rejected fixture location.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return True for a rejected cell.
+ */
 constexpr bool IsRejectedCell(usize x, usize y, usize z)
 {
   return IsRejectedCubeCell(x, y, z) || k_TieCell.isAt(x, y, z) || k_TieNegativeXCell.isAt(x, y, z) || k_PositiveXBoundaryCell.isAt(x, y, z) || k_PositiveYBoundaryCell.isAt(x, y, z);
 }
 
+/**
+ * @brief Calculates the input feature identifier at one fixture cell.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return Input feature identifier.
+ */
 constexpr int32 GetInputFeatureId(usize x, usize y, usize z)
 {
   if(IsRejectedCell(x, y, z))
@@ -90,6 +140,13 @@ constexpr int32 GetInputFeatureId(usize x, usize y, usize z)
   return 2;
 }
 
+/**
+ * @brief Calculates the source tuple selected by deterministic coarsening.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return Linear source tuple index after all coarsening passes.
+ */
 constexpr usize GetExpectedSourceIndex(usize x, usize y, usize z)
 {
   if(k_TieCell.isAt(x, y, z))
@@ -145,6 +202,13 @@ constexpr usize GetExpectedSourceIndex(usize x, usize y, usize z)
   return GetIndex(x, y, 0);
 }
 
+/**
+ * @brief Calculates the compacted feature identifier at one output cell.
+ * @param x Zero-based X coordinate.
+ * @param y Zero-based Y coordinate.
+ * @param z Zero-based Z coordinate.
+ * @return Expected output feature identifier.
+ */
 constexpr int32 GetExpectedFeatureId(usize x, usize y, usize z)
 {
   if(k_TieCell.isAt(x, y, z) || k_Feature3Seed.isAt(x, y, z))
@@ -158,6 +222,10 @@ constexpr int32 GetExpectedFeatureId(usize x, usize y, usize z)
   return 1;
 }
 
+/**
+ * @brief Builds the discriminating fixture and all expected source arrays.
+ * @param dataStructure Receives the geometry, cell arrays, and feature arrays.
+ */
 void PopulateDataStructure(DataStructure& dataStructure)
 {
   const SizeVec3 imageSize = {k_Dimension, k_Dimension, k_Dimension};
@@ -169,17 +237,17 @@ void PopulateDataStructure(DataStructure& dataStructure)
   imageGeom->setCellData(*cellAM);
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {k_FeatureCount}, imageGeom->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1}, IDataAction::Mode::Execute);
   auto* featureIds = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
-  auto copiedScalarStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto copiedScalarStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedScalar"}), cellShape, {1}, IDataAction::Mode::Execute);
   auto* copiedScalar = DataArray<int32>::Create(dataStructure, "CopiedScalar", copiedScalarStore, cellAM->getId());
-  auto copiedVectorStore = DataStoreUtilities::CreateDataStore<float32>(cellShape, {3}, IDataAction::Mode::Execute);
+  auto copiedVectorStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedVector"}), cellShape, {3}, IDataAction::Mode::Execute);
   auto* copiedVector = DataArray<float32>::Create(dataStructure, "CopiedVector", copiedVectorStore, cellAM->getId());
-  auto ignoredValuesStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto ignoredValuesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "IgnoredValues"}), cellShape, {1}, IDataAction::Mode::Execute);
   auto* ignoredValues = DataArray<int32>::Create(dataStructure, "IgnoredValues", ignoredValuesStore, cellAM->getId());
-  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>({k_FeatureCount}, {1}, IDataAction::Mode::Execute);
+  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {k_FeatureCount}, {1}, IDataAction::Mode::Execute);
   auto* numNeighbors = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAM->getId());
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>({k_FeatureCount}, {1}, IDataAction::Mode::Execute);
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "Phases"}), {k_FeatureCount}, {1}, IDataAction::Mode::Execute);
   auto* phases = DataArray<int32>::Create(dataStructure, "Phases", phasesStore, featureAM->getId());
 
   for(usize z = 0; z < k_Dimension; z++)
@@ -211,38 +279,31 @@ void PopulateDataStructure(DataStructure& dataStructure)
 } // namespace DiscriminatingFixture
 } // namespace
 
-// Oracle strategy and expected-value calculation:
+// The tests use two analytical oracles.
 //
-// 1. The 4x1x1 oracle starts with FeatureIds [2, 1, 1, 3]. Feature 1 is
-//    rejected. Its left cell has feature 2 as its only valid retained
-//    neighbor, and its right cell has feature 3. Their copied scalar values
-//    therefore come from those neighbors, producing [20, 20, 30, 30].
-//    Removing feature 1 then compacts feature 2 to ID 1 and feature 3 to ID 2,
-//    producing FeatureIds [1, 1, 2, 2].
+// The 4 by 1 by 1 oracle starts with FeatureIds [2, 1, 1, 3]. Feature 1 is rejected.
+// Its left cell has feature 2 as its only retained neighbor. Its right cell has feature 3.
+// The copied scalar values are therefore [20, 20, 30, 30].
+// Compaction maps features 2 and 3 to identifiers 1 and 2.
+// The final FeatureIds are [1, 1, 2, 2].
 //
-// 2. The 6x6x6 oracle rejects the 27 cells in a 3x3x3 feature-1 cube plus
-//    four additional feature-1 cells, giving 31 initially rejected cells.
-//    The cube surface and additional cells have retained face neighbors and
-//    are filled during the first pass. Only the cube center remains, so the
-//    observed coarsening counts are 31, 1, and 0. The center is filled during
-//    the second pass from its final +Z neighbor, whose tuple was copied from
-//    the original exterior cell at (2, 2, 4).
+// The 6-cubed oracle rejects a 3-cubed feature-1 region and four additional cells.
+// Thus, 31 cells are initially rejected. The first pass fills the cube surface and additional cells.
+// Only the cube center remains for the second pass. The observed coarsening counts are 31, 1, and 0.
+// Its final positive-Z neighbor supplies a tuple copied from exterior cell (2, 2, 4).
 //
-//    The tie cell has feature 3 at -Z and feature 4 at -Y. Face neighbors are
-//    visited in the order -Z, -Y, -X, +X, +Y, +Z. Because the selected source
-//    changes only when a vote count is strictly greater than the current
-//    maximum, the 1-vs-1 tie retains the first vote and selects feature 3.
-//    For equal-feature exterior neighbors, each later vote increases that
-//    feature's count, so the last valid matching neighbor supplies the tuple.
-//    The expected source-index function encodes this traversal order directly.
+// The tie cell has feature 3 at negative Z and feature 4 at negative Y.
+// Face traversal order is negative Z, negative Y, negative X, positive X, positive Y, and positive Z.
+// A source changes only when its vote count exceeds the current maximum.
+// Thus, a one-to-one tie keeps the first vote and selects feature 3.
+// For matching exterior features, the last valid neighbor supplies the tuple.
+// GetExpectedSourceIndex() encodes this traversal rule.
 //
-//    Feature compaction maps retained input features 2, 3, and 4 to output
-//    IDs 1, 2, and 3. Feature 5 owns no cells. It is removed in all-phase mode
-//    but retained in single-phase mode because it belongs to another phase.
-//    This gives feature-array lengths of 4 and 5 while all cell arrays remain
-//    identical. Scalar, float32[3], ignored-array, NumNeighbors, and Phases
-//    expectations are calculated directly from these source indices and
-//    compaction mappings.
+// Feature compaction maps retained input features 2, 3, and 4 to identifiers 1, 2, and 3.
+// Feature 5 owns no cells. All-phase mode removes it.
+// Single-phase mode retains feature 5 because it belongs to another phase.
+// The feature-array lengths are therefore 4 and 5, while all cell arrays remain equal.
+// Expected scalar, vector, NumNeighbors, and Phases values follow from the source indices and compaction mapping.
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
@@ -251,9 +312,9 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
   const bool singlePhase = GENERATE(false, true);
   DYNAMIC_SECTION("ApplyToSinglePhase=" << singlePhase)
   {
-    // Class 1 oracle: feature 1 occupies the two middle cells of [2, 1, 1, 3]
-    // and is rejected. Its left/right face-neighbor votes select features 2 and 3,
-    // yielding FeatureIds [1, 1, 2, 2] after inactive-feature removal remaps IDs.
+    // Feature 1 occupies the two middle cells of [2, 1, 1, 3] and is rejected.
+    // Its left and right face-neighbor votes select features 2 and 3.
+    // Inactive-feature removal then produces FeatureIds [1, 1, 2, 2].
     DataStructure dataStructure;
 
     const SizeVec3 imageSize = {4, 1, 1};
@@ -318,7 +379,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
       CHECK(outputFeatureIds[i] == expectedFeatureIds[i]);
       CHECK(outputCopiedValues[i] == expectedCopiedValues[i]);
       CHECK(outputIgnoredValues[i] == inputIgnoredValues[i]);
-      // Class 4 invariants: reassignment leaves no rejected IDs and IDs remain valid.
+      // Reassignment removes all rejected identifiers and keeps each identifier in range.
       CHECK(outputFeatureIds[i] >= 0);
       CHECK(outputFeatureIds[i] < 3);
     }
@@ -437,7 +498,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
   constexpr int32 k_MinNumNeighbors = 3;
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
-  // Read the Small IN100 Data set
+  // Load the Small IN100 exemplar before each selected algorithm scenario.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
@@ -473,11 +534,11 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
     args.insertOrAssign(ComputeFeatureNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
     args.insertOrAssign(ComputeFeatureNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
-    // Preflight the filter and check result
+    // Preflight must accept the configured feature arrays.
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
+    // Execution must complete the selected feature-coarsening scenario.
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -510,13 +571,13 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
     args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(numNeighborPath));
     // args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
-    // Preflight the filter and check result
+    // Preflight must accept the configured feature arrays.
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
     CHECK(preflightResult.outputActions.warnings()[0].code == -5558);
 
-    // Execute the filter and check the result
+    // Execution must complete the selected feature-coarsening scenario.
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -531,7 +592,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   {
-    // Write out the DataStructure for later viewing/debugging
+    // The optional output supports manual inspection of the coarsened arrays.
     Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
     nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
@@ -546,25 +607,22 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
 {
   UnitTest::LoadPlugins();
 
-  // With "Apply to Single Phase Only" enabled, preflight validates that the feature-level
-  // NumNeighbors and FeaturePhases arrays share the same tuple count. Build them with
-  // deliberately different tuple counts (in separate AttributeMatrices) to drive the
-  // validateNumberOfTuples() guard that emits error -252.
+  // Single-phase preflight requires equal tuple counts for NumNeighbors and FeaturePhases.
+  // Separate AttributeMatrix objects give these arrays different tuple counts.
+  // This mismatch reaches the validateNumberOfTuples() guard for error -252.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeom->setDimensions({4, 1, 1});
 
-  // Cell Data: FeatureIds is dereferenced in preflight (must exist) but is not part of the
-  // feature-level tuple-count check.
+  // FeatureIds must exist for preflight, but it is not part of the feature-level tuple-count check.
   auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {4}, imageGeom->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {4}, {1}, cellAM->getId());
 
-  // Feature Data: NumNeighbors has 5 tuples.
+  // NumNeighbors has five feature tuples.
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {5}, imageGeom->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {5}, {1}, featureAM->getId());
 
-  // FeaturePhases lives in a separate AttributeMatrix with a different tuple count (4 != 5),
-  // causing the cross-array tuple-count check to fail.
+  // FeaturePhases has four tuples in a separate AttributeMatrix.
   auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {4}, imageGeom->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, mismatchAM->getId());
 
@@ -809,10 +867,10 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsen
   imageGeom->setCellData(*cellAM);
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {2}, imageGeom->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1}, IDataAction::Mode::Execute);
   auto* featureIds = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
 
-  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>({2}, {1}, IDataAction::Mode::Execute);
+  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {2}, {1}, IDataAction::Mode::Execute);
   auto* numNeighbors = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAM->getId());
 
   featureIds->fill(-1);
@@ -885,7 +943,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibil
       CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+      // Successful pipeline loading verifies the MultiDataArraySelectionFilterParameterConverter value.
     }
   }
 }

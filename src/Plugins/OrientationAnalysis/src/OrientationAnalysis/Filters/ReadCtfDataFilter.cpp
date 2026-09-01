@@ -116,9 +116,8 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
   }
 
-  // CtfReader::readHeaderOnly() reports success even when the header carries no usable
-  // dimensions (a missing or zero XCells/YCells key parses as 0), so reject that here
-  // instead of creating a zero-sized Image Geometry.
+  // readHeaderOnly() can accept a header with zero dimensions.
+  // Reject it before creating a zero-sized Image Geometry.
   if(reader.getXCells() < 1 || reader.getYCells() < 1)
   {
     return {MakeErrorResult<OutputActions>(-19604, fmt::format("The .ctf file header reports X Cells = {} and Y Cells = {}. Both must be at least 1. The file may be malformed or not a .ctf file.",
@@ -194,9 +193,8 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Create the Ensemble AttributeMatrix. Slot 0 is always reserved for the "Invalid Phase";
-  // CtfReader assigns phase indices sequentially starting at 1, so the tuple count is
-  // (number of phases) + 1.
+  // Slot 0 is reserved for the invalid phase.
+  // CtfReader assigns later phases sequentially, so tuple count is phase count plus one.
   tupleDims = {reader.getPhaseVector().size() + 1};
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {

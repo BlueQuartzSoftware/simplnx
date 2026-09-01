@@ -7,91 +7,99 @@
 
 namespace nx::core
 {
+/**
+ * @namespace nx::core
+ * @brief Contains simplnx core types and functions.
+ */
+
 namespace HDF5
 {
 class DatasetIO;
 }
 
+/**
+ * @class IListStore
+ * @brief Defines shared metadata and I/O operations for list stores.
+ */
 class IListStore
 {
 public:
+  /**
+   * @brief Destroys the list store.
+   */
   virtual ~IListStore() = default;
 
   /**
-   * @brief Returns the number of tuples in the DataStore.
-   * @return usize
+   * @brief Reports whether list data is out-of-core.
+   * @return True when list data uses nonresident storage.
    */
+  virtual bool isOutOfCore() const noexcept
+  {
+    return false;
+  }
+
   virtual usize getNumberOfTuples() const = 0;
+
   /**
-   * @brief Returns the dimensions of the Tuples
-   * @return
+   * @brief Returns the tuple shape.
+   * @return Reference that remains valid until the store changes shape or is destroyed.
    */
   virtual const ShapeType& getTupleShape() const = 0;
 
   /**
-   * @brief This method sets the shape of the dimensions to `tupleShape`.
-   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
-   * from *slowest* to *fastest*.
+   * @brief Changes the tuple shape.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
    */
   virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   /**
-   * @brief Clear All Lists
+   * @brief Removes all list values.
    */
   virtual void clearAllLists() = 0;
 
   /**
-   * @brief Returns the number of elements in the list at the specified grain/tuple index.
-   * @param grainId The grain/tuple index to query
-   * @return usize The number of elements in the specified list
+   * @brief Returns the value count in one list.
+   * @param grainId Tuple index of the list.
+   * @return Value count in the selected list.
    */
   virtual usize getListSize(usize grainId) const = 0;
 
-  /**
-   * @brief Returns the total number of lists in the list store.
-   * @return usize The number of lists
-   */
   virtual usize getNumberOfLists() const = 0;
 
-  /**
-   * @brief Returns the total number of lists in the list store.
-   * Alias for getNumberOfLists().
-   * @return usize The number of lists
-   */
   virtual usize size() const = 0;
 
   /**
-   * @brief Clears the array.
+   * @brief Removes all list values.
    */
   virtual void clear() = 0;
 
   /**
    * @brief Reads list data from an HDF5 dataset.
-   * @param datasetReader The HDF5 DatasetIO to read from
+   * @param datasetReader HDF5 dataset to read.
    */
   virtual void readHdf5(const HDF5::DatasetIO& datasetReader) = 0;
 
   /**
    * @brief Writes list data to an HDF5 dataset.
-   * @param datasetReader The HDF5 DatasetIO to write to
+   * @param datasetReader HDF5 dataset to write.
    */
   virtual void writeHdf5(HDF5::DatasetIO& datasetReader) = 0;
 
 protected:
   /**
-   * @brief Default constructor.
+   * @brief Creates a list store.
    */
   IListStore() = default;
 
   /**
-   * @brief Copy constructor.
-   * @param rhs The IListStore to copy from
+   * @brief Copies base list-store state.
+   * @param rhs List store to copy.
    */
   IListStore(const IListStore& rhs) = default;
 
   /**
-   * @brief Move constructor.
-   * @param rhs The IListStore to move from
+   * @brief Moves base list-store state.
+   * @param rhs List store to move.
    */
   IListStore(IListStore&& rhs) = default;
 };

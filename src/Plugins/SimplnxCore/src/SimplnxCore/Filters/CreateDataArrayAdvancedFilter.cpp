@@ -88,9 +88,9 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
   }
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
-                                                                    static_cast<ChoicesParameter::ValueType>(0),
-                                                                    ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
+      ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // Choice order matches InitializeType values.
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
@@ -112,25 +112,19 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
   params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive] The upper bound initialization range for random values", "1;1;1"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
-  /* Using Fill Value */
   params.linkParameters(k_InitType_Key, k_InitValue_Key, static_cast<ChoicesParameter::ValueType>(0));
 
-  /* Using Incremental */
   params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, static_cast<ChoicesParameter::ValueType>(1));
   params.linkParameters(k_InitType_Key, k_StepOperation_Key, static_cast<ChoicesParameter::ValueType>(1));
   params.linkParameters(k_InitType_Key, k_StepValue_Key, static_cast<ChoicesParameter::ValueType>(1));
 
-  /* Random - Using Random */
   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(2));
   params.linkParameters(k_InitType_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(2));
   params.linkParameters(k_InitType_Key, k_StandardizeSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
 
-  /* Random - Using Random With Range */
   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(3));
   params.linkParameters(k_InitType_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(3));
@@ -161,7 +155,6 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto compDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
-  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
   auto initFillValue = filterArgs.value<std::string>(k_InitValue_Key);
   auto initIncFillValue = filterArgs.value<std::string>(k_StartingFillValue_Key);
   auto stepValue = filterArgs.value<std::string>(k_StepValue_Key);
@@ -221,6 +214,8 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
+
   auto arrayDataType = ConvertNumericTypeToDataType(numericType);
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);
 
@@ -241,7 +236,6 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
-    // Create the Fill Values preflight updated values
     CreateFillPreflightVals(initFillValue, numComponents, preflightUpdatedValues);
 
     break;
@@ -259,7 +253,6 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
-    // Create the Incremental/Decremental Values preflight updated values
     CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
 
     break;
@@ -283,7 +276,6 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
-    // Create the Random Values preflight updated values
     CreateRandomPreflightVals(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComponents, preflightUpdatedValues);
 
     break;
@@ -308,7 +300,7 @@ Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure
 
   if(initType == InitializeType::Random || initType == InitializeType::RangedRandom)
   {
-    // Store Seed Value in Top Level Array
+    // The stored seed makes random initialization reproducible.
     dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
   }
 
@@ -347,10 +339,9 @@ Result<Arguments> CreateDataArrayAdvancedFilter::FromSIMPLJson(const nlohmann::j
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
-  // Initialize Type parameter is not applicable in NX
+  // The legacy initialization settings do not map directly to these advanced
+  // options. The importer keeps the NX defaults and converts only the fill value.
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitValue_Key));
-  // Initialization Range parameter is not applicable in NX
-  // Starting Index value parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

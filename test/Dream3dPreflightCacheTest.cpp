@@ -32,10 +32,13 @@ namespace fs = std::filesystem;
 namespace
 {
 /**
- * @brief Writes a small .dream3d file containing a group, an attribute matrix,
- * two DataArrays, and a StringArray, then backdates its mtime so the cache's
- * young-mtime guard (files newer than k_MtimeTrustWindow are never trusted)
- * does not interfere with hit/miss assertions.
+ * @brief Writes a small .dream3d file and ages its timestamp for cache tests.
+ * @param fileName Output file name.
+ * @param numTuples Number of tuples in each numeric array.
+ * @return The written file path.
+ *
+ * The file contains two DataArrays and one StringArray. Aging the timestamp
+ * prevents the young-file guard from changing hit and miss assertions.
  */
 fs::path WriteTestFile(const std::string& fileName, usize numTuples = 10)
 {
@@ -97,6 +100,28 @@ TEST_CASE("Dream3dPreflightCache: miss then hit with equivalent structure", "[Dr
   REQUIRE(floats->getComponentShape() == ShapeType{3});
 }
 
+TEST_CASE("Dream3dPreflightCache: fetch of a file containing a StringArray succeeds", "[Dream3dPreflightCache]")
+{
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.clear();
+  cache.resetStats();
+
+  const fs::path filePath = WriteTestFile("preflight_cache_stringarray.dream3d");
+  const DataPath stringsPath({"TestGroup", "Strings"});
+
+  // RefreshStores must preserve StringArray placeholders without reading values.
+  // Both miss and hit paths run RefreshStores, so this case exercises both paths.
+  REQUIRE_NOTHROW(cache.fetch(filePath));
+  Result<DataStructure> result = cache.fetch(filePath);
+  REQUIRE(result.valid());
+  REQUIRE(cache.hitCount() == 1);
+
+  const auto* strings = result.value().getDataAs<StringArray>(stringsPath);
+  REQUIRE(strings != nullptr);
+  REQUIRE(strings->isPlaceholder());
+  REQUIRE(strings->getNumberOfTuples() == 2);
+}
+
 TEST_CASE("Dream3dPreflightCache: missing file returns open error", "[Dream3dPreflightCache]")
 {
   auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
@@ -130,11 +155,8 @@ TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each oth
   REQUIRE(arrayA != nullptr);
   REQUIRE(arrayB != nullptr);
 
-  // Every handout's DataArray owns a distinct store instance. Preflight arrays
-  // are backed by EmptyDataStore, whose mutators throw (it holds no data to
-  // mutate in place), so pointer inequality is the correct proxy for
-  // "mutating one handout cannot reach another". A third fetch must likewise
-  // get a store distinct from both prior handouts.
+  // Each handout must own a distinct EmptyDataStore instance.
+  // Pointer inequality proves that mutating one handout cannot reach another.
   Result<DataStructure> resultC = cache.fetch(filePath);
   REQUIRE(resultC.valid());
   DataStructure handoutC = std::move(resultC.value());
@@ -144,22 +166,21 @@ TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each oth
   REQUIRE(arrayA->getIDataStore() != arrayC->getIDataStore());
   REQUIRE(arrayB->getIDataStore() != arrayC->getIDataStore());
 
-  // StringArrays are backed by a real, mutable StringStore (of placeholder
-  // empty strings under preflight), so isolation is proven behaviorally: an
-  // in-place edit to one handout's StringArray must not reach another handout
-  // or a later fetch. This exercises the StringStore deep copy directly —
-  // without it, stringsB would observe "mutated".
+  // StringArray placeholders support resizing but not element access.
+  // Resizing one handout must not change the tuple count of other handouts.
   auto* stringsA = handoutA.getDataAs<StringArray>(stringsPath);
   auto* stringsB = handoutB.getDataAs<StringArray>(stringsPath);
   auto* stringsC = handoutC.getDataAs<StringArray>(stringsPath);
   REQUIRE(stringsA != nullptr);
   REQUIRE(stringsB != nullptr);
   REQUIRE(stringsC != nullptr);
-  const std::vector<std::string> stringsBBefore = stringsB->values();
-  const std::vector<std::string> stringsCBefore = stringsC->values();
-  stringsA->setValue(0, "mutated");
-  REQUIRE(stringsB->values() == stringsBBefore);
-  REQUIRE(stringsC->values() == stringsCBefore);
+  REQUIRE(stringsA->isPlaceholder());
+  REQUIRE(stringsB->isPlaceholder());
+  REQUIRE(stringsC->isPlaceholder());
+  stringsA->resizeTuples(ShapeType{5});
+  REQUIRE(stringsA->getNumberOfTuples() == 5);
+  REQUIRE(stringsB->getNumberOfTuples() == 2);
+  REQUIRE(stringsC->getNumberOfTuples() == 2);
 }
 
 TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Dream3dPreflightCache]")
@@ -173,14 +194,10 @@ TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Drea
   REQUIRE(cache.fetch(filePath).valid());
   REQUIRE(cache.missCount() == 1);
 
-  // Rewrite with different content, then stamp the file with a modification time
-  // that is unambiguously different from the cached entry's while remaining
-  // older than the trust window. The rewrite's natural (size, mtime) token is
-  // not a reliable change signal: HDF5 aggregates small allocations into fixed
-  // blocks, so the 10- and 20-tuple files can be byte-identical in size, and
-  // filesystem timestamp granularity (notably ~15 ms on Windows) can give two
-  // writes milliseconds apart the same mtime. An explicit distinct mtime makes
-  // the staleness check deterministic on every platform.
+  // Rewrite the file and assign an explicit older timestamp.
+  // HDF5 can give different tuple counts the same file size.
+  // Filesystem timestamp granularity can also hide rapid rewrites.
+  // A distinct timestamp makes staleness detection deterministic.
   WriteTestFile("preflight_cache_stale.dream3d", 20);
   fs::last_write_time(filePath, cachedMtime - std::chrono::seconds(20));
 
@@ -197,7 +214,7 @@ TEST_CASE("Dream3dPreflightCache: files younger than the trust window are never 
   cache.resetStats();
 
   const fs::path filePath = WriteTestFile("preflight_cache_young.dream3d");
-  // Make the file look just-written.
+  // A young timestamp must bypass the cache.
   fs::last_write_time(filePath, fs::file_time_type::clock::now());
 
   REQUIRE(cache.fetch(filePath).valid());
@@ -237,7 +254,7 @@ TEST_CASE("Dream3dPreflightCache: least-recently-used entry is evicted past capa
   {
     files.push_back(WriteTestFile(fmt::format("preflight_cache_lru_{}.dream3d", i)));
   }
-  // Fill to capacity, then touch file 0 so file 1 is the LRU victim.
+  // Fill the cache, then touch file 0 so file 1 becomes the least-recently used entry.
   for(usize i = 0; i < DREAM3D::Dream3dPreflightCache::k_Capacity; i++)
   {
     REQUIRE(cache.fetch(files[i]).valid());
@@ -289,17 +306,16 @@ TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "
   REQUIRE(cache.hitCount() + cache.missCount() == k_NumThreads * k_FetchesPerThread);
 }
 
-// Hidden benchmark ([.benchmark]): demonstrates the cache's effect under
-// simulated network-storage latency. Excluded from default runs because it
-// asserts on wall-clock behavior, which is only meaningful with the delay
-// driver installed. Run manually:
+// This hidden benchmark measures cache behavior under simulated storage latency.
+// It requires the delay driver and is excluded from default runs.
+// Run it manually with:
 //   ./simplnx_test "[.benchmark]"
 TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[.benchmark]")
 {
   auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
   cache.clear();
 
-  // Metadata-heavy file: many small arrays make traversal cost dominate.
+  // Many small arrays make metadata traversal dominate this fixture.
   DataStructure dataStructure;
   auto* group = DataGroup::Create(dataStructure, "BenchGroup");
   for(usize i = 0; i < 150; i++)
@@ -312,8 +328,7 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   REQUIRE(DREAM3D::WriteFile(filePath, dataStructure, Pipeline{}, false).valid());
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
-  // Install the delay driver: every HDF5 open/read now costs 2 ms, like a
-  // high-latency network mount.
+  // The delay driver adds 2 ms to each HDF5 open or read.
   const hid_t driverId = DelayVfd::Register();
   REQUIRE(driverId != H5I_INVALID_HID);
   DelayVfd::SetDelayMicroseconds(2000);
@@ -321,16 +336,14 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
 
   using Clock = std::chrono::steady_clock;
 
-  // Microsecond resolution: a warm cache hit is sub-millisecond, so timing in
-  // milliseconds would round it to 0 and let a several-ms regression slip past
-  // the ratio assertion below.
-  // BEFORE (per-edit behavior without a cache): clear + fetch = full traversal.
+  // Use microseconds because a warm cache hit is less than one millisecond.
+  // The cold fetch performs a full metadata traversal.
   cache.clear();
   const auto coldStart = Clock::now();
   REQUIRE(cache.fetch(filePath).valid());
   const auto coldUs = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - coldStart).count();
 
-  // AFTER: warm fetch = stat only.
+  // The warm fetch performs a timestamp check only.
   const auto warmStart = Clock::now();
   REQUIRE(cache.fetch(filePath).valid());
   const auto warmUs = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - warmStart).count();

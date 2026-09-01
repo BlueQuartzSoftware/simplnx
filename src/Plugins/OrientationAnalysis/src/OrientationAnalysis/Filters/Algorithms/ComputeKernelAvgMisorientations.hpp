@@ -12,6 +12,12 @@
 namespace nx::core
 {
 
+/**
+ * @struct ComputeKernelAvgMisorientationsInputValues
+ * @brief Identifies KAM inputs.
+ *
+ * KernelSize stores X, Y, Z radii. The output angle is in degrees.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 {
   VectorInt32Parameter::ValueType KernelSize;
@@ -26,17 +32,31 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 
 /**
  * @class ComputeKernelAvgMisorientations
- * @brief Computes the Kernel Average Misorientation (KAM) for each cell of an Image Geometry.
- * For each valid cell (featureId > 0 and phase > 0), the misorientation between the cell and
- * every admitted neighbor in a user-sized kernel is averaged and stored in degrees. Neighbors
- * are admitted per-grain (same feature id, the default) or per-voxel (featureId > 0 and same
- * phase) depending on the UseFeatureIds input.
+ * @brief Computes Kernel Average Misorientation for each Image Geometry cell.
+ *
+ * Valid cells average admitted neighbor angles in degrees. Same-feature mode
+ * uses the focal feature. Same-phase mode uses positive feature IDs in the
+ * focal phase.
+ *
+ * The facade dispatches to direct or cache-budgeted scanline traversal.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientations
 {
 public:
+  /**
+   * @brief Initializes KAM dispatch.
+   * @param dataStructure Provides selected arrays and the geometry.
+   * @param mesgHandler Supplies progress messages.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies selected arrays and KAM settings.
+   * @pre dataStructure, mesgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   ComputeKernelAvgMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   ComputeKernelAvgMisorientationsInputValues* inputValues);
+  /**
+   * @brief Destroys the KAM dispatcher.
+   */
   ~ComputeKernelAvgMisorientations() noexcept;
 
   ComputeKernelAvgMisorientations(const ComputeKernelAvgMisorientations&) = delete;
@@ -44,6 +64,10 @@ public:
   ComputeKernelAvgMisorientations& operator=(const ComputeKernelAvgMisorientations&) = delete;
   ComputeKernelAvgMisorientations& operator=(ComputeKernelAvgMisorientations&&) noexcept = delete;
 
+  /**
+   * @brief Dispatches KAM computation.
+   * @return Result from the selected executor.
+   */
   Result<> operator()();
 
 private:

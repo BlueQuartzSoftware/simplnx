@@ -11,39 +11,49 @@
 namespace nx::core
 {
 
+/**
+ * @struct ComputeFeatureReferenceCAxisMisorientationsInputValues
+ * @brief Identifies feature-reference c-axis misorientation inputs.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsInputValues
 {
-  // Input Geometry
   DataPath ImageGeometryPath;
-  // Input Cell Data
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath QuatsArrayPath;
-
-  // Input Feature Data
   DataPath AvgCAxesArrayPath;
-
-  // Input Ensemble Data
   DataPath CrystalStructuresArrayPath;
-
-  // Output Cell Data
   DataPath FeatureReferenceCAxisMisorientationsArrayPath;
-
-  // Output Feature Data
   DataPath FeatureAvgCAxisMisorientationsArrayPath;
   DataPath FeatureStdevCAxisMisorientationsArrayPath;
 };
 
 /**
  * @class ComputeFeatureReferenceCAxisMisorientations
- * @brief This filter calculates the misorientation angle between the C-axis of each Cell within a Feature and the average C-axis for that Feature and stores that value for each Cell.
+ * @brief Computes c-axis misorientation to each feature reference.
+ *
+ * Hexagonal cells compare their c axes to the feature-average c axis. The
+ * executor writes cell angles in degrees and calculates feature mean and
+ * population standard deviation. It uses local feature and ensemble data with
+ * one Z-slice of cell data.
  */
-
 class ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientations
 {
 public:
+  /**
+   * @brief Initializes feature-reference c-axis misorientation computation.
+   * @param dataStructure Provides selected arrays and the geometry.
+   * @param mesgHandler Supplies progress messages.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies selected arrays.
+   * @pre dataStructure, mesgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   ComputeFeatureReferenceCAxisMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                               ComputeFeatureReferenceCAxisMisorientationsInputValues* inputValues);
+  /**
+   * @brief Destroys the feature-reference c-axis executor.
+   */
   ~ComputeFeatureReferenceCAxisMisorientations() noexcept;
 
   ComputeFeatureReferenceCAxisMisorientations(const ComputeFeatureReferenceCAxisMisorientations&) = delete;
@@ -51,6 +61,15 @@ public:
   ComputeFeatureReferenceCAxisMisorientations& operator=(const ComputeFeatureReferenceCAxisMisorientations&) = delete;
   ComputeFeatureReferenceCAxisMisorientations& operator=(ComputeFeatureReferenceCAxisMisorientations&&) noexcept = delete;
 
+  /**
+   * @brief Computes feature-reference c-axis misorientations.
+   * @pre Positive cell feature and phase IDs are within their selected arrays.
+   * @return An error if no hexagonal phase exists, or a warning for skipped
+   *         non-hexagonal phases.
+   *
+   * Cancellation returns success with completed slices and feature outputs
+   * preserved.
+   */
   Result<> operator()();
 
 private:

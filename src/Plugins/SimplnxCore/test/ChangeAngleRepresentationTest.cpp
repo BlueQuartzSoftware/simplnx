@@ -8,27 +8,31 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <array>
 #include <catch2/catch.hpp>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <nonstd/span.hpp>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Invalid Execution", "[OrientationAnalysis][ChangeAngleRepresentationFilter]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  // Create default Parameters for the filter.
   // This should fail
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
@@ -42,9 +46,12 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Invalid Execution", "[O
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -65,17 +72,14 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
     }
   }
 
-  // Create default Parameters for the filter.
   // This should fail
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check the results
@@ -93,9 +97,12 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -116,17 +123,14 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
     }
   }
 
-  // Create default Parameters for the filter.
   // This should fail
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(1));
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check the results

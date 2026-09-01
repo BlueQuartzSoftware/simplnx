@@ -12,6 +12,7 @@
 
 namespace nx::core
 {
+
 namespace H5
 {
 class IDataFactory;
@@ -21,131 +22,83 @@ class IDataIOManager;
 
 /**
  * @class AbstractPlugin
- * @brief The AbstractPlugin class is the base class for all C++ plugins for
- * use in the application. The AbstractPlugin class provides an interface for
- * retrieving information about the plugin and creating filters within the
- * plugin.
+ * @brief Defines runtime metadata, filters, and I/O services for a plugin.
+ *
+ * Application owns loaded plugins. A plugin owns registered filter factories
+ * and shared I/O-manager pointers.
  */
 class SIMPLNX_EXPORT AbstractPlugin
 {
 public:
   using IdType = Uuid;
+
   using FilterContainerType = std::unordered_set<FilterHandle>;
+
   using IOManagerPointer = std::shared_ptr<IDataIOManager>;
+
   using IOManagersContainerType = std::vector<IOManagerPointer>;
 
+  /**
+   * @struct SIMPLData
+   * @brief Maps a legacy SIMPL filter to a simplnx filter.
+   */
   struct SIMPLNX_EXPORT SIMPLData
   {
     using ConversionFunction = std::function<Result<Arguments>(const nlohmann::json&)>;
 
-    Uuid simplnxUuid;
-    ConversionFunction convertJson;
+    Uuid simplnxUuid;               // Simplnx filter UUID that receives the converted arguments.
+    ConversionFunction convertJson; // Converts legacy JSON to simplnx Arguments.
   };
 
   using SIMPLMapType = std::map<Uuid, SIMPLData>;
 
   virtual ~AbstractPlugin();
 
-  /**
-   * @brief Returns the plugin's name.
-   * @return std::string
-   */
   std::string getName() const;
 
-  /**
-   * @brief Returns the plugin's description.
-   * @return std::string
-   */
   std::string getDescription() const;
 
-  /**
-   * @brief Returns the plugin's ID.
-   * @return IdType
-   */
   IdType getId() const;
 
-  /**
-   * @brief Checks if the plugin contains a filter with the given ID. Returns
-   * true if the plugin contains the filter. Returns false otherwise.
-   * @param identifier
-   * @return bool
-   */
   bool containsFilterId(FilterHandle::FilterIdType identifier) const;
 
   /**
-   * @brief Create's an IFilter with the specified ID. If the plugin
-   * does not contain a filter with the specified ID, this function returns
-   * nullptr. Otherwise, this returns a std::unique_ptr to the created IFilter.
-   * @param filterId
-   * @return IFilter::UniquePointer
+   * @brief Creates a filter from its registered factory.
+   * @param filterId Filter UUID to create.
+   * @return Owning filter pointer, or nullptr when no factory matches or returns null.
    */
   IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const;
 
-  /**
-   * @brief Returns a set of FilterHandles pointing to each of the filters
-   * contained in the plugin.
-   * @return std::unordered_set<nx::core::FilterHandle>
-   */
   FilterContainerType getFilterHandles() const;
 
-  /**
-   * @brief
-   * @return
-   */
   FilterContainerType::size_type getFilterCount() const;
 
-  /**
-   * @brief Returns the plugin's vendor name.
-   * @return std::string
-   */
   std::string getVendor() const;
 
-  /**
-   * @brief Returns a collection of DataStructure IO managers available
-   * through the plugin for use in reading or writing the DataStructure
-   * to a specific format.
-   * @return IOManagersContainerType
-   */
   IOManagersContainerType getDataIOManagers() const;
 
-  /**
-   * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
-   * their simplnx counterpart
-   * @return SIMPLMapType
-   */
   virtual SIMPLMapType getSimplToSimplnxMap() const = 0;
 
-  virtual void setOocTempDirectory(const std::string& path);
-
 protected:
-  /**
-   * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,
-   * and vendor.
-   * @param identifier
-   * @param name
-   * @param description
-   */
   AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor);
 
   /**
-   * @brief Records information for creating a filter using the provided
-   * FilterCreationFunc. The filter ID is provided by the filter created by the
-   * FilterCreationFunc. If the FilterCreationFunc fails to create a filter,
-   * this method does nothing.
-   * @param filterFunc
+   * @brief Registers a filter factory.
+   * @param filterFunc Factory that returns a new filter.
+   * @throws std::runtime_error if filterFunc returns null or duplicates a UUID.
+   *
+   * The method creates one filter to obtain and validate its UUID.
    */
   void addFilter(FilterCreationFunc filterFunc);
 
-  /**
-   * @brief Inserts an IOManager into the plugin for use throughout simplnx once the plugin has been loaded.
-   * @param ioManager
-   */
   void addDataIOManager(const IOManagerPointer& ioManager);
 
   /**
-   * @brief Adds a default value to the Preferences for the current plugin.
-   * @param keyName
-   * @param value
+   * @brief Registers a plugin default preference value.
+   * @param keyName Plugin preference key.
+   * @param value Default JSON value.
+   *
+   * Application owns the shared Preferences instance.
    */
   void addDefaultValue(std::string keyName, const nlohmann::json& value);
 
@@ -159,17 +112,31 @@ private:
   IOManagersContainerType m_IOManagers;
 };
 
+/**
+ * @brief Defines a C ABI plugin factory.
+ *
+ * The caller owns the returned plugin and releases it through DestroyPluginFunc.
+ */
 using CreatePluginFunc = AbstractPlugin* (*)();
+
+/**
+ * @brief Defines a C ABI plugin destruction function.
+ *
+ * The function deletes a plugin only when its concrete type matches the export.
+ */
 using DestroyPluginFunc = bool (*)(AbstractPlugin*);
 } // namespace nx::core
 
 #define SIMPLNX_CREATE_PLUGIN_FUNC SIMPLNX_CreatePlugin
+
 #define SIMPLNX_DESTROY_PLUGIN_FUNC SIMPLNX_DestroyPlugin
 
 #define SIMPLNX_STRINGIFY_IMPL(x) #x
+
 #define SIMPLNX_STRINGIFY(x) SIMPLNX_STRINGIFY_IMPL(x)
 
 #define SIMPLNX_CREATE_PLUGIN_FUNC_NAME SIMPLNX_STRINGIFY(SIMPLNX_CREATE_PLUGIN_FUNC)
+
 #define SIMPLNX_DESTROY_PLUGIN_FUNC_NAME SIMPLNX_STRINGIFY(SIMPLNX_DESTROY_PLUGIN_FUNC)
 
 #if defined(_WIN32)
@@ -178,6 +145,13 @@ using DestroyPluginFunc = bool (*)(AbstractPlugin*);
 #define SIMPLNX_PLUGIN_EXPORT __attribute__((visibility("default")))
 #endif
 
+/**
+ * @def SIMPLNX_DEF_PLUGIN_IMPL
+ * @brief Defines exported plugin creation and destruction functions.
+ * @param pluginType Concrete AbstractPlugin type.
+ * @param createName Exported factory symbol.
+ * @param destroyName Exported destruction symbol.
+ */
 #define SIMPLNX_DEF_PLUGIN_IMPL(pluginType, createName, destroyName)                                                                                                                                   \
   extern "C" {                                                                                                                                                                                         \
   SIMPLNX_PLUGIN_EXPORT nx::core::AbstractPlugin* createName()                                                                                                                                         \
@@ -197,4 +171,9 @@ using DestroyPluginFunc = bool (*)(AbstractPlugin*);
   }                                                                                                                                                                                                    \
   }
 
+/**
+ * @def SIMPLNX_DEF_PLUGIN
+ * @brief Defines default exported plugin creation and destruction functions.
+ * @param pluginType Concrete AbstractPlugin type.
+ */
 #define SIMPLNX_DEF_PLUGIN(pluginType) SIMPLNX_DEF_PLUGIN_IMPL(pluginType, SIMPLNX_CREATE_PLUGIN_FUNC, SIMPLNX_DESTROY_PLUGIN_FUNC)

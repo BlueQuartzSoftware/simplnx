@@ -17,17 +17,292 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <fmt/format.h>
 
+#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <set>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
+
+namespace
+{
+const std::string k_ArchiveName = "segment_features_exemplars.tar.gz";
+const std::string k_DataDirName = "segment_features_exemplars";
+const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDirName;
+const fs::path k_SmallExemplarFile = k_DataDir / "ebsd_small.dream3d";
+const fs::path k_LargeExemplarFile = k_DataDir / "ebsd_large.dream3d";
+
+constexpr StringLiteral k_GeomName = "DataContainer";
+constexpr StringLiteral k_CellDataName = "CellData";
+constexpr StringLiteral k_FeatureDataName = "CellFeatureData";
+constexpr StringLiteral k_EnsembleName = "CellEnsembleData";
+
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_FeatureIdsPath({k_GeomName, k_CellDataName, "FeatureIds"});
+const DataPath k_ActivePath({k_GeomName, k_FeatureDataName, "Active"});
+const DataPath k_MaskPath({k_GeomName, k_CellDataName, "Mask"});
+const DataPath k_QuatsPath({k_GeomName, k_CellDataName, "Quats"});
+const DataPath k_PhasesPath({k_GeomName, k_CellDataName, "Phases"});
+const DataPath k_CrystalStructuresPath({k_GeomName, k_EnsembleName, "CrystalStructures"});
+
+constexpr usize k_SmallDim = 15;
+constexpr usize k_SmallBlockSize = 5;
+constexpr usize k_LargeDim = 200;
+constexpr usize k_LargeBlockSize = 25;
+
+void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 tolerance = 5.0f, ChoicesParameter::ValueType neighborScheme = 0, bool randomize = false)
+{
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(tolerance));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(useMask ? k_MaskPath : DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(std::string(k_FeatureDataName)));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(randomize));
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: No Valid Voxels Returns Error", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  RunNoValidVoxelsErrorTest<EBSDSegmentFeaturesFilter>([](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+    BuildOrientationTestData(ds, cellShape, geom.getId(), am.getId(), 1, 3); // Cubic_High
+
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Quats")));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Phases")));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Geom", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("Grain Data"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  });
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Randomize Feature IDs", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // Three Z layers with one merge-pair pillar yield three features.
+  constexpr usize k_ExpectedFeatures = 3;
+  const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
+  const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
+
+  DataStructure dataStructure;
+  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+  auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 1, k_SmallBlockSize); // Cubic_High
+
+  EBSDSegmentFeaturesFilter filter;
+  Arguments args;
+  SetupArgs(args, /*useMask=*/false, /*isPeriodic=*/false, /*tolerance=*/5.0f, /*neighborScheme=*/0, /*randomize=*/true);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(k_ActivePath);
+  REQUIRE(actives.getNumberOfTuples() == k_ExpectedFeatures + 1);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  const auto& featureStore = featureIds.getDataStoreRef();
+  std::set<int32> uniqueIds;
+  int32 minId = std::numeric_limits<int32>::max();
+  int32 maxId = std::numeric_limits<int32>::min();
+  for(usize i = 0; i < featureStore.getNumberOfTuples(); i++)
+  {
+    int32 fid = featureStore.getValue(i);
+    uniqueIds.insert(fid);
+    minId = std::min(minId, fid);
+    maxId = std::max(maxId, fid);
+  }
+  REQUIRE(minId == 1);
+  REQUIRE(maxId == static_cast<int32>(k_ExpectedFeatures));
+  REQUIRE(uniqueIds.size() == k_ExpectedFeatures);
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: High Tolerance Merges All", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
+  const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
+
+  DataStructure dataStructure;
+  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+  auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 1, k_SmallBlockSize); // Cubic_High
+
+  EBSDSegmentFeaturesFilter filter;
+  Arguments args;
+  SetupArgs(args, /*useMask=*/false, /*isPeriodic=*/false, /*tolerance=*/90.0f);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // Cubic misorientations do not exceed 62.8 degrees, so tolerance 90 merges
+  // all valid cells.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(k_ActivePath);
+  REQUIRE(actives.getNumberOfTuples() == 2); // Feature index zero is reserved.
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  const auto& featureStore = featureIds.getDataStoreRef();
+  for(usize i = 0; i < featureStore.getNumberOfTuples(); i++)
+  {
+    REQUIRE(featureStore.getValue(i) == 1);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // The fixture differentiates face, edge, and vertex connectivity at a
+  // 5-degree tolerance.
+  constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
+
+  auto setupEBSD = [&](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+
+    // Background cells use 60-degree X rotations. Paired cells use identity
+    // quaternions in EbsdLib x,y,z,w order.
+    const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
+    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4}, IDataAction::Mode::Execute);
+    auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
+    auto& quatsStore = quatsArr->getDataStoreRef();
+    for(usize i = 0; i < 27; i++)
+    {
+      quatsStore[i * 4 + 0] = std::sin(bgHalf);
+      quatsStore[i * 4 + 1] = 0.0f;
+      quatsStore[i * 4 + 2] = 0.0f;
+      quatsStore[i * 4 + 3] = std::cos(bgHalf);
+    }
+    for(usize idx : {static_cast<usize>(0), static_cast<usize>(1 * 9 + 1 * 3 + 1)})
+    {
+      quatsStore[idx * 4 + 0] = 0.0f;
+      quatsStore[idx * 4 + 1] = 0.0f;
+      quatsStore[idx * 4 + 2] = 0.0f;
+      quatsStore[idx * 4 + 3] = 1.0f;
+    }
+    const float32 pairHalf = 30.0f * k_DegToRad * 0.5f;
+    for(usize idx : {static_cast<usize>(0 * 9 + 0 * 3 + 2), static_cast<usize>(1 * 9 + 1 * 3 + 2)})
+    {
+      quatsStore[idx * 4 + 0] = std::sin(pairHalf);
+      quatsStore[idx * 4 + 1] = 0.0f;
+      quatsStore[idx * 4 + 2] = 0.0f;
+      quatsStore[idx * 4 + 3] = std::cos(pairHalf);
+    }
+
+    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1}, IDataAction::Mode::Execute);
+    auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
+    phasesArr->fill(1);
+
+    const ShapeType ensShape = {2};
+    auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
+    const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
+    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ds, crystStructsPath, ensShape, {1}, IDataAction::Mode::Execute);
+    auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
+    auto& crystStore = crystArr->getDataStoreRef();
+    crystStore[0] = 999;
+    crystStore[1] = 1;
+
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Quats")));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Phases")));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Geom", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  };
+
+  RunFaceEdgeVertexConnectivityTest<EBSDSegmentFeaturesFilter>([&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 0); },
+                                                               [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 1); });
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[OrientationAnalysis][EBSDSegmentFeatures][.GenerateTestData]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto outputDir = fs::path(fmt::format("{}/generated_test_data/ebsd_segment_features", unit_test::k_BinaryTestOutputDir));
+  fs::create_directories(outputDir);
+
+  // The small variants cover base, mask, and periodic configurations.
+  {
+    const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
+    const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
+
+    DataStructure ds;
+
+    auto* amBase = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
+    auto& geomBase = ds.getDataRefAs<ImageGeom>(DataPath({"Base"}));
+    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBase->getId(), 1, k_SmallBlockSize);
+
+    auto* amMasked = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
+    auto& geomMasked = ds.getDataRefAs<ImageGeom>(DataPath({"Masked"}));
+    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMasked->getId(), 1, k_SmallBlockSize);
+    BuildSphericalMask(ds, cellShape, amMasked->getId());
+
+    auto* amPeriodic = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
+    auto& geomPeriodic = ds.getDataRefAs<ImageGeom>(DataPath({"Periodic"}));
+    BuildOrientationTestData(ds, cellShape, geomPeriodic.getId(), amPeriodic->getId(), 1, k_SmallBlockSize, true); // wrapBoundary
+
+    UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
+  }
+
+  // The large periodic fixture omits a mask so boundary cells can exercise
+  // wrapping.
+  {
+    const ShapeType cellShape = {k_LargeDim, k_LargeDim, k_LargeDim};
+    const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
+
+    DataStructure ds;
+    auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
+    auto& geom = ds.getDataRefAs<ImageGeom>(k_GeomPath);
+    BuildOrientationTestData(ds, cellShape, geom.getId(), am->getId(), 1, k_LargeBlockSize, true); // wrapBoundary
+
+    UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
+  }
+}
 
 namespace ebsd_segment_features_constants
 {
@@ -56,16 +331,13 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:Face", "[OrientationAnalysis
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
-  // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  // EBSD Segment Features/Semgent Features (Misorientation) Filter
   {
     EBSDSegmentFeaturesFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
@@ -82,11 +354,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:Face", "[OrientationAnalysis
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -97,7 +367,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:Face", "[OrientationAnalysis
     REQUIRE(numFeatures == 83);
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsArrayPath);
     const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsFacePath);
@@ -113,16 +382,13 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:All", "[OrientationAnalysis]
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
-  // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  // EBSD Segment Features/Semgent Features (Misorientation) Filter
   {
     EBSDSegmentFeaturesFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(1));
 
@@ -139,11 +405,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:All", "[OrientationAnalysis]
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -154,7 +418,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:All", "[OrientationAnalysis]
     REQUIRE(numFeatures == 77);
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsArrayPath);
     const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsAllPath);
@@ -170,16 +433,13 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskFace", "[OrientationAnal
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
-  // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  // EBSD Segment Features/Semgent Features (Misorientation) Filter
   {
     EBSDSegmentFeaturesFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
@@ -196,11 +456,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskFace", "[OrientationAnal
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -211,7 +469,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskFace", "[OrientationAnal
     REQUIRE(numFeatures == 36);
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsArrayPath);
     const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsMaskFacePath);
@@ -227,16 +484,13 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnaly
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
-  // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  // EBSD Segment Features/Semgent Features (Misorientation) Filter
   {
     EBSDSegmentFeaturesFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(1));
 
@@ -253,11 +507,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnaly
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -268,7 +520,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnaly
     REQUIRE(numFeatures == 32);
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsArrayPath);
     const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(ebsd_segment_features_constants::k_FeatureIdsMaskAllPath);
@@ -334,12 +585,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Masked Voxel 0 Seed V
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the shared SegmentFeatures driver: the first seed must be validated (and
-  // stamped) by getSeed() exactly like every later seed. 5x1x1 with voxel 0 masked out; per-cell
-  // orientations are pure rotations about x by Phi = [0, 20, 22, 0, 90] degrees, so pairwise
-  // misorientations equal |dPhi|. At tolerance 10 the expected features are F1 = {1, 2} (2 deg)
-  // and F2 = {4}; masked cells keep FeatureId 0. A driver that bursts from the raw index 0
-  // produces a phantom empty feature 1 and shifted ids [0, 2, 2, 0, 3].
+  // getSeed() must reject the masked first cell. Otherwise, the driver creates
+  // a phantom feature and shifts later identifiers.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
   imageGeom->setDimensions({5, 1, 1});
@@ -404,11 +651,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Boundary Wra
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the IsPeriodic parameter (previously a silent no-op in the shared
-  // SegmentFeatures driver). 4x1x1 line of pure rotations about x by Phi = [0, 30, 30, 2]
-  // degrees (Hexagonal_High): pairwise misorientations equal |dPhi|, so at tolerance 10 the
-  // non-periodic partition is {0} {1,2} {3}; periodic, the x boundary wraps and the end cells
-  // (misorientation 2 degrees) join: {0,3} {1,2}.
+  // Periodic mode must join the compatible first and last cells across the x
+  // boundary.
   auto runFilter = [](bool isPeriodic) -> std::vector<int32> {
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
@@ -473,9 +717,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Execute Error - All C
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the shared SegmentFeatures driver: with every cell masked out no seed
-  // exists, so the filter must fail with -87000. The pre-fix driver burst from the raw index 0
-  // and "succeeded" with one phantom, zero-cell feature.
+  // An all-masked fixture has no seed and must return -87000.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
   imageGeom->setDimensions({3, 1, 1});

@@ -40,6 +40,30 @@ Chaining an erode and a dilate pass (with equal iteration counts) performs the t
 
 - **Mask Array** -- a boolean cell-level array, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to an EBSD confidence index, image quality, or similar scalar.
 
+## Algorithm
+
+This filter performs iterative morphological erosion or dilation directly on a boolean mask array within an ImageGeom grid. Unlike the Erode/Dilate Bad Data filter, this filter operates only on the mask and does not propagate changes to sibling data arrays.
+
+### Processing Steps
+
+For each iteration, the algorithm scans every voxel in the volume:
+
+1. Identify false (unmasked) voxels.
+2. For each false voxel, examine its 6 face-connected neighbors (optionally restricted to specific axes by the user).
+3. **Dilation**: If any neighbor is true (masked), set the current false voxel to true. This grows the masked region outward.
+4. **Erosion**: If any neighbor is true, set that neighbor to false. This shrinks the masked region inward.
+
+A dual-buffer approach ensures that reads and writes do not interfere within a single iteration: the original mask state is read from one buffer while modifications are accumulated in a separate copy.
+
+### Performance
+
+This algorithm is optimized for both in-memory and out-of-core (OOC) data stores. When data resides on disk in chunked format, random voxel access can cause expensive chunk load/evict cycles. The implementation avoids this by:
+
+- **Sequential Z-slice processing**: The volume is scanned one Z-slice at a time, aligning with typical chunk boundaries.
+- **3-slice dual rolling window**: Two sets of three Z-slice buffers (read and write) are maintained in memory, allowing face-neighbor lookups and modification tracking without per-voxel store access.
+- **Deferred bulk writes**: Modified slices are written back to the store in bulk after each Z-layer completes, minimizing I/O operations.
+- **uint8 intermediary for bool**: Because std::vector<bool> uses bit-packing, uint8 buffers are used for the rolling window with conversion during I/O.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

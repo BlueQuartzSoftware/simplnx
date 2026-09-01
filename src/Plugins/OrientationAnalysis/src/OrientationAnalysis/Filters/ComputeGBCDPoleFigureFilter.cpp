@@ -1,5 +1,8 @@
 #include "ComputeGBCDPoleFigureFilter.hpp"
-#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigure.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureDirect.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureScanline.hpp"
+
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -54,7 +57,6 @@ std::vector<std::string> ComputeGBCDPoleFigureFilter::defaultTags() const
 Parameters ComputeGBCDPoleFigureFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
@@ -143,7 +145,10 @@ Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  return ComputeGBCDPoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto* gbcdArray = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  // A disk-backed GBCD selects the phase-slice scanline executor. A resident
+  // GBCD selects the full-cache direct executor.
+  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArray}, dataStructure, messageHandler, shouldCancel, &inputValues);
 }
 
 namespace
@@ -173,7 +178,7 @@ Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::jso
   Result<> dimResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_OutputDimensionKey, k_OutputImageDimension_Key);
   if(dimResult.valid())
   {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(dimResult));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
@@ -193,13 +198,13 @@ Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::jso
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key);
   if(cellAMResult.valid())
   {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(cellAMResult));
   }
   Result<> intensityResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key);
   if(intensityResult.valid())
   {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(intensityResult));
   }
 

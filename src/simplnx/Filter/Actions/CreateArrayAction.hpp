@@ -12,25 +12,20 @@
 
 namespace nx::core
 {
+
 /**
- * @brief Action for creating DataArrays in a DataStructure
+ * @class CreateArrayAction
+ * @brief Creates a numeric DataArray through an output action.
+ *
+ * An empty format defers storage selection to the data-structure resolver. A
+ * non-empty format requests an override after the geometry compatibility gate.
+ * Tuple, component, and byte-count products must fit their required types.
  */
 class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 {
 public:
-  inline static constexpr StringLiteral k_DefaultDataFormat = "";
-
   CreateArrayAction() = delete;
 
-  /**
-   * @brief Constructs a CreateArrayAction.
-   * @param type The data type of the array
-   * @param tDims The tuple dimensions
-   * @param cDims The component dimensions
-   * @param path The path where the DataArray will be created
-   * @param dataFormat The data format (empty string for in-memory)
-   * @param fillValue The fill value for the array
-   */
   CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
 
   ~CreateArrayAction() noexcept override;
@@ -41,63 +36,35 @@ public:
   CreateArrayAction& operator=(CreateArrayAction&&) noexcept = delete;
 
   /**
-   * @brief Applies this action's change to the given DataStructure in the given mode.
-   * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure The DataStructure to modify
-   * @param mode The mode (Preflight or Execute)
-   * @return Result<> Result with any errors or warnings
+   * @brief Creates the configured array in a data structure.
+   * @param dataStructure Destination data structure.
+   * @param mode Preflight or execute action mode.
+   * @return Creation warnings or errors.
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
-  /**
-   * @brief Returns a copy of the action.
-   * @return UniquePointer A unique pointer to the cloned action
-   */
   UniquePointer clone() const override;
 
-  /**
-   * @brief Returns the DataType of the DataArray to be created.
-   * @return DataType
-   */
   DataType type() const;
 
-  /**
-   * @brief Returns the dimensions of the DataArray to be created.
-   * @return const std::vector<usize>&
-   */
   const std::vector<usize>& dims() const;
 
-  /**
-   * @brief Returns the component dimensions of the DataArray to be created.
-   * @return const std::vector<usize>&
-   */
   const ShapeType& componentDims() const;
 
-  /**
-   * @brief Returns the path of the DataArray to be created.
-   * @return const DataPath&
-   */
   DataPath path() const;
 
-  /**
-   * @brief Returns all of the DataPaths to be created.
-   * @return std::vector<DataPath>
-   */
   std::vector<DataPath> getAllCreatedPaths() const override;
 
-  /**
-   * @brief Returns the data formatting name for use in creating the appropriate data store.
-   * An empty string results in creating an in-memory DataStore.
-   * Other formats must be defined in external plugins.
-   * @return std::string
-   */
-  std::string dataFormat() const;
+  std::string fillValue() const;
 
   /**
-   * @brief Returns the fill value of the DataArray to be created.
-   * @return std::string
+   * @brief Returns the requested storage-format override.
+   *
+   * An empty string uses automatic resolver selection. A non-empty value requests
+   * the specified format after the geometry compatibility gate.
+   * @return Requested format, or an empty string for automatic selection.
    */
-  std::string fillValue() const;
+  std::string dataFormat() const;
 
 private:
   DataType m_Type;

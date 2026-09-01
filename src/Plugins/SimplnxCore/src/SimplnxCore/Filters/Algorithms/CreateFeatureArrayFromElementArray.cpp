@@ -2,58 +2,147 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <limits>
-#include <vector>
+#include <algorithm>
+#include <memory>
+#include <nonstd/span.hpp>
 
 using namespace nx::core;
 
 namespace
 {
-constexpr auto k_NotSeen = std::numeric_limits<usize>::max();
+// Cell buffers stay fixed regardless of the total element count.
+constexpr usize k_ChunkTuples = 65536;
 
+/**
+ * @brief Finds the largest nonnegative feature ID with bounded reads.
+ * @param featureIdsStore Supplies feature IDs.
+ * @param shouldCancel Signals cancellation between chunks.
+ * @return Maximum ID, zero after cancellation, or an input or read error.
+ */
+Result<int32> findMaximumFeatureId(const Int32AbstractDataStore& featureIdsStore, const std::atomic_bool& shouldCancel)
+{
+  const usize totalTuples = featureIdsStore.getNumberOfTuples();
+  auto featureIdsBuffer = std::make_unique<int32[]>(k_ChunkTuples);
+  int32 maximumFeatureId = 0;
+
+  for(usize chunkStart = 0; chunkStart < totalTuples; chunkStart += k_ChunkTuples)
+  {
+    if(shouldCancel)
+    {
+      return {0};
+    }
+
+    const usize chunkTupleCount = std::min(k_ChunkTuples, totalTuples - chunkStart);
+    Result<> readResult = featureIdsStore.copyIntoBuffer(chunkStart, nonstd::span<int32>(featureIdsBuffer.get(), chunkTupleCount));
+    if(readResult.invalid())
+    {
+      return ConvertResultTo<int32>(std::move(readResult), int32{0});
+    }
+
+    for(usize cellIdx = 0; cellIdx < chunkTupleCount; cellIdx++)
+    {
+      const int32 featureId = featureIdsBuffer[cellIdx];
+      if(featureId < 0)
+      {
+        return MakeErrorResult<int32>(-81880, "Invalid Input, Feature Ids Array must not contain negative values");
+      }
+      maximumFeatureId = std::max(maximumFeatureId, featureId);
+    }
+  }
+
+  return {maximumFeatureId};
+}
+
+/**
+ * @struct CopyCellDataFunctor
+ * @brief Dispatches element-to-feature copying by runtime value type.
+ */
 struct CopyCellDataFunctor
 {
+  /**
+   * @brief Copies element values through bounded bulk transfers.
+   * @tparam T Element and feature value type.
+   * @param selectedCellArray Supplies element values.
+   * @param featureIdsStore Maps elements to feature tuples.
+   * @param createdArray Receives final feature values.
+   * @param shouldCancel Signals cancellation between chunks.
+   * @return Success with an optional inconsistency warning, or a transfer error.
+   *
+   * The output write occurs only after all chunks complete. Cancellation does
+   * not publish the partially assembled feature buffer.
+   */
   template <typename T>
-  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, int32 maxValue, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel) const
   {
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
+    const usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
+    const usize totalFeatures = createdDataStore.getNumberOfTuples();
+    const usize featureValueCount = totalFeatures * totalCellArrayComponents;
 
-    std::vector<usize> featureFirstCellOffset(static_cast<usize>(maxValue) + 1, k_NotSeen);
+    // These arrays scale with feature count, not cell count. Caching first and
+    // final values keeps all hot-loop work local and preserves last-value-wins behavior.
+    auto firstFeatureValues = std::make_unique<T[]>(featureValueCount);
+    auto createdFeatureValues = std::make_unique<T[]>(featureValueCount);
+    auto featureWasSeen = std::make_unique<bool[]>(totalFeatures);
+    auto featureIdsBuffer = std::make_unique<int32[]>(k_ChunkTuples);
+    auto cellValuesBuffer = std::make_unique<T[]>(k_ChunkTuples * totalCellArrayComponents);
     Result<> result;
 
-    const usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
-    for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
+    for(usize chunkStart = 0; chunkStart < totalCellArrayTuples; chunkStart += k_ChunkTuples)
     {
       if(shouldCancel)
       {
         return {};
       }
 
-      const int32 featureIdx = featureIds[cellTupleIdx];
-
-      if(featureFirstCellOffset[featureIdx] == k_NotSeen)
+      const usize chunkTupleCount = std::min(k_ChunkTuples, totalCellArrayTuples - chunkStart);
+      const usize chunkValueCount = chunkTupleCount * totalCellArrayComponents;
+      Result<> readResult = featureIdsStore.copyIntoBuffer(chunkStart, nonstd::span<int32>(featureIdsBuffer.get(), chunkTupleCount));
+      if(readResult.invalid())
       {
-        featureFirstCellOffset[featureIdx] = totalCellArrayComponents * cellTupleIdx;
+        return readResult;
+      }
+      readResult = selectedCellStore.copyIntoBuffer(chunkStart * totalCellArrayComponents, nonstd::span<T>(cellValuesBuffer.get(), chunkValueCount));
+      if(readResult.invalid())
+      {
+        return readResult;
       }
 
-      const usize firstInstanceCellTupleIdx = featureFirstCellOffset[featureIdx];
-      for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
+      for(usize cellIdx = 0; cellIdx < chunkTupleCount; cellIdx++)
       {
-        const T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
-        const T currentCellVal = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
-        if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
+        const usize featureIdx = static_cast<usize>(featureIdsBuffer[cellIdx]);
+        const usize featureValueOffset = featureIdx * totalCellArrayComponents;
+        const usize cellValueOffset = cellIdx * totalCellArrayComponents;
+
+        if(!featureWasSeen[featureIdx])
         {
-          result.warnings().push_back(
-              Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
+          std::copy_n(cellValuesBuffer.get() + cellValueOffset, totalCellArrayComponents, firstFeatureValues.get() + featureValueOffset);
+          featureWasSeen[featureIdx] = true;
         }
 
-        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = currentCellVal;
+        for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
+        {
+          const T currentCellValue = cellValuesBuffer[cellValueOffset + cellCompIdx];
+          if(currentCellValue != firstFeatureValues[featureValueOffset + cellCompIdx] && result.warnings().empty())
+          {
+            result.warnings().push_back(
+                Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
+          }
+          createdFeatureValues[featureValueOffset + cellCompIdx] = currentCellValue;
+        }
       }
+    }
+
+    Result<> writeResult = createdDataStore.copyFromBuffer(0, nonstd::span<const T>(createdFeatureValues.get(), featureValueCount));
+    if(writeResult.invalid())
+    {
+      return writeResult;
     }
 
     return result;
@@ -79,43 +168,43 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
 {
   const DataPath createdArrayPath = m_InputValues->CellFeatureAttributeMatrixPath.createChildPath(m_InputValues->CreatedArrayName);
   const auto* selectedCellArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedCellArrayPath);
-  const auto& featureIdsRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+  const auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   auto* createdArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
-  // Resize the created array to the proper size
-  if(featureIdsRef.getNumberOfTuples() == 0)
+  const usize totalCellTuples = featureIdsStore.getNumberOfTuples();
+  if(totalCellTuples == 0)
   {
     return MakeErrorResult(-81882, "Invalid Input, Feature Ids Array must not be empty");
   }
 
-  const auto [minIt, maxIt] = std::minmax_element(featureIdsRef.cbegin(), featureIdsRef.cend());
-  const int32 minValue = *minIt;
-  const int32 maxValue = *maxIt;
-
-  // Validate no negative feature IDs — a negative featureIdx in the copy loop converts to
-  // a huge usize index (int32 → usize wrapping), causing an out-of-bounds write
-  if(minValue < 0)
+  auto maximumFeatureIdResult = findMaximumFeatureId(featureIdsStore, m_ShouldCancel);
+  if(maximumFeatureIdResult.invalid())
   {
-    return MakeErrorResult(-81880, "Invalid Input, Feature Ids Array must not contain negative values");
+    return ConvertResult(std::move(maximumFeatureIdResult));
+  }
+  if(m_ShouldCancel)
+  {
+    return {};
   }
 
+  const usize requiredFeatureTuples = static_cast<usize>(maximumFeatureIdResult.value()) + 1;
   auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
 
-  // validate resize won't shrink child arrays
-  if(maxValue + 1 > cellFeatureAttrMat.getNumberOfTuples())
+  // Validate that growing the attribute matrix will not shrink a larger child array.
+  if(requiredFeatureTuples > cellFeatureAttrMat.getNumberOfTuples())
   {
     for(const auto& childObject : cellFeatureAttrMat)
     {
       const auto* iArray = dynamic_cast<IArray*>(childObject.second.get());
-      if(iArray != nullptr && iArray->getNumberOfTuples() > (maxValue + 1))
+      if(iArray != nullptr && iArray->getNumberOfTuples() > requiredFeatureTuples)
       {
         return MakeErrorResult(-81881, fmt::format("Resizing would cause data loss in {}. Make sure all objects in {} have tuple counts equal to or less then the max Feature ID {}!",
-                                                   iArray->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), maxValue + 1));
+                                                   iArray->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), requiredFeatureTuples));
       }
     }
 
-    cellFeatureAttrMat.resizeTuples(std::vector<usize>{static_cast<usize>(maxValue) + 1});
+    cellFeatureAttrMat.resizeTuples({requiredFeatureTuples});
   }
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsRef, createdArray, maxValue, m_ShouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsStore, createdArray, m_ShouldCancel);
 }

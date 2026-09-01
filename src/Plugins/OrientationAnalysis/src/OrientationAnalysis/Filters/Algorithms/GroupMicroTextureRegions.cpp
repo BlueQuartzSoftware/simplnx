@@ -8,9 +8,15 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
+#include <memory>
 #include <random>
 
 using namespace nx::core;
+
+namespace
+{
+constexpr usize k_CellRemapChunkSize = 65536;
+}
 
 // -----------------------------------------------------------------------------
 GroupMicroTextureRegions::GroupMicroTextureRegions(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -37,13 +43,11 @@ const std::atomic_bool& GroupMicroTextureRegions::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void GroupMicroTextureRegions::randomizeParentIds(usize totalPoints, usize totalParentIds)
+void GroupMicroTextureRegions::randomizeParentIds(usize totalParentIds)
 {
   // Shuffle parent IDs in [1, totalParentIds-1] via Fisher-Yates with the same
   // RNG state already seeded by operator(). Parent ID 0 is reserved (unassigned)
   // and is excluded from the shuffle so cells with no parent stay at 0.
-  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
-
   std::vector<int32> shuffle(totalParentIds);
   for(usize i = 0; i < totalParentIds; i++)
   {
@@ -58,22 +62,78 @@ void GroupMicroTextureRegions::randomizeParentIds(usize totalPoints, usize total
   }
 
   // Remap feature parent IDs first so cell parent IDs can index through the new mapping
-  const usize numFeatures = m_FeatureParentIds.getNumberOfTuples();
+  const usize numFeatures = m_FeatureParentIdsCache.size();
   for(usize f = 0; f < numFeatures; f++)
   {
-    const int32 oldId = m_FeatureParentIds[f];
+    const int32 oldId = m_FeatureParentIdsCache[f];
     if(oldId >= 0 && static_cast<usize>(oldId) < totalParentIds)
     {
-      m_FeatureParentIds[f] = shuffle[oldId];
+      m_FeatureParentIdsCache[f] = shuffle[oldId];
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+Result<> GroupMicroTextureRegions::cacheFeatureData()
+{
+  const usize numFeatures = m_FeaturePhases.getNumberOfTuples();
+  m_FeaturePhasesCache.resize(numFeatures);
+  m_FeatureParentIdsCache.assign(numFeatures, -1);
+  m_CrystalStructuresCache.resize(m_CrystalStructures.getNumberOfTuples());
+  m_AvgQuatsCache.resize(m_AvgQuats.getSize());
+  m_VolumesCache.resize(m_Volumes.getNumberOfTuples());
+
+  if(Result<> result = m_FeaturePhases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(m_FeaturePhasesCache.data(), m_FeaturePhasesCache.size())); result.invalid())
+  {
+    return result;
+  }
+  if(Result<> result = m_CrystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(m_CrystalStructuresCache.data(), m_CrystalStructuresCache.size())); result.invalid())
+  {
+    return result;
+  }
+  if(Result<> result = m_AvgQuats.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(m_AvgQuatsCache.data(), m_AvgQuatsCache.size())); result.invalid())
+  {
+    return result;
+  }
+  return m_Volumes.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(m_VolumesCache.data(), m_VolumesCache.size()));
+}
+
+// -----------------------------------------------------------------------------
+Result<> GroupMicroTextureRegions::remapCellParentIds()
+{
+  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+  auto& cellParentIdsStore = cellParentIds.getDataStoreRef();
+  const usize totalPoints = featureIds.getNumberOfTuples();
+  auto featureIdsBuffer = std::make_unique<int32[]>(k_CellRemapChunkSize);
+  auto cellParentIdsBuffer = std::make_unique<int32[]>(k_CellRemapChunkSize);
+
+  for(usize offset = 0; offset < totalPoints; offset += k_CellRemapChunkSize)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
+    const usize count = std::min(k_CellRemapChunkSize, totalPoints - offset);
+    if(Result<> result = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdsBuffer.get(), count)); result.invalid())
+    {
+      return result;
+    }
+
+    for(usize i = 0; i < count; i++)
+    {
+      cellParentIdsBuffer[i] = m_FeatureParentIdsCache[featureIdsBuffer[i]];
+    }
+
+    if(Result<> result = cellParentIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(cellParentIdsBuffer.get(), count)); result.invalid())
+    {
+      return result;
     }
   }
 
-  // Re-derive cell parent IDs from the shuffled feature parent IDs
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  for(usize k = 0; k < totalPoints; k++)
-  {
-    cellParentIds[k] = m_FeatureParentIds[featureIds[k]];
-  }
+  return {};
 }
 
 // -----------------------------------------------------------------------------
@@ -102,6 +162,11 @@ Result<> GroupMicroTextureRegions::execute()
 
   while(featureSeed >= 0)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     parentCount++;
     featureSeed = getSeed(parentCount);
     if(featureSeed < 0)
@@ -164,6 +229,10 @@ Result<> GroupMicroTextureRegions::operator()()
   m_AvgCAxes[1] = 0.0f;
   m_AvgCAxes[2] = 0.0f;
   m_FeatureParentIds.fill(-1);
+  if(Result<> result = cacheFeatureData(); result.invalid())
+  {
+    return result;
+  }
 
   // Execute the main grouping algorithm
   messageHelper.sendMessage(fmt::format("Start Grouping....."));
@@ -174,6 +243,10 @@ Result<> GroupMicroTextureRegions::operator()()
   {
     return result;
   }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   // handle active array resize
   if(m_NumTuples < 2)
@@ -182,18 +255,20 @@ Result<> GroupMicroTextureRegions::operator()()
   }
   m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixName).resizeTuples(ShapeType{m_NumTuples});
 
-  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const usize totalPoints = featureIds.getNumberOfTuples();
-  for(usize k = 0; k < totalPoints; k++)
-  {
-    cellParentIds[k] = m_FeatureParentIds[featureIds[k]];
-  }
-
   if(m_InputValues->RandomizeParentIds)
   {
     messageHelper.sendMessage(fmt::format("Randomizing Parent Ids"));
-    randomizeParentIds(totalPoints, m_NumTuples);
+    randomizeParentIds(m_NumTuples);
+  }
+
+  if(Result<> writeFeatureParentIdsResult = m_FeatureParentIds.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(m_FeatureParentIdsCache.data(), m_FeatureParentIdsCache.size()));
+     writeFeatureParentIdsResult.invalid())
+  {
+    return writeFeatureParentIdsResult;
+  }
+  if(Result<> remapCellParentIdsResult = remapCellParentIds(); remapCellParentIdsResult.invalid())
+  {
+    return remapCellParentIdsResult;
   }
 
   return {};
@@ -202,7 +277,7 @@ Result<> GroupMicroTextureRegions::operator()()
 // -----------------------------------------------------------------------------
 int GroupMicroTextureRegions::getSeed(int32 newFid)
 {
-  usize numFeatures = m_FeaturePhases.getNumberOfTuples();
+  const usize numFeatures = m_FeaturePhasesCache.size();
 
   int32 featureIdSeed = -1;
 
@@ -225,7 +300,7 @@ int GroupMicroTextureRegions::getSeed(int32 newFid)
     {
       randFeature = randFeature - numFeatures;
     }
-    if(m_FeatureParentIds.getValue(randFeature) == -1)
+    if(m_FeatureParentIdsCache[randFeature] == -1)
     {
       featureIdSeed = randFeature;
     }
@@ -243,23 +318,21 @@ int GroupMicroTextureRegions::getSeed(int32 newFid)
 
   if(featureIdSeed >= 0)
   {
-    m_FeatureParentIds[featureIdSeed] = newFid;
+    m_FeatureParentIdsCache[featureIdSeed] = newFid;
     m_NumTuples = newFid + 1;
 
     if(m_InputValues->UseRunningAverage)
     {
       usize index = featureIdSeed * 4;
       // Get the orientation matrix (which is passive) and then transpose it to make it active transform
-      ebsdlib::Matrix3X3F g1t = ebsdlib::Quaternion<float32>(m_AvgQuats.getValue(index + 0), m_AvgQuats.getValue(index + 1), m_AvgQuats.getValue(index + 2), m_AvgQuats.getValue(index + 3))
-                                    .toOrientationMatrix()
-                                    .toGMatrix()
-                                    .transpose();
+      ebsdlib::Matrix3X3F g1t =
+          ebsdlib::Quaternion<float32>(m_AvgQuatsCache[index + 0], m_AvgQuatsCache[index + 1], m_AvgQuatsCache[index + 2], m_AvgQuatsCache[index + 3]).toOrientationMatrix().toGMatrix().transpose();
       ebsdlib::Matrix3X1F cAxis(0.0f, 0.0f, 1.0f);
       // normalize so that the dot product can be taken below without
       // dividing by the magnitudes (they would be 1)
       const ebsdlib::Matrix3X1F c1 = (g1t * cAxis).normalize();
 
-      m_AvgCAxes = c1 * m_Volumes.getValue(featureIdSeed);
+      m_AvgCAxes = c1 * m_VolumesCache[featureIdSeed];
     }
   }
 
@@ -269,9 +342,9 @@ int GroupMicroTextureRegions::getSeed(int32 newFid)
 // -----------------------------------------------------------------------------
 bool GroupMicroTextureRegions::determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid)
 {
-  const int32 neighborParentId = m_FeatureParentIds.getValue(neighborFeature);
-  const int32 referenceFeaturePhase = m_FeaturePhases.getValue(referenceFeature);
-  const int32 neighborFeaturePhase = m_FeaturePhases.getValue(neighborFeature);
+  const int32 neighborParentId = m_FeatureParentIdsCache[neighborFeature];
+  const int32 referenceFeaturePhase = m_FeaturePhasesCache[referenceFeature];
+  const int32 neighborFeaturePhase = m_FeaturePhasesCache[neighborFeature];
 
   if(neighborParentId == -1 && referenceFeaturePhase > 0 && neighborFeaturePhase > 0)
   {
@@ -281,27 +354,19 @@ bool GroupMicroTextureRegions::determineGrouping(int32 referenceFeature, int32 n
     if(!m_InputValues->UseRunningAverage)
     {
       const usize index = referenceFeature * 4;
-      // Get the orientation matrix (which is passive) and then transpose it to make it active transform
-      // transpose the g matrix so when c-axis is multiplied by it,
-      // it will give the sample direction that the c-axis is along
-      ebsdlib::Matrix3X3F g1t = ebsdlib::Quaternion<float32>(m_AvgQuats.getValue(index + 0), m_AvgQuats.getValue(index + 1), m_AvgQuats.getValue(index + 2), m_AvgQuats.getValue(index + 3))
-                                    .toOrientationMatrix()
-                                    .toGMatrix()
-                                    .transpose();
+      // The transposed matrix maps crystal [001] into the sample frame.
+      ebsdlib::Matrix3X3F g1t =
+          ebsdlib::Quaternion<float32>(m_AvgQuatsCache[index + 0], m_AvgQuatsCache[index + 1], m_AvgQuatsCache[index + 2], m_AvgQuatsCache[index + 3]).toOrientationMatrix().toGMatrix().transpose();
       c1 = (g1t * cAxis).normalize();
     }
-    uint32 phase1 = m_CrystalStructures.getValue(referenceFeaturePhase);
-    uint32 phase2 = m_CrystalStructures.getValue(neighborFeaturePhase);
+    uint32 phase1 = m_CrystalStructuresCache[referenceFeaturePhase];
+    uint32 phase2 = m_CrystalStructuresCache[neighborFeaturePhase];
     if(phase1 == phase2 && (phase1 == ebsdlib::CrystalStructure::Hexagonal_High))
     {
       const usize index = neighborFeature * 4;
-      // Get the orientation matrix (which is passive) and then transpose it to make it active transform
-      // transpose the g matrix so when c-axis is multiplied by it,
-      // it will give the sample direction that the c-axis is along
-      ebsdlib::Matrix3X3F g2t = ebsdlib::Quaternion<float32>(m_AvgQuats.getValue(index + 0), m_AvgQuats.getValue(index + 1), m_AvgQuats.getValue(index + 2), m_AvgQuats.getValue(index + 3))
-                                    .toOrientationMatrix()
-                                    .toGMatrix()
-                                    .transpose();
+      // The transposed matrix maps crystal [001] into the sample frame.
+      ebsdlib::Matrix3X3F g2t =
+          ebsdlib::Quaternion<float32>(m_AvgQuatsCache[index + 0], m_AvgQuatsCache[index + 1], m_AvgQuatsCache[index + 2], m_AvgQuatsCache[index + 3]).toOrientationMatrix().toGMatrix().transpose();
       ebsdlib::Matrix3X1F c2 = (g2t * cAxis).normalize();
 
       float32 w;
@@ -319,10 +384,10 @@ bool GroupMicroTextureRegions::determineGrouping(int32 referenceFeature, int32 n
       float32 cAxisToleranceRad = m_InputValues->CAxisTolerance * nx::core::Constants::k_PiF / 180.0f;
       if(w <= cAxisToleranceRad || (nx::core::Constants::k_PiD - w) <= cAxisToleranceRad)
       {
-        m_FeatureParentIds.setValue(neighborFeature, newFid);
+        m_FeatureParentIdsCache[neighborFeature] = newFid;
         if(m_InputValues->UseRunningAverage)
         {
-          c2 = c2 * m_Volumes.getValue(neighborFeature);
+          c2 = c2 * m_VolumesCache[neighborFeature];
           m_AvgCAxes = m_AvgCAxes + c2;
         }
         return true;

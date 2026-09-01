@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/CopyFeatureArrayToElementArray.hpp"
 #include "SimplnxCore/Filters/CopyFeatureArrayToElementArrayFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -11,6 +12,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -20,6 +22,121 @@ namespace fs = std::filesystem;
 
 namespace
 {
+/**
+ * @class CopyFeatureFailingReadStore
+ * @brief Injects a selected error into a selected bulk read.
+ * @tparam T Specifies the store element type.
+ */
+template <typename T>
+class CopyFeatureFailingReadStore : public DataStore<T>
+{
+public:
+  /**
+   * @brief Creates an in-memory store with a selected read failure.
+   * @param tupleShape Store tuple shape.
+   * @param componentShape Store component shape.
+   * @param value Optional initialization value.
+   * @param errorCode Error code returned by the selected read.
+   * @param failOnRead One-based read call that returns the error.
+   */
+  CopyFeatureFailingReadStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> value, int32 errorCode, usize failOnRead = 1)
+  : DataStore<T>(tupleShape, componentShape, value)
+  , m_ErrorCode(errorCode)
+  , m_FailOnRead(failOnRead)
+  {
+  }
+
+  /**
+   * @brief Reads values until the selected call returns the injected error.
+   * @param offset Zero-based first source element.
+   * @param buffer Receives values on successful calls.
+   * @return The injected error or the underlying DataStore result.
+   */
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> buffer) const override
+  {
+    if(++m_ReadCount == m_FailOnRead)
+    {
+      return MakeErrorResult(m_ErrorCode, "Injected CopyFeatureArray bulk-read failure");
+    }
+    return DataStore<T>::copyIntoBuffer(offset, buffer);
+  }
+
+private:
+  int32 m_ErrorCode;
+  usize m_FailOnRead;
+  mutable usize m_ReadCount = 0;
+};
+
+/**
+ * @class CopyFeatureFailingWriteStore
+ * @brief Injects a selected error into every bulk write.
+ * @tparam T Specifies the store element type.
+ */
+template <typename T>
+class CopyFeatureFailingWriteStore : public DataStore<T>
+{
+public:
+  /**
+   * @brief Creates an in-memory store with a selected write error.
+   * @param tupleShape Store tuple shape.
+   * @param componentShape Store component shape.
+   * @param value Optional initialization value.
+   * @param errorCode Error code returned by bulk writes.
+   */
+  CopyFeatureFailingWriteStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> value, int32 errorCode)
+  : DataStore<T>(tupleShape, componentShape, value)
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  {
+    return MakeErrorResult(m_ErrorCode, "Injected CopyFeatureArray bulk-write failure");
+  }
+
+private:
+  int32 m_ErrorCode;
+};
+
+/**
+ * @class CopyFeatureCancelAfterSecondReadStore
+ * @brief Requests cancellation after the second successful bulk read.
+ */
+class CopyFeatureCancelAfterSecondReadStore : public DataStore<int32>
+{
+public:
+  /**
+   * @brief Creates a scalar int32 store that updates a caller-owned cancel flag.
+   * @param tupleShape Store tuple shape.
+   * @param shouldCancel Cancel flag that must outlive this store.
+   */
+  CopyFeatureCancelAfterSecondReadStore(const ShapeType& tupleShape, std::atomic_bool& shouldCancel)
+  : DataStore<int32>(tupleShape, ShapeType{1}, int32{0})
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  /**
+   * @brief Performs a bulk read and requests cancellation after the second success.
+   * @param offset Zero-based first source element.
+   * @param buffer Receives the selected values.
+   * @return The underlying DataStore result.
+   */
+  Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
+  {
+    auto result = DataStore<int32>::copyIntoBuffer(offset, buffer);
+    if(result.valid() && ++m_ReadCount == 2)
+    {
+      m_ShouldCancel = true;
+    }
+    return result;
+  }
+
+private:
+  std::atomic_bool& m_ShouldCancel;
+  mutable usize m_ReadCount = 0;
+};
+
 const std::string k_CellFeatureIdsArrayName("FeatureIds");
 const std::string k_FeatureTemperatureName("Feature Temperature");
 const std::string k_FeatureDataArrayName("Feature Data Array");
@@ -27,8 +144,12 @@ const std::string k_CellTempArraySuffix("_ToCell");
 const DataPath k_CellTempArrayPath({k_FeatureTemperatureName + k_CellTempArraySuffix});
 const DataPath k_CellFeatureArrayPath({k_FeatureDataArrayName + k_CellTempArraySuffix});
 
-// Class 1 (Analytical) fixture: hand-built input whose expected output is derived by hand.
-// See src/Plugins/SimplnxCore/vv/CopyFeatureArrayToElementArrayFilter.md (Oracle section).
+/**
+ * @namespace AnalyticalFixtures
+ * @brief Provides hand-derived input and expected arrays for the analytical oracle.
+ *
+ * The V&V report documents the complete oracle derivation.
+ */
 namespace AnalyticalFixtures
 {
 const std::string k_ImageGeometryName("Image Geometry");
@@ -50,50 +171,40 @@ const DataPath k_AvgTempCellPath({k_ImageGeometryName, k_CellDataName, k_AvgTemp
 const DataPath k_RGBCellPath({k_ImageGeometryName, k_CellDataName, k_RGBName + k_Suffix});
 const DataPath k_ActiveCellPath({k_ImageGeometryName, k_CellDataName, k_ActiveName + k_Suffix});
 
-// 4 x 3 x 1 (X,Y,Z) image geometry: 12 cells, 4 features (ids 0-3).
+// The 4 by 3 by 1 geometry has 12 cells and feature identifiers 0 through 3.
 const std::vector<int32> k_FeatureIds = {0, 1, 1, 2, 2, 0, 3, 1, 3, 3, 0, 2};
 
-// Feature-level source values (4 tuples).
+// These arrays contain four feature-level source tuples.
 const std::vector<float32> k_AvgTemp = {10.5F, 20.25F, -30.75F, 40.125F};
 const std::vector<int32> k_RGB = {1, 2, 3, 40, 50, 60, -7, 8, -9, 100, 200, 127};
 const std::vector<bool> k_Active = {false, true, true, false};
 
-// Hand-derived expected outputs: out[i*C + c] = source[FeatureIds[i]*C + c].
-// AvgTemp_Cell[i] = AvgTemp[FeatureIds[i]]:
-//   fid  = [0,     1,     1,     2,      2,      0,    3,      1,     3,      3,      0,    2     ]
+// Each output component uses `source[FeatureIds[i] * C + c]`.
+// The expected scalar output uses AvgTemp at each cell's feature identifier.
 const std::vector<float32> k_ExpectedAvgTempCell = {10.5F, 20.25F, 20.25F, -30.75F, -30.75F, 10.5F, 40.125F, 20.25F, 40.125F, 40.125F, 10.5F, -30.75F};
 
-// RGB_Cell tuple i = RGB tuple FeatureIds[i] (3 components per tuple):
+// Each expected RGB tuple copies the three components from its feature tuple.
 const std::vector<int32> k_ExpectedRGBCell = {
-    1,   2,   3,   // cell 0,  fid 0
-    40,  50,  60,  // cell 1,  fid 1
-    40,  50,  60,  // cell 2,  fid 1
-    -7,  8,   -9,  // cell 3,  fid 2
-    -7,  8,   -9,  // cell 4,  fid 2
-    1,   2,   3,   // cell 5,  fid 0
-    100, 200, 127, // cell 6,  fid 3
-    40,  50,  60,  // cell 7,  fid 1
-    100, 200, 127, // cell 8,  fid 3
-    100, 200, 127, // cell 9,  fid 3
-    1,   2,   3,   // cell 10, fid 0
-    -7,  8,   -9,  // cell 11, fid 2
+    1, 2, 3, 40, 50, 60, 40, 50, 60, -7, 8, -9, -7, 8, -9, 1, 2, 3, 100, 200, 127, 40, 50, 60, 100, 200, 127, 100, 200, 127, 1, 2, 3, -7, 8, -9,
 };
 
-// Active_Cell[i] = Active[FeatureIds[i]]:
+// Each expected Active value copies the value from its feature tuple.
 const std::vector<bool> k_ExpectedActiveCell = {false, true, true, true, true, false, false, true, false, false, false, true};
 
-// Builds the 4x3x1 ImageGeom fixture with a Cell AttributeMatrix (FeatureIds) and a
-// Feature AttributeMatrix (AvgTemp float32/1-comp, RGB int32/3-comp, Active bool/1-comp).
+/**
+ * @brief Builds the 4 by 3 by 1 analytical fixture and its feature arrays.
+ * @return The populated DataStructure.
+ */
 DataStructure CreateFixture()
 {
   DataStructure dataStructure;
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
-  imageGeomPtr->setDimensions(SizeVec3{4, 3, 1}); // X, Y, Z
+  imageGeomPtr->setDimensions(SizeVec3{4, 3, 1});
   imageGeomPtr->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F});
   imageGeomPtr->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F});
 
-  // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
+  // The AttributeMatrix tuple shape uses slowest-to-fastest {Z, Y, X} order.
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, std::vector<usize>{1, 3, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
 
@@ -130,6 +241,10 @@ DataStructure CreateFixture()
   return dataStructure;
 }
 
+/**
+ * @brief Creates filter arguments for every analytical feature source array.
+ * @return Configured analytical-test arguments.
+ */
 Arguments CreateArguments()
 {
   Arguments args;
@@ -138,6 +253,7 @@ Arguments CreateArguments()
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(k_Suffix));
   return args;
 }
+
 } // namespace AnalyticalFixtures
 } // namespace
 
@@ -149,15 +265,13 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
   DataStructure dataStructure;
   Arguments args;
 
-  // The FeatureIds path must be VALID so that parameter validation passes and the
-  // filter's own empty-selection guard in preflightImpl()/executeImpl() is what fires.
+  // A valid FeatureIds path lets the filter's empty-selection guard produce the error.
   Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {30}, {1});
 
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(""));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
@@ -166,7 +280,6 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
     REQUIRE(err.code == nx::core::FilterParameter::Constants::k_Validate_Empty_Value);
   }
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors().size() == 1);
@@ -184,11 +297,10 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
 
   DataStructure dataStructure;
 
-  // Cell-level FeatureIds must exist (validated selection parameter) but is not part of the tuple-count check.
+  // FeatureIds must exist, but it is not part of the feature-array tuple-count check.
   Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {30}, {1});
 
-  // Two feature-level arrays with deliberately different tuple counts (3 != 4) so the validateNumberOfTuples()
-  // guard over the selected feature arrays fails and emits error -3020.
+  // Selected feature arrays with three and four tuples reach error -3020 in validateNumberOfTuples().
   Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_FeatureTemperatureName, {3}, {1});
   Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_FeatureDataArrayName, {4}, {1});
 
@@ -208,9 +320,8 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
 {
   UnitTest::LoadPlugins();
 
-  // A NeighborList is an IArray but NOT an IDataArray. The parameter restricts selections to
-  // ArrayType::DataArray, so this must fail parameter validation with a clean error instead of
-  // reaching preflightImpl() and throwing std::bad_cast from getDataRefAs<IDataArray>().
+  // NeighborList implements IArray but not IDataArray.
+  // Parameter validation must reject it before preflight can request an IDataArray reference.
   DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureAMPath));
   auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureAMPath);
@@ -245,10 +356,9 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Cr
 {
   UnitTest::LoadPlugins();
 
-  // Selecting the FeatureIds array itself with an empty suffix derives a created path identical
-  // to the source path. IFilter::preflight() does not apply output actions, so the collision is
-  // reported when the CreateArrayAction is applied at execute (-266) — never a silent overwrite.
-  // (In a pipeline, the pipeline-level preflight applies actions and catches this before execute.)
+  // An empty suffix makes the created path equal the selected FeatureIds path.
+  // Direct filter preflight does not apply output actions, so execution returns collision error -266.
+  // Pipeline preflight applies actions and detects the same collision before execution.
   DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
 
   CopyFeatureArrayToElementArrayFilter filter;
@@ -260,7 +370,7 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Cr
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors()[0].code == -266);
 
-  // The original FeatureIds array must be untouched.
+  // The failed create action must leave the original FeatureIds values unchanged.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath));
   const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath).getDataStoreRef();
   for(usize i = 0; i < AnalyticalFixtures::k_FeatureIds.size(); i++)
@@ -272,6 +382,9 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Cr
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Analytical Oracle (Class 1)", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
@@ -282,15 +395,13 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Analytical Oracle 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const usize numCells = AnalyticalFixtures::k_FeatureIds.size();
 
-  // ------------------------------------------------------------------------
-  // Class 1 (Analytical): compare against the hand-derived expected constants.
-  // out[i*C + c] = source[FeatureIds[i]*C + c] — derivation in the V&V report.
-  // ------------------------------------------------------------------------
+  // The analytical oracle compares each output with hand-derived constants.
+  // The V&V report derives `out[i * C + c] = source[FeatureIds[i] * C + c]`.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(AnalyticalFixtures::k_AvgTempCellPath));
   const auto& avgTempCellRef = dataStructure.getDataRefAs<Float32Array>(AnalyticalFixtures::k_AvgTempCellPath).getDataStoreRef();
   REQUIRE(avgTempCellRef.getNumberOfTuples() == numCells);
@@ -321,10 +432,8 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Analytical Oracle 
     REQUIRE(activeCellRef[i] == AnalyticalFixtures::k_ExpectedActiveCell[i]);
   }
 
-  // ------------------------------------------------------------------------
-  // Class 4 (Invariant): piecewise constancy — every pair of cells sharing a
-  // feature id must have identical output tuples (checked on the 3-comp array).
-  // ------------------------------------------------------------------------
+  // Cells with the same feature identifier must have equal output tuples.
+  // The three-component output checks this piecewise-constancy invariant.
   for(usize i = 0; i < numCells; i++)
   {
     for(usize j = i + 1; j < numCells; j++)
@@ -343,15 +452,158 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Analytical Oracle 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Scanline propagates bulk failures before partial writes", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
+  auto makeValues = [] {
+    CopyFeatureArrayToElementArrayInputValues values;
+    values.SelectedFeatureArrayPaths = {AnalyticalFixtures::k_AvgTempPath};
+    values.FeatureIdsPath = AnalyticalFixtures::k_FeatureIdsPath;
+    values.CreatedArraySuffix = AnalyticalFixtures::k_Suffix;
+    return values;
+  };
+  auto addSentinelOutput = [](DataStructure& dataStructure) {
+    const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+    auto* output = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, AnalyticalFixtures::k_AvgTempCellPath.getTargetName(), {1, 3, 4}, {1}, cellData.getId());
+    if(output != nullptr)
+    {
+      output->fill(-42.0F);
+    }
+    return output;
+  };
+
+  SECTION("validator FeatureIds read fails")
+  {
+    DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+    const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+    dataStructure.removeData(AnalyticalFixtures::k_FeatureIdsPath);
+    auto store = std::make_shared<CopyFeatureFailingReadStore<int32>>(ShapeType{1, 3, 4}, ShapeType{1}, int32{0}, -8101);
+    REQUIRE(Int32Array::Create(dataStructure, k_CellFeatureIdsArrayName, store, cellData.getId()) != nullptr);
+    auto* output = addSentinelOutput(dataStructure);
+    REQUIRE(output != nullptr);
+    std::atomic_bool shouldCancel = false;
+    ForceOocAlgorithmGuard guard(true);
+    auto values = makeValues();
+    auto result = CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result)
+    REQUIRE(result.errors()[0].code == -8101);
+    REQUIRE(output->getValue(0) == -42.0F);
+  }
+
+  SECTION("FeatureIds transfer read fails after validation")
+  {
+    DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+    const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+    dataStructure.removeData(AnalyticalFixtures::k_FeatureIdsPath);
+    auto store = std::make_shared<CopyFeatureFailingReadStore<int32>>(ShapeType{1, 3, 4}, ShapeType{1}, int32{0}, -8102, 2);
+    SIMPLNX_RESULT_REQUIRE_VALID(store->copyFromBuffer(0, nonstd::span<const int32>(AnalyticalFixtures::k_FeatureIds.data(), AnalyticalFixtures::k_FeatureIds.size())));
+    REQUIRE(Int32Array::Create(dataStructure, k_CellFeatureIdsArrayName, store, cellData.getId()) != nullptr);
+    auto* output = addSentinelOutput(dataStructure);
+    REQUIRE(output != nullptr);
+    std::atomic_bool shouldCancel = false;
+    ForceOocAlgorithmGuard guard(true);
+    auto values = makeValues();
+    auto result = CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result)
+    REQUIRE(result.errors()[0].code == -8102);
+    REQUIRE(output->getValue(0) == -42.0F);
+  }
+
+  SECTION("feature cache read fails")
+  {
+    DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+    const auto& featureData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_AvgTempPath.getParent());
+    dataStructure.removeData(AnalyticalFixtures::k_AvgTempPath);
+    auto store = std::make_shared<CopyFeatureFailingReadStore<float32>>(ShapeType{4}, ShapeType{1}, float32{0.0F}, -8103);
+    REQUIRE(Float32Array::Create(dataStructure, AnalyticalFixtures::k_AvgTempName, store, featureData.getId()) != nullptr);
+    auto* output = addSentinelOutput(dataStructure);
+    REQUIRE(output != nullptr);
+    std::atomic_bool shouldCancel = false;
+    ForceOocAlgorithmGuard guard(true);
+    auto values = makeValues();
+    auto result = CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result)
+    REQUIRE(result.errors()[0].code == -8103);
+    REQUIRE(output->getValue(0) == -42.0F);
+  }
+
+  SECTION("output write fails")
+  {
+    DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+    const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+    auto store = std::make_shared<CopyFeatureFailingWriteStore<float32>>(ShapeType{1, 3, 4}, ShapeType{1}, float32{0.0F}, -8104);
+    auto* output = Float32Array::Create(dataStructure, AnalyticalFixtures::k_AvgTempCellPath.getTargetName(), store, cellData.getId());
+    REQUIRE(output != nullptr);
+    std::atomic_bool shouldCancel = false;
+    ForceOocAlgorithmGuard guard(true);
+    auto values = makeValues();
+    auto result = CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result)
+    REQUIRE(result.errors()[0].code == -8104);
+  }
+}
+
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Pre-cancelled Scanline does not write", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+  const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+  auto* output = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, AnalyticalFixtures::k_AvgTempCellPath.getTargetName(), {1, 3, 4}, {1}, cellData.getId());
+  REQUIRE(output != nullptr);
+  output->fill(-42.0F);
+  CopyFeatureArrayToElementArrayInputValues values;
+  values.SelectedFeatureArrayPaths = {AnalyticalFixtures::k_AvgTempPath};
+  values.FeatureIdsPath = AnalyticalFixtures::k_FeatureIdsPath;
+  values.CreatedArraySuffix = AnalyticalFixtures::k_Suffix;
+  std::atomic_bool shouldCancel = true;
+  ForceOocAlgorithmGuard guard(true);
+  SIMPLNX_RESULT_REQUIRE_VALID(CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)())
+  for(usize i = 0; i < output->getNumberOfTuples(); i++)
+  {
+    REQUIRE(output->getValue(i) == -42.0F);
+  }
+}
+
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Cancellation after FeatureIds chunk read does not write", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
+  const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(AnalyticalFixtures::k_FeatureIdsPath.getParent());
+  std::atomic_bool shouldCancel = false;
+  dataStructure.removeData(AnalyticalFixtures::k_FeatureIdsPath);
+  auto idsStore = std::make_shared<CopyFeatureCancelAfterSecondReadStore>(ShapeType{1, 3, 4}, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_VALID(idsStore->copyFromBuffer(0, nonstd::span<const int32>(AnalyticalFixtures::k_FeatureIds.data(), AnalyticalFixtures::k_FeatureIds.size())));
+  REQUIRE(Int32Array::Create(dataStructure, k_CellFeatureIdsArrayName, idsStore, cellData.getId()) != nullptr);
+  auto* output = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, AnalyticalFixtures::k_AvgTempCellPath.getTargetName(), {1, 3, 4}, {1}, cellData.getId());
+  REQUIRE(output != nullptr);
+  output->fill(-42.0F);
+  CopyFeatureArrayToElementArrayInputValues values;
+  values.SelectedFeatureArrayPaths = {AnalyticalFixtures::k_AvgTempPath};
+  values.FeatureIdsPath = AnalyticalFixtures::k_FeatureIdsPath;
+  values.CreatedArraySuffix = AnalyticalFixtures::k_Suffix;
+  ForceOocAlgorithmGuard guard(true);
+  SIMPLNX_RESULT_REQUIRE_VALID(CopyFeatureArrayToElementArray(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)())
+  REQUIRE(shouldCancel);
+  for(usize i = 0; i < output->getNumberOfTuples(); i++)
+  {
+    REQUIRE(output->getValue(i) == -42.0F);
+  }
+}
+
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Negative FeatureIds (-5355)", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
 
-  // Corrupt one feature id to a negative value. Preflight cannot see array values,
-  // so this must pass preflight and fail in execute via
-  // ValidateFeatureIdsToFeatureAttributeMatrixIndexing (ignoreNegativeValues = false).
+  // Preflight does not inspect feature identifier values.
+  // Execution must reject a negative value through ValidateFeatureIdsToFeatureAttributeMatrixIndexing().
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath));
   auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath).getDataStoreRef();
   featureIdsStoreRef[5] = -1;
@@ -362,19 +614,37 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Ne
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors()[0].code == -5355);
+  const auto& scalarOutput = dataStructure.getDataRefAs<Float32Array>(AnalyticalFixtures::k_AvgTempCellPath);
+  const auto& rgbOutput = dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_RGBCellPath);
+  const auto& boolOutput = dataStructure.getDataRefAs<BoolArray>(AnalyticalFixtures::k_ActiveCellPath);
+  for(usize i = 0; i < scalarOutput.getSize(); i++)
+  {
+    REQUIRE(scalarOutput.getValue(i) == 0.0F);
+  }
+  for(usize i = 0; i < rgbOutput.getSize(); i++)
+  {
+    REQUIRE(rgbOutput.getValue(i) == int32{0});
+  }
+  for(usize i = 0; i < boolOutput.getSize(); i++)
+  {
+    REQUIRE(boolOutput.getValue(i) == false);
+  }
 }
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - FeatureId exceeds Feature tuple count (-5351)", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = AnalyticalFixtures::CreateFixture();
 
-  // Corrupt one feature id to 4: the feature arrays have 4 tuples (valid ids 0-3),
-  // so id 4 would read past the end. Must pass preflight and fail in execute with -5351.
+  // Feature identifier 4 is outside the four-tuple source range.
+  // Preflight accepts the shapes, but execution must return error -5351 before a read.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath));
   auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_FeatureIdsPath).getDataStoreRef();
   featureIdsStoreRef[5] = 4;
@@ -385,20 +655,38 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Execute Error - Fe
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors()[0].code == -5351);
+  const auto& scalarOutput = dataStructure.getDataRefAs<Float32Array>(AnalyticalFixtures::k_AvgTempCellPath);
+  const auto& rgbOutput = dataStructure.getDataRefAs<Int32Array>(AnalyticalFixtures::k_RGBCellPath);
+  const auto& boolOutput = dataStructure.getDataRefAs<BoolArray>(AnalyticalFixtures::k_ActiveCellPath);
+  for(usize i = 0; i < scalarOutput.getSize(); i++)
+  {
+    REQUIRE(scalarOutput.getValue(i) == 0.0F);
+  }
+  for(usize i = 0; i < rgbOutput.getSize(); i++)
+  {
+    REQUIRE(rgbOutput.getValue(i) == int32{0});
+  }
+  for(usize i = 0; i < boolOutput.getSize(); i++)
+  {
+    REQUIRE(boolOutput.getValue(i) == false);
+  }
 }
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Over-provisioned Feature array accepted", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  // Pins deviation CopyFeatureArrayToElementArrayFilter-D2: DREAM3D 6.5.171 errors (-5555) when the
-  // feature array has more tuples than largestFeatureId + 1; SIMPLNX deliberately accepts it.
+  // DREAM3D 6.5.171 rejects source tuples beyond the largest referenced feature identifier.
+  // SIMPLNX accepts these unused feature tuples.
   DataStructure dataStructure;
 
-  // 6 cells referencing features 0-2; feature array over-provisioned with 8 tuples.
+  // Six cells reference features 0 through 2, while the source provides eight tuples.
   auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {6}, {1});
   auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
   const std::vector<int32> featureIds = {0, 2, 1, 1, 0, 2};
@@ -423,10 +711,10 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Over-provisioned F
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  // Hand-derived: out[i] = featureValues[featureIds[i]] = [1, 5, 3, 3, 1, 5]
+  // The hand-derived output is [1, 5, 3, 3, 1, 5].
   const DataPath createdPath({k_FeatureTemperatureName + k_CellTempArraySuffix});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(createdPath));
   const auto& createdRef = dataStructure.getDataRefAs<Float32Array>(createdPath).getDataStoreRef();
@@ -442,10 +730,13 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Over-provisioned F
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Zero-tuple FeatureIds accepted", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  // A FeatureIds array with zero tuples is degenerate but legal: there is nothing to copy,
-  // and the filter must succeed with empty output arrays (not crash in range validation).
+  // A zero-tuple FeatureIds array has nothing to copy but remains valid.
+  // The filter must create empty outputs without entering range validation.
   DataStructure dataStructure;
 
   Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {0}, {1});
@@ -460,7 +751,7 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Zero-tuple Feature
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath createdPath({k_FeatureTemperatureName + k_CellTempArraySuffix});
@@ -474,9 +765,14 @@ TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Vali
 {
   UnitTest::LoadPlugins();
 
+  // SIMPLNX_TEST_ALGORITHM_PATH selects Direct, Scanline, or both for the same assertions.
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure;
 
-  // Create Cell FeatureIds array
+  // Create the cell-to-feature mapping.
   Int32Array* cellFeatureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {{10, 3}}, {1});
   REQUIRE(cellFeatureIdsPtr != nullptr);
   Int32Array& cellFeatureIds = *cellFeatureIdsPtr;
@@ -490,8 +786,7 @@ TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Vali
     }
   }
 
-  // Create two feature data arrays with 3 tuples each, filled with distinct per-feature
-  // values so that an indexing mistake in the filter cannot go undetected.
+  // Distinct values in two source arrays expose an incorrect feature lookup.
   DataArray<TestType>* avgTempValuePtr = DataArray<TestType>::template CreateWithStore<DataStore<TestType>>(dataStructure, k_FeatureTemperatureName, {3}, {1});
   REQUIRE(avgTempValuePtr != nullptr);
   DataArray<TestType>& avgTempValue = *avgTempValuePtr;
@@ -505,7 +800,7 @@ TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Vali
     featureDataValue[i] = static_cast<TestType>(i * 3 + 1); // [1, 4, 7]
   }
 
-  // Create filter and set arguments
+  // Copy both source arrays through the selected algorithm path.
   CopyFeatureArrayToElementArrayFilter filter;
   Arguments args;
 
@@ -514,15 +809,13 @@ TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Vali
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
   args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(k_CellTempArraySuffix));
 
-  // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  // Execute the filter
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  // Check the filter results
+  // Each output value must match its source feature tuple.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(k_CellTempArrayPath));
   const auto& createdElementTempArray = dataStructure.getDataRefAs<DataArray<TestType>>(k_CellTempArrayPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(k_CellFeatureArrayPath));
@@ -578,8 +871,8 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: SIMPL Backwards Co
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<std::vector<DataPath>>(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPaths_Key) == std::vector<DataPath>{DataPath({"DataContainer", "CellData", "TestArray"})});
       CHECK(args.value<DataPath>(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // The legacy CreatedArrayName is intentionally NOT mapped onto the suffix; the copied array keeps
-      // the input array's name, so the suffix stays at its default (empty).
+      // Legacy CreatedArrayName does not map to the suffix parameter.
+      // The copied array keeps its input name, so the suffix remains empty.
       CHECK(args.value<std::string>(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key).empty());
     }
   }

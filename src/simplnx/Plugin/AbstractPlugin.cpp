@@ -102,7 +102,3 @@ void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& 
   Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
   preferences->addDefaultValues(getName(), keyName, value);
 }
-
-void AbstractPlugin::setOocTempDirectory(const std::string& path)
-{
-}

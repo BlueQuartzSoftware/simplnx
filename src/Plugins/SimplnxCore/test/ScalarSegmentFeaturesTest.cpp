@@ -8,16 +8,214 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <set>
+
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
+
+namespace
+{
+// These paths select the segmentation exemplar archive.
+const std::string k_ArchiveName = "segment_features_exemplars.tar.gz";
+const std::string k_DataDirName = "segment_features_exemplars";
+const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDirName;
+const fs::path k_SmallExemplarFile = k_DataDir / "scalar_small.dream3d";
+const fs::path k_LargeExemplarFile = k_DataDir / "scalar_large.dream3d";
+
+// These names define the generated geometry hierarchy.
+constexpr StringLiteral k_GeomName = "DataContainer";
+constexpr StringLiteral k_CellDataName = "CellData";
+constexpr StringLiteral k_FeatureDataName = "CellFeatureData";
+
+// These paths select generated segmentation arrays.
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_FeatureIdsPath({k_GeomName, k_CellDataName, "FeatureIds"});
+const DataPath k_ActivePath({k_GeomName, k_FeatureDataName, "Active"});
+const DataPath k_MaskPath({k_GeomName, k_CellDataName, "Mask"});
+
+// These dimensions define the small and large generated fixtures.
+constexpr usize k_SmallDim = 15;
+constexpr usize k_SmallBlockSize = 5;
+constexpr usize k_LargeDim = 200;
+constexpr usize k_LargeBlockSize = 25;
+
+/**
+ * @brief Populates ScalarSegmentFeaturesFilter arguments.
+ * @param args Receives the filter arguments.
+ * @param useMask True to use k_MaskPath.
+ * @param isPeriodic True to connect cells across opposite geometry boundaries.
+ * @param tolerance Maximum scalar difference within one feature.
+ * @param neighborScheme 0 for face neighbors or 1 for all connected neighbors.
+ * @param randomize True to randomize output feature identifiers.
+ */
+void SetupArgs(Arguments& args, bool useMask, bool isPeriodic, int tolerance, ChoicesParameter::ValueType neighborScheme = 0, bool randomize = false)
+{
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(k_GeomPath));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(DataPath({k_GeomName, k_CellDataName, "ScalarData"})));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(tolerance));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(useMask ? k_MaskPath : DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>(std::string(k_FeatureDataName)));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(randomize));
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // The shared test verifies vertex-connected and edge-connected region pairs.
+  // Its setup callable creates four isolated cells and configures FaceEdgeVertex connectivity.
+  auto setupScalar = [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    const DataPath scalarPath = cellDataPath.createChildPath("ScalarData");
+    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(ds, scalarPath, cellShape, {1}, IDataAction::Mode::Execute);
+    auto* scalarArr = DataArray<int32>::Create(ds, "ScalarData", scalarDS, am.getId());
+    auto& store = scalarArr->getDataStoreRef();
+    store.fill(0);
+    store[0 * 9 + 0 * 3 + 0] = 1; // (0,0,0) — vertex pair A
+    store[1 * 9 + 1 * 3 + 1] = 1; // (1,1,1) — vertex pair B
+    store[0 * 9 + 0 * 3 + 2] = 2; // (2,0,0) — edge pair C
+    store[1 * 9 + 1 * 3 + 2] = 2; // (2,1,1) — edge pair D
+
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(cellDataPath.createChildPath("ScalarData")));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(0));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  };
+
+  RunFaceEdgeVertexConnectivityTest<ScalarSegmentFeaturesFilter>([&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 0); },
+                                                                 [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 1); });
+}
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: No Valid Voxels Returns Error", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  RunNoValidVoxelsErrorTest<ScalarSegmentFeaturesFilter>([](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    CreateTestDataArray<int32>(ds, "ScalarData", cellShape, {1}, am.getId());
+
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(cellDataPath.createChildPath("ScalarData")));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(0));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("FeatureData"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  });
+}
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Randomize Feature IDs", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr usize k_ExpectedFeatures = 27; // 3^3
+  const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
+
+  DataStructure dataStructure;
+  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, {k_SmallDim, k_SmallDim, k_SmallDim}, std::string(k_GeomName), std::string(k_CellDataName));
+  BuildScalarTestData(dataStructure, cellShape, am->getId(), k_SmallBlockSize);
+
+  ScalarSegmentFeaturesFilter filter;
+  Arguments args;
+  SetupArgs(args, /*useMask=*/false, /*isPeriodic=*/false, /*tolerance=*/0, /*neighborScheme=*/0, /*randomize=*/true);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(k_ActivePath);
+  REQUIRE(actives.getNumberOfTuples() == k_ExpectedFeatures + 1);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  const auto& featureStore = featureIds.getDataStoreRef();
+  std::set<int32> uniqueIds;
+  int32 minId = std::numeric_limits<int32>::max();
+  int32 maxId = std::numeric_limits<int32>::min();
+  for(usize i = 0; i < featureStore.getNumberOfTuples(); i++)
+  {
+    int32 fid = featureStore.getValue(i);
+    uniqueIds.insert(fid);
+    minId = std::min(minId, fid);
+    maxId = std::max(maxId, fid);
+  }
+  REQUIRE(minId == 1);
+  REQUIRE(maxId == static_cast<int32>(k_ExpectedFeatures));
+  REQUIRE(uniqueIds.size() == k_ExpectedFeatures);
+}
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Generate Test Data", "[SimplnxCore][ScalarSegmentFeatures][.GenerateTestData]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto outputDir = fs::path(fmt::format("{}/generated_test_data/scalar_segment_features", unit_test::k_BinaryTestOutputDir));
+  fs::create_directories(outputDir);
+
+  // Each small test variant uses a separate 15-cubed geometry.
+  {
+    const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
+    const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
+
+    DataStructure ds;
+
+    auto* amBase = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
+    BuildScalarTestData(ds, cellShape, amBase->getId(), k_SmallBlockSize);
+
+    auto* amMasked = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
+    BuildScalarTestData(ds, cellShape, amMasked->getId(), k_SmallBlockSize);
+    BuildSphericalMask(ds, cellShape, amMasked->getId());
+
+    auto* amPeriodic = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
+    BuildScalarTestData(ds, cellShape, amPeriodic->getId(), k_SmallBlockSize, "ScalarData", true);
+
+    auto* amTolerance = BuildSegmentFeaturesTestGeometry(ds, dims, "Tolerance", std::string(k_CellDataName));
+    BuildScalarTestData(ds, cellShape, amTolerance->getId(), k_SmallBlockSize);
+
+    UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
+  }
+
+  // The large 200-cubed fixture enables its mask and periodic boundaries.
+  {
+    const ShapeType cellShape = {k_LargeDim, k_LargeDim, k_LargeDim};
+    const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
+
+    DataStructure ds;
+    auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
+    BuildScalarTestData(ds, cellShape, am->getId(), k_LargeBlockSize, "ScalarData", true);
+    BuildSphericalMask(ds, cellShape, am->getId());
+
+    UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
+  }
+}
 
 namespace
 {
@@ -39,7 +237,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
-  // Read the Small IN100 Data set
+  // Load the Small IN100 input before scalar segmentation.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -59,26 +257,21 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
     DataPath gridGeomDataPath({k_DataContainer});
     int scalarTolerance = 0;
 
-    // Create default Parameters for the filter.
+    // Configure the unmasked scalar segmentation and its output hierarchy.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(gridGeomDataPath));
-    // Turn off the use of a Mask Array
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    // Set the input array and the tolerance
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
-    // Set the paths to the created arrays
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>(outputFeatureIdsName));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>(computedCellDataName));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
-    // Are we going to randomize the featureIds when completed.
+    // Randomization verifies the optional feature-identifier permutation.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(true));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
@@ -88,7 +281,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
   }
 
   {
-    // Write out the DataStructure for later viewing/debugging
+    // This output supports manual inspection of the segmented arrays.
     std::string filePath = fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir);
     // std::cout << "Writing file to: " << filePath << std::endl;
     nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
@@ -102,9 +295,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstruction][ScalarSegmentFeatures]")
 {
-  /**
-   * We are going to use Catch2's GENERATE macro to create variations of parameter values.
-   * EVERYTHING after the GENERATE macro will be run for each of the generated sets of values
+  /*
+   * Catch2 runs the remainder of this test once for each generated parameter tuple.
    */
   auto [sectionName, inputDataArrayName, exemplaryFeatureIdsArrayName, neighborSchemeIndex] =
       GENERATE(std::make_tuple("Shared Edges - Face Only", k_SharedEdgesInputArrayName, k_ExemplarySharedEdgesFaceOnlyFeatureIdsName, 0),
@@ -116,8 +308,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
                std::make_tuple("Combination - Face Only", k_CombinationInputArrayName, k_ExemplaryCombinationFaceOnlyFeatureIdsName, 0),
                std::make_tuple("Combination - All Connected", k_CombinationInputArrayName, k_ExemplaryCombinationAllConnectedFeatureIdsName, 1));
 
-  /**
-   * @note EVERYTHING from here to the end of the test will be run for **each** tuple set above
+  /*
+   * Each tuple selects one input layout and one neighbor-connectivity mode.
    */
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_neighbor_scheme_test.tar.gz", "segment_features_neighbor_scheme_test");
   auto baseDataFilePath = fs::path(fmt::format("{}/segment_features_neighbor_scheme_test/segment_features_neighbor_scheme_test.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -138,18 +330,14 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
     DataPath gridGeomDataPath({k_SmallIn100ImageGeom});
     int scalarTolerance = 0;
 
-    // Create default Parameters for the filter.
+    // Configure the common output hierarchy for each generated scenario.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(gridGeomDataPath));
-    // Turn off the use of a Mask Array
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    // Set the tolerance
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
-    // Set the paths to the created arrays
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>(outputFeatureIdsName));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>(computedCellDataName));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
-    // Are we going to randomize the featureIds when completed.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
     SECTION(sectionName)
@@ -160,11 +348,9 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
       args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
       args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborSchemeIndex));
 
-      // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-      // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
@@ -179,11 +365,10 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Masked Voxel 0 Seed Validation", 
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the shared SegmentFeatures driver: the first seed must be validated (and
-  // stamped) by getSeed() exactly like every later seed. 5x1x1 with voxel 0 masked out; scalar
-  // values [9, 5, 5, 9, 7] at tolerance 1 give F1 = {1, 2} and F2 = {4}; masked cells keep
-  // FeatureId 0. A driver that bursts from the raw index 0 produces a phantom empty feature 1
-  // and shifted ids [0, 2, 2, 0, 3].
+  // getSeed() must validate and stamp the first index exactly like each later seed.
+  // The 5 by 1 by 1 fixture masks index 0 and uses values [9, 5, 5, 9, 7].
+  // Tolerance 1 produces features {1, 2} and {4}. Masked cells keep identifier 0.
+  // Starting directly at raw index 0 would create an empty feature and shift later identifiers.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
   imageGeom->setDimensions({5, 1, 1});
@@ -236,11 +421,10 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Boundary Wrap", "[Simpln
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the IsPeriodic parameter (previously a silent no-op in the shared
-  // SegmentFeatures driver). 4x1x1 line with scalar values [5, 9, 9, 5] at tolerance 1:
-  // non-periodic the ends stay separate ({0} {1,2} {3}); periodic the x boundary wraps and the
-  // end cells join ({0,3} {1,2}). The expectation is identical for the face and the 26-neighbor
-  // ("all connected") schemes, which exercises the wrap in both neighbor generators.
+  // The 4 by 1 by 1 fixture requires IsPeriodic to change boundary connectivity.
+  // Without wrapping, values [5, 9, 9, 5] produce regions {0}, {1, 2}, and {3}.
+  // With wrapping, the end cells join and produce regions {0, 3} and {1, 2}.
+  // Face and FaceEdgeVertex modes must apply the same boundary wrap.
   auto runFilter = [](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
@@ -299,9 +483,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked 
 {
   UnitTest::LoadPlugins();
 
-  // Regression pin for the shared SegmentFeatures driver: with every cell masked out no seed
-  // exists, so the filter must fail with -87000. The pre-fix driver burst from the raw index 0
-  // and "succeeded" with one phantom, zero-cell feature.
+  // No valid seed exists when the mask excludes every cell, so execution must return -87000.
+  // Starting directly at raw index 0 would incorrectly create an empty feature.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
   imageGeom->setDimensions({3, 1, 1});

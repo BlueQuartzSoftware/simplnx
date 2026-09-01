@@ -5,201 +5,230 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
-#include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+
+#include <nonstd/span.hpp>
+
+#include <chrono>
+#include <memory>
 
 using namespace nx::core;
 
 namespace
 {
-template <typename OutputT, typename FaceLabelsT>
-class SampleSurfaceMeshImpl
+/**
+ * @struct FeatureBoundingVolume
+ * @brief Stores one feature bounding box and its ray-test radius.
+ *
+ * Both values depend only on triangle geometry. Precomputation lets all sample
+ * points reuse them.
+ */
+struct FeatureBoundingVolume
 {
-public:
-  SampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, const std::vector<Point3Df>& points,
-                        IDataArray& iPolyIds, const std::atomic_bool& shouldCancel, std::atomic_bool& overflowHit)
-  : m_Faces(faces)
-  , m_FaceIds(faceIds)
-  , m_FaceBBs(faceBBs)
-  , m_Points(points)
-  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
-  , m_ShouldCancel(shouldCancel)
-  , m_OverflowHit(overflowHit)
-  {
-  }
-
-  ~SampleSurfaceMeshImpl() = default;
-
-  SampleSurfaceMeshImpl(const SampleSurfaceMeshImpl&) = default;           // Copy Constructor Default Implemented
-  SampleSurfaceMeshImpl(SampleSurfaceMeshImpl&&) noexcept = default;       // Move Constructor Default Implemented
-  SampleSurfaceMeshImpl& operator=(const SampleSurfaceMeshImpl&) = delete; // Copy Assignment Not Implemented
-  SampleSurfaceMeshImpl& operator=(SampleSurfaceMeshImpl&&) = delete;      // Move Assignment Not Implemented
-
-  void checkPoints(const usize start, const usize end) const
-  {
-    if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
-    {
-      if(std::numeric_limits<OutputT>::max() < end - 1)
-      {
-        m_OverflowHit = true;
-      }
-    }
-    for(usize iter = start; iter < end; iter++)
-    {
-      const usize numPoints = m_Points.size();
-
-      // find bounding box for current feature
-      BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds[iter]));
-      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
-
-      // check points in vertex array to see if they are in the bounding box of the feature
-      for(usize i = 0; i < numPoints; i++)
-      {
-        // Check for the filter being canceled.
-        if(m_ShouldCancel || m_OverflowHit)
-        {
-          return;
-        }
-
-        Point3Df point = m_Points[i];
-        if(m_PolyIds[i] == 0)
-        {
-          char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, boundingBox, radius);
-          if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
-          {
-            m_PolyIds[i] = static_cast<OutputT>(iter);
-          }
-        }
-      }
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    checkPoints(range.min(), range.max());
-  }
-
-private:
-  const TriangleGeom& m_Faces;
-  const std::vector<std::vector<FaceLabelsT>>& m_FaceIds;
-  const std::vector<BoundingBox3Df>& m_FaceBBs;
-  const std::vector<Point3Df>& m_Points;
-  AbstractDataStore<OutputT>& m_PolyIds;
-  const std::atomic_bool& m_ShouldCancel;
-  std::atomic_bool& m_OverflowHit;
+  BoundingBox3Df Box;
+  float32 Radius = 0.0f;
 };
 
-// -----------------------------------------------------------------------------
+/**
+ * @class SliceSampleSurfaceMeshImpl
+ * @brief Assigns one slice of sample points to the first enclosing feature.
+ * @tparam OutputT Specifies the output feature-ID type.
+ * @tparam FaceLabelsT Specifies the face-label type.
+ *
+ * Parallel ranges read immutable face lists and bounding data. They write
+ * different slice-output positions. Triangle geometry reads use the concrete
+ * store contract described by SampleSurfaceMesh.
+ */
 template <typename OutputT, typename FaceLabelsT>
-class SampleSurfaceMeshImplByPoints
+class SliceSampleSurfaceMeshImpl
 {
 public:
-  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<FaceLabelsT>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, IDataArray& iPolyIds,
-                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper,
-                                std::atomic_bool& overflowHit)
-  : m_Filter(filter)
-  , m_Faces(faces)
-  , m_FaceIds(faceIds)
+  SliceSampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
+                             const std::vector<FeatureBoundingVolume>& featureBounds, const std::vector<Point3Df>& slicePoints, nonstd::span<OutputT> sliceOutput, const std::atomic_bool& shouldCancel,
+                             std::atomic_bool& overflowHit)
+  : m_Faces(faces)
+  , m_FaceLists(faceLists)
   , m_FaceBBs(faceBBs)
-  , m_Points(points)
-  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
-  , m_FeatureId(featureId)
+  , m_FeatureBounds(featureBounds)
+  , m_SlicePoints(slicePoints)
+  , m_SliceOutput(sliceOutput)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
   , m_OverflowHit(overflowHit)
   {
   }
-  virtual ~SampleSurfaceMeshImplByPoints() = default;
+  ~SliceSampleSurfaceMeshImpl() = default;
 
-  void checkPoints(const usize start, const usize end) const
+  SliceSampleSurfaceMeshImpl(const SliceSampleSurfaceMeshImpl&) = default;
+  SliceSampleSurfaceMeshImpl(SliceSampleSurfaceMeshImpl&&) noexcept = default;
+  SliceSampleSurfaceMeshImpl& operator=(const SliceSampleSurfaceMeshImpl&) = delete;
+  SliceSampleSurfaceMeshImpl& operator=(SliceSampleSurfaceMeshImpl&&) = delete;
+
+  /**
+   * @brief Processes one disjoint sample-point range.
+   * @param range Specifies the half-open local point range.
+   */
+  void operator()(const Range& range) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
-
-    if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+    const usize numFeatures = m_FeatureBounds.size();
+    for(usize i = range.min(); i < range.max(); i++)
     {
-      if(std::numeric_limits<OutputT>::max() < m_FeatureId)
-      {
-        m_OverflowHit = true;
-      }
-    }
-
-    const OutputT iter = m_FeatureId;
-
-    // find bounding box for current feature
-    BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds));
-    float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
-
-    usize pointsVisited = 0;
-    // check points in vertex array to see if they are in the bounding box of the feature
-    for(usize i = start; i < end; i++)
-    {
-      Point3Df point = m_Points[i];
-      if(m_PolyIds[i] == 0)
-      {
-        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds, m_FaceBBs, point, boundingBox, radius);
-        if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
-        {
-          m_PolyIds[i] = iter;
-        }
-      }
-      pointsVisited++;
-
-      // Send some feedback
-      if(pointsVisited % 1000 == 0)
-      {
-        progressMessenger.sendProgressMessage(
-            1000, [&](usize currentProgress, usize maxProgress) { return fmt::format("Feature {} | Points Completed: {} of {}", m_FeatureId, currentProgress, maxProgress); });
-      }
-      // Check for the filter being canceled.
+      // One point can require a test against every feature. Check cancellation
+      // per point to bound response latency during this expensive inner work.
       if(m_ShouldCancel || m_OverflowHit)
       {
         return;
       }
+
+      const Point3Df point = m_SlicePoints[i];
+      OutputT assignedFeature = 0;
+      for(usize featureId = 0; featureId < numFeatures; featureId++)
+      {
+        const FeatureBoundingVolume& featureBounds = m_FeatureBounds[featureId];
+        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceLists[featureId], m_FaceBBs, point, featureBounds.Box, featureBounds.Radius);
+        if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
+        {
+          assignedFeature = static_cast<OutputT>(featureId);
+          break;
+        }
+      }
+      m_SliceOutput[i] = assignedFeature;
     }
   }
 
-  void operator()(const Range& range) const
-  {
-    checkPoints(range.min(), range.max());
-  }
-
 private:
-  SampleSurfaceMesh* m_Filter = nullptr;
   const TriangleGeom& m_Faces;
-  const std::vector<FaceLabelsT>& m_FaceIds;
+  const std::vector<std::vector<FaceLabelsT>>& m_FaceLists;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
-  const std::vector<Point3Df>& m_Points;
-  AbstractDataStore<OutputT>& m_PolyIds;
-  const usize m_FeatureId = 0;
+  const std::vector<FeatureBoundingVolume>& m_FeatureBounds;
+  const std::vector<Point3Df>& m_SlicePoints;
+  nonstd::span<OutputT> m_SliceOutput;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
   std::atomic_bool& m_OverflowHit;
 };
 
-template <template <typename, typename> class ParallelClassT, typename FaceLabelsT>
-struct GenerateParallelClassFunctor
+/**
+ * @struct SampleSlicesFunctor
+ * @brief Dispatches the bounded Z-slice loop for an output feature-ID type.
+ */
+struct SampleSlicesFunctor
 {
-  template <typename OutputT, typename... ArgsT>
-  auto operator()(ArgsT&&... args)
+  /**
+   * @brief Generates, tests, and writes all sampling-grid slices.
+   * @tparam OutputT Specifies the output feature-ID type.
+   * @tparam FaceLabelsT Specifies the face-label type.
+   * @param algorithm Supplies grid dimensions and serial slice-point generation.
+   * @param triangleGeom Supplies the surface geometry.
+   * @param faceLists Maps each feature to triangle indices.
+   * @param faceBBs Supplies one bounding box per triangle.
+   * @param featureBounds Supplies one precomputed bounding volume per feature.
+   * @param polyIds Receives output feature IDs.
+   * @param shouldCancel Supplies the cancellation flag.
+   * @param messageHelper Reports progress.
+   * @return Valid result, bulk-write error, or feature-ID overflow error.
+   */
+  template <typename OutputT, typename FaceLabelsT>
+  Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
+                      const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   {
-    return ParallelClassT<OutputT, FaceLabelsT>(std::forward<ArgsT>(args)...);
+    const usize numFeatures = faceLists.size();
+
+    // Reject a feature range that the output integer type cannot represent.
+    std::atomic_bool overflowHit(false);
+    if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+    {
+      if(std::numeric_limits<OutputT>::max() < numFeatures - 1)
+      {
+        overflowHit = true;
+      }
+    }
+
+    auto& outputStore = polyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>();
+
+    const SizeVec3 gridDims = algorithm->getGridDimensions();
+    const usize cellsPerSlice = gridDims.getX() * gridDims.getY();
+    const usize numSlices = gridDims.getZ();
+
+    messageHelper.sendMessage("Sampling triangle geometry ...");
+    ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+    progressMessageHelper.setMaxProgresss(numSlices);
+    progressMessageHelper.setProgressMessageTemplate("Sampling triangle geometry: {:.1f}%");
+    auto progressMessenger = progressMessageHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
+    // Reuse point and output buffers whose size is proportional to one XY slice.
+    std::vector<Point3Df> slicePoints(cellsPerSlice);
+    auto sliceOutput = std::make_unique<OutputT[]>(cellsPerSlice);
+
+    for(usize zSlice = 0; zSlice < numSlices; zSlice++)
+    {
+      if(shouldCancel)
+      {
+        break;
+      }
+
+      // Serial increasing-Z generation preserves a stateful random draw sequence.
+      algorithm->generateSlicePoints(zSlice, slicePoints);
+
+      SliceSampleSurfaceMeshImpl<OutputT, FaceLabelsT> impl(triangleGeom, faceLists, faceBBs, featureBounds, slicePoints, nonstd::span<OutputT>(sliceOutput.get(), cellsPerSlice), shouldCancel,
+                                                            overflowHit);
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setRange(0, cellsPerSlice);
+      dataAlg.execute(impl);
+
+      if(overflowHit || shouldCancel)
+      {
+        break;
+      }
+
+      Result<> copyResult = outputStore.copyFromBuffer(zSlice * cellsPerSlice, nonstd::span<const OutputT>(sliceOutput.get(), cellsPerSlice));
+      if(copyResult.invalid())
+      {
+        return copyResult;
+      }
+
+      progressMessenger.sendProgressMessage(1);
+    }
+
+    if(overflowHit)
+    {
+      return MakeErrorResult(
+          -158630, fmt::format("Overflow occurred when downcasting a Face Label value of type {} to a feature Id value of type {}. Feature count of {} is greater than max value ({})",
+                               DataTypeToHumanString(GetDataType<FaceLabelsT>()), DataTypeToHumanString(polyIds.getDataType()), numFeatures - 1, DataTypeToHumanString(polyIds.getDataType())));
+    }
+
+    messageHelper.sendMessage("Complete");
+
+    return {};
   }
 };
 
+/**
+ * @struct SampleSurfaceMeshFunctor
+ * @brief Dispatches face-label processing for one runtime integer type.
+ */
 struct SampleSurfaceMeshFunctor
 {
+  /**
+   * @brief Builds mesh lookup data and starts bounded slice sampling.
+   * @tparam T Specifies the face-label integer type.
+   * @param algorithm Supplies slice generation.
+   * @param triangleGeom Supplies the surface geometry.
+   * @param iFaceLabels Supplies two feature labels per triangle.
+   * @param polyIds Receives cell feature IDs.
+   * @param shouldCancel Supplies the cancellation flag.
+   * @param messageHelper Reports progress.
+   * @return Valid result, bulk-write error, or feature-ID overflow error.
+   */
   template <typename T>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const IDataArray& iFaceLabels, IDataArray& polyIds, const std::atomic_bool& shouldCancel,
                       MessageHelper& messageHelper)
   {
     const AbstractDataStore<T>& faceLabelsSM = dynamic_cast<const DataArray<T>&>(iFaceLabels).getDataStoreRef();
-    // pull down faces
     const usize numFaces = faceLabelsSM.getNumberOfTuples();
 
     messageHelper.sendMessage("Counting number of Features...");
 
-    // walk through faces to see how many features there are
+    // The largest positive face label determines the feature-list count.
     T g1 = 0, g2 = 0;
     T maxFeatureId = 0;
     for(usize i = 0; i < numFaces; i++)
@@ -216,19 +245,18 @@ struct SampleSurfaceMeshFunctor
       }
     }
 
-    // Check for user canceled flag.
     if(shouldCancel)
     {
       return {};
     }
 
-    // add one to account for feature 0
+    // Include feature zero for background-compatible indexing.
     usize numFeatures = maxFeatureId + 1;
 
     std::vector<std::vector<T>> faceLists(numFeatures);
     messageHelper.sendMessage("Counting number of triangle faces per feature ...");
 
-    // traverse data to determine number of faces belonging to each feature
+    // Size each feature list from its positive label occurrences.
     for(usize i = 0; i < numFaces; i++)
     {
       g1 = faceLabelsSM[2 * i];
@@ -243,7 +271,6 @@ struct SampleSurfaceMeshFunctor
       }
     }
 
-    // Check for user canceled flag.
     if(shouldCancel)
     {
       return {};
@@ -251,19 +278,19 @@ struct SampleSurfaceMeshFunctor
 
     messageHelper.sendMessage("Allocating triangle faces per feature ...");
 
-    // fill out lists with number of references to cells
+    // Track the next insertion position for each pre-sized face list.
     std::vector<int32> linkLoc(numFaces, 0);
 
     std::vector<BoundingBox3Df> faceBBs;
     {
-      // !!! DO NOT USE GeometryStoreCache ELSEWHERE, SPECIAL CASE !!!
+      // Keep this GeometryStoreCache in the serial face traversal. It performs
+      // per-element generic-store reads and does not make concurrent access safe.
       const GeometryMath::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
 
-      // initialize temp storage 'verts' vector to avoid expensive
-      // calls during tight loops below
+      // Reuse the vertex-index buffer for each triangle.
       std::vector<usize> verts(cache.NumVertsPerFace);
 
-      // traverse data again to get the faces belonging to each feature
+      // Fill feature face lists and calculate one bounding box per triangle.
       for(int32 i = 0; i < numFaces; i++)
       {
         g1 = faceLabelsSM[2 * i];
@@ -276,68 +303,36 @@ struct SampleSurfaceMeshFunctor
         {
           faceLists[g2][(linkLoc[g2])++] = i;
         }
-        // find bounding box for each face
         faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i, verts));
       }
     }
 
-    // Check for user canceled flag.
     if(shouldCancel)
     {
       return {};
     }
 
-    messageHelper.sendMessage("Vertex Geometry generating sampling points");
-
-    // generate the list of sampling points from subclass
-    std::vector<Point3Df> points = {};
-    algorithm->generatePoints(points);
-
-    messageHelper.sendMessage("Sampling triangle geometry ...");
-
-    ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-    progressMessageHelper.setMaxProgresss(points.size());
-
-    std::atomic_bool overflowHit(false);
-
-    // C++11 RIGHT HERE....
-    auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
-    // If the number of features is larger than the number of cores to do the work then parallelize over the number of features
-    // otherwise parallelize over the number of triangle points.
-    if(numFeatures > nthreads)
+    // Feature bounding volumes depend only on the mesh and serve all sample points.
+    std::vector<FeatureBoundingVolume> featureBounds;
+    featureBounds.reserve(numFeatures);
+    for(usize featureId = 0; featureId < numFeatures; featureId++)
     {
-      using PFunctT = GenerateParallelClassFunctor<::SampleSurfaceMeshImpl, T>;
-      ParallelDataAlgorithm dataAlg;
-      dataAlg.setRange(0, numFeatures);
-      ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, triangleGeom, faceLists, faceBBs, points, polyIds, shouldCancel, overflowHit);
-    }
-    else
-    {
-      using PFunctT = GenerateParallelClassFunctor<::SampleSurfaceMeshImplByPoints, T>;
-      for(int32 featureId = 0; featureId < numFeatures; featureId++)
-      {
-        ParallelDataAlgorithm dataAlg;
-        dataAlg.setRange(0, points.size());
-        ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, algorithm, triangleGeom, faceLists[featureId], faceBBs, polyIds, points, featureId,
-                                                              shouldCancel, progressMessageHelper, overflowHit);
-      }
+      BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(triangleGeom, faceLists[featureId]));
+      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
+      featureBounds.emplace_back(FeatureBoundingVolume{boundingBox, radius});
     }
 
-    if(overflowHit)
+    if(shouldCancel)
     {
-      return MakeErrorResult(-158630,
-                             fmt::format("Overflow occurred when downcasting a Face Label value of type {} to a feature Id value of type {}. Feature count of {} is greater than max value ({})",
-                                         DataTypeToHumanString(GetDataType<T>()), DataTypeToHumanString(polyIds.getDataType()), maxFeatureId, DataTypeToHumanString(polyIds.getDataType())));
+      return {};
     }
 
-    messageHelper.sendMessage("Complete");
-
-    return {};
+    // Dispatch output type after mesh-scale lookup data is complete.
+    return ExecuteDataFunctionIntType(SampleSlicesFunctor{}, polyIds.getDataType(), algorithm, triangleGeom, faceLists, faceBBs, featureBounds, polyIds, shouldCancel, messageHelper);
   }
 };
 } // namespace
 
-// -----------------------------------------------------------------------------
 SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
@@ -346,19 +341,16 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::at
 {
 }
 
-// -----------------------------------------------------------------------------
 SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 {
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues.TriangleGeometryPath);
   const auto& iFaceLabels = m_DataStructure.getDataRefAs<IDataArray>(inputValues.SurfaceMeshFaceLabelsArrayPath);
 
-  // create array to hold which polyhedron (feature) each point falls in
+  // Resolve the existing output that receives one feature ID per sample point.
   auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.FeatureIdsArrayPath);
 
-  // Face labels are always an integer type (the parameter is restricted to GetIntegerDataTypes()), so dispatch only
-  // over the integer types.
+  // Parameter validation restricts face labels to integer types.
   return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHelper);
 }

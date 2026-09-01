@@ -5,10 +5,12 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
@@ -91,11 +93,10 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
   const auto generatedAMPath = DataPath{{targetPath.getTargetName() + k_AMPostFix}};
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     DBSCANFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilonVal));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(minPtsVal));
@@ -104,16 +105,14 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
     args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(generatedIdsName));
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Write the DataStructure out to the file system
+  // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
@@ -160,11 +159,10 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   uint64 seed = std::mt19937_64::default_seed;
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     DBSCANFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(randomType));
     args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(seed)); // Will be ignored if randomType == DBSCAN::ParseOrder::Random
     args.insertOrAssign(DBSCANFilter::k_SeedArrayName_Key, std::make_any<std::string>("seed_array"));
@@ -175,16 +173,14 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
     args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(generatedIdsName));
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Write the DataStructure out to the file system
+  // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
@@ -252,67 +248,89 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.15f;
-  const int32 minPtsVal = 4;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.15f;
+  int32 minPtsVal = 4;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath);
-  ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.3f;
-  const int32 minPtsVal = 3;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath);
-  ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.3f;
-  const int32 minPtsVal = 3;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath);
-  ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.3f;
-  const int32 minPtsVal = 3;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath);
-  ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.3f;
-  const int32 minPtsVal = 3;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath);
-  ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 {
-  const float32 epsVal = 0.18f;
-  const int32 minPtsVal = 3;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  float32 epsVal = 0.18f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath);
-  ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  scope.execute([&] { ::LDFTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath); });
+  scope.execute([&] { ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::Random); });
+  scope.execute([&] { ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::SeededRandom); });
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
 
   const auto vertexGeom = DataPath{{"Reduced Vertex Geom"}};
@@ -324,11 +342,10 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   const DataPath generatedAMPath = vertexGeom.createChildPath(targetPath.getTargetName() + k_AMPostFix);
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     DBSCANFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.0099999998f));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(5));
@@ -337,16 +354,14 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
     args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(generatedIdsName));
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Write the DataStructure out to the file system
+  // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
@@ -366,6 +381,10 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[SimplnxCore][DBSCAN]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   // Class 1 oracle: 4 points at unit-square corners, epsilon=0.1, minPoints=5.
   // Cell side = 0.1/sqrt(2) ~= 0.0707 -> each point occupies its own 1-point cell -> no core grids -> warning -85640.
   // Expected: all cluster IDs = 0, AM has 1 tuple.
@@ -402,7 +421,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     // No core grids -> warning, not error
     REQUIRE(executeResult.result.valid());
     REQUIRE_FALSE(executeResult.result.warnings().empty());
@@ -425,6 +444,10 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[SimplnxCore][DBSCAN]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   // Class 1 oracle: 3 points, P2 masked out.
   // epsilon=1.0, minPoints=2 -> cell side = 1.0/sqrt(2) ~= 0.707.
   // Active points P0=(0.0, 0.0) and P1=(0.1, 0.0) both land in grid cell 0 -> 2 points >= minPoints -> core grid -> Cluster 1.
@@ -470,7 +493,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -489,6 +512,10 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[SimplnxCore][DBSCAN]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   // Class 1 oracle: same 3 points as F2, but every point is masked off.
   // With no active point there are no grid bounds to derive, so no grid cell can be occupied and no
   // core grid can exist. This pins the contract for that case; before the bounds guard was added,
@@ -534,7 +561,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     // Nothing to cluster -> warning, not error and not a crash
     REQUIRE(executeResult.result.valid());
     REQUIRE_FALSE(executeResult.result.warnings().empty());
@@ -553,6 +580,29 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
   ::CheckClusterInvariants(dataStructure, clusterIdsPath, featureAMPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-sized temporary mask", "[SimplnxCore][DBSCANFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(points != nullptr);
+
+  DBSCANFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+  args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(2));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Points"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("Ids"));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  CHECK(preflightResult.outputActions.value().actions.size() == 2);
+  CHECK(preflightResult.outputActions.value().deferredActions.empty());
 }
 
 TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
@@ -588,7 +638,7 @@ TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxC
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (AMPathBuilderFilterParameterConverter) - verified by successful pipeline loading
+      // Successful pipeline loading verifies the AMPathBuilderFilterParameterConverter value.
       CHECK(args.value<float32>(DBSCANFilter::k_Epsilon_Key) == 2.5f);
       CHECK(args.value<int32>(DBSCANFilter::k_MinPoints_Key) == 5);
       CHECK(args.value<ChoicesParameter::ValueType>(DBSCANFilter::k_DistanceMetric_Key) == 0);

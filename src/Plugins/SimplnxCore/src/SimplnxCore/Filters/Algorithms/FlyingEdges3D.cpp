@@ -1,5 +1,6 @@
 #include "FlyingEdges3D.hpp"
 
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/FlyingEdges.hpp"
 
@@ -7,21 +8,46 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @struct ExecuteFlyingEdgesFunctor
+ * @brief Dispatches and validates the four Flying Edges passes.
+ */
 struct ExecuteFlyingEdgesFunctor
 {
+  /**
+   * @brief Runs one scalar specialization.
+   * @tparam T Input scalar type.
+   * @param image Supplies dimensions and coordinates.
+   * @param iDataArray Supplies scalar point values.
+   * @param isoVal Specifies the contour value before conversion to T.
+   * @param triangleGeom Receives surface points and faces.
+   * @param normals Receives point normals.
+   * @param normAM Owns the normals array.
+   * @return Success, or a source bulk-read error from pass 1, 2, or 4.
+   */
   template <typename T>
-  void operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
+  Result<> operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
   {
     FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), static_cast<T>(isoVal), triangleGeom, normals);
-    flyingEdges.pass1();
-    flyingEdges.pass2();
+    if(Result<> result = flyingEdges.pass1(); result.invalid())
+    {
+      return result;
+    }
+    if(Result<> result = flyingEdges.pass2(); result.invalid())
+    {
+      return result;
+    }
     flyingEdges.pass3();
 
-    // pass 3 resized normals so be sure to resize parent AM
+    // Pass 3 resizes normals. Keep the parent AttributeMatrix consistent.
     normAM.resizeTuples(normals.getTupleShape());
 
-    flyingEdges.pass4();
+    if(Result<> result = flyingEdges.pass4(); result.invalid())
+    {
+      return result;
+    }
     triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfFaces()});
+    return {};
   }
 };
 } // namespace
@@ -53,12 +79,14 @@ Result<> FlyingEdges3D::operator()()
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
   auto& normalsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->normalsArrayPath)->getDataStoreRef();
 
-  // auto created so must have a parent
+  // Preflight creates normals under an AttributeMatrix.
   DataPath normAMPath = m_InputValues->normalsArrayPath.getParent();
 
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 
-  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray->getDataType(), image, iDataArray, isoVal, triangleGeom, normalsStore, normAM);
+  const bool usesOutOfCoreStore = IsOutOfCore(*iDataArray);
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  return {};
+  return ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray->getDataType(), image, iDataArray, isoVal, triangleGeom, normalsStore, normAM);
 }

@@ -2,11 +2,15 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -30,30 +34,32 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   auto& d3dVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
   auto& nxVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
+  scope.requireExpectedStore(nxVolumeFractionsArrayRef);
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
@@ -68,7 +74,7 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution",
 {
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
@@ -77,16 +83,13 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution",
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 

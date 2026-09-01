@@ -5,12 +5,15 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 
 using namespace nx::core;
@@ -19,22 +22,34 @@ namespace fs = std::filesystem;
 
 namespace
 {
+/**
+ * @brief Requires preflight to reject one replacement value for a selected array type.
+ * @tparam T Specifies the selected array element type.
+ * @param dataStructure Contains the selected array and mask.
+ * @param selectedDataPath Array whose type constrains the replacement value.
+ * @param conditionalPath Boolean mask array path.
+ * @param value Replacement value text that must be outside the selected type's range.
+ */
 template <typename T>
 void ConditionalSetValueOverFlowTest(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& conditionalPath, const std::string& value)
 {
   ConditionalSetValueFilter filter;
   Arguments args;
-  // Replace every value with a zero
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>(value));
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
+/**
+ * @brief Tests whether each tuple's first value equals zero.
+ * @tparam T Specifies the array element type.
+ * @param data Array to inspect.
+ * @return True if each tested value equals zero.
+ */
 template <class T>
 bool RequireDataArrayEqualZero(const DataArray<T>& data)
 {
@@ -63,27 +78,27 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Missing/Empty DataPaths", "[C
 
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
 
-  // Preflight the filter and check result with empty values
+  // Empty replacement text must fail before array paths are available.
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>(""));
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
-  // Invalid numeric value
+  // Nonnumeric replacement text must fail before array paths are available.
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
-  // Valid numeric value, but the boolean array and the input array are not set, should fail
+  // Valid replacement text still requires both selected and conditional arrays.
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
-  // Set the mask array but should still fail
+  // A conditional array alone is not sufficient.
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
-  // Set the input array, now should pass preflight.
+  // Both required paths make the configuration valid.
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid() == true);
@@ -93,6 +108,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Missing/Empty DataPaths", "[C
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[ConditionalSetValueFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -105,10 +123,10 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
   DataObject* ciDataObject = dataStructure.getData(ciDataPath);
 
   DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
-  // Fill every value with 10.0 into the ciArray
+  // Initialize the selected values before conditional replacement.
   ciDataArray->fill(10.0);
 
-  // Create a bool array where every value is TRUE
+  // A true mask selects every tuple.
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
@@ -116,23 +134,21 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
 
   ConditionalSetValueFilter filter;
   Arguments args;
-  // Replace every value with a zero
+  // Replace all selected values with zero.
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 
-  // Write the DataStructure out to the file system
+  // The optional output supports manual inspection of the replaced values.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
@@ -142,6 +158,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[ConditionalSetValueFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -152,28 +171,26 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[Cond
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
   auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
-  // Fill every value with 10.0 into the ciArray
+  // Initialize the selected values before conditional replacement.
   float32DataArray.fill(10.0);
 
-  // Create a bool array where every value is TRUE
+  // A true mask selects every tuple.
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
   ConditionalSetValueFilter filter;
   Arguments args;
-  // Replace every value with a zero
+  // Replace all selected values with zero.
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
@@ -183,6 +200,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[Cond
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[ConditionalSetValueFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -193,28 +213,26 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[Condi
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
   auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
-  // Fill every value with 10.0 into the ciArray
+  // Initialize the selected values before conditional replacement.
   float32DataArray.fill(10.0);
 
-  // Create a bool array where every value is TRUE
+  // A true mask selects every tuple.
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
   ConditionalSetValueFilter filter;
   Arguments args;
-  // Replace every value with a zero
+  // Replace all selected values with zero.
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
@@ -235,17 +253,16 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   };
   DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
-  // Get the DataGroups that we are going to add an Image Geometry into
+  // Create arrays of each numeric type for the range checks.
   DataGroup* levelOneGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
   REQUIRE(levelOneGroup != nullptr);
   DataGroup* levelTwoGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
   REQUIRE(levelTwoGroup != nullptr);
 
-  // Add an ImageGeometry into each DataGroup
   UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelOneGroup);
   UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelTwoGroup);
 
-  // Create a bool array where every value is TRUE
+  // A true mask makes each range check reach the selected array.
   ShapeType tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
   BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
   conditionalArray1->fill(true);
@@ -255,63 +272,55 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   DataPath conditionalDataPath({k_LevelZero, k_LevelOne, k_ConditionalArray});
 
   DataPath selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int8DataSet});
-  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "-130"); // underflow
-  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "130");  // overflow
+  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "-130"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "130");  // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint8DataSet});
-  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "-1");  // underflow
-  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "260"); // overflow
+  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "-1");  // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "260"); // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int16DataSet});
-  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "-32770"); // underflow
-  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "32770");  // overflow
+  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "-32770"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "32770");  // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint16DataSet});
-  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "-1");    // underflow
-  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "65537"); // overflow
+  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "-1");    // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "65537"); // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int32DataSet});
-  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "-2147483649"); // underflow
-  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "2147483649");  // overflow
+  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "-2147483649"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "2147483649");  // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint32DataSet});
-  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "-1");         // underflow
-  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "4294967297"); // overflow
+  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "-1");         // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "4294967297"); // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int64DataSet});
-  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "-92233720368547758080"); // underflow
-  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "92233720368547758080");  // overflow
+  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "-92233720368547758080"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "92233720368547758080");  // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint64DataSet});
-  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "-1");                    // underflow
-  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "184467440737095516150"); // overflow
+  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "-1");                    // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "184467440737095516150"); // The value is above the supported range.
 
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-  /**
-   * The following tests will not pass on windows because the standard allows for
-   * processing of subnormal floating point numbers: https://en.wikipedia.org/wiki/Subnormal_number
-   *
-   * Unix string to numeric disallows these subnormal float values due to the err being
-   * higher in the denormalized values.
-   *
-   * These subnormal numbers can be processed on unix with some workarounds or
-   * we can enforce err on windows with other workarounds. Until a clear stance is taken
-   * by a majority of project maintainers we are temporarily removing tests.
-   *
-   * Unix-like systems will err out with underflow in line with original test assumptions
+  /*
+   * Windows string conversion accepts the selected subnormal values. Unix-like
+   * conversion reports underflow for these values. Run these platform-specific
+   * underflow expectations only on non-Windows systems.
    */
 #else
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float32DataSet});
-  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "1.17549e-039");  // underflow
-  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "3.40282e+039");  // overflow
-  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-1.17549e-039"); // underflow
-  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-3.40282e+039"); // overflow
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "1.17549e-039");  // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "3.40282e+039");  // The value is above the supported range.
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-1.17549e-039"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-3.40282e+039"); // The value is above the supported range.
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float64DataSet});
-  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "2.22507e-309");  // underflow
-  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
-  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
-  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "2.22507e-309");  // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "1.79769e+309");  // The value is above the supported range.
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // The value is below the supported range.
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // The value is above the supported range.
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -319,6 +328,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[ConditionalSetValueFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   ConditionalSetValueFilter filter;
@@ -333,7 +345,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
   auto* ciDataArray = dataStructure.getDataAs<Float32Array>(ciDataPath);
-  // Fill every value with 10.0 into the ciArray
+  // Initialize the selected values before unconditional replacement.
   ciDataArray->fill(10.0);
 
   const std::string removeStr = "10.0";
@@ -344,12 +356,10 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& alteredArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
@@ -364,6 +374,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Inverted Mask Algorithm Bool", "[ConditionalSetValueFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -374,29 +387,27 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Inverted Mask Algorithm 
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
   auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
-  // Fill every value with 10.0 into the ciArray
+  // Initialize the selected values before inverted-mask replacement.
   float32DataArray.fill(10.0);
 
-  // Create a bool array where every value is TRUE
+  // A false mask selects every tuple when mask inversion is enabled.
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(false);
 
   ConditionalSetValueFilter filter;
   Arguments args;
-  // Replace every value with a zero
+  // Replace all inverted-mask selections with zero.
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_InvertMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));

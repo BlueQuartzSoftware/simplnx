@@ -53,7 +53,6 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseFill_Key, "Use Custom Fill Value", "If false all copied arrays will be filled with 0 by default", false));
   params.insert(std::make_unique<NumberParameter<float64>>(k_FillValue_Key, "Fill Value", "This is the value that will appear in the arrays outside the overlap", 0.0));
@@ -71,7 +70,6 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "The attribute matrix for the reference geometry", DataPath{}));
 
-  // link parameters
   params.linkParameters(k_UseFill_Key, k_FillValue_Key, true);
 
   return params;
@@ -104,13 +102,20 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   auto* sampleAM = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
   auto* refAM = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
 
-  // Create arrays on the reference grid to hold data present on the sampling grid
+  // The reference grid needs matching arrays for sampling-grid values.
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IDataArray>();
+    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IArray>();
     for(const auto& array : sampleVoxelArrays)
     {
+      // Neighbor lists may implement IDataArray, but this filter intentionally does not create or
+      // copy them. Only ordinary numeric/Boolean DataArray instances have regular-grid semantics.
+      if(array->getArrayType() != IArray::ArrayType::DataArray)
+      {
+        continue;
+      }
+      const auto& dataArray = dynamic_cast<const IDataArray&>(*array);
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateArrayAction>(array->getDataType(), refAM->getShape(), array->getComponentShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAM->getShape(), dataArray.getComponentShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
@@ -136,7 +141,6 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    }
   //  }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

@@ -3,6 +3,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -10,9 +11,14 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+
 #include <filesystem>
+#include <memory>
+#include <optional>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -20,25 +26,22 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const DataPath k_ExemplarArrayPath = Constants::k_DataContainerPath.createChildPath(Constants::k_CellData).createChildPath("Mask Exemplar");
-
-// -----------------------------------------------------------------------------
-// Hand-built non-square 2D fixture. Builds a 3x4 mask (shaped per the empty
-// axis) with a 4-voxel top-left connected component and a 2-voxel bottom-right
-// connected component. IdentifySample should keep the larger (4-voxel) region
-// and drop the smaller one. A wrong row-stride in the Empty2D dispatches would
-// either merge the two components or step outside the buffer.
-//
-// Mask (T = true = good, F = false = bad), oriented in the two non-empty axes:
-//   row 0: T T F
-//   row 1: T T F
-//   row 2: F F T
-//   row 3: F F T
-// -----------------------------------------------------------------------------
+/*
+ * The non-square fixture detects an incorrect row stride in each Empty2D dispatch.
+ * Its 3 by 4 mask has one four-voxel component and one two-voxel component.
+ * The filter must retain only the larger component.
+ * Rows 0 and 1 are `T T F`. Rows 2 and 3 are `F F T`.
+ */
 const DataPath k_NonSquareImagePath = DataPath({"Image"});
 const DataPath k_NonSquareMaskPath = k_NonSquareImagePath.createChildPath("CellData").createChildPath("Mask");
 
-DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims)
+/**
+ * @brief Builds a non-square two-dimensional mask for row-stride tests.
+ * @param dims Image dimensions with exactly one axis of size 1.
+ * @param useConfiguredStore True to create the mask with the configured store factory.
+ * @return A DataStructure with the 3 by 4 component mask.
+ */
+DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims, bool useConfiguredStore = false)
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_NonSquareImagePath.getTargetName());
@@ -50,23 +53,18 @@ DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims)
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, "CellData", imageShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
 
-  BoolArray* mask = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", cellData->getShape(), ShapeType{1}, cellData->getId());
+  std::shared_ptr<AbstractDataStore<bool>> maskStore;
+  if(useConfiguredStore)
+  {
+    maskStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_NonSquareMaskPath, cellData->getShape(), ShapeType{1}, IDataAction::Mode::Execute);
+  }
+  else
+  {
+    maskStore = std::make_shared<BoolDataStore>(cellData->getShape(), ShapeType{1}, std::optional<bool>{});
+  }
+  BoolArray* mask = BoolArray::Create(dataStructure, "Mask", maskStore, cellData->getId());
 
-  // The mask pattern in logical (row, col) form:
-  //   row 0: T T F
-  //   row 1: T T F
-  //   row 2: F F T
-  //   row 3: F F T
-  // Each dimensionality state maps (row, col) -> linear index using row = first
-  // non-empty axis and col = second non-empty axis. Since all three layouts
-  // share the shape {3 cols, 4 rows} in row-major order, the linear-index
-  // arithmetic is identical across them.
-  const std::array<bool, 12> values = {
-      true,  true,  false, // row 0
-      true,  true,  false, // row 1
-      false, false, true,  // row 2
-      false, false, true   // row 3
-  };
+  const std::array<bool, 12> values = {true, true, false, true, true, false, false, false, true, false, false, true};
   REQUIRE(mask->getNumberOfTuples() == values.size());
   for(usize i = 0; i < values.size(); i++)
   {
@@ -75,15 +73,29 @@ DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims)
   return dataStructure;
 }
 
-void RunIdentifySampleAndCheck(DataStructure& dataStructure)
+/**
+ * @brief Creates IdentifySample arguments for the non-square mask fixture.
+ * @return Configured whole-volume arguments without hole filling.
+ */
+Arguments CreateNonSquareArguments()
 {
-  IdentifySampleFilter filter;
   Arguments args;
   args.insert(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_NonSquareImagePath));
   args.insert(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_NonSquareMaskPath));
   args.insert(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(false));
   args.insert(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(false));
   args.insert(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  return args;
+}
+
+/**
+ * @brief Executes IdentifySample and verifies that only the larger component remains.
+ * @param dataStructure Contains the non-square mask to update.
+ */
+void RunIdentifySampleAndCheck(DataStructure& dataStructure)
+{
+  IdentifySampleFilter filter;
+  Arguments args = CreateNonSquareArguments();
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -91,15 +103,9 @@ void RunIdentifySampleAndCheck(DataStructure& dataStructure)
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Expected output: the 4-voxel top-left component (indices 0, 1, 3, 4)
-  // survives; the 2-voxel bottom-right component (indices 8, 11) is cleared.
-  const std::array<bool, 12> expected = {
-      true,  true,  false, //
-      true,  true,  false, //
-      false, false, false, //
-      false, false, false  //
-  };
-  const auto& mask = dataStructure.getDataRefAs<BoolArray>(k_NonSquareMaskPath);
+  const std::array<bool, 12> expected = {true, true, false, true, true, false, false, false, false, false, false, false};
+  const DataPath maskPath = k_NonSquareImagePath.createChildPath("CellData").createChildPath("Mask");
+  const auto& mask = dataStructure.getDataRefAs<BoolArray>(maskPath);
   REQUIRE(mask.getNumberOfTuples() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
@@ -107,10 +113,17 @@ void RunIdentifySampleAndCheck(DataStructure& dataStructure)
     REQUIRE(mask[i] == expected[i]);
   }
 }
+
+const DataPath k_ExemplarArrayPath = Constants::k_DataContainerPath.createChildPath(Constants::k_CellData).createChildPath("Mask Exemplar");
 } // namespace
+
 TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilter]")
 {
   UnitTest::LoadPlugins();
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample_v2.tar.gz", "identify_sample_v2");
   using TestArgType = std::tuple<std::string, std::string, std::string>;
@@ -150,7 +163,6 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
     SECTION(fmt::format("{}_{}_{}", slice_by_slice, slice_plane, fill_holes))
     {
       fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample_v2/{}_{}_{}.dream3d", unit_test::k_TestFilesDir, slice_by_slice, slice_plane, fill_holes));
-      std::cout << inputFilePath.string() << std::endl;
 
       DataStructure dataStructure = LoadDataStructure(inputFilePath);
       IdentifySampleFilter filter;
@@ -161,17 +173,11 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
       args.insert(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(sliceBySlice));
       args.insert(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(sliceBySlicePlane));
 
-      // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-      // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
+      auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-      WriteTestDataStructure(dataStructure, fmt::format("{}/identify_sample_output_{}_{}_{}.dream3d", unit_test::k_BinaryTestOutputDir, fillHoles, sliceBySlice, sliceBySlicePlane));
-#endif
 
       const IDataArray& computedArray = dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath);
       const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(k_ExemplarArrayPath);
@@ -222,29 +228,34 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[
   }
 }
 
-// -----------------------------------------------------------------------------
-// Non-square 2D regression tests. Exercise each EmptyX/Y/Z 2D dispatch with a
-// 3x4 layout so any wrong row-stride in the flood-fill would merge the two
-// components or step off the end of the buffer. See the comment at
-// CreateNonSquare2DMaskDataStructure for the mask layout and expected output.
-// -----------------------------------------------------------------------------
+// These cases rotate the 3 by 4 fixture through each Empty2D dispatch.
+// An incorrect flood-fill stride merges the components or accesses outside the mask.
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty Z Non-Square {3,4,1}", "[SimplnxCore][IdentifySampleFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{3, 4, 1});
-  ::RunIdentifySampleAndCheck(dataStructure);
+  scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty Y Non-Square {3,1,4}", "[SimplnxCore][IdentifySampleFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{3, 1, 4});
-  ::RunIdentifySampleAndCheck(dataStructure);
+  scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty X Non-Square {1,3,4}", "[SimplnxCore][IdentifySampleFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{1, 3, 4});
-  ::RunIdentifySampleAndCheck(dataStructure);
+  scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }

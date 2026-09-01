@@ -40,6 +40,17 @@ constexpr int64 k_MaskSelectedArrayInvalid = -2604;
 constexpr int64 k_MaskCompareInvalid = -2605;
 constexpr int64 k_InvalidImageGeometry = -2606;
 
+/**
+ * @brief Configures an automatic ImageGeom from selected vertex positions.
+ * @param dataStructure Provides the source VertexGeom and created ImageGeom.
+ * @param filterArgs Supplies the geometry, grid, and mask selections.
+ * @return Error if an enabled BoolArray has no DataStore, or success.
+ * @pre Preflight created both geometries and validated their paths.
+ * @pre An enabled mask identifies a BoolArray.
+ *
+ * The helper derives spacing and origin from selected vertex bounds. It uses
+ * the enabled mask so excluded vertices do not enlarge the grid.
+ */
 Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filterArgs)
 {
   const auto samplingGridType = filterArgs.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
@@ -66,7 +77,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
     return MakeErrorResult(k_MaskSelectedArrayInvalid, fmt::format("Use Mask was selected but the mask array at path '{}' could not be found or is not a BoolArray.", maskArrayPath.toString()));
   }
 
-  // Find the largest/smallest (x,y,z) dimensions of the incoming data to be used to define the maximum dimensions for the regular grid
+  // The selected vertex bounds define the extent of the created regular grid.
   std::vector<float32> meshMaxExtents;
   std::vector<float32> meshMinExtents;
   for(size_t i = 0; i < 3; i++)
@@ -279,14 +290,9 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType MapPointCloudToRegularGridFilter::parametersVersion() const
 {
+  // Version 2 adds two parameters with backward-compatible defaults. It also
+  // accepts more mask types, so no argument migration is necessary.
   return 2;
-
-  // Version 1 -> 2
-  // Change 1:
-  // Added 2 new parameters, but defaults support original functionality
-  //
-  // Change 2:
-  // Extended the accepted typing for mask array, no change needed
 }
 
 //------------------------------------------------------------------------------
@@ -351,7 +357,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath, "", "true");
       actions.appendAction(std::move(createAction));
     }
 
@@ -373,7 +379,6 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   auto samplingGridType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplingGridType_Key);
   if(samplingGridType == 0)
   {
-    // Create the regular grid
     messageHandler("Creating Regular Grid");
     auto result = CreateRegularGrid(dataStructure, filterArgs);
     if(result.invalid())

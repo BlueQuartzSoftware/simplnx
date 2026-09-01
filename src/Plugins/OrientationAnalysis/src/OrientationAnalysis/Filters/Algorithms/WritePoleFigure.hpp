@@ -23,6 +23,10 @@ const std::string k_MetaDataName("MetaData");
 
 } // namespace write_pole_figure
 
+/**
+ * @struct WritePoleFigureInputValues
+ * @brief Defines pole-figure generation, output, and input-array settings.
+ */
 struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 {
   StringParameter::ValueType Title;
@@ -59,11 +63,32 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 };
 
 /**
- * @class
+ * @class WritePoleFigure
+ * @brief Generates pole figure images from Euler angle data using Lambert or discrete projection.
+ *
+ * The algorithm streams phase and Euler inputs in 65,536-tuple pages. It scans
+ * the inputs twice for each phase and materializes all selected Euler angles for
+ * that phase in an EbsdLib array. Therefore, page buffers are bounded but total
+ * projection memory scales with the largest phase.
+ *
+ * Mask access remains per tuple through MaskCompareUtilities. An out-of-core mask
+ * can cause repeated element access during both scans of every phase. The current
+ * algorithm does not inspect cancellation or bulk-I/O Result values.
+ *
+ * The ImageFormat setting is retained by the input interface, but disk output is
+ * currently always PNG. Output geometry and intensity arrays receive bulk writes.
  */
 class ORIENTATIONANALYSIS_EXPORT WritePoleFigure
 {
 public:
+  /**
+   * @brief Initializes a pole-figure generator.
+   * @param dataStructure Provides source arrays and output geometries.
+   * @param mesgHandler Receives phase progress and crystal-structure warnings.
+   * @param shouldCancel Supplies a retained flag that operator() does not inspect.
+   * @param inputValues Defines generation and output settings.
+   * @pre All arguments outlive this generator.
+   */
   WritePoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WritePoleFigureInputValues* inputValues);
   ~WritePoleFigure() noexcept;
 
@@ -72,6 +97,10 @@ public:
   WritePoleFigure& operator=(const WritePoleFigure&) = delete;
   WritePoleFigure& operator=(WritePoleFigure&&) noexcept = delete;
 
+  /**
+   * @enum ImageFormatType
+   * @brief Defines image-format choice values retained by the filter interface.
+   */
   enum ImageFormatType
   {
     TifImageType = 0,
@@ -83,6 +112,10 @@ public:
 
   using EnumType = ChoicesParameter::ValueType;
 
+  /**
+   * @enum LayoutType
+   * @brief Selects the composite pole-figure layout.
+   */
   enum class LayoutType : EnumType
   {
     Horizontal = 0,
@@ -90,13 +123,27 @@ public:
     Square = 2,
   };
 
+  /**
+   * @enum Algorithm
+   * @brief Selects Lambert or discrete pole-figure generation.
+   */
   enum class Algorithm : EnumType
   {
-    LambertProjection = 0, //!<
-    Discrete = 1,          //!<
-    Unknown = 2,           //!
+    LambertProjection = 0,
+    Discrete = 1,
+    Unknown = 2,
   };
 
+  /**
+   * @brief Generates requested intensity, geometry, and PNG outputs.
+   * @return Directory, mask, array-creation, or PNG writer errors that the current implementation inspects.
+   * @pre Cell phases, Euler angles, and an optional mask have equal tuple counts.
+   * @pre Euler tuples have three components and phase IDs index ensemble arrays.
+   * @pre Image, Lambert, color, and marker settings satisfy EbsdLib requirements.
+   *
+   * Some dynamic intensity-array creation failures and all bulk-I/O failures are
+   * not returned by the current implementation.
+   */
   Result<> operator()();
 
 private:

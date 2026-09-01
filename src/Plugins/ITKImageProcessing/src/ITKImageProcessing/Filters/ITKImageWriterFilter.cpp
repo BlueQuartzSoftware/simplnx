@@ -498,14 +498,14 @@ Result<Arguments> ITKImageWriterFilter::FromSIMPLJson(const nlohmann::json& json
   Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_PlaneKey, k_Plane_Key);
   if(planeResult.valid())
   {
-    // This parameter does not appear in some 6.5 pipeline, thus we only include it in the output if it's valid
+    // Some 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(planeResult));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FileNameKey, k_FileName_Key));
   Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IndexOffsetKey, k_IndexOffset_Key);
   if(offsetResult.valid())
   {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    // 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(offsetResult));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageGeomPath_Key));

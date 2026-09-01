@@ -1,5 +1,8 @@
 #include "ComputeCoordinateThreshold.hpp"
 
+#include "ComputeCoordinateThresholdDirect.hpp"
+#include "ComputeCoordinateThresholdScanline.hpp"
+
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
@@ -7,10 +10,10 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -18,13 +21,34 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @concept GeometryType
+ * @brief Restricts node-mask workers to geometry types.
+ * @tparam T Specifies the candidate geometry type.
+ */
 template <typename T>
 concept GeometryType = std::is_base_of_v<IGeometry, T>;
 
+/**
+ * @class ComputeMaskImpl
+ * @brief Writes a coordinate-bound mask for one node geometry type.
+ * @tparam GeomT Specifies the input geometry type.
+ *
+ * The caller disables parallel execution. Generic DataArray and DataStore access
+ * has no concurrent-access guarantee.
+ */
 template <GeometryType GeomT>
 class ComputeMaskImpl
 {
 public:
+  /**
+   * @brief Initializes a node-geometry mask worker.
+   * @param geom Supplies geometry vertices and cells.
+   * @param mask Receives one mask value per cell.
+   * @param shouldInvert True to reverse mask values.
+   * @param isInBoundsFunct Tests each geometry vertex.
+   * @pre All arguments outlive the worker execution.
+   */
   ComputeMaskImpl(const GeomT& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
   : m_Geom(geom)
   , m_Mask(mask)
@@ -32,65 +56,24 @@ public:
   , m_IsInBoundsFunct(isInBoundsFunct)
   {
   }
+  /**
+   * @brief Destroys the node-geometry mask worker.
+   */
   ~ComputeMaskImpl() = default;
 
-  // -----------------------------------------------------------------------------
+  /**
+   * @brief Writes mask values for a cell interval.
+   * @param start Identifies the first cell.
+   * @param end Identifies one past the last cell.
+   * @pre [start, end) is inside the geometry cell range.
+   */
   void compute(usize start, usize end) const
   {
-    static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
+    static_assert(std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
 
     uint8 trueValue = (m_Invert) ? 0 : 1;
     uint8 falseValue = (m_Invert) ? 1 : 0;
 
-    if constexpr(std::is_same_v<ImageGeom, GeomT>)
-    {
-      usize xPoints = m_Geom.getNumXCells();
-      usize yPoints = m_Geom.getNumYCells();
-      FloatVec3 spacing = m_Geom.getSpacing();
-      FloatVec3 origin = m_Geom.getOrigin();
-
-      usize zStride = 0, yStride = 0;
-      for(usize i = start; i < end; i++)
-      {
-        zStride = i * xPoints * yPoints;
-        for(usize j = 0; j < yPoints; j++)
-        {
-          yStride = j * xPoints;
-          for(usize k = 0; k < xPoints; k++)
-          {
-            // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-            float32 minXVal = k * spacing[0] + origin[0];
-            float32 minYVal = j * spacing[1] + origin[1];
-            float32 minZVal = i * spacing[2] + origin[2];
-
-            float32 maxXVal = k * spacing[0] + origin[0] + spacing[0];
-            float32 maxYVal = j * spacing[1] + origin[1] + spacing[1];
-            float32 maxZVal = i * spacing[2] + origin[2] + spacing[2];
-
-            // Check every vertex for spherical and other potential thresholds
-            uint8 inBoundsVertexCount = 0;
-            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, minYVal, minZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, minYVal, minZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, maxYVal, minZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, minYVal, maxZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, maxYVal, maxZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, maxYVal, maxZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, minYVal, maxZVal);
-            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, maxYVal, minZVal);
-
-            usize tup = zStride + yStride + k;
-            if(inBoundsVertexCount == 8)
-            {
-              m_Mask.setValue(tup, trueValue);
-            }
-            else
-            {
-              m_Mask.setValue(tup, falseValue);
-            }
-          }
-        }
-      }
-    }
     if constexpr(std::is_same_v<VertexGeom, GeomT>)
     {
       const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
@@ -166,7 +149,10 @@ public:
     }
   }
 
-  // -----------------------------------------------------------------------------
+  /**
+   * @brief Writes mask values for an assigned cell range.
+   * @param range Identifies the cell interval.
+   */
   void operator()(const Range& range) const
   {
     compute(range.min(), range.max());
@@ -179,18 +165,24 @@ private:
   const std::function<uint8(float32, float32, float32)>& m_IsInBoundsFunct;
 };
 
-Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
+/**
+ * @brief Creates a coordinate-bound mask for a node geometry.
+ * @param geom Supplies the node geometry.
+ * @param mask Receives one value per geometry cell.
+ * @param shouldInvert True to reverse mask values.
+ * @param isInBoundsFunct Tests each geometry vertex.
+ * @return Success, or an unsupported-geometry error.
+ *
+ * The execution remains serial because generic DataArray and DataStore access
+ * has no concurrent-access guarantee.
+ */
+Result<> ExecuteNodeMask(const IGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
 {
   ParallelDataAlgorithm dataAlg;
+  // Generic geometry and mask stores remain serial.
   dataAlg.setParallelizationEnabled(false);
   switch(geom.getGeomType())
   {
-  case IGeometry::Type::Image: {
-    const auto& image = dynamic_cast<const ImageGeom&>(geom);
-    dataAlg.setRange(0, image.getNumZCells());
-    dataAlg.execute(ComputeMaskImpl<ImageGeom>(image, mask, shouldInvert, isInBoundsFunct));
-    break;
-  }
   case IGeometry::Type::Triangle: {
     dataAlg.setRange(0, geom.getNumberOfCells());
     dataAlg.execute(ComputeMaskImpl<TriangleGeom>(dynamic_cast<const TriangleGeom&>(geom), mask, shouldInvert, isInBoundsFunct));
@@ -218,6 +210,15 @@ Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask,
   return {};
 }
 
+/**
+ * @brief Tests whether bounds can intersect a non-image geometry.
+ * @param geom Supplies geometry bounds.
+ * @param inputValues Supplies selected coordinate bounds.
+ * @return True if geometry bounds can intersect selected bounds.
+ * @pre inputValues is not null.
+ *
+ * A false result lets the caller fill the mask without visiting every cell.
+ */
 bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThresholdInputValues* inputValues)
 {
   if(geom.getGeomType() == IGeometry::Type::Image)
@@ -259,7 +260,6 @@ bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThreshold
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 ComputeCoordinateThreshold::ComputeCoordinateThreshold(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                        ComputeCoordinateThresholdInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -269,19 +269,40 @@ ComputeCoordinateThreshold::ComputeCoordinateThreshold(DataStructure& dataStruct
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeCoordinateThreshold::~ComputeCoordinateThreshold() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ComputeCoordinateThreshold::operator()()
 {
-  std::function<uint8(float32, float32, float32)> f_IsInBounds;
+  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
+  auto& maskArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath);
+  auto& mask = maskArray.getDataStoreRef();
+
+  if(!PrecheckRuntimeGeom(geom, m_InputValues))
+  {
+    if(m_InputValues->Invert)
+    {
+      mask.fill(1);
+    }
+    else
+    {
+      mask.fill(0);
+    }
+
+    return MakeWarningVoidResult(-24715, "The input geometry did not contain any points within the supplied coordinate bounds, all values in the mask are the same.");
+  }
+
+  if(geom.getGeomType() == IGeometry::Type::Image)
+  {
+    return DispatchAlgorithm<ComputeCoordinateThresholdDirect, ComputeCoordinateThresholdScanline>({&maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  }
+
+  std::function<uint8(float32, float32, float32)> isInBounds;
   switch(static_cast<BoundsType>(m_InputValues->ShapeType))
   {
   case BoundsType::Rectangle: {
-    VectorFloat32Parameter::ValueType minPoint = m_InputValues->MinCoord;
-    VectorFloat32Parameter::ValueType maxPoint = m_InputValues->MaxCoord;
-    f_IsInBounds = [minPoint, maxPoint](float32 x, float32 y, float32 z) -> uint8 {
+    const VectorFloat32Parameter::ValueType minPoint = m_InputValues->MinCoord;
+    const VectorFloat32Parameter::ValueType maxPoint = m_InputValues->MaxCoord;
+    isInBounds = [minPoint, maxPoint](float32 x, float32 y, float32 z) -> uint8 {
       if(minPoint[0] > x || maxPoint[0] < x)
       {
         return 0;
@@ -302,43 +323,16 @@ Result<> ComputeCoordinateThreshold::operator()()
     break;
   }
   case BoundsType::Sphere: {
-    VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
-    f_IsInBounds = [sphereInfo](float32 x, float32 y, float32 z) -> uint8 {
-      float32 xDiff = x - sphereInfo[0];
-      float32 yDiff = y - sphereInfo[1];
-      float32 zDiff = z - sphereInfo[2];
-
-      // Do not switch to pow() inlined is faster for square case for floating point num
-      float32 tDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
-
-      if(tDiff > (sphereInfo[3] * sphereInfo[3]))
-      {
-        return 0;
-      }
-
-      return 1;
+    const VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
+    isInBounds = [sphereInfo](float32 x, float32 y, float32 z) -> uint8 {
+      const float32 xDiff = x - sphereInfo[0];
+      const float32 yDiff = y - sphereInfo[1];
+      const float32 zDiff = z - sphereInfo[2];
+      const float32 totalDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
+      return totalDiff > (sphereInfo[3] * sphereInfo[3]) ? 0 : 1;
     };
   }
   }
 
-  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
-  auto& mask = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
-
-  if(!PrecheckRuntimeGeom(geom, m_InputValues))
-  {
-    if(m_InputValues->Invert)
-    {
-      mask.fill(1);
-    }
-    else
-    {
-      mask.fill(0);
-    }
-
-    return MakeWarningVoidResult(-24715, "The input geometry did not contain any points within the supplied coordinate bounds, all values in the mask are the same.");
-  }
-
-  ExecuteComputeMask(geom, mask, m_InputValues->Invert, f_IsInBounds);
-
-  return {};
+  return ExecuteNodeMask(geom, mask, m_InputValues->Invert, isInBounds);
 }

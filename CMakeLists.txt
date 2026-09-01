@@ -54,6 +54,14 @@ option(SIMPLNX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 option(SIMPLNX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
 
 # ------------------------------------------------------------------------------
+# Controls which algorithm paths are exercised by dual-dispatch unit tests.
+#   0 (Both)       - tests run with forceOoc=false AND forceOoc=true (default)
+#   1 (OocOnly)    - tests run with forceOoc=true only (use for OOC builds)
+#   2 (InCoreOnly) - tests run with forceOoc=false only (quick validation)
+# ------------------------------------------------------------------------------
+set(SIMPLNX_TEST_ALGORITHM_PATH "0" CACHE STRING "Algorithm paths to test: 0=Both, 1=OocOnly, 2=InCoreOnly")
+
+# ------------------------------------------------------------------------------
 # Is the SimplnxCore Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
 option(SIMPLNX_ENABLE_SimplnxCore "Enable the SimplnxCore Plugin" ON)
@@ -200,6 +208,7 @@ find_package(TIFF REQUIRED)
 # global property for later install, debugging and packaging
 # -----------------------------------------------------------------------
 find_package(HDF5 1.14 MODULE REQUIRED)
+find_package(ZLIB REQUIRED)
 get_target_property(hdf5_dll_path hdf5::hdf5 IMPORTED_LOCATION_RELEASE)
 get_filename_component(hdf5_dll_path "${hdf5_dll_path}" DIRECTORY)
 get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)
@@ -245,6 +254,9 @@ if(MSVC)
   target_compile_options(simplnx
     PRIVATE
       /MP
+      # Dream3dIO.cpp exceeds the default COMDAT section limit (C1128) in Debug
+      # after the out-of-core resolver refactor; /bigobj raises the limit.
+      /bigobj
   )
 endif()
 
@@ -269,6 +281,7 @@ if(SIMPLNX_ENABLE_MULTICORE)
   target_link_libraries(simplnx PUBLIC TBB::tbb)
 endif()
 
+
 target_link_libraries(simplnx
   PUBLIC
     fmt::fmt
@@ -277,6 +290,7 @@ target_link_libraries(simplnx
     nonstd::span-lite
     Eigen3::Eigen
     HDF5::HDF5
+    ZLIB::ZLIB
     Boost::mp11
     nod::nod
     spdlog::spdlog
@@ -301,6 +315,11 @@ if(SIMPLNX_ENABLE_LINK_FILESYSTEM)
 endif()
 
 set(SIMPLNX_GENERATED_DIR ${simplnx_BINARY_DIR}/generated)
+
+configure_file(
+  ${simplnx_SOURCE_DIR}/cmake/SimplnxConfig.hpp.in
+  ${SIMPLNX_GENERATED_DIR}/simplnx/Common/SimplnxConfig.hpp
+  @ONLY)
 set(SIMPLNX_GENERATED_HEADER_DIR ${simplnx_BINARY_DIR}/generated/simplnx)
 set(SIMPLNX_EXPORT_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/simplnx_export.hpp)
 
@@ -359,6 +378,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Extent.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Filesystem.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
@@ -387,8 +407,11 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IExternalSort.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/InMemoryFormatResolver.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
@@ -474,6 +497,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyListStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyStringStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
@@ -549,12 +573,14 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SliceBufferedTransfer.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Fonts/Fonts.hpp
@@ -568,6 +594,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
@@ -580,6 +607,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/UnionFind.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
@@ -615,6 +643,10 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ChunkIndex.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ChunkShapePolicy.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/DeflateEligibility.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ParallelChunkCodec.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
@@ -652,6 +684,7 @@ set(SIMPLNX_SRCS
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStoreFormatResolver.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
@@ -770,6 +803,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ClusteringUtilities.cpp
@@ -783,6 +817,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
@@ -813,6 +848,9 @@ set(SIMPLNX_SRCS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ChunkShapePolicy.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/DeflateEligibility.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ParallelChunkCodec.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
@@ -1076,7 +1114,6 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
-  find_package(ZLIB REQUIRED)
   include(CTest)
   add_subdirectory(test)
 endif()

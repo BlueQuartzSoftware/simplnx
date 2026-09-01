@@ -77,6 +77,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   DBSCANTest.cpp
   DeleteDataTest.cpp
   DREAM3DFileTest.cpp
+  ErodeDilateBadDataGeneratorTest.cpp
   ErodeDilateBadDataTest.cpp
   ErodeDilateCoordinationNumberTest.cpp
   ErodeDilateMaskTest.cpp
@@ -104,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
+  MultiThresholdObjectsVvTest.cpp
   NearestPointFuseRegularGridsTest.cpp
   OmitBoundingBoxSkinTest.cpp
   PadImageGeometryTest.cpp
@@ -153,6 +155,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SurfaceNetsFaceLabelsTest.cpp
   SurfaceNetsNodeTypesTest.cpp
   SurfaceNetsTest.cpp
+  SurfaceNetsVvTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
@@ -172,6 +175,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
+  WriteVtkStructuredPointsTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -261,6 +265,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME extract_vertex_geometry.tar.gz SHA512 b34c877e6a150eb461aa21afc33529a8cde07e32d4c1e788cb2c98751ebf1d8f82ca9da010c8c3de6f15e53e9a8d030d62c93173815b101fe676edccac59ad0a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ExtractFeatureBoundaries2D.tar.gz SHA512 3e4ce48bc886cb8e5ecb9e8e7ceea23cb0aa18e5a2c3b47da337a9ea59ddc3eb110d941ef35a6e408482a9ad9292fcc2a52b072cc967e8542fa9f62d3311849b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME FindSurfaceFeaturesTest.tar.gz SHA512 4a03393a60fedb1d932faef82bfca5d9da79e7adbfa61620b25ebac1a24ae554861700470d91b6f7958e8d07157ba9bedb1bdb625f0e84dfcb32df5ddb6e9911)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME fill_bad_data_exemplars.tar.gz SHA512 4a3504dd5173d5ef7c37dff68b6119f65aef24a8bb893ab9777d13dc993955c39bb39ff1771ec0dcc65db9cb9a0ee249b8eca4f15726a5db1743f41bcf20cab8)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME flying_edges_exemplar_v2.tar.gz SHA512 93cab3473ca16464a00866978477e3f56e8cbea15fc0d9b989c945a352ee8f67b5c253907b24fc23b20652976d6e2cb8872a302c37b4c89c1b21fca13c080f0f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_color_table_test.tar.gz SHA512 b5683c758964eb723267400b14047f8adb0d5365ee9ca93d1a6940e9b6ad198cd4739c1ca799eb787b7706e668dbc16ab8243642034cdba5b71d64c27e682d3f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_vector_colors.tar.gz SHA512 a30ac9ac35002f4a79b60a02a86de1661c4828c77b45d3848c6e2c37943c8874756f0e163cda99f2c0de372ff1cd9257288d5357fa3db8a539428df713325ee7)
@@ -283,6 +288,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   # Rotate_Sample_Ref_Frame_Test_v2/v3 archives retired 2026-07 during V&V: the RotateSampleRefFrame test now uses an
   # inlined, hand-derived Class 1 (analytical permutation) oracle instead of a golden-file exemplar.
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME sample_surface_mesh_regular_grid_v1.tar.gz SHA512 511cda431a5139bc81899b6ce22bc644f861df5b3cb939d058866b8fb1070542285f6bc889c736c6f39384b6443983cdec221ee15e70d063c95887285475cc17)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME segment_features_exemplars.tar.gz SHA512 004fdccf1d2af6dbea8690a9213cf485ddd8c3afb90416895de7d8f52c51f4c2e4b73edb335b01572934ad4d2ff188edc047b3a64f76beff8d280e55ef08e2ab)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME segment_features_neighbor_scheme_test.tar.gz SHA512 4700b42eb3a9058dc08520c786d0e6aa20e45bfa06233952462c0c8a428e437406f530125822f1742dfe57405be66e4f0fd5ac2f76db4a13379a7ae189d370cd)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d_v3.tar.gz SHA512 bfa9547e787b0f8e8122702da0eb4e519f48a48bf4f94aad020f72479d071d32dfc96a1425705874c68507a61ed391d28606d9c4f4acd559043ef0ace64fd33f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)

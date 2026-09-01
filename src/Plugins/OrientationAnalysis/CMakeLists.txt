@@ -9,6 +9,7 @@ else()
 endif()
 
 
+
 # ------------------------------------------------------------------------------
 # EbsdLib needs install rules for creating packages
 # ------------------------------------------------------------------------------
@@ -173,6 +174,8 @@ set(filter_algorithms
   AlignSectionsMisorientation
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
+  BadDataNeighborOrientationCheckScanline
+  BadDataNeighborOrientationCheckWorklist
   CAxisSegmentFeatures
   ComputeAvgCAxes
   ComputeAvgOrientations
@@ -187,12 +190,19 @@ set(filter_algorithms
   ComputeFZQuaternions
   ComputeGBCD
   ComputeGBCDMetricBased
-  ComputeGBCDPoleFigure
+  ComputeGBCDPoleFigureDirect
+  ComputeGBCDPoleFigureScanline
   ComputeGBPDMetricBased
   ComputeIPFColors
+  ComputeIPFColorsDirect
+  ComputeIPFColorsScanline
   ComputeKernelAvgMisorientations
+  ComputeKernelAvgMisorientationsDirect
+  ComputeKernelAvgMisorientationsScanline
   ComputeMisorientations
   ComputeQuaternionConjugate
+  ComputeQuaternionConjugateDirect
+  ComputeQuaternionConjugateScanline
   ComputeSchmids
   ComputeShapes
   ComputeShapesTriangleGeom
@@ -390,6 +400,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
                     )
   add_custom_target(Copy_${PLUGIN_NAME}_CAxis_Data ALL
                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/caxis_data.tar.gz"
+                  COMMAND ${CMAKE_COMMAND} -E make_directory "${DATA_DEST_DIR}/${PLUGIN_NAME}"
                   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/caxis_data/Combo-EBSD-120130.osc_r0c0.ang" "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
                   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/caxis_data"
                   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -410,6 +421,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   )
   add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
     COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DATA_DEST_DIR}/${PLUGIN_NAME}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -453,5 +465,3 @@ if(${PLUGIN_NAME}_INSTALL_DATA_FILES)
     COMPONENT Applications
   )
 endif()
-
-

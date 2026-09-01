@@ -64,6 +64,38 @@ The filter creates a *cluster Ids* array (one dimensionless integer cluster labe
 
 - **Clustered Attribute Array** -- any **Attribute Array** (cell-level, feature-level, or generic) whose tuples are to be partitioned into clusters. This is typically an output of an earlier computation or import step.
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. It accesses array elements via direct per-element operator[] calls, which are optimal for in-memory data (essentially pointer dereferences).
+
+The algorithm performs the standard Voronoi iteration:
+
+1. **Initialize**: Randomly select k data points as initial medoids
+2. **Assign clusters**: For each data point, compute the distance to all k medoids and assign it to the nearest
+3. **Optimize medoids**: For each cluster, find the member that minimizes the total intra-cluster distance
+4. **Repeat** steps 2-3 until medoids stop changing (convergence)
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array is backed by chunked on-disk storage (out-of-core), the **Scanline** algorithm is used. Out-of-core data lives in compressed chunks on disk; each per-element operator[] access would trigger a chunk load/decompress/evict cycle ("chunk thrashing"), making the iterative algorithm extremely slow.
+
+The Scanline algorithm uses bounded bulk I/O throughout:
+
+- **Medoid caching**: The medoids array is small (k points), so it is cached entirely in a local buffer before each cluster assignment pass, eliminating k * N per-element OOC reads per iteration.
+- **Chunked cluster assignment**: The input data and cluster IDs are read and written in fixed-size bounded tiles via bulk I/O (copyIntoBuffer/copyFromBuffer). All distance computations for each tile are done in memory.
+- **Blocked medoid optimization**: A fixed candidate tile is compared against one fixed inner tile at a time. Cluster IDs and an optional Bool or UInt8 mask are read in the same bulk tiles, and each candidate accumulates only matching cluster IDs. Candidate costs and medoid indices are feature-scale; no cell-sized membership list, temporary mask, or random tuple transfer is retained.
+- **Eligibility and errors**: A bounded mask pre-scan rejects empty input or an all-false mask before random initialization, so the seeded rejection sampler cannot hang. The original random generator and draw order are otherwise preserved.
+
+The dispatcher selects Scanline when the clustering input, feature-ID output, medoids output, or enabled mask is out-of-core. The no-mask case carries that choice explicitly rather than creating a full all-true temporary array.
+
+### Performance
+
+The in-core Direct algorithm is faster for in-memory data due to the lower overhead of operator[] access. The out-of-core Scanline algorithm converts random per-element access into sequential bulk I/O, which is essential for data stored on disk in compressed chunks. Both produce identical clustering results.
+
 % Auto generated parameter table will be inserted here
 
 ## References

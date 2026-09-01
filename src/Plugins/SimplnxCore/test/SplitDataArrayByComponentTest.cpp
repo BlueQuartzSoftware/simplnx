@@ -9,8 +9,11 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -20,7 +23,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-// -----------------------------------------------------------------------------
+
 void fillDataArray(BoolArray* inputArray)
 {
   usize numComps = inputArray->getNumberOfComponents();
@@ -38,7 +41,6 @@ void fillDataArray(BoolArray* inputArray)
   }
 }
 
-// -----------------------------------------------------------------------------
 template <typename T>
 void fillDataArray(DataArray<T>* inputArray)
 {
@@ -59,7 +61,6 @@ void fillDataArray(DataArray<T>* inputArray)
   }
 }
 
-// -----------------------------------------------------------------------------
 DataStructure createDataStructure()
 {
   DataStructure dataStructure;
@@ -101,7 +102,6 @@ DataStructure createDataStructure()
   return dataStructure;
 }
 
-// -----------------------------------------------------------------------------
 template <typename T>
 void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, const DynamicTableInfo::RowType& extractComps = {})
 {
@@ -111,7 +111,7 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
   ShapeType compsToCheck;
 
   Arguments args;
-  // read in the exemplar shift data file
+  // Load the exemplar shift data file.
   args.insertOrAssign(SplitDataArrayByComponentFilter::k_MultiCompArrayPath_Key, std::make_any<DataPath>(arrayPath));
   args.insertOrAssign(SplitDataArrayByComponentFilter::k_Postfix_Key, std::make_any<std::string>("Component"));
   args.insertOrAssign(SplitDataArrayByComponentFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
@@ -160,24 +160,26 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 }
 } // namespace
 
-// -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArrayByComponentFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = createDataStructure();
 
-  TestSplitByType<uint32>(dataStructure, "uint32");
-  TestSplitByType<bool>(dataStructure, "bool");
-  TestSplitByType<int8>(dataStructure, "int8");
-  TestSplitByType<uint8>(dataStructure, "uint8", {1, 3});
-  TestSplitByType<int16>(dataStructure, "int16");
-  TestSplitByType<uint16>(dataStructure, "uint16");
-  TestSplitByType<int32>(dataStructure, "int32");
-  TestSplitByType<int64>(dataStructure, "int64");
-  TestSplitByType<uint64>(dataStructure, "uint64");
-  TestSplitByType<float>(dataStructure, "float");
-  TestSplitByType<double>(dataStructure, "double");
+  scope.execute([&] { TestSplitByType<uint32>(dataStructure, "uint32"); });
+  scope.execute([&] { TestSplitByType<bool>(dataStructure, "bool"); });
+  scope.execute([&] { TestSplitByType<int8>(dataStructure, "int8"); });
+  scope.execute([&] { TestSplitByType<uint8>(dataStructure, "uint8", {1, 3}); });
+  scope.execute([&] { TestSplitByType<int16>(dataStructure, "int16"); });
+  scope.execute([&] { TestSplitByType<uint16>(dataStructure, "uint16"); });
+  scope.execute([&] { TestSplitByType<int32>(dataStructure, "int32"); });
+  scope.execute([&] { TestSplitByType<int64>(dataStructure, "int64"); });
+  scope.execute([&] { TestSplitByType<uint64>(dataStructure, "uint64"); });
+  scope.execute([&] { TestSplitByType<float>(dataStructure, "float"); });
+  scope.execute([&] { TestSplitByType<double>(dataStructure, "double"); });
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -17,9 +17,24 @@ namespace nx::core::HDF5
 class FileIO;
 class DatasetIO;
 
+/**
+ * @class GroupIO
+ * @brief Owns or lazily opens one move-only HDF5 group identifier.
+ *
+ * Methods serialize HDF5 calls with the process-wide Support::ApiLock(). The
+ * lock is non-recursive, so methods resolve operations that can acquire the
+ * lock before they enter a leaf HDF5 critical section. Concurrent access to
+ * the same GroupIO object is not supported.
+ */
 class SIMPLNX_EXPORT GroupIO : public ObjectIO
 {
 public:
+  /**
+   * @brief Opens a group from an HDF5 file.
+   * @param filepath Identifies the HDF5 file.
+   * @param objectPath Identifies the group in the file.
+   * @return Owning group wrapper, or null when the group cannot be opened.
+   */
   static std::shared_ptr<GroupIO> Open(const std::filesystem::path& filepath, const std::string& objectPath);
 
   /**
@@ -39,133 +54,147 @@ public:
   ~GroupIO() noexcept override;
 
   /**
-   * @brief Attempts to open a nested HDF5 group with the specified name.
-   * The created GroupIO is returned. If the process fails, the returned
-   * GroupIO is invalid.
-   * @param name
-   * @return GroupIO
+   * @brief Opens an existing child group.
+   * @param name Identifies the child group.
+   * @return Owning child wrapper, or an invalid wrapper on failure.
    */
   GroupIO openGroup(const std::string& name) const;
 
   /**
-   * @brief Attempts to open a nested HDF5 dataset with the specified name.
-   * The created DatasetReader is returned. If the process fails, the returned
-   * DatasetReader is invalid.
-   * @param name
-   * @return DatasetReader
+   * @brief Gets a lazy wrapper for an existing child dataset.
+   * @param name Identifies the child dataset.
+   * @return Dataset wrapper, or an invalid wrapper when the child is not a dataset.
    */
   DatasetIO openDataset(const std::string& name) const;
 
   /**
-   * @brief Creates a GroupIO for writing to a child group with the
-   * target name. Returns an invalid GroupIO if the group cannot be
-   * created.
-   * @param childName
-   * @return GroupIO
+   * @brief Opens an existing child group or creates a missing child group.
+   * @param childName Identifies the child group.
+   * @return Owning child wrapper, or an invalid wrapper on failure.
+   *
+   * An existing child of another HDF5 object type causes failure.
    */
   GroupIO createGroup(const std::string& childName);
 
   /**
-   * @brief Opens a DatasetIO for writing to a child group with the
-   * target name. Returns an invalid DatasetIO Result if the dataset cannot be
-   * created.
-   * @param childName
-   * @return DatasetIO
+   * @brief Gets a lazy writer for an existing or missing child dataset.
+   * @param childName Identifies the child dataset.
+   * @return Dataset wrapper, or an invalid wrapper when an existing child has another type.
+   *
+   * This method does not create the physical dataset. A later dataset write
+   * opens an existing dataset or creates a missing dataset with its type and shape.
    */
   DatasetIO openDataset(const std::string& childName);
 
   /**
-   * @brief Opens a DatasetIO for writing to a child group with the
-   * target name. Returns a null pointer if the dataset cannot be
-   * created.
-   * @param childName
-   * @return std::shared_ptr<DatasetIO>
+   * @brief Gets a lazy wrapper for an existing child dataset.
+   * @param childName Identifies the child dataset.
+   * @return Dataset wrapper, or null when the child is not a dataset.
    */
   std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& childName) const;
 
   /**
-   * @brief Opens a GroupIO for writing to a child group with the target name.
-   * @param childName The name of the child to open
-   * @return Returns a nullptr on failure to open
+   * @brief Opens an existing child group.
+   * @param childName Identifies the child group.
+   * @return Owning child wrapper, or null on failure.
    */
   std::shared_ptr<GroupIO> openGroupPtr(const std::string& childName) const;
 
   /**
-   * @brief Creates a DatasetIO for writing to a child group with the
-   * target name. Returns an invalid DatasetIO if the dataset cannot be
-   * created.
-   * @param childName
-   * @return DatasetIO
+   * @brief Gets a lazy writer for a child dataset.
+   * @param childName Identifies the child dataset.
+   * @return Dataset wrapper, or an invalid wrapper when this group is invalid.
+   *
+   * The physical dataset is created by a later write operation.
    */
   DatasetIO createDataset(const std::string& childName);
 
+  /**
+   * @brief Gets a shared lazy writer for a child dataset.
+   * @param childName Identifies the child dataset.
+   * @return Dataset wrapper, or null when this group is invalid.
+   *
+   * The physical dataset is created by a later write operation.
+   */
   std::shared_ptr<DatasetIO> createDatasetPtr(const std::string& childName);
 
   /**
-   * @brief Creates a link within the group to another HDF5 object specified
-   * by an HDF5 object path.
-   * Returns an error code if one occurs. Otherwise, this method returns 0.
-   * @param objectPath
-   * @return Result<>
+   * @brief Creates a hard link in this group to an object under the parent identifier.
+   * @param objectPath Identifies the source object. Its final path component becomes the link name.
+   * @return Valid result on success. Returns an error for an empty path or an HDF5 failure.
    */
   Result<> createLink(const std::string& objectPath);
 
   /**
-   * @brief Returns the number of children objects within the group.
-   *
-   * Returns 0 if the GroupIO is invalid.
-   * @return size_t
+   * @brief Gets the number of child objects.
+   * @return Child count, or zero when this wrapper is invalid.
    */
   virtual usize getNumChildren() const;
 
   /**
-   * @brief Returns a vector with the names of each child object.
-   *
-   * This will return an empty vector if the GroupIO is invalid.
-   * @return std::vector<std::string>
+   * @brief Gets the names of all child objects.
+   * @return Child names, or an empty vector when this wrapper is invalid.
    */
   virtual std::vector<std::string> getChildNames() const;
 
+  /**
+   * @brief Gets one child name by its HDF5 index.
+   * @param idx Selects a child in the range [0, getNumChildren()).
+   * @return Child name.
+   * @pre This wrapper is valid, the index is in range, and the name has at most 1023 bytes.
+   *
+   * The current API does not report HDF5 query failures or truncated names.
+   */
   virtual std::string getChildNameByIdx(hsize_t idx) const;
 
   /**
-   * @brief Returns true if the target child is a group. Returns false
-   * otherwise.
-   *
-   * This will always return false if the GroupIO is invalid.
-   * @param childName
-   * @return bool
+   * @brief Tests whether a child is an HDF5 group.
+   * @param childName Identifies the child.
+   * @return True when the child is a group. Returns false for invalid wrappers and query failures.
    */
   virtual bool isGroup(const std::string& childName) const;
 
   /**
-   * @brief Returns true if the target child is a dataset. Returns false
-   * otherwise.
-   *
-   * This will always return false if the GroupIO is invalid.
-   * @param childName
-   * @return bool
+   * @brief Tests whether a child is an HDF5 dataset.
+   * @param childName Identifies the child.
+   * @return True when the child is a dataset. Returns false for invalid wrappers and query failures.
    */
   virtual bool isDataset(const std::string& childName) const;
 
+  /**
+   * @brief Tests whether a supported child object exists.
+   * @param childName Identifies the child.
+   * @return True for groups and datasets. Returns false for named datatypes and query failures.
+   */
   bool exists(const std::string& childName) const;
 
+  /**
+   * @brief Gets the supported HDF5 object type of a child.
+   * @param childName Identifies the child.
+   * @return Group or Dataset when detected. Returns Unknown for other types and query failures.
+   */
   ObjectType getObjectType(const std::string& childName) const;
 
 protected:
   /**
-   * @brief Opens and wraps an HDF5 group.
-   * @param filepath
-   * @param groupPath
+   * @brief Takes ownership of an open HDF5 group identifier.
+   * @param parentId Identifies the parent object. It must outlive this wrapper.
+   * @param groupName Stores the child name relative to the parent.
+   * @param groupId Supplies the identifier to close during destruction.
    */
   GroupIO(hid_t parentId, const std::string& groupName, hid_t groupId);
 
+  /**
+   * @brief Opens this group when it is not open.
+   * @return Open group identifier, or a negative HDF5 identifier on failure.
+   */
   hid_t open() const override;
+
+  /**
+   * @brief Closes the owned group identifier when it is open.
+   */
   void close() override;
 
 private:
 };
-
-// -----------------------------------------------------------------------------
-// Declare our extern templates
 } // namespace nx::core::HDF5

@@ -4,19 +4,28 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <vector>
+
 using namespace nx::core;
 
-/**
- * @brief The CombineAttributeArraysImpl class is a templated private implementation that deals with
- * combining the various input arrays into one contiguous array
- */
 namespace
 {
+/// Bounds transient storage while keeping bulk transfers large enough to amortize OOC I/O.
+constexpr usize k_ChunkValues = 65536;
+
+/**
+ * @struct CombineAttributeArraysImpl
+ * @brief Combines one runtime-selected DataArray type through bounded bulk datastore transfers.
+ */
 struct CombineAttributeArraysImpl
 {
-
   template <typename DataType>
-  Result<> operator()(bool normalize, std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr)
+  Result<> operator()(bool normalize, const std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr, const std::atomic_bool& shouldCancel)
   {
     using OutputArrayType = DataArray<DataType>;
     using InputArrayType = DataArray<DataType>;
@@ -24,108 +33,146 @@ struct CombineAttributeArraysImpl
     using OutputDataStoreType = AbstractDataStore<DataType>;
 
     OutputDataStoreType& outputDataStore = dynamic_cast<OutputArrayType*>(outputArrayPtr)->getDataStoreRef();
-    usize numArrays = inputArraysVec.size();
+    const usize numArrays = inputArraysVec.size();
     if(numArrays == 0)
     {
       return MakeWarningVoidResult(1, "No arrays were selected to combine.");
     }
 
     std::vector<InputArrayType*> inputArrays;
+    inputArrays.reserve(numArrays);
+    std::vector<usize> componentCounts;
+    componentCounts.reserve(numArrays);
+    std::vector<usize> componentOffsets;
+    componentOffsets.reserve(numArrays);
 
-    for(usize i = 0; i < numArrays; i++)
+    usize maxInputComponents = 0;
+    usize componentOffset = 0;
+    for(DataObject* inputArrayObject : inputArraysVec)
     {
-      inputArrays.push_back(dynamic_cast<InputArrayType*>(inputArraysVec[i]));
+      auto* inputArray = dynamic_cast<InputArrayType*>(inputArrayObject);
+      const usize componentCount = inputArray->getNumberOfComponents();
+      inputArrays.push_back(inputArray);
+      componentCounts.push_back(componentCount);
+      componentOffsets.push_back(componentOffset);
+      componentOffset += componentCount;
+      maxInputComponents = std::max(maxInputComponents, componentCount);
     }
 
-    usize numTuples = inputArrays[0]->getNumberOfTuples();
-    usize stackedDims = outputDataStore.getNumberOfComponents();
-    usize arrayOffset = 0;
-    usize numComps = 0;
+    const usize numTuples = inputArrays[0]->getNumberOfTuples();
+    const usize stackedDims = outputDataStore.getNumberOfComponents();
+    const usize tuplesPerChunk = std::max<usize>(1, k_ChunkValues / std::max<usize>(1, stackedDims));
+    auto inputBuffer = std::make_unique<DataType[]>(tuplesPerChunk * maxInputComponents);
+    auto outputBuffer = std::make_unique<DataType[]>(tuplesPerChunk * stackedDims);
+
+    std::unique_ptr<DataType[]> maxValues;
+    std::unique_ptr<DataType[]> minValues;
 
     if(normalize)
     {
-      std::vector<DataType> maxValues(stackedDims, std::numeric_limits<DataType>::lowest());
-      std::vector<DataType> minValues(stackedDims, std::numeric_limits<DataType>::max());
+      maxValues = std::make_unique<DataType[]>(stackedDims);
+      minValues = std::make_unique<DataType[]>(stackedDims);
+      std::fill_n(maxValues.get(), stackedDims, std::numeric_limits<DataType>::lowest());
+      std::fill_n(minValues.get(), stackedDims, std::numeric_limits<DataType>::max());
 
       for(usize i = 0; i < numArrays; i++)
       {
-        const InputDataStoreType& inputDataStore = inputArrays[i]->getDataStoreRef(); // Get a reference var to the current input array
-
-        numComps = inputDataStore.getNumberOfComponents();
-        if(i > 0)
+        const InputDataStoreType& inputDataStore = inputArrays[i]->getDataStoreRef();
+        const usize numComps = componentCounts[i];
+        const usize arrayOffset = componentOffsets[i];
+        for(usize tupleOffset = 0; tupleOffset < numTuples; tupleOffset += tuplesPerChunk)
         {
-          arrayOffset += inputArrays[i - 1]->getNumberOfComponents();
-        }
-        for(usize j = 0; j < numTuples; j++)
-        {
-          for(usize k = 0; k < numComps; k++)
+          if(shouldCancel)
           {
-            if(inputDataStore[numComps * j + k] > maxValues[arrayOffset + k])
+            return {};
+          }
+
+          const usize tupleCount = std::min(tuplesPerChunk, numTuples - tupleOffset);
+          auto readResult = inputDataStore.copyIntoBuffer(tupleOffset * numComps, nonstd::span<DataType>(inputBuffer.get(), tupleCount * numComps));
+          if(readResult.invalid())
+          {
+            return readResult;
+          }
+
+          // Preserve tuple and component traversal order. NaN values do not
+          // update either bound through these ordered comparisons.
+          for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
+          {
+            for(usize compIndex = 0; compIndex < numComps; compIndex++)
             {
-              maxValues[arrayOffset + k] = inputDataStore[numComps * j + k];
-            }
-            if(inputDataStore[numComps * j + k] < minValues[arrayOffset + k])
-            {
-              minValues[arrayOffset + k] = inputDataStore[numComps * j + k];
+              const DataType value = inputBuffer[tupleIndex * numComps + compIndex];
+              const usize outputCompIndex = arrayOffset + compIndex;
+              if(value > maxValues[outputCompIndex])
+              {
+                maxValues[outputCompIndex] = value;
+              }
+              if(value < minValues[outputCompIndex])
+              {
+                minValues[outputCompIndex] = value;
+              }
             }
           }
         }
       }
+    }
 
-      arrayOffset = 0;
-
-      for(usize i = 0; i < numTuples; i++)
+    for(usize tupleOffset = 0; tupleOffset < numTuples; tupleOffset += tuplesPerChunk)
+    {
+      if(shouldCancel)
       {
-        for(usize j = 0; j < numArrays; j++)
-        {
-          const InputDataStoreType& inputDataStore = inputArrays[j]->getDataStoreRef(); // Get a reference var to the current input array
+        return {};
+      }
 
-          numComps = inputDataStore.getNumberOfComponents();
-          if(j > 0)
+      const usize tupleCount = std::min(tuplesPerChunk, numTuples - tupleOffset);
+      for(usize arrayIndex = 0; arrayIndex < numArrays; arrayIndex++)
+      {
+        const InputDataStoreType& inputDataStore = inputArrays[arrayIndex]->getDataStoreRef();
+        const usize numComps = componentCounts[arrayIndex];
+        const usize arrayOffset = componentOffsets[arrayIndex];
+        auto readResult = inputDataStore.copyIntoBuffer(tupleOffset * numComps, nonstd::span<DataType>(inputBuffer.get(), tupleCount * numComps));
+        if(readResult.invalid())
+        {
+          return readResult;
+        }
+
+        for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
+        {
+          for(usize compIndex = 0; compIndex < numComps; compIndex++)
           {
-            arrayOffset += inputArrays[j - 1]->getNumberOfComponents();
-          }
-          for(usize k = 0; k < numComps; k++)
-          {
-            if(maxValues[arrayOffset + k] == minValues[arrayOffset + k])
+            const usize outputCompIndex = arrayOffset + compIndex;
+            const DataType value = inputBuffer[tupleIndex * numComps + compIndex];
+            if(normalize)
             {
-              outputDataStore[stackedDims * i + (arrayOffset) + k] = static_cast<DataType>(0);
+              if(maxValues[outputCompIndex] == minValues[outputCompIndex])
+              {
+                outputBuffer[stackedDims * tupleIndex + outputCompIndex] = static_cast<DataType>(0);
+              }
+              else
+              {
+                outputBuffer[stackedDims * tupleIndex + outputCompIndex] = (value - minValues[outputCompIndex]) / (maxValues[outputCompIndex] - minValues[outputCompIndex]);
+              }
             }
             else
             {
-              outputDataStore[stackedDims * i + (arrayOffset) + k] = (inputDataStore[numComps * i + k] - minValues[arrayOffset + k]) / (maxValues[arrayOffset + k] - minValues[arrayOffset + k]);
+              outputBuffer[stackedDims * tupleIndex + outputCompIndex] = value;
             }
           }
         }
-        arrayOffset = 0;
       }
-    }
-    else
-    {
-      usize outputNumComps = outputDataStore.getNumberOfComponents();
-      usize compsWritten = 0;
-      for(const auto* inputArrayPtr : inputArrays)
-      {
-        const InputDataStoreType& inputDataStore = inputArrayPtr->getDataStoreRef(); // Get a reference var to the current input array
-        usize numInputComps = inputDataStore.getNumberOfComponents();
 
-        for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
-        {
-          for(usize compIndex = 0; compIndex < numInputComps; compIndex++)
-          {
-            outputDataStore[tupleIndex * outputNumComps + compsWritten + compIndex] = inputDataStore[tupleIndex * numInputComps + compIndex];
-          }
-        }
-        compsWritten += numInputComps;
+      auto writeResult = outputDataStore.copyFromBuffer(tupleOffset * stackedDims, nonstd::span<const DataType>(outputBuffer.get(), tupleCount * stackedDims));
+      if(writeResult.invalid())
+      {
+        return writeResult;
       }
     }
+
     return {};
   }
 };
 
 } // namespace
 
-// -----------------------------------------------------------------------------
 CombineAttributeArrays::CombineAttributeArrays(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                CombineAttributeArraysInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -135,16 +182,13 @@ CombineAttributeArrays::CombineAttributeArrays(DataStructure& dataStructure, con
 {
 }
 
-// -----------------------------------------------------------------------------
 CombineAttributeArrays::~CombineAttributeArrays() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& CombineAttributeArrays::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> CombineAttributeArrays::operator()()
 {
   if(m_ShouldCancel)
@@ -159,5 +203,6 @@ Result<> CombineAttributeArrays::operator()()
 
   auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->StackedDataArrayPath);
 
-  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->NormalizeData, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath));
+  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->NormalizeData, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath),
+                             m_ShouldCancel);
 }

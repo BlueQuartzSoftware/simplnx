@@ -27,7 +27,6 @@ constexpr int32 k_ErrorUnsupportedDataType = -20004;
 constexpr int32 k_ErrorBufferSizeMismatch = -20005;
 } // namespace
 
-// -----------------------------------------------------------------------------
 Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& filePath) const
 {
   std::string pathStr = filePath.string();
@@ -61,17 +60,15 @@ Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& file
   }
 
   metadata.numPages = 1;
-  // stb does not provide origin or spacing metadata
+  // stb does not expose origin or spacing metadata.
   metadata.origin = std::nullopt;
   metadata.spacing = std::nullopt;
 
   return {std::move(metadata)};
 }
 
-// -----------------------------------------------------------------------------
 Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const
 {
-  // First get metadata to determine the data type
   Result<ImageMetadata> metaResult = readMetadata(filePath);
   if(metaResult.invalid())
   {
@@ -79,57 +76,73 @@ Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::s
   }
   const ImageMetadata& metadata = metaResult.value();
 
-  std::string pathStr = filePath.string();
-  int width = 0;
-  int height = 0;
-  int comp = 0;
-
   usize bpe = GetDataTypeSize(metadata.dataType);
   usize expectedSize = metadata.width * metadata.height * metadata.numComponents * bpe;
 
   if(buffer.size() != expectedSize)
   {
-    return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for image '{}'", buffer.size(), expectedSize, pathStr));
+    return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for image '{}'", buffer.size(), expectedSize, filePath.string()));
   }
+
+  const usize rowBytes = metadata.width * metadata.numComponents * bpe;
+  return readPixelDataRows(filePath, [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels) -> Result<> {
+    const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bpe;
+    const usize byteCount = pixelCount * metadata.numComponents * bpe;
+    std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
+    return {};
+  });
+}
+
+Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const
+{
+  Result<ImageMetadata> metaResult = readMetadata(filePath);
+  if(metaResult.invalid())
+  {
+    return ConvertResult(std::move(metaResult));
+  }
+  const ImageMetadata& metadata = metaResult.value();
+
+  const std::string pathStr = filePath.string();
+  int width = 0;
+  int height = 0;
+  int comp = 0;
+  void* decodedData = nullptr;
 
   if(metadata.dataType == DataType::float32)
   {
-    float* data = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
-    if(data == nullptr)
-    {
-      const char* reason = stbi_failure_reason();
-      return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load HDR image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
-    }
-    std::memcpy(buffer.data(), data, expectedSize);
-    stbi_image_free(data);
+    decodedData = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
   }
   else if(metadata.dataType == DataType::uint16)
   {
-    stbi_us* data = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
-    if(data == nullptr)
-    {
-      const char* reason = stbi_failure_reason();
-      return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load 16-bit image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
-    }
-    std::memcpy(buffer.data(), data, expectedSize);
-    stbi_image_free(data);
+    decodedData = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
   }
   else
   {
-    stbi_uc* data = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
-    if(data == nullptr)
-    {
-      const char* reason = stbi_failure_reason();
-      return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
-    }
-    std::memcpy(buffer.data(), data, expectedSize);
-    stbi_image_free(data);
+    decodedData = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
   }
 
-  return {};
+  if(decodedData == nullptr)
+  {
+    const char* reason = stbi_failure_reason();
+    return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
+  }
+
+  const usize bytesPerElement = GetDataTypeSize(metadata.dataType);
+  const usize rowBytes = metadata.width * metadata.numComponents * bytesPerElement;
+  const auto* bytes = static_cast<const uint8*>(decodedData);
+  Result<> result;
+  for(usize row = 0; row < metadata.height; ++row)
+  {
+    result = callback(row, 0, metadata.width, std::span<const uint8>(bytes + row * rowBytes, rowBytes));
+    if(result.invalid())
+    {
+      break;
+    }
+  }
+  stbi_image_free(decodedData);
+  return result;
 }
 
-// -----------------------------------------------------------------------------
 Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const
 {
   if(metadata.dataType != DataType::uint8)
@@ -174,22 +187,18 @@ Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::
   return {};
 }
 
-// -----------------------------------------------------------------------------
 std::set<DataType> StbImageIO::supportedWriteDataTypes() const
 {
   return {DataType::uint8};
 }
 
-// -----------------------------------------------------------------------------
 std::set<usize> StbImageIO::supportedWriteComponentCounts() const
 {
-  // The stb backend serves PNG, BMP and JPEG. Verified against the vendored stb_image_write.h:
-  //  - PNG:  stbi_write_png_to_mem() indexes ctype[comp] where ctype has 5 entries {-1,0,4,2,6};
-  //          comp>=5 is an out-of-bounds read. comp 1..4 are in range.
-  //  - JPEG: stbi_write_jpg_core() explicitly rejects (comp < 1 || comp > 4).
-  //  - BMP:  stbi_write_bmp_core() only produces conforming 24-bit RGB (comp 1,3) or 32-bit RGBA (comp 4).
-  // A 2-component array is not UB in any backend, but BMP and JPEG silently drop the second channel
-  // (treating it as grayscale + ignored alpha) so the write is not conforming across formats. The
-  // uniformly-supported, conforming intersection is therefore {1, 3, 4}.
+  // stbi_write_png_to_mem() indexes a five-entry table with the component count.
+  // Counts above four cause an out-of-bounds read. stbi_write_jpg_core() accepts
+  // only one through four. stbi_write_bmp_core() produces conforming output for
+  // one, three, or four components.
+  // BMP and JPEG discard the second channel of two-component input. Thus, the
+  // conforming component-count intersection for all three formats is {1, 3, 4}.
   return {1, 3, 4};
 }

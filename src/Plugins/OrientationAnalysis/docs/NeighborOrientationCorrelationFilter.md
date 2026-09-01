@@ -51,6 +51,20 @@ DREAM3D-NX's implementation fixes three defects present in DREAM.3D 6.5.171, so 
 
 See `NeighborOrientationCorrelationFilter-D1` through `-D4` in `src/Plugins/OrientationAnalysis/vv/deviations/NeighborOrientationCorrelationFilter.md` for the full analysis and migration guidance.
 
+## Algorithm
+
+### In-Core Path
+
+For each voxel, the algorithm computes the misorientation with its 6 face-sharing neighbors. If too many neighbors disagree (exceed the misorientation tolerance), the voxel is flagged for cleanup and its attributes are replaced with those of a suitable neighbor. All data access uses direct array indexing with `operator[]`.
+
+### Out-of-Core Path
+
+Uses a 3-slice Z rolling window (previous, current, next) to provide all neighbor access from memory. For each Z-slice processed, the algorithm loads the three relevant slices into local buffers using `copyIntoBuffer()`. After processing a slice, modified data is written back using `copyFromBuffer()`, and the window advances by shifting buffers and reading the next slice. This ensures that all 6-neighbor lookups are serviced from in-memory buffers rather than individual OOC element reads.
+
+### Performance
+
+The OOC optimization matters most for large datasets that exceed available RAM. Because each voxel requires access to neighbors in adjacent Z-slices, naive OOC access would decompress the same chunks repeatedly. The rolling window approach reads each slice at most three times total (as previous, current, and next), converting random access into predictable sequential I/O. For in-memory datasets, the two paths produce identical results with negligible overhead difference.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

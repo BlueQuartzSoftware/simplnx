@@ -10,7 +10,10 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -28,6 +31,8 @@ const DataPath k_ImageGeomPath({k_DataContainer});
 const DataPath k_FeatureIdsPath({k_DataContainer, k_CellData, k_FeatureIds});
 const DataPath k_FlaggedFeaturesPath({k_DataContainer, k_CellFeatureData, k_ActiveName});
 const DataPath k_NewFeatureIdsPath({k_NewImgGeom, k_CellData, k_FeatureIds});
+const DataPath k_CellVectorPath({k_DataContainer, k_CellData, "CellVector"});
+const DataPath k_CellBoolPath({k_DataContainer, k_CellData, "CellBool"});
 
 void FillDataStructure(DataStructure& dataStructure)
 {
@@ -61,6 +66,15 @@ void FillDataStructure(DataStructure& dataStructure)
   testFeatIdsDataStore[14] = 3;
   testFeatIdsDataStore[15] = 0;
 
+  auto* cellVector = UnitTest::CreateTestDataArray<int32>(dataStructure, k_CellVectorPath.getTargetName(), tupleDims, {2}, attributeMatrix->getId());
+  auto* cellBool = UnitTest::CreateTestDataArray<bool>(dataStructure, k_CellBoolPath.getTargetName(), tupleDims, {1}, attributeMatrix->getId());
+  for(usize i = 0; i < testFeatIdsDataStore.getNumberOfTuples(); i++)
+  {
+    cellVector->getDataStoreRef()[i * 2] = static_cast<int32>(i);
+    cellVector->getDataStoreRef()[i * 2 + 1] = -static_cast<int32>(i);
+    cellBool->getDataStoreRef()[i] = (i % 2) == 0;
+  }
+
   auto* featureAttributeMatrix = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {4ULL}, imageGeom->getId());
   BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrix->getId());
   auto& maskDataStore = maskArray->getDataStoreRef();
@@ -74,6 +88,18 @@ void FillDataStructure(DataStructure& dataStructure)
   testStore[1] = 4041;
   testStore[2] = 10128;
   testStore[3] = 2185;
+}
+
+void ReplaceBackgroundForFillTest(DataStructure& dataStructure)
+{
+  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  for(usize index = 0; index < featureIds.getNumberOfTuples(); index++)
+  {
+    if(featureIds[index] == 0)
+    {
+      featureIds[index] = 1;
+    }
+  }
 }
 
 template <bool RemoveV = true>
@@ -133,13 +159,15 @@ void ValidateNewGeom(const Int32Array& featureIdsResult, const AttributeMatrix& 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
   UnitTest::LoadPlugins();
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -147,12 +175,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
@@ -166,25 +192,25 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
   UnitTest::LoadPlugins();
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(1));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeomPrefix));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -204,16 +230,52 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill direct and scanline parity", "[SimplnxCore][RemoveFlaggedFeatures]")
+{
+  UnitTest::LoadPlugins();
+  RemoveFlaggedFeaturesFilter filter;
+  Arguments args;
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(true));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+
+  DataStructure directData;
+  FillDataStructure(directData);
+  ReplaceBackgroundForFillTest(directData);
+  {
+    AlgorithmTestScope scope(AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+    auto result = scope.executeFilter(filter, directData, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  }
+  DataStructure scanlineData;
+  FillDataStructure(scanlineData);
+  ReplaceBackgroundForFillTest(scanlineData);
+  {
+    AlgorithmTestScope scope(AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+    auto result = scope.executeFilter(filter, scanlineData, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  CompareDataArrays<int32>(directData.getDataRefAs<IDataArray>(k_FeatureIdsPath), scanlineData.getDataRefAs<IDataArray>(k_FeatureIdsPath));
+  CompareDataArrays<int32>(directData.getDataRefAs<IDataArray>(k_CellVectorPath), scanlineData.getDataRefAs<IDataArray>(k_CellVectorPath));
+  CompareDataArrays<bool>(directData.getDataRefAs<IDataArray>(k_CellBoolPath), scanlineData.getDataRefAs<IDataArray>(k_CellBoolPath));
+}
+
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
   UnitTest::LoadPlugins();
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -222,12 +284,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
@@ -277,7 +337,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
 
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<bool>(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key) == true);
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+      // Successful pipeline loading verifies the MultiDataArraySelectionFilterParameterConverter value.
       CHECK(args.value<DataPath>(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

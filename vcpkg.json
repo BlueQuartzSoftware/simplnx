@@ -29,6 +29,9 @@
       ]
     },
     {
+      "name": "zlib"
+    },
+    {
       "name": "span-lite"
     },
     {

@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <memory>
 #include <string>
@@ -9,13 +10,32 @@
 
 namespace nx::core
 {
-class AbstractStringStore
+
+/**
+ * @class AbstractStringStore
+ * @brief Defines string storage for StringArray.
+ *
+ * A materialized store provides mutable string values. A placeholder store
+ * retains tuple metadata until import materializes values. isPlaceholder()
+ * avoids a concrete-store type check during deferred import. Value access
+ * requires a materialized store. Bounds-checked access reports std::out_of_range
+ * for invalid indexes. Placeholder access reports std::runtime_error.
+ */
+class SIMPLNX_EXPORT AbstractStringStore
 {
 public:
   using value_type = std::string;
   using reference = value_type&;
   using const_reference = const value_type&;
 
+  /**
+   * @class Iterator
+   * @brief Provides non-owning mutable iteration by flat index.
+   *
+   * The store must outlive the iterator. Comparisons require iterators from the
+   * same store. A default-constructed Iterator is unbound. Do not call
+   * isValid() or an operation that accesses its store until binding.
+   */
   class Iterator
   {
   public:
@@ -91,14 +111,12 @@ public:
       return *this;
     }
 
-    // prefix
     inline Iterator& operator++()
     {
       m_Index++;
       return *this;
     }
 
-    // postfix
     inline Iterator operator++(int)
     {
       Iterator iter = *this;
@@ -106,14 +124,12 @@ public:
       return iter;
     }
 
-    // prefix
     inline Iterator& operator--()
     {
       m_Index--;
       return *this;
     }
 
-    // postfix
     inline Iterator operator--(int)
     {
       Iterator iter = *this;
@@ -166,6 +182,14 @@ public:
     usize m_Index = 0;
   };
 
+  /**
+   * @class ConstIterator
+   * @brief Provides non-owning constant iteration by flat index.
+   *
+   * The store must outlive the iterator. Comparisons require iterators from the
+   * same store. A default-constructed ConstIterator is unbound. isValid()
+   * accepts it and returns false. Other store operations require binding.
+   */
   class ConstIterator
   {
   public:
@@ -241,14 +265,12 @@ public:
       return *this;
     }
 
-    // prefix
     ConstIterator& operator++()
     {
       m_Index++;
       return *this;
     }
 
-    // postfix
     ConstIterator operator++(int)
     {
       ConstIterator iter = *this;
@@ -256,14 +278,12 @@ public:
       return iter;
     }
 
-    // prefix
     ConstIterator& operator--()
     {
       m_Index--;
       return *this;
     }
 
-    // postfix
     ConstIterator operator--(int)
     {
       ConstIterator iter = *this;
@@ -323,140 +343,52 @@ public:
   using iterator = Iterator;
   using const_iterator = ConstIterator;
 
-  ~AbstractStringStore() = default;
+  virtual ~AbstractStringStore() = default;
 
   /**
-   * @brief Creates a deep copy of this AbstractStringStore.
-   * @return std::unique_ptr<AbstractStringStore> Unique pointer to the deep copy
+   * @brief Creates an independent store.
+   * @return Owning pointer to the copy.
    */
   virtual std::unique_ptr<AbstractStringStore> deepCopy() const = 0;
 
-  /**
-   * @brief Returns the total number of strings in the store.
-   * @return usize The number of strings
-   */
   virtual usize size() const = 0;
-
-  /**
-   * @brief Returns whether the string store is empty.
-   * @return bool True if the store has no strings, false otherwise
-   */
   virtual bool empty() const = 0;
 
-  /**
-   * @brief Returns the number of tuples in the StringStore.
-   * @return usize
-   */
+  virtual bool isPlaceholder() const = 0;
+
   virtual usize getNumberOfTuples() const = 0;
+
   /**
-   * @brief Returns the dimensions of the Tuples
-   * @return
+   * @brief Returns tuple dimensions.
+   * @return Tuple-shape reference owned by this store.
+   * @post The reference remains valid until the store changes shape or is destroyed.
    */
   virtual const ShapeType& getTupleShape() const = 0;
 
-  /**
-   * @brief This method sets the shape of the dimensions to `tupleShape`.
-   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
-   * from *slowest* to *fastest*.
-   */
   virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
-  /**
-   * @brief Array subscript operator to access the string at the specified index.
-   * @param index The index to access
-   * @return reference Reference to the string at the specified index
-   */
   virtual reference operator[](usize index) = 0;
 
-  /**
-   * @brief Const array subscript operator to access the string at the specified index.
-   * @param index The index to access
-   * @return const_reference Const reference to the string at the specified index
-   */
   virtual const_reference operator[](usize index) const = 0;
 
-  /**
-   * @brief Returns a const reference to the string at the specified index with bounds checking.
-   * @param index The index to access
-   * @return const_reference Const reference to the string at the specified index
-   */
   virtual const_reference at(usize index) const = 0;
 
-  /**
-   * @brief Returns the string value at the specified index.
-   * @param index The index to retrieve
-   * @return const_reference Const reference to the string value
-   */
   virtual const_reference getValue(usize index) const = 0;
 
-  /**
-   * @brief Sets the string value at the specified index.
-   * @param index The index to set
-   * @param value The string value to set
-   */
   virtual void setValue(usize index, const value_type& value) = 0;
 
-  /**
-   * @brief Returns an iterator to the beginning of the strings.
-   * @return iterator Iterator to the first string
-   */
   iterator begin();
-
-  /**
-   * @brief Returns an iterator to the end of the strings.
-   * @return iterator Iterator past the last string
-   */
   iterator end();
-
-  /**
-   * @brief Returns a const iterator to the beginning of the strings.
-   * @return const_iterator Const iterator to the first string
-   */
   const_iterator begin() const;
-
-  /**
-   * @brief Returns a const iterator to the end of the strings.
-   * @return const_iterator Const iterator past the last string
-   */
   const_iterator end() const;
-
-  /**
-   * @brief Returns a const iterator to the beginning of the strings.
-   * @return const_iterator Const iterator to the first string
-   */
   const_iterator cbegin() const;
-
-  /**
-   * @brief Returns a const iterator to the end of the strings.
-   * @return const_iterator Const iterator past the last string
-   */
   const_iterator cend() const;
 
-  /**
-   * @brief Assignment operator to replace all strings with values from a vector.
-   * @param values Vector of strings to assign
-   * @return AbstractStringStore& Reference to this AbstractStringStore
-   */
   virtual AbstractStringStore& operator=(const std::vector<std::string>& values) = 0;
-
-  /**
-   * @brief Equality comparison operator to check if the store contains the same strings as the vector.
-   * @param values Vector of strings to compare against
-   * @return bool True if all strings match, false otherwise
-   */
   bool operator==(const std::vector<std::string>& values) const;
-
-  /**
-   * @brief Inequality comparison operator to check if the store differs from the vector.
-   * @param values Vector of strings to compare against
-   * @return bool True if any strings differ, false otherwise
-   */
   bool operator!=(const std::vector<std::string>& values) const;
 
 protected:
-  /**
-   * @brief Default constructor.
-   */
   AbstractStringStore() = default;
 };
 } // namespace nx::core

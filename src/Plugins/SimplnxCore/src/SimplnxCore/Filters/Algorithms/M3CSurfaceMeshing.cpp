@@ -6,6 +6,11 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/BoundedRecordPageCache.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <fmt/format.h>
@@ -19,30 +24,152 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <new>
 #include <string_view>
 #include <vector>
 
 using namespace nx::core;
 
-// =============================================================================
-// Port of the legacy DREAM3D M3CEntireVolume algorithm (all-in-memory variant).
-// The multi-material marching-cubes core operates on flat, 1-based index arrays;
-// the helpers below are transcribed closely from
-//   DREAM3D/Source/Plugins/SurfaceMeshing/SurfaceMeshingFilters/Unsupported/M3CEntireVolume.cpp
-// Only the thin operator() layer touches simplnx (read ImageGeom+FeatureIds,
-// write TriangleGeom+FaceLabels+NodeTypes).
-// =============================================================================
+// The M3C core closely follows legacy DREAM3D M3CEntireVolume. Its flat,
+// 1-based arrays preserve legacy topology and output ordering.
 namespace
 {
-// Index of a padded site / voxel (i.e. an index into the FeatureId grid). MUST be 64-bit: a large
-// Image Geometry can have well over 2^31 voxels, and node ids derived as 7*site must not overflow.
+/**
+ * @class TemporaryRecordVector
+ * @brief Fixed-record scratch vector with a bounded typed page cache.
+ * @tparam T Specifies the fixed scratch-record type.
+ *
+ * Candidate nodes, cube offsets, and triangle metadata use this wrapper. A
+ * genuine OOC dispatch cannot fall back to resident scratch.
+ */
+template <typename T>
+class TemporaryRecordVector
+{
+public:
+  /**
+   * @brief Creates the record store and its bounded typed cache.
+   * @param recordCount Specifies initial fixed-record count.
+   * @param requireExternalStore Prevents resident fallback during genuine OOC.
+   * @param shouldCancel Stops before storage allocation when true.
+   * @param recordsPerPage Specifies records per backing-store request.
+   * @param cachePages Specifies maximum resident pages.
+   * @return Initialized record vector, or a provider/allocation error.
+   */
+  static Result<TemporaryRecordVector> Create(uint64 recordCount, bool requireExternalStore, const std::atomic_bool& shouldCancel, uint64 recordsPerPage = 4096, usize cachePages = 8)
+  {
+    if(recordCount > 0 && shouldCancel)
+    {
+      return MakeErrorResult<TemporaryRecordVector>(-90540, "M3C temporary-record vector creation was cancelled.");
+    }
+    if(recordsPerPage == 0 || cachePages == 0 || recordsPerPage > std::numeric_limits<uint64>::max() / sizeof(T))
+    {
+      return MakeErrorResult<TemporaryRecordVector>(-90541, "M3C temporary-record vector configuration is invalid.");
+    }
+
+    TemporaryRecordStoreConfig config;
+    config.recordSize = sizeof(T);
+    config.maxRecordsPerBatch = recordsPerPage;
+    config.initialRecordCount = recordCount;
+    auto storeResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+
+    std::unique_ptr<ITemporaryRecordStore> store;
+    if(storeResult.valid())
+    {
+      store = std::move(storeResult.value());
+    }
+    else if(!requireExternalStore)
+    {
+      auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
+      if(fallbackResult.invalid())
+      {
+        return ConvertInvalidResult<TemporaryRecordVector>(std::move(fallbackResult));
+      }
+      store = std::move(fallbackResult.value());
+    }
+    else
+    {
+      return ConvertInvalidResult<TemporaryRecordVector>(std::move(storeResult));
+    }
+    if(store == nullptr)
+    {
+      return MakeErrorResult<TemporaryRecordVector>(-90542, "M3C temporary-record provider returned a null store.");
+    }
+
+    TemporaryRecordVector vector;
+    vector.m_Store = std::move(store);
+    try
+    {
+      vector.m_Cache = std::make_unique<BoundedRecordPageCache<T>>(*vector.m_Store, recordsPerPage, cachePages);
+    } catch(const std::bad_alloc&)
+    {
+      return MakeErrorResult<TemporaryRecordVector>(-90543, "M3C temporary-record vector could not allocate its bounded page cache.");
+    }
+    return {std::move(vector)};
+  }
+
+  TemporaryRecordVector() = default;
+  TemporaryRecordVector(TemporaryRecordVector&&) noexcept = default;
+  TemporaryRecordVector& operator=(TemporaryRecordVector&&) noexcept = default;
+  TemporaryRecordVector(const TemporaryRecordVector&) = delete;
+  TemporaryRecordVector& operator=(const TemporaryRecordVector&) = delete;
+
+  /**
+   * @brief Returns the owned byte-record store.
+   * @return Store used for bulk operations.
+   */
+  ITemporaryRecordStore& store() noexcept
+  {
+    return *m_Store;
+  }
+
+  /**
+   * @brief Returns the owned typed page cache.
+   * @return Cache used for localized random access.
+   */
+  BoundedRecordPageCache<T>& cache() noexcept
+  {
+    return *m_Cache;
+  }
+
+  /**
+   * @brief Writes dirty pages before the next algorithm phase.
+   * @param shouldCancel Stops cache flushing when true.
+   * @return Error from cache flushing, or success.
+   */
+  Result<> flush(const std::atomic_bool& shouldCancel)
+  {
+    return m_Cache->flush(shouldCancel);
+  }
+
+private:
+  std::unique_ptr<ITemporaryRecordStore> m_Store;
+  std::unique_ptr<BoundedRecordPageCache<T>> m_Cache;
+};
+
+/**
+ * @struct M3CCandidateNodeRecord
+ * @brief External scratch record for one possible M3C node.
+ * @p type records whether/how the candidate is used; @p pruneReferences records
+ * whether dropped or surviving triangles reference it; @p compactId is assigned
+ * after counting all live candidates so output vertices can be written densely.
+ */
+struct M3CCandidateNodeRecord
+{
+  int8 type = 0;
+  uint8 pruneReferences = 0;
+  std::array<std::byte, 6> padding{};
+  uint64 compactId = 0;
+};
+static_assert(std::is_trivially_copyable_v<M3CCandidateNodeRecord>);
+
+// A SiteId indexes the padded Feature Id grid. The 64-bit type prevents overflow
+// when a large grid derives seven candidate-node IDs from each site.
 using SiteId = int64;
-// Sentinel stored in the compacted-node map for candidate slots that are not real mesh nodes.
+// This sentinel marks candidate slots that are not real mesh nodes.
 constexpr uint32 k_UnusedNodeId = std::numeric_limits<uint32>::max();
 
-constexpr int num_neigh = 26; // number of 3D neighbors per site (legacy #define)
+constexpr int num_neigh = 26;
 
-// --- M3C working structs (mirror SIMPL/Geometry/MeshStructs.h SurfaceMesh::M3C) ---
 struct Node
 {
   float coord[3];
@@ -51,34 +178,52 @@ struct VoxelCoord
 {
   float coord[3];
 };
+/**
+ * @struct Neighbor
+ * @brief Stores one-based indexes for 26 neighboring sites.
+ */
 struct Neighbor
 {
   SiteId neigh_id[27]; // 1-based; index 0 unused. 64-bit: these index the FeatureId grid.
 };
-struct Face // a marching "square"
+/**
+ * @struct Face
+ * @brief Stores one marching square's edges and center node.
+ */
+struct Face
 {
-  // The 4 corner site ids are NOT stored (they are recomputed on demand from the site index, keeping
-  // the FeatureId indexing 64-bit) so that this, the largest working array (3 per site), stays small.
-  // edge_id is an UNSIGNED 32-bit edge index (mesh-scale, capped near 2^32 edges); FCnode is a 64-bit node id.
+  // Recompute corner sites to keep this largest working array compact. Edge IDs
+  // are 32-bit mesh indexes. Face-center node IDs retain 64-bit site indexes.
   uint32 edge_id[4];
   SiteId FCnode; // face-center node id, -1 if none
   int8 nEdge;
   int8 effect; // 0 = useless square, 1 = straddles >=2 labels
 };
-struct Segment // a face edge
+/**
+ * @struct Segment
+ * @brief Stores one oriented face-edge segment and its labels.
+ */
+struct Segment
 {
   int64 node_id[2];
   int nSpin[2]; // labels on left/right of the arrow
 };
+/**
+ * @struct Triangle
+ * @brief Stores one generated triangle and its adjacent labels.
+ */
 struct Triangle
 {
   int64 node_id[3];
   int nSpin[2];
 };
 
-// On-demand coordinate accessors. A site's coordinate and each of its 7 candidate node positions are
-// pure functions of the 1-based padded site index, so they are computed as needed rather than stored
-// in full-volume arrays (which dominated the algorithm's memory footprint).
+// Coordinates are pure functions of the padded site index. Compute them on
+// demand to avoid full-volume coordinate arrays.
+/**
+ * @struct SiteCoords
+ * @brief Calculates padded-grid coordinates on demand.
+ */
 struct SiteCoords
 {
   usize fileDim0;
@@ -87,11 +232,15 @@ struct SiteCoords
   float res[3];
   float origin[3];
 
+  /**
+   * @brief Calculates one site coordinate.
+   * @param site Specifies a one-based padded site index.
+   * @return Coordinate in image units.
+   */
   VoxelCoord operator[](int64 site) const
   {
     const usize linear = static_cast<usize>(site - 1);
-    // Subtract the 1-cell ghost shell so that real cell (0,0,0) at padded index (1,1,1) maps to the
-    // geometry origin, keeping M3C's coordinates aligned with the input volume and the other meshers.
+    // Subtract the ghost shell so padded site (1,1,1) maps to the image origin.
     const int64 i = static_cast<int64>(linear % fileDim0) - 1;
     const int64 j = static_cast<int64>((linear / fileDim0) % fileDim1) - 1;
     const int64 k = static_cast<int64>(linear / fileNSP) - 1;
@@ -104,12 +253,22 @@ struct SiteCoords
   }
 };
 
+/**
+ * @struct NodeCoords
+ * @brief Calculates seven M3C candidate-node coordinates per site.
+ */
 struct NodeCoords
 {
   SiteCoords sites;
 
-  // 7 candidate nodes per site: +x/+y/+z edge midpoints (0,1,2), xy/xz/yz face centers (3,4,5),
-  // body center (6). Matches the legacy initialize_nodes half-spacing offsets.
+  /**
+   * @brief Calculates one candidate-node coordinate.
+   * @param id Specifies a zero-based candidate-node index.
+   * @return Edge-midpoint, face-center, or body-center coordinate.
+   *
+   * Each site has three positive-edge midpoints, three positive-face centers,
+   * and one body center. Their order matches the legacy node layout.
+   */
   Node operator[](int64 id) const
   {
     const int64 site = id / 7 + 1;
@@ -154,10 +313,11 @@ struct NodeCoords
   }
 };
 
-// The multi-material marching-squares case tables. Byte-identical between the legacy
-// M3CSliceBySlice.cpp and M3CEntireVolume.cpp (verified). 20 cases x up to 4 edges.
-// edgeTable_2d: per case, node-slot pairs (0-3 edge midpoints, 4 = face-center) forming edges.
-// nsTable_2d:   per edge, the pixel-slot pair whose FeatureIds become that edge's two labels.
+// These 20 multi-material marching-square cases match the legacy slice and
+// whole-volume algorithms. Each case contains at most four edges.
+// k_EdgeTable2d maps node-slot pairs to edges. Slots 0 through 3 are edge
+// midpoints, and slot 4 is the face center.
+// k_NsTable2d maps each edge to the two corner labels on its sides.
 // clang-format off
 constexpr int k_EdgeTable2d[20][8] = {
     {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {0, 1, -1, -1, -1, -1, -1, -1},   {-1, -1, -1, -1, -1, -1, -1, -1},
@@ -251,13 +411,13 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
     }
   }
 
-  // Independent grain id for the (formerly) zero feature
+  // Reserve one positive label for input Feature Id 0.
   maxGrainId = maxGrainId + 1;
 
   p[0] = 0; // Point 0 is garbage
 
-  // Renumber the (formerly) zero feature to the reserved id. Ghost cells are negative and untouched.
-  // Voxel coordinates are no longer stored; they are computed on demand via SiteCoords/NodeCoords.
+  // Renumber zero labels without changing negative ghost cells. Coordinates are
+  // computed on demand by SiteCoords and NodeCoords.
   const usize totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
   for(usize id = 1; id <= totalPoints; id++)
   {
@@ -269,21 +429,27 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
   return maxGrainId;
 }
 
-// -----------------------------------------------------------------------------
-// On-demand 26-neighbor accessor (replaces a stored per-site array, ~108 bytes/site). Reproduces the
-// toroidal indexing of the legacy get_neighbor_list; the ghost shell makes the wrap harmless. Because
-// operator[] recomputes all 26 ids, callers that read several neighbors of the same site should cache
-// the returned Neighbor in a local rather than indexing the accessor repeatedly.
-// -----------------------------------------------------------------------------
+/**
+ * @struct NeighborAccessor
+ * @brief Reconstructs 26 legacy neighbors for one padded site.
+ *
+ * The ghost shell makes toroidal border indexes harmless. Cache the returned
+ * Neighbor when a caller needs multiple neighbor indexes.
+ */
 struct NeighborAccessor
 {
   SiteId ns;
   SiteId nsp;
   int xDim;
 
+  /**
+   * @brief Calculates the 26 neighbors of one padded site.
+   * @param site_id Specifies a one-based padded site index.
+   * @return Neighbor indexes in the legacy order.
+   */
   Neighbor operator[](SiteId site_id) const
   {
-    // Recover the (k, j, i) that the legacy triple loop used for this 1-based site.
+    // Recover the legacy loop coordinates for this one-based site.
     const SiteId within = (site_id - 1) % nsp;         // == j + (i - 1)
     const int i = static_cast<int>(within % xDim) + 1; // 1..xDim
     const SiteId j = within - (i - 1);                 // multiple of xDim, 0..nsp-xDim
@@ -327,8 +493,14 @@ struct NeighborAccessor
   }
 };
 
-// The 4 corner site ids of a marching square (squareId = 3*(site-1) + orientation), recomputed on
-// demand in place of the former Face::site_id storage. Mirrors the corners set by initialize_squares.
+/**
+ * @brief Calculates the four corner sites of a marching square.
+ * @param squareId Encodes the source site and square orientation.
+ * @param neighbors Provides padded-grid neighbor indexes.
+ * @return Corner site indexes in marching-square order.
+ *
+ * On-demand calculation keeps four site indexes out of every Face record.
+ */
 std::array<SiteId, 4> squareCorners(SiteId squareId, const NeighborAccessor& neighbors)
 {
   const SiteId site = squareId / 3 + 1;
@@ -345,15 +517,14 @@ std::array<SiteId, 4> squareCorners(SiteId squareId, const NeighborAccessor& nei
   }
 }
 
-// -----------------------------------------------------------------------------
-// (Candidate node coordinates are computed on demand via NodeCoords; node types are
-//  zero-initialized with their backing vector, so no explicit node-initialization pass is needed.)
-// -----------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-// Initialize the 3 marching squares per site to their empty sentinels. Corner site ids are no longer
-// stored (see squareCorners), so only the edge/flag fields are reset here.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Initializes three empty marching squares per padded site.
+ * @param sq Receives empty edge and flag fields.
+ * @param ns Specifies padded site count.
+ *
+ * Candidate coordinates are calculated on demand. The node-type vector uses
+ * value initialization, so neither data set needs a separate initialization pass.
+ */
 void initialize_squares(Face* sq, SiteId ns)
 {
   for(SiteId sqId = 0; sqId < 3 * ns; sqId++)
@@ -368,7 +539,12 @@ void initialize_squares(Face* sq, SiteId ns)
   }
 }
 
-// Node type values (match SIMPL::SurfaceMesh::NodeType / what simplnx LaplacianSmoothing consumes).
+/**
+ * @namespace M3CNodeType
+ * @brief Defines node categories consumed by mesh-smoothing algorithms.
+ *
+ * These values match the legacy SurfaceMesh NodeType contract.
+ */
 namespace M3CNodeType
 {
 constexpr int8 k_Unused = 0;
@@ -380,10 +556,11 @@ constexpr int8 k_SurfaceTriplePoint = 13;
 constexpr int8 k_SurfaceQuadPoint = 14;
 } // namespace M3CNodeType
 
-// -----------------------------------------------------------------------------
-// Classify a square's 4 corner labels into cases 0..19. Transcribed from
-// M3CEntireVolume::get_square_index.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Classifies four corner labels into a marching-square case.
+ * @param tns Provides four corner labels in square order.
+ * @return Case index from 0 through 19.
+ */
 int get_square_index(const int tns[4])
 {
   int aBit[6];
@@ -406,10 +583,16 @@ int get_square_index(const int tns[4])
   return tempIndex;
 }
 
-// -----------------------------------------------------------------------------
-// Disambiguate the all-corners-differ saddle (case 15) using the 3D same-label
-// neighbor counts. Transcribed from M3CEntireVolume::treat_anomaly.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Resolves the case-15 saddle from three-dimensional neighbors.
+ * @param tnst Provides four corner site indexes.
+ * @param p1 Provides padded Feature Id values.
+ * @param n1 Calculates padded-grid neighbors.
+ * @param sqid Is unused by the legacy-compatible calculation.
+ * @return Zero or one to select the case-15 topology.
+ *
+ * The algorithm connects the corner with the fewest positive same-label neighbors.
+ */
 int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const NeighborAccessor& n1, SiteId /*sqid*/)
 {
   int numNeigh[4] = {0, 0, 0, 0};
@@ -453,10 +636,15 @@ int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const Neig
   return tempFlag;
 }
 
-// -----------------------------------------------------------------------------
-// Map an edge-table node slot (0-4) for a given square order to a concrete
-// candidate-node id. Transcribed from M3CEntireVolume::get_nodes.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Maps edge-table slots to candidate-node indexes.
+ * @param cst Specifies the square origin site.
+ * @param ord Specifies the square orientation.
+ * @param nidx Provides two edge-table node slots.
+ * @param nid Receives two candidate-node indexes.
+ * @param nsp1 Specifies padded sites per Z plane.
+ * @param xDim1 Specifies padded X dimension.
+ */
 void get_nodes(SiteId cst, int ord, const int nidx[2], SiteId* nid, SiteId nsp1, int xDim1)
 {
   for(int ii = 0; ii < 2; ii++)
@@ -528,10 +716,16 @@ void get_nodes(SiteId cst, int ord, const int nidx[2], SiteId* nid, SiteId nsp1,
   }
 }
 
-// -----------------------------------------------------------------------------
-// Map a square's two side-pixel slots to the two straddling FeatureIds.
-// Transcribed from M3CEntireVolume::get_spins.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Maps square-corner slots to two edge-side labels.
+ * @param p1 Provides padded Feature Id values.
+ * @param cst Specifies the square origin site.
+ * @param ord Specifies the square orientation.
+ * @param pID Provides two square-corner slots.
+ * @param pSpin Receives the two Feature Id values.
+ * @param nsp1 Specifies padded sites per Z plane.
+ * @param xDim1 Specifies padded X dimension.
+ */
 void get_spins(const int32* p1, SiteId cst, int ord, const int pID[2], int* pSpin, SiteId nsp1, int xDim1)
 {
   for(int i = 0; i < 2; i++)
@@ -594,10 +788,17 @@ void get_spins(const int32* p1, SiteId cst, int ord, const int pID[2], int* pSpi
   }
 }
 
-// -----------------------------------------------------------------------------
-// Count the total number of face edges across all squares (two-pass sizing).
-// Transcribed from M3CEntireVolume::get_number_fEdges.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts face edges and marks effective squares.
+ * @param sq Receives each square's effect flag.
+ * @param p Provides padded Feature Id values.
+ * @param n Calculates padded-grid neighbors.
+ * @param ns Specifies padded site count.
+ * @param shouldCancel Stops before later squares when true.
+ * @return Count accumulated before completion or cancellation.
+ *
+ * The count permits one exact allocation before edge generation.
+ */
 int64 get_number_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, SiteId ns, const std::atomic_bool& shouldCancel)
 {
   int64 sumEdge = 0;
@@ -656,7 +857,7 @@ int64 get_number_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, Sit
         }
         else if(numGhostCorners == 1)
         {
-          // "one negative spin" case is not supposed to happen; leave numCEdge = 0.
+          // A single negative corner is not a valid legacy square case.
           numCEdge = 0;
         }
         else
@@ -674,11 +875,18 @@ int64 get_number_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, Sit
   return sumEdge;
 }
 
-// -----------------------------------------------------------------------------
-// Emit the actual face-edge segments, record them on squares, and set node
-// types (triple/quad on face centers, default elsewhere, unused on pure-surface
-// edges). Transcribed from M3CEntireVolume::get_nodes_fEdges.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Creates face edges and classifies their candidate nodes.
+ * @param sq Receives edge indexes and face-center nodes.
+ * @param p Provides padded Feature Id values.
+ * @param n Calculates padded-grid neighbors.
+ * @param nodeType Receives candidate-node categories.
+ * @param e Receives face-edge records.
+ * @param ns Specifies padded site count.
+ * @param nsp Specifies padded sites per Z plane.
+ * @param xDim Specifies padded X dimension.
+ * @param shouldCancel Stops before later squares when true.
+ */
 void get_nodes_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, int8* nodeType, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int64 eid = 0;
@@ -736,12 +944,13 @@ void get_nodes_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, int8*
             }
             else
             {
-              // pure box-surface edge: mark its nodes unused
+              // Pure exterior edges do not create output mesh nodes.
               nodeType[nodeID[0]] = M3CNodeType::k_Unused;
               nodeType[nodeID[1]] = M3CNodeType::k_Unused;
             }
 
-            // Categorize the two nodes of this edge (triple/quad on face-center slot 4).
+            // Face centers represent triple or quad points. Other slots represent
+            // default interface nodes.
             for(int ii = 0; ii < 2; ii++)
             {
               if(nodeIndex[ii] == 4)
@@ -761,11 +970,8 @@ void get_nodes_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, int8*
               }
               else
               {
-                // Unconditional: an edge-endpoint node touched by any square edge is a real mesh node.
-                // (The legacy `if(nodeKind != -1)` guard was vestigial -- legacy also zero-initializes
-                // node kinds, so the value -1 never occurs and the branch was always taken. A node
-                // previously marked k_Unused by a box-surface edge MUST be promoted here, otherwise
-                // node compaction would drop a node that stored edges/triangles still reference.)
+                // Every interior edge endpoint is a real mesh node. Without this
+                // promotion, compaction can remove a node that stored edges reference.
                 SiteId tnode = nodeID[ii];
                 nodeType[tnode] = M3CNodeType::k_Default;
               }
@@ -778,10 +984,13 @@ void get_nodes_fEdges(Face* sq, const int32* p, const NeighborAccessor& n, int8*
   }
 }
 
-// -----------------------------------------------------------------------------
-// Count triangles for a case-0 cube (no face centers): burn edges into closed
-// loops, fan-triangulate. Transcribed from M3CEntireVolume::get_number_case0_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts triangles for a cube without face centers.
+ * @param afe Provides cube face-edge indexes.
+ * @param e1 Provides oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @return Triangle count after closed-loop fan triangulation.
+ */
 int get_number_case0_triangles(const SiteId* afe, Segment* e1, int nfedge)
 {
   std::vector<int> burnt(nfedge, 0);
@@ -894,21 +1103,18 @@ int get_number_case0_triangles(const SiteId* afe, Segment* e1, int nfedge)
   return numTri;
 }
 
-// -----------------------------------------------------------------------------
-// Count triangles for a case-2 cube (two face centers). Transcribed from
-// M3CEntireVolume::get_number_case2_triangles.
-//
-// Chase-loop guard note (applies to all 8 burnt_loop chase loops in the case2/caseM count and
-// generate functions): for well-formed label data every do-pass extends the chain by EXACTLY one
-// edge -- endNode is fixed for the whole pass, the cube's face edges contain no duplicate node
-// pairs (adjacent cube faces share only one edge-midpoint node and the 2D case tables never emit
-// duplicate edges), and within one spin-pair loop every node has degree <= 2 (the 3-4 edges that
-// meet at a face-center node all carry distinct spin pairs). So the loop of numN edges closes in
-// exactly numN passes and index never exceeds numN. The in-loop `index >= numN` break and the
-// per-pass no-progress break are therefore unreachable for valid input; they exist so that
-// degenerate/non-manifold input degrades to a bounded (possibly incomplete) loop instead of
-// overrunning burnt_loop or spinning forever.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts triangles for a cube with two face centers.
+ * @param afe Provides cube face-edge indexes.
+ * @param e1 Provides mutable oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @param afc Provides face-center node indexes.
+ * @param nfctr Is fixed at two and is unused.
+ * @return Triangle count after open- and closed-loop triangulation.
+ *
+ * Valid label data extends each chase loop by one edge. Loop guards bound
+ * malformed or non-manifold input instead of overrunning a buffer.
+ */
 int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/)
 {
   std::vector<int> burnt(nfedge, 0);
@@ -1151,10 +1357,15 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
   return numTri;
 }
 
-// -----------------------------------------------------------------------------
-// Count triangles for a case-M cube (>=3 face centers). Transcribed from
-// M3CEntireVolume::get_number_caseM_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts triangles for a cube with three or more face centers.
+ * @param afe Provides cube face-edge indexes.
+ * @param e1 Provides mutable oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @param afc Provides face-center node indexes.
+ * @param nfctr Specifies face-center count.
+ * @return Triangle count after body-center and closed-loop triangulation.
+ */
 int get_number_caseM_triangles(const SiteId* afe, Segment* e1, int nfedge, const SiteId* afc, int nfctr)
 {
   std::vector<int> burnt(nfedge, 0);
@@ -1400,10 +1611,19 @@ int get_number_caseM_triangles(const SiteId* afe, Segment* e1, int nfedge, const
   return numTri;
 }
 
-// -----------------------------------------------------------------------------
-// Count the total triangles across all cubes and set body-center node types.
-// Transcribed from M3CEntireVolume::get_number_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts all triangles and classifies body-center nodes.
+ * @param p Provides padded Feature Id values.
+ * @param sq Provides marching-square records.
+ * @param neighbors Calculates padded-grid neighbors.
+ * @param nodeType Receives body-center node categories.
+ * @param e Provides mutable oriented face-edge records.
+ * @param ns Specifies padded site count.
+ * @param nsp Specifies padded sites per Z plane.
+ * @param xDim Specifies padded X dimension.
+ * @param shouldCancel Stops before later cubes when true.
+ * @return Triangle count accumulated before completion or cancellation.
+ */
 int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& neighbors, int8* nodeType, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int64 nTri0 = 0;
@@ -1483,10 +1703,8 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
         }
       }
       (void)nburnt;
-      // 5-8 distinct labels can legitimately meet at a cube's body center, but the published NodeType
-      // convention tops out at k_QuadPoint (= "4 or more grains"; downstream consumers such as
-      // Laplacian smoothing only handle 2/3/4 and their +10 surface variants). Clamp like
-      // QuickSurfaceMesh does. (Legacy wrote the raw count.)
+      // Five or more labels can meet at a body center. NodeType supports only
+      // the "four or more" category used by downstream mesh consumers.
       nodeType[BCnode] = static_cast<int8>(std::min(nds, static_cast<int>(M3CNodeType::k_QuadPoint)));
     }
 
@@ -1505,13 +1723,8 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
         }
       }
 
-      // Case dispatch (this exhausts all reachable values of nFC -- the same reasoning applies to the
-      // matching dispatches in get_triangles and the windowed/parallel sweeps): a face contributes a
-      // face-center node only for square cases 7/11/13/14/19, which is purely a function of the 4
-      // corner labels. Exhaustively enumerating all 4140 label partitions of a cube's 8 corners yields
-      // nFC in {0, 2, 3, 4, 5, 6} -- exactly one face-center is geometrically impossible (a lone
-      // triple-line crossing cannot terminate inside the cube without turning on other faces), so the
-      // nFC == 1 gap here silently skips nothing. nFC > 6 cannot occur (a cube has 6 faces).
+      // Square cases determine face-center count. A cube can have zero or two
+      // through six centers. One crossing cannot terminate inside one cube.
       if(nFC == 0)
       {
         nTri0 = nTri0 + get_number_case0_triangles(arrayFE.data(), e, nFE);
@@ -1529,9 +1742,20 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
   return nTri0 + nTri2 + nTriM;
 }
 
-// -----------------------------------------------------------------------------
-// Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Generates triangles for a cube without face centers.
+ * @param t1 Receives triangle records.
+ * @param mCubeID Receives the source cube for each triangle.
+ * @param afe Provides cube face-edge indexes.
+ * @param v1 Is retained by the legacy call shape and is unused.
+ * @param e1 Provides mutable oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @param tin Specifies the first output triangle index.
+ * @param tout Receives the next unused output triangle index.
+ * @param tcrd1 Is retained by the legacy call shape and is unused.
+ * @param tcrd2 Is retained by the legacy call shape and is unused.
+ * @param mcid Specifies the source cube index.
+ */
 void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3],
                          SiteId mcid)
 {
@@ -1720,9 +1944,22 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   *tout = ctid;
 }
 
-// -----------------------------------------------------------------------------
-// Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Generates triangles for a cube with two face centers.
+ * @param t1 Receives triangle records.
+ * @param mCubeID Receives the source cube for each triangle.
+ * @param afe Provides cube face-edge indexes.
+ * @param v1 Is retained by the legacy call shape and is unused.
+ * @param e1 Provides mutable oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @param afc Provides face-center node indexes.
+ * @param nfctr Is fixed at two and is unused.
+ * @param tin Specifies the first output triangle index.
+ * @param tout Receives the next unused output triangle index.
+ * @param tcrd1 Is retained by the legacy call shape and is unused.
+ * @param tcrd2 Is retained by the legacy call shape and is unused.
+ * @param mcid Specifies the source cube index.
+ */
 void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int64 tin, int64* tout,
                          const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
@@ -2092,10 +2329,25 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   *tout = ctid;
 }
 
-// -----------------------------------------------------------------------------
-// Generate triangles for a case-M cube (fan from body center for open loops).
-// Transcribed from M3CEntireVolume::get_caseM_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Generates triangles for a cube with three or more face centers.
+ * @param t1 Receives triangle records.
+ * @param mCubeID Receives the source cube for each triangle.
+ * @param afe Provides cube face-edge indexes.
+ * @param v1 Is retained by the legacy call shape and is unused.
+ * @param e1 Provides mutable oriented face-edge records.
+ * @param nfedge Specifies cube face-edge count.
+ * @param afc Provides face-center node indexes.
+ * @param nfctr Specifies face-center count.
+ * @param tin Specifies the first output triangle index.
+ * @param tout Receives the next unused output triangle index.
+ * @param ccn Specifies the body-center candidate node.
+ * @param tcrd1 Is retained by the legacy call shape and is unused.
+ * @param tcrd2 Is retained by the legacy call shape and is unused.
+ * @param mcid Specifies the source cube index.
+ *
+ * Open loops use a fan from the body-center node.
+ */
 void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int64 tin, int64* tout, SiteId ccn,
                          const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
@@ -2274,7 +2526,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
-      // triangulation: fan from the body-center node ccn
+      // Open loops use a fan from the body-center node.
       for(int iii = 0; iii < numN; iii++)
       {
         SiteId ce = burnt_loop[iii];
@@ -2412,10 +2664,19 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   *tout = ctid;
 }
 
-// -----------------------------------------------------------------------------
-// Fill the pre-sized triangle array cube-by-cube. Transcribed from
-// M3CEntireVolume::get_triangles.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Fills pre-sized triangle arrays in cube order.
+ * @param p Calculates padded-site coordinates.
+ * @param t Receives triangle records.
+ * @param mCubeID Receives the source cube for each triangle.
+ * @param sq Provides marching-square records.
+ * @param v Calculates candidate-node coordinates.
+ * @param e Provides mutable oriented face-edge records.
+ * @param ns Specifies padded site count.
+ * @param nsp Specifies padded sites per Z plane.
+ * @param xDim Specifies padded X dimension.
+ * @param shouldCancel Stops before later cubes when true.
+ */
 void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, const NodeCoords& v, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int64 tidIn = 0;
@@ -2503,8 +2764,13 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
   }
 }
 
-// Convert a 1-based padded working-grid site to the 0-based index into the original (unpadded)
-// cell arrays, or SIZE_MAX if the site is in the ghost shell.
+/**
+ * @brief Converts a padded site to an original cell index.
+ * @param site Specifies the one-based padded site.
+ * @param fileDim Specifies padded grid dimensions.
+ * @param dims Specifies original grid dimensions.
+ * @return Original zero-based cell index, or SIZE_MAX for a ghost site.
+ */
 usize paddedSiteToOriginalCell(int64 site, const usize fileDim[3], const usize dims[3])
 {
   const usize linear = static_cast<usize>(site - 1);
@@ -2518,8 +2784,16 @@ usize paddedSiteToOriginalCell(int64 site, const usize fileDim[3], const usize d
   return std::numeric_limits<usize>::max();
 }
 
-// Find a representative original cell for a working label among the 8 corner sites of a marching
-// cube. Returns SIZE_MAX if no non-ghost corner carries that label (i.e. the label is exterior).
+/**
+ * @brief Finds a non-ghost source cell for one working label.
+ * @param workLabel Specifies the renumbered Feature Id.
+ * @param cubeSite Specifies the cube origin site.
+ * @param n Provides cube neighbors.
+ * @param point Provides padded Feature Id values.
+ * @param fileDim Specifies padded grid dimensions.
+ * @param dims Specifies original grid dimensions.
+ * @return Original cell index, or SIZE_MAX when the label is exterior.
+ */
 usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, const int32* point, const usize fileDim[3], const usize dims[3])
 {
   const Neighbor nb = n[cubeSite]; // cache: 7 neighbors of the cube site read below
@@ -2538,11 +2812,25 @@ usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, c
   return std::numeric_limits<usize>::max();
 }
 
-// -----------------------------------------------------------------------------
-// Shared finalization for both the whole-volume and sliding-window variants: given the assembled
-// triangles/nodeType, promote surface nodes, compact node ids, and write the output TriangleGeom +
-// FaceLabels + NodeTypes, then transfer selected arrays and (optionally) repair triangle windings.
-// Kept as a free function so it can name the file-local mesh types.
+/**
+ * @brief Finalizes mesh topology, transfers arrays, and repairs winding.
+ * @param dataStructure Provides input and output objects.
+ * @param inputValues Specifies output paths and options.
+ * @param messageHandler Receives progress messages.
+ * @param shouldCancel Stops later finalization stages when true.
+ * @param triangles Provides generated triangle records.
+ * @param mCubeID Provides triangle cube indexes.
+ * @param fedges Provides face-edge scratch records.
+ * @param nodeType Provides candidate node types.
+ * @param point Provides padded Feature Id values.
+ * @param nodeCoords Calculates node coordinates.
+ * @param neighbors Provides padded-grid neighbors.
+ * @param numSites Specifies padded-grid site count.
+ * @param fileDim Specifies padded grid dimensions.
+ * @param dims Specifies original grid dimensions.
+ * @param maxGrainId Specifies the reserved zero-label value.
+ * @return Error during output or transfer, or success after cancellation.
+ */
 Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInputValues* inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                       std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<Segment>& fedges, std::vector<int8>& nodeType, std::vector<int32>& point,
                       const NodeCoords& nodeCoords, const NeighborAccessor& neighbors, SiteId numSites, const usize* fileDim, const usize* dims, int maxGrainId)
@@ -2666,7 +2954,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  // The face-edge segments are no longer needed; release before the memory-heavy output + winding stages.
+  // Release face edges before memory-heavy output and winding stages.
   std::vector<Segment>().swap(fedges);
 
   if(shouldCancel)
@@ -2674,13 +2962,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     return {};
   }
 
-  // --- Stage 5: compact nodes and write the output TriangleGeom --------------
   messageHandler("Writing surface mesh...");
-  // Node-id compaction without a dense 7*numSites candidate->id map. A candidate's compacted id is simply
-  // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
-  // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
-  // valid because the surface-node promotion above only adds +10 to kinds and never clears a node, so
-  // the set of real nodes is exactly what the sweep produced.
+  // A block prefix compacts real nodes without a dense candidate-to-id map.
+  // Surface promotion never removes a node, so the sweep's node set is stable.
   const SiteId numCandidateNodes = 7 * numSites;
   constexpr SiteId k_NodeBlock = 128;
   const SiteId numNodeBlocks = (numCandidateNodes + k_NodeBlock - 1) / k_NodeBlock;
@@ -2725,8 +3009,8 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   faceLabels.resizeTuples({static_cast<usize>(nTriangleFinal)});
   nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
 
-  // Compact nodes: scatter coordinates + node types to their new (sequential) ids. Walking candidates
-  // in ascending order and emitting with a running counter reproduces assign_new_nodeID's numbering.
+  // Emit real candidates in ascending order. This order preserves the legacy
+  // compact node numbering without a candidate-to-node map.
   int64 vtxRunning = 0;
   for(SiteId i = 0; i < numCandidateNodes; i++)
   {
@@ -2741,10 +3025,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  // FaceLabels convention (matches QuickSurfaceMesh / SurfaceNets): negative ghost labels -> -1
-  // (exterior box surface), the renumbered zero-feature (maxGrainId) -> 0, and the SMALLER of the two
-  // labels is placed in component 0 (downstream filters rely on this). Triangle winding is made
-  // consistent with this ordering separately by the optional repair pass below.
+  // FaceLabels matches QuickSurfaceMesh and SurfaceNets. Negative ghost labels
+  // become -1, and the reserved zero label becomes 0. The smaller label is first
+  // because downstream filters require this order. Winding repair uses the same order.
   const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
 
   // Triangles: remap to compacted node ids and write the ordered FaceLabels.
@@ -2760,10 +3043,8 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     faceLabels[static_cast<usize>(i) * 2 + 1] = (labelA <= labelB) ? labelB : labelA;
   }
 
-  // --- Transfer selected Cell/Feature arrays to the two sides of each face -----------------------
-  // Reuses the simplnx TupleTransfer machinery. For each triangle, a representative source cell is
-  // derived per side from the triangle's marching-cube corner cells (matched by working label). The
-  // exterior side (FaceLabel == -1) is skipped by the transfer functions.
+  // Transfer selected arrays to both face sides. Each side uses a source cell
+  // whose working label matches that side. TupleTransfer skips exterior sides.
   if(!inputValues->SelectedCellDataArrayPaths.empty() || !inputValues->SelectedFeatureDataArrayPaths.empty())
   {
     messageHandler("Transferring attribute arrays to the mesh faces...");
@@ -2780,8 +3061,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
     for(int64 i = 0; i < nTriangleFinal; i++)
     {
-      // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
-      // the feature in the same FaceLabels component.
+      // Use the FaceLabels order so each transferred component aligns with its label.
       const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
       const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
       const bool side0IsComp0 = (labelA <= labelB);
@@ -2796,17 +3076,16 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  // The M3C working buffers are dead once the output mesh and attribute transfer are written; the
-  // winding-repair pass below reads only the output TriangleGeom + FaceLabels. Release them here so
-  // findElementNeighbors' adjacency is not allocated on top of them (this is where peak memory lands).
+  // Winding repair reads only the output geometry and FaceLabels. Release working
+  // buffers before adjacency allocation to reduce peak memory.
   std::vector<Triangle>().swap(triangles);
   std::vector<SiteId>().swap(mCubeID);
   std::vector<int8>().swap(nodeType);
   std::vector<int32>().swap(point);
   std::vector<uint32>().swap(nodeBlockBase);
 
-  // Optional winding-consistency repair. M3C does not itself guarantee globally consistent normals,
-  // so this pass (using triangle connectivity) makes the winding consistent with the FaceLabels.
+  // M3C does not guarantee globally consistent normals. Optional repair uses
+  // triangle connectivity to make winding consistent with FaceLabels.
   if(inputValues->RepairTriangleWinding)
   {
     messageHandler("Generating connectivity and triangle neighbors...");
@@ -2853,7 +3132,6 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
 namespace nx::core
 {
-// -----------------------------------------------------------------------------
 M3CSurfaceMeshing::M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMeshingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -2862,12 +3140,50 @@ M3CSurfaceMeshing::M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMes
 {
 }
 
-// -----------------------------------------------------------------------------
 M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> M3CSurfaceMeshing::operator()()
 {
+  // Every dynamic cell and mesh array selects the residency path. A selected
+  // input or created output can be disk-backed while Feature Ids remain resident.
+  std::vector<const IArray*> dispatchTargets;
+  const auto appendArray = [this, &dispatchTargets](const DataPath& path) {
+    if(const auto* array = m_DataStructure.getDataAs<IDataArray>(path); array != nullptr)
+    {
+      dispatchTargets.push_back(array);
+    }
+  };
+  appendArray(m_InputValues->FeatureIdsArrayPath);
+  appendArray(m_InputValues->NodeTypesDataPath);
+  appendArray(m_InputValues->FaceLabelsDataPath);
+  for(const auto& path : m_InputValues->SelectedCellDataArrayPaths)
+  {
+    appendArray(path);
+  }
+  for(const auto& path : m_InputValues->CreatedDataArrayPaths)
+  {
+    appendArray(path);
+  }
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  dispatchTargets.push_back(triangleGeom.getVertices());
+  dispatchTargets.push_back(triangleGeom.getFaces());
+
+  const bool usesOutOfCoreStore = AnyOutOfCore(AlgorithmArrayTargets(dispatchTargets));
+  const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCorePath ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+
+  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, true, m_ShouldCancel, m_MessageHandler);
+  if(sentinelCheck.invalid())
+  {
+    return sentinelCheck;
+  }
+
+  if(useOutOfCorePath)
+  {
+    return runOutOfCore(dispatchTargets, usesOutOfCoreStore);
+  }
+
   // Default: the multithreaded sliding-window sweep (runWindowed(parallel=true)). Peak per-site scratch
   // is O(sliceArea) instead of O(volume), and the per-cube work runs across all cores. It is watertight
   // and correct, with byte-identical vertices, FaceLabels, and NodeTypes to the serial path, but a
@@ -2880,20 +3196,6 @@ Result<> M3CSurfaceMeshing::operator()()
   //   M3C_WHOLE_VOLUME=1  -> runEntireVolume():  serial whole-volume (O(volume) memory)
   // Both serial paths are byte-identical to each other.
 
-  // Reject Feature Ids that collide with this algorithm's internal sentinel space: maxGrainId+1 is
-  // signed overflow (undefined behavior) when INT32_MAX is present, and negative Feature Ids collide
-  // with M3C's nSpin < 0 ghost convention. This is a mitigation for the underlying sentinel-collision
-  // design, not a fix -- see simplnx#1705. Run here (execute), not preflight: a full-volume scan is
-  // too expensive to repeat on every GUI parameter edit.
-  {
-    const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-    Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, /*rejectMaxInt32=*/true, m_ShouldCancel, m_MessageHandler);
-    if(sentinelCheck.invalid())
-    {
-      return sentinelCheck;
-    }
-  }
-
   if(const char* wholeVol = std::getenv("M3C_WHOLE_VOLUME"); wholeVol != nullptr && std::string_view(wholeVol) == "1")
   {
     return runEntireVolume();
@@ -2905,10 +3207,883 @@ Result<> M3CSurfaceMeshing::operator()()
   return runWindowed(true);
 }
 
-// -----------------------------------------------------------------------------
+Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispatchTargets, bool usesOutOfCoreStore)
+{
+  if(dispatchTargets.empty())
+  {
+    return MakeErrorResult(-90544, "M3C out-of-core dispatch did not receive any dynamic storage targets.");
+  }
+
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+  const SizeVec3 gridDims = imageGeom.getDimensions();
+  const usize dims[3] = {gridDims[0], gridDims[1], gridDims[2]};
+  if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0 || dims[0] > std::numeric_limits<usize>::max() / dims[1] || dims[0] * dims[1] > std::numeric_limits<usize>::max() / dims[2])
+  {
+    return MakeErrorResult(-90546, "M3C out-of-core input dimensions are zero or overflow the cell count.");
+  }
+  const usize cellCount = dims[0] * dims[1] * dims[2];
+  if(featureIdsStore.getNumberOfTuples() != cellCount)
+  {
+    return MakeErrorResult(-90547, "M3C out-of-core FeatureIds tuple count does not match the Image Geometry.");
+  }
+
+  // First bounded pass preserves initialize_micro's zero-feature renumbering
+  // without retaining a second copy of the cell data.
+  constexpr usize kFeatureIdBulkValues = 65536;
+  std::array<int32, kFeatureIdBulkValues> maxScanBuffer{};
+  int32 maxGrainId = 0;
+  for(usize offset = 0; offset < cellCount;)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const usize count = std::min(kFeatureIdBulkValues, cellCount - offset);
+    auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(maxScanBuffer.data(), count));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    for(usize index = 0; index < count; index++)
+    {
+      maxGrainId = std::max(maxGrainId, maxScanBuffer[index]);
+    }
+    offset += count;
+  }
+  if(maxGrainId == std::numeric_limits<int32>::max())
+  {
+    return MakeErrorResult(-90548, "M3C out-of-core FeatureIds maximum cannot be incremented to reserve the zero feature.");
+  }
+  maxGrainId++;
+
+  const usize fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
+  if(fileDim[0] < dims[0] || fileDim[1] < dims[1] || fileDim[2] < dims[2] || fileDim[0] > std::numeric_limits<usize>::max() / fileDim[1] ||
+     fileDim[0] * fileDim[1] > std::numeric_limits<usize>::max() / fileDim[2])
+  {
+    return MakeErrorResult(-90549, "M3C out-of-core padded dimensions overflow.");
+  }
+  if(fileDim[0] > static_cast<usize>(std::numeric_limits<int>::max()) || fileDim[0] * fileDim[1] > static_cast<usize>(std::numeric_limits<SiteId>::max()) ||
+     fileDim[0] * fileDim[1] * fileDim[2] > static_cast<usize>(std::numeric_limits<SiteId>::max()))
+  {
+    return MakeErrorResult(-90550, "M3C out-of-core padded dimensions cannot be represented by its signed site/index arithmetic.");
+  }
+  const SiteId numSites = static_cast<SiteId>(fileDim[0] * fileDim[1] * fileDim[2]);
+  const SiteId numSitesPerPlane = static_cast<SiteId>(fileDim[0] * fileDim[1]);
+  if(numSites > std::numeric_limits<SiteId>::max() / 7 || numSites > std::numeric_limits<SiteId>::max() / 3)
+  {
+    return MakeErrorResult(-90551, "M3C out-of-core square or candidate-node count overflows its site index type.");
+  }
+
+  // Four LRU Z slices cover the 26-neighbor anomaly lookup while keeping the
+  // padded ghost shell implicit. The cache also handles the NeighborAccessor's
+  // toroidal border indices without materializing a padded volume.
+  const usize sourceSliceSize = dims[0] * dims[1];
+  std::array<std::vector<int32>, 4> sourceSlices;
+  std::array<int64, 4> sourceSliceZ = {-1, -1, -1, -1};
+  std::array<uint64, 4> sourceSliceUse{};
+  uint64 sourceUseCounter = 0;
+  const auto sourceValue = [&](SiteId site) -> Result<int32> {
+    const usize linear = static_cast<usize>(site - 1);
+    const usize x = linear % fileDim[0];
+    const usize y = (linear / fileDim[0]) % fileDim[1];
+    const usize z = linear / (fileDim[0] * fileDim[1]);
+    if(z == 0 || z + 1 == fileDim[2] || y == 0 || y + 1 == fileDim[1] || x == 0 || x + 1 == fileDim[0])
+    {
+      return {k_GhostLabel};
+    }
+    const int64 sourceZ = static_cast<int64>(z - 1);
+    usize slot = 0;
+    while(slot < sourceSlices.size() && sourceSliceZ[slot] != sourceZ)
+    {
+      slot++;
+    }
+    if(slot == sourceSlices.size())
+    {
+      slot = static_cast<usize>(std::min_element(sourceSliceUse.begin(), sourceSliceUse.end()) - sourceSliceUse.begin());
+      try
+      {
+        sourceSlices[slot].resize(sourceSliceSize);
+      } catch(const std::bad_alloc&)
+      {
+        return MakeErrorResult<int32>(-90551, "M3C out-of-core rolling FeatureIds slice allocation failed.");
+      }
+      const usize sourceOffset = static_cast<usize>(sourceZ) * sourceSliceSize;
+      auto readResult = featureIdsStore.copyIntoBuffer(sourceOffset, nonstd::span<int32>(sourceSlices[slot].data(), sourceSliceSize));
+      if(readResult.invalid())
+      {
+        return ConvertInvalidResult<int32>(std::move(readResult));
+      }
+      sourceSliceZ[slot] = sourceZ;
+    }
+    sourceSliceUse[slot] = ++sourceUseCounter;
+    const int32 value = sourceSlices[slot][(y - 1) * dims[0] + (x - 1)];
+    return {value == 0 ? maxGrainId : value};
+  };
+
+  const NeighborAccessor neighbors{numSites, numSitesPerPlane, static_cast<int>(fileDim[0])};
+  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3 origin = imageGeom.getOrigin();
+  const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {spacing[0], spacing[1], spacing[2]}, {origin[0], origin[1], origin[2]}};
+  const NodeCoords nodeCoords{siteCoords};
+  const uint64 candidateCount = static_cast<uint64>(7 * numSites);
+  const SiteId lastCube = numSites - numSitesPerPlane;
+  if(lastCube < 0 || static_cast<uint64>(lastCube) == std::numeric_limits<uint64>::max())
+  {
+    return MakeErrorResult(-90552, "M3C out-of-core cube-count record range overflows.");
+  }
+  const uint64 cubeRecordCount = static_cast<uint64>(lastCube) + 1;
+  auto candidateResult = TemporaryRecordVector<M3CCandidateNodeRecord>::Create(candidateCount, usesOutOfCoreStore, m_ShouldCancel);
+  if(candidateResult.invalid())
+  {
+    return ConvertResult(std::move(candidateResult));
+  }
+  auto triangleCountResult = TemporaryRecordVector<int64>::Create(cubeRecordCount, usesOutOfCoreStore, m_ShouldCancel);
+  if(triangleCountResult.invalid())
+  {
+    return ConvertResult(std::move(triangleCountResult));
+  }
+  auto candidateNodes = std::move(candidateResult.value());
+  auto triangleCounts = std::move(triangleCountResult.value());
+  const M3CCandidateNodeRecord unusedNode{};
+  auto fillNodesResult = candidateNodes.store().fill(0, candidateCount, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(&unusedNode), sizeof(unusedNode)), m_ShouldCancel);
+  if(fillNodesResult.invalid())
+  {
+    return fillNodesResult;
+  }
+  const int64 zeroTriangleCount = 0;
+  auto fillCountsResult =
+      triangleCounts.store().fill(0, cubeRecordCount, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(&zeroTriangleCount), sizeof(zeroTriangleCount)), m_ShouldCancel);
+  if(fillCountsResult.invalid())
+  {
+    return fillCountsResult;
+  }
+
+  const auto setNodeType = [&](SiteId nodeId, int8 type) -> Result<> {
+    auto nodeResult = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+    if(nodeResult.invalid())
+    {
+      return ConvertResult(std::move(nodeResult));
+    }
+    auto node = nodeResult.value();
+    node.type = type;
+    return candidateNodes.cache().write(static_cast<uint64>(nodeId), node, m_ShouldCancel);
+  };
+
+  // Reconstruct one marching square in fixed local storage. The edge ids are
+  // local to the caller; only the candidate-node classification survives pass
+  // one and it lives in the external record vector.
+  const auto buildSquare = [&](SiteId squareId, Face& square, std::array<Segment, 64>& segments, int& segmentCount, bool writeNodeTypes) -> Result<> {
+    square = {};
+    for(auto& edge : square.edge_id)
+    {
+      edge = k_UnusedNodeId;
+    }
+    square.FCnode = -1;
+    const SiteId cubeOrigin = squareId / 3 + 1;
+    const int squareOrder = static_cast<int>(squareId % 3);
+    const auto corners = squareCorners(squareId, neighbors);
+    int spins[4];
+    int ghostCorners = 0;
+    for(int index = 0; index < 4; index++)
+    {
+      auto spinResult = sourceValue(corners[index]);
+      if(spinResult.invalid())
+      {
+        return ConvertResult(std::move(spinResult));
+      }
+      spins[index] = spinResult.value();
+      ghostCorners += spins[index] < 0 ? 1 : 0;
+    }
+    if(ghostCorners != 4)
+    {
+      square.effect = 1;
+    }
+    if(ghostCorners == 4)
+    {
+      return {};
+    }
+    int squareIndex = get_square_index(spins);
+    if(squareIndex == 15)
+    {
+      int neighborCounts[4] = {0, 0, 0, 0};
+      for(int corner = 0; corner < 4; corner++)
+      {
+        const Neighbor cornerNeighbors = neighbors[corners[corner]];
+        for(int neighborIndex = 1; neighborIndex <= num_neigh; neighborIndex++)
+        {
+          auto neighborSpin = sourceValue(cornerNeighbors.neigh_id[neighborIndex]);
+          if(neighborSpin.invalid())
+          {
+            return ConvertResult(std::move(neighborSpin));
+          }
+          neighborCounts[corner] += spins[corner] == neighborSpin.value() && neighborSpin.value() > 0 ? 1 : 0;
+        }
+      }
+      int minimum = 1000;
+      int minimumIndex = -1;
+      for(int corner = 0; corner < 4; corner++)
+      {
+        if(neighborCounts[corner] < minimum)
+        {
+          minimum = neighborCounts[corner];
+          minimumIndex = corner;
+        }
+      }
+      squareIndex += minimumIndex == 0 || minimumIndex == 2 ? 1 : 0;
+    }
+    if(squareIndex == 0)
+    {
+      return {};
+    }
+    for(int edgeIndex = 0; edgeIndex < 8; edgeIndex += 2)
+    {
+      if(k_EdgeTable2d[squareIndex][edgeIndex] == -1)
+      {
+        continue;
+      }
+      const int nodeIndex[2] = {k_EdgeTable2d[squareIndex][edgeIndex], k_EdgeTable2d[squareIndex][edgeIndex + 1]};
+      const int pixelIndex[2] = {k_NsTable2d[squareIndex][edgeIndex], k_NsTable2d[squareIndex][edgeIndex + 1]};
+      SiteId nodeIds[2];
+      get_nodes(cubeOrigin, squareOrder, nodeIndex, nodeIds, numSitesPerPlane, static_cast<int>(fileDim[0]));
+      const int pixelSpins[2] = {spins[pixelIndex[0]], spins[pixelIndex[1]]};
+      if(pixelSpins[0] > 0 || pixelSpins[1] > 0)
+      {
+        if(segmentCount >= static_cast<int>(segments.size()))
+        {
+          return MakeErrorResult(-90552, "M3C out-of-core local square edge buffer overflowed.");
+        }
+        segments[static_cast<usize>(segmentCount)] = Segment{{nodeIds[0], nodeIds[1]}, {pixelSpins[0], pixelSpins[1]}};
+        square.edge_id[square.nEdge++] = static_cast<uint32>(segmentCount++);
+      }
+      else if(writeNodeTypes)
+      {
+        auto firstResult = setNodeType(nodeIds[0], M3CNodeType::k_Unused);
+        if(firstResult.invalid())
+        {
+          return firstResult;
+        }
+        auto secondResult = setNodeType(nodeIds[1], M3CNodeType::k_Unused);
+        if(secondResult.invalid())
+        {
+          return secondResult;
+        }
+      }
+      for(int node = 0; node < 2; node++)
+      {
+        if(nodeIndex[node] == 4 && (squareIndex == 7 || squareIndex == 11 || squareIndex == 13 || squareIndex == 14 || squareIndex == 19))
+        {
+          square.FCnode = nodeIds[node];
+        }
+        if(writeNodeTypes)
+        {
+          int8 type = M3CNodeType::k_Default;
+          if(nodeIndex[node] == 4)
+          {
+            if(squareIndex == 19)
+            {
+              type = M3CNodeType::k_QuadPoint;
+            }
+            else if(squareIndex == 7 || squareIndex == 11 || squareIndex == 13 || squareIndex == 14)
+            {
+              type = M3CNodeType::k_TriplePoint;
+            }
+            else
+            {
+              continue;
+            }
+          }
+          auto typeResult = setNodeType(nodeIds[node], type);
+          if(typeResult.invalid())
+          {
+            return typeResult;
+          }
+        }
+      }
+    }
+    return {};
+  };
+
+  // Match the legacy edge-stage visitation order when classifying
+  // candidate nodes. No resident square/edge vector survives this pass.
+  for(SiteId squareId = 0; squareId < 3 * numSites; squareId++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    Face square;
+    std::array<Segment, 64> segments{};
+    int segmentCount = 0;
+    auto squareResult = buildSquare(squareId, square, segments, segmentCount, true);
+    if(squareResult.invalid())
+    {
+      return squareResult;
+    }
+  }
+
+  // A cube references only six squares and at most 24 face edges, so its
+  // count is rebuilt locally. Count records preserve the default parallel
+  // path's cube indexing/order for the later prefix + generation pass.
+  uint64 numFacesPruned = 0;
+  uint64 maximumTrianglesPerCube = 0;
+  const auto skipBackgroundSkinFace = [maxGrainId](const Triangle& triangle) {
+    const int spinA = triangle.nSpin[0];
+    const int spinB = triangle.nSpin[1];
+    return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
+  };
+  for(SiteId cube = 1; cube <= lastCube; cube++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const SiteId squareIds[6] = {3 * (cube - 1), 3 * (cube - 1) + 1, 3 * (cube - 1) + 2, 3 * cube + 2, 3 * (cube + static_cast<SiteId>(fileDim[0]) - 1) + 1, 3 * (cube + numSitesPerPlane - 1)};
+    std::array<Face, 6> squares{};
+    std::array<Segment, 64> segments{};
+    int segmentCount = 0;
+    SiteId faceCenters[6] = {-1, -1, -1, -1, -1, -1};
+    int faceCenterCount = 0;
+    int edgeCount = 0;
+    int effectiveCount = 0;
+    for(int square = 0; square < 6; square++)
+    {
+      auto squareResult = buildSquare(squareIds[square], squares[square], segments, segmentCount, false);
+      if(squareResult.invalid())
+      {
+        return squareResult;
+      }
+      if(squares[square].FCnode != -1)
+      {
+        faceCenters[faceCenterCount++] = squares[square].FCnode;
+      }
+      edgeCount += squares[square].nEdge;
+      effectiveCount += squares[square].effect;
+    }
+    if(faceCenterCount >= 3)
+    {
+      const auto firstCorners = squareCorners(squareIds[0], neighbors);
+      const auto lastCorners = squareCorners(squareIds[5], neighbors);
+      int uniqueSpins = 0;
+      int cubeSpins[8];
+      for(int index = 0; index < 4; index++)
+      {
+        auto firstSpin = sourceValue(firstCorners[index]);
+        auto lastSpin = sourceValue(lastCorners[index]);
+        if(firstSpin.invalid() || lastSpin.invalid())
+        {
+          return firstSpin.invalid() ? ConvertResult(std::move(firstSpin)) : ConvertResult(std::move(lastSpin));
+        }
+        cubeSpins[index] = firstSpin.value();
+        cubeSpins[index + 4] = lastSpin.value();
+      }
+      for(int index = 0; index < 8; index++)
+      {
+        const int spin = cubeSpins[index];
+        if(spin != -1)
+        {
+          uniqueSpins++;
+          cubeSpins[index] = -1;
+          for(int other = 0; other < 8; other++)
+          {
+            if(cubeSpins[other] == spin)
+            {
+              cubeSpins[other] = -1;
+            }
+          }
+        }
+      }
+      auto bodyResult = setNodeType(7 * (cube - 1) + 6, static_cast<int8>(std::min(uniqueSpins, static_cast<int>(M3CNodeType::k_QuadPoint))));
+      if(bodyResult.invalid())
+      {
+        return bodyResult;
+      }
+    }
+    int64 count = 0;
+    if(effectiveCount > 0 && edgeCount > 2)
+    {
+      std::array<SiteId, 64> edgeIds{};
+      int edgeIndex = 0;
+      for(const auto& square : squares)
+      {
+        for(int index = 0; index < square.nEdge; index++)
+        {
+          edgeIds[edgeIndex++] = square.edge_id[index];
+        }
+      }
+      if(faceCenterCount == 0)
+      {
+        count = get_number_case0_triangles(edgeIds.data(), segments.data(), edgeCount);
+      }
+      else if(faceCenterCount == 2)
+      {
+        count = get_number_case2_triangles(edgeIds.data(), segments.data(), edgeCount, faceCenters, faceCenterCount);
+      }
+      else if(faceCenterCount > 2 && faceCenterCount <= 6)
+      {
+        count = get_number_caseM_triangles(edgeIds.data(), segments.data(), edgeCount, faceCenters, faceCenterCount);
+      }
+      maximumTrianglesPerCube = std::max(maximumTrianglesPerCube, static_cast<uint64>(count));
+
+      if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && count > 0)
+      {
+        std::vector<Triangle> countTriangles(static_cast<usize>(count));
+        std::vector<SiteId> countCubes(static_cast<usize>(count));
+        double c1[3];
+        double c2[3];
+        for(int component = 0; component < 3; component++)
+        {
+          c1[component] = siteCoords[cube].coord[component];
+          c2[component] = siteCoords[cube + 1 + static_cast<SiteId>(fileDim[0]) + numSitesPerPlane].coord[component];
+        }
+        int64 generatedCount = 0;
+        if(faceCenterCount == 0)
+        {
+          get_case0_triangles(countTriangles.data(), countCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, 0, &generatedCount, c1, c2, cube);
+        }
+        else if(faceCenterCount == 2)
+        {
+          get_case2_triangles(countTriangles.data(), countCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, faceCenters, faceCenterCount, 0, &generatedCount, c1, c2, cube);
+        }
+        else
+        {
+          get_caseM_triangles(countTriangles.data(), countCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, faceCenters, faceCenterCount, 0, &generatedCount, 7 * (cube - 1) + 6,
+                              c1, c2, cube);
+        }
+        if(generatedCount != count)
+        {
+          return MakeErrorResult(-90559, "M3C out-of-core pruning generation disagrees with its counted triangle range.");
+        }
+
+        int64 survivingCount = 0;
+        for(const Triangle& triangle : countTriangles)
+        {
+          const bool dropTriangle = skipBackgroundSkinFace(triangle);
+          const uint8 referenceFlag = dropTriangle ? uint8{1} : uint8{2};
+          for(const SiteId nodeId : triangle.node_id)
+          {
+            auto nodeResult = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+            if(nodeResult.invalid())
+            {
+              return ConvertResult(std::move(nodeResult));
+            }
+            auto node = nodeResult.value();
+            node.pruneReferences = static_cast<uint8>(node.pruneReferences | referenceFlag);
+            auto writeResult = candidateNodes.cache().write(static_cast<uint64>(nodeId), node, m_ShouldCancel);
+            if(writeResult.invalid())
+            {
+              return writeResult;
+            }
+          }
+          if(dropTriangle)
+          {
+            numFacesPruned++;
+          }
+          else
+          {
+            survivingCount++;
+          }
+        }
+        count = survivingCount;
+      }
+    }
+    auto writeResult = triangleCounts.cache().write(static_cast<uint64>(cube), count, m_ShouldCancel);
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
+  }
+  auto flushNodesResult = candidateNodes.flush(m_ShouldCancel);
+  if(flushNodesResult.invalid())
+  {
+    return flushNodesResult;
+  }
+  auto flushCountsResult = triangleCounts.flush(m_ShouldCancel);
+  if(flushCountsResult.invalid())
+  {
+    return flushCountsResult;
+  }
+
+  // Convert counts in place to the 1-based deterministic cube offsets used by
+  // the parallel path. The values remain in external storage for pass 2.
+  uint64 triangleTotal = 0;
+  for(SiteId cube = 1; cube <= lastCube; cube++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    auto countResult = triangleCounts.cache().read(static_cast<uint64>(cube), m_ShouldCancel);
+    if(countResult.invalid())
+    {
+      return ConvertResult(std::move(countResult));
+    }
+    const int64 count = countResult.value();
+    if(count < 0 || static_cast<uint64>(count) > static_cast<uint64>(std::numeric_limits<int64>::max()) - triangleTotal ||
+       triangleTotal > static_cast<uint64>(std::numeric_limits<usize>::max()) - static_cast<uint64>(count))
+    {
+      return MakeErrorResult(-90553, "M3C out-of-core triangle count or offset overflows its output range.");
+    }
+    auto offsetResult = triangleCounts.cache().write(static_cast<uint64>(cube), static_cast<int64>(triangleTotal), m_ShouldCancel);
+    if(offsetResult.invalid())
+    {
+      return offsetResult;
+    }
+    triangleTotal += static_cast<uint64>(count);
+  }
+  auto offsetFlushResult = triangleCounts.flush(m_ShouldCancel);
+  if(offsetFlushResult.invalid())
+  {
+    return offsetFlushResult;
+  }
+
+  // Candidate IDs compact in ascending candidate order, exactly matching the
+  // original assign_new_nodeID traversal. Vertex/NodeTypes output waits until
+  // generation has marked exterior nodes.
+  uint64 nodeTotal = 0;
+  for(uint64 candidate = 0; candidate < candidateCount; candidate++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    auto nodeResult = candidateNodes.cache().read(candidate, m_ShouldCancel);
+    if(nodeResult.invalid())
+    {
+      return ConvertResult(std::move(nodeResult));
+    }
+    auto node = nodeResult.value();
+    bool nodeChanged = false;
+    if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && node.pruneReferences == uint8{1} && node.type > 0)
+    {
+      node.type = M3CNodeType::k_Unused;
+      nodeChanged = true;
+    }
+    if(node.type > 0)
+    {
+      if(nodeTotal == std::numeric_limits<uint64>::max() || nodeTotal >= static_cast<uint64>(std::numeric_limits<usize>::max()))
+      {
+        return MakeErrorResult(-90554, "M3C out-of-core compacted node count overflows its output range.");
+      }
+      node.compactId = nodeTotal++;
+      nodeChanged = true;
+    }
+    if(nodeChanged)
+    {
+      auto writeResult = candidateNodes.cache().write(candidate, node, m_ShouldCancel);
+      if(writeResult.invalid())
+      {
+        return writeResult;
+      }
+    }
+  }
+  auto compactFlushResult = candidateNodes.flush(m_ShouldCancel);
+  if(compactFlushResult.invalid())
+  {
+    return compactFlushResult;
+  }
+
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  triangleGeom.resizeVertexList(static_cast<usize>(nodeTotal));
+  triangleGeom.resizeFaceList(static_cast<usize>(triangleTotal));
+  triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeTotal)});
+  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(triangleTotal)});
+  auto& faceStore = triangleGeom.getFaces()->getDataStoreRef();
+  auto& faceLabelsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath).getDataStoreRef();
+  auto& nodeTypesStore = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath).getDataStoreRef();
+  faceLabelsStore.resizeTuples({static_cast<usize>(triangleTotal)});
+  nodeTypesStore.resizeTuples({static_cast<usize>(nodeTotal)});
+
+  std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
+  for(usize index = 0; index < m_InputValues->SelectedCellDataArrayPaths.size(); index++)
+  {
+    AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[index], m_InputValues->CreatedDataArrayPaths[index], transfers);
+  }
+  const usize cellArrayCount = m_InputValues->SelectedCellDataArrayPaths.size();
+  for(usize index = 0; index < m_InputValues->SelectedFeatureDataArrayPaths.size(); index++)
+  {
+    AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[index], m_InputValues->CreatedDataArrayPaths[cellArrayCount + index],
+                                    m_InputValues->FeatureIdsArrayPath, transfers);
+  }
+  const auto outputLabel = [maxGrainId](int spin) { return spin < 0 ? int32{-1} : (spin == maxGrainId ? int32{0} : static_cast<int32>(spin)); };
+  const auto sourceCell = [&](int label, SiteId cube) -> Result<usize> {
+    const Neighbor n = neighbors[cube];
+    const SiteId corners[8] = {cube, n.neigh_id[1], n.neigh_id[7], n.neigh_id[8], n.neigh_id[18], n.neigh_id[19], n.neigh_id[25], n.neigh_id[26]};
+    for(SiteId site : corners)
+    {
+      auto value = sourceValue(site);
+      if(value.invalid())
+      {
+        return ConvertInvalidResult<usize>(std::move(value));
+      }
+      if(value.value() == label)
+      {
+        const usize linear = static_cast<usize>(site - 1);
+        const usize x = linear % fileDim[0];
+        const usize y = (linear / fileDim[0]) % fileDim[1];
+        const usize z = linear / (fileDim[0] * fileDim[1]);
+        if(x >= 1 && x <= dims[0] && y >= 1 && y <= dims[1] && z >= 1 && z <= dims[2])
+        {
+          return {(z - 1) * sourceSliceSize + (y - 1) * dims[0] + (x - 1)};
+        }
+      }
+    }
+    return {std::numeric_limits<usize>::max()};
+  };
+
+  constexpr usize kFaceBatch = 16384;
+  std::array<IGeometry::MeshIndexType, kFaceBatch * 3> faceValues{};
+  std::array<int32, kFaceBatch * 2> labelValues{};
+  std::array<QuickSurfaceTransferData, kFaceBatch> transferValues{};
+  const usize localCapacity = std::max<usize>(1, static_cast<usize>(maximumTrianglesPerCube));
+  std::vector<Triangle> localTriangles(localCapacity);
+  std::vector<SiteId> localCubes(localCapacity);
+  for(SiteId cube = 1; cube <= lastCube; cube++)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    auto offset = triangleCounts.cache().read(static_cast<uint64>(cube), m_ShouldCancel);
+    if(offset.invalid())
+    {
+      return ConvertResult(std::move(offset));
+    }
+    const usize destination = static_cast<usize>(offset.value());
+    const SiteId squareIds[6] = {3 * (cube - 1), 3 * (cube - 1) + 1, 3 * (cube - 1) + 2, 3 * cube + 2, 3 * (cube + static_cast<SiteId>(fileDim[0]) - 1) + 1, 3 * (cube + numSitesPerPlane - 1)};
+    std::array<Face, 6> squares{};
+    std::array<Segment, 64> segments{};
+    std::array<SiteId, 64> edgeIds{};
+    SiteId centers[6] = {-1, -1, -1, -1, -1, -1};
+    int segmentCount = 0;
+    int edgeCount = 0;
+    int centerCount = 0;
+    int effectiveCount = 0;
+    for(int square = 0; square < 6; square++)
+    {
+      auto result = buildSquare(squareIds[square], squares[square], segments, segmentCount, false);
+      if(result.invalid())
+      {
+        return result;
+      }
+      if(squares[square].FCnode != -1)
+      {
+        centers[centerCount++] = squares[square].FCnode;
+      }
+      effectiveCount += squares[square].effect;
+      for(int edge = 0; edge < squares[square].nEdge; edge++)
+      {
+        edgeIds[edgeCount++] = squares[square].edge_id[edge];
+      }
+    }
+    usize generated = 0;
+    if(effectiveCount > 0 && edgeCount > 2)
+    {
+      double c1[3];
+      double c2[3];
+      for(int component = 0; component < 3; component++)
+      {
+        c1[component] = siteCoords[cube].coord[component];
+        c2[component] = siteCoords[cube + 1 + static_cast<SiteId>(fileDim[0]) + numSitesPerPlane].coord[component];
+      }
+      int64 end = 0;
+      if(centerCount == 0)
+      {
+        get_case0_triangles(localTriangles.data(), localCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, 0, &end, c1, c2, cube);
+      }
+      else if(centerCount == 2)
+      {
+        get_case2_triangles(localTriangles.data(), localCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, centers, centerCount, 0, &end, c1, c2, cube);
+      }
+      else if(centerCount > 2)
+      {
+        get_caseM_triangles(localTriangles.data(), localCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, centers, centerCount, 0, &end, 7 * (cube - 1) + 6, c1, c2, cube);
+      }
+      generated = static_cast<usize>(end);
+    }
+    if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+    {
+      usize survivingCount = 0;
+      for(usize index = 0; index < generated; index++)
+      {
+        if(!skipBackgroundSkinFace(localTriangles[index]))
+        {
+          localTriangles[survivingCount] = localTriangles[index];
+          localCubes[survivingCount] = localCubes[index];
+          survivingCount++;
+        }
+      }
+      generated = survivingCount;
+    }
+    uint64 expectedEnd = triangleTotal;
+    if(cube != lastCube)
+    {
+      auto nextOffset = triangleCounts.cache().read(static_cast<uint64>(cube + 1), m_ShouldCancel);
+      if(nextOffset.invalid() || nextOffset.value() < 0)
+      {
+        return nextOffset.invalid() ? ConvertResult(std::move(nextOffset)) : MakeErrorResult(-90558, "M3C out-of-core triangle offset is negative.");
+      }
+      expectedEnd = static_cast<uint64>(nextOffset.value());
+    }
+    if(generated > localCapacity || expectedEnd < static_cast<uint64>(destination) || generated != expectedEnd - static_cast<uint64>(destination))
+    {
+      return MakeErrorResult(-90555, "M3C out-of-core generation disagrees with its counted triangle range.");
+    }
+    for(usize start = 0; start < generated; start += kFaceBatch)
+    {
+      const usize count = std::min(kFaceBatch, generated - start);
+      for(usize local = 0; local < count; local++)
+      {
+        const Triangle& triangle = localTriangles[start + local];
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+          auto nodeResult = candidateNodes.cache().read(static_cast<uint64>(triangle.node_id[vertex]), m_ShouldCancel);
+          if(nodeResult.invalid() || nodeResult.value().type <= 0)
+          {
+            return nodeResult.invalid() ? ConvertResult(std::move(nodeResult)) : MakeErrorResult(-90556, "M3C out-of-core triangle references an unused candidate node.");
+          }
+          auto node = nodeResult.value();
+          if((triangle.nSpin[0] < 0) != (triangle.nSpin[1] < 0) && node.type < 10)
+          {
+            node.type = static_cast<int8>(node.type + 10);
+            auto write = candidateNodes.cache().write(static_cast<uint64>(triangle.node_id[vertex]), node, m_ShouldCancel);
+            if(write.invalid())
+            {
+              return write;
+            }
+          }
+          faceValues[local * 3 + vertex] = static_cast<IGeometry::MeshIndexType>(node.compactId);
+        }
+        const int32 a = outputLabel(triangle.nSpin[0]);
+        const int32 b = outputLabel(triangle.nSpin[1]);
+        const bool aFirst = a <= b;
+        labelValues[local * 2] = aFirst ? a : b;
+        labelValues[local * 2 + 1] = aFirst ? b : a;
+        auto first = sourceCell(aFirst ? triangle.nSpin[0] : triangle.nSpin[1], cube);
+        auto second = sourceCell(aFirst ? triangle.nSpin[1] : triangle.nSpin[0], cube);
+        if(first.invalid() || second.invalid())
+        {
+          return first.invalid() ? ConvertResult(std::move(first)) : ConvertResult(std::move(second));
+        }
+        transferValues[local] = {destination + start + local, first.value(), second.value(), labelValues[local * 2], labelValues[local * 2 + 1]};
+      }
+      auto faceWrite = faceStore.copyFromBuffer((destination + start) * 3, nonstd::span<const IGeometry::MeshIndexType>(faceValues.data(), count * 3));
+      auto labelWrite = faceLabelsStore.copyFromBuffer((destination + start) * 2, nonstd::span<const int32>(labelValues.data(), count * 2));
+      if(faceWrite.invalid() || labelWrite.invalid())
+      {
+        return faceWrite.invalid() ? faceWrite : labelWrite;
+      }
+      for(const auto& transfer : transfers)
+      {
+        auto result = transfer->quickSurfaceTransferBatch(nonstd::span<const QuickSurfaceTransferData>(transferValues.data(), count));
+        if(result.invalid())
+        {
+          return result;
+        }
+      }
+    }
+  }
+  auto promotionFlush = candidateNodes.flush(m_ShouldCancel);
+  if(promotionFlush.invalid())
+  {
+    return promotionFlush;
+  }
+
+  auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
+  constexpr usize kVertexBatch = 16384;
+  std::array<float32, kVertexBatch * 3> vertexValues{};
+  std::array<int8, kVertexBatch> typeValues{};
+  for(uint64 candidate = 0; candidate < candidateCount;)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const uint64 end = std::min(candidateCount, candidate + static_cast<uint64>(kVertexBatch));
+    usize count = 0;
+    uint64 firstCompact = 0;
+    for(uint64 current = candidate; current < end; current++)
+    {
+      auto nodeResult = candidateNodes.cache().read(current, m_ShouldCancel);
+      if(nodeResult.invalid())
+      {
+        return ConvertResult(std::move(nodeResult));
+      }
+      const auto& node = nodeResult.value();
+      if(node.type > 0)
+      {
+        if(count == 0)
+        {
+          firstCompact = node.compactId;
+        }
+        const Node coordinate = nodeCoords[static_cast<SiteId>(current)];
+        vertexValues[count * 3] = coordinate.coord[0];
+        vertexValues[count * 3 + 1] = coordinate.coord[1];
+        vertexValues[count * 3 + 2] = coordinate.coord[2];
+        typeValues[count++] = node.type;
+      }
+    }
+    if(count > 0)
+    {
+      auto vertexWrite = vertexStore.copyFromBuffer(firstCompact * 3, nonstd::span<const float32>(vertexValues.data(), count * 3));
+      auto typeWrite = nodeTypesStore.copyFromBuffer(firstCompact, nonstd::span<const int8>(typeValues.data(), count));
+      if(vertexWrite.invalid() || typeWrite.invalid())
+      {
+        return vertexWrite.invalid() ? vertexWrite : typeWrite;
+      }
+    }
+    candidate = end;
+  }
+  if(m_InputValues->RepairTriangleWinding)
+  {
+    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    if(ioCollection.hasExternalSortCapability() && ioCollection.hasTemporaryRecordStoreCapability())
+    {
+      auto result = MeshingUtilities::RepairTriangleWindingExternal(faceStore, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    else if(usesOutOfCoreStore)
+    {
+      return MakeErrorResult(-90557, "M3C out-of-core winding repair requires external-sort and temporary-record-store providers.");
+    }
+    else
+    {
+      triangleGeom.findElementNeighbors(true);
+      const auto optionalId = triangleGeom.getElementNeighborsId();
+      if(optionalId.has_value())
+      {
+        const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+        auto result = MeshingUtilities::RepairTriangleWinding(faceStore, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+        m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
+        m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
+        if(result.invalid())
+        {
+          return result;
+        }
+      }
+    }
+  }
+  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  {
+    if(triangleTotal == 0)
+    {
+      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, featureIds.getNumberOfTuples(), static_cast<usize>(nodeTotal));
+    }
+    if(numFacesPruned == 0)
+    {
+      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+    }
+  }
+  return {};
+}
+
 Result<> M3CSurfaceMeshing::runEntireVolume()
 {
-  // The geometry parameter only accepts ImageGeom (M3C's node coordinates assume uniform cell spacing).
+  // M3C node coordinates require the uniform spacing of ImageGeom.
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -2920,28 +4095,27 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   const float res[3] = {spacing[0], spacing[1], spacing[2]};
   const float origin[3] = {imgOrigin[0], imgOrigin[1], imgOrigin[2]};
 
-  // Always wrap the volume in a ghost layer (NX inputs are not pre-wrapped).
+  // NX inputs do not include an exterior layer. Add one for surface closure.
   constexpr bool k_AddSurfaceLayer = true;
   usize fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
   const usize totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
-  // Site count and per-plane site count are 64-bit (SiteId): they index the FeatureId grid and must
-  // support volumes with more than 2^31 voxels. (Edge/node id storage is unsigned 32-bit, capping the
-  // MESH size near 2^32 elements; the peak memory model still scales with volume - see docs.)
+  // SiteId supports grids with more than 2^31 voxels. The 32-bit edge and node
+  // storage still limits mesh size to approximately 2^32 elements.
   const SiteId numSites = static_cast<SiteId>(totalPoints);
   const SiteId numSitesPerPlane = static_cast<SiteId>(fileDim[0] * fileDim[1]);
 
-  // Read FeatureIds directly from its DataStore (no full-array copy) into the padded working grid.
-  // The FeatureId==0 renumbering happens on the working grid, never on the input array.
+  // Read Feature Ids directly into the padded grid. Zero-label renumbering changes
+  // only this working copy.
   m_MessageHandler("Initializing working grid and ghost layer...");
   std::vector<int32> point(totalPoints + 1, 0);
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
-  // On-demand accessors replace the former full-volume voxCoords, node, and neighbor arrays.
+  // Calculate coordinates and neighbors on demand to avoid three full-volume arrays.
   const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
   const NeighborAccessor neighbors{numSites, numSitesPerPlane, static_cast<int>(fileDim[0])};
 
-  // 3 marching squares (top/back/left) per site; node types (7 candidate nodes/site) start Unused (0).
+  // Each site owns top, back, and left squares. Seven candidate node types start unused.
   m_MessageHandler("Initializing candidate nodes and squares...");
   std::vector<Face> squares(static_cast<usize>(3) * numSites);
   std::vector<int8> nodeType(static_cast<usize>(7) * numSites, 0);
@@ -2952,7 +4126,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
     return {};
   }
 
-  // --- Stage 2: face edges ---------------------------------------------------
+  // Count face edges before their exact allocation.
   m_MessageHandler("Counting face edges...");
   const int64 nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, numSites, m_ShouldCancel);
 
@@ -2965,7 +4139,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
     return {};
   }
 
-  // --- Stage 3: triangles ----------------------------------------------------
+  // Count triangles before their exact allocation.
   m_MessageHandler("Counting triangles...");
   const int64 nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
@@ -2982,13 +4156,10 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point, nodeCoords, neighbors, numSites, fileDim, dims, maxGrainId);
 }
 
-// -----------------------------------------------------------------------------
-// Sliding-window (z-slice) variant (the default path). See M3CSurfaceMeshing.hpp: the marching-square
-// scratch is held for only two z-slices at a time, so per-site scratch is O(sliceArea) rather than
-// O(volume). Produces byte-identical output to runEntireVolume().
 Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 {
-  // --- Setup (identical to runEntireVolume) ----------------------------------
+  // The sliding window keeps marching-square scratch to two Z slices. Serial
+  // execution matches runEntireVolume. Parallel execution can change triangulation.
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -3015,28 +4186,23 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
   const NodeCoords nodeCoords{siteCoords};
   const NeighborAccessor neighbors{numSites, numSitesPerPlane, xDim};
 
-  // Mesh-scale accumulators grow with the output; only the per-site squares are windowed.
-  // fedges is the only vector that grows incrementally (push_back during the pass-1 sweep; its
-  // capacity is pre-reserved from an early extrapolation -- see the sweep lambda). triangles and
-  // mCubeID stay empty until the pass-1 count finishes and are then resized once to the exact size.
+  // Mesh-scale vectors grow with output size. Only per-site squares are windowed.
+  // Face edges reserve once from an early rate estimate. Triangles and cube IDs
+  // resize once after the first pass counts their exact size.
   std::vector<int8> nodeType(static_cast<usize>(7) * numSites, 0);
   std::vector<Segment> fedges;
   std::vector<Triangle> triangles;
   std::vector<SiteId> mCubeID;
 
-  // --- Square window: two z-slices of the 3-marching-squares-per-site scratch ------------------
-  // squareId = 3*(site-1)+ord. The window holds squares for sites [winBaseSite, winBaseSite + 2*numSitesPerPlane);
-  // winIndex maps an absolute squareId to its slot. As the cube sweep crosses into the next slice the
-  // window slides forward by one slice (memmove the second slice down, compute the new second slice).
+  // The square window holds two Z slices. It slides one slice as the cube sweep
+  // advances and keeps absolute square IDs mapped to local slots.
   const SiteId sliceSquares = 3 * numSitesPerPlane; // squares per z-slice
   std::vector<Face> window(static_cast<usize>(2) * sliceSquares);
   SiteId winBaseSite = 1;
   auto winIndex = [&winBaseSite](SiteId squareId) -> usize { return static_cast<usize>(squareId - 3 * (winBaseSite - 1)); };
 
-  // Compute the edges/flags for a contiguous range of squareIds directly into the window buffer.
-  // This is the get_nodes_fEdges body restricted to one slice; it appends face edges to the global
-  // fedges (edge ids stay globally sequential because squareIds are visited in ascending order) and
-  // sets face-center/edge node types. It also reproduces get_number_fEdges's per-square effect flag.
+  // Build square edges and node types in ascending square order. This preserves
+  // global face-edge IDs and the legacy effect flag.
   auto computeSquares = [&](SiteId kLo, SiteId kHi, bool appendEdges, int64& eid) {
     for(SiteId k = kLo; k < kHi; k++)
     {
@@ -3128,7 +4294,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
                 }
                 else
                 {
-                  // Unconditional promotion to k_Default -- see the matching comment in get_nodes_fEdges.
+                  // Interior edge endpoints must remain real nodes after compaction.
                   SiteId tnode = nodeID[ii];
                   nodeType[tnode] = M3CNodeType::k_Default;
                 }
@@ -3141,22 +4307,15 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
     }
   };
 
-  // The case-table functions (get_number_caseX / get_caseX) FLIP shared face edges in place while
-  // tracing loops, so the whole-volume ordering (ALL counts, then ALL generates) is significant for a
-  // byte-identical result. We reproduce it with two windowed sweeps over the same persistent fedges:
-  //   pass 1 (appendEdges=true,  generate=false): build fedges, set node types, and run every count
-  //                                               (applying all count-flips in cube order);
-  //   pass 2 (appendEdges=false, generate=true):  rebuild the windowed squares (no fedges append) and
-  //                                               generate triangles (applying all generate-flips).
+  // Case functions flip shared face edges while tracing loops. Count every cube
+  // before generating any triangle to preserve the serial ordering.
   int64 nTriangle = 0;
 
   const int64 totalSlices = (numSitesPerPlane > 0) ? (numSites / numSitesPerPlane) : 1;
   const int64 progressStep = std::max<int64>(1, totalSlices / 20); // ~20 progress updates per sweep
 
-  // One-shot fedges capacity estimate: a few slices into the edge-appending pass, extrapolate the
-  // final edge count from the per-slice rate seen so far (with a small margin) so the potentially
-  // multi-GB fedges vector avoids the repeated geometric reallocations (and their transient memory
-  // spikes) that incremental push_back growth would otherwise cost. Never triggers for small volumes.
+  // Estimate face-edge capacity after early slices. One reservation avoids repeated
+  // multi-gigabyte reallocations and transient memory spikes.
   bool fedgesReserved = false;
   const int64 reserveAfterSlices = std::max<int64>(4, totalSlices / 16);
   auto maybeReserveFedges = [&](int64 eid) {
@@ -3166,8 +4325,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       return;
     }
     fedgesReserved = true;
-    // The window is two slices ahead of the slide counter: after N slides the squares (and their
-    // appended edges) of slices [1, N + 2] have been computed.
+    // The window has computed two slices beyond the slide counter.
     const int64 slicesComputed = sliceIdx + 2;
     const auto projected = static_cast<usize>(static_cast<double>(eid) / static_cast<double>(slicesComputed) * static_cast<double>(totalSlices) * 1.05);
     if(projected > fedges.capacity())
@@ -3189,7 +4347,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
         return;
       }
 
-      // Slide the window forward so it always covers sites [i, i + numSitesPerPlane].
+      // Slide the window to cover the current and next site planes.
       while(i >= winBaseSite + numSitesPerPlane)
       {
         std::memmove(window.data(), window.data() + sliceSquares, static_cast<usize>(sliceSquares) * sizeof(Face));
@@ -3242,8 +4400,8 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       const int cubeFlag = (eff > 0) ? 1 : 0;
       const SiteId BCnode = 7 * (i - 1) + 6;
 
-      // Body-center node type (get_number_triangles nFC>=3 block; point-grid only). Set in the count
-      // pass, matching where the whole-volume path assigns it.
+      // The count pass assigns the body-center type when three or more face
+      // centers meet. This timing matches the whole-volume path.
       if(!generate && nFC >= 3)
       {
         const std::array<SiteId, 4> corners1 = squareCorners(sqID[0], neighbors);
@@ -3271,7 +4429,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
             }
           }
         }
-        // Clamp to k_QuadPoint ("4 or more grains") -- see the note in get_number_triangles.
+        // NodeType uses k_QuadPoint for four or more labels.
         nodeType[BCnode] = static_cast<int8>(std::min(nds, static_cast<int>(M3CNodeType::k_QuadPoint)));
       }
 
@@ -3295,7 +4453,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
       if(!generate)
       {
-        // Pass 1: count triangles (and apply the same shared-edge flips as the whole-volume count).
+        // The first pass counts triangles and applies whole-volume edge flips.
         if(nFC == 0)
         {
           nTriangle += get_number_case0_triangles(arrayFE.data(), fedges.data(), nFE);
@@ -3311,7 +4469,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
         continue;
       }
 
-      // Pass 2: generate triangles into the pre-sized global arrays (running index like get_triangles).
+      // The second pass writes triangles to the pre-sized arrays in cube order.
       double coord1[3];
       double coord2[3];
       for(int k = 0; k < 3; k++)
@@ -3353,19 +4511,15 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
   }
   else
   {
-    // Experimental multithreaded sweep. The edge stage (computeSquares) runs SERIALLY per slice, so the
-    // squares, fedges, and edge-node nodeType are built identically to the serial path (hence identical
-    // vertices, FaceLabels, and NodeTypes). The per-cube count/generate work is then parallel across the
-    // cubes of each slice: each cube reads the shared squares/fedges but flips a PRIVATE copy of its face
-    // edges, so cubes never mutate shared state and no coloring is needed. Because the legacy per-cube
-    // loop triangulation depends on cross-cube edge-flip propagation (inherently serial), dropping it
-    // yields a DIFFERENT but valid triangulation of the same interfaces -- correct and watertight, but
-    // not the same triangles as the serial path. Triangle order still matches (offsets from the count).
+    // The serial edge stage preserves vertices, labels, and node types. Parallel
+    // cubes read shared squares and flip private edge copies. This avoids shared
+    // mutation. Cross-cube flips are omitted, so triangulation can differ while
+    // interfaces remain valid and watertight.
     const SiteId lastCube = numSites - numSitesPerPlane;
     const usize numCubes = (lastCube >= 1) ? static_cast<usize>(lastCube) : 0; // cubes are 1..lastCube
 
-    // Per-cube work with a private edge copy (thread-safe). doGenerate=false counts (and sets the
-    // body-center node type); doGenerate=true writes triangles at triOffset. Returns the triangle count.
+    // Each cube uses private edges. Counting sets body-center node types. Generation
+    // writes triangles at the precomputed offset.
     auto perCube = [&](SiteId i, bool doGenerate, int64 triOffset) -> int64 {
       SiteId sqID[6];
       sqID[0] = 3 * (i - 1);
@@ -3422,14 +4576,15 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
             }
           }
         }
-        // Clamp to k_QuadPoint ("4 or more grains") -- see the note in get_number_triangles.
+        // NodeType uses k_QuadPoint for four or more labels.
         nodeType[BCnode] = static_cast<int8>(std::min(nds, static_cast<int>(M3CNodeType::k_QuadPoint)));
       }
       if(eff <= 0 || nFE <= 2)
       {
         return 0;
       }
-      // Private copy of this cube's face edges; local indices are 0..nFE-1 (max ~24, buffer is 64).
+      // Private face-edge indexes start at zero. A cube has at most 24 edges,
+      // and the fixed local buffer holds 64.
       std::array<SiteId, 64> localAFE{};
       std::array<Segment, 64> localEdges{};
       int tindex = 0;
@@ -3484,7 +4639,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       return tout - triOffset;
     };
 
-    // Slide the serial edge-stage window forward until it covers sites [targetBaseSite, +2*NSP).
+    // Slide the serial edge window until it covers the target and next site planes.
     auto advanceWindowTo = [&](SiteId targetBaseSite, bool appendEdges, int64& eid) {
       while(winBaseSite < targetBaseSite)
       {

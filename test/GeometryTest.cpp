@@ -16,9 +16,10 @@
 
 using namespace nx::core;
 
-////////////////////////////////////
-// Begin generic geometry testing //
-////////////////////////////////////
+/**
+ * @brief Verifies common node geometry operations.
+ * @param geom Geometry under test.
+ */
 void testAbstractGeometry(IGeometry* geom)
 {
   SECTION("abstract geometry")
@@ -42,6 +43,10 @@ void testAbstractGeometry(IGeometry* geom)
   }
 }
 
+/**
+ * @brief Verifies vertex and edge operations on a two-dimensional geometry.
+ * @param geom Geometry under test.
+ */
 void testGeom2D(INodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
@@ -88,6 +93,10 @@ void testGeom2D(INodeGeometry2D* geom)
   }
 }
 
+/**
+ * @brief Verifies vertex, edge, and face operations on a three-dimensional geometry.
+ * @param geom Geometry under test.
+ */
 void testGeom3D(INodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
@@ -135,6 +144,10 @@ void testGeom3D(INodeGeometry3D* geom)
   }
 }
 
+/**
+ * @brief Verifies dimensions and cell counts on a grid geometry.
+ * @param geom Geometry under test.
+ */
 void testGeomGrid(IGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
@@ -152,17 +165,15 @@ void testGeomGrid(IGridGeometry* geom)
   }
 }
 
-// -----------------------------------------------------------------------------
-// getBoundingBox coverage. Regression guard for issue #1649 (commit a31beeb):
-// INodeGeometry0D::getBoundingBox() seeded the upper corner with
-// std::numeric_limits<float>::min() -- the smallest POSITIVE normal float
-// (~1.18e-38) rather than the most-negative value -- so the max corner was never
-// updated for any geometry whose maximum coordinate on an axis was <= ~0 (e.g. a
-// mesh centered at or below the origin), yielding a wrong/oversized box.
-// Geometries lying entirely in positive space happened to work, which masked the
-// bug. These helpers exercise negative, origin-straddling, and positive
-// coordinate ranges so the failure mode is caught for every node-based geometry.
-// -----------------------------------------------------------------------------
+// Bounding-box tests cover negative, mixed-sign, and positive coordinates.
+// These ranges verify that corner initialization handles every node geometry.
+/**
+ * @brief Requires a bounding box to match the expected minimum and maximum points.
+ * @tparam T Specifies the coordinate type.
+ * @param bbox Bounding box to inspect.
+ * @param expectedMin Expected minimum point.
+ * @param expectedMax Expected maximum point.
+ */
 template <typename T>
 void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
 {
@@ -175,6 +186,10 @@ void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMi
   REQUIRE(bbox.getMaxPoint()[2] == Approx(expectedMax[2]));
 }
 
+/**
+ * @brief Tests bounding boxes for one node geometry type.
+ * @tparam GeomType Specifies the geometry type.
+ */
 template <class GeomType>
 void testNodeGeometryBoundingBox()
 {
@@ -184,10 +199,7 @@ void testNodeGeometryBoundingBox()
   const auto* vertices = createVertexList(geom);
   geom->setVertices(*vertices);
 
-  // Regression for #1649: a geometry lying entirely in negative space. The upper
-  // corner must be the least-negative coordinate on each axis. The pre-fix code
-  // seeded the upper corner with numeric_limits<float>::min() (~1.18e-38), so the
-  // max never updated here and the box came back wrong/oversized.
+  // Negative coordinates require the upper corner to start below every input value.
   {
     geom->resizeVertexList(4);
     geom->setVertexCoordinate(0, Point3Df{-3.0f, -4.0f, -5.0f});
@@ -197,8 +209,7 @@ void testNodeGeometryBoundingBox()
     checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-6.0f, -8.0f, -9.0f}, Point3Df{-1.0f, -2.0f, -2.0f});
   }
 
-  // Geometry straddling the origin (mixed-sign coordinates, including an exact
-  // zero on every axis).
+  // Mixed-sign coordinates include zero on every axis.
   {
     geom->resizeVertexList(3);
     geom->setVertexCoordinate(0, Point3Df{-2.0f, 3.0f, -4.0f});
@@ -207,8 +218,7 @@ void testNodeGeometryBoundingBox()
     checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-2.0f, -6.0f, -4.0f}, Point3Df{5.0f, 3.0f, 1.0f});
   }
 
-  // Geometry entirely in positive space (worked even before the fix; guards
-  // against an over-correction that would break the common case).
+  // Positive coordinates verify the common case remains correct.
   {
     geom->resizeVertexList(2);
     geom->setVertexCoordinate(0, Point3Df{2.0f, 4.0f, 6.0f});
@@ -217,9 +227,7 @@ void testNodeGeometryBoundingBox()
   }
 }
 
-/////////////////////////////////////
-// Begin geometry-specific testing //
-/////////////////////////////////////
+// Geometry-specific cases verify each concrete geometry type.
 TEST_CASE("EdgeGeomTest")
 {
   DataStructure dataStructure;
@@ -265,12 +273,8 @@ TEST_CASE("ImageGeomTest")
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// -----------------------------------------------------------------------------
-// ImageGeom::findElementSizes was rewritten in the 2D-handling refactor. It no
-// longer silently coerces an empty-dim spacing of 0 to 1 — it now errors on any
-// non-positive spacing. These tests lock in the new contract so future
-// regressions are caught without relying on a pipeline-level test.
-// -----------------------------------------------------------------------------
+// ImageGeom::findElementSizes rejects non-positive spacing and uses each spacing value.
+// These cases verify the contract directly.
 TEST_CASE("ImageGeom::findElementSizes 3D valid spacing")
 {
   DataStructure dataStructure;
@@ -302,9 +306,7 @@ TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper e
   REQUIRE(voxelSizes != nullptr);
   REQUIRE((*voxelSizes)[0] == Approx(0.5f * 0.5f * 0.004f));
 
-  // If the user wants to ignore the empty axis (treat z-spacing as unit
-  // thickness), they must set spacing[2] = 1.0 explicitly. The old code
-  // coerced this automatically; the new code requires it to be explicit.
+  // Unit spacing explicitly represents a zero-thickness axis.
   geom->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f});
   REQUIRE(geom->findElementSizes(true).valid());
   const auto* voxelSizesFlat = geom->getElementSizes();
@@ -335,9 +337,8 @@ TEST_CASE("ImageGeom::findElementSizes rejects non-positive spacing")
 
 TEST_CASE("ImageGeom::findElementSizes 1D image computes length correctly")
 {
-  // 1D images (two empty axes) now work as long as the user supplies unit
-  // spacing for the empty axes. Element size is a line length in the
-  // remaining axis, scaled by the other two spacings.
+  // One-dimensional images require unit spacing on their empty axes.
+  // Element size is the remaining-axis length scaled by the other spacings.
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, "Line");
   geom->setDimensions(SizeVec3{5, 1, 1});
@@ -425,12 +426,8 @@ TEST_CASE("VertexGeomTest")
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// -----------------------------------------------------------------------------
-// getBoundingBox coverage (regression guard for issue #1649 / commit a31beeb).
-// Every node-based geometry inherits INodeGeometry0D::getBoundingBox(), so each
-// concrete type is exercised to ensure the corner initialization is correct
-// regardless of where the geometry sits relative to the origin.
-// -----------------------------------------------------------------------------
+// Each node geometry inherits the same bounding-box implementation.
+// The cases verify it for every concrete type and coordinate range.
 TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
 {
   SECTION("VertexGeom")

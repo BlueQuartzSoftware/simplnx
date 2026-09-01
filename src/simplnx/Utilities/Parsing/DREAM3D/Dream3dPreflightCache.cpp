@@ -1,6 +1,7 @@
 #include "Dream3dPreflightCache.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -21,15 +22,13 @@ namespace nx::core::DREAM3D
 {
 namespace
 {
-// Matches ReadDREAM3DFilter's open-failure code and message so cache fetches
-// surface the same user-visible error for a missing or unreadable file.
+// Match ReadDREAM3DFilter so cached and uncached open failures have one contract.
 constexpr int32 k_FailedOpenFileIOError = -25;
 
 /**
- * @brief Canonicalizes a path for use as a cache key so the same file reached
- * via different spellings (relative vs absolute, redundant separators) maps to
- * one entry. Falls back to fs::absolute when canonicalization fails (e.g. the
- * file does not exist yet).
+ * @brief Creates the most stable available cache key for a file path.
+ * @param filePath Supplies a relative or absolute path.
+ * @return Weakly canonical path text, or absolute path text if canonicalization fails.
  */
 std::string MakeKey(const fs::path& filePath)
 {
@@ -43,9 +42,9 @@ std::string MakeKey(const fs::path& filePath)
 }
 
 /**
- * @brief Reads the preflight (metadata-only) DataStructure from disk. This is
- * the cache's miss path: open the file and import metadata-only (empty) data
- * stores.
+ * @brief Imports one metadata-only DataStructure from disk.
+ * @param filePath Identifies the DREAM3D file.
+ * @return Imported structure or the standard open or import error.
  */
 Result<DataStructure> ReadFromDisk(const fs::path& filePath)
 {
@@ -58,12 +57,19 @@ Result<DataStructure> ReadFromDisk(const fs::path& filePath)
 }
 
 /**
- * @brief Rebinds a DataArray<T> to a deep copy of its current store. Deep
- * copying an EmptyDataStore allocates nothing; it only duplicates the shape
- * metadata, which is exactly what preflight handouts need.
+ * @struct RefreshDataArrayStoreFunctor
+ * @brief Rebinds one numeric array to a deep store copy.
+ *
+ * An EmptyDataStore copy duplicates shape metadata and allocates no bulk values.
  */
 struct RefreshDataArrayStoreFunctor
 {
+  /**
+   * @brief Replaces one dispatched numeric store.
+   * @tparam T Specifies the array value type.
+   * @param dataStructure Owns the array.
+   * @param path Identifies the array.
+   */
   template <typename T>
   void operator()(DataStructure& dataStructure, const DataPath& path) const
   {
@@ -75,11 +81,17 @@ struct RefreshDataArrayStoreFunctor
 };
 
 /**
- * @brief Rebinds a NeighborList<T> to a deep copy of its list store, for the
- * same isolation reason as RefreshDataArrayStoreFunctor.
+ * @struct RefreshNeighborListStoreFunctor
+ * @brief Rebinds one NeighborList to a deep list-store copy.
  */
 struct RefreshNeighborListStoreFunctor
 {
+  /**
+   * @brief Replaces one dispatched list store.
+   * @tparam T Specifies the neighbor value type.
+   * @param dataStructure Owns the list.
+   * @param path Identifies the list.
+   */
   template <typename T>
   void operator()(DataStructure& dataStructure, const DataPath& path) const
   {
@@ -105,10 +117,16 @@ void Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
     }
     else if(auto* stringArray = dataStructure.getDataAs<StringArray>(path); stringArray != nullptr)
     {
-      // StringArray exposes no store getter; rebuilding from its values gives
-      // an equivalent, independent store. Preflight string stores hold only
-      // placeholder strings, so this copies almost nothing.
-      stringArray->setStore(std::make_shared<StringStore>(stringArray->values(), stringArray->getTupleShape()));
+      // A placeholder cannot expose values. Give it a new placeholder with the
+      // same shape. Rebuild a materialized string store from its values.
+      if(stringArray->isPlaceholder())
+      {
+        stringArray->setStore(std::make_shared<EmptyStringStore>(stringArray->getTupleShape()));
+      }
+      else
+      {
+        stringArray->setStore(std::make_shared<StringStore>(stringArray->values(), stringArray->getTupleShape()));
+      }
     }
     else if(auto* neighborList = dataStructure.getDataAs<INeighborList>(path); neighborList != nullptr)
     {
@@ -127,16 +145,14 @@ std::optional<DataStructure> Dream3dPreflightCache::tryServeFromCache(const std:
     {
       m_Hits++;
       iter->second.lastUsedTick = ++m_Tick;
-      // Copy under the lock (the entry could be evicted after release); the
-      // copy is cheap because preflight stores hold no bulk data.
+      // Copy while the entry cannot be evicted. Preflight stores contain no bulk data.
       handout = iter->second.master;
     }
   }
   if(handout.has_value())
   {
-    // Refresh outside the lock: the handout's shared_ptrs keep the source
-    // stores alive on their own, and masters are never mutated in place, so
-    // isolating the copy needs no synchronization with other fetches.
+    // Shared pointers keep source stores alive after the table lock releases.
+    // Masters are immutable, so store isolation needs no table synchronization.
     RefreshStores(*handout);
   }
   return handout;
@@ -149,25 +165,18 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
   const auto mtime = fs::last_write_time(filePath, errorCode);
   if(errorCode)
   {
-    // Stat failed (file missing/unreachable): fall through to a direct read so
-    // the caller receives the normal open-failure error for a missing or
-    // unreadable file.
-    // Freshly read from disk and never cached, so no refresh is needed: this
-    // handout already owns stores no other handout can reach. The read is still
-    // serialized because the HDF5 C library is not safe to call concurrently.
+    // A direct serialized read preserves the standard open error. Failed stat
+    // paths never enter the cache, so their handout already owns unique stores.
     m_Misses++;
     const std::lock_guard<std::mutex> readLock(m_ReadMutex);
     return ReadFromDisk(filePath);
   }
 
-  // Never trust entries for a file modified within the mtime rounding window
-  // of network filesystems: a same-size rewrite inside that window would be
-  // indistinguishable from the cached state. Serve a fresh read instead.
+  // A recent same-size rewrite can hide inside network timestamp rounding.
+  // Bypass the cache during the trust window.
   if(fs::file_time_type::clock::now() - mtime < k_MtimeTrustWindow)
   {
-    // Freshly read from disk and never cached, so no refresh is needed: this
-    // handout already owns stores no other handout can reach. The read is still
-    // serialized because the HDF5 C library is not safe to call concurrently.
+    // The uncached import already owns unique stores. Serialize its HDF5 traversal.
     m_Misses++;
     const std::lock_guard<std::mutex> readLock(m_ReadMutex);
     return ReadFromDisk(filePath);
@@ -175,21 +184,16 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
 
   const std::string key = MakeKey(filePath);
 
-  // Fast path: a valid cached entry needs only m_Mutex and never blocks on a
-  // disk read in flight for some other file, keeping the per-edit path light.
+  // A hit uses only the table mutex and does not wait for an unrelated disk read.
   if(std::optional<DataStructure> hit = tryServeFromCache(key, fileSize, mtime); hit.has_value())
   {
     return {std::move(*hit)};
   }
 
-  // Miss: serialize the disk read with m_ReadMutex because the HDF5 C library
-  // is not safe to call concurrently in this build. Per the lock ordering,
-  // m_ReadMutex is acquired here BEFORE any m_Mutex acquisition below.
+  // Serialize the complete HDF5 import. This lock precedes every later table lock.
   const std::lock_guard<std::mutex> readLock(m_ReadMutex);
 
-  // Re-check under m_Mutex: another thread may have populated this entry while
-  // we waited for m_ReadMutex. If so, serve it and skip the redundant (and, on
-  // high-latency storage, expensive) read.
+  // Another thread can populate the entry while this thread waits for the read lock.
   if(std::optional<DataStructure> hit = tryServeFromCache(key, fileSize, mtime); hit.has_value())
   {
     return {std::move(*hit)};
@@ -199,7 +203,7 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
   Result<DataStructure> diskResult = ReadFromDisk(filePath);
   if(diskResult.invalid())
   {
-    // Failures are never cached: the next fetch must retry the file.
+    // A failed import must be retried by the next fetch.
     return diskResult;
   }
 
@@ -212,9 +216,7 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
     entry.mtime = mtime;
     entry.lastUsedTick = ++m_Tick;
 
-    // Bound the table: evict the least-recently-used entry. The cap exists to
-    // bound bookkeeping in long GUI sessions that touch many files; preflight
-    // masters themselves are only kilobytes.
+    // Evict the least-recently-used entry to bound long-session bookkeeping.
     while(m_Entries.size() > k_Capacity)
     {
       auto victim = std::min_element(m_Entries.begin(), m_Entries.end(), [](const auto& a, const auto& b) { return a.second.lastUsedTick < b.second.lastUsedTick; });

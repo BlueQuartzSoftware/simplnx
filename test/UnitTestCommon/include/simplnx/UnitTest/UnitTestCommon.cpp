@@ -1,7 +1,5 @@
 #include "UnitTestCommon.hpp"
 
-#include "simplnx/Parameters/Dream3dImportParameter.hpp"
-
 #include <zlib.h>
 
 #include <array>
@@ -12,37 +10,19 @@ namespace nx::core::UnitTest
 {
 DataStructure LoadDataStructure(const fs::path& filepath)
 {
-  // Ensure the plugins a loaded.
   LoadPlugins();
-
-  INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
   REQUIRE(fs::exists(filepath));
 
-  DataStructure dataStructure;
-
-  // const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-  auto* filterList = Application::Instance()->getFilterList();
-  /*************************************************************************
-   * ReadDREAM3DFilter
-   ************************************************************************/
-  constexpr Uuid k_ReadDREAM3DFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
-  const FilterHandle k_ReadDREAM3DFilterHandle(k_ReadDREAM3DFilterId, k_SimplnxCorePluginId);
-
-  auto filterPtr = filterList->createFilter(k_ReadDREAM3DFilterHandle);
-  REQUIRE(nullptr != filterPtr);
-
-  Arguments args;
-  args.insertOrAssign("import_data_object", std::make_any<Dream3dImportParameter::ImportData>(Dream3dImportParameter::ImportData{filepath, Dream3dImportParameter::PathImportPolicy::All}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filterPtr->preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filterPtr->execute(dataStructure, args); //, nullptr, IFilter::MessageHandler{[](const IFilter::Message& message) { fmt::print("{}\n", message.message); }});
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  return dataStructure;
+  auto result = DREAM3D::LoadDataStructure(filepath);
+  if(result.invalid())
+  {
+    for(const auto& error : result.errors())
+    {
+      UNSCOPED_INFO(fmt::format("[{}] {}", error.code, error.message));
+    }
+    FAIL(fmt::format("Failed to load DataStructure from '{}'", filepath.string()));
+  }
+  return std::move(result.value());
 }
 
 TestFileSentinel::TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles, bool removeTemp)
@@ -69,7 +49,7 @@ TestFileSentinel::~TestFileSentinel()
   if(m_RemoveTemp)
   {
     std::error_code errorCode;
-    std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
+    fs::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
     if(errorCode)
     {
       std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
@@ -79,7 +59,12 @@ TestFileSentinel::~TestFileSentinel()
 
 namespace
 {
-// Parse an octal field from a tar header, returning 0 on empty/null fields
+/**
+ * @brief Parses an unsigned octal field from a tar header.
+ * @param data First field byte.
+ * @param length Maximum field length in bytes.
+ * @return The parsed value, or 0 for an empty field.
+ */
 uint64 parseOctal(const char* data, size_t length)
 {
   uint64 value = 0;
@@ -94,7 +79,11 @@ uint64 parseOctal(const char* data, size_t length)
   return value;
 }
 
-// Check if a 512-byte tar header block is all zeros (end-of-archive marker)
+/**
+ * @brief Tests whether a tar header block contains only zero bytes.
+ * @param block Header block to test.
+ * @return True if all 512 bytes are zero.
+ */
 bool isZeroBlock(const std::array<char, 512>& block)
 {
   for(char c : block)
@@ -107,9 +96,14 @@ bool isZeroBlock(const std::array<char, 512>& block)
   return true;
 }
 
-// Validate the tar header checksum (offset 148, 8 bytes octal).
-// The checksum is the unsigned sum of all 512 header bytes, treating
-// the 8-byte checksum field itself as spaces (0x20).
+/**
+ * @brief Validates the checksum in a 512-byte tar header.
+ * @param header Header block to validate.
+ * @return True if the stored and computed checksums are equal.
+ *
+ * The checksum uses the unsigned sum of all header bytes. The calculation
+ * treats the eight-byte checksum field at offset 148 as spaces.
+ */
 bool validateChecksum(const std::array<char, 512>& header)
 {
   uint64 stored = parseOctal(header.data() + 148, 8);
@@ -150,7 +144,7 @@ std::error_code TestFileSentinel::decompress()
       int bytesRead = gzread(gz, header.data(), k_BlockSize);
       if(bytesRead == 0)
       {
-        break; // EOF
+        break; // The gzip stream reached its end.
       }
       if(bytesRead < 0 || bytesRead != k_BlockSize)
       {
@@ -160,13 +154,13 @@ std::error_code TestFileSentinel::decompress()
       }
     }
 
-    // Two consecutive zero blocks mark end of archive
+    // This extractor treats the first zero header block as the archive end.
     if(isZeroBlock(header))
     {
       break;
     }
 
-    // Validate tar header checksum
+    // Validate each header before its fields control path or size calculations.
     if(!validateChecksum(header))
     {
       std::cout << "Invalid tar header checksum in: " << archivePath << std::endl;
@@ -174,13 +168,12 @@ std::error_code TestFileSentinel::decompress()
       return std::make_error_code(std::errc::io_error);
     }
 
-    // Parse tar header fields
-    // offset 345, 155 bytes: prefix; offset 0, 100 bytes: name
+    // The tar prefix starts at byte 345. The entry name starts at byte 0.
     std::string prefix(header.data() + 345, strnlen(header.data() + 345, 155));
     std::string name(header.data(), strnlen(header.data(), 100));
     std::string entryPath = prefix.empty() ? name : (prefix + "/" + name);
 
-    // If a GNU long name was read from a previous 'L' entry, use it instead
+    // A preceding GNU long-name entry replaces the fixed-width header name.
     if(!gnuLongName.empty())
     {
       entryPath = std::move(gnuLongName);
@@ -190,8 +183,7 @@ std::error_code TestFileSentinel::decompress()
     uint64 fileSize = parseOctal(header.data() + 124, 12);
     char typeFlag = header[156];
 
-    // Handle GNU long name extension (typeflag 'L'): the data blocks contain
-    // the long filename for the next entry
+    // A GNU `L` entry stores the name for the next archive entry.
     if(typeFlag == 'L')
     {
       uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
@@ -210,7 +202,7 @@ std::error_code TestFileSentinel::decompress()
         uint64 useful = std::min(fileSize - longName.size(), static_cast<uint64>(k_BlockSize));
         longName.append(dataBuf.data(), useful);
       }
-      // Remove trailing null if present
+      // The GNU name payload can include one trailing null byte.
       if(!longName.empty() && longName.back() == '\0')
       {
         longName.pop_back();
@@ -219,7 +211,7 @@ std::error_code TestFileSentinel::decompress()
       continue;
     }
 
-    // Handle GNU long link name extension (typeflag 'K'): skip data blocks
+    // A GNU `K` entry contains a long link name. This extractor skips its payload.
     if(typeFlag == 'K')
     {
       uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
@@ -239,16 +231,16 @@ std::error_code TestFileSentinel::decompress()
 
     std::string fullPath = fmt::format("{}/{}", m_TestFilesDir, entryPath);
 
-    // typeFlag: '5' = directory, '0' or '\0' = regular file, '2' = symlink
+    // Tar type 5 is a directory. Type 0 or null is a regular file.
     if(typeFlag == '5')
     {
-      std::filesystem::create_directories(fullPath);
+      fs::create_directories(fullPath);
     }
     else if(typeFlag == '0' || typeFlag == '\0')
     {
-      // Ensure parent directory exists
-      std::filesystem::path filePath(fullPath);
-      std::filesystem::create_directories(filePath.parent_path());
+      // Create the parent before this entry writes its regular-file payload.
+      fs::path filePath(fullPath);
+      fs::create_directories(filePath.parent_path());
 
       std::ofstream outFile(fullPath, std::ios::binary);
       if(!outFile)
@@ -276,7 +268,7 @@ std::error_code TestFileSentinel::decompress()
     }
     else
     {
-      // For other types (symlinks, etc.), skip the data blocks
+      // Skip payload blocks for links and other unsupported entry types.
       uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
       for(uint64 i = 0; i < blocks; i++)
       {
@@ -295,32 +287,28 @@ std::error_code TestFileSentinel::decompress()
   return {};
 }
 
-PreferencesSentinel::PreferencesSentinel(std::string largeDataFormat, int64 largeDataSize, bool forceOocData)
+PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, int64 largeDataSize)
 {
   auto* prefs = nx::core::Application::Instance()->getPreferences();
 
-  // Save current preference values
-  m_OriginalFormat = prefs->largeDataFormat();
+  // Save both values before this sentinel changes the process-wide preferences.
+  m_OriginalMode = prefs->dataStorageMode();
   m_OriginalSize = prefs->valueAs<int64>(nx::core::Preferences::k_LargeDataSize_Key);
-  m_OriginalForceOoc = prefs->forceOocData();
 
-  // Set new preference values
-  prefs->setLargeDataFormat(std::move(largeDataFormat));
+  // Apply the test values only after the complete prior state is available.
+  prefs->setDataStorageMode(mode);
   prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
-  prefs->setForceOocData(forceOocData);
 }
 
 PreferencesSentinel::~PreferencesSentinel()
 {
   auto* prefs = nx::core::Application::Instance()->getPreferences();
 
-  // Restore original preference values
-  prefs->setLargeDataFormat(m_OriginalFormat);
+  // Restore only the in-memory values. Unit tests must not write the developer's preferences file.
+  // A concurrent save or a terminated test could persist a temporary storage mode.
+  // Later test processes would then inherit that incorrect mode.
+  prefs->setDataStorageMode(m_OriginalMode);
   prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
-  prefs->setForceOocData(m_OriginalForceOoc);
-
-  // Save preferences to disk
-  nx::core::Application::Instance()->savePreferences();
 }
 
 } // namespace nx::core::UnitTest

@@ -9,10 +9,10 @@
 #include <EbsdLib/Core/Orientation.hpp>
 
 #include <fmt/format.h>
+#include <nonstd/span.hpp>
 
 using namespace nx::core;
 
-// -----------------------------------------------------------------------------
 ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadAngDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_MessageHandler(msgHandler)
@@ -21,10 +21,8 @@ ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-// -----------------------------------------------------------------------------
 ReadAngData::~ReadAngData() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ReadAngData::operator()()
 {
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading .ang file '{}'", m_InputValues->InputFile.string()));
@@ -49,7 +47,6 @@ Result<> ReadAngData::operator()()
   return copyRawEbsdData(&reader);
 }
 
-// -----------------------------------------------------------------------------
 Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
 {
   const std::vector<ebsdlib::AngPhase::Pointer> phases = reader->getPhaseVector();
@@ -69,10 +66,7 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
   const std::string k_InvalidPhase = "Invalid Phase";
   const usize numTuples = crystalStructures.getNumberOfTuples();
 
-  // Initialize EVERY slot to the "Invalid Phase" defaults first. Slot 0 is always the
-  // invalid phase, and any slot not covered by a phase section in the file (possible when
-  // the file's phase indices are not contiguous) keeps these defaults instead of
-  // zero-initialized garbage.
+  // Defaults preserve invalid and omitted phase slots.
   for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
     crystalStructures[tupleIndex] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
@@ -86,16 +80,12 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
   for(const ebsdlib::AngPhase::Pointer& phase : phases)
   {
     const int32_t phaseID = phase->getPhaseIndex();
-    // .ang phase numbering starts at 1. A phase index < 1 (Phase 0 or negative) is rejected: DREAM3D
-    // 6.5.171 tolerated a Phase 0 section (it skipped only negative indices and wrote Phase 0 into
-    // ensemble slot 0), so this is a documented behavior change vs legacy — see deviation
-    // ReadAngDataFilter-D5. A static "# Phase 0" fixture trips this deterministically.
+    // .ang phase numbering starts at one. Phase zero remains invalid.
     if(phaseID < 1)
     {
       return MakeErrorResult(-19502, fmt::format("The .ang file declares phase index {}, but .ang phase numbering starts at 1 (Phase 0 and negative phases are not supported).", phaseID));
     }
-    // The ensemble arrays were sized in preflight from the same file's largest phase index, so an index
-    // at or above the array count can only mean the file changed between preflight and execute.
+    // An out-of-range phase indicates a file change after preflight.
     if(static_cast<usize>(phaseID) >= numTuples)
     {
       return MakeErrorResult(
@@ -116,19 +106,15 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
   return {};
 }
 
-// -----------------------------------------------------------------------------
 Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  const size_t totalCells = imageGeom.getNumberOfCells();
+  const usize totalCells = imageGeom.getNumberOfCells();
 
-  // The Image Geometry was sized in preflight from the file's column/row header (NumEvenCols x NumRows),
-  // but the reader allocates its data buffers from NumOddCols x NumRows. Every copy below reads
-  // totalCells elements out of those buffers, so if the reader actually read fewer elements (a file that
-  // changed between preflight and execute, or a malformed header where NCOLS_EVEN > NCOLS_ODD) the copies
-  // would read past the end of the reader's heap buffers. Guard against that out-of-bounds read.
+  // The geometry and reader can disagree after a file change. Guard reader
+  // buffers before copy operations.
   if(reader->getNumberOfElements() < totalCells)
   {
     return MakeErrorResult(-19503,
@@ -137,40 +123,54 @@ Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
                                        reader->getNumberOfElements(), totalCells));
   }
 
-  // Adjust the values of the 'phase' data to correct for invalid values and assign the read Phase Data into the actual DataArray
+  // .ang phase zero and negative values map to the first valid phase.
   {
     if(m_ShouldCancel)
     {
       return {};
     }
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::Phases));
-    int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(ebsdlib::Ang::PhaseData));
-    for(size_t i = 0; i < totalCells; i++)
+    auto* phasePtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ang::PhaseData));
+    for(usize i = 0; i < totalCells; i++)
     {
       if(phasePtr[i] < 1)
       {
         phasePtr[i] = 1;
       }
-      targetArray[i] = phasePtr[i];
     }
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalCells));
   }
 
-  // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
+  // Condense the Euler Angles from 3 separate source arrays (Phi1, Phi, Phi2) into a
+  // single interleaved 3-component destination array. Uses chunked interleaving to
+  // bound memory while still writing bulk chunks via copyFromBuffer.
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Phi1));
-    const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Phi));
-    const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Phi2));
+    const auto* fComp0 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi1));
+    const auto* fComp1 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi));
+    const auto* fComp2 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi2));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::EulerAngles));
-    for(size_t i = 0; i < totalCells; i++)
+    auto& eulerStore = cellEulerAngles.getDataStoreRef();
+
+    // Chunked interleaving: interleave k_ChunkSize tuples into a local buffer,
+    // then bulk-write the chunk. This avoids both per-element OOC access and
+    // allocating a buffer for the entire volume.
+    constexpr usize k_ChunkSize = 65536;
+    std::vector<float32> eulerBuf(k_ChunkSize * 3);
+    for(usize offset = 0; offset < totalCells; offset += k_ChunkSize)
     {
-      cellEulerAngles[3 * i] = fComp0[i];
-      cellEulerAngles[3 * i + 1] = fComp1[i];
-      cellEulerAngles[3 * i + 2] = fComp2[i];
+      usize count = std::min(k_ChunkSize, totalCells - offset);
+      for(usize i = 0; i < count; i++)
+      {
+        eulerBuf[3 * i] = fComp0[offset + i];
+        eulerBuf[3 * i + 1] = fComp1[offset + i];
+        eulerBuf[3 * i + 2] = fComp2[offset + i];
+      }
+      eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuf.data(), count * 3));
     }
   }
 
@@ -179,40 +179,43 @@ Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
     return {};
   }
 
+  // OOC-safe bulk writes for single-component float arrays.
+  // Each copyFromBuffer() writes the entire reader buffer in one I/O operation,
+  // which is optimal for both in-memory and OOC DataStore backends.
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::ImageQuality));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::ImageQuality));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ImageQuality));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::ConfidenceIndex));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::ConfidenceIndex));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ConfidenceIndex));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::SEMSignal));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::SEMSignal));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::SEMSignal));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Fit));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::Fit));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::Fit));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::XPosition));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::XPosition));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::XPosition));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::YPosition));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ang::YPosition));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::YPosition));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   return {};

@@ -33,6 +33,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ReadTextDataArrayInputValues
+ * @brief Stores text layout, destination, and preflight array settings.
+ */
 struct SIMPLNXCORE_EXPORT ReadTextDataArrayInputValues
 {
   DataStoreFormatParameter::ValueType DataFormat;
@@ -48,13 +52,26 @@ struct SIMPLNXCORE_EXPORT ReadTextDataArrayInputValues
 
 /**
  * @class ReadTextDataArray
- * @brief This algorithm implements support code for the ReadTextDataArrayFilter
+ * @brief Parses delimited numeric text into a preallocated DataArray.
+ *
+ * CsvParser writes through bounded pages. Array format, type, and shape settings
+ * are used during filter preflight rather than algorithm execution.
  */
-
 class SIMPLNXCORE_EXPORT ReadTextDataArray
 {
 public:
+  /**
+   * @brief Creates a delimited-text reader.
+   * @param dataStructure Receives parsed values.
+   * @param mesgHandler Is retained but not used.
+   * @param shouldCancel Is retained but not inspected.
+   * @param inputValues Specifies file, delimiter, skip count, and destination. The
+   * caller must keep this object alive for the reader lifetime.
+   */
   ReadTextDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadTextDataArrayInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning reader.
+   */
   ~ReadTextDataArray() noexcept;
 
   ReadTextDataArray(const ReadTextDataArray&) = delete;
@@ -62,6 +79,12 @@ public:
   ReadTextDataArray& operator=(const ReadTextDataArray&) = delete;
   ReadTextDataArray& operator=(ReadTextDataArray&&) noexcept = delete;
 
+  /**
+   * @brief Parses the configured file into the destination store.
+   * @return Parser, conversion, or destination-write error, or success.
+   *
+   * The algorithm does not inspect cancellation after parsing starts.
+   */
   Result<> operator()();
 
 private:
