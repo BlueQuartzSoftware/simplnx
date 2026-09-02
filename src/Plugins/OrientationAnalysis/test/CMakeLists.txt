@@ -47,6 +47,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadAngDataTest.cpp
   ReadChannel5DataTest.cpp
   ReadCtfDataTest.cpp
+  ReadEbsdPatternFileTest.cpp
   ReadEnsembleInfoTest.cpp
   ReadGrainMapper3DTest.cpp
   ReadH5EbsdTest.cpp
