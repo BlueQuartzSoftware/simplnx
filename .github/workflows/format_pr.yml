@@ -26,7 +26,8 @@ jobs:
         with:
           path: ${{ env.REPO_PATH }}
           fetch-depth: 2
-      - uses: actions/checkout@v7
+      - name: Checkout workflow script
+        uses: actions/checkout@v7
         if: ${{ github.repository != job.workflow_repository }}
         with:
           repository: ${{ job.workflow_repository }}
