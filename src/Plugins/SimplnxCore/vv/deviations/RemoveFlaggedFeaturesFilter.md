@@ -54,9 +54,9 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 
 **Symptom:** With fill enabled, when every cell belongs to a flagged feature and the unflagged features own no cells, SIMPLNX returns error `-45436` and leaves the cells at -1; DREAM3D 6.5.171 loops forever. Reproduced on a 4x1x1 volume with `FeatureIds = [1, 1, 1, 1]`, three feature tuples, and only feature 1 flagged: 6.5.171 was still running when killed after 30 seconds.
 
-**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). The all-flagged guard only inspects the flag array, so an unflagged feature that owns no cells satisfies it. After marking, no cell is non-negative, so no vacated cell ever finds a fill source and neither implementation detected the lack of progress. SIMPLNX now tracks whether a pass recorded any fill source and stops with a deterministic error when vacated cells remain without one. This is the same class of defect as `RequireMinNumNeighborsFilter-D3`.
+**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). The all-flagged guard only inspects the flag array, so an unflagged feature that owns no cells satisfies it. After marking, no cell is non-negative, so no vacated cell ever finds a fill source and neither implementation detected the lack of progress. SIMPLNX now counts the cells that each pass actually fills and stops with a deterministic error when vacated cells remain and the count is zero. A second route to the same non-termination, listing the Feature Ids array itself in *Attribute Arrays to Ignore* so that sources were chosen but the Feature Ids array was never overwritten, is closed by always copying that array and warning (`-45438`). 6.5.171 also loops forever in that case (`voxelArrayNames.removeAll` honors the request). This is the same class of defect as `RequireMinNumNeighborsFilter-D3`.
 
-**Affected users:** Users whose feature Attribute Matrix contains features that own no cells, when the flag array removes every feature that does own cells. Valid inputs are unaffected.
+**Affected users:** Users whose feature Attribute Matrix contains features that own no cells, when the flag array removes every feature that does own cells; and users who list the Feature Ids array in *Attribute Arrays to Ignore* with fill enabled. Other inputs are unaffected.
 
 **Recommendation:** `trust SIMPLNX`. The error names the array and explains the two ways to correct the input; the legacy behavior is an unbounded execution.
 
@@ -70,9 +70,9 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** When a FeatureId is negative or not less than the feature tuple count, SIMPLNX returns error `-45435` before modifying anything; DREAM3D 6.5.171 indexes its flag vector out of bounds. In the A/B run (5x2x1, cell 6 set to 5 with five feature tuples) 6.5.171 completed and silently zeroed that cell, which depends on whatever memory followed the vector.
+**Symptom:** When a FeatureId is negative or not less than the feature tuple count, SIMPLNX returns error `-45435` before it modifies anything; DREAM3D 6.5.171 indexed its flag vector out of bounds. In the A/B run (5x2x1, cell 6 set to 5 with five feature tuples) 6.5.171 completed and silently zeroed that cell. The result depended on whatever memory followed the vector.
 
-**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). `remove_flaggedfeatures()` evaluates `activeObjects[gnum]` for every cell without validating `gnum`. SIMPLNX now validates every FeatureId against the flag count in a read-only pass before the marking pass. This is the same class of defect as `RequireMinNumNeighborsFilter-D2`.
+**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). `remove_flaggedfeatures()` evaluates `activeObjects[gnum]` for every cell without validating `gnum`. SIMPLNX now validates every FeatureId against the flag count in a read-only pass before the marking pass, and also returns `-45437` when the Feature Ids tuple count differs from the geometry cell count, which neither implementation checked before. This is the same class of defect as `RequireMinNumNeighborsFilter-D2`.
 
 **Affected users:** Users with a Feature Ids array that does not correspond to the selected feature Attribute Matrix, for example after selecting the wrong Attribute Matrix or after a partial renumbering. Valid inputs are unaffected.
 

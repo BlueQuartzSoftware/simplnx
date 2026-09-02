@@ -74,6 +74,14 @@ among the tied **Features** is arbitrary. Ties are common in integer arrays such
 - The filter warns during preflight when the chosen settings would remove nothing, and when they
   would remove every **Feature**. The latter is an error at execute time, since it would leave
   nothing behind.
+- Every value in *Cell Feature Ids* must be in the range 0 through (number of **Feature** tuples - 1),
+  and the array must hold one value per **Cell** of the selected geometry. A value outside that range
+  stops the filter with error *-45435*, and a tuple-count mismatch with error *-45437*, before any data
+  is modified. These checks are shared with [Remove/Extract Flagged Features](RemoveFlaggedFeaturesFilter.md),
+  which also documents the fill rules (background **Cells** are never filled but can be fill sources) and
+  the *-45436* error that stops a fill that cannot make progress.
+- The *Cell Feature Ids* array is always copied by the fill, even when it is listed in *Attribute Arrays
+  to Ignore*; the filter warns (*-45438*) and removes it from the list.
 
 % Auto generated parameter table will be inserted here
 
