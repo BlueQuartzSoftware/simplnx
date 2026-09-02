@@ -67,6 +67,11 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
                                                    BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
+  params.insert(std::make_unique<BoolParameter>(k_SharpBoundingBoxEdges_Key, "Sharp Bounding Box Edges",
+                                                "M3C places mesh vertices on cell edges, so on its own it bevels the edges and corners of the bounding box by half a cell (a 45 "
+                                                "degree chamfer). If true, the wall vertices along each box edge are moved onto the edge and merged, and the chamfer "
+                                                "triangles are removed, so the six walls meet at sharp edges and corners as a finite element model expects.",
+                                                true));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Image Geometry", "The complete path to the Image Geometry from which to create a Triangle Geometry",
@@ -104,11 +109,17 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType M3CSurfaceMeshingFilter::parametersVersion() const
 {
-  return 2;
+  return 3;
   // Version 1 -> 2
   // Change 1:
   // Added - k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
   // Solution - set the value to 0 (BoundingBoxSkinMode::k_Off, preserves prior behavior);
+  //
+  // Version 2 -> 3
+  // Change 1:
+  // Added - k_SharpBoundingBoxEdges_Key = "sharp_bounding_box_edges";
+  // Solution - missing values take the parameter default (true). Note that this deliberately CHANGES the
+  //            output of older pipelines: the bounding box edges are now sharp instead of chamfered.
   //
 }
 
@@ -200,6 +211,7 @@ Result<> M3CSurfaceMeshingFilter::executeImpl(DataStructure& dataStructure, cons
 
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
   inputValues.BoundingBoxSkinMode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);
+  inputValues.SharpBoundingBoxEdges = filterArgs.value<bool>(k_SharpBoundingBoxEdges_Key);
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.SelectedCellDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);

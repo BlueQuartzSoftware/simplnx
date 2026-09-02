@@ -25,7 +25,9 @@
 #include <cstdlib>
 #include <filesystem>
 #include <limits>
+#include <set>
 #include <string>
+#include <tuple>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -925,4 +927,333 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across
   UnitTest::CheckArraysInheritTupleDims(wholeVolumeResult.Structure);
   UnitTest::CheckArraysInheritTupleDims(serialWindowedResult.Structure);
   UnitTest::CheckArraysInheritTupleDims(parallelWindowedResult.Structure);
+}
+
+namespace
+{
+const DataPath k_SharpEdgesTriGeomPath({"M3CSharpEdgesMesh"});
+const DataPath k_SharpEdgesImageGeomPath({"ImageGeometry"});
+const DataPath k_SharpEdgesFeatureIdsPath({"ImageGeometry", "Cell Data", "FeatureIds"});
+const DataPath k_SharpEdgesFaceLabelsPath = k_SharpEdgesTriGeomPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+const DataPath k_SharpEdgesNodeTypesPath = k_SharpEdgesTriGeomPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
+
+// Builds an in-memory ImageGeom + FeatureIds volume from a labeling functor. Unlike RunM3COnToy this takes
+// an arbitrary spacing and origin, so that a half-cell snap along one axis cannot be confused with one along
+// another, and so that the float arithmetic is exercised away from round numbers.
+template <typename LabelFuncT>
+DataStructure BuildToyVolume(const SizeVec3& dims, const FloatVec3& spacing, const FloatVec3& origin, LabelFuncT&& labeler)
+{
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_SharpEdgesImageGeomPath.getTargetName());
+  imageGeom->setDimensions(dims);
+  imageGeom->setSpacing(spacing);
+  imageGeom->setOrigin(origin);
+  const std::vector<usize> tupleShape = {dims[2], dims[1], dims[0]};
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
+  auto& featureIdsRef = featureIds->getDataStoreRef();
+  usize idx = 0;
+  for(usize z = 0; z < dims[2]; z++)
+  {
+    for(usize y = 0; y < dims[1]; y++)
+    {
+      for(usize x = 0; x < dims[0]; x++)
+      {
+        featureIdsRef[idx++] = labeler(x, y, z);
+      }
+    }
+  }
+  return dataStructure;
+}
+
+// Runs M3C (winding repair on, Bounding Box Skin off) on the volume built by BuildToyVolume with the Sharp
+// Bounding Box Edges option set as requested; the mesh is created at k_SharpEdgesTriGeomPath.
+void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
+{
+  M3CSurfaceMeshingFilter filter;
+  Arguments args;
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(BoundingBoxSkinMode::k_Off));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_SharpBoundingBoxEdges_Key, std::make_any<bool>(sharpEdges));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_SharpEdgesImageGeomPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_SharpEdgesFeatureIdsPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_SharpEdgesTriGeomPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+}
+
+// The bounding planes of an ImageGeom and a tolerance suited to its coordinate magnitudes (same reasoning as
+// in CheckMeshWithinVolume).
+struct VolumeBounds
+{
+  std::array<float32, 3> Lo;
+  std::array<float32, 3> Hi;
+  float32 Tol;
+};
+
+VolumeBounds GetVolumeBounds(const DataStructure& dataStructure, const DataPath& imageGeomPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(imageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const SizeVec3 dims = imageGeom.getDimensions();
+  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3 spacing = imageGeom.getSpacing();
+  VolumeBounds bounds{};
+  for(usize ax = 0; ax < 3; ax++)
+  {
+    bounds.Lo[ax] = origin[ax];
+    bounds.Hi[ax] = origin[ax] + static_cast<float32>(dims[ax]) * spacing[ax];
+  }
+  const float32 maxSpacing = std::max({spacing[0], spacing[1], spacing[2]});
+  const float32 maxMagnitude = std::max({std::abs(bounds.Lo[0]), std::abs(bounds.Lo[1]), std::abs(bounds.Lo[2]), std::abs(bounds.Hi[0]), std::abs(bounds.Hi[1]), std::abs(bounds.Hi[2])});
+  bounds.Tol = std::max(1.0e-4f * maxSpacing, 8.0f * std::numeric_limits<float32>::epsilon() * maxMagnitude);
+  return bounds;
+}
+
+// Counts the exterior triangles (Face Label -1 on one side) whose three vertices do NOT all lie on one common
+// bounding plane. Such a triangle bridges two walls: it is one of the 45 degree chamfer triangles M3C's
+// marching-squares cases emit along the edges and at the corners of the bounding box. A box with sharp edges
+// has none.
+usize CountWallBridgingTriangles(const DataStructure& dataStructure, const DataPath& triGeomPath, const DataPath& faceLabelsPath, const DataPath& imageGeomPath)
+{
+  const VolumeBounds bounds = GetVolumeBounds(dataStructure, imageGeomPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triGeomPath));
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  const auto& triStore = tri.getFaces()->getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+
+  usize numBridging = 0;
+  for(usize i = 0; i < tri.getNumberOfFaces(); i++)
+  {
+    if(faceLabelStore[i * 2 + 0] != -1 && faceLabelStore[i * 2 + 1] != -1)
+    {
+      continue;
+    }
+    // Which of the six planes does EVERY vertex of this triangle lie on?
+    bool sharesAPlane = false;
+    for(usize ax = 0; ax < 3 && !sharesAPlane; ax++)
+    {
+      for(const float32 plane : {bounds.Lo[ax], bounds.Hi[ax]})
+      {
+        bool allOnPlane = true;
+        for(usize corner = 0; corner < 3 && allOnPlane; corner++)
+        {
+          const usize vertIndex = triStore[i * 3 + corner];
+          allOnPlane = std::abs(vertStore[vertIndex * 3 + ax] - plane) <= bounds.Tol;
+        }
+        if(allOnPlane)
+        {
+          sharesAPlane = true;
+          break;
+        }
+      }
+    }
+    if(!sharesAPlane)
+    {
+      numBridging++;
+    }
+  }
+  return numBridging;
+}
+
+// Asserts that each of the eight corner points of the volume is present as a mesh vertex. A chamfered box
+// has none of them; a sharp box has all of them.
+void RequireBoxCornersPresent(const DataStructure& dataStructure, const DataPath& triGeomPath, const DataPath& imageGeomPath)
+{
+  const VolumeBounds bounds = GetVolumeBounds(dataStructure, imageGeomPath);
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  for(int cornerBits = 0; cornerBits < 8; cornerBits++)
+  {
+    const std::array<float32, 3> corner = {((cornerBits & 1) != 0) ? bounds.Hi[0] : bounds.Lo[0], ((cornerBits & 2) != 0) ? bounds.Hi[1] : bounds.Lo[1],
+                                           ((cornerBits & 4) != 0) ? bounds.Hi[2] : bounds.Lo[2]};
+    bool found = false;
+    for(usize i = 0; i < tri.getNumberOfVertices() && !found; i++)
+    {
+      found = std::abs(vertStore[i * 3 + 0] - corner[0]) <= bounds.Tol && std::abs(vertStore[i * 3 + 1] - corner[1]) <= bounds.Tol && std::abs(vertStore[i * 3 + 2] - corner[2]) <= bounds.Tol;
+    }
+    INFO("box corner (" << corner[0] << ", " << corner[1] << ", " << corner[2] << ") is not a mesh vertex");
+    REQUIRE(found);
+  }
+}
+
+// Asserts that no two vertices share the same coordinates: the snap must MERGE the vertices it moves onto a
+// common point, not leave coincident duplicates (which would make the walls disconnected along the edge).
+void RequireNoCoincidentVertices(const DataStructure& dataStructure, const DataPath& triGeomPath)
+{
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  std::set<std::tuple<float32, float32, float32>> seen;
+  for(usize i = 0; i < tri.getNumberOfVertices(); i++)
+  {
+    const auto key = std::make_tuple(vertStore[i * 3 + 0], vertStore[i * 3 + 1], vertStore[i * 3 + 2]);
+    INFO("vertex " << i << " (" << std::get<0>(key) << ", " << std::get<1>(key) << ", " << std::get<2>(key) << ") coincides with an earlier vertex");
+    REQUIRE(seen.insert(key).second);
+  }
+}
+
+// Asserts the mesh reaches every bounding plane: min/max vertex coordinate per axis equals the volume extent.
+void RequireMeshReachesBounds(const DataStructure& dataStructure, const DataPath& triGeomPath, const DataPath& imageGeomPath)
+{
+  const VolumeBounds bounds = GetVolumeBounds(dataStructure, imageGeomPath);
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  for(usize ax = 0; ax < 3; ax++)
+  {
+    float32 minC = std::numeric_limits<float32>::max();
+    float32 maxC = std::numeric_limits<float32>::lowest();
+    for(usize i = 0; i < tri.getNumberOfVertices(); i++)
+    {
+      minC = std::min(minC, vertStore[i * 3 + ax]);
+      maxC = std::max(maxC, vertStore[i * 3 + ax]);
+    }
+    REQUIRE(minC == Approx(bounds.Lo[ax]));
+    REQUIRE(maxC == Approx(bounds.Hi[ax]));
+  }
+}
+
+// The toy labelings the sharp-edge test runs. Each puts a real Feature in every voxel that touches a box
+// edge, so every one of the twelve edges and eight corners is chamfered in stock M3C output.
+int32 SingleFeatureLabeler(usize /*x*/, usize /*y*/, usize /*z*/)
+{
+  return 1;
+}
+
+// Three regions meeting along a line, so internal boundaries run into the walls and their triple-line
+// vertices sit in the same outermost wall row as the chamfer vertices.
+int32 TripleLineLabeler(usize x, usize y, usize /*z*/)
+{
+  return (x < 2) ? 1 : ((y < 2) ? 2 : 3);
+}
+
+// Every cell its own Feature: interfaces along all three axes, and internal boundaries meet every edge cell.
+int32 UniqueCellLabeler(usize x, usize y, usize z)
+{
+  return static_cast<int32>(1 + x + 4 * y + 16 * z);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Non-unit, anisotropic spacing and a non-zero origin: the half-cell snap distance differs per axis, so a
+  // snap applied along the wrong axis (or by the wrong amount) cannot pass by coincidence.
+  const SizeVec3 dims(4, 3, 5);
+  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+
+  using LabelerFn = int32 (*)(usize, usize, usize);
+  const auto [labelerName, labeler] = GENERATE(std::make_tuple("single feature", static_cast<LabelerFn>(SingleFeatureLabeler)),
+                                               std::make_tuple("triple line", static_cast<LabelerFn>(TripleLineLabeler)), std::make_tuple("unique cells", static_cast<LabelerFn>(UniqueCellLabeler)));
+
+  DYNAMIC_SECTION(labelerName << ": option off keeps the chamfer")
+  {
+    DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, labeler);
+    RunM3CSharpEdges(dataStructure, false);
+    // Proves the assertion below discriminates: stock M3C output DOES bridge walls along every box edge.
+    REQUIRE(CountWallBridgingTriangles(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath) > 0);
+    CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
+  }
+
+  DYNAMIC_SECTION(labelerName << ": option on makes every wall triangle coplanar with one wall")
+  {
+    DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, labeler);
+    RunM3CSharpEdges(dataStructure, true);
+
+    const usize numBridging = CountWallBridgingTriangles(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath);
+    INFO(numBridging << " exterior triangles still bridge two bounding planes");
+    REQUIRE(numBridging == 0);
+
+    RequireBoxCornersPresent(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesImageGeomPath);
+    RequireNoCoincidentVertices(dataStructure, k_SharpEdgesTriGeomPath);
+    RequireMeshReachesBounds(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesImageGeomPath);
+    CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
+    CheckMeshWithinVolume(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath);
+
+    // With a single Feature the mesh is nothing but the six walls, so a sharp box must be a closed surface:
+    // every edge used by exactly two triangles. This is what proves the walls were JOINED along the box
+    // edges rather than merely extended to them. (The multi-Feature labelings are excluded because, with
+    // the Bounding Box Skin off, an internal boundary meeting a wall forms a documented T-junction.)
+    if(std::string(labelerName) == "single feature")
+    {
+      const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath);
+      const SurfaceMeshingTest::EdgeUseCounts counts = SurfaceMeshingTest::CountEdgeUses(tri);
+      INFO("edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
+                                        << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
+      REQUIRE(SurfaceMeshingTest::IsWatertight(tri));
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on Small IN100", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+
+  // Real segmented data: hundreds of Features, so triple lines and quad points run into every wall and
+  // box edge. The option is on by default, which is what RunM3COnSmallIn100 uses.
+  DataStructure dataStructure = LoadSmallIn100Input();
+  RunM3COnSmallIn100(dataStructure);
+
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const DataPath imageGeomPath({k_DataContainer});
+  const usize numBridging = CountWallBridgingTriangles(dataStructure, k_ExemplarMeshPath, faceLabelsPath, imageGeomPath);
+  INFO(numBridging << " exterior triangles still bridge two bounding planes");
+  REQUIRE(numBridging == 0);
+  RequireBoxCornersPresent(dataStructure, k_ExemplarMeshPath, imageGeomPath);
+  RequireNoCoincidentVertices(dataStructure, k_ExemplarMeshPath);
+  RequireMeshReachesBounds(dataStructure, k_ExemplarMeshPath, imageGeomPath);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a one-cell-thick volume", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Along an axis that is only one cell thick, the single row of wall vertices is within half a cell of BOTH
+  // bounding planes on that axis, so there is no unambiguous edge to snap it to; the option leaves that axis
+  // chamfered. The other two axes are still sharpened, and the mesh must stay well-formed and span the volume.
+  const SizeVec3 dims(4, 3, 1);
+  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+
+  DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, TripleLineLabeler);
+  RunM3CSharpEdges(dataStructure, true);
+
+  RequireNoCoincidentVertices(dataStructure, k_SharpEdgesTriGeomPath);
+  RequireMeshReachesBounds(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesImageGeomPath);
+  CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
+  CheckMeshWithinVolume(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath);
+
+  // The four edges parallel to the thin (z) axis ARE sharp: the vertical box edge lines exist as vertices at
+  // the z-midplane, where the x and y wall rows were merged.
+  const VolumeBounds bounds = GetVolumeBounds(dataStructure, k_SharpEdgesImageGeomPath);
+  const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath);
+  const auto& vertStore = tri.getVertices()->getDataStoreRef();
+  const float32 zMid = origin[2] + 0.5f * spacing[2];
+  for(int cornerBits = 0; cornerBits < 4; cornerBits++)
+  {
+    const float32 cx = ((cornerBits & 1) != 0) ? bounds.Hi[0] : bounds.Lo[0];
+    const float32 cy = ((cornerBits & 2) != 0) ? bounds.Hi[1] : bounds.Lo[1];
+    bool found = false;
+    for(usize i = 0; i < tri.getNumberOfVertices() && !found; i++)
+    {
+      found = std::abs(vertStore[i * 3 + 0] - cx) <= bounds.Tol && std::abs(vertStore[i * 3 + 1] - cy) <= bounds.Tol && std::abs(vertStore[i * 3 + 2] - zMid) <= bounds.Tol;
+    }
+    INFO("vertical box edge at (" << cx << ", " << cy << ") has no vertex at z = " << zMid);
+    REQUIRE(found);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
