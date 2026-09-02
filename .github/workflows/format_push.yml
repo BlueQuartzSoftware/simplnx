@@ -21,7 +21,7 @@ jobs:
           WORKFLOW_PATH: workflow/${{ job.workflow_repository }}
         run: |
           echo "WORKFLOW_PATH=$WORKFLOW_PATH" >> "$GITHUB_OUTPUT"
-          echo "CLANG_FORMAT_SCRIPT_DIR=${{ case(github.repository != job.workflow_repository, env.WORKFLOW_PATH, env.REPO_PATH) }}" >> $GITHUB_ENV
+          echo "CLANG_FORMAT_SCRIPT_DIR=$GITHUB_WORKSPACE/${{ case(github.repository != job.workflow_repository, env.WORKFLOW_PATH, env.REPO_PATH) }}" >> $GITHUB_ENV
       - uses: actions/checkout@v7
         with:
           path: ${{ env.REPO_PATH }}
