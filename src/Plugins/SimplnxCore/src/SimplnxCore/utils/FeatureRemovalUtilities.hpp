@@ -36,7 +36,9 @@ struct SIMPLNXCORE_EXPORT RemovalArgs
  * @param args Paths and options describing the removal.
  * @param messageHandler Receives progress messages.
  * @param shouldCancel Polled to abort the long running loops.
- * @return Invalid if every feature was flagged, or if the feature group could not be compacted.
+ * @return Invalid (-45435) if a FeatureId is negative or not less than the flag count, before anything
+ * is modified; invalid (-45433) if every feature was flagged; invalid (-45436) if fill is enabled and a
+ * pass cannot fill any remaining vacated cell; invalid (-45434) if the feature group could not be compacted.
  */
 SIMPLNXCORE_EXPORT Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel);
