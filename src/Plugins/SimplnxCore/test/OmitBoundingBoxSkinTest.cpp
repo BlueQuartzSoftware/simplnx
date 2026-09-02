@@ -214,12 +214,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
     UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 
-  // M3C's marching-cubes candidate generation can leave some "pre-existing" candidate nodes that no
-  // triangle -- dropped or surviving -- ever references, independent of the skin-omit option (see
-  // M3CSurfaceMeshing.cpp finalizeMesh). So the option cannot promise zero orphan vertices overall;
-  // what it promises is that it never CREATES a new orphan beyond nodes the prune itself touched.
-  // Verify that by coordinate: every vertex unreferenced in the pruned mesh must also have been
-  // unreferenced in the full (un-pruned) mesh at the same coordinate.
+  // The option must never leave a vertex behind that only dropped faces referenced. Verified by
+  // coordinate: a vertex unreferenced in the pruned mesh would have to be unreferenced in the full
+  // (un-pruned) mesh at the same coordinate as well -- and since M3C no longer emits orphan vertices
+  // at all (issue #1706 was resolved by the single ghost sentinel), no vertex is unreferenced in either.
   SECTION("Option on leaves no vertex newly orphaned by the prune")
   {
     SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, BoundingBoxSkinMode::k_Off);
@@ -250,12 +248,14 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
     const auto prunedReferenced = isReferencedByCoord(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
 
     usize newlyOrphanedCount = 0;
+    usize unreferencedCount = 0;
     for(const auto& [coord, isReferencedInPruned] : prunedReferenced)
     {
       if(isReferencedInPruned)
       {
         continue;
       }
+      unreferencedCount++;
       // A vertex that survives the prune unreferenced must have also been unreferenced pre-prune.
       REQUIRE(fullReferenced.count(coord) == 1);
       if(fullReferenced.at(coord))
@@ -266,6 +266,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
 
     INFO("Vertices newly orphaned by the prune (must be 0): " << newlyOrphanedCount);
     REQUIRE(newlyOrphanedCount == 0);
+    INFO("Unreferenced vertices in the pruned mesh (must be 0): " << unreferencedCount);
+    REQUIRE(unreferencedCount == 0);
 
     UnitTest::CheckArraysInheritTupleDims(fullMesh.Structure);
     UnitTest::CheckArraysInheritTupleDims(prunedMesh.Structure);
@@ -376,9 +378,8 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
 
-    // Node Types are untouched by M3C's orphan-cleanup discontinuity, but this is the only no-op
-    // test that checks all three meshers, so it is the natural place to cover the array for all of
-    // them rather than just Face Labels/Faces/Vertices.
+    // This is the only no-op test that checks all three meshers, so it is the natural place to cover
+    // Node Types for all of them rather than just Face Labels/Faces/Vertices.
     const DataPath nodeTypesPath = k_TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
     REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
@@ -443,10 +444,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
     UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
 
-    // M3C's orphan-cleanup is the one code path in the whole feature that has a discontinuity
-    // (see M3CSurfaceMeshing.cpp:2566): it is gated on whether the prune actually dropped anything,
-    // not on the option flag alone. This fully-indexed input drops nothing, so Node Types must
-    // still match exactly here.
+    // M3C's orphan-node clearing after the prune is the one code path in the whole feature that is
+    // gated on whether the prune actually dropped anything, not on the option flag alone. This
+    // fully-indexed input drops nothing, so Node Types must still match exactly here.
     const DataPath nodeTypesPath = k_M3CTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
     REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
@@ -685,25 +685,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
 {
   UnitTest::LoadPlugins();
 
-  // Unlike QuickSurfaceMesh/SurfaceNets, M3C does not necessarily reach zero vertices here: its
-  // marching-cubes candidate generation can leave "pre-existing" candidate nodes that no triangle
-  // ever references, independent of the skin-omit option (see M3CSurfaceMeshing.cpp finalizeMesh).
-  // When the option prunes every face (as it does on an all-background volume), the narrowed
-  // orphan-node clearing leaves exactly those pre-existing orphans behind. Measure that count from
-  // the un-pruned (option off) mesh of the same input rather than assuming any particular number.
-  DataStructure offStructure = SurfaceMeshingTest::CreateAllBackground();
-  const Result<> offResult = RunM3CRaw(offStructure, BoundingBoxSkinMode::k_Off);
-  SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-  REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-  const auto& offGeom = offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
-  const auto& offFacesRef = offGeom.getFaces()->getDataStoreRef();
-  std::set<usize> offReferencedVertices;
-  for(usize i = 0; i < offGeom.getNumberOfFaces() * 3; i++)
-  {
-    offReferencedVertices.insert(static_cast<usize>(offFacesRef[i]));
-  }
-  const usize preExistingOrphanCount = offGeom.getNumberOfVertices() - offReferencedVertices.size();
-  INFO("Pre-existing orphan vertex count measured from the un-pruned mesh: " << preExistingOrphanCount);
+  // Like QuickSurfaceMesh/SurfaceNets, M3C must reach zero vertices here: pruning every face orphans
+  // every node, and the option clears the nodes its prune orphans. (M3C once also carried orphan
+  // vertices of its own that survived this, issue #1706; the single ghost sentinel removed them.)
 
   SECTION("Repair Triangle Winding off")
   {
@@ -717,7 +701,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-    REQUIRE(triangleGeom.getNumberOfVertices() == preExistingOrphanCount);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -737,7 +721,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
-    REQUIRE(triangleGeom.getNumberOfVertices() == preExistingOrphanCount);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }

@@ -39,7 +39,8 @@ namespace
 // Independent structural validation of an M3C output mesh (does NOT rely on the exemplar oracle):
 //  - no degenerate triangles and all vertex indices in range,
 //  - FaceLabels ordered (smaller feature id in component 0, per the output convention),
-//  - every emitted vertex is a real node (compaction keeps only NodeType > 0).
+//  - every emitted vertex is a real node (compaction keeps only NodeType > 0),
+//  - every emitted vertex is referenced by a triangle (no orphan vertices, issue #1706).
 void CheckMeshIntegrity(DataStructure& dataStructure, const DataPath& triGeomPath, const DataPath& faceLabelsPath, const DataPath& nodeTypesPath)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triGeomPath));
@@ -72,6 +73,21 @@ void CheckMeshIntegrity(DataStructure& dataStructure, const DataPath& triGeomPat
   for(usize i = 0; i < numVertices; i++)
   {
     REQUIRE(nodeTypeStore[i] > 0);
+  }
+
+  // Every emitted vertex is referenced by at least one triangle. M3C used to leave orphan vertices
+  // near the volume boundary (issue #1706): the legacy ghost shell carried six distinct sentinels, so
+  // ghost cells looked like material interfaces to each other and marked candidate nodes whose
+  // triangles were never built. A single shared ghost sentinel removed the cause; this guards it.
+  std::vector<bool> referenced(numVertices, false);
+  for(usize i = 0; i < numTriangles * 3; i++)
+  {
+    referenced[triStore[i]] = true;
+  }
+  for(usize i = 0; i < numVertices; i++)
+  {
+    INFO("vertex " << i << " is not referenced by any triangle (orphan vertex)");
+    REQUIRE(referenced[i]);
   }
 
   // A face separates exactly two DISTINCT regions. (-1,-1) would mean a face between two cells that

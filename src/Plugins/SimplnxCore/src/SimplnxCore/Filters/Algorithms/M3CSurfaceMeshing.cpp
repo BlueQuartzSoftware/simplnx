@@ -3064,10 +3064,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
     // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
-    // legitimately produces an empty mesh. Report it rather than returning silently. Unlike
-    // QuickSurfaceMesh/SurfaceNets, M3C's narrowed orphan-node clearing (see above) can leave
-    // pre-existing candidate nodes in the output even when every face is dropped, so nNodes here
-    // is not necessarily zero.
+    // legitimately produces an empty mesh. Report it rather than returning silently. nNodes is
+    // expected to be zero here as well (every node was orphaned by the prune and cleared); it is
+    // passed through so the warning stays honest if that ever changes.
     if(nTriangleFinal == 0)
     {
       return MeshingUtilities::MakeEmptyMeshWarning(inputValues->TriangleGeometryPath, dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples(),
