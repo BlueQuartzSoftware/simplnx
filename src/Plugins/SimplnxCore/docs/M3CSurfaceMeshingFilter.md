@@ -101,10 +101,8 @@ Two inputs leave this mode nothing useful to do. Both are reported as warnings, 
   interior porosity; the warning concerns only the walls, not whether background exists elsewhere in
   the volume.
 - `-56340` — every **Voxel** is background, so every face is omitted and the **Triangle Geometry** is
-  created with zero faces. Unlike Create Surface Mesh (QuickMesh) and Create Surface Mesh (Surface
-  Nets), the vertex count is not zero for M3C (see the note below), so the warning reports the
-  remaining vertex count. The input is legal — it holds no internal interface and no **Feature** to
-  cap — so this is success.
+  created with zero faces and zero vertices. The input is legal — it holds no internal interface and
+  no **Feature** to cap — so this is success.
 
 ### Sharp Bounding Box Edges
 
@@ -145,7 +143,7 @@ wall vertices is then half a **Cell** from both bounding planes on that axis and
 edge to move it to. The other two axes are still sharpened.
 
 The pass runs after the **Bounding Box Skin** prune, so with *Background-Backed Walls Only* it only affects
-the wall faces that survive the prune. It does not touch the orphan vertices described in the note below.
+the wall faces that survive the prune.
 
 ### Feature Id Validation
 
@@ -156,12 +154,6 @@ the volume. A **Feature Id** must therefore be in the range `0` to `INT32_MAX - 
 value produces an error (code `-56343`) naming the offending value, its tuple index, and the
 array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
 as issue #1705), not a fix for it.
-
-**Note:** M3C's candidate-node generation always leaves a handful of node entries near the volume
-boundary that no triangle references. These orphan vertices are present in stock M3C output
-regardless of the **Bounding Box Skin** setting (tracked as issue #1706), and
-**Background-Backed Walls Only** does not touch them — it clears only the vertices its own pruning
-orphans. This is why an all-background volume yields zero faces but a non-zero vertex count.
 
 ### Notes and Limitations
 
