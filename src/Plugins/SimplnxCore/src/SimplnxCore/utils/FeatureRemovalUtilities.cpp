@@ -13,7 +13,35 @@ using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+constexpr int32 k_AllFeaturesFlaggedError = -45433;
+constexpr int32 k_RemoveInactiveObjectsError = -45434;
+constexpr int32 k_FeatureIdOutOfRangeError = -45435;
+constexpr int32 k_NoFillProgressError = -45436;
+
+/**
+ * @brief Outcome of one pass of IdentifyNeighbors() over the volume.
+ */
+struct NeighborScan
+{
+  /// At least one cell still holds a negative (vacated) FeatureId.
+  bool unresolvedCellsRemain = false;
+  /// At least one vacated cell has a non-negative face neighbor recorded as its fill source.
+  bool fillSourceFound = false;
+};
+
+/**
+ * @brief Chooses a fill source for every vacated cell.
+ *
+ * A vacated cell is one whose FeatureId is negative. Its six face neighbors are polled in the order
+ * -Z, -Y, -X, +X, +Y, +Z. Every non-negative neighbor FeatureId is tallied, background (0) included,
+ * and the source becomes the neighbor whose feature first reaches the highest tally. A cell with no
+ * non-negative neighbor gets no source this pass and is retried on the next pass, after its own
+ * neighbors have been filled.
+ *
+ * Cells with FeatureId 0 are background. They are never fill targets, so they do not keep the caller
+ * iterating. They are legal fill sources, which matches DREAM3D 6.5.171.
+ */
+NeighborScan IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
 {
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
@@ -29,7 +57,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  bool shouldLoop = false;
+  NeighborScan scan;
 
   auto progressIncrement = dims[2] / 100;
   usize progressCounter = 0;
@@ -39,7 +67,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
   {
     if(shouldCancel)
     {
-      return false;
+      return scan;
     }
 
     if(progressCounter > progressIncrement)
@@ -57,11 +85,13 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       {
         int64 voxelIndex = kStride + jStride + xIdx;
         featureName = featureIds[voxelIndex];
-        if(featureName > 0)
+        // Only vacated cells (negative) need a source. Background (0) is not a fill target; treating
+        // it as one would keep the caller's loop alive forever because nothing ever overwrites it.
+        if(featureName >= 0)
         {
           continue;
         }
-        shouldLoop = true;
+        scan.unresolvedCellsRemain = true;
         int32 current;
         int32 most = 0;
         std::vector<int32> numHits(6, 0);
@@ -92,6 +122,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
                 {
                   most = current;
                   storageArray[voxelIndex] = static_cast<int32>(neighborPoint);
+                  scan.fillSourceFound = true;
                 }
                 break;
               }
@@ -100,14 +131,15 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
             {
               // Count the first sighting as a hit. Without this the tally only records a neighbor on
               // the SECOND sighting of a feature, so a bad cell whose valid neighbors all belong to
-              // distinct features never gets a fill source. It stays negative, shouldLoop stays true,
-              // and the caller's do/while dilation loop never terminates.
+              // distinct features never gets a fill source. It stays negative, and the caller's
+              // do/while dilation loop never terminates.
               discoveredFeatures.push_back(feature);
               numHits[discoveredFeatures.size() - 1] = 1;
               if(1 > most)
               {
                 most = 1;
                 storageArray[voxelIndex] = static_cast<int32>(neighborPoint);
+                scan.fillSourceFound = true;
               }
             }
           }
@@ -115,7 +147,30 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       }
     }
   }
-  return shouldLoop;
+  return scan;
+}
+
+/**
+ * @brief Checks that every FeatureId indexes a tuple of the feature Attribute Matrix.
+ *
+ * FlagFeatures() indexes a vector of size totalFeatures with each cell's FeatureId, so a negative or
+ * too-large value is an out-of-bounds read. Run this before anything is modified.
+ */
+Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& featureAttributeMatrixPath)
+{
+  const usize totalPoints = featureIds.getNumberOfTuples();
+  for(usize i = 0; i < totalPoints; i++)
+  {
+    const int32 featureId = featureIds[i];
+    if(featureId < 0 || static_cast<usize>(featureId) >= totalFeatures)
+    {
+      return MakeErrorResult(k_FeatureIdOutOfRangeError,
+                             fmt::format("Cell {} of the Feature Ids array '{}' holds the value {}, but the feature Attribute Matrix '{}' has {} tuple(s), so the valid range is 0 through {}. Every "
+                                         "cell must reference a tuple of the feature Attribute Matrix. No data was modified.",
+                                         i, featureIdsPath.toString(), featureId, featureAttributeMatrixPath.toString(), totalFeatures, totalFeatures - 1));
+    }
+  }
+  return {};
 }
 
 std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, const std::vector<bool>& flaggedFeatures, const bool fillRemovedFeatures)
@@ -199,10 +254,22 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
 
   messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
 
+  Result<> validation = ValidateFeatureIds(featureIds, flaggedFeatures.size(), args.FeatureIdsArrayPath, args.FeatureAttributeMatrixPath);
+  if(validation.invalid())
+  {
+    return validation;
+  }
+
+  if(shouldCancel)
+  {
+    return {};
+  }
+
   std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.FillRemovedFeatures);
   if(activeObjects.empty())
   {
-    return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
+    return MakeErrorResult(k_AllFeaturesFlaggedError, fmt::format("All {} feature(s) in '{}' were flagged and would all be removed. At least one feature must remain. No data was modified.",
+                                                                  flaggedFeatures.size() - 1, args.FeatureAttributeMatrixPath.toString()));
   }
 
   if(shouldCancel)
@@ -224,16 +291,29 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
       count++;
       messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
       std::fill(neighbors.begin(), neighbors.end(), -1);
-      shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
+      const NeighborScan scan = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
 
       if(shouldCancel)
       {
         return {};
       }
 
+      // Vacated cells remain but none of them touches a cell that belongs to a feature. Another pass
+      // would find the same state, so stop instead of looping forever. This only happens when every
+      // cell belonged to a flagged feature and the unflagged features own no cells.
+      if(scan.unresolvedCellsRemain && !scan.fillSourceFound)
+      {
+        return MakeErrorResult(k_NoFillProgressError,
+                               fmt::format("Fill iteration {} could not fill any of the remaining vacated cells in the Feature Ids array '{}' because none of them has a face neighbor that belongs "
+                                           "to a surviving feature. This happens when every cell belongs to a flagged feature and the unflagged feature(s) own no cells. Unflag a feature that "
+                                           "owns cells, or disable 'Fill-in Removed Features'. THE FOLLOWING ARRAY HAS BEEN MODIFIED: '{}' (removed cells are set to -1).",
+                                           count, args.FeatureIdsArrayPath.toString(), args.FeatureIdsArrayPath.toString()));
+      }
+
       messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
       std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(dataStructure, args.FeatureIdsArrayPath, args.IgnoredDataArrayPaths);
       FindVoxelArrays(featureIds, neighbors, voxelArrays, shouldCancel);
+      shouldLoop = scan.unresolvedCellsRemain;
     } while(shouldLoop);
   }
 
@@ -245,7 +325,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
   if(!RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel))
   {
-    return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", args.FeatureAttributeMatrixPath.toString()));
+    return MakeErrorResult(k_RemoveInactiveObjectsError, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", args.FeatureAttributeMatrixPath.toString()));
   }
 
   return {};
