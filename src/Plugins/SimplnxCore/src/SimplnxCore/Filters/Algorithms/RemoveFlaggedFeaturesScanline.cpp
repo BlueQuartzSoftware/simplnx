@@ -32,16 +32,25 @@ namespace
 {
 constexpr int32 k_FeatureIdOutOfRangeError = -45435;
 constexpr int32 k_NoFillProgressError = -45436;
+constexpr int32 k_TupleCountMismatchError = -45437;
+constexpr int32 k_FeatureIdsCannotBeIgnoredWarning = -45438;
 constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
+constexpr usize k_MaxListedEmptyFeatures = 10;
 
 /**
  * @brief Validates every Feature ID through bounded reads before the algorithm modifies data.
  */
-Result<> ValidateFeatureIdsScanline(const Int32AbstractDataStore& featureIds, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& flaggedFeaturesPath,
+Result<> ValidateFeatureIdsScanline(const Int32AbstractDataStore& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& flaggedFeaturesPath,
                                     const std::atomic_bool& shouldCancel)
 {
   constexpr usize k_ChunkSize = 65536;
   const usize totalPoints = featureIds.getNumberOfTuples();
+  if(totalPoints != totalCells)
+  {
+    return MakeErrorResult(k_TupleCountMismatchError,
+                           fmt::format("The Feature IDs array '{}' has {} tuple(s), but the selected Image Geometry has {} cell(s). The array must hold exactly one value per cell. No data was modified.",
+                                       featureIdsPath.toString(), totalPoints, totalCells));
+  }
   auto values = std::make_unique<int32[]>(std::min(k_ChunkSize, totalPoints));
   for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
   {
@@ -570,8 +579,15 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
   if(function != Functionality::Extract)
   {
-    Result<> validationResult =
-        ValidateFeatureIdsScanline(featureIds, flaggedFeatures->getNumberOfTuples(), m_InputValues->FeatureIdsArrayPath, m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
+    const usize totalFeatures = flaggedFeatures->getNumberOfTuples();
+    if(totalFeatures < 2)
+    {
+      return MakeErrorResult(-45433, fmt::format("The feature Attribute Matrix '{}' has {} tuple(s). Tuple 0 is unused, so at least 2 tuples are required for a feature to survive removal. No data "
+                                                 "was modified.",
+                                                 m_InputValues->FlaggedFeaturesArrayPath.getParent().toString(), totalFeatures));
+    }
+    Result<> validationResult = ValidateFeatureIdsScanline(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->FeatureIdsArrayPath,
+                                                           m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
     if(validationResult.invalid())
     {
       return validationResult;
@@ -598,22 +614,8 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       auto preflightResult = filter.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        // The delegated filter reports the real cause, so its own errors are kept and each one is
-        // prefixed with this call's context instead of being buried behind a second error object.
-        Result<> delegatedResult = ConvertResult(std::move(preflightResult.outputActions));
-        if(delegatedResult.valid() || delegatedResult.errors().empty())
-        {
-          // Defensive: the delegated preflight reported a failure without any error to explain it.
-          return MakeErrorResult(-45442, fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: the ComputeFeatureRect preflight reported a "
-                                                     "failure without a cause.",
-                                                     m_InputValues->TempBoundsPath.toString(), m_InputValues->FeatureIdsArrayPath.toString()));
-        }
-        for(Error& error : delegatedResult.errors())
-        {
-          error.message = fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                      m_InputValues->FeatureIdsArrayPath.toString(), error.message);
-        }
-        return delegatedResult;
+        return MakeErrorResult(-53901, fmt::format("Preflight of the feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
+                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors())));
       }
 
       if(m_ShouldCancel)
@@ -624,26 +626,20 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       auto executeResult = filter.execute(m_DataStructure, args);
       if(executeResult.result.invalid())
       {
-        // The delegated filter reports the real cause, so its own errors are kept and each one is
-        // prefixed with this call's context instead of being buried behind a second error object.
-        Result<> delegatedResult = std::move(executeResult.result);
-        if(delegatedResult.errors().empty())
-        {
-          // Defensive: the delegated execution reported a failure without any error to explain it.
-          return MakeErrorResult(-45443, fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: the ComputeFeatureRect execution reported a "
-                                                     "failure without a cause.",
-                                                     m_InputValues->TempBoundsPath.toString(), m_InputValues->FeatureIdsArrayPath.toString()));
-        }
-        for(Error& error : delegatedResult.errors())
-        {
-          error.message = fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                      m_InputValues->FeatureIdsArrayPath.toString(), error.message);
-        }
-        return delegatedResult;
+        m_DataStructure.removeData(m_InputValues->TempBoundsPath);
+        return MakeErrorResult(-53902, fmt::format("The feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
+                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors())));
       }
     }
 
-    auto bounds = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath);
+    const auto& boundsStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath).getDataStoreRef();
+    std::vector<uint32> bounds(boundsStore.getSize());
+    Result<> boundsReadResult = boundsStore.copyIntoBuffer(0, nonstd::span<uint32>(bounds.data(), bounds.size()));
+    m_DataStructure.removeData(m_InputValues->TempBoundsPath);
+    if(boundsReadResult.invalid())
+    {
+      return MergeResults(std::move(result), std::move(boundsReadResult));
+    }
 
     if(m_ShouldCancel)
     {
@@ -661,7 +657,8 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
     usize maxTuple = flaggedFeatures->getNumberOfTuples();
     std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
-    for(usize i = 1; i < maxTuple; i++)
+    std::vector<usize> emptyFeatures;
+    for(usize i = 1; i < maxTuple && 6 * i + 5 < bounds.size(); i++)
     {
       if(m_ShouldCancel)
       {
@@ -679,9 +676,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
       if(minVoxels[0] > maxVoxels[0] || minVoxels[1] > maxVoxels[1] || minVoxels[2] > maxVoxels[2])
       {
-        result.warnings().push_back(
-            Warning{k_EmptyFeatureSkippedWarning, fmt::format("Feature {} is flagged for extraction but owns no cell in the Feature IDs array '{}'. No geometry was created for it.", i,
-                                                              m_InputValues->FeatureIdsArrayPath.toString())});
+        emptyFeatures.push_back(i);
         continue;
       }
 
@@ -698,6 +693,22 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       }
     }
     taskRunner.wait();
+
+    if(!emptyFeatures.empty())
+    {
+      std::string listed;
+      for(usize index = 0; index < std::min(emptyFeatures.size(), k_MaxListedEmptyFeatures); index++)
+      {
+        listed += fmt::format("{}{}", index == 0 ? "" : ", ", emptyFeatures[index]);
+      }
+      if(emptyFeatures.size() > k_MaxListedEmptyFeatures)
+      {
+        listed += ", ...";
+      }
+      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+                                                                                  "them. Feature ID(s): {}",
+                                                                                  emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+    }
 
     Result<> cropResult = cropTaskResult.takeResult();
     if(cropResult.invalid())
@@ -739,6 +750,21 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
     if(m_InputValues->FillRemovedFeatures)
     {
+      std::vector<DataPath> ignoredPaths;
+      ignoredPaths.reserve(m_InputValues->IgnoredDataArrayPaths.size());
+      for(const DataPath& path : m_InputValues->IgnoredDataArrayPaths)
+      {
+        if(path == m_InputValues->FeatureIdsArrayPath)
+        {
+          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+                                                                                           "cannot be ignored, so it was removed from the ignore list.",
+                                                                                           path.toString())});
+          continue;
+        }
+        ignoredPaths.push_back(path);
+      }
+      std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, ignoredPaths);
+
       bool shouldLoop = false;
       usize count = 0;
       do
@@ -746,9 +772,6 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
         count++;
         m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
 
-        // Rebuild the retained cell-array list for each convergence iteration.
-        // Feature IDs must remain in this list for negative IDs to be replaced.
-        std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
         usize replacementCount = 0;
         usize unresolvedCount = 0;
         auto fillResult = IdentifyAndFillNeighborsScanline(imageGeom, featureIds, voxelArrays, replacementCount, unresolvedCount, m_ShouldCancel, messageHelper);

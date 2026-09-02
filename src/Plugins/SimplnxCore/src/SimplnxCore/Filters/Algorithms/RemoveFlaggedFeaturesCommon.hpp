@@ -17,6 +17,20 @@
 namespace nx::core
 {
 
+inline std::string FirstRemoveFlaggedFeaturesErrorMessage(const std::vector<Error>& errors)
+{
+  if(errors.empty())
+  {
+    return "(no error message)";
+  }
+  std::string message = fmt::format("[{}] {}", errors[0].code, errors[0].message);
+  if(errors.size() > 1)
+  {
+    message += fmt::format(" (+{} more)", errors.size() - 1);
+  }
+  return message;
+}
+
 class RunCropImageGeometryImpl
 {
 public:
@@ -69,24 +83,14 @@ public:
     args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
     args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
 
+    const std::string boundsText = fmt::format("voxels [{}, {}, {}] to [{}, {}, {}]", m_MinVoxelVector[0], m_MinVoxelVector[1], m_MinVoxelVector[2], m_MaxVoxelVector[0],
+                                                m_MaxVoxelVector[1], m_MaxVoxelVector[2]);
+
     auto preflightResult = filter.preflight(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())
     {
-      // The delegated filter reports the real cause, so its own errors are kept and each one is
-      // prefixed with this call's context instead of being buried behind a second error object.
-      Result<> delegatedResult = ConvertResult(std::move(preflightResult.outputActions));
-      if(delegatedResult.valid() || delegatedResult.errors().empty())
-      {
-        // Defensive: the delegated preflight reported a failure without any error to explain it.
-        m_TaskResult.store(MakeErrorResult(-45440, fmt::format("RemoveFlaggedFeatures: cropping '{}' from '{}' failed: the delegated crop preflight reported a failure without a cause.",
-                                                               m_CreatedImgGeomPath.toString(), m_ImageGeometryPath.toString())));
-        return;
-      }
-      for(Error& error : delegatedResult.errors())
-      {
-        error.message = fmt::format("RemoveFlaggedFeatures: cropping '{}' from '{}' failed: {}", m_CreatedImgGeomPath.toString(), m_ImageGeometryPath.toString(), error.message);
-      }
-      m_TaskResult.store(std::move(delegatedResult));
+      m_TaskResult.store(MakeErrorResult(-53903, fmt::format("Preflight of the crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
+                                                         m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors()))));
       return;
     }
 
@@ -98,21 +102,8 @@ public:
     auto executeResult = filter.execute(m_DataStructure, args);
     if(executeResult.result.invalid())
     {
-      // The delegated filter reports the real cause, so its own errors are kept and each one is
-      // prefixed with this call's context instead of being buried behind a second error object.
-      Result<> delegatedResult = std::move(executeResult.result);
-      if(delegatedResult.errors().empty())
-      {
-        // Defensive: the delegated execution reported a failure without any error to explain it.
-        m_TaskResult.store(MakeErrorResult(-45441, fmt::format("RemoveFlaggedFeatures: cropping '{}' from '{}' failed: the delegated crop execution reported a failure without a cause.",
-                                                               m_CreatedImgGeomPath.toString(), m_ImageGeometryPath.toString())));
-        return;
-      }
-      for(Error& error : delegatedResult.errors())
-      {
-        error.message = fmt::format("RemoveFlaggedFeatures: cropping '{}' from '{}' failed: {}", m_CreatedImgGeomPath.toString(), m_ImageGeometryPath.toString(), error.message);
-      }
-      m_TaskResult.store(std::move(delegatedResult));
+      m_TaskResult.store(MakeErrorResult(-53904, fmt::format("The crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
+                                                         m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors()))));
     }
   }
 
