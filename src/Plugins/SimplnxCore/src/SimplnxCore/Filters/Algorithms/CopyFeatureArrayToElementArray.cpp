@@ -127,7 +127,7 @@ Result<> CopyFeatureArrayToElementArray::operator()()
     const auto& selectedFeatureArray = m_DataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
     auto& createdArray = m_DataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
+    m_MessageHandler.sendInfoMessage(fmt::format("Copying data into target array '{}'...", createdArrayPath.toString()));
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, featureIds.getNumberOfTuples());
     dataAlg.requireArraysInMemory({&featureIds, &selectedFeatureArray, &createdArray});

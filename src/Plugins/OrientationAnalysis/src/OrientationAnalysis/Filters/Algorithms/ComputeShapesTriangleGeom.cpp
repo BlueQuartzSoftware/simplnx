@@ -484,7 +484,7 @@ void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValue
     {
       return;
     }
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Computing Feature {}/{}", m_FeatureUpdateCount, m_NumFeatures)});
+    m_MessageHandler.sendInfoMessage(fmt::format("Computing Feature {}/{}", m_FeatureUpdateCount, m_NumFeatures));
     m_InitialPoint = std::chrono::steady_clock::now();
   }
 }

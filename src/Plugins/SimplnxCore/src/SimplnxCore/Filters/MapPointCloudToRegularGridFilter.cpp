@@ -374,7 +374,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   if(samplingGridType == 0)
   {
     // Create the regular grid
-    messageHandler("Creating Regular Grid");
+    messageHandler.sendInfoMessage("Creating Regular Grid");
     auto result = CreateRegularGrid(dataStructure, filterArgs);
     if(result.invalid())
     {

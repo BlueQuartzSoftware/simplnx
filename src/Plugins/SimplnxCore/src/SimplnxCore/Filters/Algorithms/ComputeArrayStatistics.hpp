@@ -8,6 +8,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <chrono>
 #include <mutex>
@@ -80,11 +81,32 @@ public:
 
   Result<> operator()();
 
+  /**
+   * @brief Thread-safe throttled progress update. Takes a functor rather than a string because the
+   * callers reset a progress counter inside it, so the body must run only when a message is due.
+   * @param functor Callable of the form std::string func()
+   */
+  template <class CallableT>
+  requires std::is_invocable_r_v<std::string, CallableT>
+  void sendThreadSafeProgressMessage(CallableT&& functor)
+  {
+    std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+    m_Throttle.queueMessage(std::forward<CallableT>(functor));
+  }
+
+  /**
+   * @brief Thread-safe guaranteed status message. Safe to call from the parallel range workers.
+   * @param message
+   */
+  void sendThreadSafeInfoMessage(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const ComputeArrayStatisticsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

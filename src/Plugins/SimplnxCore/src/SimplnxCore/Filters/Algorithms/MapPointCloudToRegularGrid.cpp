@@ -83,7 +83,7 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
     auto now = std::chrono::steady_clock::now();
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
-      messageHandler(fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", static_cast<int64>((static_cast<float32>(i) / numVerts) * 100.0f)));
+      messageHandler.sendInfoMessage(fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", static_cast<int64>((static_cast<float32>(i) / numVerts) * 100.0f)));
       start = now;
     }
   }
@@ -112,12 +112,6 @@ MapPointCloudToRegularGrid::MapPointCloudToRegularGrid(DataStructure& dataStruct
 
 // -----------------------------------------------------------------------------
 MapPointCloudToRegularGrid::~MapPointCloudToRegularGrid() noexcept = default;
-
-// -----------------------------------------------------------------------------
-void MapPointCloudToRegularGrid::updateProgress(const std::string& message)
-{
-  m_MessageHandler(IFilter::Message::Type::Info, message);
-}
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& MapPointCloudToRegularGrid::getCancel()

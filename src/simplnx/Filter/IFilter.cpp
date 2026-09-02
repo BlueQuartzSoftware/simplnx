@@ -7,10 +7,47 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <sstream>
 #include <vector>
 
 using namespace nx::core;
+
+namespace
+{
+/**
+ * @brief Computes the integer percent used to drive a progress bar, clamped to [0, 100]. A zero
+ * denominator yields 0 rather than dividing by zero.
+ * @param current
+ * @param max
+ * @return
+ */
+int32 CalculateProgressBarValue(usize current, usize max)
+{
+  if(max == 0)
+  {
+    return 0;
+  }
+  auto percent = static_cast<int32>(static_cast<float64>(current) / static_cast<float64>(max) * 100.0);
+  return std::clamp(percent, 0, 100);
+}
+} // namespace
+
+void IFilter::MessageHandler::sendProgressMessage(std::string message, int32 percent) const
+{
+  sendMessage(Message{Message::Type::Progress, std::move(message), std::clamp(percent, 0, 100)});
+}
+
+void IFilter::MessageHandler::sendProgressCount(std::string label, usize current, usize max) const
+{
+  sendMessage(Message{Message::Type::Progress, fmt::format("{}: {}/{}", label, current, max), CalculateProgressBarValue(current, max)});
+}
+
+void IFilter::MessageHandler::sendProgressPercent(std::string label, usize current, usize max, int32 decimals) const
+{
+  const float64 percent = (max == 0) ? 0.0 : (static_cast<float64>(current) / static_cast<float64>(max) * 100.0);
+  sendMessage(Message{Message::Type::Progress, fmt::format("{}: {:.{}f}%", label, percent, decimals), CalculateProgressBarValue(current, max)});
+}
 
 namespace
 {

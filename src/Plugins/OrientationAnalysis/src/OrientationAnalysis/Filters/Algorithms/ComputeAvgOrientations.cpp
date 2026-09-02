@@ -2,8 +2,8 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Core/DirectionalStats.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -219,6 +219,7 @@ ComputeAvgOrientations::ComputeAvgOrientations(DataStructure& dataStructure, con
 , m_MessageHandler(mesgHandler)
 , m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -229,19 +230,7 @@ ComputeAvgOrientations::~ComputeAvgOrientations() noexcept = default;
 void ComputeAvgOrientations::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_NumberOfFeatures)) * 100.0f);
-  std::string ss = fmt::format("{}% Complete", progressInt);
-  m_MessageHandler(IFilter::Message::Type::Info, ss);
-
-  m_InitialPoint = std::chrono::steady_clock::now();
+  m_Throttle.incrementPercent(counter, 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -280,13 +269,11 @@ Result<> ComputeAvgOrientations::operator()()
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
-
   // Warnings (e.g. dropped voxels/features) from each path are merged and returned together.
   Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
-    messageHelper.sendMessage("Computing Rodrigues Average Orientations");
+    m_MessageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
 
     Result<> result = computeRodriguesAverage();
     if(result.invalid())
@@ -299,15 +286,15 @@ Result<> ComputeAvgOrientations::operator()()
   {
     if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher Average Orientations");
+      m_MessageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
     if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing Watson Average Orientations");
+      m_MessageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
     if(m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher and Watson Average Orientations");
+      m_MessageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
 
     Result<> result = computeVmfWatsonAverage();
@@ -407,6 +394,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
   // default (see vv/ComputeAvgOrientationsFilter.md and ComputeFeatureFaceMisorientation).
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
+  m_Throttle.reset(m_NumberOfFeatures, "Computing Average Orientations");
   dataAlg.setRange(0, m_NumberOfFeatures);
   dataAlg.execute(VmfWatsonSamplingImpl(this, m_InputValues, m_DataStructure, featureNumVoxels, featureIdToPhaseMap));
 
@@ -455,8 +443,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   // Get the Identity Quaternion
   static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger messenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler messenger(m_MessageHandler);
 
   for(size_t i = 0; i < totalPoints; i++)
   {
@@ -464,7 +451,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       return {};
     }
-    messenger.sendThrottledMessage([i, totalPoints]() { return fmt::format("Computing Rodrigues Average: Cell {}/{}", i + 1, totalPoints); });
+    messenger.updateCount("Computing Rodrigues Average", i + 1, totalPoints);
 
     const int32_t currentFeatureId = featureIds[i];
     const int32_t currentPhase = phases[i];

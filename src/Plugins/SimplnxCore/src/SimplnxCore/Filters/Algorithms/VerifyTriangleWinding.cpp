@@ -129,10 +129,10 @@ Result<> VerifyTriangleWinding::operator()()
     return result;
   }
 
-  m_MessageHandler("Checking for duplicates - sorting vertices");
+  m_MessageHandler.sendInfoMessage("Checking for duplicates - sorting vertices");
   const MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
 
-  m_MessageHandler("Checking for duplicates - validating");
+  m_MessageHandler.sendInfoMessage("Checking for duplicates - validating");
   auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
   if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
@@ -149,7 +149,7 @@ Result<> VerifyTriangleWinding::operator()()
   Result<> windingResult = {};
   {
     // Generate Connectivity
-    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triGeom.findElementNeighbors(true);
     const auto optionalId = triGeom.getElementNeighborsId();
     if(!optionalId.has_value())
@@ -158,7 +158,7 @@ Result<> VerifyTriangleWinding::operator()()
     }
     const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-    m_MessageHandler("Repairing Windings...");
+    m_MessageHandler.sendInfoMessage("Repairing Windings...");
     // This is reused since it may contain warnings
     windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, idsStore, m_ShouldCancel, m_MessageHandler);
     if(windingResult.invalid())
@@ -171,7 +171,7 @@ Result<> VerifyTriangleWinding::operator()()
     m_DataStructure.removeData(triGeom.getElementNeighborsId().value());
   }
 
-  m_MessageHandler("Assessing reversal - calculating feature volumes");
+  m_MessageHandler.sendInfoMessage("Assessing reversal - calculating feature volumes");
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
   for(int32 i = 0; i < idsStore.getSize(); i++)
@@ -186,7 +186,7 @@ Result<> VerifyTriangleWinding::operator()()
     return volumeResult;
   }
 
-  m_MessageHandler("Implementing reversal in parallel");
+  m_MessageHandler.sendInfoMessage("Implementing reversal in parallel");
   std::vector<usize> reversalTargets = {};
   reversalTargets.reserve(volumes.size());
   for(usize i = 1; i < volumes.size(); i++) // zero is an invalid feature label
@@ -208,7 +208,7 @@ Result<> VerifyTriangleWinding::operator()()
 
   if(m_InputValues->RepairNormals)
   {
-    m_MessageHandler("Recalculating normals");
+    m_MessageHandler.sendInfoMessage("Recalculating normals");
     auto& normals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsPath)->getDataStoreRef();
 
     // Parallel algorithm to calculate normals

@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -116,7 +117,7 @@ Result<> RemoveFlaggedFeatures::operator()()
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
   {
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
+    m_MessageHandler.sendInfoMessage(fmt::format("Beginning Feature Extraction"));
 
     {
       ComputeFeatureRectFilter filter;
@@ -175,12 +176,12 @@ Result<> RemoveFlaggedFeatures::operator()()
 
       DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
-      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {}", i)});
+      m_MessageHandler.sendInfoMessage(fmt::format("Now Extracting Feature {}", i));
       taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, getCancel(), m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath));
     }
     taskRunner.wait();
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
+    m_MessageHandler.sendInfoMessage(fmt::format("All Features Successfully Extracted"));
   }
 
   if(getCancel())

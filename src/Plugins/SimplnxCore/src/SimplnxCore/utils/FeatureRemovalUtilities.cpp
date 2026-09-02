@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 
@@ -13,9 +13,9 @@ using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(messageHandler);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -44,7 +44,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      throttledMessenger.updatePercent("Processing Image", zIdx, dims[2]);
       progressCounter = 0;
     }
     progressCounter++;
@@ -195,9 +195,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.ImageGeometryPath);
   auto& featureIds = dataStructure.getDataAs<Int32Array>(args.FeatureIdsArrayPath)->getDataStoreRef();
 
-  MessageHelper messageHelper(messageHandler);
-
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+  messageHandler.sendInfoMessage(fmt::format("Beginning Feature Removal"));
 
   std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.FillRemovedFeatures);
   if(activeObjects.empty())
@@ -222,16 +220,16 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     do
     {
       count++;
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+      messageHandler.sendInfoMessage(fmt::format("Entering iteration number {}...", count));
       std::fill(neighbors.begin(), neighbors.end(), -1);
-      shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
+      shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHandler);
 
       if(shouldCancel)
       {
         return {};
       }
 
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
+      messageHandler.sendInfoMessage(fmt::format("Filling bad voxels..."));
       std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(dataStructure, args.FeatureIdsArrayPath, args.IgnoredDataArrayPaths);
       FindVoxelArrays(featureIds, neighbors, voxelArrays, shouldCancel);
     } while(shouldLoop);
@@ -242,7 +240,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+  messageHandler.sendInfoMessage(fmt::format("Stripping excess inactive objects from model..."));
   if(!RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel))
   {
     return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", args.FeatureAttributeMatrixPath.toString()));

@@ -69,7 +69,7 @@ Result<> ComputeAvgCAxes::operator()()
 
   std::vector<int32> cellCount(totalFeatures, 0);
 
-  m_MessageHandler({IFilter::Message::Type::Info, "Computing cell contributions"});
+  m_MessageHandler.sendInfoMessage("Computing cell contributions");
 
   // Loop over each cell
   for(usize i = 0; i < totalPoints; i++)
@@ -129,7 +129,7 @@ Result<> ComputeAvgCAxes::operator()()
   }
 
   // Now that each feature's Axis is summed up, compute the final average C-Axis
-  m_MessageHandler({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
+  m_MessageHandler.sendInfoMessage("Computing final feature average C-Axis values");
 
   for(usize currentFeatureId = 0; currentFeatureId < totalFeatures; currentFeatureId++)
   {

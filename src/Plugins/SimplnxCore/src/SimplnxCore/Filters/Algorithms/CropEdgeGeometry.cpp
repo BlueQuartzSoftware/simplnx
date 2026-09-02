@@ -354,7 +354,7 @@ Result<> CropEdgeGeometry::operator()()
 
       auto& newDataArray = dynamic_cast<IDataArray&>(destVertexAttrMatrix.at(srcName));
 
-      m_MessageHandler(fmt::format("Cropping Volume || Copying Vertex Array {}", srcName));
+      m_MessageHandler.sendInfoMessage(fmt::format("Cropping Volume || Copying Vertex Array {}", srcName));
       ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcVertexAttrMatrix, vertexReferenced, m_ShouldCancel);
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
@@ -396,7 +396,7 @@ Result<> CropEdgeGeometry::operator()()
 
       auto& newDataArray = dynamic_cast<IDataArray&>(destEdgesAttrMatrix.at(srcName));
 
-      m_MessageHandler(fmt::format("Cropping Volume || Copying Edge Array {}", srcName));
+      m_MessageHandler.sendInfoMessage(fmt::format("Cropping Volume || Copying Edge Array {}", srcName));
       ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcEdgesAttrMatrix, edgesMask, m_ShouldCancel);
     }
     taskRunner.wait();

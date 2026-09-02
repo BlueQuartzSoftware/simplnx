@@ -41,7 +41,7 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
       return {};
     }
 
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Concatenating array '{}'...", inputArrayPath.toString())});
+    messageHandler.sendInfoMessage(fmt::format("Concatenating array '{}'...", inputArrayPath.toString()));
     const auto& inputDataArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
     auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, destTupleOffset, 0, inputDataArray.getNumberOfTuples());
     if(result.invalid())
@@ -67,7 +67,7 @@ Result<> ConcatenateNeighborListsImpl(DataStructure& dataStructure, const std::v
       return {};
     }
 
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Concatenating neighbor list '{}'...", inputNeighborListPath.toString())});
+    messageHandler.sendInfoMessage(fmt::format("Concatenating neighbor list '{}'...", inputNeighborListPath.toString()));
     const auto& inputNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(inputNeighborListPath);
     for(int32 listIdx = 0; listIdx < inputNeighborList.getNumberOfLists(); ++listIdx)
     {

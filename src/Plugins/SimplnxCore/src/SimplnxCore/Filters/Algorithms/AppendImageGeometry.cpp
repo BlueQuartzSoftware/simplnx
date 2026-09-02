@@ -149,7 +149,7 @@ Result<> AppendImageGeometry::operator()()
 
     if(m_InputValues->SaveAsNewGeometry)
     {
-      m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
+      m_MessageHandler.sendInfoMessage(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
       auto newGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath);
       auto newDestGeomDimsVec = newGeometry.getDimensions().toContainer<std::vector<usize>>();
       std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
@@ -157,7 +157,7 @@ Result<> AppendImageGeometry::operator()()
     }
     else
     {
-      m_MessageHandler(fmt::format("Appending data into array {}", newCellDataPath.createChildPath(name).toString()));
+      m_MessageHandler.sendInfoMessage(fmt::format("Appending data into array {}", newCellDataPath.createChildPath(name).toString()));
       auto originalDestGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
       std::reverse(originalDestGeomDimsVec.begin(), originalDestGeomDimsVec.end());
       auto newDestGeomDimsVec = destGeometry.getDimensions().toContainer<std::vector<usize>>();

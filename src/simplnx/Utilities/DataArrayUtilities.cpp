@@ -160,7 +160,7 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
                                                             const IFilter::MessageHandler& messageHandler)
 {
-  messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
+  messageHandler.sendInfoMessage(fmt::format("Validating range of values within input array '{}'...", featureIds.getName()));
 
   usize numFeatures = 0;
 
@@ -299,7 +299,7 @@ void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCe
     const std::string srcName = oldDataArray.getName();
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Copying Data Array {}", srcName));
+    m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array {}", srcName));
     ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

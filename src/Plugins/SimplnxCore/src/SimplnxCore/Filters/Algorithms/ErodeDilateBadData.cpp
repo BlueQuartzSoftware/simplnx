@@ -3,9 +3,9 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 namespace
@@ -16,14 +16,14 @@ public:
   ErodeDilateBadDataTransferDataImpl() = delete;
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
-  ErodeDilateBadDataTransferDataImpl(usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighbors,
-                                     const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
-  : m_TotalPoints(totalPoints)
+  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr)
+  : m_FilterAlg(filterAlg)
+  , m_TotalPoints(totalPoints)
   , m_Operation(operation)
   , m_Neighbors(neighbors)
   , m_DataArrayPtr(dataArrayPtr)
   , m_FeatureIds(featureIds)
-  , m_MessageHelper(messageHelper)
   {
   }
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented
@@ -34,11 +34,16 @@ public:
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    std::string arrayName = m_DataArrayPtr->getName();
+    const std::string arrayName = m_DataArrayPtr->getName();
+    // Pre-gate on a count so the shared progress mutex is taken about a hundred times per array
+    // rather than once per voxel. Matches RequireMinimumSizeFeatures.
+    const usize progressIncrement = std::max(m_TotalPoints / 100ULL, 1ULL);
     for(usize i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
+      if(i % progressIncrement == 0)
+      {
+        m_FilterAlg->sendThreadSafeProgressMessage(fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)));
+      }
 
       const int32 featureName = m_FeatureIds[i];
       const int64 neighbor = m_Neighbors[i];
@@ -53,12 +58,12 @@ public:
   }
 
 private:
+  ErodeDilateBadData* m_FilterAlg = nullptr;
   usize m_TotalPoints = 0;
   ChoicesParameter::ValueType m_Operation = 0;
   const std::vector<int64>& m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
-  MessageHelper& m_MessageHelper;
 };
 
 /**
@@ -86,6 +91,7 @@ ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilt
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -96,6 +102,13 @@ ErodeDilateBadData::~ErodeDilateBadData() noexcept = default;
 const std::atomic_bool& ErodeDilateBadData::getCancel()
 {
   return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void ErodeDilateBadData::sendThreadSafeProgressMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.trySendMessage(message);
 }
 
 // -----------------------------------------------------------------------------
@@ -125,8 +138,6 @@ Result<> ErodeDilateBadData::operator()()
       numFeatures = featureName;
     }
   }
-
-  MessageHelper messageHelper(m_MessageHandler);
 
   // Build up a list of the DataArrays that we are going to operate on.
   const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
@@ -216,14 +227,14 @@ Result<> ErodeDilateBadData::operator()()
         continue;
       }
 
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
+      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray));
     taskRunner.wait(); // Redundant while parallelization is disabled, but keeps the "transfer is complete" invariant local.
   }
 

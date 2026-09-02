@@ -34,12 +34,6 @@ RotateSampleRefFrame::RotateSampleRefFrame(DataStructure& dataStructure, const I
 RotateSampleRefFrame::~RotateSampleRefFrame() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void RotateSampleRefFrame::updateProgress(const std::string& message)
-{
-  m_MessageHandler(IFilter::Message::Type::Info, message);
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& RotateSampleRefFrame::getCancel()
 {
   return m_ShouldCancel;
@@ -87,7 +81,7 @@ Result<> RotateSampleRefFrame::operator()()
 
     const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
+    m_MessageHandler.sendInfoMessage(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
     ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
                                                                                             m_InputValues->SliceBySlice, &filterProgressCallback);

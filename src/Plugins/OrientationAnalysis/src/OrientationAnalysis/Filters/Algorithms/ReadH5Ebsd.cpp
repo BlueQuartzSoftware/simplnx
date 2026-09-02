@@ -169,7 +169,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   }
 
   // Initialize all the arrays with some default values
-  mMessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
+  mMessageHandler.sendInfoMessage(fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath));
   uint32_t mRefFrameZDir = ebsdReader->getStackingOrder();
 
   ebsdReader->setSliceStart(mInputValues->startSlice);
@@ -389,7 +389,7 @@ Result<> ReadH5Ebsd::operator()()
       args.insertOrAssign(::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Preflight the filter and check result
-      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
+      m_MessageHandler.sendInfoMessage(fmt::format("Preflighting {}...", filter->humanName()));
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
@@ -402,7 +402,7 @@ Result<> ReadH5Ebsd::operator()()
       }
 
       // Execute the filter and check the result
-      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
+      m_MessageHandler.sendInfoMessage(fmt::format("Executing {}", filter->humanName()));
       auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {

@@ -12,7 +12,7 @@ void notifyProgress(usize lineNumber, usize numberOfTuples, float32& threshold, 
   if(percentCompleted > threshold)
   {
     // Print the status of the import
-    msgHandler({IFilter::Message::Type::Info, fmt::format("Importing CSV Data || {:.{}f}% Complete", static_cast<double>(percentCompleted), 1)});
+    msgHandler.sendInfoMessage(fmt::format("Importing CSV Data || {:.{}f}% Complete", static_cast<double>(percentCompleted), 1));
     threshold = threshold + 5.0f;
     if(threshold < percentCompleted)
     {

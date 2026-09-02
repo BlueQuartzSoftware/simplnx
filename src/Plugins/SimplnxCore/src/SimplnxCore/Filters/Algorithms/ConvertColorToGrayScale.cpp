@@ -191,7 +191,7 @@ Result<> ConvertColorToGrayScale::operator()()
   auto outputPathIter = m_InputValues->OutputDataArrayPaths.begin();
   for(const auto& arrayPath : m_InputValues->InputDataArrayPaths)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting data '{}'", arrayPath.toString()));
+    m_MessageHandler.sendInfoMessage(fmt::format("Converting data '{}'", arrayPath.toString()));
 
     if(getCancel())
     {

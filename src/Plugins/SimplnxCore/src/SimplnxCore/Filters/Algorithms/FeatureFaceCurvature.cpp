@@ -4,8 +4,8 @@
 #include "SimplnxCore/Filters/Algorithms/FindNRingNeighbors.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -20,6 +20,7 @@ FeatureFaceCurvature::FeatureFaceCurvature(DataStructure& dataStructure, const I
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -30,6 +31,13 @@ FeatureFaceCurvature::~FeatureFaceCurvature() noexcept = default;
 const std::atomic_bool& FeatureFaceCurvature::getCancel()
 {
   return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void FeatureFaceCurvature::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementCount(counter);
 }
 
 // -----------------------------------------------------------------------------
@@ -90,8 +98,6 @@ Result<> FeatureFaceCurvature::operator()()
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
-
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all
  * the tasks while the first tasks start up. TBB will then grab a new task from it's own queue to work on it up to the
@@ -101,11 +107,10 @@ Result<> FeatureFaceCurvature::operator()()
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  messageHelper.sendMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
+  m_MessageHandler.sendInfoMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
 
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(sharedFeatureFaces.size());
+  m_Throttle.reset(sharedFeatureFaces.size(), "Calculating Curvatures");
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {
@@ -114,14 +119,14 @@ Result<> FeatureFaceCurvature::operator()()
     CalculateTriangleGroupCurvatures func(this, m_InputValues->NRingCount, triangleIds, m_InputValues->useNormalsForCurveFitting, surfaceMeshPrincipalCurvature1sArrayPtr,
                                           surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr, surfaceMeshPrincipalDirection2sArrayPtr,
                                           surfaceMeshGaussianCurvaturesArrayPtr, surfaceMeshMeanCurvaturesArrayPtr, surfaceMeshWeingartenMatrixArrayPtr, triangleGeomPtr, surfaceMeshFaceLabelsArrayPtr,
-                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel, progressMessageHelper);
+                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
     {
       g->run(func);
     }
 #else
-    messageHelper.sendMessage(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
+    m_MessageHandler.sendInfoMessage(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
     {
       func();
     }
@@ -129,7 +134,7 @@ Result<> FeatureFaceCurvature::operator()()
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  messageHelper.sendMessage("Waiting on computations to complete.");
+  m_MessageHandler.sendInfoMessage("Waiting on computations to complete.");
   g->wait(); // Wait for all the threads to complete before moving on.
 #endif
 

@@ -69,7 +69,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   std::vector<float> xCentroid(dims[2], 0.0f);
   std::vector<float> yCentroid(dims[2], 0.0f);
 
-  ThrottledMessenger throttledMessenger = getMessageHelper().createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(getMessageHandler());
   // Loop over the Z Direction
   for(size_t iter = 0; iter < dims[2]; iter++)
   {
@@ -77,7 +77,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+    throttledMessenger.updatePercent("Determining Shifts", iter, dims[2]);
 
     size_t count = 0;
     xCentroid[iter] = 0;
@@ -140,7 +140,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the X dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  X Dim={}  X Shift={}  sDims[0]={}",
                                           iter, dims[0], xShifts[iter], sdims[0]);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if((yShifts[iter] < -sdims[1] || yShifts[iter] > sdims[1]) && !yWarning)
@@ -148,19 +148,19 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the Y dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  Y Dim={}  Y Shift={}  sDims[1]={}",
                                           iter, dims[1], yShifts[iter], sdims[1]);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
         std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
         std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
 
@@ -197,7 +197,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the X dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  X Dim={}  X Shift={}  sDims[0]={}",
                                           iter, dims[0], xShifts[iter], sdims[0]);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if((yShifts[iter] < -sdims[1] || yShifts[iter] > sdims[1]) && !yWarning)
@@ -205,19 +205,19 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the Y dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  Y Dim={}  Y Shift={}  sDims[1]={}",
                                           iter, dims[1], yShifts[iter], sdims[1]);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
         std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
         std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+        m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
     }

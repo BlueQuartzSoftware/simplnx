@@ -111,7 +111,7 @@ void _make_code()
 
       std::cout << "else if( inputType == ebsdlib::orientations::Type::" << names[i] << " && outputType == ebsdlib::orientations::Type::" << names[o] << ")\n"
                 << "{\n";
-      std::cout << "  messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, \"Converting " << names[i] << " to " << names[o] << "\"});\n";
+      std::cout << "  messageHandler.sendInfoMessage(\"Converting " << names[i] << " to " << names[o] << "\");\n";
 
       if(inRep[i] == "qu")
       {

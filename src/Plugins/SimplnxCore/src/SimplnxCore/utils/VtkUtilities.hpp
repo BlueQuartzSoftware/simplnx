@@ -122,14 +122,12 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
     return "char";
   }
 
-  messageHandler(IFilter::Message::Type::Info, fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
+  messageHandler.sendInfoMessage(fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
   if(const char* name = typeid(T).name(); nullptr != name && name[0] == 'l')
   {
-    messageHandler(
-        IFilter::Message::Type::Info,
-        fmt::format(
-            "You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32_t or uint32_t.",
-            typeid(T).name()));
+    messageHandler.sendInfoMessage(fmt::format(
+        "You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32_t or uint32_t.",
+        typeid(T).name()));
   }
   return "";
 }
@@ -143,7 +141,7 @@ struct WriteVtkDataArrayFunctor
     auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
     auto& dataStore = dataArray->template getIDataStoreRefAs<DataStore<T>>();
 
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
+    messageHandler.sendInfoMessage(fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
 
     const usize totalElements = dataStore.getSize();
     const int numComps = static_cast<int>(dataStore.getNumberOfComponents());
@@ -305,7 +303,7 @@ struct WriteVtkDataFunctor
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", dataArrayRef.getName(), static_cast<int32>(100 * static_cast<float>(idx) / static_cast<float>(numTuples)));
-          messageHandler(IFilter::Message::Type::Info, string);
+          messageHandler.sendInfoMessage(string);
           start = now;
           if(shouldCancel)
           {

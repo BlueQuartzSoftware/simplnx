@@ -114,7 +114,7 @@ public:
         auto result = readUserDefinedVariables();
         if(result.invalid())
         {
-          m_Filter->updateProgress(result.errors().data()->message);
+          m_Filter->reportWarning(result.errors().data()->message);
         }
         continue;
       }
@@ -175,7 +175,7 @@ public:
       }
 
       // Unrecognized section
-      m_Filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section", StringUtilities::number(m_LineCount)));
+      m_Filter->reportWarning(fmt::format("Warning at line {}: Unrecognized section", StringUtilities::number(m_LineCount)));
     }
 
     return {};
@@ -667,7 +667,7 @@ private:
         Result<> result = parse_ull(tokens.at(2), numVerts);
         if(result.invalid())
         {
-          m_Filter->updateProgress(result.errors().data()->message);
+          m_Filter->reportWarning(result.errors().data()->message);
           continue;
         }
 
@@ -694,7 +694,7 @@ private:
         Result<> result = parse_ull(tokens.at(2), numCells);
         if(result.invalid())
         {
-          m_Filter->updateProgress(result.errors().data()->message);
+          m_Filter->reportWarning(result.errors().data()->message);
           continue;
         }
 
@@ -722,7 +722,7 @@ private:
         Result<> tupResult = parse_ull(tokens.at(2), tupleCount);
         if(tupResult.invalid())
         {
-          m_Filter->updateProgress(tupResult.errors().data()->message);
+          m_Filter->reportWarning(tupResult.errors().data()->message);
           continue;
         }
 
@@ -760,13 +760,13 @@ private:
                   "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({}), and the vertex tuple count has not been read yet.  Skipping...",
                   dataArrayName, tupleCount, m_Cache.cellAttrMatTupleCount);
             }
-            m_Filter->updateProgress(msg);
+            m_Filter->reportWarning(msg);
           }
           else
           {
             std::string msg = fmt::format("Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be either a vertex array or cell array.  Skipping...",
                                           dataArrayName, tupleCount);
-            m_Filter->updateProgress(msg);
+            m_Filter->reportWarning(msg);
           }
         }
         if(readInResult.invalid())
@@ -805,9 +805,15 @@ const std::atomic_bool& ReadDeformKeyFileV12::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+void ReadDeformKeyFileV12::reportWarning(const std::string& message)
+{
+  m_MessageHandler.sendWarningMessage(message);
+}
+
+// -----------------------------------------------------------------------------
 void ReadDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 {
-  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
+  m_MessageHandler.sendInfoMessage(progressMessage);
 }
 
 // -----------------------------------------------------------------------------

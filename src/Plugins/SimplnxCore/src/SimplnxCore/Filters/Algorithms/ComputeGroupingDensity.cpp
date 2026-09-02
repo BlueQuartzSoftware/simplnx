@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <unordered_set>
 
@@ -77,13 +77,12 @@ public:
       // Default value-initialized to zeroes: https://en.cppreference.com/w/cpp/named_req/DefaultInsertable
       checkedFeatureVolumes.resize(numFeatures);
     }
-    MessageHelper messageHelper(m_MessageHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {:.1f}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
+      throttledMessenger.updateCount("Computing grouping density", currentParentId, numParents);
 
       if(m_ShouldCancel)
       {

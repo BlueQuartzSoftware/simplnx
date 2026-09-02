@@ -27,12 +27,6 @@ protected:
 
   void onCancelled() const;
 
-  void onFilterProgress(AbstractPipelineNode* node, int32 progress, int32 maxProgress, const std::string& msg) const;
-
-  void onRunStateChanged(AbstractPipelineNode* node, RunState state) const;
-
-  void onFilterUpdate(AbstractPipelineNode* node, const std::string& msg) const;
-
   void onFaultStateChanged(AbstractPipelineNode* node, FaultState state) const;
 
 private:

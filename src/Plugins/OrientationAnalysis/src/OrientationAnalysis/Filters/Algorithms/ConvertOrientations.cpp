@@ -85,6 +85,7 @@ ConvertOrientations::ConvertOrientations(DataStructure& dataStructure, const IFi
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -101,17 +102,7 @@ bool ConvertOrientations::shouldCancel() const
 void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalPoints)) * 100.0f);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
-  m_InitialPoint = std::chrono::steady_clock::now();
+  m_Throttle.incrementPercent(counter, 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -121,10 +112,10 @@ Result<> ConvertOrientations::operator()()
   auto& inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
   auto& outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
   size_t totalPoints = inputArray.getNumberOfTuples();
-  m_TotalPoints = totalPoints;
+  m_Throttle.reset(totalPoints, "Converting Orientations");
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)],
-                                                             k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
+  m_MessageHandler.sendInfoMessage(
+      fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)], k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
 
   // Allow data-based parallelization; require both arrays resident in memory for out-of-core stores.
   ParallelDataAlgorithm parallelAlgorithm;

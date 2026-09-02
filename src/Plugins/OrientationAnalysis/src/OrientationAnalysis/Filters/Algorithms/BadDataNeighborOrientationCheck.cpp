@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -89,8 +89,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   // on the mask array because the algorithm needs to distinguish "newly flipped" from "still bad".
   std::vector<int32> neighborCount(totalPoints, 0);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
   // Loop over every point finding the number of neighbors that fall within the
   // user defined angle tolerance.
   for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -99,7 +98,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    throttledMessenger.updatePercent("Processing Data", voxelIndex, totalPoints);
     // If the mask was set to false, then we check this voxel
     // "Bad" voxels are those whose mask value is false; only these get processed.
     const bool voxelIsBad = !maskCompare->isTrue(voxelIndex);
@@ -186,10 +185,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
         {
           return {};
         }
-        throttledMessenger.sendThrottledMessage([&] {
-          return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
-                             CalculatePercentComplete(voxelIndex, totalPoints));
-        });
+        // The label varies per level and loop, so the text is assembled only when a message is
+        // actually due rather than on every iteration.
+        throttledMessenger.queueMessage("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
+                                        CalculatePercentComplete(voxelIndex, totalPoints));
 
         // If the current voxel's neighbor count is >= the current level and the mask is FALSE,
         // we flip the voxel to TRUE and recompute its (still-bad) neighbors' counts below.

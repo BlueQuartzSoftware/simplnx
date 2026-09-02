@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <vector>
 
@@ -182,7 +182,7 @@ std::vector<NeighborPoint> getAllNeighbors(const int64 currentPoint, const int64
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHelper(mesgHandler)
+, m_MessageHandler(mesgHandler)
 {
 }
 
@@ -192,7 +192,7 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
-  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 
   SizeVec3 udims = gridGeom->getDimensions();
 
@@ -273,7 +273,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
     // Send a progress message
     float percentComplete = static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels) * 100.0f;
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
+    throttledMessenger.queueMessage("{:.2f}% - Current Feature Count: {}", percentComplete, gnum);
     // Increment or set values for the next iteration
     gnum++;
     // Get the next seed value
@@ -284,9 +284,9 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   m_FoundFeatures = gnum - 1; // Decrement the gnum because it will end up 1 larger than it should have been.
   if(hasNonContiguousFeature)
   {
-    m_MessageHelper.sendMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
+    m_MessageHandler.sendInfoMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
   }
-  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
+  m_MessageHandler.sendInfoMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
   return {};
 }
 
@@ -309,6 +309,6 @@ SegmentFeatures::SeedGenerator SegmentFeatures::initializeStaticVoxelSeedGenerat
 // -----------------------------------------------------------------------------
 void SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
 {
-  m_MessageHelper.sendMessage("Randomizing Feature Ids");
+  m_MessageHandler.sendInfoMessage("Randomizing Feature Ids");
   ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }
