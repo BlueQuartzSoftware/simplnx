@@ -288,8 +288,12 @@
           "value": "TriangleDataContainer",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 3,
         "repair_triangle_winding": {
+          "value": true,
+          "version": 1
+        },
+        "sharp_bounding_box_edges": {
           "value": true,
           "version": 1
         },
