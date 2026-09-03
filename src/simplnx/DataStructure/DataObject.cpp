@@ -76,7 +76,7 @@ DataObject& DataObject::operator=(DataObject&& rhs) noexcept
 
 DataObject::~DataObject() noexcept
 {
-  if(m_DataStructure == nullptr)
+  if(m_DataStructure == nullptr || m_DataStructure == this)
   {
     return;
   }

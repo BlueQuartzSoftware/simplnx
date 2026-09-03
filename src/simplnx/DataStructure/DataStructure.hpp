@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
@@ -40,7 +41,7 @@ inline const std::string k_ImportableTag = "Importable";
  * geometries, and scalars are added to the structure. The DataStructure allows
  * parents to be added to or removed from DataObjects.
  */
-class SIMPLNX_EXPORT DataStructure
+class SIMPLNX_EXPORT DataStructure : public BaseGroup
 {
   using WeakCollectionType = std::map<DataObject::IdType, std::weak_ptr<DataObject>>;
 
@@ -56,6 +57,8 @@ protected:
   bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
 
 public:
+  static constexpr StringLiteral k_TypeName = "DataStructure";
+
   using SignalType = nod::signal<void(DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&)>;
   using Iterator = DataMap::Iterator;
   using ConstIterator = DataMap::ConstIterator;
@@ -95,7 +98,7 @@ public:
    * @brief Clears the DataStructure by removing all DataObjects. The next
    * DataObject ID remains unchanged after the operation.
    */
-  void clear();
+  void clear() override;
 
   /**
    * @brief Returns the IdType for the DataObject found at the specified DataPath. The
@@ -745,12 +748,6 @@ public:
   std::vector<DataObject*> getTopLevelData() const;
 
   /**
-   * @brief Returns a reference to the DataMap backing the top level of the DataStructure.
-   * @return const DataMap&
-   */
-  const DataMap& getDataMap() const;
-
-  /**
    * @brief Inserts a new DataObject into the DataStructure nested under the given
    * DataPath. If the DataPath is empty, the DataObject is added directly to
    * the DataStructure. The provided DataObject can exist outside of the DataStructure,
@@ -864,6 +861,24 @@ public:
    * @return DataStructure& Reference to this DataStructure
    */
   DataStructure& operator=(DataStructure&& rhs) noexcept;
+
+  /**
+   * @brief Returns a deep copy of the DataStructure.
+   * @return DataObject*
+   */
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+
+  /**
+   * @brief Returns a shallow copy of the DataObject.
+   * @return DataObject*
+   */
+  DataObject* shallowCopy() override;
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief Sets the next ID to use when constructing a DataObject.
@@ -1020,7 +1035,6 @@ private:
   // Variables
   SignalType m_Signal;
   WeakCollectionType m_DataObjects;
-  DataMap m_RootGroup;
   bool m_IsValid = false;
   DataObject::IdType m_NextId = 1;
 };

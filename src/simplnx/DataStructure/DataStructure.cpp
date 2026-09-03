@@ -29,13 +29,14 @@ const std::string k_Delimiter = "|--";
 namespace nx::core
 {
 DataStructure::DataStructure()
-: m_IsValid(true)
+: BaseGroup(*this, k_TypeName)
+, m_IsValid(true)
 {
 }
 
 DataStructure::DataStructure(const DataStructure& dataStructure)
-: m_DataObjects(dataStructure.m_DataObjects)
-, m_RootGroup(dataStructure.m_RootGroup)
+: BaseGroup(dataStructure)
+, m_DataObjects(dataStructure.m_DataObjects)
 , m_IsValid(dataStructure.m_IsValid)
 , m_NextId(dataStructure.m_NextId)
 {
@@ -54,16 +55,16 @@ DataStructure::DataStructure(const DataStructure& dataStructure)
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
   // Updates all DataObjects with their new DataStructure
-  m_RootGroup.setDataStructure(this);
+  setDataStructure(this);
 }
 
 DataStructure::DataStructure(DataStructure&& dataStructure) noexcept
-: m_DataObjects(std::move(dataStructure.m_DataObjects))
-, m_RootGroup(std::move(dataStructure.m_RootGroup))
+: BaseGroup(std::move(dataStructure))
+, m_DataObjects(std::move(dataStructure.m_DataObjects))
 , m_IsValid(dataStructure.m_IsValid)
 , m_NextId(dataStructure.m_NextId)
 {
-  m_RootGroup.setDataStructure(this);
+  getDataMap().setDataStructure(this);
 }
 
 DataStructure::~DataStructure()
@@ -98,7 +99,7 @@ size_t DataStructure::getSize() const
 
 void DataStructure::clear()
 {
-  auto topDataIds = m_RootGroup.getKeys();
+  auto topDataIds = getDataMap().getKeys();
   for(auto dataId : topDataIds)
   {
     removeData(dataId);
@@ -125,7 +126,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   try
   {
     std::vector<DataObject::IdType> pathIds;
-    const DataObject* data = m_RootGroup[path[0]];
+    const DataObject* data = getDataMap()[path[0]];
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());
 
@@ -163,7 +164,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   {
     std::vector<DataObject::IdType> pathIds;
     std::string name = path[0];
-    const DataObject* data = m_RootGroup[name];
+    const DataObject* data = getDataMap()[name];
     if(data == nullptr)
     {
       data = nx::core::DataGroup::Create(*this, name);
@@ -272,7 +273,7 @@ DataObject* DataStructure::getData(const DataPath& path)
   {
     return nullptr;
   }
-  DataObject* targetObject = m_RootGroup[path[0]];
+  DataObject* targetObject = getDataMap()[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
     if(targetObject == nullptr)
@@ -351,7 +352,7 @@ const DataObject* DataStructure::getData(const DataPath& path) const
   {
     return nullptr;
   }
-  const DataObject* targetObject = m_RootGroup[path[0]];
+  const DataObject* targetObject = getDataMap()[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
     if(targetObject == nullptr)
@@ -508,6 +509,11 @@ void DataStructure::dataDeleted(DataObject::IdType identifier, const std::string
   notify(msg);
 }
 
+DataMap& DataStructure::getRootGroup()
+{
+  return getDataMap();
+}
+
 std::vector<DataObject*> DataStructure::getTopLevelData() const
 {
   std::vector<DataObject*> topLevel(m_RootGroup.getSize(), nullptr);
@@ -520,16 +526,6 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
   return topLevel;
 }
 
-const DataMap& DataStructure::getDataMap() const
-{
-  return m_RootGroup;
-}
-
-DataMap& DataStructure::getRootGroup()
-{
-  return m_RootGroup;
-}
-
 bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
 {
   if(obj == nullptr)
@@ -537,18 +533,19 @@ bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
     return false;
   }
 
-  if(m_RootGroup.contains(obj.get()) || m_RootGroup.contains(obj->getName()))
+  auto& dataMap = getDataMap();
+  if(dataMap.contains(obj.get()) || dataMap.contains(obj->getName()))
   {
     return false;
   }
 
-  return m_RootGroup.insert(obj);
+  return dataMap.insert(obj);
 }
 
 bool DataStructure::removeTopLevel(DataObject* data)
 {
   std::string name = data->getName();
-  if(!m_RootGroup.remove(data))
+  if(!getDataMap().remove(data))
   {
     return false;
   }
@@ -585,22 +582,22 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataOb
 
 DataStructure::Iterator DataStructure::begin()
 {
-  return m_RootGroup.begin();
+  return getDataMap().begin();
 }
 
 DataStructure::Iterator DataStructure::end()
 {
-  return m_RootGroup.end();
+  return getDataMap().end();
 }
 
 DataStructure::ConstIterator DataStructure::begin() const
 {
-  return m_RootGroup.begin();
+  return getDataMap().begin();
 }
 
 DataStructure::ConstIterator DataStructure::end() const
 {
-  return m_RootGroup.end();
+  return getDataMap().end();
 }
 
 bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath)
@@ -644,7 +641,7 @@ bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject
     return false;
   }
 
-  if(!m_RootGroup.insert(dataObject))
+  if(!getDataMap().insert(dataObject))
   {
     return false;
   }
@@ -734,7 +731,7 @@ void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& 
 DataStructure& DataStructure::operator=(const DataStructure& rhs)
 {
   m_DataObjects = rhs.m_DataObjects;
-  m_RootGroup = rhs.m_RootGroup;
+  getDataMap() = rhs.getDataMap();
   m_IsValid = rhs.m_IsValid;
   m_NextId = rhs.m_NextId;
 
@@ -760,7 +757,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
 DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
 {
   m_DataObjects = std::move(rhs.m_DataObjects);
-  m_RootGroup = std::move(rhs.m_RootGroup);
+  getDataMap() = std::move(rhs.getDataMap());
   m_IsValid = std::move(rhs.m_IsValid);
   m_NextId = std::move(rhs.m_NextId);
 
@@ -768,9 +765,25 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   return *this;
 }
 
+std::shared_ptr<DataObject> DataStructure::deepCopy(const DataPath& copyPath)
+{
+  // DataStructure cannot be contained in another DataStructure...
+  return nullptr;
+}
+
+DataObject* DataStructure::shallowCopy()
+{
+  return new DataStructure(*this);
+}
+
+std::string DataStructure::getTypeName() const
+{
+  return k_TypeName;
+}
+
 void DataStructure::applyAllDataStructure()
 {
-  m_RootGroup.setDataStructure(this);
+  setDataStructure(this);
 }
 
 nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
@@ -861,7 +874,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
       dataObjectPtr->checkUpdatedIds(updatedIdsMap);
     }
   }
-  m_RootGroup.updateIds(updatedIdsMap);
+  getDataMap().updateIds(updatedIdsMap);
 }
 
 void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
@@ -1015,7 +1028,7 @@ Result<> DataStructure::validateGeometries() const
    * the compile will fail if the unit tests are enabled. Which they are on all the CI machines.
    */
   Result<> result;
-  for(const auto& dataObject : m_RootGroup)
+  for(const auto& dataObject : getDataMap())
   {
     auto dataObjectType = dataObject.second->getDataObjectType();
     if(dataObjectType >= DataObject::Type::IGeometry && dataObjectType <= DataObject::Type::TetrahedralGeom)
