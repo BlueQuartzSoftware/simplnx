@@ -5,13 +5,36 @@ on:
     branches:
       - develop
       - master
+  workflow_call:
 
 jobs:
   clang_format:
     runs-on: ubuntu-24.04
 
+    env:
+      REPO_PATH: repo/${{ github.repository }}
+
     steps:
+      - name: Setup env vars
+        id: setup_env_vars
+        env:
+          WORKFLOW_PATH: workflow/${{ job.workflow_repository }}
+        run: |
+          echo "WORKFLOW_PATH=$WORKFLOW_PATH" >> "$GITHUB_OUTPUT"
+          echo "CLANG_FORMAT_SCRIPT_DIR=$GITHUB_WORKSPACE/${{ case(github.repository != job.workflow_repository, env.WORKFLOW_PATH, env.REPO_PATH) }}" >> $GITHUB_ENV
       - uses: actions/checkout@v7
+        with:
+          path: ${{ env.REPO_PATH }}
+      - name: Checkout workflow script
+        uses: actions/checkout@v7
+        if: ${{ github.repository != job.workflow_repository }}
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: ${{ steps.setup_env_vars.outputs.WORKFLOW_PATH }}
+          sparse-checkout: |
+            scripts/clang_format.py
+          sparse-checkout-cone-mode: false
       - name: Add Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
       - name: Install clang-format-19
@@ -20,5 +43,6 @@ jobs:
           sudo apt-get install clang-format-19
           clang-format-19 --version
       - name: Check Formatting
+        working-directory: ${{ env.REPO_PATH }}
         run: |
-          python3 scripts/clang_format.py --format-version 19
+          python3 "$CLANG_FORMAT_SCRIPT_DIR/scripts/clang_format.py" --format-version 19
