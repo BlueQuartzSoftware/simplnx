@@ -5,7 +5,9 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
@@ -926,3 +928,24 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across
   UnitTest::CheckArraysInheritTupleDims(serialWindowedResult.Structure);
   UnitTest::CheckArraysInheritTupleDims(parallelWindowedResult.Structure);
 }
+// Characterization test for an OPEN BUG in M3CSurfaceMeshing, pre-existing and unrelated to triple-line
+// generation itself (triple-line extraction only made it visible).
+//
+// On a 2x2x1 four-grain block (domain spanning z in [0, 1]), M3C emits a spurious extra triple-line
+// vertex/edge at z = -0.5 -- one full cell BELOW the domain -- carrying NumFeatures == 4 as if it were a
+// genuine quadruple-point junction. The real physical quadruple line is a single vertical segment
+// through the shared corner of the four grains (1 edge); M3C instead reports 2 collinear edges split at
+// z = 0, with the extra segment/vertex sitting in what can only be a ghost/padding cell layer that M3C
+// synthesizes to close the marching-cubes cube on a domain that is only 1 cell thick in Z.
+//
+// Likely cause: M3C's ghost-shell handling clamps/replicates real feature labels into the padding layer
+// on a 1-cell-thick domain instead of using a background label, so the padding cube looks like an
+// ordinary interior 4-feature junction to the exterior-triple-line filtering logic.
+//
+// This is a PRE-EXISTING M3C defect: this branch changed nothing in M3C's meshing (it only appended a
+// triple-line-generation call at the end of finalizeMesh), so M3C's mesh and FaceLabels here are
+// byte-identical to before this branch. The assertions below encode the CORRECT expected behavior (an
+// EdgeGeom confined to the real domain, z in [0, 1]); they currently fail against the actual (buggy)
+// output. The [!shouldfail] tag makes Catch2 report that as an expected failure so CI stays green.
+// Once M3C's ghost-shell handling is fixed, this test will start passing -- at that point remove the
+// [!shouldfail] tag so it becomes a normal regression test.

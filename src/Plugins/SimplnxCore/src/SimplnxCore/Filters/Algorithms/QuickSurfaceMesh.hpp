@@ -19,7 +19,6 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 {
   bool FixProblemVoxels;
   bool RepairTriangleWinding;
-  bool GenerateTripleLines;
   ChoicesParameter::ValueType BoundingBoxSkinMode;
 
   DataPath GridGeomDataPath;
@@ -75,16 +74,10 @@ public:
    */
   void createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount);
 
-  /**
-   * @brief generateTripleLines
-   */
-  void generateTripleLines();
-
 private:
   DataStructure& m_DataStructure;
   const QuickSurfaceMeshInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  bool m_GenerateTripleLines = false;
 };
 } // namespace nx::core

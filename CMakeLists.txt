@@ -608,6 +608,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TriangleUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TripleLineUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp
@@ -807,6 +808,7 @@ set(SIMPLNX_SRCS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TriangleUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TripleLineUtilities.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.cpp
