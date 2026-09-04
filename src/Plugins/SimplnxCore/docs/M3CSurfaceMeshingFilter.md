@@ -101,10 +101,49 @@ Two inputs leave this mode nothing useful to do. Both are reported as warnings, 
   interior porosity; the warning concerns only the walls, not whether background exists elsewhere in
   the volume.
 - `-56340` — every **Voxel** is background, so every face is omitted and the **Triangle Geometry** is
-  created with zero faces. Unlike Create Surface Mesh (QuickMesh) and Create Surface Mesh (Surface
-  Nets), the vertex count is not zero for M3C (see the note below), so the warning reports the
-  remaining vertex count. The input is legal — it holds no internal interface and no **Feature** to
-  cap — so this is success.
+  created with zero faces and zero vertices. The input is legal — it holds no internal interface and
+  no **Feature** to cap — so this is success.
+
+### Sharp Bounding Box Edges
+
+M3C places every mesh vertex on a **Cell** edge, face center, or body center; no candidate vertex ever
+sits on the corner of a **Cell**. Along an edge of the bounding box, the marching square that straddles
+the edge has one real **Voxel** and three ghost **Voxels**, and the case table joins its two edge
+midpoints with a diagonal. On its own, therefore, M3C bevels all twelve edges and eight corners of the
+volume with a 45 degree chamfer that is half a **Cell** deep on each wall.
+
+That chamfer is a problem for downstream finite element workflows. Mesh preparation tools such as Gmsh
+identify the outer walls of the model as planar surfaces that meet at sharp edges; a bevelled edge instead
+introduces a narrow extra strip of surface along every box edge and a small extra facet at every corner, so
+the walls have to be repaired by hand before a volume mesh can be built. Development builds of this port
+produced sharp edges; the chamfer appeared in the released version, and this option restores the sharp
+behavior as the default.
+
+| Option off: chamfered edges | Option on: sharp edges |
+|---|---|
+| ![](Images/M3CSurfaceMeshing_BoundingBoxEdges_Chamfered.png) | ![](Images/M3CSurfaceMeshing_BoundingBoxEdges_Sharp.png) |
+
+When *Sharp Bounding Box Edges* is on (the default), the **Filter** finishes with a pass that:
+
+1. Moves the outermost row of vertices on each wall onto the neighboring wall plane. Because vertices lie on a
+   half-**Cell** lattice, this row is exactly the set of wall vertices within half a **Cell** of another wall,
+   so no other vertex moves.
+2. Merges the vertices from the two walls that now coincide on the shared edge line (and the three that
+   coincide at each corner) into one vertex. A merged vertex takes the higher of the **Node Types** involved.
+3. Removes the chamfer triangles, which after the merge reference the same vertex twice.
+
+The result is six planar walls that meet along shared edge lines and at the eight corner points of the
+volume, with fewer triangles and vertices than the chamfered mesh. Internal **Feature** boundaries that run
+into a wall follow it to the edge because their triple-line vertices are in the same outermost row. Face
+Labels and any transferred **Cell** or **Feature** arrays are unaffected. Turn the option off to obtain the
+original chamfered output.
+
+The pass leaves an axis chamfered when the volume is only one **Cell** thick along it: the single row of
+wall vertices is then half a **Cell** from both bounding planes on that axis and there is no unambiguous
+edge to move it to. The other two axes are still sharpened.
+
+The pass runs after the **Bounding Box Skin** prune, so with *Background-Backed Walls Only* it only affects
+the wall faces that survive the prune.
 
 ### Feature Id Validation
 
@@ -116,23 +155,20 @@ value produces an error (code `-56343`) naming the offending value, its tuple in
 array's **Data Path**. This is a mitigation for the underlying sentinel-collision design (tracked
 as issue #1705), not a fix for it.
 
-**Note:** M3C's candidate-node generation always leaves a handful of node entries near the volume
-boundary that no triangle references. These orphan vertices are present in stock M3C output
-regardless of the **Bounding Box Skin** setting (tracked as issue #1706), and
-**Background-Backed Walls Only** does not touch them — it clears only the vertices its own pruning
-orphans. This is why an all-background volume yields zero faces but a non-zero vertex count.
-
 ### Notes and Limitations
 
 - The volume is automatically wrapped in a temporary ghost layer so that **Features** touching the
   edge of the volume are meshed correctly; no manual padding is required. The ghost layer is internal
   only: the generated mesh lies entirely within the bounds of the input **Image Geometry**, and its
-  exterior surface sits exactly on the volume boundary.
+  exterior surface sits exactly on the volume boundary. With *Sharp Bounding Box Edges* off, the edges
+  and corners of the bounding box are chamfered by half a **Cell** (see above); with it on they are sharp.
 - **Changed in this release:** earlier versions placed the mesh half a **Cell** off from the input
   volume and additionally emitted surface along the internal seams of the ghost layer, so roughly
   half of every mesh fell outside the volume bounds. Both are fixed. Meshes produced by this
-  **Filter** now align with the input volume and with the other surface meshing **Filters**. Surface
-  meshes regenerated after this change will differ from ones saved previously.
+  **Filter** now align with the input volume and with the other surface meshing **Filters**. The
+  edges and corners of the bounding box are also now sharp by default (see *Sharp Bounding Box
+  Edges* above), where the previous release chamfered them. Surface meshes regenerated after these
+  changes will differ from ones saved previously.
 - **Feature Id** values of 0 are handled internally and restored on output.
 - Only an **Image Geometry** is accepted as input: the M3C node coordinates assume uniform **Cell**
   spacing, so a **RectGrid Geometry** cannot be meshed correctly by this **Filter**.
@@ -158,7 +194,7 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 |---|---|---|---|
 | Algorithm | Voxel-face ("staircase") | Dual (SurfaceNets) | Primal multi-material marching cubes |
 | Vertex placement | Voxel corners | One relaxed vertex per boundary **Cell** | On **Cell** edges/faces |
-| Surface quality | Blocky / stair-stepped | Smooth, sharp edges preserved | Faceted (marching-cubes) |
+| Surface quality | Blocky / stair-stepped | Smooth, sharp edges preserved | Faceted (marching-cubes); bounding box edges sharp by default |
 | Built-in smoothing | No (apply Laplacian Smoothing afterward) | Yes, optional and accuracy-controlled | No (apply Laplacian Smoothing afterward) |
 | Relative triangle count | Highest | Lowest | Moderate to high (configuration dependent) |
 | Multi-material junctions | Yes | Native | Yes (via case table) |
