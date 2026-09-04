@@ -23,8 +23,6 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -35,6 +33,8 @@
 
 using namespace nx::core;
 namespace fs = std::filesystem;
+namespace PU = nx::core::PartitionUtilities;
+namespace PUP = nx::core::PartitionUtilities::Parameters;
 
 namespace
 {
@@ -56,8 +56,8 @@ Arguments createBasicPartitionGeometryArguments(const DataPath& inputGeometryPat
                                                 const std::optional<DataPath>& maskArrayPath)
 {
   Arguments args;
-  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Basic));
-  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PUP::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PU::PartitioningMode::Basic));
+  args.insert(PUP::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
   args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
   args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
@@ -76,10 +76,10 @@ Arguments createAdvancedPartitionGeometryArguments(const DataPath& inputGeometry
                                                    const FloatVec3& partitioningSchemeOrigin, const FloatVec3& lengthPerPartition)
 {
   Arguments args;
-  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Advanced));
-  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
-  args.insert(PartitionGeometryFilter::k_PartitionGridOrigin_Key, std::vector<float>{partitioningSchemeOrigin.getX(), partitioningSchemeOrigin.getY(), partitioningSchemeOrigin.getZ()});
-  args.insert(PartitionGeometryFilter::k_CellLength_Key, std::vector<float>{lengthPerPartition.getX(), lengthPerPartition.getY(), lengthPerPartition.getZ()});
+  args.insert(PUP::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PU::PartitioningMode::Advanced));
+  args.insert(PUP::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PUP::k_PartitionGridOrigin_Key, std::vector<float>{partitioningSchemeOrigin.getX(), partitioningSchemeOrigin.getY(), partitioningSchemeOrigin.getZ()});
+  args.insert(PUP::k_CellLength_Key, std::vector<float>{lengthPerPartition.getX(), lengthPerPartition.getY(), lengthPerPartition.getZ()});
   args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
   args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
@@ -91,10 +91,10 @@ Arguments createBoundingBoxPartitionGeometryArguments(const DataPath& inputGeome
                                                       const IntVec3& numOfPartitionsPerAxis, const FloatVec3& lowerLeftCoord, const FloatVec3& upperRightCoord)
 {
   Arguments args;
-  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::BoundingBox));
-  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
-  args.insert(PartitionGeometryFilter::k_MinGridCoord_Key, std::vector<float>{lowerLeftCoord.getX(), lowerLeftCoord.getY(), lowerLeftCoord.getZ()});
-  args.insert(PartitionGeometryFilter::k_MaxGridCoord_Key, std::vector<float>{upperRightCoord.getX(), upperRightCoord.getY(), upperRightCoord.getZ()});
+  args.insert(PUP::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PU::PartitioningMode::BoundingBox));
+  args.insert(PUP::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PUP::k_MinGridCoord_Key, std::vector<float>{lowerLeftCoord.getX(), lowerLeftCoord.getY(), lowerLeftCoord.getZ()});
+  args.insert(PUP::k_MaxGridCoord_Key, std::vector<float>{upperRightCoord.getX(), upperRightCoord.getY(), upperRightCoord.getZ()});
   args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
   args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
@@ -106,10 +106,10 @@ Arguments createBoundingBoxPartitionGeometryArguments(const DataPath& inputGeome
 Arguments createExistingPartitioningSchemeGeometryArguments(const DataPath& inputGeometryPath, const DataPath& attrMatrixPath, const std::string& partitionIdsArrayName, const DataPath& existingPSPath)
 {
   Arguments args;
-  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid));
+  args.insert(PUP::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PU::PartitioningMode::ExistingPartitionGrid));
   args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
-  args.insert(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key, existingPSPath);
+  args.insert(PUP::k_ExistingPartitionGridPath_Key, existingPSPath);
   args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
   return args;
 }

@@ -5,7 +5,7 @@
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "SimplnxCore/Filters/PartitionGeometryFilter.hpp"
+#include "SimplnxCore/utils/PartitionUtilities.hpp"
 
 using namespace nx::core;
 
@@ -152,10 +152,10 @@ const std::atomic_bool& PartitionGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometry::operator()()
 {
-  auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
+  auto partitioningMode = static_cast<PartitionUtilities::PartitioningMode>(m_InputValues->PartitioningMode);
 
   DataPath partitionGridGeomPath;
-  if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
+  if(partitioningMode == PartitionUtilities::PartitioningMode::ExistingPartitionGrid)
   {
     partitionGridGeomPath = m_InputValues->ExistingPartitionGridPath;
   }
