@@ -3230,9 +3230,10 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   }
 
   // First bounded pass preserves initialize_micro's zero-feature renumbering
-  // without retaining a second copy of the cell data.
+  // without retaining a second copy of the cell data. Large bounded batches
+  // are heap-backed so this path remains within the default Windows stack.
   constexpr usize kFeatureIdBulkValues = 65536;
-  std::array<int32, kFeatureIdBulkValues> maxScanBuffer{};
+  std::vector<int32> maxScanBuffer(kFeatureIdBulkValues);
   int32 maxGrainId = 0;
   for(usize offset = 0; offset < cellCount;)
   {
@@ -3833,9 +3834,9 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   };
 
   constexpr usize kFaceBatch = 16384;
-  std::array<IGeometry::MeshIndexType, kFaceBatch * 3> faceValues{};
-  std::array<int32, kFaceBatch * 2> labelValues{};
-  std::array<QuickSurfaceTransferData, kFaceBatch> transferValues{};
+  std::vector<IGeometry::MeshIndexType> faceValues(kFaceBatch * 3);
+  std::vector<int32> labelValues(kFaceBatch * 2);
+  std::vector<QuickSurfaceTransferData> transferValues(kFaceBatch);
   const usize localCapacity = std::max<usize>(1, static_cast<usize>(maximumTrianglesPerCube));
   std::vector<Triangle> localTriangles(localCapacity);
   std::vector<SiteId> localCubes(localCapacity);
@@ -3992,8 +3993,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
 
   auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
   constexpr usize kVertexBatch = 16384;
-  std::array<float32, kVertexBatch * 3> vertexValues{};
-  std::array<int8, kVertexBatch> typeValues{};
+  std::vector<float32> vertexValues(kVertexBatch * 3);
+  std::vector<int8> typeValues(kVertexBatch);
   for(uint64 candidate = 0; candidate < candidateCount;)
   {
     if(m_ShouldCancel)

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -24,7 +25,7 @@ namespace nx::core
  * @brief Coordinates one memory budget across registered cache subsystems.
  *
  * Cache subsystems register allocation size and recency with this singleton.
- * Direct entry eviction selects the globally oldest registered entry.
+ * Direct entry eviction selects the globally oldest unpinned entry.
  * A delegated subsystem receives a non-blocking byte request and releases its
  * own entries later. Accounting can temporarily exceed the budget until that release.
  *
@@ -43,6 +44,26 @@ public:
    * @brief Defines an opaque registration identifier.
    */
   using AllocationHandle = uint64;
+
+  /**
+   * @struct AllocationOptions
+   * @brief Specifies optional state for a new cache registration.
+   */
+  struct AllocationOptions
+  {
+    bool initiallyPinned = false; ///< Excludes the entry from eviction until a matching unpin() call.
+  };
+
+  /**
+   * @enum PinResult
+   * @brief Identifies the result of a budget-aware pin attempt.
+   */
+  enum class PinResult
+  {
+    Success,       ///< The manager added the pin.
+    UnknownHandle, ///< The allocation is not registered.
+    BudgetExceeded ///< Unique pinned bytes cannot fit within the current budget.
+  };
 
   /**
    * @brief Callback invoked when an entry is evicted.
@@ -112,10 +133,67 @@ public:
   std::pair<AllocationHandle, std::vector<AllocationHandle>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallback onEvict);
 
   /**
+   * @brief Registers an allocation with optional initial pin state.
+   * @param subsystem Identifies the owning subsystem.
+   * @param key Identifies the entry within its subsystem.
+   *
+   * @param[in] sizeBytes Allocation size in bytes.
+   * @param onEvict Marks the entry for deferred removal after direct eviction.
+   * @param options Specifies initial registration state.
+   *
+   * @return New handle and handles that direct entry eviction removed.
+   * @note A pinned registration remains in usedBytes() but is not an eviction candidate.
+   * @note An all-pinned cache can exceed the budget after this registration.
+   */
+  std::pair<AllocationHandle, std::vector<AllocationHandle>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallback onEvict,
+                                                                      const AllocationOptions& options);
+
+  /**
+   * @brief Registers a temporary pinned allocation if unique pinned bytes remain within the budget.
+   * @param subsystem Identifies the requesting subsystem.
+   * @param key Identifies the temporary allocation.
+   * @param sizeBytes Specifies the reserved capacity in bytes.
+   * @return New handle, or no value when pinned residency cannot admit the reservation.
+   *
+   * This method requests eviction before it registers the reservation.
+   * A delegated subsystem can reconcile its accounting later.
+   * The caller must call release() after the temporary allocation becomes inactive.
+   */
+  std::optional<AllocationHandle> reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes);
+
+  /**
    * @brief Marks a registered allocation as most recently used.
    * @param handle Identifies the allocation. An unknown handle has no effect.
    */
   void touch(AllocationHandle handle);
+
+  /**
+   * @brief Increments the pin count for a registered allocation.
+   * @param handle Identifies the allocation.
+   * @return True if the handle exists.
+   * @note The call updates recency.
+   * Pinned entries remain registered but are not eviction candidates.
+   */
+  bool pin(AllocationHandle handle);
+
+  /**
+   * @brief Pins an allocation if total unique pinned bytes remain within the budget.
+   * @param handle Identifies the allocation.
+   * @return Result that distinguishes budget rejection from an unknown handle.
+   *
+   * A nested pin does not add unique pinned bytes and succeeds for a valid handle.
+   * The check and first pin use one manager lock to prevent concurrent over-admission.
+   */
+  PinResult pinWithinBudget(AllocationHandle handle);
+
+  /**
+   * @brief Decrements the pin count for a registered allocation.
+   * @param handle Identifies the allocation.
+   * @return True if the handle exists. A zero pin count remains unchanged.
+   *
+   * @note The final matching call updates recency before the entry becomes an eviction candidate.
+   */
+  bool unpin(AllocationHandle handle);
 
   /**
    * @brief Releases a registered allocation.
@@ -146,6 +224,12 @@ public:
   uint64 usedBytes() const;
 
   /**
+   * @brief Returns bytes held by allocations with one or more pins.
+   * @return Unique pinned allocation bytes. Nested pins do not duplicate the byte count.
+   */
+  uint64 pinnedBytes() const;
+
+  /**
    * @brief Clears all tracked entries and resets used bytes to zero.
    *
    * This test utility does not invoke eviction callbacks, clear subsystem
@@ -162,13 +246,14 @@ private:
 
   /**
    * @struct Entry
-   * @brief Stores one cache registration and its direct-eviction callback.
+   * @brief Stores one cache registration, pin count, and direct-eviction callback.
    */
   struct Entry
   {
     std::string subsystem;
     std::string key;
     uint64 sizeBytes = 0;
+    uint64 pinCount = 0;
     std::chrono::steady_clock::time_point lastAccessed;
     EvictionCallback onEvict;
   };
@@ -179,8 +264,10 @@ private:
    * @return Handles removed through direct entry eviction.
    * @pre m_Mutex is held.
    *
-   * Direct eviction removes globally oldest entries. A delegated handler records
-   * one byte request and stops this pass until its subsystem releases entries.
+   * Direct eviction removes globally oldest unpinned entries. A delegated handler
+   * records one byte request and stops until its subsystem releases entries.
+   * An all-pinned cache can exceed the
+   * budget after the new registration.
    */
   std::vector<AllocationHandle> makeRoom(uint64 needed);
 
@@ -198,6 +285,7 @@ private:
   std::unordered_map<std::string, SubsystemEvictionHandler> m_SubsystemHandlers;
   uint64 m_BudgetBytes = 0;
   uint64 m_UsedBytes = 0;
+  uint64 m_PinnedBytes = 0;
   AllocationHandle m_NextHandle = 1;
 };
 
