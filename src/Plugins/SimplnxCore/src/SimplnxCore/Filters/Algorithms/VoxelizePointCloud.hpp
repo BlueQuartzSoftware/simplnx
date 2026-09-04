@@ -5,6 +5,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 namespace nx::core
 {
@@ -14,11 +16,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT VoxelizePointCloudInputValues
 {
-  bool UseExistingGeom;            ///< If true, map points into an existing grid geometry; if false, auto-size a new ImageGeom around the point cloud.
-  DataPath PointCloudGeometryPath; ///< Path to the input node-based geometry whose vertex positions are voxelized.
-  DataPath OutputGeometryPath;     ///< Path to the existing destination grid geometry (Image or RectGrid). Used only when UseExistingGeom is true.
-  std::string MaskName;            ///< Name of the output UInt8 voxel mask array created inside the destination geometry's cell Attribute Matrix.
-  DataPath NewGeometryPath;        ///< Path at which the new auto-sized ImageGeom is created. Used only when UseExistingGeom is false.
+  ChoicesParameter::ValueType PartitioningMode;
+  VectorInt32Parameter::ValueType NumberOfCellsPerAxis;
+  VectorFloat32Parameter::ValueType PartitionGridOrigin;
+  VectorFloat32Parameter::ValueType CellLength;
+  VectorFloat32Parameter::ValueType MinGridCoord;
+  VectorFloat32Parameter::ValueType MaxGridCoord;
+  DataPath PointCloudGeometryPath;
+  DataPath OutputGeometryPath;
+  std::string MaskName;
+  DataPath NewGeometryPath;
 };
 
 /**
