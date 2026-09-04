@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
-#include "SimplnxCore/Filters/PartitionGeometryFilter.hpp"
+#include "SimplnxCore/utils/PartitionUtilities.hpp"
 
 using namespace nx::core;
 

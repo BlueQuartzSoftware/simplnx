@@ -422,6 +422,7 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/VtkUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PartitionUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
