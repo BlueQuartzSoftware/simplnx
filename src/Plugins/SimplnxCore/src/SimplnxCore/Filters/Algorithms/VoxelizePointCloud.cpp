@@ -1,5 +1,7 @@
 #include "VoxelizePointCloud.hpp"
 
+#include "SimplnxCore/utils/PartitionUtilities.hpp"
+
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
@@ -169,8 +171,8 @@ Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* imageGeom
   // boundary points can be silently excluded. nextafter guarantees at least 1 ULP of
   // expansion beyond the original bounding box faces regardless of coordinate magnitude.
   constexpr float32 k_Inf = std::numeric_limits<float32>::infinity();
-  const Point3Df origMin = bounds.getMinPoint();
-  const Point3Df origMax = bounds.getMaxPoint();
+  const Point3Df& origMin = bounds.getMinPoint();
+  const Point3Df& origMax = bounds.getMaxPoint();
   const Point3Df minPoint{std::min(rawMinPoint[0], std::nextafter(origMin[0], -k_Inf)), std::min(rawMinPoint[1], std::nextafter(origMin[1], -k_Inf)),
                           std::min(rawMinPoint[2], std::nextafter(origMin[2], -k_Inf))};
   const Point3Df maxPoint{std::max(rawMaxPoint[0], std::nextafter(origMax[0], k_Inf)), std::max(rawMaxPoint[1], std::nextafter(origMax[1], k_Inf)),
@@ -224,7 +226,9 @@ Result<> VoxelizePointCloud::operator()()
     }
   };
 
-  if(m_InputValues->UseExistingGeom)
+  const auto partitioningMode = static_cast<PartitionUtilities::PartitioningMode>(m_InputValues->PartitioningMode);
+
+  if(partitioningMode == PartitionUtilities::PartitioningMode::ExistingPartitionGrid)
   {
     const auto* destGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->OutputGeometryPath);
     auto& voxelMask = m_DataStructure.getDataRefAs<UInt8Array>(destGeom->getCellDataPath().createChildPath(m_InputValues->MaskName));
@@ -246,12 +250,16 @@ Result<> VoxelizePointCloud::operator()()
     return ConvertResult(std::move(result));
   }
 
-  // If we are doing a new geometry we need to do a first pass to determine the proper bounds
+  // Basic mode auto-fits the new ImageGeom to the actual point cloud extent at execute time.
+  // Advanced and BoundingBox modes have exact dims/origin/spacing from preflight — no resize needed.
   auto* destGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->NewGeometryPath);
 
-  if(Result<> result = ResizeImageGeom(pointCloud, destGeom); result.invalid())
+  if(partitioningMode == PartitionUtilities::PartitioningMode::Basic)
   {
-    return result;
+    if(Result<> result = ResizeImageGeom(pointCloud, destGeom); result.invalid())
+    {
+      return result;
+    }
   }
 
   auto& voxelMask = m_DataStructure.getDataRefAs<UInt8Array>(destGeom->getCellDataPath().createChildPath(m_InputValues->MaskName));

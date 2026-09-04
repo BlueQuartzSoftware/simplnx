@@ -64,14 +64,6 @@ public:
   PartitionGeometry& operator=(const PartitionGeometry&) = delete;
   PartitionGeometry& operator=(PartitionGeometry&&) noexcept = delete;
 
-  struct PSGeomInfo
-  {
-    USizeVec3 geometryDims;
-    std::optional<FloatVec3> geometryOrigin;
-    std::optional<FloatVec3> geometrySpacing;
-    IGeometry::LengthUnit geometryUnits;
-  };
-
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

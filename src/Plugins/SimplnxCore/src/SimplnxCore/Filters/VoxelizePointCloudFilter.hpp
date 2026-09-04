@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
+#include "SimplnxCore/utils/PartitionUtilities.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -25,9 +26,7 @@ public:
   VoxelizePointCloudFilter& operator=(VoxelizePointCloudFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_UseExistingGeometry_Key = "use_existing_geometry";
   static constexpr StringLiteral k_InputPointCloudGeometryPath_Key = "input_point_cloud_geometry_path";
-  static constexpr StringLiteral k_SelectedGridGeometryPath_Key = "input_grid_geometry_path";
   static constexpr StringLiteral k_MaskArrayName_Key = "mask_array_name";
   static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
 

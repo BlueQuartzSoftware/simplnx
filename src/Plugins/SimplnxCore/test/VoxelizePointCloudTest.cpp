@@ -15,6 +15,8 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
+namespace PU = nx::core::PartitionUtilities;
+namespace PUP = nx::core::PartitionUtilities::Parameters;
 
 namespace
 {
@@ -104,12 +106,26 @@ usize CountMarked(DataStructure& ds, const DataPath& maskPath)
   return count;
 }
 
+// Use for ExistingPartitionGrid mode (TC-B, TC-C, TC-D, TC-P3-P7)
 Arguments MakeArgs(bool useExisting, const DataPath& outputGeomPath = DataPath{}, const std::string& maskName = k_DefaultMaskName)
 {
   Arguments args;
-  args.insertOrAssign(VoxelizePointCloudFilter::k_UseExistingGeometry_Key, std::make_any<bool>(useExisting));
+  args.insertOrAssign(PUP::k_PartitioningMode_Key, std::make_any<ChoicesParameter::ValueType>(useExisting ? PUP::k_ExistingSchemeModeIndex : PUP::k_BasicModeIndex));
   args.insertOrAssign(VoxelizePointCloudFilter::k_InputPointCloudGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
-  args.insertOrAssign(VoxelizePointCloudFilter::k_SelectedGridGeometryPath_Key, std::make_any<DataPath>(outputGeomPath));
+  args.insertOrAssign(PUP::k_ExistingPartitionGridPath_Key, std::make_any<DataPath>(outputGeomPath));
+  args.insertOrAssign(VoxelizePointCloudFilter::k_MaskArrayName_Key, std::make_any<std::string>(maskName));
+  args.insertOrAssign(VoxelizePointCloudFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewGeomPath));
+  return args;
+}
+
+// Use for Basic mode (TC-A, TC-P1, TC-P2). numPartitions controls spacing used by ResizeImageGeom.
+Arguments MakeNewGeomArgs(const std::vector<int32>& numPartitions, const std::string& maskName = k_DefaultMaskName)
+{
+  Arguments args;
+  args.insertOrAssign(PUP::k_PartitioningMode_Key, std::make_any<ChoicesParameter::ValueType>(PUP::k_BasicModeIndex));
+  args.insertOrAssign(VoxelizePointCloudFilter::k_InputPointCloudGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
+  args.insertOrAssign(PUP::k_NumberOfCellsPerAxis_Key, std::make_any<VectorInt32Parameter::ValueType>(numPartitions));
+  args.insertOrAssign(PUP::k_ExistingPartitionGridPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(VoxelizePointCloudFilter::k_MaskArrayName_Key, std::make_any<std::string>(maskName));
   args.insertOrAssign(VoxelizePointCloudFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewGeomPath));
   return args;
@@ -125,8 +141,8 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A1: All points — including the max-boundary corner — are included after auto-sizing")
   {
-    // bounding box: min=(0,0,0) max=(10,10,10) → sideLength=10, padding=0.01
-    // origin ≈ (-0.01,-0.01,-0.01), distance≈10.02, dims=ceil(10.02)={11,11,11}
+    // 10 partitions over extent=10 → spacing≈1.  ResizeImageGeom: padding=0.01, distance≈10.02,
+    // dims=ceil(10.02/1)={11,11,11}, origin≈(-0.01,-0.01,-0.01).
     //
     // Flat index = z*11*11 + y*11 + x  (dims={11,11,11})
     //   (0,0,0)   → cell (0,0,0)   → flat 0
@@ -142,7 +158,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
                                     });
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({10, 10, 10}));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath));
@@ -171,7 +187,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     CreateEmptyPointCloud(dataStructure);
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({5, 5, 5}));
 
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -45980);
@@ -179,13 +195,15 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A3: Single point — zero-extent bounding box collapses to 1x1x1 geometry")
   {
-    // All side lengths are 0, padding is 0. Each dim clamps to 1.
-    // origin=(5,5,5), spacing=(1,1,1). Point maps to xRaw=yRaw=zRaw=0 → cell(0,0,0) → flat 0.
+    // 1 partition over zero extent → spacing=2e-6 (from GeometryUtilities 1e-6 padding).
+    // ResizeImageGeom: 0.1% padding of zero side-length is 0, nextafter gives ±1 ULP
+    // of expansion (≈9.5e-7 at magnitude 5), so distance≈1.9e-6, dims=max(1,ceil(0.95))=1.
+    // origin=nextafter(5,-inf). Point maps to xRaw≈0.48→xPos=0 → cell(0,0,0) → flat 0.
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{5.0f, 5.0f, 5.0f}});
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({1, 1, 1}));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
@@ -202,9 +220,10 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A4: Planar point cloud (zero Z extent) — collapses Z to 1, XY sized normally")
   {
-    // Points all at z=0: side lengths=(2,3,0), padding=(0.002,0.003,0).
-    // dims = {ceil(2.004)=3, ceil(3.006)=4, max(1,ceil(0))=1}
-    // origin ≈ (-0.002, -0.003, 0.0), sliceSize=3*4=12.
+    // {2,3,1} partitions over extent=(2,3,0) → spacing≈(1,1,2e-6).
+    // ResizeImageGeom: padding=(0.002,0.003,0). Z uses nextafter expansion (±1 subnormal ULP)
+    // giving distance_z≈2.8e-45; ceil(2.8e-45/2e-6)=1, clamped to max(1,1)=1.
+    // dims={3,4,1}, origin≈(-0.002,-0.003,0), sliceSize=3*4=12.
     //   (0,0,0) → xRaw=0.002→xPos=0, yRaw=0.003→yPos=0, zPos=0 → flat 0
     //   (2,0,0) → xRaw=2.002→xPos=2, yPos=0, zPos=0            → flat 2
     //   (0,3,0) → xPos=0, yRaw=3.003→yPos=3, zPos=0            → flat 9
@@ -212,7 +231,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     CreatePointCloud(dataStructure, {{0.0f, 0.0f, 0.0f}, {2.0f, 0.0f, 0.0f}, {0.0f, 3.0f, 0.0f}});
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({2, 3, 1}));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
@@ -235,10 +254,11 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     // At 1e7f the float32 ULP is 1.0, so 0.1% of a 2.0f extent = 0.002f rounds
     // to zero when added to the bounding-box faces.  Without the nextafter fix the
     // padded extent stays at 2.0f, dims={2,2,2}, and the max-boundary point hits
-    // xRaw==dims[0] and is silently excluded.  With nextafter:
+    // xRaw==dims[0] and is silently excluded.
+    // 2 partitions over extent=2 → spacing=1.  With nextafter:
     //   minPoint ≈ 9999999.0f  (one ULP below origMin)
     //   maxPoint ≈ 10000003.0f (one ULP above origMax)
-    //   distance = 4.0f → dims = {4,4,4}
+    //   distance = 4.0f → dims=ceil(4/1) = {4,4,4}
     //
     // sliceSize = 4*4 = 16.  flat = z*16 + y*4 + x.
     //   (1e7,   1e7,   1e7  ) → cell(1,1,1) → flat 21  (1*16 + 1*4 + 1)
@@ -248,7 +268,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     CreatePointCloud(dataStructure, {{k_Base, k_Base, k_Base}, {k_Base + 2.0f, k_Base + 2.0f, k_Base + 2.0f}});
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({2, 2, 2}));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
@@ -264,20 +284,31 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
-  SECTION("TC-A6: Extent that would require petabyte allocation yields clean error -45982")
+  SECTION("TC-A6: Large-extent cloud with coarse partitioning produces correct small grid")
   {
-    // spacing defaults to {1,1,1}.  Two points 30000 units apart → dims ≈ {30030,30030,30030}.
-    // Product = ~2.7e13 cells: fits in usize (no integer-overflow UB) but is 27 TB — no system
-    // can satisfy this allocation.  bad_alloc is caught in ResizeImageGeom and returned as -45982
-    // rather than propagating as an unhandled exception or producing heap corruption.
+    // 3 partitions over extent=30000 → spacing=10000. ResizeImageGeom: 0.1% padding=30,
+    // distance=30060, dims=ceil(30060/10000)=4 → {4,4,4}, origin=(-30,-30,-30).
+    //
+    // sliceSize=16.  flat = z*16 + y*4 + x.
+    //   (0,0,0)         → xRaw=30/10000=0.003→xPos=0 → flat   0
+    //   (30000,30000,30000) → xRaw=30030/10000=3.003→xPos=3 → flat  63
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{0.0f, 0.0f, 0.0f}, {30000.0f, 30000.0f, 30000.0f}});
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({3, 3, 3}));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-    REQUIRE(executeResult.result.errors()[0].code == -45982);
+    const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
+    REQUIRE(newGeom.getDimensions() == SizeVec3{4, 4, 4});
+
+    const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
+    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
+    REQUIRE(CountMarked(dataStructure, maskPath) == 2u);
+    REQUIRE(mask[0] == 1u);
+    REQUIRE(mask[63] == 1u);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -755,7 +786,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Preflight validation", "[Simpl
     VertexGeom::Create(dataStructure, k_PointCloudName); // no setVertices call
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({5, 5, 5}));
 
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -45985);
@@ -769,7 +800,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Preflight validation", "[Simpl
     geom->setVertices(*verts);
 
     VoxelizePointCloudFilter filter;
-    auto executeResult = filter.execute(dataStructure, MakeArgs(false));
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({5, 5, 5}));
 
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -45989);
