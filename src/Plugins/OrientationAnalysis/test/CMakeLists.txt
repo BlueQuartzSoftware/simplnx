@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeIPFColorsTest.cpp
   ComputeKernelAvgMisorientationsTest.cpp
   ComputeFeatureNeighborMisorientationsTest.cpp
+  ComputeMDFTest.cpp
   ComputeMisorientationsTest.cpp
   ComputeQuaternionConjugateTest.cpp
   ComputeSchmidsTest.cpp
