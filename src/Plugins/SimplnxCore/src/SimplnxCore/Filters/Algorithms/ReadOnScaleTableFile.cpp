@@ -1,6 +1,5 @@
 #include "ReadOnScaleTableFile.hpp"
 
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -14,6 +13,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
+#include <locale.h>
 #include <string>
 #include <string_view>
 
@@ -42,6 +42,50 @@ enum class Section : uint8
   ZBounds,
   Names,
   Materials
+};
+
+class CLocale
+{
+public:
+  CLocale()
+  {
+#ifdef _WIN32
+    m_Locale = _create_locale(LC_ALL, "C");
+#else
+    m_Locale = newlocale(LC_ALL_MASK, "C", nullptr);
+#endif
+  }
+
+  ~CLocale()
+  {
+    if(m_Locale != nullptr)
+    {
+#ifdef _WIN32
+      _free_locale(m_Locale);
+#else
+      freelocale(m_Locale);
+#endif
+    }
+  }
+
+  CLocale(const CLocale&) = delete;
+  CLocale(CLocale&&) noexcept = delete;
+  CLocale& operator=(const CLocale&) = delete;
+  CLocale& operator=(CLocale&&) noexcept = delete;
+
+#ifdef _WIN32
+  using LocaleType = _locale_t;
+#else
+  using LocaleType = locale_t;
+#endif
+
+  LocaleType get() const
+  {
+    return m_Locale;
+  }
+
+private:
+  LocaleType m_Locale = nullptr;
 };
 
 std::string_view NextToken(std::string_view line, usize& offset)
@@ -132,16 +176,41 @@ Result<usize> ParseCount(std::string_view line, usize lineNumber, Section sectio
 
 Result<float32> ParseFloat(std::string_view token, usize lineNumber, Section section, const std::filesystem::path& inputFile)
 {
-  // This libc++ does not provide floating-point std::from_chars. The temporary string gives std::strtof a null-terminated token.
-  const std::string tokenText(token);
-  char* end = nullptr;
-  errno = 0;
-  const float32 value = std::strtof(tokenText.c_str(), &end);
-  if(errno == ERANGE || end != tokenText.c_str() + tokenText.size())
+#ifdef __cpp_lib_to_chars
+  float32 value = 0.0F;
+  const auto [end, error] = std::from_chars(token.data(), token.data() + token.size(), value, std::chars_format::general);
+  if(error == std::errc::result_out_of_range)
+  {
+    return MakeErrorResult<float32>(k_BoundValueError,
+                                    fmt::format("The {} bound value '{}' at line {} in '{}' is out of range for float32.", SectionName(section).substr(0, 1), token, lineNumber, inputFile.string()));
+  }
+  if(error != std::errc{} || end != token.data() + token.size())
   {
     return MakeErrorResult<float32>(k_BoundValueError,
                                     fmt::format("The {} bound value '{}' at line {} in '{}' is not numeric.", SectionName(section).substr(0, 1), token, lineNumber, inputFile.string()));
   }
+#else
+  // Process-locale strtof parsing is unsafe because the Qt application can select a locale that uses decimal commas.
+  static const CLocale cLocale;
+  const std::string tokenText(token);
+  char* end = nullptr;
+  errno = 0;
+#ifdef _WIN32
+  const float32 value = _strtof_l(tokenText.c_str(), &end, cLocale.get());
+#else
+  const float32 value = strtof_l(tokenText.c_str(), &end, cLocale.get());
+#endif
+  if(errno == ERANGE)
+  {
+    return MakeErrorResult<float32>(k_BoundValueError,
+                                    fmt::format("The {} bound value '{}' at line {} in '{}' is out of range for float32.", SectionName(section).substr(0, 1), token, lineNumber, inputFile.string()));
+  }
+  if(end != tokenText.c_str() + tokenText.size())
+  {
+    return MakeErrorResult<float32>(k_BoundValueError,
+                                    fmt::format("The {} bound value '{}' at line {} in '{}' is not numeric.", SectionName(section).substr(0, 1), token, lineNumber, inputFile.string()));
+  }
+#endif
   return {value};
 }
 
@@ -168,8 +237,8 @@ Result<> ReadSectionTokens(std::ifstream& input, std::string& line, usize& lineN
     const std::string_view firstToken = NextToken(line, offset);
     if(stopAtSectionHeader && GetSection(firstToken) != Section::None)
     {
-      return MakeErrorResult(tooShortError, fmt::format("The '{}' section in '{}' contains {} values, but its header declares {} values. The next section starts at line {}.", SectionName(section),
-                                                        inputFile.string(), parsedCount, expectedCount, lineNumber));
+      return MakeErrorResult(tooShortError, fmt::format("The '{}' section in '{}' declares {} values, but only {} values were found before the next section at line {}.", SectionName(section),
+                                                        inputFile.string(), expectedCount, parsedCount, lineNumber));
     }
 
     std::string_view token = firstToken;
@@ -212,17 +281,16 @@ ReadOnScaleTableFile::ReadOnScaleTableFile(DataStructure& dataStructure, const I
 
 ReadOnScaleTableFile::~ReadOnScaleTableFile() noexcept = default;
 
-Result<OnScaleTableFileHeader> ReadOnScaleTableFile::readHeader() const
+Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::filesystem::path& inputFile)
 {
-  std::ifstream input(m_InputValues->InputFile, std::ios::binary);
+  std::ifstream input(inputFile, std::ios::binary);
   if(!input.is_open())
   {
-    return MakeErrorResult<OnScaleTableFileHeader>(k_FileAccessError,
-                                                   fmt::format("The OnScale table file '{}' could not be opened for reading. Check the file permissions.", m_InputValues->InputFile.string()));
+    return MakeErrorResult<OnScaleTableFileHeader>(k_FileAccessError, fmt::format("The OnScale table file '{}' could not be opened for reading. Check the file permissions.", inputFile.string()));
   }
 
   OnScaleTableFileHeader header;
-  header.InputFile = m_InputValues->InputFile;
+  header.InputFile = inputFile;
 
   // The header scan validates bounds without retaining a second copy of the coordinate data.
   std::string line;
@@ -238,7 +306,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::readHeader() const
       continue;
     }
 
-    Result<usize> countResult = ParseCount(line, lineNumber, section, m_InputValues->InputFile);
+    Result<usize> countResult = ParseCount(line, lineNumber, section, inputFile);
     if(countResult.invalid())
     {
       return ConvertInvalidResult<OnScaleTableFileHeader>(std::move(countResult));
@@ -250,16 +318,28 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::readHeader() const
       if(count < 2)
       {
         return MakeErrorResult<OnScaleTableFileHeader>(k_InvalidBoundCountError, fmt::format("The '{}' section at line {} in '{}' declares {} bounds. A present axis must contain at least 2 bounds.",
-                                                                                             SectionName(section), lineNumber, m_InputValues->InputFile.string(), count));
+                                                                                             SectionName(section), lineNumber, inputFile.string(), count));
       }
 
       const usize axis = AxisIndex(section);
       header.BoundsCounts[axis] = count;
       header.BoundsPresent[axis] = true;
       auto valuesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize) -> Result<> {
-            auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->InputFile);
-            return valueResult.valid() ? Result<>{} : ConvertResult(std::move(valueResult));
+          ReadSectionTokens(input, line, lineNumber, inputFile, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
+            auto valueResult = ParseFloat(token, tokenLine, section, inputFile);
+            if(valueResult.invalid())
+            {
+              return ConvertResult(std::move(valueResult));
+            }
+            if(index == 0)
+            {
+              header.FirstBounds[axis] = valueResult.value();
+            }
+            if(index + 1 == count)
+            {
+              header.LastBounds[axis] = valueResult.value();
+            }
+            return {};
           });
       if(valuesResult.invalid())
       {
@@ -269,8 +349,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::readHeader() const
     else if(section == Section::Names)
     {
       header.NameCount = count;
-      auto namesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, false, k_NameValuesTooShortError, [](std::string_view, usize, usize) -> Result<> { return {}; });
+      auto namesResult = ReadSectionTokens(input, line, lineNumber, inputFile, section, count, true, k_NameValuesTooShortError, [](std::string_view, usize, usize) -> Result<> { return {}; });
       if(namesResult.invalid())
       {
         return ConvertInvalidResult<OnScaleTableFileHeader>(std::move(namesResult));
@@ -286,8 +365,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::readHeader() const
 
   if(!foundMaterials)
   {
-    return MakeErrorResult<OnScaleTableFileHeader>(k_MissingMaterialSectionError,
-                                                   fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", m_InputValues->InputFile.string()));
+    return MakeErrorResult<OnScaleTableFileHeader>(k_MissingMaterialSectionError, fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", inputFile.string()));
   }
 
   return {std::move(header)};
@@ -303,9 +381,6 @@ Result<> ReadOnScaleTableFile::operator()()
 
   auto& geometry = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->RectGridGeometryPath);
   geometry.setUnits(IGeometry::LengthUnit::Meter);
-  // The geometry action creates its cell matrix in XYZ order. Cell arrays use ZYX tuple order.
-  m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellAttributeMatrixPath)
-      .resizeTuples({m_InputValues->Header.BoundsCounts[2] - 1, m_InputValues->Header.BoundsCounts[1] - 1, m_InputValues->Header.BoundsCounts[0] - 1});
   std::array<Float32Array*, 3> boundsArrays = {
       &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RectGridGeometryPath.createChildPath("X Bounds")),
       &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RectGridGeometryPath.createChildPath("Y Bounds")),
@@ -325,12 +400,13 @@ Result<> ReadOnScaleTableFile::operator()()
   }
 
   MessageHelper messageHelper(m_MessageHandler);
-  auto progressMessenger = messageHelper.createThrottledMessenger(std::chrono::milliseconds(100));
 
   // The parser writes directly into the outputs and retains only one input line.
   std::string line;
   usize lineNumber = 0;
   bool foundMaterials = false;
+  std::array<bool, 3> boundsRead = {false, false, false};
+  bool namesRead = false;
   while(std::getline(input, line))
   {
     lineNumber++;
@@ -353,7 +429,7 @@ Result<> ReadOnScaleTableFile::operator()()
       const usize axis = AxisIndex(section);
       if(count != boundsArrays[axis]->getNumberOfTuples())
       {
-        return MakeErrorResult(k_FileChangedError, fmt::format("The '{}' section in '{}' now declares {} bounds, but preflight allocated {} bounds. Run preflight again.", SectionName(section),
+        return MakeErrorResult(k_FileChangedError, fmt::format("The '{}' section in '{}' declares {} bounds, but preflight found {} bounds. The file changed after preflight.", SectionName(section),
                                                                m_InputValues->InputFile.string(), count, boundsArrays[axis]->getNumberOfTuples()));
       }
 
@@ -372,18 +448,19 @@ Result<> ReadOnScaleTableFile::operator()()
       {
         return valuesResult;
       }
+      boundsRead[axis] = true;
     }
     else if(section == Section::Names)
     {
       if(count != names.getNumberOfTuples())
       {
-        return MakeErrorResult(k_FileChangedError, fmt::format("The 'name' section in '{}' now declares {} names, but preflight allocated {} names. Run preflight again.",
+        return MakeErrorResult(k_FileChangedError, fmt::format("The 'name' section in '{}' declares {} names, but preflight found {} names. The file changed after preflight.",
                                                                m_InputValues->InputFile.string(), count, names.getNumberOfTuples()));
       }
 
       messageHelper.sendMessage("Reading names");
       auto namesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, false, k_NameValuesTooShortError, [&](std::string_view token, usize, usize index) -> Result<> {
+          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_NameValuesTooShortError, [&](std::string_view token, usize, usize index) -> Result<> {
             names.setValue(index, std::string(token));
             return {};
           });
@@ -391,6 +468,7 @@ Result<> ReadOnScaleTableFile::operator()()
       {
         return namesResult;
       }
+      namesRead = true;
     }
     else if(section == Section::Materials)
     {
@@ -400,12 +478,15 @@ Result<> ReadOnScaleTableFile::operator()()
       {
         const std::string message = fmt::format("The 'matr' header in '{}' declares {} values, but the created geometry has {} cells. The reader will use exactly {} values.",
                                                 m_InputValues->InputFile.string(), count, numCells, numCells);
-        m_MessageHandler(IFilter::Message::Type::Warning, message);
         result.warnings().push_back({k_MaterialCountMismatchWarning, message});
       }
 
       messageHelper.sendMessage("Reading material values 0%");
-      const usize progressIncrement = std::max<usize>(1, numCells / 100);
+      auto progressHelper = messageHelper.createProgressMessageHelper();
+      progressHelper.setMaxProgresss(numCells);
+      progressHelper.setProgressMessageTemplate("Reading material values {:.0f}%");
+      auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(100));
+      const usize cancelIncrement = std::max<usize>(1, numCells / 100);
       usize materialCount = 0;
       usize extraCount = 0;
       while(std::getline(input, line))
@@ -417,13 +498,12 @@ Result<> ReadOnScaleTableFile::operator()()
         {
           if(materialCount < numCells)
           {
-            if(materialCount % progressIncrement == 0)
+            if(materialCount % cancelIncrement == 0)
             {
               if(m_ShouldCancel)
               {
                 return {};
               }
-              progressMessenger.sendThrottledMessage([&] { return fmt::format("Reading material values {:.0f}%", CalculatePercentComplete(materialCount, numCells)); });
             }
 
             auto valueResult = ParseMaterial(token, lineNumber, m_InputValues->InputFile);
@@ -433,6 +513,7 @@ Result<> ReadOnScaleTableFile::operator()()
             }
             featureIds[materialCount] = valueResult.value();
             materialCount++;
+            progressMessenger.sendProgressMessage(1);
           }
           else
           {
@@ -451,13 +532,27 @@ Result<> ReadOnScaleTableFile::operator()()
       {
         const std::string message = fmt::format("The 'matr' section in '{}' contains {} trailing values after the required {} values. The reader ignored the trailing values.",
                                                 m_InputValues->InputFile.string(), extraCount, numCells);
-        m_MessageHandler(IFilter::Message::Type::Warning, message);
         result.warnings().push_back({k_ExtraMaterialValuesWarning, message});
       }
       break;
     }
   }
 
+  for(usize axis = 0; axis < boundsRead.size(); axis++)
+  {
+    if(boundsRead[axis] != m_InputValues->Header.BoundsPresent[axis])
+    {
+      constexpr std::array<std::string_view, 3> k_AxisNames = {"X", "Y", "Z"};
+      return MakeErrorResult(k_FileChangedError,
+                             fmt::format("The {} bounds section in '{}' was expected to be {} after preflight but was found {}. The file changed after preflight.", k_AxisNames[axis],
+                                         m_InputValues->InputFile.string(), m_InputValues->Header.BoundsPresent[axis] ? "present" : "absent", boundsRead[axis] ? "present" : "absent"));
+    }
+  }
+  if(m_InputValues->Header.NameCount > 0 && !namesRead)
+  {
+    return MakeErrorResult(k_FileChangedError, fmt::format("The 'name' section in '{}' was expected because preflight found {} names, but the section was not found. The file changed after preflight.",
+                                                           m_InputValues->InputFile.string(), m_InputValues->Header.NameCount));
+  }
   if(!foundMaterials)
   {
     return MakeErrorResult(k_MissingMaterialSectionError, fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", m_InputValues->InputFile.string()));
