@@ -626,11 +626,41 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::Geometry")
   const auto& rectGeomBlock = rectGeom.at("geometry");
   REQUIRE(rectGeomBlock.at("geometry_type").get<std::string>() == "RectGrid");
   REQUIRE(rectGeomBlock.at("dimensions") == nlohmann::json::array({10, 10, 5}));
+  REQUIRE(rectGeomBlock.contains("origin"));
+  REQUIRE(rectGeomBlock.at("origin").at(0).get<float32>() == Approx(0.0f));
+  REQUIRE(rectGeomBlock.at("origin").at(1).get<float32>() == Approx(0.0f));
+  REQUIRE(rectGeomBlock.at("origin").at(2).get<float32>() == Approx(0.0f));
   REQUIRE_FALSE(rectGeomBlock.contains("spacing"));
 
   // A DataGroup must not carry a geometry block
   const auto& levelOne = FindNode(imageGeom.at("children"), Constants::k_LevelOne.view());
   REQUIRE_FALSE(levelOne.contains("geometry"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* rectGridGeom = RectGridGeom::Create(dataStructure, "Rect Grid");
+  REQUIRE(rectGridGeom != nullptr);
+  rectGridGeom->setDimensions({2, 2, 2});
+
+  auto* xBounds = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "X Bounds", {3}, {1});
+  auto* yBounds = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Y Bounds", {3}, {1});
+  auto* zBounds = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Z Bounds", {3}, {1});
+  REQUIRE(xBounds != nullptr);
+  REQUIRE(yBounds != nullptr);
+  REQUIRE(zBounds != nullptr);
+  rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+
+  nlohmann::json json;
+  REQUIRE_NOTHROW(json = dataStructure.exportHierarchyAsJson());
+  const auto& node = FindNode(json.at("objects"), "Rect Grid");
+  const auto& geom = node.at("geometry");
+
+  REQUIRE(geom.at("dimensions") == nlohmann::json::array({2, 2, 2}));
+  REQUIRE_FALSE(geom.contains("origin"));
 }
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
@@ -663,7 +693,8 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
   REQUIRE_FALSE(geom.contains("face_data_path"));
   REQUIRE_FALSE(geom.contains("dimensions"));
   REQUIRE_FALSE(geom.contains("num_polyhedra"));
-  // A triangle geometry is 2D: edges are optional and only reported when an edge list exists
+  // A triangle geometry reports zero edges without an edge list. The edge-data path remains optional.
+  REQUIRE(geom.at("num_edges").get<uint64>() == 0);
   REQUIRE_FALSE(geom.contains("edge_data_path"));
 }
 
