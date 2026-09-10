@@ -162,9 +162,7 @@ as issue #1705), not a fix for it.
   only: the generated mesh lies entirely within the bounds of the input **Image Geometry**, and its
   exterior surface sits exactly on the volume boundary. With *Sharp Bounding Box Edges* off, the edges
   and corners of the bounding box are chamfered by half a **Cell** (see above); with it on they are sharp.
-- **Changed in this release:** earlier versions placed the mesh half a **Cell** off from the input
-  volume and additionally emitted surface along the internal seams of the ghost layer, so roughly
-  half of every mesh fell outside the volume bounds. Both are fixed. Meshes produced by this
+- Meshes produced by this
   **Filter** now align with the input volume and with the other surface meshing **Filters**. The
   edges and corners of the bounding box are also now sharp by default (see *Sharp Bounding Box
   Edges* above), where the previous release chamfered them. Surface meshes regenerated after these
@@ -179,12 +177,13 @@ as issue #1705), not a fix for it.
   Peak memory is therefore dominated by the size of the generated mesh itself (the number of
   triangles and vertices) rather than by the input dimensions; meshes with a very large number of
   small **Features** produce more triangles and use more memory.
+- The ambiguous "checkerboard" marching square (two **Features** on opposite
+  corners of a **Cell** face) is resolved as `M3CSliceBySlice` did, by counting each corner's
+  same-**Feature** neighbors within the slice plane.
 
-This implementation ports the in-memory algorithm of the legacy DREAM.3D `M3CEntireVolume` **Filter**
-(it is the functional replacement for the legacy `M3CSliceBySlice` **Filter**), originally
-contributed by Dr. Sukbin Lee (Carnegie Mellon University), based on the algorithm of
-Wu & Sullivan, "Multiple material marching cubes algorithm," *International Journal for Numerical
-Methods in Engineering*, 58(2):189–207, 2003.
+This implementation ports the slice-by-slice algorithm of the legacy DREAM.3D `M3CSliceBySlice` **Filter**,
+based on the algorithm of Wu & Sullivan, "Multiple material marching cubes algorithm," *International Journal for Numerical
+Methods in Engineering*, 58(2):189–207, 2003.  
 
 ## Comparison of Surface Meshing Filters
 

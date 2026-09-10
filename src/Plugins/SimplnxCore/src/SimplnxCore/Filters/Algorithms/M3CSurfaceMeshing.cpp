@@ -42,8 +42,6 @@ using SiteId = int64;
 // Sentinel stored in the compacted-node map for candidate slots that are not real mesh nodes.
 constexpr uint32 k_UnusedNodeId = std::numeric_limits<uint32>::max();
 
-constexpr int num_neigh = 26; // number of 3D neighbors per site (legacy #define)
-
 // --- M3C working structs (mirror SIMPL/Geometry/MeshStructs.h SurfaceMesh::M3C) ---
 struct Node
 {
@@ -409,8 +407,9 @@ int get_square_index(const int tns[4])
 }
 
 // -----------------------------------------------------------------------------
-// Disambiguate the all-corners-differ saddle (case 15) using the 3D same-label
-// neighbor counts. Transcribed from M3CEntireVolume::treat_anomaly.
+// Disambiguate the all-corners-differ saddle (case 15) using the 8 in-plane (same z-plane) same-label neighbor counts.
+// Transcribed from M3CSliceBySlice::treat_anomaly. The 26-neighbor M3CEntireVolume variant produces ties that the algorithm resolves arbitrarily.
+// This behavior creates spurious handles (tunnels) in grain surfaces.
 // -----------------------------------------------------------------------------
 int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const NeighborAccessor& n1, SiteId /*sqid*/)
 {
@@ -420,12 +419,12 @@ int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const Neig
   {
     SiteId csite = tnst[i];
     int cspin = p1[csite];
-    const Neighbor nb = n1[csite]; // cache: all 26 neighbors read below
-    for(int j = 1; j <= num_neigh; j++)
+    const Neighbor nb = n1[csite]; // Cache the 8 in-plane neighbors read below.
+    for(int j = 1; j <= 8; j++)
     {
       SiteId nsite = nb.neigh_id[j];
       int nspin = p1[nsite];
-      if(cspin == nspin && nspin > 0)
+      if(cspin == nspin)
       {
         numNeigh[i] = numNeigh[i] + 1;
       }
