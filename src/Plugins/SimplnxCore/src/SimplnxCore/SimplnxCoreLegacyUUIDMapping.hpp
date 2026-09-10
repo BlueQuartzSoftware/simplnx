@@ -119,6 +119,7 @@
 #include "SimplnxCore/Filters/TriangleNormalFilter.hpp"
 #include "SimplnxCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/VerifyTriangleWindingFilter.hpp"
+#include "SimplnxCore/Filters/WriteAbaqusCrystalPlasticityFilter.hpp"
 #include "SimplnxCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "SimplnxCore/Filters/WriteASCIIDataFilter.hpp"
 #include "SimplnxCore/Filters/WriteAvizoRectilinearCoordinateFilter.hpp"
@@ -240,6 +241,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData
     {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryFilter>::uuid, &AppendImageGeometryFilter::FromSIMPLJson}}, // AppendImageGeometry
     {nx::core::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), {nx::core::FilterTraits<ComputeFeatureClusteringFilter>::uuid, &ComputeFeatureClusteringFilter::FromSIMPLJson}}, // ComputeFeatureClustering
+    {nx::core::Uuid::FromString("d702beff-eb02-5ee1-a76a-79d5b56ec730").value(), {nx::core::FilterTraits<WriteAbaqusCrystalPlasticityFilter>::uuid, &WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson}}, // CreateAbaqusFile
     {nx::core::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), {nx::core::FilterTraits<WriteAbaqusHexahedronFilter>::uuid, &WriteAbaqusHexahedronFilter::FromSIMPLJson}}, // AbaqusHexahedronWriter
     {nx::core::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), {nx::core::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid, &NearestPointFuseRegularGridsFilter::FromSIMPLJson}}, // NearestPointFuseRegularGrids
     {nx::core::Uuid::FromString("77befd69-4536-5856-9f81-02996d038f73").value(), {nx::core::FilterTraits<ResampleRectGridToImageGeomFilter>::uuid, &ResampleRectGridToImageGeomFilter::FromSIMPLJson}}, // ResampleRectGridToImageGeom
