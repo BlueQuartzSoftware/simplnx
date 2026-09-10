@@ -156,6 +156,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleNormalFilterTest.cpp
   UncertainRegularGridSampleSurfaceMeshTest.cpp
   VerifyTriangleWindingTest.cpp
+  WriteAbaqusCrystalPlasticityTest.cpp
   WriteAbaqusHexahedronTest.cpp
   WriteASCIIDataTest.cpp
   WriteAvizoRectilinearCoordinateTest.cpp
