@@ -506,6 +506,7 @@ DataStructure createTestDataStructure()
  * @return Data structure without derived DynamicListArray objects.
  *
  * The DREAM3D writer cannot serialize objects from findElementsContainingVert() and findElementNeighbors().
+ * DREAM3D::WriteFile fails with "-5 : Could not find IO factory for datatype: DynamicListArray" when the fixture contains the derived lists.
  */
 DataStructure createRoundTripDataStructure()
 {
