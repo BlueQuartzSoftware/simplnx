@@ -29,7 +29,7 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusCrystalPlasticityInputValues
   int32 NumUserOutVar = 1;
   /** @brief User constants that follow the five generated constants. */
   DynamicTableParameter::ValueType MaterialConstants;
-  /** @brief Path to the voxel geometry. */
+  /** @brief Path to the Image Geometry that defines the voxel mesh. */
   DataPath ImageGeometryPath;
   /** @brief Path to the scalar cell feature IDs. */
   DataPath FeatureIdsArrayPath;
@@ -64,7 +64,7 @@ public:
 
   /**
    * @brief Generates and commits all five Abaqus files.
-   * @return Success, cancellation, or a file-writing error.
+   * @return Success, cancellation, an invalid-grain error, or a file-writing error.
    */
   Result<> operator()();
 
