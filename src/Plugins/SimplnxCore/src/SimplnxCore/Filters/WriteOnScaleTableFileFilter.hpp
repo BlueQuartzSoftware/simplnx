@@ -94,7 +94,7 @@ protected:
    * @param messageHandler Receives filter messages.
    * @param shouldCancel Indicates that execution must stop.
    * @param executionContext Resolves relative paths.
-   * @return Empty output actions or validation errors.
+   * @return Empty output actions with an empty phase-name warning, or validation errors.
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                 const ExecutionContext& executionContext) const override;

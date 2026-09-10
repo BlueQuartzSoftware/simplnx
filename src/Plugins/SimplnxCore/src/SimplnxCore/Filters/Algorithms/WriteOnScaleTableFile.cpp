@@ -14,8 +14,12 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <array>
@@ -23,6 +27,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <iterator>
 #include <numbers>
 #include <numeric>
 #include <string>
@@ -37,6 +42,19 @@ namespace
 {
 const DataPath k_ScratchGeometryPath({"Image Geometry"});
 const DataPath k_ScratchCellDataPath = k_ScratchGeometryPath.createChildPath("Cell Data");
+
+constexpr int32 k_NegativeFeatureIdsError = -12037;
+constexpr int32 k_InvalidImageGeometryError = -12039;
+constexpr int32 k_InvalidRectGridGeometryError = -12040;
+constexpr int32 k_UnexpectedReorderedDimensionsError = -12041;
+
+enum class WriteStatus : uint8
+{
+  Success,
+  Cancelled,
+  OpenError,
+  WriteError
+};
 
 enum class Axis : uint8
 {
@@ -69,7 +87,9 @@ Eigen::Matrix3f CreateRotationMatrix(float32 angle, Axis axis)
 
 Eigen::Matrix3f DetermineRotationMatrix(const SizeVec3& dimensions)
 {
-  // The fixed swap order and left multiplication reproduce the DREAM.3D 6.6 axis-reorder matrix.
+  // DREAM.3D 6.6 built a 3x3 table that Rotate Sample Reference Frame rejected because it required a 4x4 table. Thus, the legacy reorder always failed with error -10115. This port implements
+  // the intended reorder with a valid 4x4 table.
+  // The fixed swap order and left multiplication reproduce the intended DREAM.3D 6.6 axis-reorder matrix.
   std::vector<Eigen::Matrix3f> rotationMatrices;
   SizeVec3 reorderedDimensions = dimensions;
   SizeVec3 sortedDimensions = dimensions;
@@ -96,7 +116,8 @@ Eigen::Matrix3f DetermineRotationMatrix(const SizeVec3& dimensions)
   }
 
   const Eigen::Matrix3f identity = Eigen::Matrix3f::Identity();
-  return std::accumulate(rotationMatrices.cbegin(), rotationMatrices.cend(), identity, [](const Eigen::Matrix3f& accumulated, const Eigen::Matrix3f& next) { return next * accumulated; });
+  return std::accumulate(rotationMatrices.cbegin(), rotationMatrices.cend(), identity,
+                         [](const Eigen::Matrix3f& accumulated, const Eigen::Matrix3f& next) { return Eigen::Matrix3f(next * accumulated); });
 }
 
 DynamicTableParameter::ValueType ConvertRotationMatrixToTable(const Eigen::Matrix3f& matrix)
@@ -113,121 +134,150 @@ DynamicTableParameter::ValueType ConvertRotationMatrixToTable(const Eigen::Matri
   return table;
 }
 
+WriteStatus FlushBuffer(std::ostream& output, fmt::memory_buffer& buffer)
+{
+  output.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+  buffer.clear();
+  return output ? WriteStatus::Success : WriteStatus::WriteError;
+}
+
+WriteStatus OpenOutput(const fs::path& filePath, std::ofstream& output)
+{
+  output.open(filePath, std::ios::binary | std::ios::trunc);
+  return output.is_open() ? WriteStatus::Success : WriteStatus::OpenError;
+}
+
+void SendProgress(ThrottledMessenger& messenger, std::string_view label, usize current, usize total)
+{
+  messenger.sendThrottledMessage([=]() { return fmt::format("{}: {:.0f}%", label, CalculatePercentComplete(current, total)); });
+}
+
 template <class Generator>
-void WriteEntries(std::ofstream& output, usize count, usize maxEntriesPerLine, Generator&& generator)
+void WriteEntries(fmt::memory_buffer& buffer, usize count, usize maxEntriesPerLine, Generator&& generator)
 {
   // The legacy format writes each separator before its entry and leaves matrix data without a trailing newline.
-  usize entriesPerLine = 0;
   for(usize index = 0; index < count; index++)
   {
-    if(entriesPerLine != 0)
+    if(index != 0)
     {
-      if(entriesPerLine % maxEntriesPerLine == 0)
-      {
-        output << '\n';
-        entriesPerLine = 0;
-      }
-      else
-      {
-        output << ' ';
-      }
+      fmt::format_to(std::back_inserter(buffer), "{}", index % maxEntriesPerLine == 0 ? "\n" : " ");
     }
-    output << generator(index);
-    entriesPerLine++;
+    fmt::format_to(std::back_inserter(buffer), "{}", generator(index));
   }
 }
 
-void WriteImageCoordinates(std::ofstream& output, std::string_view label, usize nodeCount, float32 origin, float32 spacing)
+WriteStatus WriteImageCoordinates(std::ofstream& output, std::string_view label, usize nodeCount, float32 origin, float32 spacing)
 {
-  output << label << ' ' << nodeCount << '\n';
-  WriteEntries(output, nodeCount, 6, [origin, spacing](usize index) { return fmt::format("{:.8E}", origin + (static_cast<float32>(index) * spacing)); });
-  output << '\n';
+  fmt::memory_buffer buffer;
+  fmt::format_to(std::back_inserter(buffer), "{} {}\n", label, nodeCount);
+  WriteEntries(buffer, nodeCount, 6, [origin, spacing](usize index) { return fmt::format("{:.8E}", origin + (static_cast<float32>(index) * spacing)); });
+  fmt::format_to(std::back_inserter(buffer), "\n");
+  return FlushBuffer(output, buffer);
 }
 
-void WriteRectGridCoordinates(std::ofstream& output, std::string_view label, const Float32Array& bounds)
+WriteStatus WriteRectGridCoordinates(std::ofstream& output, std::string_view label, const Float32Array& bounds)
 {
-  output << label << ' ' << bounds.getNumberOfTuples() << '\n';
-  WriteEntries(output, bounds.getNumberOfTuples(), 6, [&bounds](usize index) { return fmt::format("{:.8E}", bounds[index]); });
-  output << '\n';
+  fmt::memory_buffer buffer;
+  fmt::format_to(std::back_inserter(buffer), "{} {}\n", label, bounds.getNumberOfTuples());
+  WriteEntries(buffer, bounds.getNumberOfTuples(), 6, [&bounds](usize index) { return fmt::format("{:.8E}", bounds[index]); });
+  fmt::format_to(std::back_inserter(buffer), "\n");
+  return FlushBuffer(output, buffer);
 }
 
-struct FindMaxGrainId
+struct FeatureIdStats
+{
+  usize MaxGrainId = 0;
+  usize NegativeCount = 0;
+  bool Copied = true;
+};
+
+template <class T>
+void UpdateFeatureIdStats(T value, FeatureIdStats& stats)
+{
+  if constexpr(std::is_signed_v<T>)
+  {
+    if(value < 0)
+    {
+      stats.NegativeCount++;
+      return;
+    }
+  }
+  stats.MaxGrainId = std::max(stats.MaxGrainId, static_cast<usize>(value));
+}
+
+struct FindFeatureIdStats
 {
   template <class T>
-  usize operator()(const IDataArray& featureIds) const
+  FeatureIdStats operator()(const IDataArray& featureIds) const
   {
     const auto& typedFeatureIds = dynamic_cast<const DataArray<T>&>(featureIds);
-    usize maxGrainId = 0;
+    FeatureIdStats stats;
     for(const T value : typedFeatureIds)
     {
-      if constexpr(std::is_signed_v<T>)
-      {
-        if(value > 0)
-        {
-          maxGrainId = std::max(maxGrainId, static_cast<usize>(value));
-        }
-      }
-      else
-      {
-        maxGrainId = std::max(maxGrainId, static_cast<usize>(value));
-      }
+      UpdateFeatureIdStats(value, stats);
     }
-    return maxGrainId;
+    return stats;
   }
 };
 
 struct CopyFeatureIds
 {
   template <class T>
-  bool operator()(const IDataArray& sourceArray, DataStructure& destinationDataStructure, const DataObject::IdType& destinationParentId) const
+  FeatureIdStats operator()(const IDataArray& sourceArray, DataStructure& destinationDataStructure, const DataObject::IdType& destinationParentId, const ShapeType& destinationTupleShape) const
   {
     const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
-    auto destinationStore = DataStoreUtilities::CreateDataStore<T>(typedSource.getTupleShape(), typedSource.getComponentShape(), IDataAction::Mode::Execute);
+    auto destinationStore = DataStoreUtilities::CreateDataStore<T>(destinationTupleShape, typedSource.getComponentShape(), IDataAction::Mode::Execute);
     auto* destinationArray = DataArray<T>::Create(destinationDataStructure, sourceArray.getName(), destinationStore, destinationParentId);
     if(destinationArray == nullptr)
     {
-      return false;
+      return {.Copied = false};
     }
-    std::copy(typedSource.cbegin(), typedSource.cend(), destinationArray->begin());
-    return true;
+
+    FeatureIdStats stats;
+    for(usize index = 0; index < typedSource.getNumberOfTuples(); index++)
+    {
+      const T value = typedSource[index];
+      (*destinationArray)[index] = value;
+      UpdateFeatureIdStats(value, stats);
+    }
+    return stats;
   }
 };
 
 struct WriteFeatureIds
 {
   template <class T>
-  void operator()(std::ofstream& output, const IDataArray& featureIds, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler) const
+  WriteStatus operator()(std::ofstream& output, const IDataArray& featureIds, const SizeVec3& dimensions, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper) const
   {
     const auto& typedFeatureIds = dynamic_cast<const DataArray<T>&>(featureIds);
-    const usize tupleCount = typedFeatureIds.getNumberOfTuples();
-    const usize progressInterval = std::max<usize>(1, tupleCount / 100);
-    usize entriesPerLine = 0;
-    for(usize index = 0; index < tupleCount; index++)
+    const usize cellsPerSlice = dimensions[0] * dimensions[1];
+    fmt::memory_buffer buffer;
+    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+    for(usize z = 0; z < dimensions[2]; z++)
     {
-      if(index % progressInterval == 0)
+      if(shouldCancel)
       {
-        if(shouldCancel)
-        {
-          return;
-        }
-        messageHandler({IFilter::Message::Type::Info, fmt::format("Writing matrix values: {}%", (index * 100) / tupleCount)});
+        return WriteStatus::Cancelled;
       }
 
-      if(entriesPerLine != 0)
+      const usize sliceStart = z * cellsPerSlice;
+      const usize sliceEnd = sliceStart + cellsPerSlice;
+      for(usize index = sliceStart; index < sliceEnd; index++)
       {
-        if(entriesPerLine % 40 == 0)
+        if(index != 0)
         {
-          output << '\n';
-          entriesPerLine = 0;
+          fmt::format_to(std::back_inserter(buffer), "{}", index % 40 == 0 ? "\n" : " ");
         }
-        else
-        {
-          output << ' ';
-        }
+        fmt::format_to(std::back_inserter(buffer), "{}", typedFeatureIds[index]);
       }
-      output << fmt::format("{}", typedFeatureIds[index]);
-      entriesPerLine++;
+
+      if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+      {
+        return WriteStatus::WriteError;
+      }
+      SendProgress(progressMessenger, "Writing matrix values", z + 1, dimensions[2]);
     }
+    return WriteStatus::Success;
   }
 };
 } // namespace
@@ -256,31 +306,44 @@ Result<> WriteOnScaleTableFile::operator()()
 
   const IGridGeometry* exportGeometry = &inputGeometry;
   const IDataArray* exportFeatureIds = &inputFeatureIds;
+  FeatureIdStats featureIdStats;
   DataStructure rotatedDataStructure;
   const SizeVec3 inputDimensions = inputGeometry.getDimensions();
   if(!(inputDimensions[0] >= inputDimensions[1] && inputDimensions[1] >= inputDimensions[2]))
   {
-    // The sub-filter rotates a private copy so the export does not change the input data structure.
+    // The sub-filter rotates a private copy so the export does not change the input data structure. Peak memory is three times the feature ID bytes while the sub-filter runs: the input, the scratch
+    // copy, and the rotated output. Memory remains at two times the feature ID bytes after the sub-filter removes the scratch copy and until this algorithm returns.
     auto* scratchGeometry = ImageGeom::Create(rotatedDataStructure, k_ScratchGeometryPath.getTargetName());
     if(scratchGeometry == nullptr)
     {
       return MakeErrorResult(-12028, "Failed to create the scratch Image Geometry for the Rotate Sample Reference Frame sub-filter.");
     }
-    const auto& inputImageGeometry = dynamic_cast<const ImageGeom&>(inputGeometry);
-    scratchGeometry->setDimensions(inputImageGeometry.getDimensions());
-    scratchGeometry->setOrigin(inputImageGeometry.getOrigin());
-    scratchGeometry->setSpacing(inputImageGeometry.getSpacing());
+    const auto* inputImageGeometry = dynamic_cast<const ImageGeom*>(&inputGeometry);
+    if(inputImageGeometry == nullptr)
+    {
+      return MakeErrorResult(k_InvalidImageGeometryError, fmt::format("The grid geometry '{}' requires reordering but is not an Image Geometry.", m_InputValues->InputGeometryPath.toString()));
+    }
+    scratchGeometry->setDimensions(inputImageGeometry->getDimensions());
+    scratchGeometry->setOrigin(inputImageGeometry->getOrigin());
+    scratchGeometry->setSpacing(inputImageGeometry->getSpacing());
 
-    auto* scratchCellData = AttributeMatrix::Create(rotatedDataStructure, k_ScratchCellDataPath.getTargetName(), inputFeatureIds.getTupleShape(), scratchGeometry->getId());
+    const ShapeType scratchCellShape = {inputDimensions[2], inputDimensions[1], inputDimensions[0]};
+    auto* scratchCellData = AttributeMatrix::Create(rotatedDataStructure, k_ScratchCellDataPath.getTargetName(), scratchCellShape, scratchGeometry->getId());
     if(scratchCellData == nullptr)
     {
       return MakeErrorResult(-12029, "Failed to create the scratch Cell Data Attribute Matrix for the Rotate Sample Reference Frame sub-filter.");
     }
     scratchGeometry->setCellData(*scratchCellData);
-    const bool copied = ExecuteDataFunctionIntType(CopyFeatureIds{}, inputFeatureIds.getDataType(), inputFeatureIds, rotatedDataStructure, scratchCellData->getId());
-    if(!copied)
+    // The copy pass also validates IDs and finds the maximum ID. Thus, reordered data does not need an additional scan.
+    featureIdStats = ExecuteDataFunctionIntType(CopyFeatureIds{}, inputFeatureIds.getDataType(), inputFeatureIds, rotatedDataStructure, scratchCellData->getId(), scratchCellShape);
+    if(!featureIdStats.Copied)
     {
       return MakeErrorResult(-12030, fmt::format("Failed to copy the feature IDs array '{}' for the Rotate Sample Reference Frame sub-filter.", m_InputValues->FeatureIdsArrayPath.toString()));
+    }
+    if(featureIdStats.NegativeCount > 0)
+    {
+      return MakeErrorResult(k_NegativeFeatureIdsError, fmt::format("Found {} negative feature ids in '{}'. OnScale material indices must be 0 or greater.", featureIdStats.NegativeCount,
+                                                                    m_InputValues->FeatureIdsArrayPath.toString()));
     }
 
     RotateSampleRefFrameFilter rotateFilter;
@@ -294,36 +357,53 @@ Result<> WriteOnScaleTableFile::operator()()
     rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_RotateSliceBySlice_Key, std::make_any<bool>(false));
     rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(false));
 
-    auto rotatePreflight = rotateFilter.preflight(rotatedDataStructure, rotateArgs);
-    if(rotatePreflight.outputActions.invalid())
-    {
-      return MakeErrorResult(-12031, fmt::format("The Rotate Sample Reference Frame sub-filter preflight failed while reordering geometry '{}': {}", m_InputValues->InputGeometryPath.toString(),
-                                                 rotatePreflight.outputActions.errors().front().message));
-    }
+    // Correctness depends on Rotate Sample Reference Frame treating this exact 90-degree matrix as a lossless grid rotation through its IsLosslessGridRotation tolerance. A direct index permutation
+    // would be less expensive, but the sub-filter preserves parity with the intended legacy design.
+    auto rotateExecute = rotateFilter.execute(rotatedDataStructure, rotateArgs, nullptr, m_MessageHandler, m_ShouldCancel);
     if(m_ShouldCancel)
     {
       return {};
     }
-
-    auto rotateExecute = rotateFilter.execute(rotatedDataStructure, rotateArgs);
     if(rotateExecute.result.invalid())
     {
       return MakeErrorResult(-12032, fmt::format("The Rotate Sample Reference Frame sub-filter failed while reordering geometry '{}': {}", m_InputValues->InputGeometryPath.toString(),
                                                  rotateExecute.result.errors().front().message));
     }
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
 
     exportGeometry = &rotatedDataStructure.getDataRefAs<ImageGeom>(k_ScratchGeometryPath);
-    exportFeatureIds = &rotatedDataStructure.getDataRefAs<IDataArray>(k_ScratchCellDataPath.createChildPath(inputFeatureIds.getName()));
     const SizeVec3 reorderedDimensions = exportGeometry->getDimensions();
+    SizeVec3 expectedDimensions = inputDimensions;
+    std::sort(expectedDimensions.begin(), expectedDimensions.end(), std::greater<usize>());
+    // ImageRotationUtilities::CreateRotationArgs selects output spacing from matrix columns, which show where each old axis lands.
+    // New-axis spacing requires matrix rows, or equivalently the columns of the transposed matrix.
+    if(reorderedDimensions != expectedDimensions)
+    {
+      return MakeErrorResult(
+          k_UnexpectedReorderedDimensionsError,
+          fmt::format("Rotate Sample Reference Frame produced dimensions ({}) for geometry '{}' but the OnScale reorder expected ({}). This happens for two-axis reorders of geometries with "
+                      "anisotropic spacing because the rotation utility assigns output spacing from the wrong matrix axis. Resample to isotropic spacing or reorder the axes before this filter.",
+                      StringUtilities::formatDimensions3D(reorderedDimensions), m_InputValues->InputGeometryPath.toString(), StringUtilities::formatDimensions3D(expectedDimensions)));
+    }
+    exportFeatureIds = &rotatedDataStructure.getDataRefAs<IDataArray>(k_ScratchCellDataPath.createChildPath(inputFeatureIds.getName()));
     m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Applied an OnScale axis reorder with Rotate Sample Reference Frame. New dimensions: {} x {} x {}.", reorderedDimensions[0],
                                                                 reorderedDimensions[1], reorderedDimensions[2])});
   }
+  else
+  {
+    featureIdStats = ExecuteDataFunctionIntType(FindFeatureIdStats{}, exportFeatureIds->getDataType(), *exportFeatureIds);
+    if(featureIdStats.NegativeCount > 0)
+    {
+      return MakeErrorResult(k_NegativeFeatureIdsError, fmt::format("Found {} negative feature ids in '{}'. OnScale material indices must be 0 or greater.", featureIdStats.NegativeCount,
+                                                                    m_InputValues->FeatureIdsArrayPath.toString()));
+    }
+  }
 
-  const usize maxGrainId = ExecuteDataFunctionIntType(FindMaxGrainId{}, exportFeatureIds->getDataType(), *exportFeatureIds);
+  const usize maxGrainId = featureIdStats.MaxGrainId;
+  if(maxGrainId == 0)
+  {
+    m_MessageHandler(IFilter::Message::Type::Warning, fmt::format("No positive feature ids were found in '{}'; the name section is empty.", m_InputValues->FeatureIdsArrayPath.toString()));
+  }
+
   const fs::path outputPath = m_InputValues->OutputPath / fmt::format("{}.flxtbl", m_InputValues->FilePrefix);
   auto atomicFileResult = AtomicFile::Create(outputPath);
   if(atomicFileResult.invalid())
@@ -331,12 +411,18 @@ Result<> WriteOnScaleTableFile::operator()()
     return MakeErrorResult(-12033, fmt::format("Failed to create a temporary output file for '{}': {}", outputPath.string(), atomicFileResult.errors().front().message));
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
-  std::ofstream output(atomicFile.tempFilePath(), std::ios::binary | std::ios::trunc);
-  if(!output.is_open())
+  const fs::path tempPath = atomicFile.tempFilePath();
+  std::ofstream output;
+  const WriteStatus openStatus = OpenOutput(tempPath, output);
+  if(openStatus == WriteStatus::OpenError)
   {
-    return MakeErrorResult(-12034, fmt::format("Failed to open the temporary OnScale table file '{}'. Check write permissions for output path '{}'.", atomicFile.tempFilePath().string(),
-                                               m_InputValues->OutputPath.string()));
+    return MakeErrorResult(-12034, fmt::format("Could not open '{}' for writing (target '{}').", tempPath.string(), outputPath.string()));
   }
+
+  const auto makeWriteError = [&tempPath, &outputPath]() {
+    return MakeErrorResult(-12035, fmt::format("Writing to '{}' failed (target '{}'). Check available disk space.", tempPath.string(), outputPath.string()));
+  };
+  MessageHelper messageHelper(m_MessageHandler);
 
   if(m_ShouldCancel)
   {
@@ -358,14 +444,22 @@ Result<> WriteOnScaleTableFile::operator()()
         return {};
       }
       m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Writing {} coordinates...", labels[axis])});
-      WriteImageCoordinates(output, labels[axis], dimensions[axis] + 1, origin[axis], spacing[axis]);
+      if(WriteImageCoordinates(output, labels[axis], dimensions[axis] + 1, origin[axis], spacing[axis]) == WriteStatus::WriteError)
+      {
+        return makeWriteError();
+      }
     }
   }
   else
   {
-    const auto& rectGridGeometry = dynamic_cast<const RectGridGeom&>(*exportGeometry);
+    const auto* rectGridGeometry = dynamic_cast<const RectGridGeom*>(exportGeometry);
+    if(rectGridGeometry == nullptr)
+    {
+      return MakeErrorResult(k_InvalidRectGridGeometryError,
+                             fmt::format("The grid geometry '{}' is neither an Image Geometry nor a Rectilinear Grid Geometry.", m_InputValues->InputGeometryPath.toString()));
+    }
     const std::array<std::pair<std::string_view, const Float32Array*>, 3> bounds = {
-        {{"xcrd", rectGridGeometry.getXBounds()}, {"ycrd", rectGridGeometry.getYBounds()}, {"zcrd", rectGridGeometry.getZBounds()}}};
+        {{"xcrd", rectGridGeometry->getXBounds()}, {"ycrd", rectGridGeometry->getYBounds()}, {"zcrd", rectGridGeometry->getZBounds()}}};
     for(const auto& [label, boundsArray] : bounds)
     {
       if(m_ShouldCancel)
@@ -373,7 +467,10 @@ Result<> WriteOnScaleTableFile::operator()()
         return {};
       }
       m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Writing {} coordinates...", label)});
-      WriteRectGridCoordinates(output, label, *boundsArray);
+      if(WriteRectGridCoordinates(output, label, *boundsArray) == WriteStatus::WriteError)
+      {
+        return makeWriteError();
+      }
     }
   }
 
@@ -409,16 +506,20 @@ Result<> WriteOnScaleTableFile::operator()()
     return {};
   }
   m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale matrix values..."});
-  ExecuteDataFunctionIntType(WriteFeatureIds{}, exportFeatureIds->getDataType(), output, *exportFeatureIds, m_ShouldCancel, m_MessageHandler);
-  if(m_ShouldCancel)
+  const WriteStatus matrixStatus = ExecuteDataFunctionIntType(WriteFeatureIds{}, exportFeatureIds->getDataType(), output, *exportFeatureIds, dimensions, m_ShouldCancel, messageHelper);
+  if(matrixStatus == WriteStatus::Cancelled || m_ShouldCancel)
   {
     return {};
+  }
+  if(matrixStatus == WriteStatus::WriteError)
+  {
+    return makeWriteError();
   }
 
   output.close();
   if(output.fail())
   {
-    return MakeErrorResult(-12035, fmt::format("Failed to write the OnScale table file '{}'. Check available storage and write permissions.", outputPath.string()));
+    return makeWriteError();
   }
 
   Result<> commitResult = atomicFile.commit();
