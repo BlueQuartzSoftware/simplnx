@@ -6,6 +6,13 @@
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
@@ -108,9 +115,108 @@ void AppendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& at
 }
 
 /**
+ * @brief Converts a 3-vector to a JSON array.
+ */
+template <typename T>
+nlohmann::json Vec3ToJson(const Vec3<T>& vec)
+{
+  return nlohmann::json::array({vec[0], vec[1], vec[2]});
+}
+
+/**
+ * @brief Adds the grid-specific keys (dimensions, cell data path, origin, spacing).
+ * RectGrid origin is derived from its bounds arrays and is omitted when those are unavailable.
+ */
+void AppendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry& gridGeometry)
+{
+  geometryNode["dimensions"] = Vec3ToJson(gridGeometry.getDimensions());
+  if(gridGeometry.getCellDataId().has_value())
+  {
+    geometryNode["cell_data_path"] = gridGeometry.getCellDataPath().toString();
+  }
+
+  if(const auto* imageGeom = dynamic_cast<const ImageGeom*>(&gridGeometry); imageGeom != nullptr)
+  {
+    geometryNode["origin"] = Vec3ToJson(imageGeom->getOrigin());
+    geometryNode["spacing"] = Vec3ToJson(imageGeom->getSpacing());
+  }
+  else if(const auto* rectGridGeom = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeom != nullptr)
+  {
+    Result<FloatVec3> originResult = rectGridGeom->getOrigin();
+    if(originResult.valid())
+    {
+      geometryNode["origin"] = Vec3ToJson(originResult.value());
+    }
+  }
+}
+
+/**
+ * @brief Adds the node-based keys. Each dimensionality contributes only the
+ * counts and attribute-matrix paths it owns. A *_data_path key is omitted
+ * when that attribute matrix has not been assigned.
+ */
+void AppendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0D& nodeGeometry)
+{
+  geometryNode["num_vertices"] = nodeGeometry.getNumberOfVertices();
+  if(nodeGeometry.getVertexAttributeMatrixId().has_value())
+  {
+    geometryNode["vertex_data_path"] = nodeGeometry.getVertexAttributeMatrixDataPath().toString();
+  }
+
+  if(const auto* geom1D = dynamic_cast<const INodeGeometry1D*>(&nodeGeometry); geom1D != nullptr)
+  {
+    geometryNode["num_edges"] = geom1D->getNumberOfEdges();
+    if(geom1D->getEdgeAttributeMatrixId().has_value())
+    {
+      geometryNode["edge_data_path"] = geom1D->getEdgeAttributeMatrixDataPath().toString();
+    }
+  }
+
+  if(const auto* geom2D = dynamic_cast<const INodeGeometry2D*>(&nodeGeometry); geom2D != nullptr)
+  {
+    geometryNode["num_faces"] = geom2D->getNumberOfFaces();
+    if(geom2D->getFaceAttributeMatrixId().has_value())
+    {
+      geometryNode["face_data_path"] = geom2D->getFaceAttributeMatrixDataPath().toString();
+    }
+  }
+
+  if(const auto* geom3D = dynamic_cast<const INodeGeometry3D*>(&nodeGeometry); geom3D != nullptr)
+  {
+    geometryNode["num_polyhedra"] = geom3D->getNumberOfPolyhedra();
+    if(geom3D->getPolyhedraAttributeMatrixId().has_value())
+    {
+      geometryNode["polyhedron_data_path"] = geom3D->getPolyhedronAttributeMatrixDataPath().toString();
+    }
+  }
+}
+
+/**
+ * @brief Builds and attaches the "geometry" block for any IGeometry.
+ */
+void AppendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
+{
+  nlohmann::json geometryNode;
+  geometryNode["geometry_type"] = IGeometry::GeomTypeToString(geometry.getGeomType());
+  geometryNode["unit_dimensionality"] = geometry.getUnitDimensionality();
+  geometryNode["length_units"] = IGeometry::LengthUnitToString(geometry.getUnits());
+  geometryNode["num_cells"] = geometry.getNumberOfCells();
+
+  if(const auto* gridGeometry = dynamic_cast<const IGridGeometry*>(&geometry); gridGeometry != nullptr)
+  {
+    AppendGridGeometryFields(geometryNode, *gridGeometry);
+  }
+  else if(const auto* nodeGeometry = dynamic_cast<const INodeGeometry0D*>(&geometry); nodeGeometry != nullptr)
+  {
+    AppendNodeGeometryFields(geometryNode, *nodeGeometry);
+  }
+
+  node["geometry"] = std::move(geometryNode);
+}
+
+/**
  * @brief Builds the JSON node for one DataObject, without its children.
- * Type-specific keys are added by dynamic type. The "geometry" block is
- * added by AppendGeometryFields (see Task 3).
+ * Type-specific keys are added by dynamic type; geometries get a nested "geometry" block.
  */
 nlohmann::json MakeObjectNode(const DataObject& object, const DataPath& path)
 {
@@ -120,7 +226,11 @@ nlohmann::json MakeObjectNode(const DataObject& object, const DataPath& path)
   node["id"] = object.getId();
   node["type"] = object.getTypeName();
 
-  if(const auto* attributeMatrix = dynamic_cast<const AttributeMatrix*>(&object); attributeMatrix != nullptr)
+  if(const auto* geometry = dynamic_cast<const IGeometry*>(&object); geometry != nullptr)
+  {
+    AppendGeometryFields(node, *geometry);
+  }
+  else if(const auto* attributeMatrix = dynamic_cast<const AttributeMatrix*>(&object); attributeMatrix != nullptr)
   {
     AppendAttributeMatrixFields(node, *attributeMatrix);
   }
