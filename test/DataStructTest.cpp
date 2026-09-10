@@ -584,6 +584,89 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::AttributeMatrixAndNeighborList"
   REQUIRE_FALSE(neighborList.contains("component_shape"));
 }
 
+TEST_CASE("DataStructure::exportHierarchyAsJson::Geometry")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = createTestDataStructure();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  // ImageGeom: dims {40,60,80} set as (Z,Y,X) in the fixture, so getDimensions() reports X,Y,Z = {40,60,80}
+  // per ImageGeom::setDimensions semantics. Compare against the object itself instead of hard-coding.
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({std::string(Constants::k_ImageGeometry.view())}));
+  REQUIRE(imageGeomPtr != nullptr);
+  const SizeVec3 expectedDims = imageGeomPtr->getDimensions();
+  const FloatVec3 expectedOrigin = imageGeomPtr->getOrigin();
+  const FloatVec3 expectedSpacing = imageGeomPtr->getSpacing();
+
+  const auto& imageGeom = FindNode(json.at("objects"), Constants::k_ImageGeometry.view());
+  REQUIRE(imageGeom.at("type").get<std::string>() == ImageGeom::k_TypeName.view());
+  REQUIRE(imageGeom.contains("geometry"));
+  const auto& geom = imageGeom.at("geometry");
+
+  REQUIRE(geom.at("geometry_type").get<std::string>() == "Image");
+  REQUIRE(geom.at("unit_dimensionality").get<uint32>() == imageGeomPtr->getUnitDimensionality());
+  REQUIRE(geom.at("length_units").get<std::string>() == IGeometry::LengthUnitToString(imageGeomPtr->getUnits()));
+  REQUIRE(geom.at("num_cells").get<uint64>() == imageGeomPtr->getNumberOfCells());
+  REQUIRE(geom.at("dimensions") == nlohmann::json::array({expectedDims[0], expectedDims[1], expectedDims[2]}));
+  REQUIRE(geom.at("origin").at(0).get<float32>() == Approx(expectedOrigin[0]));
+  REQUIRE(geom.at("origin").at(1).get<float32>() == Approx(expectedOrigin[1]));
+  REQUIRE(geom.at("origin").at(2).get<float32>() == Approx(expectedOrigin[2]));
+  REQUIRE(geom.at("spacing").at(0).get<float32>() == Approx(expectedSpacing[0]));
+  REQUIRE(geom.at("spacing").at(1).get<float32>() == Approx(expectedSpacing[1]));
+  REQUIRE(geom.at("spacing").at(2).get<float32>() == Approx(expectedSpacing[2]));
+  REQUIRE(geom.at("cell_data_path").get<std::string>() == fmt::format("{}/{}", Constants::k_ImageGeometry.view(), Constants::k_CellData.view()));
+
+  // Node geometry keys must not appear on a grid geometry
+  REQUIRE_FALSE(geom.contains("num_vertices"));
+  REQUIRE_FALSE(geom.contains("vertex_data_path"));
+
+  // RectGridGeom: has dimensions, no spacing; origin present because the fixture sets bounds arrays
+  const auto& rectGeom = FindNode(json.at("objects"), k_RectGridGeo.view());
+  const auto& rectGeomBlock = rectGeom.at("geometry");
+  REQUIRE(rectGeomBlock.at("geometry_type").get<std::string>() == "RectGrid");
+  REQUIRE(rectGeomBlock.at("dimensions") == nlohmann::json::array({10, 10, 5}));
+  REQUIRE_FALSE(rectGeomBlock.contains("spacing"));
+
+  // A DataGroup must not carry a geometry block
+  const auto& levelOne = FindNode(imageGeom.at("children"), Constants::k_LevelOne.view());
+  REQUIRE_FALSE(levelOne.contains("geometry"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeom != nullptr);
+
+  // 4 vertices, 2 faces
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, triangleGeom->getId());
+  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "SharedTriList", {2}, {3}, triangleGeom->getId());
+  triangleGeom->setVertices(*vertices);
+  triangleGeom->setFaceList(*faces);
+
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", std::vector<usize>{4}, triangleGeom->getId());
+  triangleGeom->setVertexAttributeMatrix(*vertexData);
+  // Deliberately do NOT set a face attribute matrix: face_data_path must be omitted.
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  const auto& node = FindNode(json.at("objects"), "Triangles");
+  const auto& geom = node.at("geometry");
+
+  REQUIRE(geom.at("geometry_type").get<std::string>() == "Triangle");
+  REQUIRE(geom.at("num_vertices").get<uint64>() == 4);
+  REQUIRE(geom.at("num_faces").get<uint64>() == 2);
+  REQUIRE(geom.at("num_cells").get<uint64>() == 2);
+  REQUIRE(geom.at("vertex_data_path").get<std::string>() == "Triangles/Vertex Data");
+  REQUIRE_FALSE(geom.contains("face_data_path"));
+  REQUIRE_FALSE(geom.contains("dimensions"));
+  REQUIRE_FALSE(geom.contains("num_polyhedra"));
+  // A triangle geometry is 2D: edges are optional and only reported when an edge list exists
+  REQUIRE_FALSE(geom.contains("edge_data_path"));
+}
+
 /**
  * @brief Test creation and removal of items in a tree-style structure. No node has more than one parent.
  */
