@@ -3,8 +3,6 @@
 #include <cstring>
 #include <iostream>
 
-
-
 bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
 {
   SIMPLNX_H5SUPPORT_MUTEX_LOCK()

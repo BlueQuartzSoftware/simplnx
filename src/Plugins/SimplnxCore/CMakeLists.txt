@@ -107,6 +107,7 @@ set(FilterList
   ExtractFeatureBoundaries2DFilter
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
+  PottsModelFilter
   QuickSurfaceMeshFilter
   RandomizeFeatureIdsFilter
   ReadBinaryCTNorthstarFilter
@@ -277,6 +278,7 @@ set(AlgorithmList
   PointSampleEdgeGeometry
   ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
+  PottsModel
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
   ReadCSVFile

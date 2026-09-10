@@ -111,6 +111,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PipelineTest.cpp
   PointSampleEdgeGeometryTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
+  PottsModelTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RandomizeFeatureIdsTest.cpp
   ReadBinaryCTNorthstarTest.cpp

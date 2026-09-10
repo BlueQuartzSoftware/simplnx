@@ -18,8 +18,6 @@
 #include <string>
 #include <vector>
 
-
-
 #ifdef H5Support_USE_MUTEX
 #define SIMPLNX_H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
 #else
