@@ -96,7 +96,9 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   }
   rectGridGeom->setDimensions(dims);
 
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, dims, rectGridGeom->getId());
+  // Cell AttributeMatrix tuple order is ZYX to match cell arrays.
+  const DimensionType reversedDims(dims.rbegin(), dims.rend());
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, rectGridGeom->getId());
   if(attributeMatrix == nullptr)
   {
     return MakeErrorResult(-5909, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry: '{}'", prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));

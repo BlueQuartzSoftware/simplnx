@@ -270,6 +270,7 @@ static const std::map<std::string, std::string> k_LegacySimplFilterUuidMap{
     {"ImportH5OimData", "3ff4701b-3a0c-52e3-910a-fa927aa6584c"},
     {"ImportHDF5Dataset", "9e98c3b0-5707-5a3b-b8b5-23ef83b02896"},
     {"ImportImageMontage", "40a1e653-67ed-5106-b45c-179c29e422bb"},
+    {"ImportOnScaleTableFile", "06dd6e66-84fb-5170-a923-d925dc39bb94"},
     {"ImportRegisteredImageMontage", "5878723b-cc16-5486-ac5f-ff0107107e74"},
     {"ImportVectorImageStack", "c5474cd1-bea9-5a33-a0df-516e5735bab4"},
     {"InitializeData", "dfab9921-fea3-521c-99ba-48db98e43ff8"},
