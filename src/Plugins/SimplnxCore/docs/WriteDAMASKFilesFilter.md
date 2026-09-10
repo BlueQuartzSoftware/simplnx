@@ -11,7 +11,11 @@ DAMASK is a simulation package for crystal plasticity and other continuum mechan
 - `<name>.geom` contains the regular grid, physical size, origin, homogenization index, microstructure count, and spatial microstructure IDs.
 - `material.config` contains texture orientations and microstructure constituents.
 
+This pair of files is the DAMASK 2.x input format. DAMASK 3 uses a `.vti` geometry file plus YAML configuration files.
+
 The geometry header writes `grid` in cell counts. It writes `size` and `origin` in the length units of the selected **Image Geometry**. The physical size is the cell count multiplied by the cell spacing for each axis.
+
+The filter writes microstructure IDs in x-fastest order with `dims[0]` values on each line.
 
 The filter supports two data formats. Pointwise output treats each **Cell** as a separate microstructure and assigns IDs from *1* through the number of cells. Grainwise output uses the selected feature ID of each cell and writes one microstructure for each ID from *1* through the maximum positive feature ID.
 
@@ -34,6 +38,8 @@ The generated `material.config` file contains the `<texture>` and `<microstructu
 
 The filter reads cells in linear index order. If multiple cells have the same positive feature ID, the last cell supplies the phase and Euler angles for that grain.
 
+Euler angles are converted with double precision; the legacy filter rounded grainwise angles to single precision before writing.
+
 Feature ID *0* and negative feature IDs do not supply grain phase or orientation data. These raw values remain in the geometry grid.
 
 The filter writes every grain ID from *1* through the maximum positive feature ID. If an ID in this range has no cells, the filter writes phase *0* and zero Euler angles for that grain. The filter sends one warning that reports the number of missing grains.
@@ -41,6 +47,8 @@ The filter writes every grain ID from *1* through the maximum positive feature I
 If grainwise input has no positive feature IDs, the filter returns an error and does not write either output file.
 
 The output directory must exist before execution. The legacy DREAM.3D 6.6 filter created the directory when it did not exist.
+
+The Homogenization Index must be *1* or greater because DAMASK numbers homogenization entries from *1*.
 
 ### Memory
 

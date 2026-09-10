@@ -90,7 +90,7 @@ public:
 
 protected:
   /**
-   * @brief Validates the output location and input tuple counts.
+   * @brief Validates the parameters, geometry, and input tuple counts.
    * @param dataStructure Contains the selected geometry and arrays.
    * @param filterArgs Contains the parameter values.
    * @param messageHandler Receives preflight messages.

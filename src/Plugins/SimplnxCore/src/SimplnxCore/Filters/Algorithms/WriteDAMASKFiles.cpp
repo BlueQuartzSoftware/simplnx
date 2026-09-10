@@ -14,6 +14,7 @@
 #include <iterator>
 #include <numbers>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -124,6 +125,7 @@ WriteStatus WriteGeometryFile(const fs::path& filePath, const ImageGeom& imageGe
     {
       if(entriesPerLine != 0)
       {
+        // This modulo check mirrors the legacy counter for parity.
         if(entriesPerLine % dimensions[0] != 0)
         {
           fmt::format_to(std::back_inserter(buffer), " ");
@@ -201,10 +203,10 @@ WriteStatus WritePointwiseMaterial(std::ofstream& output, fmt::memory_buffer& bu
     {
       const std::array<float32, 3> orientation = {cellEulerAngles[cellIndex * 3], cellEulerAngles[cellIndex * 3 + 1], cellEulerAngles[cellIndex * 3 + 2]};
       WriteTexture(buffer, "point", cellIndex + 1, orientation);
-      if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
-      {
-        return WriteStatus::WriteError;
-      }
+    }
+    if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+    {
+      return WriteStatus::WriteError;
     }
     SendProgress(progressMessenger, "Writing Material Configuration (File 2/2)", z + 1, progressTotal);
   }
@@ -220,11 +222,11 @@ WriteStatus WritePointwiseMaterial(std::ofstream& output, fmt::memory_buffer& bu
     const usize sliceEnd = sliceStart + cellsPerSlice;
     for(usize cellIndex = sliceStart; cellIndex < sliceEnd; cellIndex++)
     {
-      WriteMicrostructure(buffer, "point", cellIndex + 1, static_cast<int32>(cellPhases[cellIndex]));
-      if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
-      {
-        return WriteStatus::WriteError;
-      }
+      WriteMicrostructure(buffer, "point", cellIndex + 1, cellPhases[cellIndex]);
+    }
+    if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+    {
+      return WriteStatus::WriteError;
     }
     SendProgress(progressMessenger, "Writing Material Configuration (File 2/2)", dimensions[2] + z + 1, progressTotal);
   }

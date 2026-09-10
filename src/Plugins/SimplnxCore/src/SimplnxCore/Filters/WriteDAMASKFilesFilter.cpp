@@ -14,6 +14,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <array>
 #include <filesystem>
@@ -58,7 +59,7 @@ Parameters WriteDAMASKFilesFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The existing directory that receives both DAMASK files.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_GeometryFileName_Key, "Geometry File Name", "Writes <name>.geom and material.config in the output path.", ""));
-  params.insert(std::make_unique<Int32Parameter>(k_HomogenizationIndex_Key, "Homogenization Index", "The homogenization index in the geometry header.", 1));
+  params.insert(std::make_unique<Int32Parameter>(k_HomogenizationIndex_Key, "Homogenization Index", "The homogenization index in the geometry header. The index must be 1 or greater.", 1));
   params.insert(std::make_unique<BoolParameter>(k_CompressGeomFile_Key, "Compress Geom File", "Write the pointwise geometry IDs as a compact range.", false));
   params.linkParameters(k_DataFormat_Key, k_CompressGeomFile_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
@@ -106,9 +107,20 @@ IFilter::PreflightResult WriteDAMASKFilesFilter::preflightImpl(const DataStructu
     return MakePreflightErrorResult(-12072, "The Geometry File Name ('') is empty. Specify a name for the .geom file.");
   }
 
+  const auto homogenizationIndex = filterArgs.value<int32>(k_HomogenizationIndex_Key);
+  if(homogenizationIndex < 1)
+  {
+    return MakePreflightErrorResult(-12079, fmt::format("The Homogenization Index ({}) must be 1 or greater. DAMASK numbers homogenization entries from 1.", homogenizationIndex));
+  }
+
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   const usize cellCount = imageGeom.getNumberOfCells();
+  if(cellCount == 0)
+  {
+    return MakePreflightErrorResult(
+        -12080, fmt::format("The Image Geometry '{}' has 0 cells. The dimensions are ({}).", imageGeometryPath.toString(), StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
+  }
   const std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12073}, {k_CellEulerAnglesArrayPath_Key, -12078}, {k_CellPhasesArrayPath_Key, -12077}}};
   for(const auto& [arrayKey, errorCode] : arrayKeys)
   {
