@@ -140,6 +140,32 @@ nlohmann::json Vec3ToJson(const Vec3<T>& vec)
 }
 
 /**
+ * @brief Determines whether each bounds array contains readable values.
+ * @param rectGridGeom Rectilinear grid geometry to inspect.
+ * @return True if all bounds arrays exist and contain readable values.
+ *
+ * Preflight stores contain only metadata and do not support value access.
+ */
+bool HasReadableBounds(const RectGridGeom& rectGridGeom)
+{
+  const auto* xBounds = rectGridGeom.getXBounds();
+  const auto* yBounds = rectGridGeom.getYBounds();
+  const auto* zBounds = rectGridGeom.getZBounds();
+
+  const auto hasReadableStore = [](const Float32Array* bounds) {
+    if(bounds == nullptr)
+    {
+      return false;
+    }
+
+    const IDataStore::StoreType storeType = bounds->getIDataStoreRef().getStoreType();
+    return storeType != IDataStore::StoreType::Empty && storeType != IDataStore::StoreType::EmptyOutOfCore;
+  };
+
+  return hasReadableStore(xBounds) && hasReadableStore(yBounds) && hasReadableStore(zBounds);
+}
+
+/**
  * @brief Adds the grid-specific keys (dimensions, cell data path, origin, spacing).
  * RectGrid origin is derived from its bounds arrays and is omitted when those are unavailable.
  */
@@ -156,7 +182,7 @@ void AppendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry&
     geometryNode["origin"] = Vec3ToJson(imageGeom->getOrigin());
     geometryNode["spacing"] = Vec3ToJson(imageGeom->getSpacing());
   }
-  else if(const auto* rectGridGeom = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeom != nullptr)
+  else if(const auto* rectGridGeom = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeom != nullptr && HasReadableBounds(*rectGridGeom))
   {
     Result<FloatVec3> originResult = rectGridGeom->getOrigin();
     if(originResult.valid())
