@@ -17,6 +17,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
@@ -500,6 +501,407 @@ DataStructure createTestDataStructure()
   return dataStruct;
 }
 
+/**
+ * @brief Creates serializable test data for disk round-trip tests.
+ * @return Data structure without derived DynamicListArray objects.
+ *
+ * The DREAM3D writer cannot serialize objects from findElementsContainingVert() and findElementNeighbors().
+ */
+DataStructure createRoundTripDataStructure()
+{
+  DataStructure dataStruct;
+
+  // Image Geometry
+  {
+    ImageGeom* imageGeom = ImageGeom::Create(dataStruct, Constants::k_ImageGeometry);
+    imageGeom->setSpacing({0.25f, 0.55f, 1.86});
+    imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+    std::vector<usize> imageGeomDims = {40, 60, 80};
+    imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+
+    const DataGroup* levelOneGroup = DataGroup::Create(dataStruct, Constants::k_LevelOne, imageGeom->getId());
+
+    const DataGroup* levelTwoGroup = DataGroup::Create(dataStruct, Constants::k_LevelTwo, levelOneGroup->getId());
+    auto* neighborList = NeighborList<int16>::Create(dataStruct, Constants::k_Int16DataSet, ShapeType{3}, levelOneGroup->getId());
+    std::vector<int16> list1 = {117, 875, 1035, 3905, 4214};
+    std::vector<int16> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
+    std::vector<int16> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};
+    neighborList->setList(0, std::make_shared<std::vector<int16>>(list1));
+    neighborList->setList(1, std::make_shared<std::vector<int16>>(list2));
+    neighborList->setList(2, std::make_shared<std::vector<int16>>(list3));
+
+    Int32Array* testIntArray = UnitTest::CreateTestDataArray<int32>(dataStruct, Constants::k_Int32DataSet, {5}, {1}, levelTwoGroup->getId());
+    (*testIntArray)[0] = 1;
+    (*testIntArray)[1] = 5;
+    (*testIntArray)[2] = 10;
+    (*testIntArray)[3] = 15;
+    (*testIntArray)[4] = 20;
+
+    const std::vector<usize> reversedDims(imageGeomDims.rbegin(), imageGeomDims.rend());
+    AttributeMatrix* levelOneAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_CellData, reversedDims, imageGeom->getId());
+    imageGeom->setCellData(*levelOneAttMatrix);
+
+    BoolArray* testBoolArray = UnitTest::CreateTestDataArray<bool>(dataStruct, Constants::k_ConditionalArray, reversedDims, {1}, levelOneAttMatrix->getId());
+    testBoolArray->fill(true);
+    (*testBoolArray)[0] = false;
+    (*testBoolArray)[5] = false;
+    (*testBoolArray)[10] = false;
+    (*testBoolArray)[20] = false;
+    (*testBoolArray)[50] = false;
+  }
+
+  // Rectilinear Grid Geometry
+  {
+    RectGridGeom* rectGeom = RectGridGeom::Create(dataStruct, k_RectGridGeo);
+    std::vector<usize> dims = {10, 10, 5};
+    rectGeom->setDimensions(dims);
+
+    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_XBounds, {14}, {1});
+    (*xBoundsArray)[0] = 0;
+    (*xBoundsArray)[1] = 1;
+    (*xBoundsArray)[2] = 2;
+    (*xBoundsArray)[3] = 3;
+    (*xBoundsArray)[4] = 4;
+    (*xBoundsArray)[5] = 5;
+    (*xBoundsArray)[6] = 6;
+    (*xBoundsArray)[7] = 7;
+    (*xBoundsArray)[8] = 8;
+    (*xBoundsArray)[9] = 9;
+    (*xBoundsArray)[10] = 10;
+    (*xBoundsArray)[11] = 11;
+    (*xBoundsArray)[12] = 12;
+    (*xBoundsArray)[13] = 14;
+    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_YBounds, {14}, {1});
+    (*yBoundsArray)[0] = 0;
+    (*yBoundsArray)[1] = 2;
+    (*yBoundsArray)[2] = 4;
+    (*yBoundsArray)[3] = 6;
+    (*yBoundsArray)[4] = 8;
+    (*yBoundsArray)[5] = 10;
+    (*yBoundsArray)[6] = 12;
+    (*yBoundsArray)[7] = 14;
+    (*yBoundsArray)[8] = 16;
+    (*yBoundsArray)[9] = 18;
+    (*yBoundsArray)[10] = 20;
+    (*yBoundsArray)[11] = 22;
+    (*yBoundsArray)[12] = 24;
+    (*yBoundsArray)[13] = 26;
+    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_ZBounds, {14}, {1});
+    (*zBoundsArray)[0] = 0;
+    (*zBoundsArray)[1] = 5;
+    (*zBoundsArray)[2] = 10;
+    (*zBoundsArray)[3] = 15;
+    (*zBoundsArray)[4] = 20;
+    (*zBoundsArray)[5] = 25;
+    (*zBoundsArray)[6] = 30;
+    (*zBoundsArray)[7] = 35;
+    (*zBoundsArray)[8] = 40;
+    (*zBoundsArray)[9] = 45;
+    (*zBoundsArray)[10] = 50;
+    (*zBoundsArray)[11] = 55;
+    (*zBoundsArray)[12] = 60;
+    (*zBoundsArray)[13] = 65;
+
+    rectGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+    rectGeom->findElementSizes(false);
+  }
+
+  // Vertex Geometry
+  {
+    VertexGeom* vertexGeom = VertexGeom::Create(dataStruct, Constants::k_VertexGeometry);
+
+    std::vector<usize> vertTupleShape = {4};
+    AttributeMatrix* vertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeom->getId());
+    vertexGeom->setVertexAttributeMatrix(*vertAttMatrix);
+    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrix->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
+    Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeom->getId());
+    (*vertListArray)[0] = 0;
+    (*vertListArray)[1] = 0;
+    (*vertListArray)[2] = 0;
+    (*vertListArray)[3] = 1;
+    (*vertListArray)[4] = 1;
+    (*vertListArray)[5] = 1;
+    (*vertListArray)[6] = 2;
+    (*vertListArray)[7] = 2;
+    (*vertListArray)[8] = 2;
+    (*vertListArray)[9] = 3;
+    (*vertListArray)[10] = 3;
+    (*vertListArray)[11] = 3;
+    vertexGeom->setVertices(*vertListArray);
+
+    vertexGeom->findElementSizes(false);
+  }
+
+  // Edge Geometry
+  {
+    EdgeGeom* edgeGeom = EdgeGeom::Create(dataStruct, k_EdgeGeo);
+
+    auto scalar = ScalarData<int64>::Create(dataStruct, k_ScalarData, 60, edgeGeom->getId());
+    std::vector<usize> edgeTupleShape = {4};
+    AttributeMatrix* edgeAttMatrix = AttributeMatrix::Create(dataStruct, EdgeGeom::k_EdgeAttributeMatrixName, edgeTupleShape, edgeGeom->getId());
+    edgeGeom->setEdgeAttributeMatrix(*edgeAttMatrix);
+
+    std::vector<usize> edgeVertTupleShape = {5};
+    AttributeMatrix* edgeVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, edgeVertTupleShape, edgeGeom->getId());
+    edgeGeom->setVertexAttributeMatrix(*edgeVertAttMatrix);
+    Float32Array* edgeVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, edgeVertTupleShape, {3}, edgeGeom->getId());
+    (*edgeVertListArray)[0] = 0;
+    (*edgeVertListArray)[1] = 0;
+    (*edgeVertListArray)[2] = 0;
+    (*edgeVertListArray)[3] = 1;
+    (*edgeVertListArray)[4] = 1;
+    (*edgeVertListArray)[5] = 1;
+    (*edgeVertListArray)[6] = 2;
+    (*edgeVertListArray)[7] = 2;
+    (*edgeVertListArray)[8] = 2;
+    (*edgeVertListArray)[9] = 3;
+    (*edgeVertListArray)[10] = 3;
+    (*edgeVertListArray)[11] = 3;
+    (*edgeVertListArray)[12] = 4;
+    (*edgeVertListArray)[13] = 4;
+    (*edgeVertListArray)[14] = 4;
+    edgeGeom->setVertices(*edgeVertListArray);
+    IGeometry::SharedEdgeList* edgesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedEdges, edgeTupleShape, {2}, edgeGeom->getId());
+    (*edgesListArray)[0] = 0;
+    (*edgesListArray)[1] = 1;
+    (*edgesListArray)[2] = 1;
+    (*edgesListArray)[3] = 2;
+    (*edgesListArray)[4] = 2;
+    (*edgesListArray)[5] = 3;
+    (*edgesListArray)[6] = 3;
+    (*edgesListArray)[7] = 4;
+    edgeGeom->setEdgeList(*edgesListArray);
+
+    edgeGeom->findElementSizes(false);
+    edgeGeom->findElementCentroids(false);
+  }
+
+  // Triangle Geometry
+  {
+    TriangleGeom* triangleGeom = TriangleGeom::Create(dataStruct, Constants::k_TriangleGeometryName);
+
+    std::vector<usize> faceTupleShape = {5};
+    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, TriangleGeom::k_FaceAttributeMatrixName, faceTupleShape, triangleGeom->getId());
+    triangleGeom->setFaceAttributeMatrix(*faceAttMatrix);
+
+    std::vector<usize> faceVertTupleShape = {6};
+    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, triangleGeom->getId());
+    triangleGeom->setVertexAttributeMatrix(*faceVertAttMatrix);
+    Float32Array* faceVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, triangleGeom->getId());
+    (*faceVertListArray)[0] = 0;
+    (*faceVertListArray)[1] = 0;
+    (*faceVertListArray)[2] = 0;
+    (*faceVertListArray)[3] = 0;
+    (*faceVertListArray)[4] = -1;
+    (*faceVertListArray)[5] = 1;
+    (*faceVertListArray)[6] = 1;
+    (*faceVertListArray)[7] = -0.5;
+    (*faceVertListArray)[8] = 1;
+    (*faceVertListArray)[9] = 0.5;
+    (*faceVertListArray)[10] = 1;
+    (*faceVertListArray)[11] = 0.5;
+    (*faceVertListArray)[12] = -0.5;
+    (*faceVertListArray)[13] = 1;
+    (*faceVertListArray)[14] = 0;
+    (*faceVertListArray)[15] = -1;
+    (*faceVertListArray)[16] = -0.5;
+    (*faceVertListArray)[17] = -1;
+    triangleGeom->setVertices(*faceVertListArray);
+    IGeometry::SharedEdgeList* facesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {3}, triangleGeom->getId());
+    (*facesListArray)[0] = 0;
+    (*facesListArray)[1] = 1;
+    (*facesListArray)[2] = 2;
+    (*facesListArray)[3] = 0;
+    (*facesListArray)[4] = 2;
+    (*facesListArray)[5] = 3;
+    (*facesListArray)[6] = 0;
+    (*facesListArray)[7] = 3;
+    (*facesListArray)[8] = 4;
+    (*facesListArray)[9] = 0;
+    (*facesListArray)[10] = 4;
+    (*facesListArray)[11] = 5;
+    (*facesListArray)[12] = 0;
+    (*facesListArray)[13] = 5;
+    (*facesListArray)[14] = 1;
+    triangleGeom->setFaceList(*facesListArray);
+
+    triangleGeom->findEdges(false);
+    // TODO: triangleGeom->findElementSizes(false);
+    triangleGeom->findElementCentroids(false);
+    triangleGeom->findUnsharedEdges(false);
+  }
+
+  // Quad Geometry
+  {
+    QuadGeom* quadGeom = QuadGeom::Create(dataStruct, k_QuadGeo);
+
+    std::vector<usize> faceTupleShape = {2};
+    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, QuadGeom::k_FaceAttributeMatrixName, faceTupleShape, quadGeom->getId());
+    quadGeom->setFaceAttributeMatrix(*faceAttMatrix);
+    std::vector<usize> faceVertTupleShape = {6};
+    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, quadGeom->getId());
+    quadGeom->setVertexAttributeMatrix(*faceVertAttMatrix);
+    Float32Array* faceVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, quadGeom->getId());
+    (*faceVertListArray)[0] = -1;
+    (*faceVertListArray)[1] = 1;
+    (*faceVertListArray)[2] = -1;
+    (*faceVertListArray)[3] = 0;
+    (*faceVertListArray)[4] = 1;
+    (*faceVertListArray)[5] = 0;
+    (*faceVertListArray)[6] = 1;
+    (*faceVertListArray)[7] = 1;
+    (*faceVertListArray)[8] = 1;
+    (*faceVertListArray)[9] = -1;
+    (*faceVertListArray)[10] = -1;
+    (*faceVertListArray)[11] = -1;
+    (*faceVertListArray)[12] = 0;
+    (*faceVertListArray)[13] = -1;
+    (*faceVertListArray)[14] = 0;
+    (*faceVertListArray)[15] = 1;
+    (*faceVertListArray)[16] = -1;
+    (*faceVertListArray)[17] = 1;
+    quadGeom->setVertices(*faceVertListArray);
+    IGeometry::SharedEdgeList* facesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {4}, quadGeom->getId());
+    (*facesListArray)[0] = 0;
+    (*facesListArray)[1] = 3;
+    (*facesListArray)[2] = 4;
+    (*facesListArray)[3] = 1;
+    (*facesListArray)[4] = 1;
+    (*facesListArray)[5] = 4;
+    (*facesListArray)[6] = 5;
+    (*facesListArray)[7] = 2;
+    quadGeom->setFaceList(*facesListArray);
+
+    quadGeom->findEdges(false);
+    // TODO: quadGeom->findElementSizes();
+    quadGeom->findElementCentroids(false);
+    quadGeom->findUnsharedEdges(false);
+  }
+
+  // Tetrahedral Geometry
+  {
+    TetrahedralGeom* tetGeom = TetrahedralGeom::Create(dataStruct, k_TetGeo);
+
+    std::vector<usize> cellTupleShape = {2};
+    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, tetGeom->getId());
+    tetGeom->setPolyhedraAttributeMatrix(*polyAttMatrix);
+    std::vector<usize> vertTupleShape = {5};
+    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, tetGeom->getId());
+    tetGeom->setVertexAttributeMatrix(*cellVertAttMatrix);
+    Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, tetGeom->getId());
+    (*vertListArray)[0] = -1;
+    (*vertListArray)[1] = 0.5;
+    (*vertListArray)[2] = 0;
+    (*vertListArray)[3] = 0;
+    (*vertListArray)[4] = 0;
+    (*vertListArray)[5] = 0;
+    (*vertListArray)[6] = 0;
+    (*vertListArray)[7] = 1;
+    (*vertListArray)[8] = 0;
+    (*vertListArray)[9] = -0.5;
+    (*vertListArray)[10] = 0.5;
+    (*vertListArray)[11] = 1;
+    (*vertListArray)[12] = 1;
+    (*vertListArray)[13] = 0.5;
+    (*vertListArray)[14] = 0;
+    tetGeom->setVertices(*vertListArray);
+    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {4}, tetGeom->getId());
+    (*polyListArray)[0] = 0;
+    (*polyListArray)[1] = 1;
+    (*polyListArray)[2] = 2;
+    (*polyListArray)[3] = 3;
+    (*polyListArray)[4] = 1;
+    (*polyListArray)[5] = 4;
+    (*polyListArray)[6] = 2;
+    (*polyListArray)[7] = 3;
+    tetGeom->setPolyhedraList(*polyListArray);
+
+    tetGeom->findEdges(false);
+    tetGeom->findFaces(false);
+    tetGeom->findElementSizes(false);
+    tetGeom->findElementCentroids(false);
+    tetGeom->findUnsharedEdges(false);
+    tetGeom->findUnsharedFaces(false);
+  }
+
+  // Hexahedral Geometry
+  {
+    HexahedralGeom* hexGeom = HexahedralGeom::Create(dataStruct, k_HexGeo);
+
+    std::vector<usize> cellTupleShape = {2};
+    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, hexGeom->getId());
+    hexGeom->setPolyhedraAttributeMatrix(*polyAttMatrix);
+    std::vector<usize> vertTupleShape = {12};
+    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, hexGeom->getId());
+    hexGeom->setVertexAttributeMatrix(*cellVertAttMatrix);
+    Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, hexGeom->getId());
+    (*vertListArray)[0] = -1;
+    (*vertListArray)[1] = 1;
+    (*vertListArray)[2] = 1;
+    (*vertListArray)[3] = -1;
+    (*vertListArray)[4] = -1;
+    (*vertListArray)[5] = 1;
+    (*vertListArray)[6] = 0;
+    (*vertListArray)[7] = -1;
+    (*vertListArray)[8] = 1;
+    (*vertListArray)[9] = 0;
+    (*vertListArray)[10] = 1;
+    (*vertListArray)[11] = 1;
+    (*vertListArray)[12] = 0;
+    (*vertListArray)[13] = 1;
+    (*vertListArray)[14] = -1;
+    (*vertListArray)[15] = -1;
+    (*vertListArray)[16] = 1;
+    (*vertListArray)[17] = -1;
+    (*vertListArray)[18] = -1;
+    (*vertListArray)[19] = -1;
+    (*vertListArray)[20] = -1;
+    (*vertListArray)[21] = 0;
+    (*vertListArray)[22] = -1;
+    (*vertListArray)[23] = -1;
+    (*vertListArray)[24] = 1;
+    (*vertListArray)[25] = -1;
+    (*vertListArray)[26] = -1;
+    (*vertListArray)[27] = 1;
+    (*vertListArray)[28] = 1;
+    (*vertListArray)[29] = -1;
+    (*vertListArray)[30] = 1;
+    (*vertListArray)[31] = 1;
+    (*vertListArray)[32] = 1;
+    (*vertListArray)[33] = 1;
+    (*vertListArray)[34] = -1;
+    (*vertListArray)[35] = 1;
+    hexGeom->setVertices(*vertListArray);
+    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {8}, hexGeom->getId());
+    (*polyListArray)[0] = 6;
+    (*polyListArray)[1] = 7;
+    (*polyListArray)[2] = 4;
+    (*polyListArray)[3] = 5;
+    (*polyListArray)[4] = 1;
+    (*polyListArray)[5] = 2;
+    (*polyListArray)[6] = 3;
+    (*polyListArray)[7] = 0;
+    (*polyListArray)[8] = 7;
+    (*polyListArray)[9] = 8;
+    (*polyListArray)[10] = 9;
+    (*polyListArray)[11] = 4;
+    (*polyListArray)[12] = 2;
+    (*polyListArray)[13] = 11;
+    (*polyListArray)[14] = 10;
+    (*polyListArray)[15] = 3;
+    hexGeom->setPolyhedraList(*polyListArray);
+
+    hexGeom->findEdges(false);
+    hexGeom->findFaces(false);
+    hexGeom->findElementSizes(false);
+    hexGeom->findElementCentroids(false);
+    hexGeom->findUnsharedEdges(false);
+    hexGeom->findUnsharedFaces(false);
+  }
+
+  return dataStruct;
+}
+
 namespace
 {
 /**
@@ -696,6 +1098,82 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
   // A triangle geometry reports zero edges without an edge list. The edge-data path remains optional.
   REQUIRE(geom.at("num_edges").get<uint64>() == 0);
   REQUIRE_FALSE(geom.contains("edge_data_path"));
+}
+
+namespace
+{
+/**
+ * @brief Removes volatile "id", "store_type", and RectGrid "origin" keys.
+ * @param node JSON hierarchy node to normalize.
+ *
+ * The reader assigns identifiers and creates Empty stores. RectGrid origin depends on bounds values, which preflight mode does not read.
+ */
+void StripVolatileKeys(nlohmann::json& node)
+{
+  node.erase("id");
+  node.erase("store_type");
+  if(node.contains("geometry") && node.at("geometry").is_object())
+  {
+    auto& geometry = node.at("geometry");
+    if(geometry.contains("geometry_type") && geometry.at("geometry_type") == "RectGrid")
+    {
+      geometry.erase("origin");
+    }
+  }
+  for(auto& child : node.at("children"))
+  {
+    StripVolatileKeys(child);
+  }
+}
+
+void StripVolatileKeysFromDocument(nlohmann::json& root)
+{
+  for(auto& node : root.at("objects"))
+  {
+    StripVolatileKeys(node);
+  }
+}
+} // namespace
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::PreflightRoundTrip")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "exportHierarchyAsJson_roundtrip.dream3d";
+  if(fs::exists(filePath))
+  {
+    fs::remove(filePath);
+  }
+
+  DataStructure written = createRoundTripDataStructure();
+  nlohmann::json writtenJson = written.exportHierarchyAsJson();
+
+  Result<> writeResult = DREAM3D::WriteFile(filePath, written);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(fs::exists(filePath));
+
+  Result<DataStructure> readResult = DREAM3D::ImportDataStructureFromFile(filePath, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  nlohmann::json readJson = readResult.value().exportHierarchyAsJson();
+
+  // Preflight mode must create every array with an empty store and read no values
+  const auto& imageGeom = FindNode(readJson.at("objects"), Constants::k_ImageGeometry.view());
+  const auto& cellData = FindNode(imageGeom.at("children"), Constants::k_CellData.view());
+  const auto& boolArray = FindNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  REQUIRE(boolArray.at("store_type").get<std::string>() == "Empty");
+  REQUIRE(boolArray.at("num_tuples").get<uint64>() == 80 * 60 * 40);
+
+  const auto& writtenRect = FindNode(writtenJson.at("objects"), k_RectGridGeo.view());
+  const auto& readRect = FindNode(readJson.at("objects"), k_RectGridGeo.view());
+  // RectGrid origin comes from bounds values, which preflight mode does not read.
+  REQUIRE(writtenRect.at("geometry").contains("origin"));
+  REQUIRE_FALSE(readRect.at("geometry").contains("origin"));
+
+  StripVolatileKeysFromDocument(writtenJson);
+  StripVolatileKeysFromDocument(readJson);
+  INFO("Written JSON:\n" << writtenJson.dump(2));
+  INFO("Read JSON:\n" << readJson.dump(2));
+  REQUIRE(writtenJson == readJson);
 }
 
 /**
