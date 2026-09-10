@@ -5,9 +5,6 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -22,8 +19,10 @@ using namespace nx::core;
 
 namespace
 {
+// Name of the per-feature bounding-box array that the extract path creates in the feature Attribute Matrix
+// through ComputeFeatureRectFilter and deletes again before the first crop.
 const std::string k_boundsName = "tempBounds";
-}
+} // namespace
 
 namespace nx::core
 {
@@ -129,31 +128,6 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   {
     return {MakeErrorResult<OutputActions>(
         -9892, fmt::format("Could not find the parent Attribute Matrix for the selected Flagged Features Data Array at path '{}'", pFlaggedFeaturesArrayPathValue.toString()))};
-  }
-
-  std::string warningMsg;
-  for(const auto& [identifier, object] : *cellFeatureAmPtr)
-  {
-    if(const auto* srcNeighborListArrayPtr = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArrayPtr != nullptr)
-    {
-      warningMsg += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArrayPtr->getName();
-    }
-  }
-  if(!warningMsg.empty())
-  {
-    resultOutputActions.m_Warnings.push_back(Warning({-11505, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be kept:{}",
-                                                                          pFeatureIdsArrayPathValue.toString(), warningMsg)}));
-  }
-
-  auto pFunctionality = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
-  if(pFunctionality != to_underlying(Functionality::Remove))
-  {
-    DataPath const tempPath = pFlaggedFeaturesArrayPathValue.replaceName(k_boundsName);
-    auto action =
-        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIdsArray.getNumberOfTuples()}, std::vector<usize>{featureIdsArray.getNumberOfComponents() * 6}, tempPath);
-
-    // After the execute function has been done, delete the temp array
-    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
   }
 
   // If we are in any way removing features, inform the user
