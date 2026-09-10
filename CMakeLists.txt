@@ -915,9 +915,9 @@ if(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST)
 endif()
 
 # ------------------------------------------------------------------------------
-# CLI Executable
+# CLI Executables (nxrunner, nxinfo)
 # ------------------------------------------------------------------------------
-add_subdirectory(${simplnx_SOURCE_DIR}/src/nxrunner)
+add_subdirectory(${simplnx_SOURCE_DIR}/src/apps)
 
 #------------------------------------------------------------------------------
 # Simplnx Plugins Section
