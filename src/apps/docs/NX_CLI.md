@@ -2,6 +2,8 @@
 
 NX Runner is an executable that allows preflighting and executing simplnx pipelines from the command line. The executable is created as part of the default simplnx CMake project and created alongside the simplnx library file.
 
+A companion tool, `nxinfo`, reports information about `.dream3d` files. See [NX_INFO.md](NX_INFO.md).
+
 In addition, NX Runner contains commands for porting SIMPL pipeline files to simplnx pipelines. One of these commands prints the converted pipeline to the terminal, and the other saves the converted pipeline to a new file using the simplnx pipeline extension.
 
 ## Commands
