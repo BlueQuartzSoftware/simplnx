@@ -108,6 +108,7 @@ set(FilterList
   ExtractTripleLinesFilter
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
+  PottsModelFilter
   QuickSurfaceMeshFilter
   RandomizeFeatureIdsFilter
   ReadCSVFileFilter
@@ -313,6 +314,7 @@ set(AlgorithmList
   PointSampleEdgeGeometry
   ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
+  PottsModel
   QuickSurfaceMesh
   QuickSurfaceMeshDirect
   QuickSurfaceMeshScanline
