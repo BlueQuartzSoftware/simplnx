@@ -394,7 +394,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
+    m_MessageHandler.sendInfoMessage(fmt::format("Now Processing: {}", filepath));
 
     result = MergeResults(converter(filepath), result);
     if(result.invalid())
@@ -407,7 +407,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
       progress = static_cast<int32>(z - m_InputValues->InputFileListInfo.startIndex - 1);
       progress = static_cast<int32>(100.0f * static_cast<float32>(progress) / total);
       std::string msg = "Converted File: " + filepath;
-      m_MessageHandler(IFilter::Message::Type::Progress, msg, progress);
+      m_MessageHandler.sendProgressMessage(msg, progress);
     }
 
     if(getCancel())

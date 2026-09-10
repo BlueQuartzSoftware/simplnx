@@ -165,7 +165,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     {
       progressInt = static_cast<int64_t>((static_cast<float>(counter) / static_cast<float>(m_Inputs->pNumberOfSamples)) * 100.0f);
       std::string ss = fmt::format("Sampling Triangles || {}% Completed", progressInt);
-      m_MessageHandler(IFilter::Message::Type::Info, ss);
+      m_MessageHandler.sendInfoMessage(ss);
       prog = prog + progIncrement;
     }
     counter++;

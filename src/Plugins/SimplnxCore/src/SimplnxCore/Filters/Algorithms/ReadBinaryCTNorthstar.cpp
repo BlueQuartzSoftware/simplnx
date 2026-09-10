@@ -74,7 +74,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         fileZSlice++;
         continue;
       }
-      messageHandler(fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z));
+      messageHandler.sendInfoMessage(fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z));
       for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
       {
         if(inputValues->ImportSubvolume && (y < inputValues->StartVoxelCoord[1] || y > inputValues->EndVoxelCoord[1]))

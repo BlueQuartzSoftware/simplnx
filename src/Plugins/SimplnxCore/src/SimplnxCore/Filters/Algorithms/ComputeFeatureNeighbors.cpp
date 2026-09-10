@@ -3,8 +3,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -16,7 +16,7 @@ struct ComputeFeatureNeighborsFunctor
   template <detail::ImageDimensionality ImageDimensionStateT>
   Result<> operator()(BoolAbstractDataStore* surfaceFeatures, Int8AbstractDataStore* boundaryCells, Float32NeighborList& sharedSurfaceAreaList, Int32NeighborList& neighborsList,
                       Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
+                      ThrottledMessageHandler& throttledMessenger, const std::atomic_bool& shouldCancel) const
   {
     constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount;
 
@@ -206,7 +206,7 @@ struct ComputeFeatureNeighborsFunctor
         for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
         {
           const int64 yStride = dims[0] * yIndex;
-          throttledMessenger.sendThrottledMessage([&] { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+          throttledMessenger.updatePercent("Determining Neighbor Lists", zStride + yStride, totalPoints);
 
           if(shouldCancel)
           {
@@ -336,8 +336,7 @@ ComputeFeatureNeighbors::~ComputeFeatureNeighbors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighbors::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumberOfNeighborsPath)->getDataStoreRef();

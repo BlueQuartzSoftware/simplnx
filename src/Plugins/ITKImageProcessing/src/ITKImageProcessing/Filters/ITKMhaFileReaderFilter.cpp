@@ -424,7 +424,7 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
   Result<> mainResult;
 
   // Execute the ImageFileReader filter
-  messageHandler(fmt::format("Reading image file '{}'...", fileNamePath.string()));
+  messageHandler.sendInfoMessage(fmt::format("Reading image file '{}'...", fileNamePath.string()));
   {
     DataStructure importedDataStructure;
     const ITKImageReaderFilter imageReaderFilter;
@@ -442,7 +442,7 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
 
     const auto& srcDataArray = importedDataStructure.getDataRefAs<IDataArray>(imageDataArrayPath);
     const auto& destDataArray = dataStructure.getDataRefAs<IDataArray>(imageDataArrayPath);
-    messageHandler(fmt::format("Copying image data to destination array '{}'...", destDataArray.getName()));
+    messageHandler.sendInfoMessage(fmt::format("Copying image data to destination array '{}'...", destDataArray.getName()));
 
     Result<> copyResult = ExecuteDataFunction(CopyImageDataFunctor{}, srcDataArray.getDataType(), importedDataStructure, dataStructure, imageDataArrayPath, fileNamePath);
     if(copyResult.invalid())
@@ -455,7 +455,7 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
 
   if(applyImageTransformation || saveImageTransformationAsArray)
   {
-    messageHandler(fmt::format("Reading transformation matrix from image file '{}'...", fileNamePath.string()));
+    messageHandler.sendInfoMessage(fmt::format("Reading transformation matrix from image file '{}'...", fileNamePath.string()));
     MHAHeaderInfo headerInfo = readMhaHeader(fileNamePath.string(), transposeTransform);
 
     if(!headerInfo.Errors.empty())
@@ -474,7 +474,7 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
     if(applyImageTransformation)
     {
       const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-      messageHandler(fmt::format("Applying transformation matrix to image geometry '{}'...", imageGeom.getName()));
+      messageHandler.sendInfoMessage(fmt::format("Applying transformation matrix to image geometry '{}'...", imageGeom.getName()));
       auto* filterListPtr = Application::Instance()->getFilterList();
       auto applyTransformationToGeometryFilter = filterListPtr->createFilter(k_ApplyTransformationToGeometryFilterHandle);
       if(applyTransformationToGeometryFilter == nullptr)

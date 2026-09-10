@@ -102,7 +102,7 @@ const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()
 // -----------------------------------------------------------------------------
 void WriteNodesAndElementsFiles::sendMessage(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------

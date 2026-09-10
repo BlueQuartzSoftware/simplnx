@@ -195,7 +195,7 @@ ComputeKMeans::~ComputeKMeans() noexcept = default;
 // -----------------------------------------------------------------------------
 void ComputeKMeans::updateProgress(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------

@@ -9,9 +9,9 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -80,9 +80,9 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IArray> arrayPtr,
+  NeighborOrientationCorrelationTransferDataImpl(NeighborOrientationCorrelation* filterAlg, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IArray> arrayPtr,
                                                  const std::atomic_bool& shouldCancel)
-  : m_MessageHelper(messageHelper)
+  : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
   , m_ArrayPtr(arrayPtr)
@@ -97,7 +97,6 @@ public:
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_ArrayPtr->getName();
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
@@ -105,7 +104,7 @@ public:
       {
         return;
       }
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
+      m_FilterAlg->sendThreadSafeProgressMessage(fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)));
       int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
@@ -115,7 +114,7 @@ public:
   }
 
 private:
-  MessageHelper& m_MessageHelper;
+  NeighborOrientationCorrelation* m_FilterAlg = nullptr;
   size_t m_TotalPoints = 0;
   // Reference, not a copy: one task exists per transferred array and bestNeighbor is
   // 8 bytes per voxel. All tasks finish before the referenced vector leaves scope
@@ -132,11 +131,19 @@ NeighborOrientationCorrelation::NeighborOrientationCorrelation(DataStructure& da
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
 // -----------------------------------------------------------------------------
 NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = default;
+
+// -----------------------------------------------------------------------------
+void NeighborOrientationCorrelation::sendThreadSafeProgressMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.trySendMessage(message);
+}
 
 // -----------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelation::operator()()
@@ -168,18 +175,15 @@ Result<> NeighborOrientationCorrelation::operator()()
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
 
-  MessageHelper messageHelper(m_MessageHandler);
-
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
     for(int64 voxelIndex = 0; voxelIndex < static_cast<int64>(totalPoints); voxelIndex++)
     {
-      throttledMessenger.sendThrottledMessage([&]() {
-        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
-                           CalculatePercentComplete(voxelIndex, totalPoints));
-      });
+      // The label varies per level, so the text is assembled only when a message is due.
+      throttledMessenger.queueMessage("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
+                                      CalculatePercentComplete(voxelIndex, totalPoints));
 
       if(m_ShouldCancel)
       {
@@ -270,7 +274,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     ParallelTaskAlgorithm parallelTask;
     for(const auto& arrayPtr : voxelArrays)
     {
-      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, arrayPtr, m_ShouldCancel));
+      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(this, totalPoints, bestNeighbor, arrayPtr, m_ShouldCancel));
     }
   }
 

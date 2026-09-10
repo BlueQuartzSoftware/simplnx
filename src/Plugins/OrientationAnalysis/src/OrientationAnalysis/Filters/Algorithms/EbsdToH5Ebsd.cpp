@@ -236,7 +236,7 @@ Result<> EbsdToH5Ebsd::operator()()
     int32_t totalSlicesImported = 0;
     for(const auto& ebsdFName : fileList)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting File: '{}'", ebsdFName));
+      m_MessageHandler.sendInfoMessage(fmt::format("Converting File: '{}'", ebsdFName));
 
       err = fileImporter->importFile(fileId, z, ebsdFName);
       if(err < 0)

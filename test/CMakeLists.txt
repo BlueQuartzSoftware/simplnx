@@ -39,14 +39,17 @@ add_executable(simplnx_test
   H5Test.cpp
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp
+  MessageHandlerTest.cpp
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
+  PipelineFilterMessagingTest.cpp
   PipelineSaveTest.cpp
   UuidTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
+  ThrottledMessageHandlerTest.cpp
   ScaleBarRendererTest.cpp
   FilterValidationTest.cpp
   SimplJsonConversionTest.cpp

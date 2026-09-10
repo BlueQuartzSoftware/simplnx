@@ -41,7 +41,7 @@
 4. **SurfaceFeatures 2D/1D fix** — legacy `FindNeighbors.cpp:330–343` only handles `ZPoints==1` explicitly; the 3D branch fires for any image with `YPoints==1` or `XPoints==1` and always triggers on `row==0` or `column==0` (both always true when that axis has length 1), marking every feature as surface. SIMPLNX uses per-dimensionality specializations that only mark corner cells (1D), corner+edge cells (2D), or all boundary cells (3D) as surface. This is D2.
 5. **Two-stage boundary split** — Stage 1 processes corner/edge/face boundary cells with explicit face-validity checks; Stage 2 processes internal cells without validity overhead. Structure is new; behavior-equivalent for 3D inputs.
 6. **Template specialization on optional outputs** — `ComputeFeatureNeighborsFunctor<ProcessSurfaceFeatures, ProcessBoundaryCells>` avoids runtime branches in the per-voxel hot path. Performance only; no behavior delta.
-7. **`ThrottledMessenger` progress** — legacy used direct `notifyStatusMessage`; SIMPLNX uses `ThrottledMessenger`. UX-only.
+7. **Throttled progress** — legacy used direct `notifyStatusMessage`; SIMPLNX emits throttled progress feedback. UX-only.
 
 *Material PRs since baseline (2025-10-01):*
 

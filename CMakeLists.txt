@@ -187,7 +187,6 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 
 #------------------------------------------------------------------------------
 # Find the Image IO libraries
@@ -279,7 +278,6 @@ target_link_libraries(simplnx
     HDF5::HDF5
     Boost::mp11
     nod::nod
-    spdlog::spdlog
     TIFF::TIFF
 )
 
@@ -540,7 +538,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.hpp
-  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
@@ -568,7 +565,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
@@ -762,7 +759,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.cpp
-  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
@@ -783,7 +779,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp

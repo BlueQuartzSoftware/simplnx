@@ -356,7 +356,7 @@ struct ZSliceFunctor
     // -------------------------------------------------------------------------
     // 2. Precompute per-triangle Z-range for fast rejection
     // -------------------------------------------------------------------------
-    messageHandler({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
+    messageHandler.sendInfoMessage("Preprocessing triangle data...");
 
     std::vector<TriangleZRange> triZRanges(numTriangles);
     for(usize t = 0; t < numTriangles; t++)
@@ -381,7 +381,7 @@ struct ZSliceFunctor
     // -------------------------------------------------------------------------
     // 3. Dispatch Z-slices in parallel using ParallelTaskAlgorithm
     // -------------------------------------------------------------------------
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+    messageHandler.sendInfoMessage(fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim));
 
     std::atomic_bool overflowHit(false);
 

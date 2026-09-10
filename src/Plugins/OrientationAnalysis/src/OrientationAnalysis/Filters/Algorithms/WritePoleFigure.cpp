@@ -609,7 +609,7 @@ Result<> WritePoleFigure::operator()()
     config.flipFinalImage = m_InputValues->FlipFinalImage;
     config.axisNames = std::vector<std::string>{"A1", "A2", "A3"};
 
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Pole Figures for Phase {}", phase)});
+    m_MessageHandler.sendInfoMessage(fmt::format("Generating Pole Figures for Phase {}", phase));
     if(m_InputValues->SaveIntensityData)
     {
       std::vector<ebsdlib::DoubleArrayType::Pointer> intensityImages;
@@ -650,8 +650,8 @@ Result<> WritePoleFigure::operator()()
         intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       default:
-        m_MessageHandler({IFilter::Message::Type::Warning,
-                          fmt::format("Phase {} has unknown crystal structure value {}; no pole figures will be generated for this phase.", phase, static_cast<uint32>(crystalStructures[phase]))});
+        m_MessageHandler.sendWarningMessage(
+            fmt::format("Phase {} has unknown crystal structure value {}; no pole figures will be generated for this phase.", phase, static_cast<uint32>(crystalStructures[phase])));
         break;
       }
 

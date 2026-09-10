@@ -5,8 +5,11 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include <mutex>
 
 namespace nx::core
 {
@@ -51,11 +54,19 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  /**
+   * @brief Thread-safe progress update. Safe to call from the parallel per-array workers.
+   * @param message Fully rendered progress text for one array
+   */
+  void sendThreadSafeProgressMessage(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const ErodeDilateBadDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

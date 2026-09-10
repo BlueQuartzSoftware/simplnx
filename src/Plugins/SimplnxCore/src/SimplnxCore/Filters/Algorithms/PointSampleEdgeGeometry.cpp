@@ -162,7 +162,7 @@ Result<> PointSampleEdgeGeometry::operator()()
   }
 
   // --- Step 1: Count how many total sample points to generate ---
-  m_MessageHandler(IFilter::Message::Type::Info, "Computing total sampling points...");
+  m_MessageHandler.sendInfoMessage("Computing total sampling points...");
   usize numVertices = 0;
 
   auto& edgeVertices = edgeGeom.getVerticesRef();
@@ -182,7 +182,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     numVertices += result.value();
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Total sampling points: {}", numVertices));
+  m_MessageHandler.sendInfoMessage(fmt::format("Total sampling points: {}", numVertices));
 
   // Resize the vertex geometry and the vertex attribute matrix
   auto& vertices = vertexGeom.getVerticesRef();
@@ -191,7 +191,7 @@ Result<> PointSampleEdgeGeometry::operator()()
   vertexAttrMatrix.resizeTuples({numVertices});
 
   // --- Step 2: Generate and write each sampled point ---
-  m_MessageHandler(IFilter::Message::Type::Info, "Generating sampled points along edge geometry...");
+  m_MessageHandler.sendInfoMessage("Generating sampled points along edge geometry...");
   int64 vertCount = 0;
   for(int64 i = 0; i < numEdges; i++)
   {
@@ -204,7 +204,7 @@ Result<> PointSampleEdgeGeometry::operator()()
 
   usize maxEdgeId = *std::max_element(vertexEdgeIdsDataStore.begin(), vertexEdgeIdsDataStore.end());
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Copying Edge Data to Vertex Geometry...");
+  m_MessageHandler.sendInfoMessage("Copying Edge Data to Vertex Geometry...");
   const DataPath vertexAttrMatPath = vertexGeom.getVertexAttributeMatrixDataPath();
   for(const auto& selectedArrayPath : m_InputValues->pSelectedDataArrayPaths)
   {
@@ -218,7 +218,7 @@ Result<> PointSampleEdgeGeometry::operator()()
                                                  vertexEdgeIdsDataPath.toString(), maxEdgeId, selectedEdgeArray->getNumberOfTuples(), selectedArrayPath.toString()));
     }
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into vertex array '{}'...", createdArrayPath.toString())});
+    m_MessageHandler.sendInfoMessage(fmt::format("Copying data into vertex array '{}'...", createdArrayPath.toString()));
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, createdVertexArray->getNumberOfTuples());
     ExecuteParallelFunction<::CopyEdgeDataToVertexData>(selectedEdgeArray->getDataType(), dataAlg, selectedEdgeArray, createdVertexArray, vertexEdgeIdsDataStore, m_ShouldCancel);

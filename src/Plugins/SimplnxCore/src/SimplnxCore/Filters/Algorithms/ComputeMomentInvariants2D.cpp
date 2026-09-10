@@ -187,7 +187,7 @@ public:
       {
         m_Omega1[featureId] = 0.0f;
         m_Omega2[featureId] = 0.0f;
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        m_MessageHandler.sendInfoMessage(fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
         return;
       }
 
@@ -236,7 +236,7 @@ public:
         centralMoments[static_cast<usize>(featureId) * 9UL + comp] = static_cast<float32>(m2DInternal[comp]);
       }
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Completed", featureId, numFeatures));
+      m_MessageHandler.sendInfoMessage(fmt::format("[{}/{}] : Completed", featureId, numFeatures));
 
       if(m_ShouldCancel)
       {
@@ -265,7 +265,7 @@ public:
       {
         m_Omega1[featureId] = 0.0f;
         m_Omega2[featureId] = 0.0f;
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        m_MessageHandler.sendInfoMessage(fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
         return;
       }
 
@@ -308,7 +308,7 @@ public:
       m_Omega1[featureId] = static_cast<float32>(omega1);
       m_Omega2[featureId] = static_cast<float32>(omega2);
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Completed", featureId, numFeatures));
+      m_MessageHandler.sendInfoMessage(fmt::format("[{}/{}] : Completed", featureId, numFeatures));
 
       if(m_ShouldCancel)
       {
