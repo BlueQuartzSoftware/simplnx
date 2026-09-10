@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read OnScale Table File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import Onscale Table File (.flxtbl)",
+    "Filter_Name": "ImportOnScaleTableFile",
+    "Filter_Uuid": "{06dd6e66-84fb-5170-a923-d925dc39bb94}",
+    "InputFile": "/test/path/table.flxtbl",
+    "Origin": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Spacing": {
+      "x": 0.5,
+      "y": 0.25,
+      "z": 0.125
+    },
+    "VolumeDataContainerName": {
+      "Data Container Name": "Imported OnScale"
+    },
+    "CellAttributeMatrixName": "Imported Cell Data",
+    "FeatureIdsArrayName": "Imported FeatureIds",
+    "PhaseAttributeMatrixName": "Imported Material Data",
+    "MaterialNameArrayName": "Imported Material Names"
+  }
+}
