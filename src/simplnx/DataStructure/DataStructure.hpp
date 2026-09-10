@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/LinkedPath.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <nlohmann/json_fwd.hpp>
 #include <nod/nod.hpp>
 #include <nonstd/expected.hpp>
 
@@ -608,6 +609,19 @@ public:
   void exportHierarchyAsText(std::ostream& outputStream) const;
 
   /**
+   * @brief Exports the data graph and per-object metadata as JSON.
+   *
+   * The output has a top-level "schema_version" (currently 1) and an
+   * "objects" array. Every node carries "name", "path", "id", "type" and
+   * "children". Arrays add data type, shapes and counts; attribute
+   * matrices add their tuple shape; geometries add a "geometry" block.
+   * Only metadata is read. No array values are touched, so the call is
+   * safe on a DataStructure that was imported in preflight mode.
+   * @return nlohmann::json
+   */
+  nlohmann::json exportHierarchyAsJson() const;
+
+  /**
    * @brief Copies the hierarchy.
    * @param rhs Source data structure.
    * @return This data structure.
@@ -685,6 +699,14 @@ private:
   void recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const;
 
   void recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const;
+
+  /**
+   * @brief Recursively serializes the objects at the given paths into JSON
+   * nodes and appends them to the provided array.
+   * @param nodes The JSON array receiving one node per path
+   * @param paths The child paths to serialize
+   */
+  void recurseHierarchyToJson(nlohmann::json& nodes, const std::vector<DataPath>& paths) const;
 
   void notify(const std::shared_ptr<AbstractDataStructureMessage>& msg);
 

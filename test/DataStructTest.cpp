@@ -20,6 +20,7 @@
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <iostream>
@@ -497,6 +498,90 @@ DataStructure createTestDataStructure()
   }
 
   return dataStruct;
+}
+
+namespace
+{
+/**
+ * @brief Finds the child node with the given name in a JSON "children" or "objects" array.
+ * Throws if not found so a bad lookup fails loudly rather than producing a null.
+ */
+const nlohmann::json& FindNode(const nlohmann::json& nodes, std::string_view name)
+{
+  for(const auto& node : nodes)
+  {
+    if(node.at("name").get<std::string>() == name)
+    {
+      return node;
+    }
+  }
+  throw std::runtime_error(fmt::format("No node named '{}' found", name));
+}
+} // namespace
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::Fields")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  REQUIRE(json.at("schema_version").get<int>() == 1);
+  REQUIRE(json.contains("objects"));
+  REQUIRE(json.at("objects").is_array());
+  REQUIRE(json.at("objects").size() == dataStructure.getTopLevelData().size());
+
+  // Top-level DataGroup "A" has two children: "H" and "C"
+  const auto& groupA = FindNode(json.at("objects"), Constants::k_GroupAName.view());
+  REQUIRE(groupA.at("path").get<std::string>() == Constants::k_GroupAName.view());
+  REQUIRE(groupA.at("type").get<std::string>() == DataGroup::k_TypeName.view());
+  REQUIRE(groupA.at("id").get<uint64>() == dataStructure.getId(DataPath({std::string(Constants::k_GroupAName.view())})).value());
+  REQUIRE(groupA.at("children").size() == 2);
+  REQUIRE_FALSE(groupA.contains("tuple_shape"));
+  REQUIRE_FALSE(groupA.contains("data_type"));
+
+  // A/H/N is an int8 DataArray with tuple shape {1} and component shape {1}
+  const auto& groupH = FindNode(groupA.at("children"), Constants::k_GroupHName.view());
+  const auto& arrayN = FindNode(groupH.at("children"), Constants::k_ArrayNName.view());
+  REQUIRE(arrayN.at("path").get<std::string>() == "A/H/N");
+  REQUIRE(arrayN.at("type").get<std::string>() == "DataArray<int8>");
+  REQUIRE(arrayN.at("data_type").get<std::string>() == "int8");
+  REQUIRE(arrayN.at("tuple_shape") == nlohmann::json::array({1}));
+  REQUIRE(arrayN.at("component_shape") == nlohmann::json::array({1}));
+  REQUIRE(arrayN.at("num_tuples").get<uint64>() == 1);
+  REQUIRE(arrayN.at("num_components").get<uint64>() == 1);
+  REQUIRE(arrayN.at("store_type").get<std::string>() == "InMemory");
+  REQUIRE(arrayN.at("children").is_array());
+  REQUIRE(arrayN.at("children").empty());
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::AttributeMatrixAndNeighborList")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = createTestDataStructure();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  const auto& imageGeom = FindNode(json.at("objects"), Constants::k_ImageGeometry.view());
+
+  // Image Geometry/CellData is an AttributeMatrix with shape {80, 60, 40} (X fastest)
+  const auto& cellData = FindNode(imageGeom.at("children"), Constants::k_CellData.view());
+  REQUIRE(cellData.at("type").get<std::string>() == AttributeMatrix::k_TypeName.view());
+  REQUIRE(cellData.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
+  REQUIRE_FALSE(cellData.contains("data_type"));
+
+  // Image Geometry/CellData/Conditional [bool] is a bool DataArray
+  const auto& boolArray = FindNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  REQUIRE(boolArray.at("data_type").get<std::string>() == "boolean");
+  REQUIRE(boolArray.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
+  REQUIRE(boolArray.at("num_tuples").get<uint64>() == 80 * 60 * 40);
+
+  // Image Geometry/ONE/int16 DataSet is a NeighborList<int16> with 3 tuples
+  const auto& levelOne = FindNode(imageGeom.at("children"), Constants::k_LevelOne.view());
+  const auto& neighborList = FindNode(levelOne.at("children"), Constants::k_Int16DataSet.view());
+  REQUIRE(neighborList.at("data_type").get<std::string>() == "int16");
+  REQUIRE(neighborList.at("num_tuples").get<uint64>() == 3);
+  REQUIRE_FALSE(neighborList.contains("component_shape"));
 }
 
 /**
