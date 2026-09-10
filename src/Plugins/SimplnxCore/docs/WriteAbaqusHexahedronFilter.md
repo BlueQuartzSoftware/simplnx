@@ -8,7 +8,7 @@ IO (Output)
 
 This filter converts a voxel grid (an **Image Geometry**) into a hexahedral element mesh and writes it to a set of Abaqus input (`.inp`) files. **Abaqus** is a commercial *finite-element-analysis* (FEA) software package; FEA is a numerical technique that divides a body into many small, simple elements and solves for quantities such as stress and strain across them. By exporting the microstructure as an Abaqus mesh, the filter lets users run mechanical (stress/strain) simulations on a digital microstructure.
 
-Each **Cell** (voxel) in the **Image Geometry** becomes one hexahedral (brick-shaped) element with 8 corner nodes. Nodes shared between neighboring voxels are written only once so the mesh is fully connected. The element type written is `C3D8`, Abaqus's standard 8-node linear brick element. Every element is assigned to an element set named after the **Feature** (grain) it belongs to, using the *Cell Feature Ids* array, so each grain can be given its own material in the simulation.
+Each **Cell** (voxel) in the **Image Geometry** becomes one hexahedral (brick-shaped) element with 8 corner nodes. Nodes shared between neighboring voxels are written only once so the mesh is fully connected. By default, the filter writes `C3D8`, Abaqus's standard 8-node linear brick element. Enable *Use Reduced Integration Elements* to write `C3D8R` reduced-integration elements instead. Every element is assigned to an element set named after the **Feature** (grain) it belongs to, using the *Cell Feature Ids* array, so each grain can be given its own material in the simulation.
 
 ![Fig. 1: Each voxel is exported as an 8-node C3D8 hexahedral element (nodes shared between neighbors written once), across five Abaqus .inp files.](Images/WriteAbaqusHexahedron_VoxelToHex.png)
 
@@ -30,7 +30,7 @@ When the *Write Dummy Node* parameter is enabled, the filter appends one extra "
 
 ### Hourglass Stiffness
 
-The `_sects.inp` file includes an `*Hourglass Stiffness` value for each grain section. "Hourglass" modes are spurious, zero-energy deformation patterns that reduced-integration brick elements can exhibit; a small artificial stiffness suppresses them. The *Hourglass Stiffness Value* parameter sets this number (default *250*, a dimensionless solver-control value).
+When *Use Reduced Integration Elements* is enabled, the `_sects.inp` file includes an `*Hourglass Stiffness` value for each grain section. "Hourglass" modes are spurious, zero-energy deformation patterns that reduced-integration brick elements can exhibit; a small artificial stiffness suppresses them. The *Hourglass Stiffness Value* parameter sets this number (default *250*, a dimensionless solver-control value). Standard `C3D8` elements do not use this value, so the filter omits the hourglass records when reduced integration is disabled.
 
 ### Required Input Sources
 
@@ -90,7 +90,7 @@ The `_elset.inp` file (a "cube" set spanning all elements, then one set per grai
    ..
 ```
 
-The `_sects.inp` file (one section per grain, each with its hourglass stiffness):
+The `_sects.inp` file for reduced-integration elements (one section per grain, each with its hourglass stiffness):
 
 ```text
 ** Section: Grain1

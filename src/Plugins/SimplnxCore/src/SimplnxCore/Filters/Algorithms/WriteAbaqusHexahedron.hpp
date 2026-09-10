@@ -15,10 +15,11 @@ namespace nx::core
 
 /**
  * @struct WriteAbaqusHexahedronInputValues
- * @brief Stores output, job, material, geometry, Feature ID, and dummy-node selections.
+ * @brief Stores integration, output, job, material, geometry, Feature ID, and dummy-node selections.
  */
 struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
 {
+  bool UseReducedIntegration;
   int32 HourglassStiffness;
   StringParameter::ValueType JobName;
   FileSystemPathParameter::ValueType OutputPath;
@@ -32,7 +33,7 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
  * @class WriteAbaqusHexahedron
  * @brief Writes an ImageGeom as five related Abaqus input files.
  *
- * The files contain nodes, C3D8 elements, grain sections, grain element sets,
+ * The files contain nodes, C3D8 or C3D8R elements, grain sections, grain element sets,
  * and a master include. Feature zero and negative Feature IDs do not enter grain
  * sets. Sections and empty sets span every positive ID through the maximum.
  *
