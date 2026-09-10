@@ -85,16 +85,9 @@ Note that both densities are less than 1.0 because each parent's children have n
 |---------------|----------------|
 | Feature Volumes   |  produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md). Cell-count volumes (integer count of voxels per feature) are the typical usage. Equivalent-diameter or physical-unit volumes also work as long as both *Feature Volumes* and *Parent Volumes* use the **same** unit.  |
 | Parent Volumes | produced by running [Compute Feature Sizes](ComputeFeatureSizesFilter.md) on the parent **Attribute Matrix** (after the upstream parent-grouping step has assigned each cell to a **Parent Feature**). |
-| Feature Parent Ids | produced by a parent-grouping filter such as [Group MicroTexture Regions](../SimplnxReview/GroupMicroTextureRegionsFilter.md) or [Merge Colonies](../SimplnxReview/MergeColoniesFilter.md), which assign each child **Feature** to a **Parent Feature**.|
+| Feature Parent Ids | produced by a parent-grouping filter such as [Group MicroTexture Regions](../OrientationAnalysis/GroupMicroTextureRegionsFilter.md) or [Merge Colonies](../SimplnxReview/MergeColoniesFilter.md), which assign each child **Feature** to a **Parent Feature**.|
 | Contiguous Neighbor List | produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).|
 | Non-Contiguous Neighbor List | (optional, only when "Use Non-Contiguous Neighbors" is enabled)* -- produced by [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md). See the "Use Non-Contiguous Neighbors" parameter guidance above for notes on how the upstream *Multiples of Average Diameter* parameter affects results.|
-
-
-### Required Input Sources
-
-- **Parent IDs** -- produced by a hierarchical grouping/merge filter (for example a twin- or parent-grain merge step).
-- **Contiguous Neighbor List** (and optionally the **Non-Contiguous Neighbor List**) -- produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) / [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md).
-- **Feature Volumes** -- produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md).
 
 % Auto generated parameter table will be inserted here
 
