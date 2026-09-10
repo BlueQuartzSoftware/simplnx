@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class WriteAbaqusHexahedronFilter
- * @brief This filter will ....
+ * @brief Writes an Image Geometry as an Abaqus hexahedral mesh.
  */
 class SIMPLNXCORE_EXPORT WriteAbaqusHexahedronFilter : public IFilter
 {
@@ -25,6 +25,7 @@ public:
 
   // Parameter Keys
   static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
   static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
   static constexpr StringLiteral k_WriteDummyNode_Key = "write_dummy_node";
   static constexpr StringLiteral k_JobName_Key = "job_name";
@@ -77,8 +78,8 @@ public:
 
   /**
    * @brief Returns parameters version integer.
-   * The Initial version should always be 1.
-   * Should be incremented everytime the parameters change.
+   * The initial version is 1.
+   * The filter increments the version each time the parameters change.
    * @return VersionType
    */
   VersionType parametersVersion() const override;
@@ -98,7 +99,7 @@ protected:
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
-   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @param executionContext Resolves relative paths to absolute paths.
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
@@ -112,7 +113,7 @@ protected:
    * @param pipelineNode The node in the pipeline that is being executed
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
-   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @param executionContext Resolves relative paths to absolute paths.
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

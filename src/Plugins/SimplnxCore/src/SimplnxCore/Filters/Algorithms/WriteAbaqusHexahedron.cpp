@@ -98,10 +98,7 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
           {
             std::string percentage =
                 "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(nodeIndex) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
-            float32 timeDiff = ((float32)nodeIndex / (float32)(milliDiff));
-            int64 estimatedTime = (float32)(totalPoints - nodeIndex) / timeDiff;
-            std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-            filter->sendMessage(percentage + timeRemaining);
+            filter->sendMessage(percentage);
             initialTime = std::chrono::steady_clock::now();
             if(shouldCancel) // Filter has been cancelled
             {
@@ -127,7 +124,7 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
   return err;
 }
 
-int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel, bool useReducedIntegration)
 {
   usize totalPoints = cDims[0] * cDims[1] * cDims[2];
   auto increment = static_cast<usize>(totalPoints * 0.01f);
@@ -148,7 +145,7 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
 
   auto initialTime = std::chrono::steady_clock::now();
   usize index = 1;
-  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=C3D8\n");
+  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=%s\n", useReducedIntegration ? "C3D8R" : "C3D8");
   for(usize z = 0; z < cDims[2]; z++)
   {
     for(usize y = 0; y < cDims[1]; y++)
@@ -166,10 +163,7 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
           {
             std::string percentage =
                 "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(index) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
-            float32 timeDiff = ((float32)index / (float32)(milliDiff));
-            int64 estimatedTime = (float32)(totalPoints - index) / timeDiff;
-            std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-            filter->sendMessage(percentage + timeRemaining);
+            filter->sendMessage(percentage);
             initialTime = std::chrono::steady_clock::now();
             if(shouldCancel) // Filter has been cancelled
             {
@@ -247,10 +241,7 @@ int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, siz
       {
         std::string percentage =
             "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(voxelId) / static_cast<float32>(maxGrainId) * 100.0f)) + "% Completed ";
-        float32 timeDiff = ((float32)voxelId / (float32)(milliDiff));
-        auto estimatedTime = static_cast<int64>((float32)(maxGrainId - voxelId) / timeDiff);
-        std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-        filter->sendMessage(percentage + timeRemaining);
+        filter->sendMessage(percentage);
         initialTime = std::chrono::steady_clock::now();
         if(shouldCancel) // Filter has been cancelled
         {
@@ -293,7 +284,7 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
   return err;
 }
 
-int32 writeSects(const std::string& file, const Int32AbstractDataStore& featureIds, int32 hourglassStiffness)
+int32 writeSects(const std::string& file, const Int32AbstractDataStore& featureIds, bool useReducedIntegration, int32 hourglassStiffness)
 {
   int32 err = 0;
   FILE* f = fopen(file.c_str(), "wb");
@@ -306,13 +297,16 @@ int32 writeSects(const std::string& file, const Int32AbstractDataStore& featureI
   // find total number of Grain Ids
   int32 maxGrainId = *std::max_element(featureIds.cbegin(), featureIds.cend());
 
-  // We are now defining the sections, which is for each grain
+  // The writer defines one section for each grain.
   int32 grain = 1;
   while(grain <= maxGrainId)
   {
     fprintf(f, "** Section: Grain%d\n", grain);
     fprintf(f, "*Solid Section, elset=Grain%d_set, material=Grain_Mat%d\n", grain, grain);
-    fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    if(useReducedIntegration)
+    {
+      fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    }
     fprintf(f, "** --------------------------------------\n");
     grain++;
   }
@@ -392,14 +386,14 @@ Result<> WriteAbaqusHexahedron::operator()()
   {
     return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
   }
-  if(getCancel()) // Filter has been cancelled
+  if(getCancel()) // Filter has been canceled
   {
     DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
 
-  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
+  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration); // Elements file
   if(err < 0)
   {
     return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
@@ -411,7 +405,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileList[2].value().tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
+  err = writeSects(fileList[2].value().tempFilePath().string(), featureIds, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));

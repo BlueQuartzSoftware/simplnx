@@ -27,6 +27,8 @@ public:
   static constexpr StringLiteral k_OutputPath_Key = "output_path";
   static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
   static constexpr StringLiteral k_JobName_Key = "job_name";
+  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
+  static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
   static constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
   static constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
   static constexpr StringLiteral k_MaterialConstants_Key = "material_constants";
@@ -80,8 +82,8 @@ public:
 
   /**
    * @brief Returns parameters version integer.
-   * The Initial version should always be 1.
-   * Should be incremented everytime the parameters change.
+   * The initial version is 1.
+   * The filter increments the version each time the parameters change.
    * @return VersionType
    */
   VersionType parametersVersion() const override;

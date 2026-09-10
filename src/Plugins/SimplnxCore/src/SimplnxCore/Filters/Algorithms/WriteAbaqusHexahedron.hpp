@@ -13,8 +13,13 @@
 namespace nx::core
 {
 
+/**
+ * @struct WriteAbaqusHexahedronInputValues
+ * @brief Contains the values that control the Abaqus hexahedral mesh export.
+ */
 struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
 {
+  bool UseReducedIntegration;
   int32 HourglassStiffness;
   StringParameter::ValueType JobName;
   FileSystemPathParameter::ValueType OutputPath;
@@ -25,11 +30,19 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
 };
 
 /**
- * @class
+ * @class WriteAbaqusHexahedron
+ * @brief Writes the Abaqus mesh files for an Image Geometry.
  */
 class SIMPLNXCORE_EXPORT WriteAbaqusHexahedron
 {
 public:
+  /**
+   * @brief Creates the Abaqus hexahedral mesh writer.
+   * @param dataStructure Contains the input geometry and feature IDs.
+   * @param mesgHandler Receives progress messages.
+   * @param shouldCancel Indicates when the caller requests cancellation.
+   * @param inputValues Contains the export settings and input paths. The caller owns this object for the lifetime of the writer.
+   */
   WriteAbaqusHexahedron(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteAbaqusHexahedronInputValues* inputValues);
   ~WriteAbaqusHexahedron() noexcept;
 
@@ -38,10 +51,18 @@ public:
   WriteAbaqusHexahedron& operator=(const WriteAbaqusHexahedron&) = delete;
   WriteAbaqusHexahedron& operator=(WriteAbaqusHexahedron&&) noexcept = delete;
 
+  /**
+   * @brief Writes the Abaqus mesh files.
+   * @return An error if a file cannot be created, written, or committed.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
 
+  /**
+   * @brief Sends an informational progress message to the filter caller.
+   * @param message Contains the progress text.
+   */
   void sendMessage(const std::string& message);
 
 private:
