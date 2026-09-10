@@ -85,6 +85,7 @@
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/PottsModelFilter.hpp"
 #include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
@@ -238,6 +239,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<ComputeLargestCrossSectionsFilter>::uuid, &ComputeLargestCrossSectionsFilter::FromSIMPLJson}}, // ComputeLargestCrossSections
     {nx::core::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), {nx::core::FilterTraits<WriteStlFileFilter>::uuid, &WriteStlFileFilter::FromSIMPLJson}}, // WriteStlFile
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData
+    {nx::core::Uuid::FromString("e15ec84b-1e02-53a6-a830-59e0813775a1").value(), {nx::core::FilterTraits<PottsModelFilter>::uuid, &PottsModelFilter::FromSIMPLJson}}, // PottsModel
     {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryFilter>::uuid, &AppendImageGeometryFilter::FromSIMPLJson}}, // AppendImageGeometry
     {nx::core::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), {nx::core::FilterTraits<ComputeFeatureClusteringFilter>::uuid, &ComputeFeatureClusteringFilter::FromSIMPLJson}}, // ComputeFeatureClustering
     {nx::core::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), {nx::core::FilterTraits<WriteAbaqusHexahedronFilter>::uuid, &WriteAbaqusHexahedronFilter::FromSIMPLJson}}, // AbaqusHexahedronWriter
