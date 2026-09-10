@@ -6,13 +6,13 @@ IO (Output)
 
 ## Description
 
-This filter writes an Abaqus input deck for a crystal-plasticity analysis that uses a user material, such as a UMAT. The filter converts an **Image Geometry** to a finite-element mesh. Each **Cell** becomes one eight-node, reduced-integration brick element of type `C3D8R`. Adjacent elements share nodes.
+This filter writes an Abaqus input deck for a crystal-plasticity analysis that uses a user material, such as a UMAT. The filter converts an **Image Geometry** to a finite-element mesh. By default, each **Cell** becomes one eight-node, reduced-integration brick element of type `C3D8R`. Disable *Use Reduced Integration Elements* to write standard `C3D8` elements instead. Adjacent elements share nodes.
 
 The filter writes five Abaqus input (`.inp`) files:
 
 - `<prefix>_nodes.inp` contains the node coordinates.
-- `<prefix>_elems.inp` contains the `C3D8R` element connectivity.
-- `<prefix>_sects.inp` contains the solid-section definitions that assign materials to grain element sets.
+- `<prefix>_elems.inp` contains the `C3D8R` or `C3D8` element connectivity.
+- `<prefix>_sects.inp` contains the solid-section definitions that assign materials to grain element sets. For `C3D8R` elements, it also contains the hourglass stiffness value.
 - `<prefix>_elset.inp` contains one element set for each feature ID from *1* through the maximum positive feature ID.
 - `<prefix>.inp` is the master file. It contains the material cards and relative `*Include` statements for the other four files.
 
@@ -26,6 +26,12 @@ Keep all five files in the same directory. The master file uses relative file na
 - **Cell Phases** is an `int32` scalar array. Each value assigns the cell to a phase.
 
 The three selected arrays must have one tuple for each cell in the **Image Geometry**.
+
+### Integration Type and Hourglass Stiffness
+
+The default `C3D8R` element uses reduced integration. Reduced integration can introduce spurious zero-energy deformation patterns called hourglass modes. The filter writes an `*Hourglass Stiffness` value for each grain section to control these modes. The *Hourglass Stiffness Value* parameter sets this solver-control value and has a default of *250*.
+
+Standard `C3D8` elements use full integration and do not use hourglass stiffness. When *Use Reduced Integration Elements* is disabled, the filter writes `C3D8` and omits all `*Hourglass Stiffness` records.
 
 ### Material Card
 
@@ -106,7 +112,11 @@ This example uses a `2 x 2 x 1` **Image Geometry** with origin `(0, 0, 0)` and s
 
 ```text
 *Solid Section, elset=Grain1_Phase1_set, material=Grain1_Phase1_mat
+*Hourglass Stiffness
+250
 *Solid Section, elset=Grain2_Phase2_set, material=Grain2_Phase2_mat
+*Hourglass Stiffness
+250
 ```
 
 `Abaqus_CP_Test_elset.inp`:

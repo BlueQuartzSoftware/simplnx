@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 // SIMPLConversion::DataContainerSelectionFilterParameterConverter requires this parameter header.
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
@@ -56,6 +57,9 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for each output file.", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The Abaqus job name.", "SomeString"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
+                                                                 "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", true));
+  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
   params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
 
@@ -79,12 +83,16 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
+  params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
+
   return params;
 }
 
 IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 2 adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
 }
 
 IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
@@ -153,6 +161,8 @@ Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStru
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
+  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
+  inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
   inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
   inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
   inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);

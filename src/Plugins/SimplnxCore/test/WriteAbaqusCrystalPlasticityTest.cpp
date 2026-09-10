@@ -125,6 +125,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain"
   const std::string prefix = "Abaqus_CP_Test";
   const WriteAbaqusCrystalPlasticityFilter filter;
   Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -193,7 +194,11 @@ UnitTest
 )";
 
   const std::string expectedSections = R"(*Solid Section, elset=Grain1_Phase1_set, material=Grain1_Phase1_mat
+*Hourglass Stiffness
+417
 *Solid Section, elset=Grain2_Phase2_set, material=Grain2_Phase2_mat
+*Hourglass Stiffness
+417
 )";
 
   REQUIRE(ReadFile(outputPath / fmt::format("{}_nodes.inp", prefix)) == expectedNodes);
@@ -201,6 +206,33 @@ UnitTest
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
   REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
   REQUIRE(ReadFile(outputPath / fmt::format("{}_sects.inp", prefix)) == expectedSections);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "StandardIntegration";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Standard_Integration";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key, std::make_any<bool>(false));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::string elements = ReadFile(outputPath / fmt::format("{}_elems.inp", prefix));
+  REQUIRE(elements.starts_with("*ELEMENT, TYPE=C3D8, ELSET=ALLELEMENTS\n"));
+  REQUIRE(elements.find("C3D8R") == std::string::npos);
+
+  const std::string sections = ReadFile(outputPath / fmt::format("{}_sects.inp", prefix));
+  REQUIRE(sections.find("*Hourglass Stiffness") == std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -452,6 +484,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Comp
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
+      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key) == 250);
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_OutputPath_Key) == fs::path("/test/path"));
       CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_FilePrefix_Key) == "TestPrefix");
       CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_JobName_Key) == "TestJob");

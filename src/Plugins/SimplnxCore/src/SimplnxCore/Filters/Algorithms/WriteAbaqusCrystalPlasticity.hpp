@@ -23,6 +23,10 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusCrystalPlasticityInputValues
   StringParameter::ValueType FilePrefix;
   /** @brief Job name in the master file heading. */
   StringParameter::ValueType JobName;
+  /** @brief True to write reduced-integration C3D8R elements. */
+  bool UseReducedIntegration = true;
+  /** @brief Hourglass stiffness value for reduced-integration elements. */
+  int32 HourglassStiffness = 250;
   /** @brief Number of solution-dependent state variables. */
   int32 NumDepvar = 1;
   /** @brief Number of user output variables. */

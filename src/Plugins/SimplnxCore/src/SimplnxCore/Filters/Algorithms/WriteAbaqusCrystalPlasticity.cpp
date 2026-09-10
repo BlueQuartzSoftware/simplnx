@@ -114,7 +114,7 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
   return CloseOutput(output);
 }
 
-WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, bool useReducedIntegration, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -126,7 +126,7 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
   const usize nodesX = dimensions[0] + 1;
   const usize nodesY = dimensions[1] + 1;
   fmt::memory_buffer buffer;
-  fmt::format_to(std::back_inserter(buffer), "*ELEMENT, TYPE=C3D8R, ELSET=ALLELEMENTS\n");
+  fmt::format_to(std::back_inserter(buffer), "*ELEMENT, TYPE={}, ELSET=ALLELEMENTS\n", useReducedIntegration ? "C3D8R" : "C3D8");
   ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
 
   for(usize z = 0; z < dimensions[2]; z++)
@@ -281,7 +281,8 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
   return CloseOutput(output);
 }
 
-WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, bool useReducedIntegration, int32 hourglassStiffness, const std::atomic_bool& shouldCancel,
+                          MessageHelper& messageHelper)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -301,6 +302,10 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
 
     const int32 phaseId = grainData.Phases[grainId];
     fmt::format_to(std::back_inserter(buffer), "*Solid Section, elset=Grain{}_Phase{}_set, material=Grain{}_Phase{}_mat\n", grainId, phaseId, grainId, phaseId);
+    if(useReducedIntegration)
+    {
+      fmt::format_to(std::back_inserter(buffer), "*Hourglass Stiffness\n{}\n", hourglassStiffness);
+    }
     if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
     {
       return WriteStatus::WriteError;
@@ -479,7 +484,8 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Elems, "Writing Elements (File 2/5)...", [&](const fs::path& path) { return WriteElements(path, imageGeom, m_ShouldCancel, messageHelper); });
+  writeResult = writeFile(FileIndex::Elems, "Writing Elements (File 2/5)...",
+                          [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->UseReducedIntegration, m_ShouldCancel, messageHelper); });
   if(writeResult.invalid())
   {
     return writeResult;
@@ -497,7 +503,8 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...", [&](const fs::path& path) { return WriteSections(path, grainData, m_ShouldCancel, messageHelper); });
+  writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...",
+                          [&](const fs::path& path) { return WriteSections(path, grainData, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness, m_ShouldCancel, messageHelper); });
   if(writeResult.invalid())
   {
     return writeResult;
