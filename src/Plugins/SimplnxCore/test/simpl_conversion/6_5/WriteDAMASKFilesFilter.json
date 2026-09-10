@@ -1,0 +1,33 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write DAMASK Files Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Export DAMASK Files",
+    "Filter_Name": "ExportDAMASKFiles",
+    "Filter_Uuid": "{7c58e612-d7d6-5ec7-806b-cce0c1c211a3}",
+    "DataFormat": 1,
+    "OutputPath": "/test/path",
+    "GeometryFileName": "damask_geometry",
+    "HomogenizationIndex": 3,
+    "CompressGeomFile": true,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "FeatureIds"
+    },
+    "CellEulerAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "EulerAngles"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Phases"
+    }
+  }
+}

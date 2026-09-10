@@ -163,6 +163,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteAvizoRectilinearCoordinateTest.cpp
   WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
+  WriteDAMASKFilesTest.cpp
   WriteFeatureDataCSVTest.cpp
   WriteImageTest.cpp
   WriteLAMMPSFileTest.cpp
