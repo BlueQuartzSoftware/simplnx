@@ -172,6 +172,7 @@ constexpr uint32 k_UnusedNodeId = std::numeric_limits<uint32>::max();
 
 constexpr int num_neigh = 26;
 
+// --- M3C working structs (mirror SIMPL/Geometry/MeshStructs.h SurfaceMesh::M3C) ---
 struct Node
 {
   float coord[3];
@@ -586,14 +587,16 @@ int get_square_index(const int tns[4])
 }
 
 /**
- * @brief Resolves the case-15 saddle from three-dimensional neighbors.
+ * @brief Resolves the case-15 saddle from eight in-plane neighbors.
  * @param tnst Provides four corner site indexes.
  * @param p1 Provides padded Feature Id values.
  * @param n1 Calculates padded-grid neighbors.
  * @param sqid Is unused by the legacy-compatible calculation.
  * @return Zero or one to select the case-15 topology.
  *
- * The algorithm connects the corner with the fewest positive same-label neighbors.
+ * The algorithm matches M3CSliceBySlice by connecting the corner with the fewest
+ * in-plane same-label neighbors. The 26-neighbor volume variant can create ties
+ * that are resolved arbitrarily and produce spurious handles.
  */
 int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const NeighborAccessor& n1, SiteId /*sqid*/)
 {
@@ -603,12 +606,12 @@ int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const Neig
   {
     SiteId csite = tnst[i];
     int cspin = p1[csite];
-    const Neighbor nb = n1[csite]; // cache: all 26 neighbors read below
-    for(int j = 1; j <= num_neigh; j++)
+    const Neighbor nb = n1[csite]; // Cache the 8 in-plane neighbors read below.
+    for(int j = 1; j <= 8; j++)
     {
       SiteId nsite = nb.neigh_id[j];
       int nspin = p1[nsite];
-      if(cspin == nspin && nspin > 0)
+      if(cspin == nspin)
       {
         numNeigh[i] = numNeigh[i] + 1;
       }

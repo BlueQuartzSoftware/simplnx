@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <limits>
+#include <map>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -1432,5 +1433,87 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a o
     INFO("vertical box edge at (" << cx << ", " << cy << ") has no vertex at z = " << zMid);
     REQUIRE(found);
   }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Regression for a user-reported defect: a grain surface came out of M3C with two tunnels (handles) that the
+// legacy DREAM.3D mesh did not have. The 6 x 6 x 5 block below is that grain's neighbourhood lifted verbatim
+// from the user's data (grain 10 -> 2, grain 112 -> 3, everything else -> 1). At z = 1 the face spanned by
+// cells (2..3, 2..3) is a two-label checkerboard (case 15), and labels 2 and 3 are already connected around
+// that face. Counting all 26 neighbours to disambiguate the saddle tied between a corner of each label and
+// bridged label 2 across the face, adding a handle; counting the 8 in-plane neighbours, as legacy
+// M3CSliceBySlice did, keeps label 2's closed surface a sphere.
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr usize k_BlockX = 6;
+  constexpr usize k_BlockY = 6;
+  constexpr usize k_BlockZ = 5;
+  // k_SaddleBlock[z][y][x]
+  constexpr std::array<std::array<std::array<int32, k_BlockX>, k_BlockY>, k_BlockZ> k_SaddleBlock = {{
+      {{{1, 1, 1, 1, 1, 1}, {1, 1, 3, 3, 1, 1}, {1, 1, 3, 2, 3, 1}, {2, 2, 2, 3, 3, 3}, {2, 2, 3, 3, 3, 3}, {2, 3, 3, 1, 1, 1}}},
+      {{{1, 1, 1, 1, 1, 1}, {1, 1, 3, 3, 1, 1}, {1, 1, 3, 2, 3, 1}, {2, 2, 2, 3, 3, 3}, {2, 3, 3, 3, 3, 3}, {2, 3, 3, 1, 1, 1}}},
+      {{{1, 1, 1, 1, 1, 1}, {1, 1, 2, 2, 1, 1}, {1, 1, 2, 2, 3, 1}, {2, 2, 2, 3, 3, 3}, {2, 3, 3, 3, 1, 1}, {1, 3, 3, 1, 1, 3}}},
+      {{{1, 1, 1, 1, 1, 1}, {1, 1, 2, 2, 3, 1}, {1, 2, 2, 2, 3, 1}, {2, 2, 3, 3, 3, 3}, {1, 3, 3, 3, 1, 1}, {1, 3, 3, 1, 1, 3}}},
+      {{{1, 1, 1, 1, 1, 1}, {1, 1, 2, 2, 3, 1}, {1, 2, 2, 2, 3, 1}, {2, 2, 3, 3, 3, 3}, {1, 3, 3, 1, 1, 3}, {1, 3, 3, 1, 3, 3}}},
+  }};
+  constexpr int32 k_GrainLabel = 2;
+
+  // One cell of label 1 padding on every side so label 2 is a closed, interior feature.
+  const SizeVec3 dims(k_BlockX + 2, k_BlockY + 2, k_BlockZ + 2);
+  const FloatVec3 spacing(1.0f, 1.0f, 1.0f);
+  const FloatVec3 origin(0.0f, 0.0f, 0.0f);
+  auto labeler = [&](usize x, usize y, usize z) -> int32 {
+    if(x == 0 || y == 0 || z == 0 || x > k_BlockX || y > k_BlockY || z > k_BlockZ)
+    {
+      return 1;
+    }
+    return k_SaddleBlock[z - 1][y - 1][x - 1];
+  };
+
+  DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, labeler);
+  RunM3CSharpEdges(dataStructure, true);
+  CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath));
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath);
+  const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SharpEdgesFaceLabelsPath));
+  const auto& faceLabelsRef = dataStructure.getDataRefAs<Int32Array>(k_SharpEdgesFaceLabelsPath).getDataStoreRef();
+
+  // Euler characteristic V - E + F of the closed surface bounding label 2.
+  std::set<usize> vertexIds;
+  std::map<std::pair<usize, usize>, int32> edgeUseCounts;
+  int64 numFaces = 0;
+  const usize numTriangles = triangleGeom.getNumberOfFaces();
+  for(usize t = 0; t < numTriangles; t++)
+  {
+    if(faceLabelsRef[t * 2] != k_GrainLabel && faceLabelsRef[t * 2 + 1] != k_GrainLabel)
+    {
+      continue;
+    }
+    numFaces++;
+    const std::array<usize, 3> v = {facesRef[t * 3], facesRef[t * 3 + 1], facesRef[t * 3 + 2]};
+    for(usize c = 0; c < 3; c++)
+    {
+      vertexIds.insert(v[c]);
+      const usize a = std::min(v[c], v[(c + 1) % 3]);
+      const usize b = std::max(v[c], v[(c + 1) % 3]);
+      edgeUseCounts[{a, b}]++;
+    }
+  }
+  REQUIRE(numFaces > 0);
+  for(const auto& [edge, count] : edgeUseCounts)
+  {
+    INFO("edge (" << edge.first << ", " << edge.second << ") of label " << k_GrainLabel << " is used by " << count << " triangles");
+    REQUIRE(count == 2);
+  }
+  const int64 numVertices = static_cast<int64>(vertexIds.size());
+  const int64 numEdges = static_cast<int64>(edgeUseCounts.size());
+  const int64 eulerCharacteristic = numVertices - numEdges + numFaces;
+  INFO("label " << k_GrainLabel << ": V = " << numVertices << ", E = " << numEdges << ", F = " << numFaces << ", V - E + F = " << eulerCharacteristic << " (2 = sphere, each handle subtracts 2)");
+  REQUIRE(eulerCharacteristic == 2);
+
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
