@@ -32,7 +32,7 @@ redirected to a file.
 | Format | Description |
 |--------|-------------|
 | `JSON` | Structured hierarchy with per-object metadata. See schema below. |
-| `TEXT` | Indented names only, one per line, prefixed with `|--`. |
+| `TEXT` | Indented names only, one per line, prefixed with `\|--`. |
 | `DOT`  | GraphViz digraph of parent-child edges. Render with `dot -Tpng`. |
 
 Example:
@@ -63,7 +63,7 @@ nxinfo --version | -v
 | -101 | Failed parsing arguments (unknown flag, missing value, unknown format, no command) |
 | -102 | Input file missing or not a regular file |
 | -103 | Failed reading the DataStructure |
-| -104 | Failed opening the output file |
+| -104 | Failed opening or writing the output file |
 
 ## JSON schema (schema_version 1)
 
@@ -103,7 +103,7 @@ Geometries add a `geometry` object:
 | `num_cells`           | all        | Number of cells / elements |
 | `dimensions`          | Image, RectGrid | `[x, y, z]` voxel counts |
 | `cell_data_path`      | Image, RectGrid | Path of the cell AttributeMatrix, if assigned |
-| `origin`              | Image      | `[x, y, z]`. RectGrid: omitted by nxinfo, because the origin is derived from bounds array values and nxinfo reads metadata only |
+| `origin`              | Image      | `[x, y, z]`. RectGrid: omitted by nxinfo, because the origin is derived from bounds array values and nxinfo reads metadata only. |
 | `spacing`             | Image      | `[x, y, z]` |
 | `num_vertices`, `vertex_data_path` | node geometries | Vertex count and vertex AttributeMatrix path, if assigned |
 | `num_edges`, `edge_data_path`     | Edge and higher | |

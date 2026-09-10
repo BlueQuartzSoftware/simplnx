@@ -35,7 +35,7 @@ constexpr int32 k_NoArgumentsProvided = -100;
 constexpr int32 k_FailedParsingArguments = -101;
 constexpr int32 k_InputFileMissing = -102;
 constexpr int32 k_FailedReadingDataStructure = -103;
-constexpr int32 k_FailedOpeningOutputFile = -104;
+constexpr int32 k_FailedOpeningOutputFile = -104; // Failed opening or writing the output file.
 
 constexpr StringLiteral k_HelpParamLong = "--help";
 constexpr StringLiteral k_HelpParamShort = "-h";
@@ -295,6 +295,12 @@ int RunDumpDataStructure(const CliOptions& options)
       return k_FailedOpeningOutputFile;
     }
     WriteDump(readResult.value(), options.format, outFile);
+    outFile.flush();
+    if(!outFile.good())
+    {
+      fmt::print(stderr, "Error {}: Failed to write output file '{}'\n", k_FailedOpeningOutputFile, options.outputFile.value().string());
+      return k_FailedOpeningOutputFile;
+    }
     return 0;
   }
 
