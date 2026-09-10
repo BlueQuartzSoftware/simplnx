@@ -205,6 +205,169 @@ UnitTest
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Wrapping Rules", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({4, 4, 2}, std::vector<int32>(32, 1), std::vector<int32>(32, 1), std::vector<float32>(96, 0.0F));
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "WrappingRules";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Wrapping_Rules";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix, {{1.0}, {2.0}, {3.0}, {4.0}, {5.0}});
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumDepvar_Key, std::make_any<int32>(2));
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumUserOutVar_Key, std::make_any<int32>(1));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+)";
+  REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
+
+  const std::string expectedMaster = R"(*Heading
+UnitTest
+** Job name : UnitTest
+*Preprint, echo = NO, model = NO, history = NO, contact = NO
+**
+*Include, Input = Wrapping_Rules_nodes.inp
+*Include, Input = Wrapping_Rules_elems.inp
+*Include, Input = Wrapping_Rules_sects.inp
+*Include, Input = Wrapping_Rules_elset.inp
+**
+*Material, name = Grain1_Phase1_mat
+*Depvar
+2
+*User Material, constants = 10
+1, 1, 0.000, 0.000, 0.000, 1.000, 2.000, 3.000
+4.000, 5.000
+*User Output Variables
+1
+)";
+  REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Gap In Feature Ids", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({2, 2, 1}, {1, 1, 5, 5}, {1, 1, 2, 2}, std::vector<float32>(12, 0.0F));
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "GapInFeatureIds";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Gap_In_Feature_Ids";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+  bool warningEmitted = false;
+  const IFilter::MessageHandler messageHandler{[&warningEmitted](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Warning && message.message == "3 feature ids in [1, 5] have no cells. Empty element sets and materials with zero orientation were written for them.")
+    {
+      warningEmitted = true;
+    }
+  }};
+
+  auto executeResult = filter.execute(dataStructure, args, nullptr, messageHandler);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(warningEmitted);
+
+  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+1, 2
+*Elset, elset=Grain2_Phase0_set
+
+*Elset, elset=Grain3_Phase0_set
+
+*Elset, elset=Grain4_Phase0_set
+
+*Elset, elset=Grain5_Phase2_set
+3, 4
+)";
+  REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: No Positive Feature Ids", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({2, 2, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, std::vector<float32>(12, 0.0F));
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusCrystalPlasticity_NoGrains_{}", uniqueSuffix);
+  fs::create_directories(outputPath);
+  const std::string prefix = "No_Positive_Feature_Ids";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  REQUIRE(executeResult.result.invalid());
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -12011);
+  REQUIRE(executeResult.result.errors()[0].message.find(k_FeatureIdsPath.toString()) != std::string::npos);
+
+  const std::vector<fs::path> outputFiles = {outputPath / fmt::format("{}_nodes.inp", prefix), outputPath / fmt::format("{}_elems.inp", prefix), outputPath / fmt::format("{}_sects.inp", prefix),
+                                             outputPath / fmt::format("{}_elset.inp", prefix), outputPath / fmt::format("{}.inp", prefix)};
+  for(const auto& outputFile : outputFiles)
+  {
+    REQUIRE_FALSE(fs::exists(outputFile));
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Negative Depvar Fails Preflight", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Negative_Depvar");
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumDepvar_Key, std::make_any<int32>(-2));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -12014);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("-2") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Negative User Output Variables Fails Preflight", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Negative_User_Output_Variables");
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumUserOutVar_Key, std::make_any<int32>(-3));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -12015);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("-3") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constants Row Width Fails Preflight", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Material_Constants_Row_Width", {{2.0, 3.0}});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  // The single static table column rejects the two-column row before preflightImpl runs.
+  REQUIRE(preflightResult.outputActions.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Feature Id Zero Skipped", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();

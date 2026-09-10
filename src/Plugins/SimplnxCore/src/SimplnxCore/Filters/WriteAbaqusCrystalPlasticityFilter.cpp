@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+// SIMPLConversion::DataContainerSelectionFilterParameterConverter requires this parameter header.
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -13,6 +14,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <array>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -103,9 +105,31 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }
 
+  const int32 numDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
+  if(numDepvar < 0)
+  {
+    return MakePreflightErrorResult(-12014, fmt::format("The number of solution-dependent state variables ({}) must be 0 or greater.", numDepvar));
+  }
+
+  const int32 numUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
+  if(numUserOutVar < 0)
+  {
+    return MakePreflightErrorResult(-12015, fmt::format("The number of user output variables ({}) must be 0 or greater.", numUserOutVar));
+  }
+
+  const auto materialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
+  for(usize rowIndex = 0; rowIndex < materialConstants.size(); rowIndex++)
+  {
+    const usize columnCount = materialConstants[rowIndex].size();
+    if(columnCount != 1)
+    {
+      return MakePreflightErrorResult(-12016, fmt::format("Material Constants row {} has {} columns. Each row must have exactly 1 column.", rowIndex, columnCount));
+    }
+  }
+
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  const auto& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
-  const usize cellCount = imageGeometry.getNumberOfCells();
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  const usize cellCount = imageGeom.getNumberOfCells();
 
   const std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
   for(const auto& [arrayKey, errorCode] : arrayKeys)
