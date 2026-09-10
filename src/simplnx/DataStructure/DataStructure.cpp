@@ -1,6 +1,8 @@
 #include "DataStructure.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -11,11 +13,13 @@
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "simplnx/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
 #include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 #include <numeric>
 #include <sstream>
@@ -28,6 +32,116 @@ const std::string k_Delimiter = "|--";
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_HierarchyJsonSchemaVersion = 1;
+
+/**
+ * @brief Converts a shape vector to a JSON array of integers.
+ */
+nlohmann::json ShapeToJson(const std::vector<usize>& shape)
+{
+  nlohmann::json array = nlohmann::json::array();
+  for(usize dim : shape)
+  {
+    array.push_back(dim);
+  }
+  return array;
+}
+
+/**
+ * @brief Returns the human readable name of a data store type.
+ */
+std::string StoreTypeToString(IDataStore::StoreType storeType)
+{
+  switch(storeType)
+  {
+  case IDataStore::StoreType::InMemory:
+    return "InMemory";
+  case IDataStore::StoreType::OutOfCore:
+    return "OutOfCore";
+  case IDataStore::StoreType::Empty:
+    return "Empty";
+  case IDataStore::StoreType::EmptyOutOfCore:
+    return "EmptyOutOfCore";
+  }
+  return "Unknown";
+}
+
+/**
+ * @brief Adds the array-specific keys for an IDataArray.
+ */
+void AppendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
+{
+  node["data_type"] = std::string(DataTypeToString(dataArray.getDataType()).view());
+  node["tuple_shape"] = ShapeToJson(dataArray.getTupleShape());
+  node["component_shape"] = ShapeToJson(dataArray.getComponentShape());
+  node["num_tuples"] = dataArray.getNumberOfTuples();
+  node["num_components"] = dataArray.getNumberOfComponents();
+  node["store_type"] = StoreTypeToString(dataArray.getIDataStoreRef().getStoreType());
+}
+
+/**
+ * @brief Adds the keys for a StringArray.
+ */
+void AppendStringArrayFields(nlohmann::json& node, const StringArray& stringArray)
+{
+  node["data_type"] = "string";
+  node["num_tuples"] = stringArray.getNumberOfTuples();
+}
+
+/**
+ * @brief Adds the keys for an INeighborList.
+ */
+void AppendNeighborListFields(nlohmann::json& node, const INeighborList& neighborList)
+{
+  node["data_type"] = std::string(DataTypeToString(neighborList.getDataType()).view());
+  node["num_tuples"] = neighborList.getNumberOfTuples();
+}
+
+/**
+ * @brief Adds the keys for an AttributeMatrix.
+ */
+void AppendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& attributeMatrix)
+{
+  node["tuple_shape"] = ShapeToJson(attributeMatrix.getShape());
+}
+
+/**
+ * @brief Builds the JSON node for one DataObject, without its children.
+ * Type-specific keys are added by dynamic type. The "geometry" block is
+ * added by AppendGeometryFields (see Task 3).
+ */
+nlohmann::json MakeObjectNode(const DataObject& object, const DataPath& path)
+{
+  nlohmann::json node;
+  node["name"] = object.getName();
+  node["path"] = path.toString();
+  node["id"] = object.getId();
+  node["type"] = object.getTypeName();
+
+  if(const auto* attributeMatrix = dynamic_cast<const AttributeMatrix*>(&object); attributeMatrix != nullptr)
+  {
+    AppendAttributeMatrixFields(node, *attributeMatrix);
+  }
+  else if(const auto* dataArray = dynamic_cast<const IDataArray*>(&object); dataArray != nullptr)
+  {
+    AppendDataArrayFields(node, *dataArray);
+  }
+  else if(const auto* stringArray = dynamic_cast<const StringArray*>(&object); stringArray != nullptr)
+  {
+    AppendStringArrayFields(node, *stringArray);
+  }
+  else if(const auto* neighborList = dynamic_cast<const INeighborList*>(&object); neighborList != nullptr)
+  {
+    AppendNeighborListFields(node, *neighborList);
+  }
+
+  node["children"] = nlohmann::json::array();
+  return node;
+}
+} // namespace
+
 DataStructure::DataStructure()
 : m_IsValid(true)
 {
@@ -950,6 +1064,52 @@ void DataStructure::recurseHierarchyToText(std::ostream& outputStream, const std
 
     // recurse
     recurseHierarchyToText(outputStream, optionalChildPaths.value(), indent);
+  }
+}
+
+nlohmann::json DataStructure::exportHierarchyAsJson() const
+{
+  nlohmann::json root;
+  root["schema_version"] = k_HierarchyJsonSchemaVersion;
+  root["objects"] = nlohmann::json::array();
+
+  for(const auto* object : getTopLevelData())
+  {
+    if(object == nullptr)
+    {
+      continue;
+    }
+    const DataPath topLevelPath({object->getName()});
+    nlohmann::json node = MakeObjectNode(*object, topLevelPath);
+
+    auto optionalChildPaths = GetAllChildDataPaths(*this, topLevelPath);
+    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
+    {
+      recurseHierarchyToJson(node["children"], optionalChildPaths.value());
+    }
+    root["objects"].push_back(std::move(node));
+  }
+
+  return root;
+}
+
+void DataStructure::recurseHierarchyToJson(nlohmann::json& nodes, const std::vector<DataPath>& paths) const
+{
+  for(const auto& path : paths)
+  {
+    const DataObject* object = getData(path);
+    if(object == nullptr)
+    {
+      continue;
+    }
+    nlohmann::json node = MakeObjectNode(*object, path);
+
+    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
+    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
+    {
+      recurseHierarchyToJson(node["children"], optionalChildPaths.value());
+    }
+    nodes.push_back(std::move(node));
   }
 }
 
