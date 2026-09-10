@@ -49,4 +49,3 @@ Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from 
 ## Retracted candidate deviations
 
 - **~~D: Kahan-vs-naive summation precision~~** — The retroactive DRAFT report (`docs/vv_retroactive_reports/ComputeFeatureCentroidsFilter.md`) hypothesized that SIMPLNX added Kahan summation over a legacy *naive* running sum. **Retracted:** source inspection shows 6.5.171 `FindFeatureCentroids::find_centroids()` already uses the identical Kahan kernel with identical `double` accumulators. No such deviation exists; the residual precision difference is captured by D1 (voxel-center fetch width), not summation method.
-
