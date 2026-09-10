@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write OnScale Table File 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create OnScale Table File",
+    "Filter_Name": "ExportOnScaleTableFile",
+    "OutputPath": "/test/path",
+    "OutputFilePrefix": "TestPrefix",
+    "NumKeypoints": {"x": 3, "y": 4, "z": 5},
+    "PzflexFeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "FeatureIds"
+    },
+    "PhaseNamesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellEnsembleData",
+      "Data Array Name": "PhaseName"
+    }
+  }
+}

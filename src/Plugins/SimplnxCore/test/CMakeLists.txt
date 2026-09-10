@@ -168,6 +168,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteLAMMPSFileTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
+  WriteOnScaleTableFileTest.cpp
   WriteSPParksSitesTest.cpp
   WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
