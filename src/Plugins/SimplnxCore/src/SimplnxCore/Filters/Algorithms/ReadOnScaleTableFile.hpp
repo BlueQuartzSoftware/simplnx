@@ -23,6 +23,8 @@ struct SIMPLNXCORE_EXPORT OnScaleTableFileHeader
   std::filesystem::file_time_type TimeStamp;
   std::array<usize, 3> BoundsCounts = {2, 2, 2};
   std::array<bool, 3> BoundsPresent = {false, false, false};
+  std::array<float32, 3> FirstBounds = {0.0F, 0.0F, 0.0F};
+  std::array<float32, 3> LastBounds = {0.0F, 0.0F, 0.0F};
   usize NameCount = 0;
   usize MaterialCount = 0;
 };
@@ -37,7 +39,6 @@ struct SIMPLNXCORE_EXPORT ReadOnScaleTableFileInputValues
   VectorFloat32Parameter::ValueType FallbackOrigin;
   VectorFloat32Parameter::ValueType FallbackSpacing;
   DataPath RectGridGeometryPath;
-  DataPath CellAttributeMatrixPath;
   DataPath FeatureIdsArrayPath;
   DataPath PhaseAttributeMatrixPath;
   DataPath MaterialNamesArrayPath;
@@ -69,9 +70,10 @@ public:
 
   /**
    * @brief Reads and validates section counts and bound values through the `matr` header.
+   * @param inputFile Identifies the OnScale table file.
    * @return Cached header data or a file-format error.
    */
-  Result<OnScaleTableFileHeader> readHeader() const;
+  static Result<OnScaleTableFileHeader> ReadHeader(const std::filesystem::path& inputFile);
 
   /**
    * @brief Reads the file directly into the output arrays.

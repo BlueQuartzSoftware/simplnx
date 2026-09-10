@@ -17,12 +17,13 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <clocale>
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -35,7 +36,14 @@ namespace
 {
 constexpr int32 k_BadHeaderCountError = -12052;
 constexpr int32 k_NonNumericBoundError = -12053;
+constexpr int32 k_NameValuesTooShortError = -12055;
+constexpr int32 k_MaterialValueError = -12056;
 constexpr int32 k_MaterialValuesTooShortError = -12057;
+constexpr int32 k_InvalidBoundCountError = -12058;
+constexpr int32 k_MissingMaterialSectionError = -12059;
+constexpr int32 k_FileChangedError = -12060;
+constexpr int32 k_MaterialCountMismatchWarning = -12061;
+constexpr int32 k_ExtraMaterialValuesWarning = -12062;
 
 const DataPath k_GeometryPath({"OnScale Volume"});
 const DataPath k_CellDataPath = k_GeometryPath.createChildPath("Cell Data");
@@ -58,10 +66,15 @@ struct FixtureOptions
   std::array<usize, 3> BoundsCounts = {20, 17, 2};
   std::vector<std::string> Names = {"pzt4t11", "pzt4t12", "pzt4t13", "pzt4t14", "pzt4t15", "pzt4t16", "pzt4t17", "pzt4t18", "pzt4t19", "pzt4t20"};
   bool NamesOnePerLine = false;
+  bool WriteNameSection = true;
+  bool WriteMatrSection = true;
   FixtureOrder Order = FixtureOrder::Standard;
+  std::string LineEnding = "\n";
+  std::optional<usize> DeclaredNameCount;
   std::optional<usize> DeclaredMatrCount;
   std::optional<usize> WrittenMatrCount;
-  bool NonNumericXBound = false;
+  std::optional<std::string> XBoundToken;
+  std::optional<usize> NonNumericMaterialIndex;
   bool BadXHeaderCount = false;
 };
 
@@ -72,17 +85,56 @@ struct GeneratedFixture
   std::vector<int32> MaterialValues;
 };
 
-void WriteTokens(std::ofstream& output, const std::vector<std::string>& tokens, usize tokensPerLine)
+class LocaleGuard
+{
+public:
+  LocaleGuard()
+  {
+    if(const char* currentLocale = std::setlocale(LC_ALL, nullptr); currentLocale != nullptr)
+    {
+      m_PreviousLocale = currentLocale;
+    }
+  }
+
+  ~LocaleGuard()
+  {
+    if(!m_PreviousLocale.empty())
+    {
+      std::setlocale(LC_ALL, m_PreviousLocale.c_str());
+    }
+  }
+
+  LocaleGuard(const LocaleGuard&) = delete;
+  LocaleGuard(LocaleGuard&&) noexcept = delete;
+  LocaleGuard& operator=(const LocaleGuard&) = delete;
+  LocaleGuard& operator=(LocaleGuard&&) noexcept = delete;
+
+  bool set(const char* localeName)
+  {
+    return std::setlocale(LC_ALL, localeName) != nullptr;
+  }
+
+private:
+  std::string m_PreviousLocale;
+};
+
+class TestableReadOnScaleTableFileFilter : public ReadOnScaleTableFileFilter
+{
+public:
+  using ReadOnScaleTableFileFilter::executeImpl;
+};
+
+void WriteTokens(std::ofstream& output, const std::vector<std::string>& tokens, usize tokensPerLine, std::string_view lineEnding)
 {
   for(usize index = 0; index < tokens.size(); index++)
   {
     output << tokens[index];
     if(index + 1 < tokens.size())
     {
-      output << ((index + 1) % tokensPerLine == 0 ? '\n' : ' ');
+      output << ((index + 1) % tokensPerLine == 0 ? lineEnding : " ");
     }
   }
-  output << '\n';
+  output << lineEnding;
 }
 
 GeneratedFixture WriteFixture(const fs::path& filePath, const FixtureOptions& options)
@@ -110,7 +162,7 @@ GeneratedFixture WriteFixture(const fs::path& filePath, const FixtureOptions& op
   fixture.MaterialValues.reserve(writtenMatrCount);
   for(usize index = 0; index < writtenMatrCount; index++)
   {
-    fixture.MaterialValues.push_back(static_cast<int32>(index % options.Names.size()));
+    fixture.MaterialValues.push_back(options.Names.empty() ? 0 : static_cast<int32>(index % options.Names.size()));
   }
 
   const auto writeBounds = [&](usize axis, std::string_view sectionName) {
@@ -120,68 +172,77 @@ GeneratedFixture WriteFixture(const fs::path& filePath, const FixtureOptions& op
     }
     if(axis == 0 && options.BadXHeaderCount)
     {
-      output << "xcrd invalid-count\n";
+      output << "xcrd invalid-count" << options.LineEnding;
     }
     else
     {
-      output << sectionName << "     " << options.BoundsCounts[axis] << '\n';
+      output << sectionName << "     " << options.BoundsCounts[axis] << options.LineEnding;
     }
 
     std::vector<std::string> tokens;
     tokens.reserve(fixture.Bounds[axis].size());
     for(usize index = 0; index < fixture.Bounds[axis].size(); index++)
     {
-      if(axis == 0 && options.NonNumericXBound && index == 1)
+      if(axis == 0 && options.XBoundToken.has_value() && index == 1)
       {
-        tokens.emplace_back("not-a-number");
+        tokens.push_back(options.XBoundToken.value());
       }
       else
       {
         tokens.push_back(fmt::format("{:.8E}", fixture.Bounds[axis][index]));
       }
     }
-    WriteTokens(output, tokens, 6);
+    WriteTokens(output, tokens, 6, options.LineEnding);
   };
 
   const auto writeNames = [&] {
-    output << "name        " << options.Names.size() << '\n';
-    WriteTokens(output, options.Names, options.NamesOnePerLine ? 1 : options.Names.size());
+    if(!options.WriteNameSection)
+    {
+      return;
+    }
+    output << "name        " << options.DeclaredNameCount.value_or(options.Names.size()) << options.LineEnding;
+    WriteTokens(output, options.Names, options.NamesOnePerLine || options.Names.empty() ? 1 : options.Names.size(), options.LineEnding);
   };
 
-  output << "hedr         0\n";
-  output << "info         1\n";
+  output << "hedr         0" << options.LineEnding;
+  output << "info         1" << options.LineEnding;
   if(options.Order == FixtureOrder::Standard)
   {
     writeBounds(0, "xcrd");
     writeBounds(1, "ycrd");
     writeBounds(2, "zcrd");
-    output << "keypoints\n2 2 2\n";
-    output << "divisions\n1 1 1\n";
+    output << "keypoints" << options.LineEnding << "2 2 2" << options.LineEnding;
+    output << "divisions" << options.LineEnding << "1 1 1" << options.LineEnding;
     writeNames();
   }
   else
   {
     writeBounds(2, "zcrd");
     writeNames();
-    output << "divisions\n1 1 1\n";
+    output << "divisions" << options.LineEnding << "1 1 1" << options.LineEnding;
     writeBounds(0, "xcrd");
-    output << "keypoints\n2 2 2\n";
+    output << "keypoints" << options.LineEnding << "2 2 2" << options.LineEnding;
     writeBounds(1, "ycrd");
   }
 
-  output << "matr        " << options.DeclaredMatrCount.value_or(numCells) << '\n';
+  if(!options.WriteMatrSection)
+  {
+    return fixture;
+  }
+
+  output << "matr        " << options.DeclaredMatrCount.value_or(numCells) << options.LineEnding;
   std::vector<std::string> materialTokens;
   materialTokens.reserve(fixture.MaterialValues.size());
-  for(const int32 value : fixture.MaterialValues)
+  for(usize index = 0; index < fixture.MaterialValues.size(); index++)
   {
-    materialTokens.push_back(fmt::format("{}", value));
+    materialTokens.push_back(options.NonNumericMaterialIndex == index ? "not-an-integer" : fmt::format("{}", fixture.MaterialValues[index]));
   }
   for(usize index = 0; index < materialTokens.size(); index++)
   {
     output << materialTokens[index];
     if(index + 1 < materialTokens.size())
     {
-      output << ((index + 1) % 40 == 0 ? '\n' : ' ');
+      output << ((index + 1) % 40 == 0 ? options.LineEnding : " ");
     }
   }
 
@@ -258,6 +319,22 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Full 3D", "[SimplnxCore][Rea
   UnitTest::LoadPlugins();
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "Full3D.flxtbl";
   const GeneratedFixture fixture = WriteFixture(inputFile, FixtureOptions{});
+
+  DataStructure preflightDataStructure;
+  const ReadOnScaleTableFileFilter filter;
+  auto preflightResult = filter.preflight(preflightDataStructure, CreateArguments(inputFile));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputValues.size() == 1);
+  REQUIRE(preflightResult.outputValues.front().name == "Rect Grid Geometry Info");
+  REQUIRE(preflightResult.outputValues.front().value.find("X Range: 0.00000000E+00 to 1.90000013E-02 (20 bounds, 19 cells)") != std::string::npos);
+  REQUIRE(preflightResult.outputValues.front().value.find("Y Range: 0.00000000E+00 to 3.20000015E-02 (17 bounds, 16 cells)") != std::string::npos);
+  REQUIRE(preflightResult.outputValues.front().value.find("Z Range: 0.00000000E+00 to 3.00000003E-03 (2 bounds, 1 cells)") != std::string::npos);
+  REQUIRE(preflightResult.outputValues.front().value.find("Units: meters") != std::string::npos);
+  auto applyResult = preflightResult.outputActions.value().applyRegular(preflightDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  REQUIRE_NOTHROW(preflightDataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
+  REQUIRE(preflightDataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath).getShape() == ShapeType{1, 16, 19});
+
   RequireValidImport(inputFile, fixture, {19, 16, 1});
 }
 
@@ -319,15 +396,11 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Matr Count Mismatch Warns", 
   const ReadOnScaleTableFileFilter filter;
   auto executeResult = filter.execute(dataStructure, CreateArguments(inputFile), nullptr, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  std::string messageText;
-  for(const auto& message : messages)
-  {
-    messageText += fmt::format("Message type {}: {}\n", to_underlying(message.type), message.message);
-  }
-  INFO(messageText);
-  REQUIRE(std::any_of(messages.cbegin(), messages.cend(), [](const IFilter::Message& message) {
-    return message.type == IFilter::Message::Type::Warning && message.message.find("declares 5 values") != std::string::npos && message.message.find("6 cells") != std::string::npos;
-  }));
+  REQUIRE(std::none_of(messages.cbegin(), messages.cend(), [](const IFilter::Message& message) { return message.type == IFilter::Message::Type::Warning; }));
+  REQUIRE(executeResult.result.warnings().size() == 1);
+  REQUIRE(executeResult.result.warnings().front().code == k_MaterialCountMismatchWarning);
+  REQUIRE(executeResult.result.warnings().front().message.find("declares 5 values") != std::string::npos);
+  REQUIRE(executeResult.result.warnings().front().message.find("6 cells") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Matr Too Short Fails", "[SimplnxCore][ReadOnScaleTableFileFilter]")
@@ -357,7 +430,10 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Invalid Preflight Input", "[
   {
     FixtureOptions options;
     options.BoundsCounts = {4, 3, 2};
-    options.NonNumericXBound = testName == "Non Numeric Bound";
+    if(testName == "Non Numeric Bound")
+    {
+      options.XBoundToken = "not-a-number";
+    }
     options.BadXHeaderCount = testName == "Bad Header Count";
     WriteFixture(inputFile, options);
   }
@@ -378,6 +454,186 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Invalid Preflight Input", "[
   {
     REQUIRE(preflightResult.outputActions.errors().front().code == k_BadHeaderCountError);
   }
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Additional Valid Inputs", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const std::string testName = GENERATE("CRLF Line Endings", "Empty Names", "Nonstandard Extension");
+  CAPTURE(testName);
+
+  FixtureOptions options;
+  options.BoundsCounts = {4, 3, 2};
+  fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / fmt::format("{}.flxtbl", testName);
+  if(testName == "CRLF Line Endings")
+  {
+    options.LineEnding = "\r\n";
+  }
+  else if(testName == "Empty Names")
+  {
+    options.Names.clear();
+  }
+  else
+  {
+    inputFile.replace_extension(".table");
+  }
+
+  const GeneratedFixture fixture = WriteFixture(inputFile, options);
+  RequireValidImport(inputFile, fixture, {3, 2, 1});
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Malformed File", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const std::string testName = GENERATE("Names Too Short", "Missing Matr", "Non Numeric Material", "Bound Count Too Small", "Bound Out Of Range");
+  CAPTURE(testName);
+
+  FixtureOptions options;
+  options.BoundsCounts = {4, 3, 2};
+  if(testName == "Names Too Short")
+  {
+    options.Names = {"first", "second"};
+    options.DeclaredNameCount = 3;
+  }
+  else if(testName == "Missing Matr")
+  {
+    options.WriteMatrSection = false;
+  }
+  else if(testName == "Non Numeric Material")
+  {
+    options.NonNumericMaterialIndex = 2;
+  }
+  else if(testName == "Bound Count Too Small")
+  {
+    options.BoundsCounts = {1, 3, 2};
+  }
+  else
+  {
+    options.XBoundToken = "1.0E+1000";
+  }
+
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / fmt::format("{}.flxtbl", testName);
+  WriteFixture(inputFile, options);
+  DataStructure dataStructure;
+  const ReadOnScaleTableFileFilter filter;
+  const Arguments args = CreateArguments(inputFile);
+
+  if(testName == "Non Numeric Material")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.invalid());
+    REQUIRE(executeResult.result.errors().front().code == k_MaterialValueError);
+  }
+  else
+  {
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+    if(testName == "Names Too Short")
+    {
+      REQUIRE(preflightResult.outputActions.errors().front().code == k_NameValuesTooShortError);
+      REQUIRE(preflightResult.outputActions.errors().front().message.find("declares 3 values, but only 2 values were found before the next section at line") != std::string::npos);
+    }
+    else if(testName == "Missing Matr")
+    {
+      REQUIRE(preflightResult.outputActions.errors().front().code == k_MissingMaterialSectionError);
+    }
+    else if(testName == "Bound Count Too Small")
+    {
+      REQUIRE(preflightResult.outputActions.errors().front().code == k_InvalidBoundCountError);
+    }
+    else
+    {
+      REQUIRE(preflightResult.outputActions.errors().front().code == k_NonNumericBoundError);
+      REQUIRE(preflightResult.outputActions.errors().front().message.find("out of range for float32") != std::string::npos);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Extra Material Values Warn Once", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  FixtureOptions options;
+  options.BoundsCounts = {4, 3, 2};
+  options.DeclaredMatrCount = 6;
+  options.WrittenMatrCount = 8;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "ExtraMaterialValues.flxtbl";
+  WriteFixture(inputFile, options);
+
+  std::vector<IFilter::Message> messages;
+  std::mutex messagesMutex;
+  const IFilter::MessageHandler messageHandler{[&messages, &messagesMutex](const IFilter::Message& message) {
+    const std::lock_guard lock(messagesMutex);
+    messages.push_back(message);
+  }};
+  DataStructure dataStructure;
+  const ReadOnScaleTableFileFilter filter;
+  auto executeResult = filter.execute(dataStructure, CreateArguments(inputFile), nullptr, messageHandler);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(std::none_of(messages.cbegin(), messages.cend(), [](const IFilter::Message& message) { return message.type == IFilter::Message::Type::Warning; }));
+  REQUIRE(executeResult.result.warnings().size() == 1);
+  REQUIRE(executeResult.result.warnings().front().code == k_ExtraMaterialValuesWarning);
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: File Changed After Preflight", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const std::string testName = GENERATE("Different X Count", "Missing X Section", "Missing Name Section");
+  CAPTURE(testName);
+
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / fmt::format("{}.flxtbl", testName);
+  FixtureOptions initialOptions;
+  initialOptions.BoundsCounts = {4, 3, 2};
+  WriteFixture(inputFile, initialOptions);
+  const auto initialWriteTime = fs::last_write_time(inputFile);
+
+  DataStructure dataStructure;
+  TestableReadOnScaleTableFileFilter filter;
+  const Arguments args = CreateArguments(inputFile);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto applyResult = preflightResult.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+
+  FixtureOptions changedOptions = initialOptions;
+  if(testName == "Different X Count")
+  {
+    changedOptions.BoundsCounts[0] = 5;
+  }
+  else if(testName == "Missing X Section")
+  {
+    changedOptions.BoundsCounts[0] = 0;
+    changedOptions.DeclaredMatrCount = 6;
+    changedOptions.WrittenMatrCount = 6;
+  }
+  else
+  {
+    changedOptions.WriteNameSection = false;
+  }
+  WriteFixture(inputFile, changedOptions);
+  fs::last_write_time(inputFile, initialWriteTime + std::chrono::seconds(2));
+
+  const std::atomic_bool shouldCancel = false;
+  auto executeResult = filter.executeImpl(dataStructure, args, nullptr, {}, shouldCancel, {});
+  REQUIRE(executeResult.invalid());
+  REQUIRE(executeResult.errors().front().code == k_FileChangedError);
+  REQUIRE(executeResult.errors().front().message.find("file changed after preflight") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: C Locale Float Parsing", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  LocaleGuard localeGuard;
+  if(!localeGuard.set("de_DE.UTF-8"))
+  {
+    SUCCEED("The de_DE.UTF-8 locale is not installed; locale-specific parsing test skipped.");
+    return;
+  }
+
+  FixtureOptions options;
+  options.BoundsCounts = {4, 3, 2};
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "CLocaleParsing.flxtbl";
+  const GeneratedFixture fixture = WriteFixture(inputFile, options);
+  RequireValidImport(inputFile, fixture, {3, 2, 1});
 }
 
 TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Header Cache Refreshes", "[SimplnxCore][ReadOnScaleTableFileFilter]")

@@ -14,20 +14,22 @@
 
 #include <fmt/format.h>
 
+#include <array>
 #include <atomic>
 #include <filesystem>
 #include <map>
+#include <mutex>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_InputFileDoesNotExistError = -12050;
 constexpr int32 k_FileAccessError = -12051;
 
-static std::atomic_int32_t s_InstanceId = 0;
-static std::map<int32, OnScaleTableFileHeader> s_HeaderCache;
+std::atomic_int32_t s_InstanceId = 0;
+std::map<int32, OnScaleTableFileHeader> s_HeaderCache;
+std::mutex s_HeaderCacheMutex;
 
 const std::array<std::string, 3> k_BoundsNames = {"X Bounds", "Y Bounds", "Z Bounds"};
 } // namespace
@@ -37,11 +39,13 @@ namespace nx::core
 ReadOnScaleTableFileFilter::ReadOnScaleTableFileFilter()
 : m_InstanceId(s_InstanceId.fetch_add(1))
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache[m_InstanceId] = {};
 }
 
 ReadOnScaleTableFileFilter::~ReadOnScaleTableFileFilter() noexcept
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache.erase(m_InstanceId);
 }
 
@@ -75,8 +79,8 @@ Parameters ReadOnScaleTableFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The OnScale table file to import.", fs::path(""), FileSystemPathParameter::ExtensionsType{".flxtbl"},
-                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The OnScale table file to import. Any file extension is accepted.", fs::path(""),
+                                                          FileSystemPathParameter::ExtensionsType{".flxtbl"}, FileSystemPathParameter::PathType::InputFile, true));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Fallback Origin", "The origin for each axis that is absent from the file.", VectorFloat32Parameter::ValueType{0.0F, 0.0F, 0.0F},
                                                          VectorFloat32Parameter::NamesType{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Fallback Spacing", "The spacing for each axis that is absent from the file.",
@@ -112,31 +116,28 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
 {
   const auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   std::error_code fileError;
-  if(!fs::exists(inputFile, fileError))
-  {
-    return MakePreflightErrorResult(k_InputFileDoesNotExistError, fmt::format("The input OnScale table file '{}' does not exist.", inputFile.string()));
-  }
-
   const auto writeTime = fs::last_write_time(inputFile, fileError);
   if(fileError)
   {
     return MakePreflightErrorResult(k_FileAccessError, fmt::format("The modification time for input OnScale table file '{}' could not be read: {}", inputFile.string(), fileError.message()));
   }
 
-  auto& cachedHeader = s_HeaderCache[m_InstanceId];
+  OnScaleTableFileHeader cachedHeader;
+  {
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    cachedHeader = s_HeaderCache[m_InstanceId];
+  }
   if(cachedHeader.InputFile != inputFile || cachedHeader.TimeStamp != writeTime)
   {
-    ReadOnScaleTableFileInputValues inputValues;
-    inputValues.InputFile = inputFile;
-    DataStructure throwaway;
-    ReadOnScaleTableFile algorithm(throwaway, messageHandler, shouldCancel, &inputValues);
-    auto headerResult = algorithm.readHeader();
+    auto headerResult = ReadOnScaleTableFile::ReadHeader(inputFile);
     if(headerResult.invalid())
     {
       return {ConvertInvalidResult<OutputActions>(std::move(headerResult))};
     }
     cachedHeader = std::move(headerResult.value());
     cachedHeader.TimeStamp = writeTime;
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    s_HeaderCache[m_InstanceId] = cachedHeader;
   }
 
   const auto geometryPath = filterArgs.value<DataPath>(k_CreatedRectGridGeometryPath_Key);
@@ -144,6 +145,8 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
   const auto featureIdsName = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   const auto phaseDataName = filterArgs.value<std::string>(k_PhaseAttributeMatrixName_Key);
   const auto materialNamesName = filterArgs.value<std::string>(k_MaterialNamesArrayName_Key);
+  const auto fallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  const auto fallbackSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   const ShapeType cellShape = {cachedHeader.BoundsCounts[2] - 1, cachedHeader.BoundsCounts[1] - 1, cachedHeader.BoundsCounts[0] - 1};
 
   Result<OutputActions> resultOutputActions;
@@ -154,10 +157,23 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
   resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(phaseDataPath, ShapeType{cachedHeader.NameCount}));
   resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(ShapeType{cachedHeader.NameCount}, phaseDataPath.createChildPath(materialNamesName), ""));
 
+  auto firstBounds = cachedHeader.FirstBounds;
+  auto lastBounds = cachedHeader.LastBounds;
+  for(usize axis = 0; axis < cachedHeader.BoundsPresent.size(); axis++)
+  {
+    if(!cachedHeader.BoundsPresent[axis])
+    {
+      firstBounds[axis] = fallbackOrigin[axis];
+      lastBounds[axis] = fallbackOrigin[axis] + fallbackSpacing[axis];
+    }
+  }
+
   std::vector<PreflightValue> updatedValues;
   updatedValues.push_back({"Rect Grid Geometry Info",
-                           fmt::format("Bounds: X={}, Y={}, Z={}\nDimensions: X={}, Y={}, Z={}\nMaterial names: {}", cachedHeader.BoundsCounts[0], cachedHeader.BoundsCounts[1],
-                                       cachedHeader.BoundsCounts[2], cachedHeader.BoundsCounts[0] - 1, cachedHeader.BoundsCounts[1] - 1, cachedHeader.BoundsCounts[2] - 1, cachedHeader.NameCount)});
+                           fmt::format("X Range: {:.8E} to {:.8E} ({} bounds, {} cells)\nY Range: {:.8E} to {:.8E} ({} bounds, {} cells)\nZ Range: {:.8E} to {:.8E} ({} bounds, {} cells)\nUnits: "
+                                       "meters\nMaterial names: {}",
+                                       firstBounds[0], lastBounds[0], cachedHeader.BoundsCounts[0], cachedHeader.BoundsCounts[0] - 1, firstBounds[1], lastBounds[1], cachedHeader.BoundsCounts[1],
+                                       cachedHeader.BoundsCounts[1] - 1, firstBounds[2], lastBounds[2], cachedHeader.BoundsCounts[2], cachedHeader.BoundsCounts[2] - 1, cachedHeader.NameCount)});
   return {std::move(resultOutputActions), std::move(updatedValues)};
 }
 
@@ -169,11 +185,14 @@ Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.FallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.FallbackSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.RectGridGeometryPath = filterArgs.value<DataPath>(k_CreatedRectGridGeometryPath_Key);
-  inputValues.CellAttributeMatrixPath = inputValues.RectGridGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
-  inputValues.FeatureIdsArrayPath = inputValues.CellAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  const DataPath cellAttributeMatrixPath = inputValues.RectGridGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  inputValues.FeatureIdsArrayPath = cellAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.PhaseAttributeMatrixPath = inputValues.RectGridGeometryPath.createChildPath(filterArgs.value<std::string>(k_PhaseAttributeMatrixName_Key));
   inputValues.MaterialNamesArrayPath = inputValues.PhaseAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_MaterialNamesArrayName_Key));
-  inputValues.Header = s_HeaderCache[m_InstanceId];
+  {
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    inputValues.Header = s_HeaderCache[m_InstanceId];
+  }
 
   return ReadOnScaleTableFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
