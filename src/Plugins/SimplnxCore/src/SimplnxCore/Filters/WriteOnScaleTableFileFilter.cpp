@@ -3,9 +3,9 @@
 #include "SimplnxCore/Filters/Algorithms/WriteOnScaleTableFile.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+// This header declares DataContainerSelectionFilterParameterConverter.
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -87,6 +87,7 @@ IFilter::UniquePointer WriteOnScaleTableFileFilter::clone() const
 IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  Result<OutputActions> resultOutputActions;
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   if(!fs::exists(outputPath))
   {
@@ -108,9 +109,14 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
-  if(dataStructure.getDataAs<StringArray>(phaseNamesPath) == nullptr)
+  const auto* phaseNames = dataStructure.getDataAs<StringArray>(phaseNamesPath);
+  if(phaseNames == nullptr)
   {
     return MakePreflightErrorResult(-12025, fmt::format("The phase names object '{}' is not a StringArray. Select a StringArray that contains the phase names.", phaseNamesPath.toString()));
+  }
+  if(phaseNames->getNumberOfTuples() == 0)
+  {
+    resultOutputActions.warnings().push_back(Warning{-12038, fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
   }
 
   const SizeVec3 dimensions = geometry.getDimensions();
@@ -121,7 +127,7 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
                                                 geometryPath.toString(), StringUtilities::formatDimensions3D(dimensions)));
   }
 
-  return {};
+  return {std::move(resultOutputActions)};
 }
 
 Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
