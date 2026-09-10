@@ -168,12 +168,13 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
 }
 
 /**
- * @brief Writes one C3D8 element for every ImageGeom cell.
+ * @brief Writes one C3D8 or C3D8R element for every ImageGeom cell.
  * @param filter Receives progress messages.
  * @param fileName Temporary element-file path.
  * @param cDims Cell dimensions in X, Y, and Z order.
  * @param pDims Node-grid dimensions in X, Y, and Z order.
  * @param shouldCancel Signals cancellation at throttled progress checkpoints.
+ * @param useReducedIntegration Writes C3D8R elements when true and C3D8 elements otherwise.
  * @return Zero on completion, one on cancellation, or -1 when fopen fails.
  * @pre filter is not null.
  * @pre Dimension products and generated IDs fit the output integer types.
@@ -181,7 +182,7 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
  * C stdio return values are not inspected. Cancellation is evaluated only when
  * a progress checkpoint runs more than one second after the prior message.
  */
-int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel, bool useReducedIntegration)
 {
   usize totalPoints = cDims[0] * cDims[1] * cDims[2];
   auto increment = static_cast<usize>(totalPoints * 0.01f);
@@ -202,7 +203,7 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
 
   auto initialTime = std::chrono::steady_clock::now();
   usize index = 1;
-  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=C3D8\n");
+  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=%s\n", useReducedIntegration ? "C3D8R" : "C3D8");
   for(usize z = 0; z < cDims[2]; z++)
   {
     for(usize y = 0; y < cDims[1]; y++)
@@ -665,12 +666,13 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
  * @brief Writes one solid section for each positive grain ID through the maximum.
  * @param file Temporary section-file path.
  * @param maxGrainId Largest grain ID to emit.
- * @param hourglassStiffness Hourglass stiffness written for every section.
+ * @param useReducedIntegration Writes hourglass stiffness when true.
+ * @param hourglassStiffness Hourglass stiffness written for reduced-integration sections.
  * @return Zero on completion or -1 when fopen fails.
  *
  * C stdio return values are not inspected.
  */
-int32 writeSects(const std::string& file, int32 maxGrainId, int32 hourglassStiffness)
+int32 writeSects(const std::string& file, int32 maxGrainId, bool useReducedIntegration, int32 hourglassStiffness)
 {
   int32 err = 0;
   FILE* f = fopen(file.c_str(), "wb");
@@ -686,7 +688,10 @@ int32 writeSects(const std::string& file, int32 maxGrainId, int32 hourglassStiff
   {
     fprintf(f, "** Section: Grain%d\n", grain);
     fprintf(f, "*Solid Section, elset=Grain%d_set, material=Grain_Mat%d\n", grain, grain);
-    fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    if(useReducedIntegration)
+    {
+      fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    }
     fprintf(f, "** --------------------------------------\n");
     grain++;
   }
@@ -787,7 +792,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
 
-  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel());
+  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration); // Elements file
   if(err < 0)
   {
     return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
@@ -799,7 +804,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->HourglassStiffness);
+  err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
