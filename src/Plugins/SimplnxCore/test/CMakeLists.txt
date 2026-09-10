@@ -119,6 +119,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadImageStackTest.cpp
   ReadImageTest.cpp
   ReadNIfTIFileTest.cpp
+  ReadOnScaleTableFileTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadStringDataArrayTest.cpp

@@ -117,6 +117,7 @@ set(FilterList
   ReadImageFilter
   ReadImageStackFilter
   ReadNIfTIFileFilter
+  ReadOnScaleTableFileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadStringDataArrayFilter
@@ -286,6 +287,7 @@ set(AlgorithmList
   ReadImage
   ReadImageStack
   ReadNIfTIFile
+  ReadOnScaleTableFile
   ReadRawBinary
   ReadStlFile
   ReadStringDataArray
