@@ -47,6 +47,7 @@ static const std::map<std::string, std::string> k_LegacySimplFilterUuidMap{
     {"CopyDataContainer", "ac8d51d8-9167-5628-a060-95a8863a76b1"},
     {"CopyFeatureArrayToElementArray", "99836b75-144b-5126-b261-b411133b5e8a"},
     {"CopyObject", "088ef69b-ca98-51a9-97ac-369862015d71"},
+    {"CreateAbaqusFile", "d702beff-eb02-5ee1-a76a-79d5b56ec730"},
     {"CreateAttributeMatrix", "93375ef0-7367-5372-addc-baa019b1b341"},
     {"CreateDataArray", "77f392fb-c1eb-57da-a1b1-e7acf9239fb8"},
     {"CreateDataContainer", "816fbe6b-7c38-581b-b149-3f839fb65b93"},
