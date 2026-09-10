@@ -1,5 +1,6 @@
 #include "ComputeFeatureCentroids.hpp"
 
+#include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -19,7 +20,8 @@ namespace
 {
 // Each bulk read contains 65,536 Feature IDs. This keeps the staging buffer cache-sized.
 constexpr usize k_ChunkTuples = 65536;
-constexpr double k_TwoPi = 6.283185307179586;
+// A feature with a per-axis unit-vector resultant below this threshold has its mass spread almost uniformly around the domain.
+// This distribution makes the circular mean indeterminate. The algorithm keeps the arithmetic mean.
 constexpr double k_DegenerateResultant = 1.0e-6;
 } // namespace
 
@@ -64,8 +66,13 @@ Result<> ComputeFeatureCentroids::operator()()
   std::vector<float64> kahanSum(featureElems3, 0.0);
   std::vector<float64> kahanComp(featureElems3, 0.0);
   std::vector<uint64> voxelCount(featureElems3, 0);
-  std::vector<float64> sumCos(featureElems3, 0.0);
-  std::vector<float64> sumSin(featureElems3, 0.0);
+  std::vector<float64> sumCos;
+  std::vector<float64> sumSin;
+  if(m_InputValues->IsPeriodic)
+  {
+    sumCos.resize(featureElems3, 0.0);
+    sumSin.resize(featureElems3, 0.0);
+  }
   std::vector<uint64> rangeX(featureElems2, 0);
   std::vector<uint64> rangeY(featureElems2, 0);
   std::vector<uint64> rangeZ(featureElems2, 0);
@@ -136,7 +143,7 @@ Result<> ComputeFeatureCentroids::operator()()
         voxelCount[fi]++;
         if(m_InputValues->IsPeriodic)
         {
-          const double phase = k_TwoPi * (voxelCoords[c] - static_cast<double>(origin[c])) / domainLength[c];
+          const double phase = Constants::k_2Pi<double> * (voxelCoords[c] - static_cast<double>(origin[c])) / domainLength[c];
           sumCos[fi] += std::cos(phase);
           sumSin[fi] += std::sin(phase);
         }
@@ -160,6 +167,9 @@ Result<> ComputeFeatureCentroids::operator()()
   if(m_InputValues->IsPeriodic)
   {
     m_MessageHandler({IFilter::Message::Type::Info, "Checking for periodic data."});
+    // When a feature spans the full extent on an axis, its arithmetic centroid is in the empty middle of the wrapped feature.
+    // Replace that component with the circular mean from the per-feature unit-vector sums.
+    // If the resultant is near zero, the feature mass is almost uniform and the algorithm keeps the arithmetic mean.
     const std::array<const std::vector<uint64>*, 3> rangeStores = {&rangeX, &rangeY, &rangeZ};
     const std::array<usize, 3> dims = {xPoints, yPoints, zPoints};
     bool anyAdjusted = false;
@@ -186,9 +196,9 @@ Result<> ComputeFeatureCentroids::operator()()
         double phase = std::atan2(sumSin[axisIdx], sumCos[axisIdx]);
         if(phase < 0.0)
         {
-          phase += k_TwoPi;
+          phase += Constants::k_2Pi<double>;
         }
-        centroidsBuf[axisIdx] = static_cast<float32>(static_cast<double>(origin[axis]) + (phase / k_TwoPi) * domainLength[axis]);
+        centroidsBuf[axisIdx] = static_cast<float32>(static_cast<double>(origin[axis]) + (phase / Constants::k_2Pi<double>) * domainLength[axis]);
         anyAdjusted = true;
       }
     }

@@ -154,4 +154,3 @@ analytical fixtures that verify SIMPLNX independently. Full entries in
   constant-offset model — neither is a legacy diff because legacy has no periodic path.)
 - **Retracted candidate** — the DRAFT "Kahan-vs-naive summation" precision deviation: legacy already uses the
   identical Kahan kernel, so no such deviation exists (the residual precision difference is captured by D1).
-
