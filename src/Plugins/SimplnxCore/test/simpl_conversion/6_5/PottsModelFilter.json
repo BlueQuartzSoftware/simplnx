@@ -1,0 +1,27 @@
+{
+  "PipelineBuilder": {
+    "Name": "Potts Model Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Potts Model",
+    "Filter_Name": "PottsModel",
+    "Filter_Uuid": "{e15ec84b-1e02-53a6-a830-59e0813775a1}",
+    "Iterations": 37,
+    "Temperature": 456.75,
+    "PeriodicBoundaries": 1,
+    "UseMask": 1,
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Mask"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "FeatureIds"
+    }
+  }
+}
