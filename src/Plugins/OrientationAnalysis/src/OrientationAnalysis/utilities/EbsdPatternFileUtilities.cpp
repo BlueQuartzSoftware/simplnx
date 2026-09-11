@@ -1,9 +1,10 @@
 #include "OrientationAnalysis/utilities/EbsdPatternFileUtilities.hpp"
 
+#include "simplnx/Common/Bit.hpp"
+
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <bit>
 #include <cctype>
 #include <fstream>
 #include <limits>
@@ -74,21 +75,16 @@ Result<std::vector<uint8>> ReadExactBytes(const std::filesystem::path& filePath,
 
 uint32 DecodeUInt32LittleEndian(const uint8* bytes)
 {
-  return static_cast<uint32>(bytes[0]) | (static_cast<uint32>(bytes[1]) << 8U) | (static_cast<uint32>(bytes[2]) << 16U) | (static_cast<uint32>(bytes[3]) << 24U);
+  return bit_cast_int<uint32, endian::little>(reinterpret_cast<const std::byte*>(bytes));
 }
 
 uint64 DecodeUInt64LittleEndian(const uint8* bytes)
 {
-  uint64 value = 0;
-  for(uint64 index = 0; index < 8; index++)
-  {
-    value |= static_cast<uint64>(bytes[index]) << (index * 8U);
-  }
-  return value;
+  return bit_cast_int<uint64, endian::little>(reinterpret_cast<const std::byte*>(bytes));
 }
 
 float64 DecodeFloat64LittleEndian(const uint8* bytes)
 {
-  return std::bit_cast<float64>(DecodeUInt64LittleEndian(bytes));
+  return bit_cast<float64>(DecodeUInt64LittleEndian(bytes));
 }
 } // namespace nx::core::EbsdPatternFileUtilities
