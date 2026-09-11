@@ -89,8 +89,49 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
+namespace
 {
+Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
+{
+  if(bounds == nullptr)
+  {
+    return {};
+  }
+  const usize size = bounds->getNumberOfTuples();
+  if(size < 2)
+  {
+    return MakeErrorResult(-4006, fmt::format("RectGridGeom: {} bounds array must contain at least 2 values to define at least 1 cell, but {} value(s) provided.", axis, size));
+  }
+  for(usize i = 1; i < size; ++i)
+  {
+    if((*bounds)[i - 1] >= (*bounds)[i])
+    {
+      return MakeErrorResult(-4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}",
+                                                axis, i, i - 1, (*bounds)[i - 1], i, (*bounds)[i]));
+    }
+  }
+  return {};
+}
+} // namespace
+
+Result<> RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
+{
+  Result<> result = validateBoundsArray(xBounds, "X");
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = validateBoundsArray(yBounds, "Y");
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = validateBoundsArray(zBounds, "Z");
+  if(result.invalid())
+  {
+    return result;
+  }
+
   if(!xBounds)
   {
     m_xBoundsId.reset();
@@ -117,6 +158,8 @@ void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yB
   {
     m_zBoundsId = zBounds->getId();
   }
+
+  return {};
 }
 
 Float32Array* RectGridGeom::getXBounds()
