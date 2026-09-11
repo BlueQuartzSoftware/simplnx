@@ -8,30 +8,33 @@
 namespace nx::core
 {
 /**
- * @class WriteAbaqusHexahedronFilter
- * @brief Writes an Image Geometry as an Abaqus hexahedral mesh.
+ * @class WriteAbaqusCrystalPlasticityFilter
+ * @brief Writes a voxel mesh and crystal-plasticity material data to Abaqus input files.
  */
-class SIMPLNXCORE_EXPORT WriteAbaqusHexahedronFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteAbaqusCrystalPlasticityFilter : public IFilter
 {
 public:
-  WriteAbaqusHexahedronFilter() = default;
-  ~WriteAbaqusHexahedronFilter() noexcept override = default;
+  WriteAbaqusCrystalPlasticityFilter() = default;
+  ~WriteAbaqusCrystalPlasticityFilter() noexcept override = default;
 
-  WriteAbaqusHexahedronFilter(const WriteAbaqusHexahedronFilter&) = delete;
-  WriteAbaqusHexahedronFilter(WriteAbaqusHexahedronFilter&&) noexcept = delete;
+  WriteAbaqusCrystalPlasticityFilter(const WriteAbaqusCrystalPlasticityFilter&) = delete;
+  WriteAbaqusCrystalPlasticityFilter(WriteAbaqusCrystalPlasticityFilter&&) noexcept = delete;
 
-  WriteAbaqusHexahedronFilter& operator=(const WriteAbaqusHexahedronFilter&) = delete;
-  WriteAbaqusHexahedronFilter& operator=(WriteAbaqusHexahedronFilter&&) noexcept = delete;
+  WriteAbaqusCrystalPlasticityFilter& operator=(const WriteAbaqusCrystalPlasticityFilter&) = delete;
+  WriteAbaqusCrystalPlasticityFilter& operator=(WriteAbaqusCrystalPlasticityFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
-  static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
-  static constexpr StringLiteral k_WriteDummyNode_Key = "write_dummy_node";
-  static constexpr StringLiteral k_JobName_Key = "job_name";
   static constexpr StringLiteral k_OutputPath_Key = "output_path";
   static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
+  static constexpr StringLiteral k_JobName_Key = "job_name";
+  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
+  static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
+  static constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
+  static constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
+  static constexpr StringLiteral k_MaterialConstants_Key = "material_constants";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
   static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
@@ -100,7 +103,7 @@ protected:
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
-   * @param executionContext Resolves relative paths to absolute paths.
+   * @param executionContext The ExecutionContext that determines the correct absolute path from a relative path
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
@@ -114,7 +117,7 @@ protected:
    * @param pipelineNode The node in the pipeline that is being executed
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
-   * @param executionContext Resolves relative paths to absolute paths.
+   * @param executionContext The ExecutionContext that determines the correct absolute path from a relative path
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
@@ -122,5 +125,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteAbaqusHexahedronFilter, "4bc81b8c-1594-409a-89eb-3ea8d8f061b0");
-/* LEGACY UUID FOR THIS FILTER 0559aa37-c5ad-549a-82d4-bff4bfcb6cc6 */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteAbaqusCrystalPlasticityFilter, "20448af0-c18c-4c76-8092-342b6081eac8");
+/* LEGACY UUID FOR THIS FILTER d702beff-eb02-5ee1-a76a-79d5b56ec730 */

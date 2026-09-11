@@ -1,6 +1,6 @@
 #include "WriteAbaqusHexahedronFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/WriteAbaqusHexahedron.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteAbaqusInputDeck.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
@@ -57,7 +57,9 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
       std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", true));
-  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The value to use for the Hourglass Stiffness", 250));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
+                                                                 "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", true));
+  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The name of the job", "SomeString"));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
@@ -69,6 +71,10 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 
   return params;
 }
@@ -76,12 +82,13 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteAbaqusHexahedronFilter::parametersVersion() const
 {
-  return 2;
+  return 4;
 
-  // Version 1 -> 2
-  // Change:
-  // Added - k_WriteDummyNode_Key = "write_dummy_node"
-  // Solution - Accept default functionality of parameter (true) to preserve backwards compatibility
+  // Version 2 adds k_WriteDummyNode_Key. The default value preserves the legacy dummy node output.
+
+  // Version 3 adds k_UseReducedIntegration_Key. The default value writes standard C3D8 elements without hourglass stiffness.
+
+  // Version 4 adds k_CellPhasesArrayPath_Key and changes the default element type to C3D8R.
 }
 
 //------------------------------------------------------------------------------
@@ -94,21 +101,14 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-
-  // Check Output Path
-  if(!fs::exists(pOutputPathValue))
+  const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  const auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  const auto cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto validationResult = ValidateAbaqusInputCellArrays(dataStructure, imageGeometryPath, featureIdsArrayPath, cellPhasesArrayPath);
+  if(validationResult.invalid())
   {
-    return MakePreflightErrorResult(-1111, "The supplied directory path doesn't exist");
+    return {ConvertResultTo<OutputActions>(std::move(validationResult), {})};
   }
-  else
-  {
-    if(!fs::is_directory(pOutputPathValue))
-    {
-      return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
-    }
-  }
-
   return {};
 }
 
@@ -116,8 +116,9 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
 Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  WriteAbaqusHexahedronInputValues inputValues;
+  WriteAbaqusInputDeckInputValues inputValues;
 
+  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
   inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -125,8 +126,9 @@ Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.WriteDummyNode = filterArgs.value<bool>(k_WriteDummyNode_Key);
+  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
-  return WriteAbaqusHexahedron(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteAbaqusInputDeck(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -144,6 +146,8 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 Result<Arguments> WriteAbaqusHexahedronFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
+  // Legacy Hexahedron pipelines wrote C3D8 elements because the filter did not expose an integration choice.
+  args.insertOrAssign(k_UseReducedIntegration_Key, std::make_any<bool>(false));
 
   std::vector<Result<>> results;
 
