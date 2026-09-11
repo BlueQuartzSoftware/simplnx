@@ -1,4 +1,5 @@
 #include "SimplnxCore/Filters/WriteAbaqusCrystalPlasticityFilter.hpp"
+#include "SimplnxCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -22,6 +23,7 @@
 #include <iterator>
 #include <numbers>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -237,6 +239,49 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::WriteAbaqus Filters: Common Mesh Output Matches", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter][WriteAbaqusHexahedronFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure crystalPlasticityData = CreateDataStructure({2, 2, 1}, {1, 1, 2, 2}, {1, 1, 2, 2}, std::vector<float32>(12, 0.0F));
+  DataStructure hexahedronData = CreateDataStructure({2, 2, 1}, {1, 1, 2, 2}, {1, 1, 2, 2}, std::vector<float32>(12, 0.0F));
+
+  const fs::path outputRoot = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusParity";
+  const fs::path crystalPlasticityOutput = outputRoot / "CrystalPlasticity";
+  const fs::path hexahedronOutput = outputRoot / "Hexahedron";
+  fs::create_directories(crystalPlasticityOutput);
+  fs::create_directories(hexahedronOutput);
+  const std::string prefix = "Abaqus_Parity";
+
+  const WriteAbaqusCrystalPlasticityFilter crystalPlasticityFilter;
+  Arguments crystalPlasticityArgs = CreateArguments(crystalPlasticityOutput, prefix);
+  crystalPlasticityArgs.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
+  auto crystalPlasticityResult = crystalPlasticityFilter.execute(crystalPlasticityData, crystalPlasticityArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(crystalPlasticityResult.result);
+
+  const WriteAbaqusHexahedronFilter hexahedronFilter;
+  Arguments hexahedronArgs = hexahedronFilter.getDefaultArguments();
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key, std::make_any<bool>(false));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_UseReducedIntegration_Key, std::make_any<bool>(true));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(hexahedronOutput));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>(prefix));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  hexahedronArgs.insertOrAssign(WriteAbaqusHexahedronFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  auto hexahedronResult = hexahedronFilter.execute(hexahedronData, hexahedronArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(hexahedronResult.result);
+
+  for(const std::string_view suffix : {"_nodes.inp", "_elems.inp", "_sects.inp", "_elset.inp"})
+  {
+    REQUIRE(ReadFile(crystalPlasticityOutput / fmt::format("{}{}", prefix, suffix)) == ReadFile(hexahedronOutput / fmt::format("{}{}", prefix, suffix)));
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(crystalPlasticityData);
+  UnitTest::CheckArraysInheritTupleDims(hexahedronData);
+}
+
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Wrapping Rules", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
@@ -440,7 +485,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tuple Count Mismatch
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Directory", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Creates Output Directory", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -452,7 +497,19 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Direc
   const WriteAbaqusCrystalPlasticityFilter filter;
   Arguments args = CreateArguments(missingPath, "Missing_Output_Directory");
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+  REQUIRE(preflightResult.outputActions.warnings()[0].code == -17);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(fs::exists(missingPath / "Missing_Output_Directory_nodes.inp"));
+  REQUIRE(fs::exists(missingPath / "Missing_Output_Directory_elems.inp"));
+  REQUIRE(fs::exists(missingPath / "Missing_Output_Directory_sects.inp"));
+  REQUIRE(fs::exists(missingPath / "Missing_Output_Directory_elset.inp"));
+  REQUIRE(fs::exists(missingPath / "Missing_Output_Directory.inp"));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")

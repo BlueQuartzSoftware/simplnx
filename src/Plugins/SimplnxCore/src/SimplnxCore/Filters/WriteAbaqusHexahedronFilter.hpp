@@ -32,6 +32,7 @@ public:
   static constexpr StringLiteral k_OutputPath_Key = "output_path";
   static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

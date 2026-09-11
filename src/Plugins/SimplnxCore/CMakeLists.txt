@@ -324,8 +324,7 @@ set(AlgorithmList
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
   VerifyTriangleWinding
-  WriteAbaqusCrystalPlasticity
-  WriteAbaqusHexahedron
+  WriteAbaqusInputDeck
   WriteASCIIData
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate

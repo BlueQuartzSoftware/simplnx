@@ -1,6 +1,6 @@
 #include "WriteAbaqusCrystalPlasticityFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/WriteAbaqusCrystalPlasticity.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteAbaqusInputDeck.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -129,16 +129,20 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   const usize cellCount = imageGeom.getNumberOfCells();
 
-  const std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
-  for(const auto& [arrayKey, errorCode] : arrayKeys)
+  const auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  const auto cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto validationResult = ValidateAbaqusInputCellArrays(dataStructure, imageGeometryPath, featureIdsArrayPath, cellPhasesArrayPath);
+  if(validationResult.invalid())
   {
-    const auto arrayPath = filterArgs.value<DataPath>(arrayKey);
-    const auto& array = dataStructure.getDataRefAs<IDataArray>(arrayPath);
-    if(array.getNumberOfTuples() != cellCount)
-    {
-      return MakePreflightErrorResult(
-          errorCode, fmt::format("The array '{}' has {} tuples, but the Image Geometry '{}' has {} cells.", arrayPath.toString(), array.getNumberOfTuples(), imageGeometryPath.toString(), cellCount));
-    }
+    return {ConvertResultTo<OutputActions>(std::move(validationResult), {})};
+  }
+
+  const auto cellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  const auto& cellEulerAnglesArray = dataStructure.getDataRefAs<IDataArray>(cellEulerAnglesArrayPath);
+  if(cellEulerAnglesArray.getNumberOfTuples() != cellCount)
+  {
+    return MakePreflightErrorResult(-12003, fmt::format("The array '{}' has {} tuples, but the Image Geometry '{}' has {} cells.", cellEulerAnglesArrayPath.toString(),
+                                                        cellEulerAnglesArray.getNumberOfTuples(), imageGeometryPath.toString(), cellCount));
   }
 
   return {};
@@ -147,21 +151,23 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
 Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  WriteAbaqusCrystalPlasticityInputValues inputValues;
+  WriteAbaqusInputDeckInputValues inputValues;
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
   inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
-  inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
-  inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  AbaqusCrystalPlasticityMaterialValues materialValues;
+  materialValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
+  materialValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
+  materialValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
+  materialValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.CrystalPlasticityMaterial = std::move(materialValues);
 
-  return WriteAbaqusCrystalPlasticity(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteAbaqusInputDeck(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
