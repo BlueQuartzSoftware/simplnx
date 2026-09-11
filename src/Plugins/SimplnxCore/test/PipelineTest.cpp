@@ -7,9 +7,11 @@
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
+#include "simplnx/Plugin/PluginLoader.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -18,6 +20,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <typeinfo>
 
 namespace fs = std::filesystem;
@@ -41,6 +44,137 @@ const Uuid k_CorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce18
 const FilterHandle k_CreateDataGroupHandle(k_CreateDataGroupId, k_CorePluginId);
 
 const DataPath k_DeferredActionPath({"foo"});
+
+constexpr Uuid k_LegacyConversionPluginId = *Uuid::FromString("254739dd-c1c4-40a7-bcf8-58e8b79b8bdb");
+constexpr Uuid k_LegacyConversionFilterId = *Uuid::FromString("477e43df-5a63-42bf-8b06-1c2407c8b67d");
+constexpr Uuid k_LegacyConversionSimplId = *Uuid::FromString("a5b7ca67-2aeb-54be-8d60-17d29e47a497");
+constexpr StringLiteral k_LegacyValueKey = "legacy_value";
+constexpr float32 k_LegacyDefaultValue = 42.0F;
+constexpr float32 k_LegacyConvertedValue = 7.0F;
+constexpr int32 k_LegacyConversionError = -7654;
+constexpr int32 k_LegacyConversionWarning = -7655;
+
+class LegacyConversionTestFilter : public IFilter
+{
+public:
+  std::string name() const override
+  {
+    return "LegacyConversionTestFilter";
+  }
+
+  std::string className() const override
+  {
+    return "LegacyConversionTestFilter";
+  }
+
+  Uuid uuid() const override
+  {
+    return k_LegacyConversionFilterId;
+  }
+
+  std::string humanName() const override
+  {
+    return "Legacy Conversion Test Filter";
+  }
+
+  std::vector<std::string> defaultTags() const override
+  {
+    return {};
+  }
+
+  Parameters parameters() const override
+  {
+    Parameters params;
+    params.insert(std::make_unique<Float32Parameter>(k_LegacyValueKey, "Legacy Value", "A value used to verify legacy conversion behavior.", k_LegacyDefaultValue));
+    return params;
+  }
+
+  VersionType parametersVersion() const override
+  {
+    return 1;
+  }
+
+  UniquePointer clone() const override
+  {
+    return std::make_unique<LegacyConversionTestFilter>();
+  }
+
+protected:
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override
+  {
+    return {};
+  }
+
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override
+  {
+    return {};
+  }
+};
+
+Result<Arguments> ConvertLegacyTestFilter(const nlohmann::json& json)
+{
+  const std::string mode = json.at("ConversionMode").get<std::string>();
+  if(mode == "invalid")
+  {
+    return MakeErrorResult<Arguments>(k_LegacyConversionError, "The test converter rejected its legacy parameters.");
+  }
+  if(mode == "json_exception")
+  {
+    static_cast<void>(json.at("MissingLegacyValue"));
+  }
+  if(mode == "std_exception")
+  {
+    throw std::runtime_error("The test converter threw a standard exception.");
+  }
+
+  Arguments args = LegacyConversionTestFilter().getDefaultArguments();
+  args.insertOrAssign(k_LegacyValueKey, std::make_any<float32>(k_LegacyConvertedValue));
+  Result<Arguments> result{std::move(args)};
+  if(mode == "warning")
+  {
+    result.warnings().push_back(Warning{k_LegacyConversionWarning, "The test converter accepted a tolerated legacy value."});
+  }
+  return result;
+}
+
+class LegacyConversionTestPlugin : public AbstractPlugin
+{
+public:
+  LegacyConversionTestPlugin()
+  : AbstractPlugin(k_LegacyConversionPluginId, "LegacyConversionTestPlugin", "", "")
+  {
+    addFilter([]() { return std::make_unique<LegacyConversionTestFilter>(); });
+  }
+
+  SIMPLMapType getSimplToSimplnxMap() const override
+  {
+    return {{k_LegacyConversionSimplId, {k_LegacyConversionFilterId, ConvertLegacyTestFilter}}};
+  }
+};
+
+nlohmann::json CreateLegacyConversionPipeline(std::string_view mode, bool includeHumanName = true)
+{
+  nlohmann::json filterJson = {{"Filter_Uuid", k_LegacyConversionSimplId.str()}, {"Filter_Name", "LegacyConversionTestFilter"}, {"ConversionMode", mode}};
+  if(includeHumanName)
+  {
+    filterJson["Filter_Human_Label"] = "Legacy Conversion Human Name";
+  }
+
+  return {{"PipelineBuilder", {{"Name", "Legacy Conversion Test Pipeline"}, {"Number_Filters", 1}, {"Version", 6}}}, {"0", std::move(filterJson)}};
+}
+
+FilterList CreateLegacyConversionFilterList()
+{
+  FilterList filterList;
+  auto addPluginResult = filterList.addPlugin(std::make_shared<InMemoryPluginLoader>(std::make_shared<LegacyConversionTestPlugin>()));
+  if(addPluginResult.invalid())
+  {
+    throw std::runtime_error(addPluginResult.errors().front().message);
+  }
+  return filterList;
+}
 
 class DeferredActionTestFilter : public IFilter
 {
@@ -113,6 +247,87 @@ protected:
   }
 };
 } // namespace
+
+TEST_CASE("PipelineTest: Invalid SIMPL conversion creates a visible unknown filter")
+{
+  FilterList filterList = CreateLegacyConversionFilterList();
+  const nlohmann::json pipelineJson = CreateLegacyConversionPipeline("invalid");
+
+  Result<std::unique_ptr<PipelineFilter>> filterResult = PipelineFilter::FromSIMPLJson(pipelineJson["0"], filterList);
+  REQUIRE(filterResult.invalid());
+  REQUIRE(filterResult.errors().size() == 1);
+  CHECK(filterResult.errors()[0].code == k_LegacyConversionError);
+  CHECK(filterResult.errors()[0].message.find("Legacy Conversion Human Name") != std::string::npos);
+  CHECK(filterResult.errors()[0].message.find("The test converter rejected its legacy parameters.") != std::string::npos);
+
+  Result<Pipeline> pipelineResult = Pipeline::FromSIMPLJson(pipelineJson, &filterList);
+  SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+
+  Pipeline& pipeline = pipelineResult.value();
+  REQUIRE(pipeline.size() == 1);
+  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(pipelineFilter != nullptr);
+  REQUIRE(pipelineFilter->getFilter() == nullptr);
+  REQUIRE(pipelineFilter->getArguments().empty());
+  REQUIRE_FALSE(LegacyConversionTestFilter().getDefaultArguments().empty());
+  CHECK(pipelineFilter->getComments().find("Legacy Conversion Human Name") != std::string::npos);
+  CHECK(pipelineFilter->getComments().find("The test converter rejected its legacy parameters.") != std::string::npos);
+}
+
+TEST_CASE("PipelineTest: SIMPL conversion warnings reach the pipeline caller")
+{
+  FilterList filterList = CreateLegacyConversionFilterList();
+  const nlohmann::json pipelineJson = CreateLegacyConversionPipeline("warning");
+
+  Result<std::unique_ptr<PipelineFilter>> filterResult = PipelineFilter::FromSIMPLJson(pipelineJson["0"], filterList);
+  SIMPLNX_RESULT_REQUIRE_VALID(filterResult);
+  REQUIRE(filterResult.warnings().size() == 1);
+  CHECK(filterResult.warnings()[0].code == k_LegacyConversionWarning);
+  CHECK(filterResult.warnings()[0].message == "The test converter accepted a tolerated legacy value.");
+
+  Result<Pipeline> pipelineResult = Pipeline::FromSIMPLJson(pipelineJson, &filterList);
+  SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+
+  REQUIRE(pipelineResult.warnings().size() == 1);
+  CHECK(pipelineResult.warnings()[0].code == k_LegacyConversionWarning);
+  CHECK(pipelineResult.warnings()[0].message == "The test converter accepted a tolerated legacy value.");
+
+  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipelineResult.value().at(0));
+  REQUIRE(pipelineFilter != nullptr);
+  REQUIRE(pipelineFilter->getFilter() != nullptr);
+  CHECK(pipelineFilter->getArguments().value<float32>(k_LegacyValueKey) == k_LegacyConvertedValue);
+}
+
+TEST_CASE("PipelineTest: SIMPL converter exceptions create a visible unknown filter")
+{
+  FilterList filterList = CreateLegacyConversionFilterList();
+
+  SECTION("nlohmann JSON exception names the legacy human name")
+  {
+    Result<Pipeline> pipelineResult;
+    REQUIRE_NOTHROW(pipelineResult = Pipeline::FromSIMPLJson(CreateLegacyConversionPipeline("json_exception"), &filterList));
+    SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+
+    auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipelineResult.value().at(0));
+    REQUIRE(pipelineFilter != nullptr);
+    REQUIRE(pipelineFilter->getFilter() == nullptr);
+    CHECK(pipelineFilter->getComments().find("Legacy Conversion Human Name") != std::string::npos);
+    CHECK(pipelineFilter->getComments().find("MissingLegacyValue") != std::string::npos);
+  }
+
+  SECTION("standard exception falls back to the legacy UUID")
+  {
+    Result<Pipeline> pipelineResult;
+    REQUIRE_NOTHROW(pipelineResult = Pipeline::FromSIMPLJson(CreateLegacyConversionPipeline("std_exception", false), &filterList));
+    SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+
+    auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipelineResult.value().at(0));
+    REQUIRE(pipelineFilter != nullptr);
+    REQUIRE(pipelineFilter->getFilter() == nullptr);
+    CHECK(pipelineFilter->getComments().find(k_LegacyConversionSimplId.str()) != std::string::npos);
+    CHECK(pipelineFilter->getComments().find("The test converter threw a standard exception.") != std::string::npos);
+  }
+}
 
 TEST_CASE("PipelineTest:Execute Pipeline")
 {
