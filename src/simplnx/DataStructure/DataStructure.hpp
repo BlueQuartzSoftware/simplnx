@@ -604,22 +604,32 @@ public:
 
   void resetIds(DataObject::IdType startingId);
 
+  /**
+   * @brief Outputs the data hierarchy in GraphViz DOT format.
+   *
+   * Nodes use unique DataObject identifiers. Object names are escaped and used as labels.
+   * @param outputStream Output stream that receives GraphViz DOT syntax.
+   */
   void exportHierarchyAsGraphViz(std::ostream& outputStream) const;
 
+  /**
+   * @brief Outputs the data hierarchy in a human-readable text format.
+   *
+   * Backslashes and control characters in object names are escaped so each object occupies one line.
+   * @param outputStream Output stream that receives the hierarchy text.
+   */
   void exportHierarchyAsText(std::ostream& outputStream) const;
 
   /**
-   * @brief Exports the data graph and per-object metadata as JSON.
+   * @brief Exports the data graph and object metadata as schema-versioned JSON.
+   * @return Root JSON object that contains "schema_version" and the hierarchy in "objects".
    *
-   * The output has a top-level "schema_version" (currently 1) and an
-   * "objects" array. Every node carries "name", "path", "id", "type" and
-   * "children". Arrays add data type, shapes and counts; attribute
-   * matrices add their tuple shape; geometries add a "geometry" block.
-   * Only metadata is read. No array values are touched, so the call is
-   * safe on a DataStructure that was imported in preflight mode.
-   * @return nlohmann::json
+   * Each node contains its name, path, identifier, type, children, and applicable type metadata.
+   * Each hierarchy level is ordered alphabetically by object name.
+   * Numeric array payloads are not read, except readable RectGrid bounds can supply the origin.
+   * The exporter omits RectGrid origin when preflight stores do not permit value access.
    */
-  nlohmann::json exportHierarchyAsJson() const;
+  [[nodiscard]] nlohmann::json exportHierarchyAsJson() const;
 
   /**
    * @brief Copies the hierarchy.
@@ -696,18 +706,10 @@ private:
 
   void applyAllDataStructure();
 
-  void recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const;
-
-  void recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const;
-
   /**
-   * @brief Recursively serializes the objects at the given paths into JSON
-   * nodes and appends them to the provided array.
-   * @param nodes The JSON array receiving one node per path
-   * @param paths The child paths to serialize
+   * @brief Notifies observers to the provided message.
+   * @param msg Shared pointer to the message to send to observers
    */
-  void recurseHierarchyToJson(nlohmann::json& nodes, const std::vector<DataPath>& paths) const;
-
   void notify(const std::shared_ptr<AbstractDataStructureMessage>& msg);
 
   SignalType m_Signal;
