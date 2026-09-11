@@ -72,6 +72,7 @@ set(FilterList
   ReadAngDataFilter
   ReadChannel5DataFilter
   ReadCtfDataFilter
+  ReadEbsdPatternFileFilter
   ReadEnsembleInfoFilter
   ReadGrainMapper3DFilter
   ReadH5EbsdFilter
@@ -211,6 +212,7 @@ set(filter_algorithms
   ReadAngData
   ReadChannel5Data
   ReadCtfData
+  ReadEbsdPatternFile
   ReadEnsembleInfo
   ReadGrainMapper3D
   ReadH5Ebsd
@@ -243,6 +245,13 @@ endforeach()
 # ------------------------------------------------------------------------------
 
 set(PLUGIN_EXTRA_SOURCES
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/IEbsdPatternFileReader.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EbsdPatternFileReaderFactory.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EbsdPatternFileReaderFactory.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EdaxUpPatternFileReader.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EdaxUpPatternFileReader.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EbsdPatternFileUtilities.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EbsdPatternFileUtilities.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
@@ -453,5 +462,3 @@ if(${PLUGIN_NAME}_INSTALL_DATA_FILES)
     COMPONENT Applications
   )
 endif()
-
-
