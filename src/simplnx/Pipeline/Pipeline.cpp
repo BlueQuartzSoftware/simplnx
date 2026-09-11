@@ -891,6 +891,7 @@ Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList*
   auto numFilters = pipelineBuilderObject[k_SIMPLNumFilterseKey].get<int32>();
 
   Pipeline pipeline(name, filterList);
+  WarningCollection warnings;
   for(int32 i = 0; i < numFilters; i++)
   {
     std::string filterKey = GenerateSIMPLPipelineStringIndex(i, numFilters - 1);
@@ -902,6 +903,10 @@ Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList*
 
     const auto& filterJson = json[filterKey];
     auto filterResult = PipelineFilter::FromSIMPLJson(filterJson, *filterList);
+    for(auto& warning : filterResult.warnings())
+    {
+      warnings.push_back(std::move(warning));
+    }
 
     if(filterResult.invalid())
     {
@@ -915,7 +920,9 @@ Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList*
     }
   }
 
-  return {std::move(pipeline)};
+  Result<Pipeline> result{std::move(pipeline)};
+  result.warnings() = std::move(warnings);
+  return result;
 }
 
 Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json)

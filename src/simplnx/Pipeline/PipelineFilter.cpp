@@ -26,6 +26,20 @@ constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
 constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
 constexpr StringLiteral k_SIMPLFilterClassNameKey = "Filter_Name";
 
+std::string GetSIMPLFilterDisplayName(const nlohmann::json& json, std::string_view uuid)
+{
+  const auto humanNameIter = json.find(k_SIMPLFilterHumanNameKey.view());
+  if(humanNameIter != json.end() && humanNameIter->is_string())
+  {
+    std::string humanName = humanNameIter->get<std::string>();
+    if(!humanName.empty())
+    {
+      return humanName;
+    }
+  }
+  return std::string(uuid);
+}
+
 nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
 {
   nlohmann::json json;
@@ -620,22 +634,6 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
   }
 }
 
-nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& errors, const std::string& filterName)
-{
-  if(errors.empty())
-  {
-    return {};
-  }
-
-  std::string prefix = fmt::format("Filter: '{}' ", filterName);
-  WarningCollection warnings;
-  for(const auto& error : errors)
-  {
-    warnings.emplace_back(Warning{error.code, prefix + error.message});
-  }
-  return warnings;
-}
-
 std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollection& errors, const std::string& prefix)
 {
   if(errors.empty())
@@ -686,6 +684,8 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Unable to parse uuid '{}'", uuidString));
   }
 
+  const std::string filterDisplayName = GetSIMPLFilterDisplayName(json, uuidString);
+
   std::optional<AbstractPlugin::SIMPLData> simplData = FindComplexConversionFromSIMPL(*filterUuid, filterList);
 
   if(!simplData.has_value())
@@ -702,49 +702,55 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
 
   if(!simplData->convertJson)
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", uuidString));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", filterDisplayName));
   }
 
-  Result<Arguments> argumentsResult = simplData->convertJson(json);
-
-  const auto filterName = filter->name();
-  const auto defaultArguments = filter->getDefaultArguments();
-  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
-  if(argumentsResult.valid())
+  Result<Arguments> argumentsResult;
+  try
   {
-    std::stringstream exceptionMessageStream;
-    // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
-    for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
-    {
-      IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
-      auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
-      if(iter == acceptedTypes.cend())
-      {
-        exceptionMessageStream << fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\nThe mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
-                                              "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n",
-                                              filterName, parameterName);
-      }
-    }
-    std::string exceptionMessage = exceptionMessageStream.str();
-    if(!exceptionMessage.empty())
-    {
-      throw std::runtime_error(exceptionMessage);
-    }
-    pipelineFilter->setArguments(std::move(argumentsResult.value()));
-  }
-  else
+    argumentsResult = simplData->convertJson(json);
+  } catch(const nlohmann::json::exception& exception)
   {
-    pipelineFilter->setArguments(defaultArguments);
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
+        -5, fmt::format("Failed to convert legacy parameters for filter '{}'. The converter threw a JSON exception: {}", filterDisplayName, exception.what()));
+  } catch(const std::exception& exception)
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
+        -6, fmt::format("Failed to convert legacy parameters for filter '{}'. The converter threw an exception: {}", filterDisplayName, exception.what()));
   }
 
-  WarningCollection warnings;
   if(argumentsResult.invalid())
   {
-    warnings = convertErrors(argumentsResult.errors(), filterName);
-    pipelineFilter->setComments(CreateErrorComments(argumentsResult.errors(), "Parameter conversion error: "));
+    for(auto& error : argumentsResult.errors())
+    {
+      error.message = fmt::format("Failed to convert legacy parameters for filter '{}': {}", filterDisplayName, error.message);
+    }
+    return ConvertInvalidResult<std::unique_ptr<PipelineFilter>>(std::move(argumentsResult));
   }
 
-  return {std::move(pipelineFilter), std::move(warnings)};
+  const auto filterName = filter->name();
+  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
+  std::stringstream exceptionMessageStream;
+  // Validate each converted value against the corresponding simplnx parameter type.
+  for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
+  {
+    IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+    auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
+    if(iter == acceptedTypes.cend())
+    {
+      exceptionMessageStream << fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\nThe mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
+                                            "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n",
+                                            filterName, parameterName);
+    }
+  }
+  std::string exceptionMessage = exceptionMessageStream.str();
+  if(!exceptionMessage.empty())
+  {
+    throw std::runtime_error(exceptionMessage);
+  }
+  pipelineFilter->setArguments(std::move(argumentsResult.value()));
+
+  return {std::move(pipelineFilter), std::move(argumentsResult.warnings())};
 }
 
 AbstractPipelineFilter::FilterType PipelineFilter::getFilterType() const

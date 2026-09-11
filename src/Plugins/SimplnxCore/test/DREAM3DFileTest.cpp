@@ -1543,6 +1543,39 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[Sim
   }
 }
 
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL legacy Statistics proxy preflights", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
+{
+  const fs::path legacyStatsFile = fs::path(nx::core::unit_test::k_SimplnxSourceDIr.view()).parent_path() / "DREAM3D_Plugins" / "Synthetic" / "data" / "4_primary_precipitates.dream3d";
+  REQUIRE(fs::exists(legacyStatsFile));
+
+  const DataPath dataContainerPath({"StatsGeneratorDataContainer"});
+  const DataPath statisticsPath = dataContainerPath.createChildPath("Statistics");
+  const DataPath legacyStatisticsPath = dataContainerPath.createChildPath("CellEnsembleData").createChildPath("Statistics");
+
+  nlohmann::json filterJson;
+  filterJson["InputFile"] = legacyStatsFile.string();
+  filterJson["InputFileDataContainerArrayProxy"] = {
+      {"Data Containers",
+       nlohmann::json::array({{{"Name", dataContainerPath.getTargetName()},
+                               {"Attribute Matricies", nlohmann::json::array({{{"Name", "CellEnsembleData"}, {"Data Arrays", nlohmann::json::array({{{"Name", "Statistics"}}})}}})}}})}};
+
+  Result<Arguments> conversionResult = ReadDREAM3DFilter::FromSIMPLJson(filterJson);
+  SIMPLNX_RESULT_REQUIRE_VALID(conversionResult);
+
+  Arguments args = std::move(conversionResult.value());
+  const auto importData = args.value<Dream3dImportParameter::ImportData>(ReadDREAM3DFilter::k_ImportFileData);
+  CHECK(std::find(importData.DataPaths.cbegin(), importData.DataPaths.cend(), statisticsPath) != importData.DataPaths.cend());
+  CHECK(std::find(importData.DataPaths.cbegin(), importData.DataPaths.cend(), legacyStatisticsPath) == importData.DataPaths.cend());
+  CHECK(std::find(importData.DataPaths.cbegin(), importData.DataPaths.cend(), dataContainerPath) != importData.DataPaths.cend());
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::make_unique<PipelineFilter>(std::make_unique<ReadDREAM3DFilter>(), args)));
+  DataStructure dataStructure;
+  REQUIRE(pipeline.preflight(dataStructure, false));
+  REQUIRE(dataStructure.containsData(statisticsPath));
+  REQUIRE_FALSE(dataStructure.containsData(legacyStatisticsPath));
+}
+
 TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteDREAM3DFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
