@@ -106,8 +106,8 @@ Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
   {
     if((*bounds)[i - 1] >= (*bounds)[i])
     {
-      return MakeErrorResult(-4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}",
-                                                axis, i, i - 1, (*bounds)[i - 1], i, (*bounds)[i]));
+      return MakeErrorResult(
+          -4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}", axis, i, i - 1, (*bounds)[i - 1], i, (*bounds)[i]));
     }
   }
   return {};
