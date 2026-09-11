@@ -206,6 +206,8 @@ constexpr StringLiteral k_DataContainerProxyKey = "Data Containers";
 constexpr StringLiteral k_AttributeMatrixProxyKey = "Attribute Matricies";
 constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
 constexpr StringLiteral k_DataObjectNameKey = "Name";
+constexpr StringLiteral k_CellEnsembleDataName = "CellEnsembleData";
+constexpr StringLiteral k_StatisticsName = "Statistics";
 } // namespace
 
 Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::convert(const nlohmann::json& json)
@@ -241,7 +243,15 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
       for(const auto& daIter : amIter[k_DataArrayProxyKey])
       {
         std::string daName = daIter[k_DataObjectNameKey].get<std::string>();
-        dataPaths.emplace_back(amPath.createChildPath(daName));
+        if(amName == k_CellEnsembleDataName && daName == k_StatisticsName)
+        {
+          // The legacy importer creates a Statistics group under the DataContainer instead of under CellEnsembleData.
+          dataPaths.emplace_back(dcPath.createChildPath(daName));
+        }
+        else
+        {
+          dataPaths.emplace_back(amPath.createChildPath(daName));
+        }
       }
 
       dataPaths.push_back(std::move(amPath));
