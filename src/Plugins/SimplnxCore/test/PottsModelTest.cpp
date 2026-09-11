@@ -1,18 +1,24 @@
 #include "SimplnxCore/Filters/PottsModelFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <random>
 #include <set>
 #include <vector>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -340,4 +346,33 @@ TEST_CASE("SimplnxCore::PottsModelFilter: FromSIMPLJson", "[SimplnxCore][PottsMo
   REQUIRE(args.value<bool>(PottsModelFilter::k_UseMask_Key));
   REQUIRE(args.value<DataPath>(PottsModelFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "Mask"}));
   REQUIRE(args.value<DataPath>(PottsModelFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
+}
+
+TEST_CASE("SimplnxCore::PottsModelFilter: SIMPL Backwards Compatibility", "[SimplnxCore][PottsModelFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "PottsModelFilter.json";
+  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+  REQUIRE(pipelineResult.valid());
+
+  auto& pipeline = pipelineResult.value();
+  REQUIRE(pipeline.size() == 1);
+
+  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(pipelineFilter != nullptr);
+
+  const IFilter* filter = pipelineFilter->getFilter();
+  REQUIRE(filter != nullptr);
+  REQUIRE(filter->uuid() == FilterTraits<PottsModelFilter>::uuid);
+
+  REQUIRE(pipelineFilter->getComments().empty());
+
+  const Arguments args = pipelineFilter->getArguments();
+  REQUIRE(args.value<int32>(PottsModelFilter::k_Iterations_Key) == 37);
+  REQUIRE(args.value<float64>(PottsModelFilter::k_Temperature_Key) == 456.75);
+  REQUIRE(args.value<bool>(PottsModelFilter::k_PeriodicBoundaries_Key));
+  REQUIRE(args.value<bool>(PottsModelFilter::k_UseMask_Key));
 }
