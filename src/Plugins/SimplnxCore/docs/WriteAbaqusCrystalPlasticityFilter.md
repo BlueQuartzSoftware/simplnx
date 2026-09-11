@@ -60,7 +60,7 @@ Feature ID *0* and negative feature IDs are skipped. They do not occur in an ele
 
 The filter writes one grain for each ID in the range `[1, maximum positive feature ID]`. If an ID in this range has no cells, the filter writes an empty element set. The filter also writes a phase *0* material with a zero orientation and sends one warning. If the input has no positive feature IDs, the filter returns an error and does not write files.
 
-The output directory must exist before execution. The legacy DREAM.3D 6.6 filter created the directory when it did not exist.
+If the output directory does not exist, the filter creates it during execution.
 
 The DREAM.3D 6.6 writer used the `_set` suffix in the material-card name. Its section reference used the `_mat` suffix. This filter uses `_mat` in both locations, so the material reference is valid. Element-set names continue to use `_set`.
 

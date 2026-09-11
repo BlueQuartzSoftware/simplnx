@@ -84,7 +84,7 @@ The shared implementation retains the Crystal Plasticity writer's behavior:
 - check cancellation during grain preparation and each file-writing phase;
 - use throttled progress messages for long-running phases.
 
-The output directory must exist before execution.
+The output directory does not have to exist before execution. Preflight reports the standard output-directory warning, and `AtomicFile` creates the required directories during execution.
 
 ## Testing strategy
 
@@ -97,6 +97,7 @@ Update the Hexahedron tests to:
 - verify the dummy node remains optional;
 - verify mismatched Cell Phases tuple counts fail preflight;
 - verify converted legacy pipelines have no inferred phase path and fail preflight until it is supplied.
+- verify execution creates a missing output directory and all five destination files.
 
 Keep the existing Crystal Plasticity byte-level tests as regression pins. They must remain unchanged unless a test-only path adjustment is necessary for the cross-filter fixture. Run the focused Abaqus tests serially, then the relevant SimplnxCore test target. Format every touched C++ file with the repository-pinned clang-format and verify with `--dry-run --Werror`.
 
@@ -138,6 +139,7 @@ This task creates the deviation sidecar requested for migration guidance. A comp
 - Crystal Plasticity's existing byte-level output remains unchanged.
 - Hexahedron requires Cell Phases and emits the canonical phase-qualified format.
 - Dummy-node output still works.
+- Missing output directories are created during execution.
 - The new parity and migration tests pass with the focused Abaqus suites.
 - Hexahedron documentation and deviation entries describe every intentional user-visible break.
 - All touched C++ files pass the pinned clang-format verification.
