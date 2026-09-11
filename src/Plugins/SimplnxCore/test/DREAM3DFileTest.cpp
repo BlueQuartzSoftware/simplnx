@@ -602,7 +602,10 @@ DataStructure CreateTestDataStructure()
 
   rectGridGeom->setDimensions(Constants::k_TupleShape);
   rectGridGeom->setCellData(cellMatrix->getId());
-  rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+  {
+    auto boundsResult = rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+    REQUIRE(boundsResult.valid());
+  }
 
   // 0D Geometry
   auto* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeom);
@@ -894,7 +897,10 @@ RectGridGeom* CreateRectGridGeometry(DataStructure& dataStructure, const std::st
     (*yBounds)[i] = static_cast<float32>(i);
     (*zBounds)[i] = static_cast<float32>(i);
   }
-  rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+  {
+    auto boundsResult = rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+    REQUIRE(boundsResult.valid());
+  }
   AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2, 2}, rectGridGeom->getId());
   rectGridGeom->setCellData(*cellMatrix);
   return rectGridGeom;

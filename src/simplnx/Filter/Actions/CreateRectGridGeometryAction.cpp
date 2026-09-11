@@ -114,7 +114,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
     const auto xBoundsArray = std::dynamic_pointer_cast<Float32Array>(xCopy);
     const auto yBoundsArray = std::dynamic_pointer_cast<Float32Array>(yCopy);
     const auto zBoundsArray = std::dynamic_pointer_cast<Float32Array>(zCopy);
-    rectGridGeom->setBounds(xBoundsArray.get(), yBoundsArray.get(), zBoundsArray.get());
+    results = rectGridGeom->setBounds(xBoundsArray.get(), yBoundsArray.get(), zBoundsArray.get());
   }
   else if(m_ArrayHandlingType == ArrayHandlingType::Move)
   {
@@ -149,7 +149,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
     }
     dataStructure.removeParent(zBoundId, oldZParentId.value());
 
-    rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+    results = rectGridGeom->setBounds(xBounds, yBounds, zBounds);
   }
   else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
   {
@@ -157,14 +157,27 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
     dataStructure.setAdditionalParent(xBounds->getId(), rectGeomId);
     dataStructure.setAdditionalParent(yBounds->getId(), rectGeomId);
     dataStructure.setAdditionalParent(zBounds->getId(), rectGeomId);
-    rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+    results = rectGridGeom->setBounds(xBounds, yBounds, zBounds);
   }
   else
   {
+    // Arrays are freshly allocated with default data (not yet populated by the user).
+    // Bypass setBounds validation and link IDs directly.
     const Float32Array* xBoundsArray = createBoundArray(dataStructure, mode, m_XBoundsArrayName, m_NumXBoundTuples, results.errors());
     const Float32Array* yBoundsArray = createBoundArray(dataStructure, mode, m_YBoundsArrayName, m_NumYBoundTuples, results.errors());
     const Float32Array* zBoundsArray = createBoundArray(dataStructure, mode, m_ZBoundsArrayName, m_NumZBoundTuples, results.errors());
-    rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+    if(xBoundsArray != nullptr)
+    {
+      rectGridGeom->setXBoundsId(xBoundsArray->getId());
+    }
+    if(yBoundsArray != nullptr)
+    {
+      rectGridGeom->setYBoundsId(yBoundsArray->getId());
+    }
+    if(zBoundsArray != nullptr)
+    {
+      rectGridGeom->setZBoundsId(zBoundsArray->getId());
+    }
   }
 
   return results;

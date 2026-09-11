@@ -459,6 +459,237 @@ TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
   }
 }
 
+// -----------------------------------------------------------------------------
+// RectGridGeom::setBounds validation
+// Covers: valid inputs (positive, negative, zero-straddling, minimum size,
+// null-pointer clear), size rejection (-4006) on each axis, monotonicity
+// rejection (-4007) on each axis, and atomicity (geometry is not modified
+// when any axis fails validation).
+// -----------------------------------------------------------------------------
+namespace
+{
+Float32Array* makeBoundsAxis(DataStructure& ds, RectGridGeom* geom, const std::string& name, std::vector<float32> values)
+{
+  auto* arr = Float32Array::CreateWithStore<DataStore<float32>>(ds, name, ShapeType{values.size()}, ShapeType{1}, geom->getId());
+  for(usize i = 0; i < values.size(); ++i)
+  {
+    arr->setValue(i, values[i]);
+  }
+  return arr;
+}
+} // namespace
+
+TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+
+  SECTION("positive monotonically increasing")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f, 2.5f, 5.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 3.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f, 2.0f});
+    auto result = geom->setBounds(x, y, z);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(geom->getXBounds() == x);
+    REQUIRE(geom->getYBounds() == y);
+    REQUIRE(geom->getZBounds() == z);
+  }
+
+  SECTION("all-negative monotonically increasing")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {-10.0f, -5.0f, -1.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {-20.0f, -3.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {-7.0f, -0.5f});
+    auto result = geom->setBounds(x, y, z);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(geom->getXBounds() == x);
+    REQUIRE(geom->getYBounds() == y);
+    REQUIRE(geom->getZBounds() == z);
+  }
+
+  SECTION("straddling zero")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {-2.0f, 0.0f, 3.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {-5.0f, 1.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {-1.0f, 0.0f, 1.0f});
+    auto result = geom->setBounds(x, y, z);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  SECTION("minimum valid size — 2 elements each")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
+    auto result = geom->setBounds(x, y, z);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  SECTION("nullptr pointers clear bounds IDs")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
+    auto setResult = geom->setBounds(x, y, z);
+    SIMPLNX_RESULT_REQUIRE_VALID(setResult);
+
+    auto clearResult = geom->setBounds(nullptr, nullptr, nullptr);
+    SIMPLNX_RESULT_REQUIRE_VALID(clearResult);
+    REQUIRE(geom->getXBounds() == nullptr);
+    REQUIRE(geom->getYBounds() == nullptr);
+    REQUIRE(geom->getZBounds() == nullptr);
+  }
+}
+
+TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  auto* goodY = makeBoundsAxis(ds, geom, "GoodY", {0.0f, 1.0f});
+  auto* goodZ = makeBoundsAxis(ds, geom, "GoodZ", {0.0f, 1.0f});
+
+  SECTION("empty X array")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4006);
+  }
+
+  SECTION("single-element X array")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {5.0f});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4006);
+  }
+
+  SECTION("single-element Y array")
+  {
+    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {3.0f});
+    auto result = geom->setBounds(goodX, y, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4006);
+  }
+
+  SECTION("single-element Z array")
+  {
+    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {7.0f});
+    auto result = geom->setBounds(goodX, goodY, z);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4006);
+  }
+}
+
+TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  auto* goodY = makeBoundsAxis(ds, geom, "GoodY", {0.0f, 1.0f});
+  auto* goodZ = makeBoundsAxis(ds, geom, "GoodZ", {0.0f, 1.0f});
+
+  SECTION("equal adjacent values on X")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f, 1.0f, 2.0f});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+
+  SECTION("strictly decreasing on X")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {5.0f, 3.0f, 1.0f});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+
+  SECTION("reversal in the middle of X")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 2.0f, 1.0f, 3.0f});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+
+  SECTION("non-monotonic Y axis")
+  {
+    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f, 2.0f});
+    auto* y = makeBoundsAxis(ds, geom, "Y", {3.0f, 1.0f});
+    auto result = geom->setBounds(goodX, y, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+
+  SECTION("non-monotonic Z axis")
+  {
+    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
+    auto* z = makeBoundsAxis(ds, geom, "Z", {2.0f, 1.0f});
+    auto result = geom->setBounds(goodX, goodY, z);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+
+  SECTION("equal adjacent negative values")
+  {
+    auto* x = makeBoundsAxis(ds, geom, "X", {-5.0f, -3.0f, -3.0f, -1.0f});
+    auto result = geom->setBounds(x, goodY, goodZ);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4007);
+  }
+}
+
+TEST_CASE("RectGridGeom::setBounds is atomic — geometry unchanged on failure")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+
+  auto* x0 = makeBoundsAxis(ds, geom, "X0", {0.0f, 1.0f, 2.0f});
+  auto* y0 = makeBoundsAxis(ds, geom, "Y0", {0.0f, 5.0f});
+  auto* z0 = makeBoundsAxis(ds, geom, "Z0", {0.0f, 3.0f});
+  auto initialSet = geom->setBounds(x0, y0, z0);
+  SIMPLNX_RESULT_REQUIRE_VALID(initialSet);
+
+  SECTION("X fails — Y and Z original IDs preserved")
+  {
+    auto* x1 = makeBoundsAxis(ds, geom, "X1", {9.0f}); // too small
+    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {0.0f, 4.0f});
+    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {0.0f, 2.0f});
+    auto badResult = geom->setBounds(x1, y1, z1);
+    SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
+    REQUIRE(geom->getXBounds() == x0);
+    REQUIRE(geom->getYBounds() == y0);
+    REQUIRE(geom->getZBounds() == z0);
+  }
+
+  SECTION("Y fails — X and Z original IDs preserved")
+  {
+    auto* x1 = makeBoundsAxis(ds, geom, "X1", {0.0f, 4.0f});
+    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {99.0f}); // too small
+    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {0.0f, 2.0f});
+    auto badResult = geom->setBounds(x1, y1, z1);
+    SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
+    REQUIRE(geom->getXBounds() == x0);
+    REQUIRE(geom->getYBounds() == y0);
+    REQUIRE(geom->getZBounds() == z0);
+  }
+
+  SECTION("Z fails — X and Y original IDs preserved")
+  {
+    auto* x1 = makeBoundsAxis(ds, geom, "X1", {0.0f, 4.0f});
+    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {0.0f, 2.0f});
+    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {5.0f, 2.0f}); // decreasing
+    auto badResult = geom->setBounds(x1, y1, z1);
+    SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
+    REQUIRE(geom->getXBounds() == x0);
+    REQUIRE(geom->getYBounds() == y0);
+    REQUIRE(geom->getZBounds() == z0);
+  }
+}
+
 TEST_CASE("ImageGeom getBoundingBox handles a negative origin")
 {
   DataStructure dataStructure;

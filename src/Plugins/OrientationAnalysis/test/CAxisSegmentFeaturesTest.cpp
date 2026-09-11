@@ -428,7 +428,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   yBoundsArrayPtr->setValue(1, 1.0f);
   zBoundsArrayPtr->setValue(0, 0.0f);
   zBoundsArrayPtr->setValue(1, 1.0f);
-  rectGridGeom->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr);
+  auto boundsResult = rectGridGeom->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
   auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, rectGridGeom->getId());
   rectGridGeom->setCellData(*cellAM);

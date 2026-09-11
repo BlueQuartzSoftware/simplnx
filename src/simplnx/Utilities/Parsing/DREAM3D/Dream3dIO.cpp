@@ -1640,7 +1640,20 @@ DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const nx::core:
   auto yBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::YBoundsName, preflight);
   auto zBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::ZBoundsName, preflight);
 
-  geom->setBounds(xBoundsArray.value(), yBoundsArray.value(), zBoundsArray.value());
+  // Use ID setters directly: the function returns DataObject* so errors cannot be propagated,
+  // and legacy files may predate the monotonicity requirement.
+  if(xBoundsArray.value() != nullptr)
+  {
+    geom->setXBoundsId(xBoundsArray.value()->getId());
+  }
+  if(yBoundsArray.value() != nullptr)
+  {
+    geom->setYBoundsId(yBoundsArray.value()->getId());
+  }
+  if(zBoundsArray.value() != nullptr)
+  {
+    geom->setZBoundsId(zBoundsArray.value()->getId());
+  }
 
   return geom;
 }
