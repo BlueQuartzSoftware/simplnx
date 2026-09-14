@@ -14,6 +14,11 @@
 
 using namespace nx::core;
 
+namespace
+{
+constexpr int32 k_InvalidNumIterationsError = -14701;
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -86,6 +91,18 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
+
+  // The erode/dilate loop runs NumIterations times, so a value below 1 performs no passes and returns
+  // the mask untouched. DREAM3D 6.5.171 rejected that in dataCheck rather than silently no-op'ing, and
+  // this guard restores that behavior so a mistyped iteration count is reported to the user.
+  if(pNumIterationsValue < 1)
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidNumIterationsError,
+                                           fmt::format("Number of Iterations ({}) must be at least 1. Erode/Dilate Mask performs one erode or dilate pass per iteration, so a value less than 1 "
+                                                       "would leave the mask array '{}' unmodified.",
+                                                       pNumIterationsValue, pMaskArrayPathValue.toString()))};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 

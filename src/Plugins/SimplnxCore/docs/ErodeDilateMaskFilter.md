@@ -33,7 +33,7 @@ Chaining an erode and a dilate pass (with equal iteration counts) performs the t
 
 ### Iterations and Direction
 
-- *Number of Iterations* is in **cell-layers**. An iteration count of 3 grows or shrinks the *true* region by 3 cells.
+- *Number of Iterations* is in **cell-layers**. An iteration count of 3 grows or shrinks the *true* region by 3 cells. The value must be at least 1; values below 1 fail preflight.
 - *X Direction*, *Y Direction*, and *Z Direction* toggle whether the morphology is applied along that axis. Disable an axis to perform anisotropic morphology -- useful when serial-sectioning resolution is anisotropic (typically Z is coarser than X and Y) and you want to limit growth or shrinking along the fine axes.
 
 ### Required Input Sources
