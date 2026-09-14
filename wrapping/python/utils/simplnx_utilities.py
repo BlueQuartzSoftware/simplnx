@@ -9,6 +9,7 @@ Usage:
 """
 
 import pathlib
+import pprint
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -295,6 +296,20 @@ def _encode_crop_geometry(name: str, value: Any, context: CodeGenContext) -> lis
     return lines
 
 
+def _encode_stats_generator(name: str, value: Any, context: CodeGenContext) -> list[str]:
+    """Encode StatsGeneratorParameter.ValueType construction from its dictionary representation."""
+    var = context.unique_name("stats_generator_data")
+    stats_dict = pprint.pformat(value.to_dict(), width=100, sort_dicts=False)
+    lines = [f"{var} = synthetic.StatsGeneratorParameter.ValueType.from_dict({stats_dict})"]
+    lines.append(var)
+    return lines
+
+
+def _encode_shape_type_selection(name: str, value: Any, context: CodeGenContext) -> list[str]:
+    """Encode ShapeTypeSelectionParameter values as SyntheticShapeType enum members."""
+    return [_encode_list(list(value))]
+
+
 def _encode_dynamic_table(name: str, value: Any, context: CodeGenContext) -> list[str]:
     """Encode DynamicTableParameter values (2D list of floats)."""
     if len(value) == 1 and len(value[0]) <= 5:
@@ -319,6 +334,8 @@ _PARAMETER_CODECS: dict[nx.Uuid, Any] = {
     nx.Uuid("32e83e13-ee4c-494e-8bab-4e699df74a5a") : _encode_read_hdf5_dataset,       # ReadHDF5DatasetParameter
     nx.Uuid("3935c833-aa51-4a58-81e9-3a51972c05ea") : _encode_oem_ebsd_scan,           # OEMEbsdScanSelectionParameter
     nx.Uuid("32b03ebf-02a5-40c7-a41c-2380722caeb7") : _encode_crop_geometry,           # CropGeometryParameter
+    nx.Uuid("44709379-5e66-4dbd-b9f2-30d09b2fd8a9") : _encode_stats_generator,         # StatsGeneratorParameter
+    nx.Uuid("d771df80-af46-412a-85be-6c4ca0820940") : _encode_shape_type_selection,    # ShapeTypeSelectionParameter
     nx.Uuid("eea76f1a-fab9-4704-8da5-4c21057cf44e") : _encode_dynamic_table,           # DynamicTableParameter
 }
 
