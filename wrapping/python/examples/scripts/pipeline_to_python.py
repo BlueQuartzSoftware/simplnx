@@ -1,5 +1,6 @@
 """Test that simplnx_utilities generates valid, compilable Python code."""
 
+import copy
 import subprocess
 import sys
 import textwrap
@@ -8,6 +9,7 @@ import unittest
 import simplnx as nx
 import simplnx_test_dirs as nxtest
 import simplnx_utilities
+
 
 class PipelineConversionTest(unittest.TestCase):
     # ---------------------------------------------------------------------------
@@ -138,6 +140,128 @@ class PipelineConversionTest(unittest.TestCase):
 
         result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
+
+    def test_PruneRegenerableStatsRemovesDerivedArraysWithoutChangingInput(self):
+        stats = {
+            "phases": [
+                {
+                    "phase_type": "Primary",
+                    "axis_orientation": [1.0, 2.0],
+                    "misorientation_bins": [3.0, 4.0],
+                    "odf": [5.0, 6.0],
+                    "distribution_sources": {"odf": "preset", "omega3": "user"},
+                    "bin_numbers": [0.5, 1.5],
+                    "feature_size_distribution": {"distribution_type": "LogNormal", "mu": [1.0]},
+                    "preset_metadata": {"preset_name": "Primary Equiaxed", "preset_version": 1},
+                },
+                {
+                    "phase_type": "Precipitate",
+                    "axis_orientation": [7.0],
+                    "misorientation_bins": [8.0],
+                    "odf": [9.0],
+                    "odf_weights": {
+                        "euler1": [0.1],
+                        "euler2": [0.2],
+                        "euler3": [0.3],
+                        "weights": [10.0],
+                        "sigmas": [0.05],
+                    },
+                    "distribution_sources": {"odf": "user"},
+                    "radial_distribution_function": {
+                        "frequencies": [0.25, 0.75],
+                        "min_distance": 1.0,
+                        "max_distance": 2.0,
+                    },
+                },
+            ]
+        }
+        original = copy.deepcopy(stats)
+
+        actual = simplnx_utilities._prune_regenerable_stats(stats)
+
+        self.assertEqual(stats, original)
+        self.assertEqual(
+            actual,
+            {
+                "phases": [
+                    {
+                        "phase_type": "Primary",
+                        "distribution_sources": {"odf": "preset", "omega3": "user"},
+                        "bin_numbers": [0.5, 1.5],
+                        "feature_size_distribution": {"distribution_type": "LogNormal", "mu": [1.0]},
+                        "preset_metadata": {"preset_name": "Primary Equiaxed", "preset_version": 1},
+                    },
+                    {
+                        "phase_type": "Precipitate",
+                        "odf_weights": {
+                            "euler1": [0.1],
+                            "euler2": [0.2],
+                            "euler3": [0.3],
+                            "weights": [10.0],
+                            "sigmas": [0.05],
+                        },
+                        "distribution_sources": {"odf": "user"},
+                        "radial_distribution_function": {
+                            "frequencies": [0.25, 0.75],
+                            "min_distance": 1.0,
+                            "max_distance": 2.0,
+                        },
+                    },
+                ]
+            },
+        )
+
+    def test_PruneRegenerableStatsRetainsOnlyUserOdfWithoutWeights(self):
+        user_bulk_odf = {
+            "phases": [
+                {
+                    "phase_type": "Primary",
+                    "distribution_sources": {"odf": "user"},
+                    "odf_weights": {
+                        "euler1": [],
+                        "euler2": [],
+                        "euler3": [],
+                        "weights": [],
+                        "sigmas": [],
+                    },
+                    "odf": [0.125, 0.375, 0.5],
+                }
+            ]
+        }
+        user_weighted_odf = {
+            "phases": [
+                {
+                    "phase_type": "Primary",
+                    "distribution_sources": {"odf": "user"},
+                    "odf_weights": {
+                        "euler1": [0.1],
+                        "euler2": [0.2],
+                        "euler3": [0.3],
+                        "weights": [42.0],
+                        "sigmas": [0.05],
+                    },
+                    "odf": [0.125, 0.375, 0.5],
+                }
+            ]
+        }
+
+        bulk_result = simplnx_utilities._prune_regenerable_stats(user_bulk_odf)
+        weighted_result = simplnx_utilities._prune_regenerable_stats(user_weighted_odf)
+
+        self.assertEqual(bulk_result["phases"][0]["odf"], [0.125, 0.375, 0.5])
+        self.assertNotIn("odf", weighted_result["phases"][0])
+
+    def test_EncodeStatsGeneratorUsesCompactFormatting(self):
+        class LiteralStatsValue:
+            def to_dict(self):
+                return {"phases": [{"bin_numbers": list(range(20))}]}
+
+        encoded = simplnx_utilities._encode_stats_generator(
+            "stats_generator_data", LiteralStatsValue(), simplnx_utilities.CodeGenContext()
+        )
+
+        self.assertEqual(len("\n".join(encoded).splitlines()), 3)
+        self.assertIn("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,", encoded[0])
 
 if __name__ == "__main__":
     unittest.main()
