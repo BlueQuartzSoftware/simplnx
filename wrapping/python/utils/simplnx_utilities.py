@@ -8,6 +8,7 @@ Usage:
     print(generate_python_pipeline(pipeline))
 """
 
+import copy
 import importlib
 import importlib.machinery
 import pathlib
@@ -348,10 +349,43 @@ def _encode_crop_geometry(name: str, value: Any, context: CodeGenContext) -> lis
     return lines
 
 
+def _prune_regenerable_stats(stats: dict) -> dict:
+    """Return a deep copy without arrays that StatsGenerator will regenerate.
+
+    ``misorientation_bins`` and ``axis_orientation`` are always derived from
+    their weight tables. Keep ``odf`` only when ``odf_weights`` is empty or
+    absent and ``distribution_sources["odf"]`` is explicitly ``"user"``;
+    that is the stored-only bulk-ODF state that execute preserves.
+
+    See Synthetic ``PrimaryStatsData.cpp:558, 677-680, 693-695`` and
+    ``StatsGeneratorFilter.cpp:403-408, 423-442``. Precipitate statistics use
+    the same common fields through ``PrecipitateStatsData.cpp:111-128``.
+    """
+    pruned = copy.deepcopy(stats)
+    odf_weight_fields = ("euler1", "euler2", "euler3", "weights", "sigmas")
+    for phase in pruned.get("phases", []):
+        phase.pop("misorientation_bins", None)
+        phase.pop("axis_orientation", None)
+
+        odf_weights = phase.get("odf_weights")
+        if isinstance(odf_weights, dict):
+            odf_weights_empty = not any(odf_weights.get(field) for field in odf_weight_fields)
+        else:
+            odf_weights_empty = not odf_weights
+        odf_is_user_supplied = phase.get("distribution_sources", {}).get("odf") == "user"
+        if not (odf_weights_empty and odf_is_user_supplied):
+            phase.pop("odf", None)
+    return pruned
+
+
 def _encode_stats_generator(name: str, value: Any, context: CodeGenContext) -> list[str]:
-    """Encode StatsGeneratorParameter.ValueType construction from its dictionary representation."""
+    """Encode StatsGenerator data after pruning execute-regenerated arrays.
+
+    ODF is retained only for the explicit user-tagged, empty-weight bulk-ODF
+    state documented by ``_prune_regenerable_stats`` and its C++ citations.
+    """
     var = context.unique_name("stats_generator_data")
-    stats_dict = pprint.pformat(value.to_dict(), width=100, sort_dicts=False)
+    stats_dict = pprint.pformat(_prune_regenerable_stats(value.to_dict()), width=100, sort_dicts=False, compact=True)
     lines = [f"{var} = synthetic.StatsGeneratorParameter.ValueType.from_dict({stats_dict})"]
     lines.append(var)
     return lines
