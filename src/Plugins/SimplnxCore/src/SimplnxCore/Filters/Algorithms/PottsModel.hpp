@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
+#include <vector>
+
 namespace nx::core
 {
 /**
@@ -19,6 +21,7 @@ struct SIMPLNXCORE_EXPORT PottsModelInputValues
   bool PeriodicBoundaries = false;
   bool UseMask = false;
   DataPath MaskArrayPath;
+  std::vector<DataPath> IgnoredDataArrayPaths;
   DataPath FeatureIdsArrayPath;
   uint64 SeedValue = 0;
 };
