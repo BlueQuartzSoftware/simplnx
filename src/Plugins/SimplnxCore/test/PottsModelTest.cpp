@@ -13,7 +13,11 @@
 #include <catch2/catch.hpp>
 
 #include <algorithm>
+#include <chrono>
+#include <condition_variable>
+#include <cstring>
 #include <filesystem>
+#include <mutex>
 #include <random>
 #include <set>
 #include <vector>
@@ -27,6 +31,8 @@ const DataPath k_ImageGeomPath({"ImageGeometry"});
 const DataPath k_CellDataPath = k_ImageGeomPath.createChildPath("CellData");
 const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
 const DataPath k_MaskPath = k_CellDataPath.createChildPath("Mask");
+const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
+const DataPath k_EulerAnglesPath = k_CellDataPath.createChildPath("EulerAngles");
 constexpr StringLiteral k_SeedArrayName = "PottsModel SeedValue";
 
 struct TestData
@@ -64,6 +70,29 @@ TestData CreateTestData(const SizeVec3& dimensions, const std::vector<int32>& fe
   return testData;
 }
 
+void AddGrainConstantCellData(DataStructure& dataStructure, const ShapeType& tupleShape, const std::vector<int32>& featureIds)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
+  const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath);
+
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(tupleShape, {1}, IDataAction::Mode::Execute);
+  auto* phases = Int32Array::Create(dataStructure, k_PhasesPath.getTargetName(), phasesStore, cellData.getId());
+  REQUIRE(phases != nullptr);
+
+  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto* eulerAngles = Float32Array::Create(dataStructure, k_EulerAnglesPath.getTargetName(), eulerAnglesStore, cellData.getId());
+  REQUIRE(eulerAngles != nullptr);
+
+  for(usize cellIndex = 0; cellIndex < featureIds.size(); cellIndex++)
+  {
+    const int32 featureId = featureIds[cellIndex];
+    (*phases)[cellIndex] = featureId * 2 + 1;
+    (*eulerAngles)[cellIndex * 3] = static_cast<float32>(featureId);
+    (*eulerAngles)[cellIndex * 3 + 1] = static_cast<float32>(featureId) + 0.25F;
+    (*eulerAngles)[cellIndex * 3 + 2] = static_cast<float32>(featureId) + 0.5F;
+  }
+}
+
 Arguments CreateArguments(int32 iterations = 10, float64 temperature = 273.0, bool periodicBoundaries = false, uint64 seed = 12345)
 {
   PottsModelFilter filter;
@@ -82,8 +111,25 @@ Arguments CreateArguments(int32 iterations = 10, float64 temperature = 273.0, bo
 
 std::vector<int32> CopyFeatureIds(const DataStructure& dataStructure)
 {
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   return {featureIds.cbegin(), featureIds.cend()};
+}
+
+uint64 ComputeFeatureIdsChecksum(const std::vector<int32>& featureIds)
+{
+  // Hash each int32 as four little-endian bytes so the checksum is independent of host byte order.
+  uint64 checksum = 14695981039346656037ULL;
+  for(const int32 featureId : featureIds)
+  {
+    const uint32 value = static_cast<uint32>(featureId);
+    for(uint32 shift = 0; shift < 32; shift += 8)
+    {
+      checksum ^= (value >> shift) & 0xFFU;
+      checksum *= 1099511628211ULL;
+    }
+  }
+  return checksum;
 }
 
 usize CountDistinctNonzeroIds(const std::vector<int32>& featureIds)
@@ -99,10 +145,38 @@ usize CountDistinctNonzeroIds(const std::vector<int32>& featureIds)
   return distinctIds.size();
 }
 
+void RequireCellDataMatchesFeatureIds(const DataStructure& dataStructure, bool checkEulerAngles)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  const auto& phases = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath);
+
+  const Float32Array* eulerAngles = nullptr;
+  if(checkEulerAngles)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath));
+    eulerAngles = &dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath);
+  }
+
+  for(usize cellIndex = 0; cellIndex < featureIds.getNumberOfTuples(); cellIndex++)
+  {
+    const int32 featureId = featureIds[cellIndex];
+    REQUIRE(phases[cellIndex] == featureId * 2 + 1);
+    if(eulerAngles != nullptr)
+    {
+      REQUIRE((*eulerAngles)[cellIndex * 3] == static_cast<float32>(featureId));
+      REQUIRE((*eulerAngles)[cellIndex * 3 + 1] == static_cast<float32>(featureId) + 0.25F);
+      REQUIRE((*eulerAngles)[cellIndex * 3 + 2] == static_cast<float32>(featureId) + 0.5F);
+    }
+  }
+}
+
 template <typename T>
 void AddMask(DataStructure& dataStructure, const ShapeType& tupleShape, const std::vector<uint8>& maskValues)
 {
   auto maskStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, {1}, IDataAction::Mode::Execute);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
   auto* mask = DataArray<T>::Create(dataStructure, k_MaskPath.getTargetName(), maskStore, dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath).getId());
   REQUIRE(mask != nullptr);
   REQUIRE(maskValues.size() == mask->getNumberOfTuples());
@@ -182,6 +256,21 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Preflight Errors", "[SimplnxCore][Pott
     auto testData = CreateTestData({1, 1, 8}, std::vector<int32>(8, 1));
     RequirePreflightError(testData.dataStructure, CreateArguments(), -72006);
   }
+
+  SECTION("Ignored arrays must be in the Feature IDs attribute matrix")
+  {
+    auto testData = CreateTestData({4, 4, 1}, std::vector<int32>(16, 1));
+    const DataPath outsideArrayPath({"OutsideArray"});
+    auto outsideArrayStore = DataStoreUtilities::CreateDataStore<float32>({16}, {1}, IDataAction::Mode::Execute);
+    REQUIRE(Float32Array::Create(testData.dataStructure, outsideArrayPath.getTargetName(), outsideArrayStore) != nullptr);
+    auto args = CreateArguments();
+    args.insertOrAssign(PottsModelFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{outsideArrayPath}));
+    PottsModelFilter filter;
+    auto preflightResult = filter.preflight(testData.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -72007);
+    REQUIRE(preflightResult.outputActions.errors()[0].message.find(outsideArrayPath.toString()) != std::string::npos);
+  }
 }
 
 TEST_CASE("SimplnxCore::PottsModelFilter: Execute Error With No Eligible Cells", "[SimplnxCore][PottsModelFilter]")
@@ -213,7 +302,131 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Deterministic Seed", "[SimplnxCore][Po
   const auto firstOutput = CopyFeatureIds(first.dataStructure);
   REQUIRE(firstOutput == CopyFeatureIds(second.dataStructure));
   REQUIRE(firstOutput != inputFeatureIds);
+  const uint64 checksum = ComputeFeatureIdsChecksum(firstOutput);
+  INFO("FeatureIds FNV-1a checksum: " << checksum);
+  REQUIRE(checksum == 11889281029680066244ULL);
+  REQUIRE_NOTHROW(first.dataStructure.getDataRefAs<UInt64Array>(DataPath({k_SeedArrayName})));
   REQUIRE(first.dataStructure.getDataRefAs<UInt64Array>(DataPath({k_SeedArrayName}))[0] == 12345);
+}
+
+TEST_CASE("SimplnxCore::PottsModelFilter: Progress Feedback", "[SimplnxCore][PottsModelFilter]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Dimension = 64;
+  constexpr usize k_CellCount = k_Dimension * k_Dimension * k_Dimension;
+  constexpr int32 k_Iterations = 120;
+  const auto inputFeatureIds = CreateRandomFeatureIds(k_CellCount, 200, 98461);
+  auto testData = CreateTestData({k_Dimension, k_Dimension, k_Dimension}, inputFeatureIds);
+
+  std::mutex progressMutex;
+  std::condition_variable progressCondition;
+  std::vector<std::string> progressMessages;
+  IFilter::MessageHandler messageHandler{[&](const IFilter::Message& message) {
+    if(message.message.find("Iteration ") == std::string::npos)
+    {
+      return;
+    }
+
+    {
+      std::lock_guard lock(progressMutex);
+      progressMessages.push_back(message.message);
+    }
+    progressCondition.notify_one();
+  }};
+
+  PottsModelFilter filter;
+  const auto startTime = std::chrono::steady_clock::now();
+  auto executeResult = filter.execute(testData.dataStructure, CreateArguments(k_Iterations, 273.0, false, 12345), nullptr, messageHandler);
+  const auto executionDuration = std::chrono::steady_clock::now() - startTime;
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  INFO("Execution duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(executionDuration).count() << " ms");
+  REQUIRE(executionDuration >= std::chrono::seconds(1));
+
+  std::string exampleProgressMessage;
+  {
+    std::unique_lock lock(progressMutex);
+    progressCondition.wait_for(lock, std::chrono::seconds(2), [&progressMessages] { return !progressMessages.empty(); });
+    if(!progressMessages.empty())
+    {
+      exampleProgressMessage = progressMessages.front();
+    }
+  }
+
+  REQUIRE_FALSE(exampleProgressMessage.empty());
+  INFO("Example progress message: " << exampleProgressMessage);
+  REQUIRE(exampleProgressMessage.find("Iteration ") != std::string::npos);
+  REQUIRE(exampleProgressMessage.find(" of ") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PottsModelFilter: Cell Data Follows Accepted Spin", "[SimplnxCore][PottsModelFilter]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Dimension = 16;
+  const ShapeType tupleShape = {1, k_Dimension, k_Dimension};
+  const auto inputFeatureIds = CreateRandomFeatureIds(k_Dimension * k_Dimension, 20, 61927);
+
+  SECTION("Cell arrays follow the donor spin")
+  {
+    auto testData = CreateTestData({k_Dimension, k_Dimension, 1}, inputFeatureIds);
+    AddGrainConstantCellData(testData.dataStructure, tupleShape, inputFeatureIds);
+
+    PottsModelFilter filter;
+    auto executeResult = filter.execute(testData.dataStructure, CreateArguments(5, 273.0, false, 12345));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE(CopyFeatureIds(testData.dataStructure) != inputFeatureIds);
+    RequireCellDataMatchesFeatureIds(testData.dataStructure, true);
+    UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
+  }
+
+  SECTION("Ignored arrays retain their input tuples")
+  {
+    auto testData = CreateTestData({k_Dimension, k_Dimension, 1}, inputFeatureIds);
+    AddGrainConstantCellData(testData.dataStructure, tupleShape, inputFeatureIds);
+    REQUIRE_NOTHROW(testData.dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath));
+    const auto& inputEulerAnglesArray = testData.dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath);
+    const std::vector<float32> inputEulerAngles(inputEulerAnglesArray.cbegin(), inputEulerAnglesArray.cend());
+
+    auto args = CreateArguments(5, 273.0, false, 12345);
+    args.insertOrAssign(PottsModelFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_EulerAnglesPath}));
+    PottsModelFilter filter;
+    auto executeResult = filter.execute(testData.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE(CopyFeatureIds(testData.dataStructure) != inputFeatureIds);
+    RequireCellDataMatchesFeatureIds(testData.dataStructure, false);
+    REQUIRE_NOTHROW(testData.dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath));
+    const auto& outputEulerAnglesArray = testData.dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesPath);
+    const std::vector<float32> outputEulerAngles(outputEulerAnglesArray.cbegin(), outputEulerAnglesArray.cend());
+    REQUIRE(std::memcmp(outputEulerAngles.data(), inputEulerAngles.data(), inputEulerAngles.size() * sizeof(float32)) == 0);
+    UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
+  }
+
+  SECTION("The mask array remains unchanged")
+  {
+    auto testData = CreateTestData({k_Dimension, k_Dimension, 1}, inputFeatureIds);
+    AddGrainConstantCellData(testData.dataStructure, tupleShape, inputFeatureIds);
+    std::vector<uint8> maskValues(inputFeatureIds.size(), 1);
+    for(usize index = 0; index < maskValues.size(); index += 7)
+    {
+      maskValues[index] = 0;
+    }
+    AddMask<uint8>(testData.dataStructure, tupleShape, maskValues);
+
+    auto args = CreateArguments(5, 273.0, false, 12345);
+    args.insertOrAssign(PottsModelFilter::k_UseMask_Key, std::make_any<bool>(true));
+    PottsModelFilter filter;
+    auto executeResult = filter.execute(testData.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE(CopyFeatureIds(testData.dataStructure) != inputFeatureIds);
+    REQUIRE_NOTHROW(testData.dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+    const auto& outputMask = testData.dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    REQUIRE(std::vector<uint8>(outputMask.cbegin(), outputMask.cend()) == maskValues);
+    RequireCellDataMatchesFeatureIds(testData.dataStructure, true);
+    UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
+  }
 }
 
 TEST_CASE("SimplnxCore::PottsModelFilter: Coarsening", "[SimplnxCore][PottsModelFilter]")
@@ -328,6 +541,8 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Masked Cells Remain Unchanged", "[Simp
 
 TEST_CASE("SimplnxCore::PottsModelFilter: FromSIMPLJson", "[SimplnxCore][PottsModelFilter]")
 {
+  REQUIRE(PottsModelFilter().parametersVersion() == 2);
+
   const nlohmann::json legacyJson = {
       {"Iterations", 17},
       {"Temperature", 650.0},
@@ -346,6 +561,7 @@ TEST_CASE("SimplnxCore::PottsModelFilter: FromSIMPLJson", "[SimplnxCore][PottsMo
   REQUIRE(args.value<bool>(PottsModelFilter::k_UseMask_Key));
   REQUIRE(args.value<DataPath>(PottsModelFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "Mask"}));
   REQUIRE(args.value<DataPath>(PottsModelFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  REQUIRE(args.value<std::vector<DataPath>>(PottsModelFilter::k_IgnoredDataArrayPaths_Key).empty());
 }
 
 TEST_CASE("SimplnxCore::PottsModelFilter: SIMPL Backwards Compatibility", "[SimplnxCore][PottsModelFilter][BackwardsCompatibility]")
@@ -375,4 +591,5 @@ TEST_CASE("SimplnxCore::PottsModelFilter: SIMPL Backwards Compatibility", "[Simp
   REQUIRE(args.value<float64>(PottsModelFilter::k_Temperature_Key) == 456.75);
   REQUIRE(args.value<bool>(PottsModelFilter::k_PeriodicBoundaries_Key));
   REQUIRE(args.value<bool>(PottsModelFilter::k_UseMask_Key));
+  REQUIRE(args.value<std::vector<DataPath>>(PottsModelFilter::k_IgnoredDataArrayPaths_Key).empty());
 }

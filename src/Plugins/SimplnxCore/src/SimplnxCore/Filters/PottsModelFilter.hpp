@@ -39,6 +39,7 @@ public:
   static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
   static constexpr StringLiteral k_UseMask_Key = "use_mask";
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
 
   /**
