@@ -8,8 +8,12 @@ Usage:
     print(generate_python_pipeline(pipeline))
 """
 
+import importlib
+import importlib.machinery
 import pathlib
 import pprint
+import sys
+import warnings
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -32,6 +36,54 @@ MODULE_ALIASES: dict[str, str] = {
 
 # Canonical import ordering for generated scripts
 _MODULE_ORDER: tuple[str, ...] = ("simplnx", "orientationanalysis", "imageprocessing")
+
+_PLUGIN_MODULES_IMPORTED = False
+
+
+def _ensure_plugin_modules_imported() -> None:
+    """Import installed plugin modules once so they register Python conversions.
+
+    Plugin modules register their parameter conversions when imported. The
+    generator cannot determine a filter's plugin name from Python because that
+    relationship is not bound, and optional plugins must not be imported at
+    module load. Discovering extension modules next to ``simplnx`` defers that
+    work until code generation is requested.
+    """
+    global _PLUGIN_MODULES_IMPORTED
+    if _PLUGIN_MODULES_IMPORTED:
+        return
+    _PLUGIN_MODULES_IMPORTED = True
+
+    module_dir = pathlib.Path(nx.__file__).parent
+    extension_paths: set[pathlib.Path] = set()
+    for pattern in ("*.cpython-*.so", "*.pyd", "*.so"):
+        extension_paths.update(module_dir.glob(pattern))
+
+    module_names: set[str] = set()
+    for extension_path in extension_paths:
+        for suffix in importlib.machinery.EXTENSION_SUFFIXES:
+            if extension_path.name.endswith(suffix):
+                module_name = extension_path.name[:-len(suffix)]
+                if module_name.isidentifier() and module_name != "simplnx":
+                    module_names.add(module_name)
+                break
+
+    failures: list[str] = []
+    for module_name in sorted(module_names):
+        if module_name in sys.modules:
+            continue
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            failures.append(f"{module_name}: {exc}")
+
+    if failures:
+        warnings.warn(
+            "Unable to import one or more simplnx plugin modules; generated Python may use "
+            f"base filter types or lack parameter conversions: {'; '.join(failures)}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -382,6 +434,7 @@ def _build_import_lines(needed_modules: set[str]) -> list[str]:
 
 def _generate_filter_block(pipeline_filter: nx.PipelineFilter, context: CodeGenContext) -> list[str]:
     """Generate code lines for a single PipelineFilter."""
+    _ensure_plugin_modules_imported()
     index = context.filter_index
     f = pipeline_filter.get_filter()
     _, alias, class_name = _resolve_filter_module(f)
@@ -462,6 +515,7 @@ def generate_python_pipeline(pipeline: nx.Pipeline) -> str:
     Returns a string containing the complete script with imports,
     DataStructure creation, filter execution blocks, and footer.
     """
+    _ensure_plugin_modules_imported()
     filters = [pipeline[i] for i in range(len(pipeline))]
     return _generate_full(filters)
 
@@ -471,6 +525,7 @@ def generate_python_filters(filters: list[nx.PipelineFilter]) -> str:
 
     No imports, DataStructure creation, or footer — just the filter blocks.
     """
+    _ensure_plugin_modules_imported()
     context = CodeGenContext(filter_index=1)
     blocks: list[str] = []
     for pipeline_filter in filters:
