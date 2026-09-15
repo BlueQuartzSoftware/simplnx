@@ -328,6 +328,8 @@ Result<> PottsModel::operator()()
   const usize maxTotalProgress = attemptsPerIteration > std::numeric_limits<usize>::max() / iterationCount ? std::numeric_limits<usize>::max() : iterationCount * attemptsPerIteration;
   progressHelper.setMaxProgresss(maxTotalProgress);
   auto progressMessenger = progressHelper.createProgressMessenger();
+  // The minimum batch reduces clock reads on typical volumes. The percentage term keeps one-percent granularity on large volumes.
+  const usize progressBatchSize = std::max<usize>(1024, attemptsPerIteration / 100);
 
   for(int32 iteration = 0; iteration < m_InputValues->Iterations; iteration++)
   {
@@ -335,6 +337,12 @@ Result<> PottsModel::operator()()
     {
       return {};
     }
+
+    usize pendingProgress = 0;
+    const auto progressMessage = [&lattice, &iteration, this](usize currentProgress, usize maxProgress) {
+      const usize percentComplete = currentProgress * 100 / maxProgress;
+      return fmt::format("Iteration {} of {} || {}% Completed || {} Total Flips", iteration + 1, m_InputValues->Iterations, percentComplete, lattice.totalFlips());
+    };
 
     for(usize attemptIndex = 0; attemptIndex < attemptsPerIteration; attemptIndex++)
     {
@@ -352,10 +360,22 @@ Result<> PottsModel::operator()()
           propagatedArray->copyTuple(*donorCell, currentCell);
         }
       }
-      progressMessenger.sendProgressMessage(1, [&lattice, &iteration, this](usize currentProgress, usize maxProgress) {
-        const usize percentComplete = currentProgress * 100 / maxProgress;
-        return fmt::format("Iteration {} of {} || {}% Completed || {} Total Flips", iteration + 1, m_InputValues->Iterations, percentComplete, lattice.totalFlips());
-      });
+
+      pendingProgress++;
+      if(pendingProgress == progressBatchSize)
+      {
+        progressMessenger.sendProgressMessage(pendingProgress, progressMessage);
+        pendingProgress = 0;
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+      }
+    }
+
+    if(pendingProgress != 0)
+    {
+      progressMessenger.sendProgressMessage(pendingProgress, progressMessage);
     }
   }
 

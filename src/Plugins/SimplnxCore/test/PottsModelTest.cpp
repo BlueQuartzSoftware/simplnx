@@ -17,6 +17,7 @@
 #include <condition_variable>
 #include <cstring>
 #include <filesystem>
+#include <iostream>
 #include <mutex>
 #include <random>
 #include <set>
@@ -357,6 +358,22 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Progress Feedback", "[SimplnxCore][Pot
   REQUIRE(exampleProgressMessage.find("Iteration ") != std::string::npos);
   REQUIRE(exampleProgressMessage.find(" of ") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PottsModelFilter: Timing", "[.PottsTiming]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Dimension = 128;
+  constexpr usize k_CellCount = k_Dimension * k_Dimension * k_Dimension;
+  const auto inputFeatureIds = CreateRandomFeatureIds(k_CellCount, 2000, 57291);
+  auto testData = CreateTestData({k_Dimension, k_Dimension, k_Dimension}, inputFeatureIds);
+
+  PottsModelFilter filter;
+  const auto startTime = std::chrono::steady_clock::now();
+  auto executeResult = filter.execute(testData.dataStructure, CreateArguments(3, 273.0, false, 12345));
+  const auto executionDuration = std::chrono::steady_clock::now() - startTime;
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  std::cout << "Potts execution time: " << std::chrono::duration_cast<std::chrono::milliseconds>(executionDuration).count() << " ms\n";
 }
 
 TEST_CASE("SimplnxCore::PottsModelFilter: Cell Data Follows Accepted Spin", "[SimplnxCore][PottsModelFilter]")
