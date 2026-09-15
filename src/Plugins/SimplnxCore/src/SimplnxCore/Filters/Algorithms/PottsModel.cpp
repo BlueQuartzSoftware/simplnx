@@ -2,12 +2,16 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
+#include <optional>
 #include <random>
 #include <vector>
 
@@ -59,8 +63,9 @@ public:
   /**
    * @brief Attempts one spin flip at the specified cell.
    * @param index Flat cell index.
+   * @return The donor cell index when the flip is accepted.
    */
-  void attemptFlip(usize index)
+  std::optional<usize> attemptFlip(usize index)
   {
     const int32 spin = m_FeatureIds[index];
     queryValidNeighbors(index);
@@ -68,7 +73,7 @@ public:
     const auto sameSpinCount = std::count_if(m_Neighbors.cbegin(), m_Neighbors.cend(), [this, spin](usize neighborIndex) { return spin == m_FeatureIds[neighborIndex]; });
     if(sameSpinCount == m_Neighbors.size())
     {
-      return;
+      return std::nullopt;
     }
 
     std::uniform_int_distribution<usize> neighborDistribution(0, m_Neighbors.size() - 1);
@@ -76,7 +81,7 @@ public:
     const int32 candidate = m_FeatureIds[randomNeighbor];
     if(candidate == 0 || spin == candidate)
     {
-      return;
+      return std::nullopt;
     }
 
     float64 deltaEnergy = 0.0;
@@ -93,7 +98,9 @@ public:
     {
       m_FeatureIds[index] = candidate;
       m_TotalFlips++;
+      return randomNeighbor;
     }
+    return std::nullopt;
   }
 
   usize totalFlips() const
@@ -259,6 +266,24 @@ Result<> PottsModel::operator()()
     mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   }
 
+  auto excludedArrayPaths = m_InputValues->IgnoredDataArrayPaths;
+  excludedArrayPaths.push_back(m_InputValues->FeatureIdsArrayPath);
+  if(m_InputValues->UseMask)
+  {
+    excludedArrayPaths.push_back(m_InputValues->MaskArrayPath);
+  }
+
+  std::vector<IDataArray*> propagatedArrays;
+  const auto cellArrayPaths = GetAllChildDataPaths(m_DataStructure, m_InputValues->FeatureIdsArrayPath.getParent(), DataObject::Type::DataArray, excludedArrayPaths);
+  if(cellArrayPaths.has_value())
+  {
+    propagatedArrays.reserve(cellArrayPaths->size());
+    for(const DataPath& cellArrayPath : *cellArrayPaths)
+    {
+      propagatedArrays.push_back(m_DataStructure.getDataAs<IDataArray>(cellArrayPath));
+    }
+  }
+
   usize attemptsPerIteration = totalCells;
   usize eligibleCellCount = 0;
   if(mask != nullptr)
@@ -299,7 +324,10 @@ Result<> PottsModel::operator()()
 
   MessageHelper messageHelper(m_MessageHandler);
   auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(attemptsPerIteration);
+  const usize iterationCount = static_cast<usize>(m_InputValues->Iterations);
+  const usize maxTotalProgress = attemptsPerIteration > std::numeric_limits<usize>::max() / iterationCount ? std::numeric_limits<usize>::max() : iterationCount * attemptsPerIteration;
+  progressHelper.setMaxProgresss(maxTotalProgress);
+  auto progressMessenger = progressHelper.createProgressMessenger();
 
   for(int32 iteration = 0; iteration < m_InputValues->Iterations; iteration++)
   {
@@ -308,8 +336,6 @@ Result<> PottsModel::operator()()
       return {};
     }
 
-    progressHelper.resetProgress();
-    auto progressMessenger = progressHelper.createProgressMessenger();
     for(usize attemptIndex = 0; attemptIndex < attemptsPerIteration; attemptIndex++)
     {
       usize currentCell = 0;
@@ -318,8 +344,15 @@ Result<> PottsModel::operator()()
         currentCell = siteDistribution(generator);
       } while(featureIds[currentCell] == 0 || (mask != nullptr && !mask->isTrue(currentCell)));
 
-      lattice.attemptFlip(currentCell);
-      progressMessenger.sendProgressMessage(1, [&lattice, iteration, this](usize currentProgress, usize maxProgress) {
+      const std::optional<usize> donorCell = lattice.attemptFlip(currentCell);
+      if(donorCell.has_value())
+      {
+        for(IDataArray* propagatedArray : propagatedArrays)
+        {
+          propagatedArray->copyTuple(*donorCell, currentCell);
+        }
+      }
+      progressMessenger.sendProgressMessage(1, [&lattice, &iteration, this](usize currentProgress, usize maxProgress) {
         const usize percentComplete = currentProgress * 100 / maxProgress;
         return fmt::format("Iteration {} of {} || {}% Completed || {} Total Flips", iteration + 1, m_InputValues->Iterations, percentComplete, lattice.totalFlips());
       });
