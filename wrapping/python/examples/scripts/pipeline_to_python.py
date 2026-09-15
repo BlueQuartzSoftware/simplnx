@@ -211,7 +211,7 @@ class PipelineConversionTest(unittest.TestCase):
             },
         )
 
-    def test_PruneRegenerableStatsRetainsOnlyUserOdfWithoutWeights(self):
+    def test_PruneRegenerableStatsDropsUserOdfWithoutWeights(self):
         user_bulk_odf = {
             "phases": [
                 {
@@ -248,7 +248,7 @@ class PipelineConversionTest(unittest.TestCase):
         bulk_result = simplnx_utilities._prune_regenerable_stats(user_bulk_odf)
         weighted_result = simplnx_utilities._prune_regenerable_stats(user_weighted_odf)
 
-        self.assertEqual(bulk_result["phases"][0]["odf"], [0.125, 0.375, 0.5])
+        self.assertNotIn("odf", bulk_result["phases"][0])
         self.assertNotIn("odf", weighted_result["phases"][0])
 
     def test_EncodeStatsGeneratorUsesCompactFormatting(self):
