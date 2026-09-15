@@ -1,9 +1,13 @@
 """Test that simplnx_utilities generates valid, compilable Python code."""
 
+import subprocess
+import sys
+import textwrap
+import unittest
+
 import simplnx as nx
 import simplnx_test_dirs as nxtest
 import simplnx_utilities
-import unittest
 
 class PipelineConversionTest(unittest.TestCase):
     # ---------------------------------------------------------------------------
@@ -112,6 +116,28 @@ class PipelineConversionTest(unittest.TestCase):
                 print(code)
                 print("".ljust(WIDTH, "="))
                 compile(code, "<string>", "exec")
+
+    def test_GeneratorImportsMissingPluginModuleOnDemand(self):
+        script = textwrap.dedent("""
+            import sys
+
+            import simplnx as nx
+            import simplnx_utilities
+
+            nxor = sys.modules["orientationanalysis"]
+            filter_type = nxor.ComputeIPFColorsFilter
+            pipeline = nx.Pipeline()
+            pipeline.append(filter_type(), filter_type.get_default_arguments())
+
+            del sys.modules["orientationanalysis"]
+            code = simplnx_utilities.generate_python_pipeline(pipeline)
+
+            assert "orientationanalysis" in sys.modules
+            assert "nxor.ComputeIPFColorsFilter.execute(" in code
+        """)
+
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
 
 if __name__ == "__main__":
     unittest.main()
