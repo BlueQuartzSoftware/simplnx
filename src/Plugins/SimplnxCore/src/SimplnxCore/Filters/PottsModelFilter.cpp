@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -26,6 +27,7 @@ constexpr int32 k_InvalidFeatureIdsLocationError = -72002;
 constexpr int32 k_InvalidMaskLocationError = -72003;
 constexpr int32 k_MaskTupleCountMismatchError = -72004;
 constexpr int32 k_InvalidDimensionalityError = -72006;
+constexpr int32 k_InvalidIgnoredArrayLocationError = -72007;
 } // namespace
 
 namespace nx::core
@@ -78,10 +80,12 @@ Parameters PottsModelFilter::parameters() const
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of the array that stores the seed used by this execution.", "PottsModel SeedValue"));
 
-  params.insertSeparator(Parameters::Separator{"Optional Parameters"});
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to restrict site selection and neighborhoods to mask-true cells.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "Boolean or uint8 mask that selects participating cells.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "Cell arrays that keep their current tuple values when a cell changes spin.",
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature IDs", "Int32 cell array that contains the spin IDs. The filter modifies this array in place.", DataPath{},
@@ -96,7 +100,10 @@ Parameters PottsModelFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType PottsModelFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Added k_IgnoredDataArrayPaths_Key. Pipelines that omit the key use the empty-list default.
 }
 
 //------------------------------------------------------------------------------
@@ -113,6 +120,7 @@ IFilter::PreflightResult PottsModelFilter::preflightImpl(const DataStructure& da
   const auto temperature = filterArgs.value<float64>(k_Temperature_Key);
   const auto useMask = filterArgs.value<bool>(k_UseMask_Key);
   const auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  const auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   const auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   const auto seedArrayName = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
@@ -144,6 +152,16 @@ IFilter::PreflightResult PottsModelFilter::preflightImpl(const DataStructure& da
   }
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+  for(const DataPath& ignoredDataArrayPath : ignoredDataArrayPaths)
+  {
+    if(ignoredDataArrayPath.getParent() != cellAttributeMatrixPath)
+    {
+      return MakePreflightErrorResult(k_InvalidIgnoredArrayLocationError,
+                                      fmt::format("The ignored array at path '{}' must be in the same attribute matrix as the 'Feature IDs' array at path '{}'. Select an array from '{}'.",
+                                                  ignoredDataArrayPath.toString(), featureIdsArrayPath.toString(), cellAttributeMatrixPath.toString()));
+    }
+  }
+
   if(useMask)
   {
     const DataPath maskAttributeMatrixPath = maskArrayPath.getParent();
@@ -164,7 +182,13 @@ IFilter::PreflightResult PottsModelFilter::preflightImpl(const DataStructure& da
 
   Result<OutputActions> resultOutputActions;
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayName})));
-  MarkDataPathModified(dataStructure, resultOutputActions, featureIdsArrayPath);
+  auto modifiedArrayExclusions = ignoredDataArrayPaths;
+  std::erase(modifiedArrayExclusions, featureIdsArrayPath);
+  if(useMask)
+  {
+    modifiedArrayExclusions.push_back(maskArrayPath);
+  }
+  AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellAttributeMatrixPath, modifiedArrayExclusions);
 
   return {std::move(resultOutputActions)};
 }
@@ -187,6 +211,7 @@ Result<> PottsModelFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.PeriodicBoundaries = filterArgs.value<bool>(k_PeriodicBoundaries_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.SeedValue = seed;
 
@@ -209,6 +234,9 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 Result<Arguments> PottsModelFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = PottsModelFilter().getDefaultArguments();
+
+  // Legacy Potts changed only FeatureIds. NX propagates cell data as documented by PottsModel-D1, so converted pipelines use the empty ignore list.
+  args.insertOrAssign(k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   std::vector<Result<>> results;
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_IterationsKey, k_Iterations_Key));
