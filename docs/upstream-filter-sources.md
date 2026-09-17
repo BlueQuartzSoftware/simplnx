@@ -67,6 +67,22 @@ For arrays produced by EBSD readers (Cell Quaternions, Cell Phases, ensemble Cry
 | Cell Shifts Array (alignment) | Align Sections (Misorientation) | OrientationAnalysis | |
 | Cell Shifts Array (alignment) | Align Sections (Mutual Information) | OrientationAnalysis | |
 | Confidence Index / Image Quality | Read H5EBSD / Read CTF Data / Read ANG Data | OrientationAnalysis | Per-cell scalar quality metric |
+| Synthetic Statistics Group | StatsGenerator / Generate Primary StatsData / Generate Precipitate StatsData | Synthetic | Per-phase statistics stored as numbered child groups |
+| Synthetic Crystal Structures | StatsGenerator / Generate Primary StatsData / Generate Precipitate StatsData | Synthetic | Ensemble-level array; Match Crystallography also copies it to the synthetic volume |
+| Synthetic Phase Types | StatsGenerator / Generate Primary StatsData / Generate Precipitate StatsData | Synthetic | Ensemble-level phase classification |
+| Synthetic Phase Names | StatsGenerator / Generate Primary StatsData / Generate Precipitate StatsData | Synthetic | Ensemble-level StringArray |
+| Synthetic Shape Types | Establish Shape Types | Synthetic | Ensemble-level analytical shape selection |
+| Synthetic Cell Feature Ids | Pack Primary Phases / Establish Matrix Phase / Establish Foam Morphology | Synthetic | Cell-level; Insert Precipitate Phases, Insert Transformation Phases, and Potts Model modify it in place |
+| Synthetic Cell Phases | Pack Primary Phases / Establish Matrix Phase / Establish Foam Morphology | Synthetic | Cell-level; later insertion filters modify it in place |
+| Synthetic Feature Phases | Pack Primary Phases / Establish Matrix Phase / Establish Foam Morphology | Synthetic | Feature-level; Insert Precipitate Phases and Insert Transformation Phases extend it |
+| Synthetic Number of Features | Pack Primary Phases / Establish Matrix Phase / Establish Foam Morphology | Synthetic | Ensemble-level feature counts |
+| Synthetic Cell Euler Angles | Match Crystallography | Synthetic | Cell-level Bunge Euler angles in radians; Insert Transformation Phases modifies it |
+| Synthetic Feature Euler Angles | Match Crystallography | Synthetic | Feature-level Bunge Euler angles in radians; Insert Transformation Phases extends it |
+| Synthetic Average Quaternions | Match Crystallography | Synthetic | Feature-level orientations; Insert Transformation Phases extends it |
+| Synthetic Feature Volumes | Match Crystallography | Synthetic | Feature-level physical volume in geometry-length cubed |
+| Synthetic Foam Mask | Establish Foam Morphology | Synthetic | Boolean cell array; true identifies solid strut material |
+| Transformation Parent Ids | Insert Transformation Phases | Synthetic | Feature-level parent mapping |
+| Transformation Features Per Parent | Insert Transformation Phases | Synthetic | Feature-level inserted-plate count |
 
 ## Future: Graph Representation
 
