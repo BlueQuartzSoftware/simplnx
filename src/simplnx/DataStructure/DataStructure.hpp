@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/LinkedPath.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <nlohmann/json_fwd.hpp>
 #include <nod/nod.hpp>
 #include <nonstd/expected.hpp>
 
@@ -840,16 +841,31 @@ public:
   void resetIds(DataObject::IdType startingId);
 
   /**
-   * @brief Outputs data graph in .dot file format
-   * @param outputStream The output stream to write GraphViz dot syntax to
+   * @brief Outputs the data hierarchy in GraphViz DOT format.
+   *
+   * Nodes use unique DataObject identifiers. Object names are escaped and used as labels.
+   * @param outputStream Output stream that receives GraphViz DOT syntax.
    */
   void exportHierarchyAsGraphViz(std::ostream& outputStream) const;
 
   /**
-   * @brief Outputs data graph in console readable format
-   * @param outputStream The output stream to write the hierarchy text to
+   * @brief Outputs the data hierarchy in a human-readable text format.
+   *
+   * Backslashes and control characters in object names are escaped so each object occupies one line.
+   * @param outputStream Output stream that receives the hierarchy text.
    */
   void exportHierarchyAsText(std::ostream& outputStream) const;
+
+  /**
+   * @brief Exports the data graph and object metadata as schema-versioned JSON.
+   * @return Root JSON object that contains "schema_version" and the hierarchy in "objects".
+   *
+   * Each node contains its name, path, identifier, type, children, and applicable type metadata.
+   * Each hierarchy level is ordered alphabetically by object name.
+   * Numeric array payloads are not read, except readable RectGrid bounds can supply the origin.
+   * The exporter omits RectGrid origin when preflight stores do not permit value access.
+   */
+  [[nodiscard]] nlohmann::json exportHierarchyAsJson() const;
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -991,24 +1007,6 @@ private:
    * This method exists for methods that copy or move another DataStructure.
    */
   void applyAllDataStructure();
-
-  /**
-   * @brief The recursive function to parse graph and dump names to and output stream in
-   * dot file syntax
-   * @param outputStream The output stream to write to
-   * @param paths Vector of DataPaths to parse recursively
-   * @param parent Name of the calling parent to output
-   */
-  void recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const;
-
-  /**
-   * @brief The recursive function to parse graph and dump names to and output stream in
-   * readable syntax
-   * @param outputStream The output stream to write to
-   * @param paths Vector of DataPaths to parse recursively
-   * @param indent The indentation string for the hierarchy
-   */
-  void recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const;
 
   /**
    * @brief Notifies observers to the provided message.

@@ -1,29 +1,47 @@
 #include "DataStructObserver.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
+#include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -44,6 +62,12 @@ constexpr StringLiteral k_QuadGeo = "Quad Geometry";
 constexpr StringLiteral k_TetGeo = "Tet Geometry";
 constexpr StringLiteral k_SharedPolyhedrons = "SharedPolyhedronList";
 constexpr StringLiteral k_HexGeo = "Hex Geometry";
+
+enum class DynamicListMode : uint8
+{
+  Exclude,
+  Include
+};
 } // namespace
 
 TEST_CASE("SimplnxCore::DataObjectType Check")
@@ -66,12 +90,12 @@ TEST_CASE("SimplnxCore::DataObjectType Check")
   static_assert(DataObject::Type::TetrahedralGeom == static_cast<DataObject::Type>(21));
 }
 
-// This test will ensure we don't run into runtime exceptions trying to run the functions
+// Verify that GraphViz export completes without a runtime exception.
 TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << std::endl;
   std::ofstream output(outputPath, std::ios_base::trunc);
@@ -80,12 +104,42 @@ TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// This test will ensure we don't run into runtime exceptions trying to run the functions
+TEST_CASE("DataStructure::exportHierarchyAsGraphViz::UniqueEscapedNodes")
+{
+  DataStructure dataStructure;
+  auto* firstParentPtr = DataGroup::Create(dataStructure, "Parent \"A\"\\Line\nNext {Record|<Port>}");
+  auto* secondParentPtr = DataGroup::Create(dataStructure, "Parent B");
+  REQUIRE(firstParentPtr != nullptr);
+  REQUIRE(secondParentPtr != nullptr);
+
+  auto* firstChildPtr = DataGroup::Create(dataStructure, "Shared Name", firstParentPtr->getId());
+  auto* secondChildPtr = DataGroup::Create(dataStructure, "Shared Name", secondParentPtr->getId());
+  REQUIRE(firstChildPtr != nullptr);
+  REQUIRE(secondChildPtr != nullptr);
+
+  std::ostringstream output;
+  dataStructure.exportHierarchyAsGraphViz(output);
+  const std::string graph = output.str();
+
+  const std::string firstParentId = fmt::format("node_{}", firstParentPtr->getId());
+  const std::string secondParentId = fmt::format("node_{}", secondParentPtr->getId());
+  const std::string firstChildId = fmt::format("node_{}", firstChildPtr->getId());
+  const std::string secondChildId = fmt::format("node_{}", secondChildPtr->getId());
+
+  REQUIRE(graph.find(fmt::format("\"{}\" [label=\"Parent \\\"A\\\"\\\\Line\\nNext \\{{Record\\|\\<Port\\>\\}}\"]", firstParentId)) != std::string::npos);
+  REQUIRE(graph.find(fmt::format("\"{}\" [label=\"Shared Name\"]", firstChildId)) != std::string::npos);
+  REQUIRE(graph.find(fmt::format("\"{}\" [label=\"Shared Name\"]", secondChildId)) != std::string::npos);
+  REQUIRE(graph.find(fmt::format("\"{}\" -> \"{}\"", firstParentId, firstChildId)) != std::string::npos);
+  REQUIRE(graph.find(fmt::format("\"{}\" -> \"{}\"", secondParentId, secondChildId)) != std::string::npos);
+  REQUIRE(firstChildId != secondChildId);
+}
+
+// Verify that text export completes without a runtime exception.
 TEST_CASE("SimplnxCore::exportHierarchyAsText")
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << std::endl;
   std::ofstream output(outputPath, std::ios_base::trunc);
@@ -94,9 +148,34 @@ TEST_CASE("SimplnxCore::exportHierarchyAsText")
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-DataStructure createTestDataStructure()
+TEST_CASE("DataStructure::exportHierarchyAsText::EscapedControls")
+{
+  DataStructure dataStructure;
+  REQUIRE(DataGroup::Create(dataStructure, "Name\\Path\nNext\tTab\rReturn") != nullptr);
+
+  std::ostringstream output;
+  dataStructure.exportHierarchyAsText(output);
+
+  REQUIRE(output.str() == "|--Name\\\\Path\\nNext\\tTab\\rReturn\n");
+}
+
+namespace
+{
+/**
+ * @brief Creates the complete DataStructure fixture used by hierarchy tests.
+ * @param dynamicListMode Controls creation of derived DynamicListArray objects.
+ * @return Populated test DataStructure.
+ */
+DataStructure createTestDataStructure(DynamicListMode dynamicListMode = DynamicListMode::Include)
 {
   DataStructure dataStruct;
+  const auto createDynamicLists = [dynamicListMode](auto& geometry) {
+    if(dynamicListMode == DynamicListMode::Include)
+    {
+      geometry.findElementsContainingVert(false);
+      geometry.findElementNeighbors(false);
+    }
+  };
 
   // Image Geometry
   {
@@ -260,8 +339,7 @@ DataStructure createTestDataStructure()
     edgeGeom->setEdgeList(*edgesListArray);
 
     edgeGeom->findElementSizes(false);
-    edgeGeom->findElementsContainingVert(false);
-    edgeGeom->findElementNeighbors(false);
+    createDynamicLists(*edgeGeom);
     edgeGeom->findElementCentroids(false);
   }
 
@@ -316,8 +394,7 @@ DataStructure createTestDataStructure()
 
     triangleGeom->findEdges(false);
     // TODO: triangleGeom->findElementSizes(false);
-    triangleGeom->findElementsContainingVert(false);
-    triangleGeom->findElementNeighbors(false);
+    createDynamicLists(*triangleGeom);
     triangleGeom->findElementCentroids(false);
     triangleGeom->findUnsharedEdges(false);
   }
@@ -365,8 +442,7 @@ DataStructure createTestDataStructure()
 
     quadGeom->findEdges(false);
     // TODO: quadGeom->findElementSizes();
-    quadGeom->findElementsContainingVert(false);
-    quadGeom->findElementNeighbors(false);
+    createDynamicLists(*quadGeom);
     quadGeom->findElementCentroids(false);
     quadGeom->findUnsharedEdges(false);
   }
@@ -412,8 +488,7 @@ DataStructure createTestDataStructure()
     tetGeom->findEdges(false);
     tetGeom->findFaces(false);
     tetGeom->findElementSizes(false);
-    tetGeom->findElementsContainingVert(false);
-    tetGeom->findElementNeighbors(false);
+    createDynamicLists(*tetGeom);
     tetGeom->findElementCentroids(false);
     tetGeom->findUnsharedEdges(false);
     tetGeom->findUnsharedFaces(false);
@@ -489,14 +564,441 @@ DataStructure createTestDataStructure()
     hexGeom->findEdges(false);
     hexGeom->findFaces(false);
     hexGeom->findElementSizes(false);
-    hexGeom->findElementsContainingVert(false);
-    hexGeom->findElementNeighbors(false);
+    createDynamicLists(*hexGeom);
     hexGeom->findElementCentroids(false);
     hexGeom->findUnsharedEdges(false);
     hexGeom->findUnsharedFaces(false);
   }
 
   return dataStruct;
+}
+
+/**
+ * @brief Creates serializable data for disk round-trip tests.
+ * @return Test DataStructure without derived DynamicListArray objects.
+ *
+ * The DREAM3D writer does not serialize the derived lists. It reports
+ * "-5 : Could not find IO factory for datatype: DynamicListArray".
+ */
+DataStructure createRoundTripDataStructure()
+{
+  return createTestDataStructure(DynamicListMode::Exclude);
+}
+
+/**
+ * @brief Finds the child node with the given name in a JSON "children" or "objects" array.
+ * @param nodes JSON node array to search.
+ * @param name Object name to find.
+ * @return The matching node.
+ * @throws std::runtime_error If no object has the requested name.
+ */
+const nlohmann::json& findNode(const nlohmann::json& nodes, std::string_view name)
+{
+  for(const auto& node : nodes)
+  {
+    if(node.at("name").get<std::string>() == name)
+    {
+      return node;
+    }
+  }
+  throw std::runtime_error(fmt::format("No JSON hierarchy node named '{}' was found.", name));
+}
+} // namespace
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::Fields")
+{
+  UnitTest::LoadPlugins();
+
+  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  REQUIRE(json.at("schema_version").get<int>() == 1);
+  REQUIRE(json.contains("objects"));
+  REQUIRE(json.at("objects").is_array());
+  REQUIRE(json.at("objects").size() == dataStructure.getTopLevelData().size());
+
+  // Top-level DataGroup "A" has two children: "H" and "C".
+  const auto& groupA = findNode(json.at("objects"), Constants::k_GroupAName.view());
+  REQUIRE(groupA.at("path").get<std::string>() == Constants::k_GroupAName.view());
+  REQUIRE(groupA.at("type").get<std::string>() == DataGroup::k_TypeName.view());
+  const auto groupAId = dataStructure.getId(DataPath({std::string(Constants::k_GroupAName.view())}));
+  REQUIRE(groupAId == groupA.at("id").get<uint64>());
+  REQUIRE(groupA.at("children").size() == 2);
+  REQUIRE_FALSE(groupA.contains("tuple_shape"));
+  REQUIRE_FALSE(groupA.contains("data_type"));
+
+  // A/H/N is an int8 DataArray with tuple shape {1} and component shape {1}.
+  const auto& groupH = findNode(groupA.at("children"), Constants::k_GroupHName.view());
+  const auto& arrayN = findNode(groupH.at("children"), Constants::k_ArrayNName.view());
+  REQUIRE(arrayN.at("path").get<std::string>() == "A/H/N");
+  REQUIRE(arrayN.at("type").get<std::string>() == "DataArray<int8>");
+  REQUIRE(arrayN.at("data_type").get<std::string>() == "int8");
+  REQUIRE(arrayN.at("tuple_shape") == nlohmann::json::array({1}));
+  REQUIRE(arrayN.at("component_shape") == nlohmann::json::array({1}));
+  REQUIRE(arrayN.at("num_tuples").get<uint64>() == 1);
+  REQUIRE(arrayN.at("num_components").get<uint64>() == 1);
+  REQUIRE(arrayN.at("store_type").get<std::string>() == "InMemory");
+  REQUIRE(arrayN.at("children").is_array());
+  REQUIRE(arrayN.at("children").empty());
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::AlphabeticOrder")
+{
+  DataStructure dataStructure;
+  auto* zGroupPtr = DataGroup::Create(dataStructure, "Zulu");
+  auto* aGroupPtr = DataGroup::Create(dataStructure, "Alpha");
+  REQUIRE(zGroupPtr != nullptr);
+  REQUIRE(aGroupPtr != nullptr);
+  REQUIRE(DataGroup::Create(dataStructure, "Zulu Child", aGroupPtr->getId()) != nullptr);
+  REQUIRE(DataGroup::Create(dataStructure, "Alpha Child", aGroupPtr->getId()) != nullptr);
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  REQUIRE(json.at("objects").at(0).at("name") == "Alpha");
+  REQUIRE(json.at("objects").at(1).at("name") == "Zulu");
+
+  const auto& alphaChildren = json.at("objects").at(0).at("children");
+  REQUIRE(alphaChildren.at(0).at("name") == "Alpha Child");
+  REQUIRE(alphaChildren.at(1).at("name") == "Zulu Child");
+}
+
+TEST_CASE("DataStructure::HierarchyExportsHandleDeepTrees")
+{
+  constexpr usize k_Depth = 512;
+  DataStructure dataStructure;
+  std::optional<DataObject::IdType> parentId;
+  for(usize index = 0; index < k_Depth; ++index)
+  {
+    DataGroup* groupPtr = parentId.has_value() ? DataGroup::Create(dataStructure, fmt::format("Level {}", index), *parentId) : DataGroup::Create(dataStructure, fmt::format("Level {}", index));
+    REQUIRE(groupPtr != nullptr);
+    parentId = groupPtr->getId();
+  }
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  const nlohmann::json* nodePtr = &json.at("objects").at(0);
+  for(usize index = 0; index < k_Depth; ++index)
+  {
+    REQUIRE(nodePtr->at("name") == fmt::format("Level {}", index));
+    if(index + 1 < k_Depth)
+    {
+      nodePtr = &nodePtr->at("children").at(0);
+    }
+  }
+
+  std::ostringstream textOutput;
+  dataStructure.exportHierarchyAsText(textOutput);
+  REQUIRE(static_cast<usize>(std::ranges::count(textOutput.str(), '\n')) == k_Depth);
+
+  std::ostringstream dotOutput;
+  dataStructure.exportHierarchyAsGraphViz(dotOutput);
+  REQUIRE(static_cast<usize>(std::ranges::count(dotOutput.str(), '\n')) >= k_Depth);
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::AttributeMatrixAndNeighborList")
+{
+  UnitTest::LoadPlugins();
+
+  const DataStructure dataStructure = createTestDataStructure();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  const auto& imageGeom = findNode(json.at("objects"), Constants::k_ImageGeometry.view());
+
+  // Image Geometry/CellData is an AttributeMatrix with shape {80, 60, 40} (X fastest).
+  const auto& cellData = findNode(imageGeom.at("children"), Constants::k_CellData.view());
+  REQUIRE(cellData.at("type").get<std::string>() == AttributeMatrix::k_TypeName.view());
+  REQUIRE(cellData.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
+  REQUIRE_FALSE(cellData.contains("data_type"));
+
+  // Image Geometry/CellData/Conditional [bool] is a bool DataArray.
+  const auto& boolArray = findNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  REQUIRE(boolArray.at("data_type").get<std::string>() == "boolean");
+  REQUIRE(boolArray.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
+  REQUIRE(boolArray.at("num_tuples").get<uint64>() == uint64{80} * 60 * 40);
+
+  // Image Geometry/ONE/int16 DataSet is a NeighborList<int16> with 3 tuples.
+  const auto& levelOne = findNode(imageGeom.at("children"), Constants::k_LevelOne.view());
+  const auto& neighborList = findNode(levelOne.at("children"), Constants::k_Int16DataSet.view());
+  REQUIRE(neighborList.at("data_type").get<std::string>() == "int16");
+  REQUIRE(neighborList.at("num_tuples").get<uint64>() == 3);
+  REQUIRE_FALSE(neighborList.contains("component_shape"));
+
+  // Vertex Geometry/Vertex Data/String Array is serialized explicitly as a string array.
+  const auto& vertexGeom = findNode(json.at("objects"), Constants::k_VertexGeometry.view());
+  const auto& vertexData = findNode(vertexGeom.at("children"), Constants::k_VertexDataGroupName.view());
+  const auto& stringArray = findNode(vertexData.at("children"), k_StringArray.view());
+  REQUIRE(stringArray.at("type").get<std::string>() == StringArray::k_TypeName.view());
+  REQUIRE(stringArray.at("data_type").get<std::string>() == "string");
+  REQUIRE(stringArray.at("num_tuples").get<uint64>() == 4);
+  REQUIRE_FALSE(stringArray.contains("component_shape"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::Geometry")
+{
+  UnitTest::LoadPlugins();
+
+  const DataStructure dataStructure = createTestDataStructure();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  const auto& imageGeom = findNode(json.at("objects"), Constants::k_ImageGeometry.view());
+  REQUIRE(imageGeom.at("type").get<std::string>() == ImageGeom::k_TypeName.view());
+  REQUIRE(imageGeom.contains("geometry"));
+  const auto& geom = imageGeom.at("geometry");
+
+  REQUIRE(geom.at("geometry_type").get<std::string>() == "Image");
+  REQUIRE(geom.at("unit_dimensionality").get<uint32>() == 3);
+  REQUIRE(geom.at("length_units").get<std::string>() == "Meter");
+  REQUIRE(geom.at("num_cells").get<uint64>() == 192000);
+  REQUIRE(geom.at("dimensions") == nlohmann::json::array({40, 60, 80}));
+  REQUIRE(geom.at("origin").at(0).get<float32>() == Approx(0.0f));
+  REQUIRE(geom.at("origin").at(1).get<float32>() == Approx(20.0f));
+  REQUIRE(geom.at("origin").at(2).get<float32>() == Approx(66.0f));
+  REQUIRE(geom.at("spacing").at(0).get<float32>() == Approx(0.25f));
+  REQUIRE(geom.at("spacing").at(1).get<float32>() == Approx(0.55f));
+  REQUIRE(geom.at("spacing").at(2).get<float32>() == Approx(1.86f));
+  REQUIRE(geom.at("cell_data_path").get<std::string>() == "Image Geometry/CellData");
+
+  // Node geometry keys must not appear on a grid geometry.
+  REQUIRE_FALSE(geom.contains("num_vertices"));
+  REQUIRE_FALSE(geom.contains("vertex_data_path"));
+
+  // RectGridGeom has dimensions and no spacing. Its origin is present because the fixture sets bounds arrays.
+  const auto& rectGeom = findNode(json.at("objects"), k_RectGridGeo.view());
+  const auto& rectGeomBlock = rectGeom.at("geometry");
+  REQUIRE(rectGeomBlock.at("geometry_type").get<std::string>() == "RectGrid");
+  REQUIRE(rectGeomBlock.at("dimensions") == nlohmann::json::array({10, 10, 5}));
+  REQUIRE(rectGeomBlock.contains("origin"));
+  REQUIRE(rectGeomBlock.at("origin").at(0).get<float32>() == Approx(0.0f));
+  REQUIRE(rectGeomBlock.at("origin").at(1).get<float32>() == Approx(0.0f));
+  REQUIRE(rectGeomBlock.at("origin").at(2).get<float32>() == Approx(0.0f));
+  REQUIRE_FALSE(rectGeomBlock.contains("spacing"));
+
+  // A DataGroup must not carry a geometry block.
+  const auto& levelOne = findNode(imageGeom.at("children"), Constants::k_LevelOne.view());
+  REQUIRE_FALSE(levelOne.contains("geometry"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, "Rect Grid");
+  REQUIRE(rectGridGeomPtr != nullptr);
+  rectGridGeomPtr->setDimensions({2, 2, 2});
+
+  auto* xBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "X Bounds", {3}, {1});
+  auto* yBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Y Bounds", {3}, {1});
+  auto* zBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Z Bounds", {3}, {1});
+  REQUIRE(xBoundsPtr != nullptr);
+  REQUIRE(yBoundsPtr != nullptr);
+  REQUIRE(zBoundsPtr != nullptr);
+  rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+
+  nlohmann::json json;
+  REQUIRE_NOTHROW(json = dataStructure.exportHierarchyAsJson());
+  const auto& node = findNode(json.at("objects"), "Rect Grid");
+  const auto& geom = node.at("geometry");
+
+  REQUIRE(geom.at("dimensions") == nlohmann::json::array({2, 2, 2}));
+  REQUIRE_FALSE(geom.contains("origin"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridEmptyOutOfCoreBounds")
+{
+  DataStructure dataStructure;
+  auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, "Rect Grid");
+  REQUIRE(rectGridGeomPtr != nullptr);
+  rectGridGeomPtr->setDimensions({2, 2, 2});
+
+  const auto createBounds = [&dataStructure](const std::string& name) {
+    auto store = std::make_shared<EmptyDataStore<float32>>(ShapeType{3}, ShapeType{1}, "out_of_core");
+    return DataArray<float32>::Create(dataStructure, name, std::move(store));
+  };
+  auto* xBoundsPtr = createBounds("X Bounds");
+  auto* yBoundsPtr = createBounds("Y Bounds");
+  auto* zBoundsPtr = createBounds("Z Bounds");
+  REQUIRE(xBoundsPtr != nullptr);
+  REQUIRE(yBoundsPtr != nullptr);
+  REQUIRE(zBoundsPtr != nullptr);
+  rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  const auto& rectGridNode = findNode(json.at("objects"), "Rect Grid");
+  REQUIRE_FALSE(rectGridNode.at("geometry").contains("origin"));
+  REQUIRE(findNode(json.at("objects"), "X Bounds").at("store_type").get<std::string>() == "EmptyOutOfCore");
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeomPtr != nullptr);
+
+  // The geometry has 4 vertices and 2 faces.
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, triangleGeomPtr->getId());
+  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "SharedTriList", {2}, {3}, triangleGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  triangleGeomPtr->setVertices(*verticesPtr);
+  triangleGeomPtr->setFaceList(*facesPtr);
+
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", std::vector<usize>{4}, triangleGeomPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  triangleGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+  // Do not assign a face attribute matrix. The exporter must omit face_data_path.
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  const auto& node = findNode(json.at("objects"), "Triangles");
+  const auto& geom = node.at("geometry");
+
+  REQUIRE(geom.at("geometry_type").get<std::string>() == "Triangle");
+  REQUIRE(geom.at("num_vertices").get<uint64>() == 4);
+  REQUIRE(geom.at("num_faces").get<uint64>() == 2);
+  REQUIRE(geom.at("num_cells").get<uint64>() == 2);
+  REQUIRE(geom.at("vertex_data_path").get<std::string>() == "Triangles/Vertex Data");
+  REQUIRE_FALSE(geom.contains("face_data_path"));
+  REQUIRE_FALSE(geom.contains("dimensions"));
+  REQUIRE_FALSE(geom.contains("num_polyhedra"));
+  // A triangle geometry reports zero edges without an edge list. The edge-data path remains optional.
+  REQUIRE(geom.at("num_edges").get<uint64>() == 0);
+  REQUIRE_FALSE(geom.contains("edge_data_path"));
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometryPaths")
+{
+  UnitTest::LoadPlugins();
+
+  const DataStructure dataStructure = createTestDataStructure();
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+
+  const auto& edgeGeometry = findNode(json.at("objects"), k_EdgeGeo.view()).at("geometry");
+  REQUIRE(edgeGeometry.at("geometry_type").get<std::string>() == "Edge");
+  REQUIRE(edgeGeometry.at("num_vertices").get<uint64>() == 5);
+  REQUIRE(edgeGeometry.at("num_edges").get<uint64>() == 4);
+  REQUIRE(edgeGeometry.at("edge_data_path").get<std::string>() == "Edge Geometry/Edge Data");
+
+  const auto& quadGeometry = findNode(json.at("objects"), k_QuadGeo.view()).at("geometry");
+  REQUIRE(quadGeometry.at("geometry_type").get<std::string>() == "Quad");
+  REQUIRE(quadGeometry.at("num_faces").get<uint64>() == 2);
+  REQUIRE(quadGeometry.at("face_data_path").get<std::string>() == "Quad Geometry/Face Data");
+
+  const auto& tetGeometry = findNode(json.at("objects"), k_TetGeo.view()).at("geometry");
+  REQUIRE(tetGeometry.at("geometry_type").get<std::string>() == "Tetrahedral");
+  REQUIRE(tetGeometry.at("num_polyhedra").get<uint64>() == 2);
+  REQUIRE(tetGeometry.at("polyhedron_data_path").get<std::string>() == "Tet Geometry/Polyhedron Data");
+
+  const auto& hexGeometry = findNode(json.at("objects"), k_HexGeo.view()).at("geometry");
+  REQUIRE(hexGeometry.at("geometry_type").get<std::string>() == "Hexahedral");
+  REQUIRE(hexGeometry.at("num_vertices").get<uint64>() == 12);
+  REQUIRE(hexGeometry.at("num_edges").get<uint64>() == 20);
+  REQUIRE(hexGeometry.at("num_faces").get<uint64>() == 11);
+  REQUIRE(hexGeometry.at("num_polyhedra").get<uint64>() == 2);
+  REQUIRE(hexGeometry.at("polyhedron_data_path").get<std::string>() == "Hex Geometry/Polyhedron Data");
+}
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::NullStoreRequestUsesEmptyStore")
+{
+  DataStructure dataStructure;
+  auto* dataArrayPtr = DataArray<int32>::Create(dataStructure, "Array", std::shared_ptr<DataArray<int32>::store_type>{});
+  REQUIRE(dataArrayPtr != nullptr);
+  REQUIRE(dataArrayPtr->getIDataStore() != nullptr);
+
+  const nlohmann::json json = dataStructure.exportHierarchyAsJson();
+  const auto& arrayNode = findNode(json.at("objects"), "Array");
+  REQUIRE(arrayNode.at("store_type").get<std::string>() == "Empty");
+  REQUIRE(arrayNode.at("tuple_shape") == nlohmann::json::array());
+  REQUIRE(arrayNode.at("component_shape") == nlohmann::json::array());
+  REQUIRE(arrayNode.at("num_tuples").get<uint64>() == 0);
+  REQUIRE(arrayNode.at("num_components").get<uint64>() == 0);
+}
+
+namespace
+{
+/**
+ * @brief Normalizes volatile fields and ordering in a hierarchy document.
+ * @param root Root hierarchy object to normalize.
+ *
+ * The reader assigns identifiers and creates Empty stores. Preflight mode does not read RectGrid bounds values.
+ */
+void stripVolatileKeysFromDocument(nlohmann::json& root)
+{
+  auto& objects = root.at("objects");
+  const auto pathLess = [](const nlohmann::json& lhs, const nlohmann::json& rhs) { return lhs.at("path").get<std::string>() < rhs.at("path").get<std::string>(); };
+  // nlohmann JSON iterators do not satisfy the std::ranges::sort constraints.
+  std::sort(objects.begin(), objects.end(), pathLess); // NOLINT(modernize-use-ranges)
+
+  std::vector<nlohmann::json*> pendingNodes;
+  pendingNodes.reserve(objects.size());
+  for(auto& object : objects)
+  {
+    pendingNodes.push_back(&object);
+  }
+
+  while(!pendingNodes.empty())
+  {
+    nlohmann::json* nodePtr = pendingNodes.back();
+    pendingNodes.pop_back();
+    nodePtr->erase("id");
+    nodePtr->erase("store_type");
+    if(nodePtr->contains("geometry") && nodePtr->at("geometry").is_object())
+    {
+      auto& geometry = nodePtr->at("geometry");
+      if(geometry.contains("geometry_type") && geometry.at("geometry_type") == "RectGrid")
+      {
+        geometry.erase("origin");
+      }
+    }
+
+    auto& children = nodePtr->at("children");
+    std::sort(children.begin(), children.end(), pathLess); // NOLINT(modernize-use-ranges)
+    for(auto& child : children)
+    {
+      pendingNodes.push_back(&child);
+    }
+  }
+}
+} // namespace
+
+TEST_CASE("DataStructure::exportHierarchyAsJson::PreflightRoundTrip")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "exportHierarchyAsJson_roundtrip.dream3d";
+  if(fs::exists(filePath))
+  {
+    fs::remove(filePath);
+  }
+
+  const DataStructure written = createRoundTripDataStructure();
+  nlohmann::json writtenJson = written.exportHierarchyAsJson();
+
+  Result<> writeResult = DREAM3D::WriteFile(filePath, written);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(fs::exists(filePath));
+
+  const Result<DataStructure> readResult = DREAM3D::ImportDataStructureFromFile(filePath, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  nlohmann::json readJson = readResult.value().exportHierarchyAsJson();
+
+  // Preflight mode must create every array with an empty store and read no values.
+  const auto& imageGeom = findNode(readJson.at("objects"), Constants::k_ImageGeometry.view());
+  const auto& cellData = findNode(imageGeom.at("children"), Constants::k_CellData.view());
+  const auto& boolArray = findNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  REQUIRE(boolArray.at("store_type").get<std::string>() == "Empty");
+  REQUIRE(boolArray.at("num_tuples").get<uint64>() == uint64{80} * 60 * 40);
+
+  const auto& writtenRect = findNode(writtenJson.at("objects"), k_RectGridGeo.view());
+  const auto& readRect = findNode(readJson.at("objects"), k_RectGridGeo.view());
+  // RectGrid origin comes from bounds values, which preflight mode does not read.
+  REQUIRE(writtenRect.at("geometry").contains("origin"));
+  REQUIRE_FALSE(readRect.at("geometry").contains("origin"));
+
+  stripVolatileKeysFromDocument(writtenJson);
+  stripVolatileKeysFromDocument(readJson);
+  INFO("Written JSON:\n" << writtenJson.dump(2));
+  INFO("Read JSON:\n" << readJson.dump(2));
+  REQUIRE(writtenJson == readJson);
 }
 
 /**

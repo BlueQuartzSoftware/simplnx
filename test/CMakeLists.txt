@@ -9,7 +9,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/DownloadTestData.cmake")
 set(SIMPLNX_TEST_DIRS_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/unit_test/simplnx_test_dirs.hpp)
 
 configure_file(${simplnx_SOURCE_DIR}/test/simplnx_test_dirs.hpp.in ${SIMPLNX_TEST_DIRS_HEADER} @ONLY)
-file(MAKE_DIRECTORY "${simplnx_BINARY_DIR}/simplnx/test_output")
+file(MAKE_DIRECTORY "${SIMPLNX_TEST_OUTPUT_DIR}")
 
 find_package(Catch2 CONFIG REQUIRED)
 
@@ -23,6 +23,7 @@ add_executable(simplnx_test
   simplnx_test_main.cpp
   AppTest.cpp
   ArgumentsTest.cpp
+  AtomicFileTest.cpp
   BitTest.cpp
   DataArrayTest.cpp
   DataPathTest.cpp
@@ -41,6 +42,7 @@ add_executable(simplnx_test
   IOFormat.cpp
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
+  NxInfoTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
   PipelineSaveTest.cpp
@@ -55,6 +57,7 @@ add_executable(simplnx_test
 target_link_libraries(simplnx_test
   PRIVATE
     simplnx
+    nxinfo_core
     Catch2::Catch2
     simplnx::UnitTestCommon
 )
