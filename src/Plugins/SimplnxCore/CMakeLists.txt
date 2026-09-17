@@ -156,6 +156,7 @@ set(FilterList
   WriteAvizoRectilinearCoordinateFilter
   WriteAvizoUniformCoordinateFilter
   WriteBinaryDataFilter
+  WriteDAMASKDREAM3DFileFilter
   WriteDREAM3DFilter
   WriteFeatureDataCSVFilter
   WriteLAMMPSFileFilter
@@ -370,6 +371,7 @@ set(AlgorithmList
   WriteAvizoUniformCoordinate
   WriteLAMMPSFile
   WriteBinaryData
+  WriteDAMASKDREAM3DFile
   WriteDREAM3D
   WriteFeatureDataCSV
   WriteLosAlamosFFT
