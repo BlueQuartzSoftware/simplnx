@@ -164,6 +164,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteAvizoRectilinearCoordinateTest.cpp
   WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
+  WriteDAMASKDREAM3DFileTest.cpp
   WriteFeatureDataCSVTest.cpp
   WriteImageTest.cpp
   WriteLAMMPSFileTest.cpp
