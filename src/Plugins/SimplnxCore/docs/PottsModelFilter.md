@@ -6,12 +6,19 @@ Synthetic Building (Coarsening)
 
 ## Description
 
-This **Filter** simulates isotropic grain growth by applying a Monte Carlo Potts model to an integer **Feature Ids** array in an **Image Geometry**. Each positive Feature Id is treated as a lattice spin. The filter changes the selected **Feature Ids** **Data Array** in place, so feature-level measurements and neighbor relationships computed before this filter can become stale and should be recomputed afterward.
+This filter simulates isotropic grain growth by applying a Monte Carlo Potts model to an integer **Feature Ids** array in an **Image Geometry**. Each positive Feature Id is treated as a lattice spin. The filter changes the selected **Feature Ids** **Data Array** in place, so feature-level measurements and neighbor relationships computed before this filter can become stale and should be recomputed afterward.
 
 | ![Feature Ids before Potts Model coarsening](Images/potts_model_before.png) | ![Feature Ids after Potts Model coarsening](Images/potts_model_after.png) |
 |:---:|:---:|
 
 *Feature Ids before (left) and after (right) Potts Model coarsening.*
+
+### How This Filter Works
+
+1. Each iteration makes one attempted update per eligible **Cell**.
+2. The filter randomly selects an eligible cell and one valid neighboring positive spin.
+3. It accepts a non-increasing boundary-energy change and applies the Boltzmann probability to an increasing change.
+4. An accepted change copies the donor spin and all non-ignored sibling cell tuples.
 
 For each Monte Carlo iteration, the filter makes one attempted update per eligible lattice site. It randomly selects an eligible **Cell**, randomly selects a valid neighboring spin as the candidate, and evaluates the energy change
 
@@ -45,39 +52,40 @@ When a flip is accepted, the filter copies the tuple in every sibling **Cell Dat
 
 Use *Attribute Arrays to Ignore* to keep selected arrays unchanged when a cell changes spin. *Feature Ids* is excluded from tuple copying because the accepted spin updates it directly. When *Use Mask* is enabled, the mask array is also excluded automatically and remains unchanged.
 
-Legacy DREAM3D changed only *Feature Ids* and did not propagate sibling cell data. DREAM3D-NX intentionally corrects that behavior as deviation `PottsModel-D1`. To reproduce the legacy data effect, add every sibling cell array to *Attribute Arrays to Ignore*.
+Legacy DREAM3D changed only *Feature Ids* and did not propagate sibling cell data. DREAM3D-NX intentionally corrects that behavior as deviation `PottsModel-D1`. Each deviation is described in the plugin repository's `docs/known_legacy_bugs.md`. To reproduce the legacy data effect, add every sibling cell array to *Attribute Arrays to Ignore*.
+
+See `PottsModel-D1` for the recorded legacy difference.
 
 ### Random Seed
 
 Enable *Use Seed for Random Generation* and provide a fixed *Seed Value* to reproduce a run with the same input and parameters. The filter stores the seed used for every execution in the uint64 array named by *Stored Seed Value Array Name*. Seeded DREAM3D-NX runs do not bit-match legacy DREAM3D results because the legacy implementation used two clock-seeded random-number generators.
 
+### Parameter Guidance and Performance
+
+- *Iterations* is a positive, dimensionless Monte Carlo iteration count. Each iteration performs one attempted update per eligible cell.
+- *Temperature* is positive and uses kelvin. Because the literal Boltzmann constant is used with the dimensionless discrete energy, changing ordinary laboratory temperatures has almost no effect on uphill acceptance.
+- *Seed Value* is a dimensionless unsigned integer. It is used only when seeded generation is enabled; otherwise the filter uses a clock-derived seed and records it.
+- *Periodic Boundaries*, *Use Mask*, and the ignore-list choices are dimensionless controls.
+
+Runtime scales approximately with `iterations × eligible cells × neighborhood size`. The unmasked 128 x 128 x 128 benchmark measured on 2026-09-15 took about *0.7 seconds per iteration* on the test system; use that value only as an order-of-magnitude planning estimate for other hardware.
+
 ### Legacy DREAM3D
 
 This filter was moved from the DREAM3DReview plugin's **Coarsening** subgroup. Its algorithm and ordinary-temperature acceptance behavior remain faithful to that implementation.
 
+### Required Input Sources
+
+- **Feature Ids** -- produced by [Pack Primary Phases](../Synthetic/PackPrimaryPhasesFilter.md), [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md), or another segmentation filter.
+- **Mask** -- optional boolean or uint8 cell data, commonly produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) or [Establish Foam Morphology](../Synthetic/EstablishFoamMorphologyFilter.md).
+- **Sibling Cell Data Arrays** -- phases, Euler angles, quaternions, colors, and other tuples should already correspond to the selected Feature Ids before coarsening.
+
+The selected arrays must belong to the cell **Attribute Matrix** of an **Image Geometry** with exactly two or three non-singleton dimensions.
+
 % Auto generated parameter table will be inserted here
-
-## Required Geometry
-
-- **Image Geometry** with exactly two or three non-singleton lattice dimensions.
-
-## Required Objects
-
-| Kind | Type | Component Dimensions | Description |
-|------|------|----------------------|-------------|
-| **Cell Data Array** | int32 | 1 | *Feature Ids* assigns a spin or feature label to each cell and is modified in place. |
-| **Cell Data Array** (optional) | bool or uint8 | 1 | *Mask* selects the cells that may participate when *Use Mask* is enabled. |
-| **Cell Data Arrays** (optional) | any DataArray type | any | Sibling arrays are copied from the accepted donor cell unless selected by *Attribute Arrays to Ignore*. |
-
-## Created Objects
-
-| Kind | Type | Tuple Dimensions | Component Dimensions | Description |
-|------|------|------------------|----------------------|-------------|
-| **Data Array** | uint64 | 1 | 1 | Stores the random seed used by the execution. Its name is set by *Stored Seed Value Array Name*. |
 
 ## Example Pipelines
 
-- `PM-13_pack_then_potts_coarsening.d3dpipeline` in the Synthetic plugin pipeline matrix.
+- `(13) Dual Zone Synthetic` in the Synthetic plugin pipeline matrix.
 
 ## References
 
