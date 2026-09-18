@@ -24,6 +24,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
+#include "simplnx/Utilities/ImageIO/ImageStackCropping.hpp"
 
 #include <filesystem>
 
@@ -247,66 +248,13 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     // Compute Z dimension, taking into account possible Z cropping
     usize zDim = files.size();
 
-    if(croppingOptions.cropZ)
+    auto zDimResult = ComputeCroppedZDimension(croppingOptions, zDim, origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
+    if(zDimResult.invalid())
     {
-      if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
-      {
-        // Voxel-based Z cropping: zBoundVoxels are inclusive indices
-        const auto zMin = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
-        const auto zMax = static_cast<usize>(croppingOptions.zBoundVoxels[1]);
-        if(zMax >= zMin)
-        {
-          zDim = zMax - zMin + 1;
-        }
-      }
-      else if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
-      {
-        const float64 zMinPhys = croppingOptions.zBoundPhysical[0];
-        const float64 zMaxPhys = croppingOptions.zBoundPhysical[1];
-
-        const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? origin[2] : 0;
-        const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? spacing[2] : 1;
-
-        if(zMaxPhys < zMinPhys)
-        {
-          return MakePreflightErrorResult(
-              -23520, fmt::format("Invalid Z cropping range: the maximum physical Z value is smaller than the minimum. Please ensure the start Z is less than or equal to the end Z."));
-        }
-
-        if(spacingZ <= 0)
-        {
-          return MakePreflightErrorResult(-23521, fmt::format("Invalid Z spacing ({}). The Z spacing must be greater than zero to apply physical cropping.", spacingZ));
-        }
-
-        if(zMinPhys < originZ || zMinPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
-        {
-          return MakePreflightErrorResult(-23522, fmt::format("The minimum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMinPhys, originZ,
-                                                              (static_cast<float32>(zDim) * spacingZ + originZ)));
-        }
-
-        if(zMaxPhys < originZ || zMaxPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
-        {
-          return MakePreflightErrorResult(-23523, fmt::format("The maximum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMaxPhys, originZ,
-                                                              (static_cast<float32>(zDim) * spacingZ + originZ)));
-        }
-
-        const auto zMinIndex = static_cast<usize>(std::floor((zMinPhys - originZ) / spacingZ));
-        if(zMinIndex >= zDim)
-        {
-          return MakePreflightErrorResult(-23524, fmt::format("The minimum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMinPhys,
-                                                              zMinIndex, (zDim > 0 ? zDim - 1 : 0)));
-        }
-
-        const auto zMaxIndex = static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ));
-        if(zMaxIndex >= zDim)
-        {
-          return MakePreflightErrorResult(-23525, fmt::format("The maximum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMaxPhys,
-                                                              zMaxIndex, (zDim > 0 ? zDim - 1 : 0)));
-        }
-
-        zDim = zMaxIndex - zMinIndex + 1;
-      }
+      const Error& zDimError = zDimResult.errors().front();
+      return MakePreflightErrorResult(zDimError.code, zDimError.message);
     }
+    zDim = zDimResult.value();
 
     outputDims.back() = zDim;
 

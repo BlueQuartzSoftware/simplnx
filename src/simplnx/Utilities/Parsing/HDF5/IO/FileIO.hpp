@@ -14,44 +14,66 @@
 
 namespace nx::core::HDF5
 {
+/**
+ * @class FileIO
+ * @brief Owns one move-only HDF5 file identifier.
+ *
+ * Static open methods serialize their HDF5 calls with Support::ApiLock().
+ * Different wrapper objects can operate on different threads, but concurrent
+ * access to the same FileIO object is not supported. HDF5 receives a narrow
+ * native path string.
+ */
 class SIMPLNX_EXPORT FileIO : public GroupIO
 {
 public:
+  /**
+   * @brief Opens an existing file read-only.
+   * @param filepath Identifies the HDF5 file.
+   * @return Valid wrapper on success, or an invalid wrapper on failure.
+   *
+   * Every attempt increments the process-wide read-open counter.
+   */
   static FileIO ReadFile(const std::filesystem::path& filepath);
+
+  /**
+   * @brief Replaces an existing path and creates a new HDF5 file.
+   * @param filepath Identifies the file to replace or create.
+   * @return Valid wrapper on success, or an invalid wrapper on failure.
+   *
+   * Filesystem removal occurs before HDF5 creation and is not recoverable through this API.
+   */
   static FileIO WriteFile(const std::filesystem::path& filepath);
+
+  /**
+   * @brief Opens an existing HDF5 file for read and write.
+   * @param filepath Identifies the HDF5 file.
+   * @return Valid wrapper on success, or an invalid wrapper on failure.
+   */
   static FileIO AppendFile(const std::filesystem::path& filepath);
 
   /**
-   * @brief Returns the number of times ReadFile() has opened a file since the
-   * last ResetReadOpenCount(). Diagnostic used by tests to prove that cached
-   * preflight paths perform zero file opens; asserting on operation counts is
-   * deterministic where wall-clock timing is not.
-   * @return uint64
+   * @brief Gets ReadFile() attempts since ResetReadOpenCount().
+   * @return Atomic process-wide attempt count.
+   *
+   * Tests use this count to verify cache behavior without timing assertions.
    */
   static uint64 GetReadOpenCount();
 
   /**
-   * @brief Resets the ReadFile() open counter. For test isolation.
+   * @brief Resets the atomic ReadFile() attempt counter for test isolation.
    */
   static void ResetReadOpenCount();
 
   /**
-   * @brief Installs a callback invoked with the file-access property list used
-   * by ReadFile()/WriteFile() just before the file is opened.
+   * @brief Sets the optional file-access property-list configurator.
+   * @param configurator Receives a temporary HDF5 property-list ID. An empty callback clears the hook.
    *
-   * Why: benchmarks inject a latency-simulating HDF5 virtual file driver
-   * through this hook to reproduce network-storage behavior deterministically
-   * on local disks. Production code never sets it; when unset, files open with
-   * the default property list when no configurator is installed.
+   * Benchmarks use this test hook to install a latency-simulating HDF5 virtual
+   * file driver. Production leaves it empty and uses H5P_DEFAULT.
    *
-   * Threading contract: this is a test-only diagnostic hook. It stores the
-   * callback without synchronization, so it must NOT be called while any
-   * ReadFile()/WriteFile() may be running on another thread (ReadFile() is
-   * invoked from preflight worker threads). Install the configurator before,
-   * and clear it after, any concurrent I/O.
-   * @param configurator Callback that receives the HDF5 file-access property
-   * list id to configure (e.g. to select a virtual file driver). Passing an
-   * empty function removes any previously installed configurator.
+   * Assignment and invocation run under Support::ApiLock(), so they cannot race.
+   * The callback also runs under this non-recursive lock. It must not call a
+   * lock-taking HDF5 wrapper or SetFaplConfigurator().
    */
   static void SetFaplConfigurator(std::function<void(hid_t faplId)> configurator);
 
@@ -60,8 +82,8 @@ public:
   FileIO(const FileIO& rhs) = delete;
 
   /**
-   * @brief Move constructor.
-   * @param rhs
+   * @brief Moves file ownership.
+   * @param rhs Supplies the file wrapper to move.
    */
   FileIO(FileIO&& rhs) noexcept = default;
 
@@ -74,22 +96,20 @@ public:
   ~FileIO() noexcept override;
 
   /**
-   * @brief Returns the HDF5 file name. Returns an empty string if the file
-   * is invalid.
-   * @return std::string
+   * @brief Gets the file name.
+   * @return Final filesystem component, or an empty string for an invalid wrapper.
    */
   std::string getName() const override;
 
   /**
-   * @brief Overrides ObjectIO name path to return an empty string.
-   * is invalid.
-   * @return std::string
+   * @brief Gets the root object's empty relative name path.
+   * @return Empty string.
    */
   std::string getNamePath() const override;
 
   /**
-   * Returns the HDF5 object path.
-   * @return std::string
+   * @brief Gets the root object's empty HDF5 path.
+   * @return Empty string.
    */
   std::string getObjectPath() const override;
 
@@ -128,10 +148,9 @@ public:
 
 protected:
   /**
-   * @brief Constructs a FileIO wrapping the HDF5 file at the target
-   * filepath.
-   * @param filepath
-   * @param fileId
+   * @brief Takes ownership of one HDF5 file identifier.
+   * @param filepath Stores the source path.
+   * @param fileId Supplies the identifier to close during destruction.
    */
   FileIO(const std::filesystem::path& filepath, hid_t fileId);
 

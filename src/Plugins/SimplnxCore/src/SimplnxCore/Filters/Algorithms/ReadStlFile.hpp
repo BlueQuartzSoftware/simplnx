@@ -26,6 +26,9 @@ struct SIMPLNXCORE_EXPORT ReadStlFileInputValues
 
 /**
  * @class ReadStlFile
+ * @brief Reads a binary STL mesh file into a TriangleGeom.
+ *
+ * The algorithm supports Magics color data and VxElements metadata. It merges duplicate vertices after it reads the mesh.
  */
 class SIMPLNXCORE_EXPORT ReadStlFile
 {
@@ -38,6 +41,13 @@ public:
   ReadStlFile& operator=(const ReadStlFile&) = delete;
   ReadStlFile& operator=(ReadStlFile&&) noexcept = delete;
 
+  /**
+   * @brief Reads triangles and eliminates duplicate nodes.
+   * @return File, parse, or node-elimination error, or success after cancellation.
+   *
+   * Cancellation and parse errors can retain partially written mesh arrays.
+   * Per-value DataStore writes do not report I/O errors.
+   */
   Result<> operator()();
 
 private:

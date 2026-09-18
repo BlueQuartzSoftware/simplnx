@@ -5,6 +5,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -14,11 +15,10 @@ using namespace nx::core;
 
 namespace
 {
-// Geometry Level
+// These names and paths define the test geometry hierarchy.
 const std::string k_ImageGeomName = "Image";
 const DataPath k_ImageGeomPath = DataPath({k_ImageGeomName});
 
-// Cell Level
 const std::string k_CellAMName = "CellData";
 const DataPath k_CellAMPath = k_ImageGeomPath.createChildPath(k_CellAMName);
 const std::string k_FeatureIdsName = "FeatureIds";
@@ -29,11 +29,10 @@ const DataPath k_BoundaryCellsPath = k_CellAMPath.createChildPath(k_BoundaryCell
 const std::string k_ExemplarBoundaryCellsName = "Exemplar" + k_BoundaryCellsName;
 const DataPath k_ExemplarBoundaryCellsPath = k_CellAMPath.createChildPath(k_ExemplarBoundaryCellsName);
 
-// Feature Level
 const std::string k_FeatureAMName = "FeatureData";
 const DataPath k_FeatureAMPath = k_ImageGeomPath.createChildPath(k_FeatureAMName);
 
-// Created Array Names and Paths
+// These names and paths select generated and exemplar output arrays.
 const std::string k_SurfaceFeaturesName = "SurfaceFeatures";
 const DataPath k_SurfaceFeaturesPath = k_FeatureAMPath.createChildPath(k_SurfaceFeaturesName);
 const std::string k_ExemplarSurfaceFeaturesName = "Exemplar" + k_SurfaceFeaturesName;
@@ -54,9 +53,12 @@ const DataPath k_SSAListPath = k_FeatureAMPath.createChildPath(k_SSAListName);
 const std::string k_ExemplarSSAListName = "Exemplar" + k_SSAListName;
 const DataPath k_ExemplarSSAListPath = k_FeatureAMPath.createChildPath(k_ExemplarSSAListName);
 
+/**
+ * @brief Builds a single-feature, single-cell fixture and its expected outputs.
+ * @return The populated DataStructure.
+ */
 DataStructure CreateSingleVoxelDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}});
@@ -72,7 +74,7 @@ DataStructure CreateSingleVoxelDataStructure()
 
   featureIds->setValue(0, 1);
 
-  // Output
+  // These arrays encode the complete analytical output for this fixture.
   Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
   exemplarBoundaryCells->setValue(0, 0);
 
@@ -91,6 +93,11 @@ DataStructure CreateSingleVoxelDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Adds a one-dimensional feature layout and analytical outputs to an ImageGeom.
+ * @param dataStructure Contains the ImageGeom and receives the arrays.
+ * @param imageShape Cell tuple shape with two axes of size 1.
+ */
 void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 {
   auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
@@ -113,7 +120,7 @@ void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
     featureIds->setValue(i, featureIdsArray[i]);
   }
 
-  // Output
+  // These arrays encode the complete analytical output for this fixture.
   Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
   exemplarBoundaryCells->setValue(0, 1);
   exemplarBoundaryCells->setValue(1, 1);
@@ -148,9 +155,12 @@ void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   exemplarSSAList->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
 }
 
+/**
+ * @brief Creates the one-dimensional Z-axis fixture.
+ * @return The populated DataStructure.
+ */
 DataStructure Create1DZDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 2.2f}});
@@ -162,9 +172,12 @@ DataStructure Create1DZDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Creates the one-dimensional Y-axis fixture.
+ * @return The populated DataStructure.
+ */
 DataStructure Create1DYDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.0f}});
@@ -176,9 +189,12 @@ DataStructure Create1DYDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Creates the one-dimensional X-axis fixture.
+ * @return The populated DataStructure.
+ */
 DataStructure Create1DXDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.0f}});
@@ -190,6 +206,11 @@ DataStructure Create1DXDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Adds a square two-dimensional feature layout and analytical outputs to an ImageGeom.
+ * @param dataStructure Contains the ImageGeom and receives the arrays.
+ * @param imageShape Cell tuple shape with one axis of size 1.
+ */
 void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 {
   auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
@@ -216,7 +237,7 @@ void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
     featureIds->setValue(i, featureIdsArray[i]);
   }
 
-  // Output
+  // These arrays encode the complete analytical output for this fixture.
   Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
   exemplarBoundaryCells->setValue(0, 2);
   exemplarBoundaryCells->setValue(1, 2);
@@ -273,9 +294,12 @@ void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   exemplarSSAList->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
 }
 
+/**
+ * @brief Creates the square two-dimensional fixture with an empty Z axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DEmptyZDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 1.0f}});
@@ -287,9 +311,12 @@ DataStructure Create2DEmptyZDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Creates the square two-dimensional fixture with an empty Y axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DEmptyYDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.2f}});
@@ -301,9 +328,12 @@ DataStructure Create2DEmptyYDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Creates the square two-dimensional fixture with an empty X axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DEmptyXDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.2f}});
@@ -315,20 +345,15 @@ DataStructure Create2DEmptyXDataStructure()
   return dataStructure;
 }
 
-// -----------------------------------------------------------------------------
-// Hand-built non-square 2D fixture. The existing 5x5x1 fixtures mask any stride
-// bug because dims[0] == dims[1]. This helper builds a 3x2 (non-square) layout
-// with two features — one per row — and attaches hand-computed exemplar results
-// so the test forces the dispatch to use the correct row stride.
-//
-// Layout with two features and varied spacings (each dimensionality picks the
-// appropriate row/column orientation for the empty axis):
-//   row 0 (first non-empty axis) -> feature 1
-//   row 1 (first non-empty axis) -> feature 2
-// With a 3x2 shape this gives 3 faces on the F1-F2 boundary, all of which are
-// normal to the "row axis" and therefore share a per-face area determined by
-// the two non-empty spacings.
-// -----------------------------------------------------------------------------
+/**
+ * @brief Adds a non-square two-feature layout and analytical outputs to an ImageGeom.
+ * @param dataStructure Contains the ImageGeom and receives the arrays.
+ * @param imageShape Non-square cell tuple shape with one axis of size 1.
+ * @param expectedBoundaryFaceArea Area of one face between the two features.
+ *
+ * Square fixtures cannot distinguish the two possible row strides. This 3 by
+ * 2 layout puts one feature in each row and creates three equal boundary faces.
+ */
 void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imageShape, float32 expectedBoundaryFaceArea)
 {
   auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
@@ -339,11 +364,7 @@ void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imag
   Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
   AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3}, imageGeom->getId());
 
-  // Populate feature ids: first half of the buffer is feature 1, second half is feature 2.
-  // Because the "row stride" is always the first non-empty axis and all three
-  // dimensionalities are shaped 3x2 (with the empty dim being size 1), the first
-  // 3 linear indices are the first row (feature 1) and the next 3 are the second
-  // row (feature 2).
+  // The first three indices form feature row 1. The next three form feature row 2.
   const usize totalVoxels = featureIds->getNumberOfTuples();
   REQUIRE(totalVoxels == 6);
   for(usize i = 0; i < 3; i++)
@@ -355,15 +376,14 @@ void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imag
     featureIds->setValue(i, 2);
   }
 
-  // Exemplar boundary cells: every voxel touches the feature 1/2 boundary once
-  // (1 diff face neighbor) since the layout is two rows of the same feature.
+  // Each cell touches the feature interface through exactly one face.
   Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
   for(usize i = 0; i < 6; i++)
   {
     exemplarBoundaryCells->setValue(i, 1);
   }
 
-  // Both features touch the image boundary, so both are "surface features".
+  // Both features touch the image boundary and are surface features.
   BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
   exemplarSurfaceFeatures->setValue(1, true);
   exemplarSurfaceFeatures->setValue(2, true);
@@ -376,30 +396,35 @@ void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imag
   exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
   exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1}));
 
-  // With the row stride correct, three voxels on each side of the boundary
-  // contribute one boundary face each, so SSA = 3 * <boundary face area>.
-  // The old EmptyX/Y/Z stride bug would step the wrong number of indices,
-  // miss one of the three boundary faces, and yield 2 * area instead.
+  // Three cells on each side contribute one face, so shared area equals three face areas.
+  // An incorrect row stride misses one face and produces only two face areas.
   const float32 expectedSSA = 3.0f * expectedBoundaryFaceArea;
   Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
   exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
   exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
 }
 
+/**
+ * @brief Creates the non-square two-dimensional fixture with an empty Z axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DNonSquareEmptyZDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  // Non-square: dims[0] = 3, dims[1] = 2. With the wrong-stride bug the
-  // computed row stride would be dims[1] = 2 rather than dims[0] = 3.
+  // The correct row stride is dimension 0 with length 3, not dimension 1 with length 2.
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}});
   imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 2, 1}});
-  // F1-F2 boundary faces have a Y-axis normal -> area = spacing[0] * spacing[2] = 2.0.
+  // A Y-normal boundary face has area `spacing[0] * spacing[2]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 2, 1}, 2.0f);
   return dataStructure;
 }
 
+/**
+ * @brief Creates the non-square two-dimensional fixture with an empty Y axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DNonSquareEmptyYDataStructure()
 {
   DataStructure dataStructure = {};
@@ -407,11 +432,15 @@ DataStructure Create2DNonSquareEmptyYDataStructure()
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}});
   imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 1, 2}});
-  // F1-F2 boundary faces have a Z-axis normal -> area = spacing[0] * spacing[1] = 2.0.
+  // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 1, 2}, 2.0f);
   return dataStructure;
 }
 
+/**
+ * @brief Creates the non-square two-dimensional fixture with an empty X axis.
+ * @return The populated DataStructure.
+ */
 DataStructure Create2DNonSquareEmptyXDataStructure()
 {
   DataStructure dataStructure = {};
@@ -419,14 +448,17 @@ DataStructure Create2DNonSquareEmptyXDataStructure()
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}});
   imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 3, 2}});
-  // F1-F2 boundary faces have a Z-axis normal -> area = spacing[0] * spacing[1] = 2.0.
+  // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{1, 3, 2}, 2.0f);
   return dataStructure;
 }
 
+/**
+ * @brief Creates a three-dimensional feature layout and its analytical outputs.
+ * @return The populated DataStructure.
+ */
 DataStructure Create3DDataStructure()
 {
-  // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}});
@@ -479,7 +511,7 @@ DataStructure Create3DDataStructure()
     featureIds->setValue(i, featureIdsArray[i]);
   }
 
-  // Output
+  // These arrays encode the complete analytical output for this fixture.
   Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
 
   // clang-format off
@@ -556,6 +588,12 @@ DataStructure Create3DDataStructure()
   return dataStructure;
 }
 
+/**
+ * @brief Executes ComputeFeatureNeighbors and compares each requested output.
+ * @param dataStructure Contains a generated fixture and its exemplar arrays.
+ * @param testBoundaryCells True to create and compare BoundaryCells.
+ * @param testSurfaceFeatures True to create and compare SurfaceFeatures.
+ */
 void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool testSurfaceFeatures)
 {
   ComputeFeatureNeighborsFilter filter;
@@ -575,15 +613,13 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
   args.insertOrAssign(ComputeFeatureNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(k_NeighborsListName));
   args.insertOrAssign(ComputeFeatureNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(k_SSAListName));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Output
+  // Optional arrays exist only when their related option is enabled.
   if(testBoundaryCells)
   {
     UnitTest::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_BoundaryCellsPath);
@@ -606,258 +642,491 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.1: Single Voxel - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.2: Single Voxel - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.3: Single Voxel - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.0: 1D Z - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.1: 1D Z - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.2: 1D Z - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.3: 1D Z - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.0: 1D Y - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.1: 1D Y - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.2: 1D Y - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.3: 1D Y - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.0: 1D X - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.1: 1D X - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.2: 1D X - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.3: 1D X - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.0: 2D Empty Z - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.1: 2D Empty Z - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.2: 2D Empty Z - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.3: 2D Empty Z - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.0: 2D Empty Y - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.1: 2D Empty Y - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.2: 2D Empty Y - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.3: 2D Empty Y - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.0: 2D Empty X - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.1: 2D Empty X - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.2: 2D Empty X - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.3: 2D Empty X - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.0: 3D - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create3DDataStructure();
 
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.1: 3D - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create3DDataStructure();
 
-  ExecuteFilter(dataStructure, false, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, true); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.2: 3D - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create3DDataStructure();
 
-  ExecuteFilter(dataStructure, true, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.3: 3D - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   DataStructure dataStructure = Create3DDataStructure();
 
-  ExecuteFilter(dataStructure, false, false);
+  scope.execute([&] { ExecuteFilter(dataStructure, false, false); });
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// -----------------------------------------------------------------------------
-// Non-square 2D regression tests. The existing 5x5x1 cases all have
-// dims[0] == dims[1], which masks an incorrect row-stride calculation in
-// initializeFaceNeighborOffsets for any of the three Empty2D dispatches.
-// A non-square 3x2 layout causes the wrong stride to either skip a boundary
-// face (producing SSA = 2 * area instead of 3 * area) or run off the end of
-// the buffer, so the hand-computed SSA below fails under the original bug.
-// -----------------------------------------------------------------------------
+// Square fixtures cannot detect an exchange of the two nonempty dimensions.
+// These non-square cases require the correct row stride in each Empty2D dispatch.
+// An incorrect stride misses a boundary face or accesses beyond the feature buffer.
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.4: 2D Empty Z - Non-Square {3,2,1}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = Create2DNonSquareEmptyZDataStructure();
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.4: 2D Empty Y - Non-Square {3,1,2}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = Create2DNonSquareEmptyYDataStructure();
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.4: 2D Empty X - Non-Square {1,3,2}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = Create2DNonSquareEmptyXDataStructure();
-  ExecuteFilter(dataStructure, true, true);
+  scope.execute([&] { ExecuteFilter(dataStructure, true, true); });
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
-  // Read the Small IN100 Data set
+  // Load the Small IN100 input before computing neighbor arrays.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -888,17 +1157,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[Si
     args.insertOrAssign(ComputeFeatureNeighborsFilter::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
     args.insertOrAssign(ComputeFeatureNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
     args.insertOrAssign(ComputeFeatureNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
-
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Output
+  // Compare the generated arrays that have valid exemplar values.
   {
     DataPath featureGroup = smallIn100Group.createChildPath(Constants::k_CellFeatureData);
     DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
@@ -910,11 +1175,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[Si
     exemplaryDataPath = featureGroup.createChildPath("NeighborList");
     UnitTest::CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(neighborListName));
 
-    // The exemplar Shared Surface Area is not valid after a bug fix, and the input
-    // file is used in other test cases. Other test cases validate SSA functionality.
+    // This shared input has a stale shared-area exemplar, so this case omits that array.
+    // Generated fixtures in this file validate the shared-area calculation independently.
   }
 
-// Write the DataStructure out to the file system
+// The optional output supports manual inspection of the generated neighbor arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif

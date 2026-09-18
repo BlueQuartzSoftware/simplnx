@@ -143,10 +143,13 @@ public:
   /**
    * @brief Resizes the internal array to accommodate the specified tuple shape.
    * @param tupleShape The new shape for the tuples
+   * @return The data-store resize result. Error -6035 reports a resize failure.
+   *
+   * The result exposes storage failures to callers instead of discarding them.
    */
-  void resizeTuples(const ShapeType& tupleShape) override
+  [[nodiscard]] Result<> resizeTuples(const ShapeType& tupleShape) override
   {
-    getIDataStoreRef().resizeTuples(tupleShape);
+    return getIDataStoreRef().resizeTuples(tupleShape);
   }
 
   /**
@@ -160,8 +163,8 @@ public:
   }
 
   /**
-   * @brief Returns the data format used for storing the array data.
-   * @return data format as string
+   * @brief Returns the actual format or the recorded placeholder selection.
+   * @return Empty string for memory, or the validated out-of-core format name.
    */
   virtual std::string getDataFormat() const = 0;
 

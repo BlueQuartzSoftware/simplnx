@@ -23,6 +23,17 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Computes an MD5 hash for one numeric array type.
+ * @tparam T Array value type.
+ * @param outputDataArray Array to hash.
+ * @return Lowercase MD5 digest.
+ * @pre outputDataArray is DataArray<T>.
+ * @pre A non-OOC array uses the concrete DataStore<T> type.
+ *
+ * The test helper reads an out-of-core array one value at a time. This path
+ * favors simple reference behavior over out-of-core performance.
+ */
 template <class T>
 std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
 {
@@ -30,7 +41,7 @@ std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
   usize arraySize = dataArray.getSize();
 
   MD5 md5;
-  if(outputDataArray.getDataFormat().empty())
+  if(outputDataArray.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     const T* dataPtr = dataArray.template getIDataStoreRefAs<DataStore<T>>().data();
     md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
@@ -131,61 +142,31 @@ namespace nx::core
 {
 namespace ITKTestBase
 {
-//------------------------------------------------------------------------------
+/**
+ * @brief Tests whether an array is not backed by an out-of-core store.
+ * @param dataStructure Contains the array.
+ * @param outputDataPath Array path.
+ * @return False only when the physical store type is OutOfCore.
+ *
+ * This test helper does not prove that another store type exposes a contiguous
+ * in-memory DataStore buffer.
+ */
 bool IsArrayInMemory(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
   const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
-  DataType outputDataType = outputDataArray.getDataType();
-
-  switch(outputDataType)
-  {
-  case DataType::float32: {
-    return dynamic_cast<const DataArray<float32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::float64: {
-    return dynamic_cast<const DataArray<float64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int8: {
-    return dynamic_cast<const DataArray<int8>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint8: {
-    return dynamic_cast<const DataArray<uint8>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int16: {
-    return dynamic_cast<const DataArray<int16>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint16: {
-    return dynamic_cast<const DataArray<uint16>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int32: {
-    return dynamic_cast<const DataArray<int32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint32: {
-    return dynamic_cast<const DataArray<uint32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int64: {
-    return dynamic_cast<const DataArray<int64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint64: {
-    return dynamic_cast<const DataArray<uint64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::boolean: {
-    [[fallthrough]];
-  }
-  default: {
-    return {};
-  }
-  }
+  return outputDataArray.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore;
 }
-//------------------------------------------------------------------------------
+
+/**
+ * @brief Computes an MD5 digest for a supported numeric array.
+ * @param dataStructure Contains the array.
+ * @param outputDataPath Array path.
+ * @return Digest for supported numeric types, or an empty string for Boolean and unknown types.
+ */
 std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
   const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
   DataType outputDataType = outputDataArray.getDataType();
-  // if(!outputDataArray.getDataFormat().empty())
-  //{
-  //   return "";
-  // }
 
   switch(outputDataType)
   {
@@ -228,7 +209,6 @@ std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputD
   }
 }
 
-//------------------------------------------------------------------------------
 Result<> ReadImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const std::string& cellAttrMatName, const std::string& imageArrayName)
 {
   ITKImageReaderFilter filter;
@@ -243,7 +223,6 @@ Result<> ReadImage(DataStructure& dataStructure, const fs::path& filePath, const
   return executeResult.result;
 }
 
-//------------------------------------------------------------------------------
 Result<> WriteImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
   ITKImageWriterFilter filter;
@@ -260,7 +239,6 @@ Result<> WriteImage(DataStructure& dataStructure, const fs::path& filePath, cons
   return executeResult.result;
 }
 
-//------------------------------------------------------------------------------
 Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath,
                        float64 tolerance)
 {
@@ -360,7 +338,14 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
   }
 }
 
-//------------------------------------------------------------------------------
+/**
+ * @brief Removes test files whose names start with a pattern.
+ * @param dirPath Directory to scan.
+ * @param filePattern Required filename prefix.
+ * @pre dirPath exists and is readable.
+ *
+ * Filesystem iteration and removal exceptions propagate to the test caller.
+ */
 void RemoveFiles(const fs::path& dirPath, const std::string& filePattern)
 {
   for(const auto& entry : fs::directory_iterator(dirPath))

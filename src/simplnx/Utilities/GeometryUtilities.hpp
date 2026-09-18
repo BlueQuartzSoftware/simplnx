@@ -34,6 +34,7 @@ private:
  * @brief Calculates the X,Y,Z partition length for a given geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param geometry The geometry to be partitioned
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
+ * @return Partition lengths or a geometry validation error.
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis);
 
@@ -41,6 +42,7 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const
  * @brief Calculates the X,Y,Z partition length for a given Image geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param geometry The geometry to be partitioned
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
+ * @return Partition lengths or a geometry validation error.
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis);
 
@@ -48,12 +50,14 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const
  * @brief Calculates the X,Y,Z partition length for a given RectGrid geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param geometry The geometry to be partitioned
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
+ * @return Partition lengths or a geometry validation error.
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis);
 
 /**
  * @brief Calculates the X,Y,Z partition scheme origin for a given node-based geometry using the geometry's bounding box.
  * @param geometry The geometry whose bounding box origin will be calculated
+ * @return Partition origin or a geometry validation error.
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry);
 
@@ -61,6 +65,7 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const I
  * @brief Calculates the X,Y,Z partition length if the given bounding box were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param boundingBox The bounding box
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
+ * @return Partition lengths or a bounding-box validation error.
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis);
 
@@ -102,8 +107,13 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
 }
 
 /**
- * @brief Removes duplicate nodes to ensure the vertex list is unique
- * @param geom The geometry to eliminate the duplicate nodes from.  This MUST be a node-based geometry.
+ * @brief Removes duplicate nodes from a node-based geometry.
+ * @tparam GeometryType Specifies the node-based geometry type.
+ * @param geom Geometry whose duplicate nodes are removed.
+ * @param scaleFactor Optional factor applied to retained vertex coordinates.
+ * @return Error from geometry validation or the first failed output resize.
+ *
+ * The function updates connectivity before it resizes associated AttributeMatrix objects.
  */
 template <class GeometryType = INodeGeometry1D, class = std::enable_if_t<std::is_base_of<INodeGeometry1D, GeometryType>::value>>
 Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
@@ -152,7 +162,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
 
   std::vector<std::vector<usize>> nodesInBin(numXBins * numYBins * numZBins);
 
-  // determine (xyz) bin each node falls in - used to speed up node comparison
+  // The spatial bins reduce the number of node comparisons.
   usize xBin = 0, yBin = 0, zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
@@ -225,7 +235,11 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     vertices[uniqueIds[i] * 3 + 1] = vertices[i * 3 + 1] * scaleFactorValue;
     vertices[uniqueIds[i] * 3 + 2] = vertices[i * 3 + 2] * scaleFactorValue;
   }
-  geom.resizeVertexList(uniqueCount);
+  auto vertexListResizeResult = geom.resizeVertexList(uniqueCount);
+  if(vertexListResizeResult.invalid())
+  {
+    return vertexListResizeResult;
+  }
 
   // Update the triangle nodes to reflect the unique ids
   IGeometry::MeshIndexType nCells;
@@ -262,18 +276,34 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
 
   if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
   {
-    geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
+    auto resizeResult = geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
   else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
   {
-    geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
+    auto resizeResult = geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
   else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
   {
-    geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
+    auto resizeResult = geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
 
-  geom.getVertexAttributeMatrix()->resizeTuples({geom.getNumberOfVertices()});
+  auto vertexMatrixResizeResult = geom.getVertexAttributeMatrix()->resizeTuples({geom.getNumberOfVertices()});
+  if(vertexMatrixResizeResult.invalid())
+  {
+    return vertexMatrixResizeResult;
+  }
 
   return {};
 }
@@ -311,23 +341,19 @@ struct SliceTriangleReturnType
 };
 
 /**
- * @brief This function will generate the vertices, slice ids and optionally RegionIds when slicing a triangle geometry
+ * @brief Generates edge vertices and optional region IDs by slicing a triangle geometry.
  *
- * The function will return the vertices where each pair of vertices represent an edge that
- * can be put into an Edge Geometry. The Vertices are packed into the std::vector<float> as XYZ coordinates
- * so the number of vertices is the size / 3 and the number of edges is size / 6. For
- * each edge there is a "slice id" that represents the integer slice index. This can be
- * used to pull out edges for a specific slice that corresponds to a specific Z
- * height. The total number of slices is also returned from the function.
+ * Each vertex pair defines one EdgeGeom edge. Slice IDs identify the Z slice for each edge.
+ * The function packs vertex XYZ coordinates in SliceVerts. Thus, SliceVerts contains three values for each vertex.
  *
- * @param triangleGeom
- * @param shouldCancel
- * @param sliceRange This is either '0' or '1' where 0=Slice the entire Z Range of the geometry and 1=Slice a user defined range
- * @param zStart The user defined starting z value to start slicing
- * @param zEnd The user defined ending z value to end slicing
- * @param sliceSpacing The physical distance between slices.
- * @param triRegionIdPtr DataArray that holds the Triangle Region Ids
- * @return
+ * @param triangleGeom Triangle geometry to slice.
+ * @param shouldCancel Cancellation flag.
+ * @param sliceRange Zero selects the complete Z range. One selects the user range.
+ * @param zStart User-range start on the Z axis.
+ * @param zEnd User-range end on the Z axis.
+ * @param sliceSpacing Physical distance between slices.
+ * @param triRegionIdPtr Optional triangle region IDs.
+ * @return Packed edge vertices, slice IDs, optional region IDs, and slice count.
  */
 SIMPLNX_EXPORT SliceTriangleReturnType SliceTriangleGeometry(nx::core::TriangleGeom& triangleGeom, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart, float32 zEnd,
                                                              float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr);

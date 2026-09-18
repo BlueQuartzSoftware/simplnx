@@ -66,72 +66,18 @@ DataObject* EdgeGeom::shallowCopy()
 std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with identifier since it will get created when inserting into data structure
+  // Construct without an identifier because insertion creates it.
   auto copy = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
-    if(m_VertexAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getVertexAttributeMatrix()))
-      {
-        const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
+    INodeGeometry1D::copyMembersInto(*copy, copyPath);
+    copy->m_EdgeDataArrayId = deepCopyOwnedChild(copyPath, getEdges());
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
 
-    if(m_VertexDataArrayId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getVertices()))
-      {
-        const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_EdgeAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getEdgeAttributeMatrix()))
-      {
-        const auto dataObjCopy = getEdgeAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_EdgeDataArrayId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getEdges()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getEdges()))
-      {
-        const auto dataObjCopy = getEdges()->deepCopy(copiedDataPath);
-      }
-      copy->m_EdgeDataArrayId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
-    {
-      copy->m_ElementSizesId = voxelSizesCopy->getId();
-    }
-    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
-    {
-      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
-    }
-    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
-    {
-      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
-    }
-    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
-    {
-      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
-    }
     return copy;
   }
   return nullptr;
@@ -152,7 +98,6 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
     if(sizes == nullptr)
     {
       m_ElementSizesId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2430, "EdgeGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
@@ -172,7 +117,6 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
     (*sizes)[i] = std::sqrt(length);
   }
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -195,15 +139,18 @@ Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
     if(edgesContainingVert == nullptr)
     {
       m_CellContainingVertDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2431, "EdgeGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVert, getNumberOfVertices());
+  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVert, getNumberOfVertices());
+  if(findResult.invalid())
+  {
+    m_CellContainingVertDataArrayId.reset();
+    return findResult;
+  }
   m_CellContainingVertDataArrayId = edgesContainingVert->getId();
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -227,17 +174,19 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
     if(edgeNeighbors == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2432, "EdgeGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
   m_CellNeighborsDataArrayId = edgeNeighbors->getId();
 
-  // No error value ( < 0) returned from below function ever
-  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, Type::Edge);
+  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, Type::Edge);
+  if(findResult.invalid())
+  {
+    m_CellNeighborsDataArrayId.reset();
+    return findResult;
+  }
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -256,7 +205,6 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
     if(edgeCentroids == nullptr)
     {
       m_CellCentroidsDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2433, "EdgeGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
@@ -264,7 +212,6 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   m_CellCentroidsDataArrayId = edgeCentroids->getId();
 
-  // Used to be error code `1`
   return {};
 }
 

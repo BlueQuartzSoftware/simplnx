@@ -72,9 +72,14 @@ void INodeGeometry2D::setFaceList(const SharedFaceList& faces)
   m_FaceListId = faces.getId();
 }
 
-void INodeGeometry2D::resizeFaceList(usize size)
+Result<> INodeGeometry2D::resizeFaceList(usize size)
 {
-  getFacesRef().getIDataStoreRef().resizeTuples({size});
+  Result<> resizeResult = getFacesRef().getIDataStoreRef().resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    resizeResult.errors()[0].message = fmt::format("Geometry '{}' failed to resize its face list to {} tuples: {}", getName(), size, resizeResult.errors()[0].message);
+  }
+  return resizeResult;
 }
 
 usize INodeGeometry2D::getNumberOfFaces() const
@@ -210,6 +215,16 @@ INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize num
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numEdges}, std::vector<usize>{2}, 0);
   SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
   return edges;
+}
+
+void INodeGeometry2D::copyMembersInto(INodeGeometry2D& copy, const DataPath& copyPath)
+{
+  INodeGeometry1D::copyMembersInto(copy, copyPath);
+
+  copy.m_FaceAttributeMatrixId = deepCopyOwnedChild(copyPath, getFaceAttributeMatrix());
+  copy.m_UnsharedEdgeListId = adoptCopiedChild<MeshIndexArrayType>(copyPath, k_UnsharedEdgesListName);
+  // A 2D geometry owns its faces; its edges are derived by findEdges() and adopted under the shared name.
+  copy.m_EdgeDataArrayId = adoptCopiedChild<MeshIndexArrayType>(copyPath, INodeGeometry2D::k_SharedEdgeListName);
 }
 
 void INodeGeometry2D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)

@@ -143,7 +143,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 
   // Compare the output arrays with those precalculated from the file
   {
-    // The exemplar algorithm skips invalid values while this algorithm doesn't due to lack of a priori knowledge (face normals array) so we simulate it here
+    // The exemplar algorithm skips invalid values. This algorithm lacks prior face-normal knowledge, so the test simulates that behavior here.
     auto& faceNormals = dataStructure.getDataRefAs<Float64Array>(TwinBoundariesConstants::k_FaceNormalsPath);
     auto& exemplarBoundaries = dataStructure.getDataRefAs<UInt8Array>(TwinBoundariesConstants::k_ExemplarBoundariesPath);
     auto& generatedBoundaries = dataStructure.getDataRefAs<UInt8Array>(TwinBoundariesConstants::k_GeneratedBoundariesPath);
@@ -166,6 +166,45 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeTwinBoundariesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool findCoherence = GENERATE(false, true);
+  CAPTURE(findCoherence);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_twin_boundaries_test" / "validation" / "7_0_Compute_Twin_Boundaries_Test.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(TwinBoundariesConstants::k_PhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(TwinBoundariesConstants::k_PhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(TwinBoundariesConstants::k_CrystalStructuresPath));
+  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(TwinBoundariesConstants::k_CrystalStructuresPath);
+  auto& featurePhasesStoreRef = featurePhasesArrayRef.getDataStoreRef();
+  for(usize featureIdx = 1; featureIdx < featurePhasesStoreRef.getNumberOfTuples(); featureIdx++)
+  {
+    featurePhasesStoreRef[featureIdx] = static_cast<int32>(crystalStructuresArrayRef.getNumberOfTuples());
+  }
+
+  ComputeTwinBoundariesFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisTolerance_Key, std::make_any<float32>(TwinBoundariesConstants::k_AxisToleranceValue));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AngleTolerance_Key, std::make_any<float32>(TwinBoundariesConstants::k_AngleToleranceValue));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_BoundariesArrayType_Key, std::make_any<ChoicesParameter::ValueType>(TwinBoundariesConstants::k_OutputType));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FindCoherence_Key, std::make_any<bool>(findCoherence));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(TwinBoundariesConstants::k_FaceLabelsPath));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FaceNormalsArrayPath_Key, std::make_any<DataPath>(TwinBoundariesConstants::k_FaceNormalsPath));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(TwinBoundariesConstants::k_PhasesPath));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(TwinBoundariesConstants::k_AvgQuatsPath));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(TwinBoundariesConstants::k_CrystalStructuresPath));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_TwinBoundariesName_Key, std::make_any<std::string>("Bounds Twin Boundaries"));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_TwinBoundariesIncoherenceName_Key, std::make_any<std::string>("Bounds Incoherence"));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -93215);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check", "[SimplnxCore][ComputeTwinBoundariesFilter]")

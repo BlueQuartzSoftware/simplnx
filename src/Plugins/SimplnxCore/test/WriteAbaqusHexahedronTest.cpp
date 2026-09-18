@@ -79,6 +79,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[Simpln
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const WriteAbaqusHexahedronFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
@@ -98,7 +101,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[Simpln
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/dummy_node", unit_test::k_TestFilesDir));
@@ -113,6 +117,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCo
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz", "7_0_abaqus_hexahedron_writer_test");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const WriteAbaqusHexahedronFilter filter;
@@ -133,7 +140,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCo
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/raw", unit_test::k_TestFilesDir));

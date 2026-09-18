@@ -65,14 +65,34 @@ Result<> SliceTriangleGeometry::operator()()
   }
 
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
-  edgeGeom.resizeVertexList(numVerts);
-  edgeGeom.resizeEdgeList(numEdges);
+  Result<> resizeResult = edgeGeom.resizeVertexList(numVerts);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = edgeGeom.resizeEdgeList(numEdges);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   INodeGeometry0D::SharedVertexList& verts = edgeGeom.getVerticesRef();
   INodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
-  edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
-  edgeGeom.getEdgeAttributeMatrix()->resizeTuples({numEdges});
+  resizeResult = edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = edgeGeom.getEdgeAttributeMatrix()->resizeTuples({numEdges});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->SliceAttributeMatrixName));
-  sliceAM.resizeTuples({sliceTriangleResult.NumberOfSlices});
+  resizeResult = sliceAM.resizeTuples({sliceTriangleResult.NumberOfSlices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   DataPath edgeAmPath = m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->EdgeAttributeMatrixName);
   auto& sliceId = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->SliceIdArrayName));
@@ -130,8 +150,16 @@ Result<> SliceTriangleGeometry::operator()()
   }
   if(numEdges != uniqueEdges.size())
   {
-    edgeGeom.resizeEdgeList(uniqueEdges.size());
-    edgeGeom.getEdgeAttributeMatrix()->resizeTuples({uniqueEdges.size()});
+    resizeResult = edgeGeom.resizeEdgeList(uniqueEdges.size());
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
+    resizeResult = edgeGeom.getEdgeAttributeMatrix()->resizeTuples({uniqueEdges.size()});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
 
   return result;

@@ -35,10 +35,10 @@ namespace
 {
 
 /**
- * @brief
- * @param imageSize
- * @param fontPtSize
- * @return
+ * @brief Measures the width of the letter X at the selected font size.
+ * @param imageSize Temporary canvas width and height in pixels.
+ * @param fontPtSize Font size in points.
+ * @return Measured text width in pixels.
  */
 float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
 {
@@ -54,41 +54,35 @@ float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
 
 namespace nx::core
 {
-//------------------------------------------------------------------------------
 std::string WritePoleFigureFilter::name() const
 {
   return FilterTraits<WritePoleFigureFilter>::name.str();
 }
 
-//------------------------------------------------------------------------------
 std::string WritePoleFigureFilter::className() const
 {
   return FilterTraits<WritePoleFigureFilter>::className;
 }
 
-//------------------------------------------------------------------------------
 Uuid WritePoleFigureFilter::uuid() const
 {
   return FilterTraits<WritePoleFigureFilter>::uuid;
 }
 
-//------------------------------------------------------------------------------
 std::string WritePoleFigureFilter::humanName() const
 {
   return "Generate and Write Pole Figure Images";
 }
 
-//------------------------------------------------------------------------------
 std::vector<std::string> WritePoleFigureFilter::defaultTags() const
 {
   return {className(), "IO", "Output", "Write", "Export", "EBSD", "Pole Figure"};
 }
 
-//------------------------------------------------------------------------------
 Parameters WritePoleFigureFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
+  // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
   params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
@@ -146,7 +140,7 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot2Name, "Count Plot 2", "The counts data for the plot", "<011>"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot3Name, "Count Plot 3", "The counts data for the plot", "<111>"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
+  // Link each parent parameter to the child parameters it controls.
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.linkParameters(k_GenerationAlgorithm_Key, k_LambertSize_Key, std::make_any<ChoicesParameter::ValueType>(0));
@@ -167,19 +161,16 @@ Parameters WritePoleFigureFilter::parameters() const
   return params;
 }
 
-//------------------------------------------------------------------------------
 IFilter::VersionType WritePoleFigureFilter::parametersVersion() const
 {
   return 3;
 }
 
-//------------------------------------------------------------------------------
 IFilter::UniquePointer WritePoleFigureFilter::clone() const
 {
   return std::make_unique<WritePoleFigureFilter>();
 }
 
-//------------------------------------------------------------------------------
 IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
@@ -229,7 +220,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Roughly calculate the output dimensions of the ImageGeometry.
+  // Calculate output dimensions from the image size, margins, and text width.
   float32 fontPtSize = pImageSizeValue / 16.0f;
   float32 margins = pImageSizeValue / 32.0f;
 
@@ -237,7 +228,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   int32 pageWidth = 0;
   int32 pageHeight = margins + fontPtSize;
-  // Each Pole Figure gets its own Square mini canvas to draw into.
+  // Reserve one square subcanvas for each pole figure.
   float32 subCanvasWidth = margins + pImageSizeValue + xCharWidth + margins;
   float32 subCanvasHeight = margins + fontPtSize + pImageSizeValue + fontPtSize * 2 + margins * 2;
   if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == WritePoleFigure::LayoutType::Horizontal)
@@ -263,7 +254,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   }
   if(!pSaveAsImageGeometry)
   {
-    // After the execute function has been done, delete the original image geometry
+    // Remove the temporary output geometry after execution.
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pOutputImageGeometryPath));
   }
 
@@ -299,11 +290,10 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createMetaData));
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  // Return actions and updated preflight values.
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-//------------------------------------------------------------------------------
 Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
@@ -329,8 +319,7 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.SaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
   inputValues.WriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
   inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  // Always render with the +Y axis pointing up, matching the legacy behavior where flipAndMirror was
-  // unconditionally applied. Not user-selectable.
+  // Keep +Y upward to match the fixed renderer orientation.
   inputValues.FlipFinalImage = true;
 
   inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
@@ -386,8 +375,7 @@ Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_GenerationAlgorithmKey, k_GenerationAlgorithm_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_LambertSizeKey, k_LambertSize_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumColorsKey, k_NumColors_Key));
-  // The legacy ImageFormat choice (tif/bmp/png/pdf) is intentionally dropped: SIMPLNX always writes PNG.
-  // See vv/deviations/WritePoleFigureFilter.md D5.
+  // SIMPLNX always writes PNG, so the legacy ImageFormat choice is not converted.
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ImageLayoutKey, k_ImageLayout_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ImagePrefixKey, k_ImagePrefix_Key));
@@ -396,10 +384,9 @@ Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
-  // Do NOT map the legacy CrystalStructuresArrayPath's DataContainer onto k_ImageGeometryPath_Key:
-  // that parameter creates a new ImageGeom, and the legacy filter had no output geometry. Reusing the
-  // input container name (e.g. "ImageDataContainer") collides with the existing geometry in preflight.
-  // The default from getDefaultArguments() ("PoleFigure") is the correct value.
+  // Do not map the legacy crystal-structure container to the output geometry path.
+  // The filter creates a new geometry, and reusing the input name can collide in preflight.
+  // Keep the default output geometry name.
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaterialNameArrayPathKey, k_MaterialNameArrayPath_Key));

@@ -119,8 +119,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   {
   case IArray::ArrayType::DataArray: {
     auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-    resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath, inputDataArray.getDataFormat()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath));
     break;
   }
   case IArray::ArrayType::NeighborListArray: {

@@ -64,6 +64,17 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
 
   auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, k_VertexArrays.size() + k_TriangleArrays.size());
+  std::vector<DataPath> expectedArrayPaths;
+  for(const auto& path : k_VertexArrays)
+  {
+    expectedArrayPaths.push_back(k_ComputedTrianglePath.createChildPath("Vertex Data").createChildPath(path.getTargetName()));
+  }
+  for(const auto& path : k_TriangleArrays)
+  {
+    expectedArrayPaths.push_back(k_ComputedTrianglePath.createChildPath("Face Data").createChildPath(path.getTargetName()));
+  }
+  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, expectedArrayPaths);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

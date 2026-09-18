@@ -71,110 +71,18 @@ DataObject* HexahedralGeom::shallowCopy()
 std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with identifier since it will get created when inserting into data structure
+  // Construct without an identifier because insertion creates it.
   auto copy = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
-    if(m_VertexAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getVertexAttributeMatrix()))
-      {
-        const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
+    INodeGeometry3D::copyMembersInto(*copy, copyPath);
+    copy->m_PolyhedronListId = deepCopyOwnedChild(copyPath, getPolyhedra());
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
 
-    if(m_VertexDataArrayId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getVertices()))
-      {
-        const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_EdgeAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getEdgeAttributeMatrix()))
-      {
-        const auto dataObjCopy = getEdgeAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_FaceAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getFaceAttributeMatrix()))
-      {
-        const auto dataObjCopy = getFaceAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_FaceAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_PolyhedronAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getPolyhedraAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getPolyhedraAttributeMatrix()))
-      {
-        const auto dataObjCopy = getPolyhedraAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_PolyhedronAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(m_PolyhedronListId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getPolyhedra()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getPolyhedra()))
-      {
-        const auto dataObjCopy = getPolyhedra()->deepCopy(copiedDataPath);
-      }
-      copy->m_PolyhedronListId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
-    {
-      copy->m_ElementSizesId = voxelSizesCopy->getId();
-    }
-    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
-    {
-      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
-    }
-    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
-    {
-      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
-    }
-    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
-    {
-      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
-    }
-    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdgesListName)); unsharedEdgesCopy != nullptr)
-    {
-      copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
-    }
-    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_SharedEdgeListName)); edgesCopy != nullptr)
-    {
-      copy->m_EdgeDataArrayId = edgesCopy->getId();
-    }
-    if(const auto unsharedFacesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedFacesListName)); unsharedFacesCopy != nullptr)
-    {
-      copy->m_UnsharedFaceListId = unsharedFacesCopy->getId();
-    }
-    if(const auto facesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry3D::k_SharedFacesListName)); facesCopy != nullptr)
-    {
-      copy->m_FaceListId = facesCopy->getId();
-    }
     return copy;
   }
   return nullptr;
@@ -211,7 +119,6 @@ Result<> HexahedralGeom::findElementSizes(bool recalculate)
     if(hexSizes == nullptr)
     {
       m_ElementSizesId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2530, "HexahedralGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
@@ -219,7 +126,6 @@ Result<> HexahedralGeom::findElementSizes(bool recalculate)
   m_ElementSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64>(getPolyhedra(), getVertices(), hexSizes);
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -237,15 +143,18 @@ Result<> HexahedralGeom::findElementsContainingVert(bool recalculate)
     if(hexasControllingVert == nullptr)
     {
       m_CellContainingVertDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2531, "HexahedralGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
   m_CellContainingVertDataArrayId = hexasControllingVert->getId();
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
+  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
+  if(findResult.invalid())
+  {
+    m_CellContainingVertDataArrayId.reset();
+    return findResult;
+  }
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -269,17 +178,19 @@ Result<> HexahedralGeom::findElementNeighbors(bool recalculate)
     if(hexNeighbors == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2532, "HexahedralGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
   m_CellNeighborsDataArrayId = hexNeighbors->getId();
 
-  // No error value ( < 0) returned from below function ever
-  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, Type::Hexahedral);
+  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, Type::Hexahedral);
+  if(findResult.invalid())
+  {
+    m_CellNeighborsDataArrayId.reset();
+    return findResult;
+  }
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -298,7 +209,6 @@ Result<> HexahedralGeom::findElementCentroids(bool recalculate)
     if(hexCentroids == nullptr)
     {
       m_CellCentroidsDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2533, "HexahedralGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
@@ -306,7 +216,6 @@ Result<> HexahedralGeom::findElementCentroids(bool recalculate)
   m_CellCentroidsDataArrayId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64>(getPolyhedra(), getVertices(), hexCentroids);
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -366,15 +275,18 @@ Result<> HexahedralGeom::findEdges(bool recalculate)
     if(edgeList == nullptr)
     {
       m_EdgeDataArrayId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2534, "HexahedralGeom Error: Unable to find or create a valid shared edges array or data store.");
     }
   }
 
-  GeometryHelpers::Connectivity::FindHexEdges<uint64>(getPolyhedra(), edgeList);
+  auto findResult = GeometryHelpers::Connectivity::FindHexEdges<uint64>(getPolyhedra(), edgeList);
+  if(findResult.invalid())
+  {
+    m_EdgeDataArrayId.reset();
+    return findResult;
+  }
   m_EdgeDataArrayId = edgeList->getId();
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -392,15 +304,18 @@ Result<> HexahedralGeom::findFaces(bool recalculate)
     if(quadList == nullptr)
     {
       m_FaceListId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2535, "HexahedralGeom Error: Unable to find or create a valid shared faces array or data store.");
     }
   }
 
-  GeometryHelpers::Connectivity::FindHexFaces<uint64>(getPolyhedra(), quadList);
+  auto findResult = GeometryHelpers::Connectivity::FindHexFaces<uint64>(getPolyhedra(), quadList);
+  if(findResult.invalid())
+  {
+    m_FaceListId.reset();
+    return findResult;
+  }
   m_FaceListId = quadList->getId();
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -419,15 +334,18 @@ Result<> HexahedralGeom::findUnsharedEdges(bool recalculate)
     if(unsharedEdgeList == nullptr)
     {
       m_UnsharedEdgeListId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2536, "HexahedralGeom Error: Unable to find or create a valid unshared edges array or data store.");
     }
   }
 
-  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64>(getPolyhedra(), unsharedEdgeList);
+  auto findResult = GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64>(getPolyhedra(), unsharedEdgeList);
+  if(findResult.invalid())
+  {
+    m_UnsharedEdgeListId.reset();
+    return findResult;
+  }
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -446,14 +364,17 @@ Result<> HexahedralGeom::findUnsharedFaces(bool recalculate)
     if(unsharedQuadList == nullptr)
     {
       m_UnsharedFaceListId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-2537, "HexahedralGeom Error: Unable to find or create a valid unshared faces array or data store.");
     }
   }
 
-  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64>(getPolyhedra(), unsharedQuadList);
+  auto findResult = GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64>(getPolyhedra(), unsharedQuadList);
+  if(findResult.invalid())
+  {
+    m_UnsharedFaceListId.reset();
+    return findResult;
+  }
   m_UnsharedFaceListId = unsharedQuadList->getId();
 
-  // Used to be error code `1`
   return {};
 }

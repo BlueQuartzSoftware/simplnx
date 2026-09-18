@@ -1,8 +1,10 @@
 #include "ComputeLargestCrossSections.hpp"
 
+#include "ComputeLargestCrossSectionsDirect.hpp"
+#include "ComputeLargestCrossSectionsScanline.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 using namespace nx::core;
 
@@ -28,91 +30,8 @@ const std::atomic_bool& ComputeLargestCrossSections::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSections::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIds.getDataStoreRef();
-  auto& largestCrossSectStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath)->getDataStoreRef();
-  const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
-
-  // Validate the largestCrossSectStore array is the proper size
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds, false, m_MessageHandler);
-  if(validateNumFeatResult.invalid())
-  {
-    return validateNumFeatResult;
-  }
-
-  std::vector<float32> featureCounts(numFeatures, 0.0f);
-
-  usize outPlane = 0, inPlane1 = 0, inPlane2 = 0;
-  float32 resScalar = 0.0f, area = 0.0f;
-  usize stride1 = 0, stride2 = 0, stride3 = 0;
-  usize iStride = 0, jStride = 0, kStride = 0;
-  usize point = 0, gNum = 0;
-
-  FloatVec3 spacing = imageGeom.getSpacing();
-
-  if(m_InputValues->Plane == 0)
-  {
-    outPlane = imageGeom.getNumZCells();
-    inPlane1 = imageGeom.getNumXCells();
-    inPlane2 = imageGeom.getNumYCells();
-
-    resScalar = spacing[0] * spacing[1];
-    stride1 = inPlane1 * inPlane2;
-    stride2 = 1;
-    stride3 = inPlane1;
-  }
-  if(m_InputValues->Plane == 1)
-  {
-    outPlane = imageGeom.getNumYCells();
-    inPlane1 = imageGeom.getNumXCells();
-    inPlane2 = imageGeom.getNumZCells();
-    resScalar = spacing[0] * spacing[2];
-    stride1 = inPlane1;
-    stride2 = 1;
-    stride3 = inPlane1 * inPlane2;
-  }
-  if(m_InputValues->Plane == 2)
-  {
-    outPlane = imageGeom.getNumXCells();
-    inPlane1 = imageGeom.getNumYCells();
-    inPlane2 = imageGeom.getNumZCells();
-    resScalar = spacing[1] * spacing[2];
-    stride1 = 1;
-    stride2 = inPlane1;
-    stride3 = inPlane1 * inPlane2;
-  }
-
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", outPlane));
-
-  for(size_t i = 0; i < outPlane; i++)
-  {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-    std::fill(featureCounts.begin(), featureCounts.end(), 0.0f);
-
-    iStride = i * stride1;
-    for(size_t j = 0; j < inPlane1; j++)
-    {
-      jStride = j * stride2;
-      for(size_t k = 0; k < inPlane2; k++)
-      {
-        kStride = k * stride3;
-        point = iStride + jStride + kStride;
-        gNum = featureIdsStore[point];
-        featureCounts[gNum]++;
-      }
-    }
-    for(size_t g = 1; g < numFeatures; g++)
-    {
-      area = featureCounts[g] * resScalar;
-      if(area > largestCrossSectStore[g])
-      {
-        largestCrossSectStore[g] = area;
-      }
-    }
-  }
-  return {};
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& largestCrossSections = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath);
+  return DispatchAlgorithm<ComputeLargestCrossSectionsDirect, ComputeLargestCrossSectionsScanline>({&featureIds, &largestCrossSections}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
+                                                                                                   m_InputValues);
 }

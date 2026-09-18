@@ -27,6 +27,10 @@ The **Filter** also outputs the clustering list (every inter-**Feature** distanc
 - **Centroids** -- the X, Y, Z coordinates of each Feature's center of mass, produced by [Compute Feature Centroids](ComputeFeatureCentroidsFilter.md).
 - **Phases** -- the phase (Ensemble) that each Feature belongs to, produced by [Compute Feature Phases](ComputeFeaturePhasesFilter.md).
 
+### Performance
+
+This filter has O(n^2) complexity in the number of features of the target phase. The feature-level arrays (phases, centroids) are accessed in the inner pairwise loop. For out-of-core (OOC) data, per-element virtual dispatch inside this quadratic loop would be prohibitively expensive. The algorithm bulk-reads the entire FeaturePhases and Centroids arrays into local `std::vector` caches via `copyIntoBuffer()` at the start. The RDF histogram is also accumulated into a local vector and written back to the output DataStore in a single `copyFromBuffer()` call after normalization.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

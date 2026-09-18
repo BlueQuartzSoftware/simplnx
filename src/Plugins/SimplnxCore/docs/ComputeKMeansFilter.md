@@ -12,6 +12,16 @@ This **Filter** applies the k means algorithm to an **Attribute Array**.  K mean
 
 Each cluster is summarized by its **centroid**, which is the arithmetic mean (the average position) of all the points assigned to that cluster.  A k means partitioning is a *Voronoi tessellation*: every point is assigned to the cluster whose centroid is closest to it, so the data space is carved into regions where each region contains all the points nearer to one centroid than to any other.  An optimal solution to the k means problem is one in which each point is associated with the cluster that has the closest mean.  This partitioning minimizes the **within-cluster variance**, that is, the sum over all clusters of the squared distances from each point to its cluster centroid; minimizing it makes the points within each cluster as tightly grouped as possible.  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
 
+## Algorithm
+
+### In-Core Path
+
+When the selected array, mask, cluster IDs, and means are in memory, the **Filter** uses the direct Lloyd iteration. It selects the initial centroids from the seeded random sequence, assigns every selected tuple to the first centroid with the strictly smallest distance, and recomputes the means until they stop changing.
+
+### Out-of-Core Path
+
+When any of those arrays is disk-backed, the **Filter** uses a streaming implementation. It reads the input, mask, and cluster IDs in fixed-size blocks and writes changed IDs in matching blocks. Centroids, counts, and accumulated means are feature-sized state; no full **Cell** array is copied into memory. The same seed, candidate draw order, strict distance tie rule, and tuple-order accumulation are retained. A mask with no selected tuples reports an error instead of attempting an unbounded centroid-selection loop.
+
 ### Distance Metric
 
 The *Distance Metric* parameter determines how distances between data points are measured when assigning points to clusters:

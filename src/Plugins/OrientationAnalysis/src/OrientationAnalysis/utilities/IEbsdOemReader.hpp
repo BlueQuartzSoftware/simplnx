@@ -16,6 +16,10 @@
 
 namespace nx::core
 {
+/**
+ * @struct ReadH5DataInputValues
+ * @brief Selects OEM scans, optional conversions, and destination paths.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
   OEMEbsdScanSelectionParameter::ValueType SelectedScanNames;
@@ -28,13 +32,29 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 };
 
 /**
- * @class ReadH5Data
+ * @class IEbsdOemReader
+ * @brief Provides the shared sequential workflow for OEM HDF5 EBSD readers.
+ * @tparam T EbsdLib H5OIMReader, H5OINAReader, or H5EspritReader type.
+ *
+ * The base owns one EbsdLib reader and borrows the data structure, message
+ * handler, cancellation flag, and input values. It loads one complete scan at
+ * a time. Derived classes copy that scan into the volume arrays.
+ *
+ * Cancellation is checked before each scan. It returns success and preserves
+ * scans copied before cancellation.
  */
-
 template <class T>
 class ORIENTATIONANALYSIS_EXPORT IEbsdOemReader
 {
 public:
+  /**
+   * @brief Initializes an OEM scan reader.
+   * @param dataStructure Provides destination arrays and geometry.
+   * @param mesgHandler Receives scan status messages.
+   * @param shouldCancel Signals cancellation between scans.
+   * @param inputValues Selects the file, scans, conversions, and destinations.
+   * @pre All arguments outlive this reader.
+   */
   IEbsdOemReader(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
@@ -52,14 +72,26 @@ public:
   IEbsdOemReader& operator=(const IEbsdOemReader&) = delete;
   IEbsdOemReader& operator=(IEbsdOemReader&&) noexcept = delete;
 
+  /**
+   * @brief Loads and copies each selected scan in selection order.
+   * @return Reader, phase-metadata, or derived copy errors.
+   *
+   * The method sets the destination geometry unit to micrometers before import.
+   */
   Result<> execute()
   {
     auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
     imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
 
+    const auto& scanNames = m_InputValues->SelectedScanNames.scanNames;
     int index = 0;
-    for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
+    for(const auto& currentScanName : scanNames)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Importing Index {}", currentScanName)});
 
       Result<> readResults = readData(currentScanName);
@@ -84,10 +116,19 @@ public:
     return m_ShouldCancel;
   }
 
+  /**
+   * @brief Loads one scan and copies its phase metadata to ensemble arrays.
+   * @param scanName HDF5 scan path selected by the user.
+   * @return EbsdLib read or missing-phase errors.
+   * @pre Ensemble arrays reserve index zero and contain every source phase index.
+   * @pre Each source phase supplies six lattice constants.
+   *
+   * Standard AngFile ensemble names let all OEM formats feed the same downstream
+   * orientation filters.
+   */
   Result<> readData(const std::string& scanName)
   {
     m_Reader->setReadPatternData(m_InputValues->ReadPatternData);
-    // If the user has already set a Scan Name to read then we are good to go.
     m_Reader->setHDF5Path(scanName);
 
     if(const int32 err = m_Reader->readFile(); err < 0)
@@ -102,7 +143,7 @@ public:
       return MakeErrorResult(-8971, fmt::format("'{}' did not parse any phases from the .h5 file '{}' for scan '{}'", m_Reader->getNameOfClass(), scanName, m_Reader->getFileName()));
     }
 
-    // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
+    // Use shared AngFile ensemble names for every OEM reader format.
     auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
     auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
     auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
@@ -134,6 +175,11 @@ public:
     return {};
   }
 
+  /**
+   * @brief Copies the currently loaded scan into its destination volume range.
+   * @param index Zero-based scan index.
+   * @return Source conversion or destination transfer errors.
+   */
   virtual Result<> copyRawEbsdData(int index) = 0;
 
 protected:

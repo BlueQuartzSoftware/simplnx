@@ -18,14 +18,19 @@ include(Catch)
 add_subdirectory(UnitTestCommon)
 add_subdirectory(ConversionTest)
 
-add_executable(simplnx_test
-  ${SIMPLNX_TEST_DIRS_HEADER}
+set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   AppTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
+  ChunkIndexTest.cpp
+  ChunkShapePolicyTest.cpp
   DataArrayTest.cpp
+  DataStoreBulkTest.cpp
+  DataIOCollectionExternalSortCompileTest.cpp
+  TemporaryRecordStoreTest.cpp
   DataPathTest.cpp
+  Dream3dLoadingApiTest.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
   DataStructTest.cpp
@@ -33,24 +38,51 @@ add_executable(simplnx_test
   DelayVfd.cpp
   Dream3dPreflightCacheTest.cpp
   DynamicFilterInstantiationTest.cpp
+  EmptyStringStoreTest.cpp
+  ExtentTest.cpp
+  ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
+  FilterTest.cpp
   GeometryTest.cpp
+  GeometryBulkContractsTest.cpp
   GeometryTestUtilities.hpp
   H5Test.cpp
+  H5IOTest.cpp
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp
+  IParallelAlgorithmTest.cpp
+  CacheMemoryBudgetManagerTest.cpp
+  MemorySafetyTest.cpp
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
+  ParallelChunkCodecTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
   PipelineSaveTest.cpp
   UuidTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
+  StbImageIOTest.cpp
+  StoreResizeContractsTest.cpp
   ScaleBarRendererTest.cpp
+  SelectiveImportReferencesTest.cpp
   FilterValidationTest.cpp
   SimplJsonConversionTest.cpp
+  StorageFormatPlanTest.cpp
+  DataStoreFormatResolverTest.cpp
+  DataStorageModeMigrationTest.cpp
+  TiffImageIOTest.cpp
 )
+
+add_executable(simplnx_test
+  ${SIMPLNX_TEST_DIRS_HEADER}
+  ${SIMPLNX_TEST_SRCS}
+)
+
+# Organize the unit-test sources into IDE folders, mirroring the plugin-test
+# convention in cmake/Plugin.cmake (source_group "test" + "Generated").
+source_group("test" FILES ${SIMPLNX_TEST_SRCS})
+source_group("Generated" FILES ${SIMPLNX_TEST_DIRS_HEADER})
 
 target_link_libraries(simplnx_test
   PRIVATE

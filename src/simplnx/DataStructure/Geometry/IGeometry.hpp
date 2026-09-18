@@ -247,6 +247,52 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
 
+  /**
+   * @brief Reproduces an owned child object beneath a geometry copy and returns the copy's identifier.
+   *
+   * A geometry's deepCopy() first deep-copies its data map, which already reproduces every child the
+   * geometry is the parent of. For those children this only resolves the identifier of the copy that
+   * already exists; children owned elsewhere in the DataStructure are deep-copied under copyPath here.
+   *
+   * @param copyPath Path of the geometry copy being populated
+   * @param child Child of this geometry to reproduce; nullptr when the geometry does not have one
+   * @return Identifier of the child beneath copyPath, or std::nullopt when child is nullptr
+   */
+  std::optional<IdType> deepCopyOwnedChild(const DataPath& copyPath, DataObject* child);
+
+  /**
+   * @brief Returns the identifier of an optional child array that the data map copy already produced.
+   *
+   * Used for the derived arrays a geometry references but does not create while copying: element
+   * sizes, element neighbors, elements containing a vertex, centroids, and the unshared element lists.
+   *
+   * @tparam T Type the child array is expected to have
+   * @param copyPath Path of the geometry copy being populated
+   * @param childName Name of the child beneath copyPath
+   * @return Identifier of the child, or std::nullopt when it is absent or has another type
+   */
+  template <class T>
+  std::optional<IdType> adoptCopiedChild(const DataPath& copyPath, const std::string& childName)
+  {
+    const auto* childCopy = getDataStructureRef().template getDataAs<T>(copyPath.createChildPath(childName));
+    if(childCopy == nullptr)
+    {
+      return {};
+    }
+    return childCopy->getId();
+  }
+
+  /**
+   * @brief Copies the members IGeometry declares into a geometry copy.
+   *
+   * Derived geometries chain to their base's override of this method from deepCopy() so that each
+   * level copies only the members it declares.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(IGeometry& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_ElementSizesId;
 
   LengthUnit m_Units = LengthUnit::Meter;

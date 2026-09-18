@@ -16,6 +16,10 @@ The *gradient magnitude* measures how quickly the input field changes from one l
 
 - **Gradient Magnitude Data** -- a single-component 32-bit float array giving the gradient magnitude of the input array, produced by [ITK Gradient Magnitude Image Filter](../ITKImageProcessing/ITKGradientMagnitudeImageFilter.md).
 
+## Algorithm
+
+The filter makes two sequential passes through the input **Data Array**. The first reads bounded input and gradient-magnitude batches to compute the weighted threshold in legacy tuple order. The second rereads bounded input batches and writes the boolean mask. This shared implementation works with both in-memory and out-of-core stores without per-**Cell** storage access or a cell-sized working allocation.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

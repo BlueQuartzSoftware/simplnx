@@ -22,6 +22,10 @@ static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
 } // namespace detail
 
+/**
+ * @struct ErodeDilateMaskInputValues
+ * @brief Collects mask morphology settings and DataStructure paths.
+ */
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 {
   ChoicesParameter::ValueType Operation;
@@ -34,12 +38,30 @@ struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 };
 
 /**
- * @class
+ * @class ErodeDilateMask
+ * @brief Erodes or dilates a Boolean mask with face neighbors.
+ *
+ * Dilation changes a false voxel when an enabled face neighbor is true. Erosion
+ * changes a true voxel when an enabled face neighbor is false. Separate read
+ * and write windows give synchronous state within each pass.
+ *
+ * Six byte slices and one Boolean transfer slice bound working memory.
+ * Byte slices avoid std::vector<bool> bit-packing. Completed slices are written
+ * sequentially and become input to the next pass.
  */
 class SIMPLNXCORE_EXPORT ErodeDilateMask
 {
 public:
+  /**
+   * @brief Initializes mask morphology.
+   * @param dataStructure Contains the ImageGeom and mask.
+   * @param mesgHandler Receives one message for each pass.
+   * @param shouldCancel Supplies the common cancellation interface.
+   * @param inputValues Selects operation, directions, iterations, and paths.
+   * @pre All arguments and the inputValues object outlive this executor.
+   */
   ErodeDilateMask(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateMaskInputValues* inputValues);
+
   ~ErodeDilateMask() noexcept;
 
   ErodeDilateMask(const ErodeDilateMask&) = delete;
@@ -47,9 +69,19 @@ public:
   ErodeDilateMask& operator=(const ErodeDilateMask&) = delete;
   ErodeDilateMask& operator=(ErodeDilateMask&&) noexcept = delete;
 
+  /**
+   * @brief Applies the selected number of mask morphology passes.
+   * @return Success.
+   * @pre Image dimensions and mask tuple count agree and are nonzero.
+   * @pre Slice-size products fit usize.
+   *
+   * The algorithm does not inspect the cancellation flag. It discards all bulk-
+   * transfer Result values. A storage failure can therefore produce partial or
+   * invalid mask output while this function returns success.
+   */
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;

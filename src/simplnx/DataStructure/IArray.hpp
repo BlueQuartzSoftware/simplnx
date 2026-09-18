@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 
 namespace nx::core
@@ -83,25 +84,16 @@ public:
   virtual void swapTuples(usize index0, usize index1) = 0;
 
   /**
-   * @brief This method sets the shape of the dimensions to `tupleShape`.
+   * @brief Changes the tuple shape while retaining values in the shared prefix.
    *
-   * There are 3 possibilities when using this function:
-   * [1] The number of tuples of the new shape is *LESS* than the original. In this
-   * case a memory allocation will take place and the first 'N' elements of data
-   * will be copied into the new array. The remaining data is *LOST*
+   * Shrinking discards trailing values. Equal tuple counts change shape metadata. Growing initializes added values with the store default.
    *
-   * [2] The number of tuples of the new shape is *EQUAL* to the original. In this
-   * case the shape is set and the function returns.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
+   * @return Valid on success. A child-store resize failure returns error -6035.
    *
-   * [3] The number of tuples of the new shape is *GREATER* than the original. In
-   * this case a new array is allocated and all the data from the original array
-   * is copied into the new array and the remaining elements are initialized to
-   * the default initialization value.
-   *
-   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
-   * from *slowest* to *fastest*.
+   * Callers must inspect the result because a failed resize can leave the prior array shape and values unchanged.
    */
-  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
+  [[nodiscard]] virtual Result<> resizeTuples(const ShapeType& tupleShape) = 0;
 
   /**
    * @brief Returns the value at the tuple and component index as a std::string.

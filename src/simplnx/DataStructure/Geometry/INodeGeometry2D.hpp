@@ -76,9 +76,10 @@ public:
 
   /**
    * @brief Resizes the face list to the target size.
-   * @param size
+   * @param size Specifies the new face count.
+   * @return Error if the face store cannot resize.
    */
-  void resizeFaceList(usize size);
+  [[nodiscard]] Result<> resizeFaceList(usize size);
 
   /**
    * @brief Returns the number of faces in the geometry.
@@ -159,11 +160,6 @@ public:
    * @brief Deletes the unshared edge list and removes it from the DataStructure.
    */
   void deleteUnsharedEdges();
-
-  /****************************************************************************
-   * These functions get values related to where the Vertex Coordinates are
-   * stored in the DataStructure
-   */
 
   /**
    * @brief Returns the DataStructure unique ID of the face list array.
@@ -257,6 +253,17 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the DataStructure object.
    */
+  /**
+   * @brief Copies the members INodeGeometry2D declares into a geometry copy.
+   *
+   * Chains to INodeGeometry1D::copyMembersInto so that a copy performed at any level of the hierarchy
+   * reproduces every inherited member exactly once.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(INodeGeometry2D& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_FaceListId;
   std::optional<IdType> m_FaceAttributeMatrixId;
   std::optional<IdType> m_UnsharedEdgeListId;

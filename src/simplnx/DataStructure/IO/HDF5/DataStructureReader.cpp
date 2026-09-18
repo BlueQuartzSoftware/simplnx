@@ -123,10 +123,9 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
   Result<> result = HDF5::ReadDataMap(*this, m_CurrentStructure.getRootGroup(), groupReader, {}, useEmptyDataStores);
   if(result.invalid())
   {
-    auto& error = result.errors()[0];
-    return MakeErrorResult<DataStructure>(error.code, error.message);
+    return ConvertInvalidResult<DataStructure>(std::move(result));
   }
-  return {m_CurrentStructure};
+  return ConvertResultTo<DataStructure>(std::move(result), DataStructure(m_CurrentStructure));
 }
 
 Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStores)
@@ -231,14 +230,8 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
 
   // Read DataObject from Factory
   {
-    auto errorCode = factory->readData(*this, parentGroup, objectName, objectId, parentId, useEmptyDataStores);
-    if(errorCode.invalid())
-    {
-      return errorCode;
-    }
+    return factory->readData(*this, parentGroup, objectName, objectId, parentId, useEmptyDataStores);
   }
-
-  return {};
 }
 
 DataStructure& DataStructureReader::getDataStructure()

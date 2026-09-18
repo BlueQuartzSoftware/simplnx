@@ -1,7 +1,17 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
+
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
 
@@ -22,16 +32,18 @@ const DataPath k_EuclideanDistances = k_CellDataAM.createChildPath("GBManhattanD
 
 TEST_CASE("SimplnxCore::AddBadDataFilter: Valid Filter Execution", "[SimplnxCore][AddBadDataFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "add_bad_data_test.tar.gz", "add_bad_data_test");
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/6_6_add_bad_data_test.dream3d", unit_test::k_TestFilesDir)));
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Create the filter arguments for the calculation.
   AddBadDataFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/6_6_add_bad_data_baseline.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(AddBadDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
   args.insertOrAssign(AddBadDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489ULL));
   args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
@@ -41,12 +53,10 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Valid Filter Execution", "[SimplnxCore
   args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(k_EuclideanDistances));
   args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeom));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellDataAM, Constants::k_SmallIN100);

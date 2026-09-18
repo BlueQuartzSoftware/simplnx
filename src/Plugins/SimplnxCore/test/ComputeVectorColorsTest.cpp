@@ -1,14 +1,21 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+
+#include <nonstd/span.hpp>
 
 #include "SimplnxCore/Filters/ComputeVectorColorsFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -27,20 +34,17 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Valid Filter Execution", "[Si
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_vector_colors.tar.gz", "generate_vector_colors");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
+    // Create the filter arguments for the calculation.
     ComputeVectorColorsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeVectorColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
     args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(k_VecColorsNX));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }

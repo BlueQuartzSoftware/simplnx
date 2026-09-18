@@ -390,9 +390,8 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           const DataPath srcCellArrayDataPath = srcImagePath.createChildPath(cellDataName).createChildPath(cellArrayName);
           const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcCellArrayDataPath);
           const ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-          const std::string dataStoreFormat = srcArray.getDataFormat();
           resultOutputActions.value().appendAction(
-              std::make_unique<CreateArrayAction>(srcArray.getDataType(), dataArrayShape, componentShape, targetCellAttrMatrix.createChildPath(srcArray.getName()), dataStoreFormat));
+              std::make_unique<CreateArrayAction>(srcArray.getDataType(), dataArrayShape, componentShape, targetCellAttrMatrix.createChildPath(srcArray.getName())));
         }
 
         // Store the preflight updated value(s) into the preflightUpdatedValues vector using

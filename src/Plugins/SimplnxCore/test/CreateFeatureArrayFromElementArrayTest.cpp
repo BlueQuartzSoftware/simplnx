@@ -384,7 +384,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error pat
 
     // Child array created directly with 5 tuples -more than AM.tupleCount=2 and more than maxValue+1=4
     auto* siblingArray = Float32Array::CreateWithStore<DataStore<float32>>(ds, k_SiblingArrayPath.getTargetName(), featureAM->getShape(), ShapeType{1ULL}, featureAM->getId());
-    siblingArray->resizeTuples(ShapeType{5ULL});
+    auto siblingArrayResizeResult = siblingArray->resizeTuples(ShapeType{5ULL});
+    SIMPLNX_RESULT_REQUIRE_VALID(siblingArrayResizeResult);
 
     auto* fidsArray = Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_FeatureIdsPath.getTargetName(), cellAM->getShape(), ShapeType{1ULL}, cellAM->getId());
     (*fidsArray)[0] = 1;
@@ -569,11 +570,9 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error path featureIds tuple count mismatch", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][AnalyticalFixtures]")
 {
-  // Oracle class: Class 4 (Invariant)
-  // cellArray: 4 tuples (in CellAM); featureIds: 2 tuples (in a separate smaller AM)
-  // Loop bound is cellArray.getNumberOfTuples()=4; featureIds[2] and featureIds[3] are OOB
-  // without the preflight check.
-  // Expected: preflight fails with error code -81883
+  // The cell array has four tuples. FeatureIds has two tuples in a separate AttributeMatrix.
+  // Preflight must reject the mismatch before execution reads featureIds[2] or featureIds[3].
+  // The expected error code is -81883.
   DataStructure ds;
   const DataPath k_SmallerAMPath = AnalyticalFixtures::k_ParentDGPath.createChildPath("SmallerAM");
   const DataPath k_MismatchedFeatureIdsPath = k_SmallerAMPath.createChildPath(Constants::k_FeatureIds);
@@ -605,6 +604,76 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error pat
     REQUIRE_FALSE(preflightResult.outputActions.valid());
     REQUIRE(preflightResult.outputActions.errors()[0].code == -81883);
   }
+}
+
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-value boundary oracle", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_CellCount = 65538;
+  constexpr usize k_ComponentCount = 3;
+  DataStructure ds;
+  auto* parent = DataGroup::Create(ds, AnalyticalFixtures::k_ParentDGName);
+  REQUIRE(parent != nullptr);
+  auto* cellAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_CellAMPath.getTargetName(), ShapeType{k_CellCount}, parent->getId());
+  REQUIRE(cellAM != nullptr);
+  auto* featureAM = AttributeMatrix::Create(ds, AnalyticalFixtures::k_FeatureAMPath.getTargetName(), ShapeType{1}, parent->getId());
+  REQUIRE(featureAM != nullptr);
+
+  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_FeatureIdsPath.getTargetName(), cellAM->getShape(), ShapeType{1}, cellAM->getId());
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(ds, AnalyticalFixtures::k_InputCellPath.getTargetName(), cellAM->getShape(), ShapeType{k_ComponentCount}, cellAM->getId());
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(values != nullptr);
+  for(usize cellIdx = 0; cellIdx < k_CellCount; cellIdx++)
+  {
+    (*featureIds)[cellIdx] = 0;
+    for(usize compIdx = 0; compIdx < k_ComponentCount; compIdx++)
+    {
+      (*values)[cellIdx * k_ComponentCount + compIdx] = 0;
+    }
+  }
+  // Feature 3 receives a conflicting value in the second page.
+  (*featureIds)[0] = 3;
+  (*values)[0] = 1;
+  (*values)[1] = 10;
+  (*values)[2] = 100;
+  (*featureIds)[65536] = 3;
+  (*values)[65536 * k_ComponentCount] = 2;
+  (*values)[65536 * k_ComponentCount + 1] = 20;
+  (*values)[65536 * k_ComponentCount + 2] = 200;
+  // Feature 1 first appears in the final tuple. Feature 2 is a gap.
+  (*featureIds)[65537] = 1;
+  (*values)[65537 * k_ComponentCount] = 7;
+  (*values)[65537 * k_ComponentCount + 1] = 70;
+  (*values)[65537 * k_ComponentCount + 2] = 700;
+
+  CreateFeatureArrayFromElementArrayFilter filter;
+  Arguments args;
+  args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_InputCellPath));
+  args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureIdsPath));
+  args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(AnalyticalFixtures::k_FeatureAMPath));
+  args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(AnalyticalFixtures::k_OutputFeaturePath.getTargetName()));
+
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  REQUIRE(executeResult.result.warnings().size() == 1);
+  REQUIRE(executeResult.result.warnings().front().code == -1000);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(AnalyticalFixtures::k_OutputFeaturePath));
+  const auto& output = ds.getDataRefAs<Int32Array>(AnalyticalFixtures::k_OutputFeaturePath);
+  REQUIRE(output.getNumberOfTuples() == 4);
+  REQUIRE(output.getNumberOfComponents() == k_ComponentCount);
+  REQUIRE(output[0] == 0);
+  REQUIRE(output[1] == 0);
+  REQUIRE(output[2] == 0);
+  REQUIRE(output[3] == 7);
+  REQUIRE(output[4] == 70);
+  REQUIRE(output[5] == 700);
+  REQUIRE(output[6] == 0);
+  REQUIRE(output[7] == 0);
+  REQUIRE(output[8] == 0);
+  REQUIRE(output[9] == 2);
+  REQUIRE(output[10] == 20);
+  REQUIRE(output[11] == 200);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][BackwardsCompatibility]")
