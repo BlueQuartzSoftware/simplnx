@@ -96,7 +96,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 
 // -----------------------------------------------------------------------------
 void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists)
+                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists, std::string_view neighborListContext)
 {
   const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
   if(srcCellFeatureData == nullptr)
@@ -123,9 +123,8 @@ void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const
   {
     preflightUpdatedValues.push_back(
         {"Invalidated NeighborLists",
-         fmt::format(
-             "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-             featureIdsArrayPath.toString(), neighborListWarningMsg)});
+         fmt::format("This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. {} {}",
+                     featureIdsArrayPath.toString(), neighborListContext, neighborListWarningMsg)});
   }
   if(!arrayWarningMsg.empty())
   {

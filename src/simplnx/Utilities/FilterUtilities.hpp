@@ -348,9 +348,11 @@ SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const D
  * @param featureIdsArrayPath DataPath to the FeatureIds array (used in warning messages)
  * @param preflightUpdatedValues Vector to append preflight updated values into
  * @param warnNeighborLists When true, also emits a preflight value for invalidated NeighborLists
+ * @param neighborListContext Trailing clause appended after the NeighborList list (e.g. copy-geometry vs in-place wording)
  */
 SIMPLNX_EXPORT void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                                      std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists = true);
+                                                      std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists = true,
+                                                      std::string_view neighborListContext = "These NeighborLists will not be copied to the new geometry:");
 
 /**
  * @brief Scans child paths being copied verbatim for any AttributeMatrix objects and emits a
