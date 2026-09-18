@@ -122,9 +122,8 @@ void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const
   if(!neighborListWarningMsg.empty())
   {
     preflightUpdatedValues.push_back(
-        {"Invalidated NeighborLists",
-         fmt::format("This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. {} {}",
-                     featureIdsArrayPath.toString(), neighborListContext, neighborListWarningMsg)});
+        {"Invalidated NeighborLists", fmt::format("This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. {} {}",
+                                                  featureIdsArrayPath.toString(), neighborListContext, neighborListWarningMsg)});
   }
   if(!arrayWarningMsg.empty())
   {
