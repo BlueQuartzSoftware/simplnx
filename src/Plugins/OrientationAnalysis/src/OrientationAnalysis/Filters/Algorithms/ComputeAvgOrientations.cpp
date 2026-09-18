@@ -1004,10 +1004,6 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
 
   DirectionalOutputBuffers outputs(m_NumberOfFeatures, m_InputValues->useVonMisesAverage, m_InputValues->useWatsonAverage);
   const auto processFeature = [&](usize feature, const std::vector<ebsdlib::QuatD>& fzQuaternions) -> Result<> {
-    if(feature >= featureOps.size() || featureOps[feature] == nullptr)
-    {
-      return MakeErrorResult(-54677, fmt::format("ComputeAvgOrientations: grouped quaternion data referenced feature {} without a valid selected Laue operation.", feature));
-    }
     if(fzQuaternions.size() != featureCounts[feature])
     {
       return MakeErrorResult(-54678, fmt::format("ComputeAvgOrientations: grouped quaternion count for feature {} is {}; expected {} from the phase-valid counting pass.", feature,
@@ -1166,6 +1162,14 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
           if(flushResult.invalid() || m_ShouldCancel)
           {
             return flushResult;
+          }
+          if(featureOps[feature] == nullptr)
+          {
+            const int32 phase = winningPhases[feature];
+            const std::string crystalStructure = static_cast<usize>(phase) < ensembleCount ? fmt::format("{}", crystalStructures[static_cast<usize>(phase)]) : "unavailable";
+            return MakeErrorResult(
+                -54677, fmt::format("ComputeAvgOrientations: grouped quaternion data referenced feature {} (selected phase {}, crystal structure {}) without a valid selected Laue operation.", feature,
+                                    phase, crystalStructure));
           }
           currentFeature = feature;
           previousTupleIndex.reset();
