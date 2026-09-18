@@ -150,8 +150,8 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
     return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  // The cell-level arrays must have exactly one tuple per geometry cell; the check above only
-  // validates the arrays against each other, not against the geometry the flood fill walks.
+  // The cell arrays must have one tuple per geometry cell.
+  // The previous check only compares the selected arrays with each other.
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
   if(quats.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
   {
@@ -159,9 +159,8 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
                                                              inputGridGeom->getNumberOfCells()))};
   }
 
-  // Create the Cell Level FeatureIds array with the cell AttributeMatrix's tuple shape so the
-  // created array always matches the AttributeMatrix that hosts it. That AttributeMatrix must
-  // itself agree with the geometry, or FeatureIds would be smaller than the flood-fill walk.
+  // Use the cell AttributeMatrix shape for FeatureIds.
+  // The AttributeMatrix must also match the geometry traversed by the flood fill.
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
   if(cellDataAM.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
   {
@@ -198,8 +197,8 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  // Derive the FeatureIds path from the geometry's cell-data AttributeMatrix, exactly as
-  // preflightImpl created it (the Quats array is not required to live in that AttributeMatrix).
+  // Derive FeatureIds from the geometry's cell-data AttributeMatrix.
+  // The Quats array can live in another AttributeMatrix.
   const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
   inputValues.FeatureIdsArrayPath = gridGeom.getCellDataPath().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));

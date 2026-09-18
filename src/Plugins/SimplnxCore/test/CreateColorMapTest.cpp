@@ -1,21 +1,27 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+
+#include <nonstd/span.hpp>
 
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 #include "SimplnxCore/Filters/ReadTextDataArrayFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <array>
 #include <limits>
 
 namespace fs = std::filesystem;
@@ -58,6 +64,18 @@ const std::string k_RainbowDesaturatedPresetName = "Rainbow Desaturated";
 const std::string k_RainbowPresetName = "Rainbow";
 const std::string k_XRayPresetName = "X Ray";
 
+constexpr usize k_BenchmarkDim = 200;
+constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
+constexpr usize k_BenchmarkTotalTuples = k_BenchmarkDim * k_BenchmarkDim * k_BenchmarkDim;
+// Samples the preset endpoints, both internal control-point boundaries, and each interval midpoint.
+constexpr std::array<uint16, 7> k_BenchmarkInputValues = {0, 166, 333, 500, 666, 833, 1000};
+constexpr std::array<std::array<uint8, 3>, 7> k_BenchmarkExpectedColors = {std::array<uint8, 3>{0, 0, 0},      std::array<uint8, 3>{0, 0, 63},    std::array<uint8, 3>{0, 0, 128},
+                                                                           std::array<uint8, 3>{0, 64, 191},   std::array<uint8, 3>{0, 128, 255}, std::array<uint8, 3>{127, 191, 255},
+                                                                           std::array<uint8, 3>{255, 255, 255}};
+const DataPath k_BenchmarkInputPath({"Color Map Input"});
+const std::string k_BenchmarkOutputName = "Color Map RGB";
+const DataPath k_BenchmarkOutputPath({k_BenchmarkOutputName});
+
 std::map<std::string, nlohmann::json> ReadPresets()
 {
   Result<nlohmann::json> result = ColorTableUtilities::LoadAllRGBPresets();
@@ -78,6 +96,10 @@ std::map<std::string, nlohmann::json> ReadPresets()
 
 TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz", "generate_color_table_test");
@@ -86,7 +108,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
 
   std::map<std::string, nlohmann::json> presetsMap = ReadPresets();
 
-  // Read Image File
+  // Load the image input.
   {
     const ReadTextDataArrayFilter filter;
     Arguments args;
@@ -101,7 +123,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Apply Preset
+  // Apply the selected color preset.
   const CreateColorMapFilter filter;
   Arguments args;
   fs::path presetFilePath;
@@ -201,10 +223,10 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
     args.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
 
-    IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
+    IFilter::ExecuteResult executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // Validate Results
+    // Validate the generated colors.
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}}));
     const UInt8Array& resultArray = dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}});
     const AbstractDataStore<uint8>& resultStore = resultArray.getDataStoreRef();

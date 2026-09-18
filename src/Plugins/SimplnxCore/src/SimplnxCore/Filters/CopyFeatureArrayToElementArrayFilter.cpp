@@ -153,10 +153,9 @@ Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nloh
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  // Do NOT map the legacy CreatedArrayName onto k_CreatedArraySuffix_Key: the legacy filter converted a
-  // single array whose output name was CreatedArrayName, but in SIMPLNX that string would be appended to
-  // the input array name as a suffix (e.g. "AvgEuler" + "AvgEulerAngles"). Leave the suffix blank so the
-  // copied array keeps the input array's name.
+  // Do not map legacy CreatedArrayName to the suffix.
+  // SIMPLNX appends a suffix to the input name, which would produce an incorrect name.
+  // Leave the suffix empty so the copied array keeps its input name.
 
   Result<> conversionResult = MergeResults(std::move(results));
 

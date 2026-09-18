@@ -10,6 +10,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ComputeLargestCrossSectionsInputValues
+ * @brief Stores validated paths and the selected cross-section plane.
+ */
 struct SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsInputValues
 {
   ChoicesParameter::ValueType Plane;
@@ -19,12 +23,25 @@ struct SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsInputValues
 };
 
 /**
- * @class
+ * @class ComputeLargestCrossSections
+ * @brief Computes each feature's largest cross-section perpendicular to a
+ * selected image axis by dispatching to storage-appropriate implementations.
  */
 class SIMPLNXCORE_EXPORT ComputeLargestCrossSections
 {
 public:
+  /**
+   * @brief Creates a cross-section dispatcher.
+   * @param dataStructure Provides the selected arrays.
+   * @param mesgHandler Receives progress messages.
+   * @param shouldCancel Stops later planes when true.
+   * @param inputValues Specifies validated paths and the plane. The caller must
+   * keep this object alive for the dispatcher lifetime.
+   */
   ComputeLargestCrossSections(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeLargestCrossSectionsInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning dispatcher.
+   */
   ~ComputeLargestCrossSections() noexcept;
 
   ComputeLargestCrossSections(const ComputeLargestCrossSections&) = delete;
@@ -32,6 +49,12 @@ public:
   ComputeLargestCrossSections& operator=(const ComputeLargestCrossSections&) = delete;
   ComputeLargestCrossSections& operator=(ComputeLargestCrossSections&&) noexcept = delete;
 
+  /**
+   * @brief Dispatches the cross-section calculation.
+   * @return Error from the selected implementation.
+   *
+   * Feature Id storage selects the direct or bulk-plane implementation.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

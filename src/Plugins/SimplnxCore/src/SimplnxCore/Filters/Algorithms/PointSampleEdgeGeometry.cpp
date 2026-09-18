@@ -84,8 +84,8 @@ Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64
   return {computeNumSamplePoints(dist, samplingRes)};
 }
 
-Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
-                    Float32Array* cumulativeSampleDistArrayPtr, int64& vertCount)
+[[nodiscard]] Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
+                                  Float32Array* cumulativeSampleDistArrayPtr, int64& vertCount)
 {
   auto result = computeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
@@ -186,9 +186,17 @@ Result<> PointSampleEdgeGeometry::operator()()
 
   // Resize the vertex geometry and the vertex attribute matrix
   auto& vertices = vertexGeom.getVerticesRef();
-  vertices.resizeTuples({numVertices});
+  Result<> resizeResult = vertices.resizeTuples({numVertices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   auto& vertexAttrMatrix = vertexGeom.getVertexAttributeMatrixRef();
-  vertexAttrMatrix.resizeTuples({numVertices});
+  resizeResult = vertexAttrMatrix.resizeTuples({numVertices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // --- Step 2: Generate and write each sampled point ---
   m_MessageHandler(IFilter::Message::Type::Info, "Generating sampled points along edge geometry...");
@@ -199,7 +207,11 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return {};
     }
-    sampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
+    Result<> sampleResult = sampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
+    if(sampleResult.invalid())
+    {
+      return sampleResult;
+    }
   }
 
   usize maxEdgeId = *std::max_element(vertexEdgeIdsDataStore.begin(), vertexEdgeIdsDataStore.end());

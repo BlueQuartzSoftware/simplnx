@@ -13,6 +13,10 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 
+/**
+ * @struct ReadBinaryCTNorthstarInputValues
+ * @brief Stores header-derived file layout, crop bounds, units, and output paths.
+ */
 struct SIMPLNXCORE_EXPORT ReadBinaryCTNorthstarInputValues
 {
   FileSystemPathParameter::ValueType InputHeaderFile;
@@ -28,12 +32,27 @@ struct SIMPLNXCORE_EXPORT ReadBinaryCTNorthstarInputValues
 };
 
 /**
- * @class
+ * @class ReadBinaryCTNorthstar
+ * @brief Imports North Star Imaging binary CT density files.
+ *
+ * The reader initializes the complete destination with a sentinel. It then seeks
+ * to selected source rows and writes each imported row through checked bulk I/O.
  */
 class SIMPLNXCORE_EXPORT ReadBinaryCTNorthstar
 {
 public:
+  /**
+   * @brief Creates a North Star binary CT reader.
+   * @param dataStructure Receives density values and geometry units.
+   * @param messageHandler Receives slice progress.
+   * @param shouldCancel Stops before later source slices when true.
+   * @param inputValues Specifies validated file layout and crop settings. The caller
+   * must keep this object alive for the reader lifetime.
+   */
   ReadBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ReadBinaryCTNorthstarInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning reader.
+   */
   ~ReadBinaryCTNorthstar() noexcept;
 
   ReadBinaryCTNorthstar(const ReadBinaryCTNorthstar&) = delete;
@@ -41,6 +60,12 @@ public:
   ReadBinaryCTNorthstar& operator=(const ReadBinaryCTNorthstar&) = delete;
   ReadBinaryCTNorthstar& operator=(ReadBinaryCTNorthstar&&) noexcept = delete;
 
+  /**
+   * @brief Initializes and imports all selected density rows.
+   * @return File, seek, read, or destination-write error, or success after cancellation.
+   *
+   * Cancellation can retain sentinel values and rows imported before the stop.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

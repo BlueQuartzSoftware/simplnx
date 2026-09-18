@@ -14,6 +14,8 @@ The subvolume is specified by minimum and maximum **cell indices** along each ax
 
 The subvolume operates **only on cells inside this index range**; cells outside are unaffected.
 
+The selected **Cell** data is initialized in bounded contiguous blocks. This keeps the memory working set fixed and avoids individual storage accesses, including when the selected **Data Array** is disk-backed. A seeded random initialization remains deterministic: values are generated in Z-Y-X cell order, with one random value per cell copied to every component of that cell's tuple.
+
 ### Initialization Type
 
 The *Initialization Type* parameter provides three modes:

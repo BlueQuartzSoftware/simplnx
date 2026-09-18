@@ -34,11 +34,8 @@ using namespace nx::core;
 
 namespace
 {
-// The WriteImage test re-uses the ImageStack data from the ITKImageProcessing plugin source tree.
-// The ITK plugin keeps a small set of input slices in its in-source data directory and the ITK
-// test references them via `unit_test::k_DataDir`. When this test lives in SimplnxCore, the
-// `k_DataDir` macro points to SimplnxCore's data directory instead, so we reach over to the ITK
-// plugin's data directory using `k_SimplnxSourceDIr`.
+// Reuse ImageStack input slices from the ITKImageProcessing source tree.
+// This test uses k_SimplnxSourceDIr because its local data directory differs.
 const std::string k_ImageStackDir = std::string(unit_test::k_SimplnxSourceDIr.view()) + "/src/Plugins/ITKImageProcessing/data/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
 const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
@@ -106,7 +103,7 @@ private:
 
 void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tempDirName, const fs::path& tempDirPath)
 {
-  // Check for the existence of each image file, remove it as we go...
+  // Check and remove each expected image file.
   for(size_t i = 0; i < numImages; i++)
   {
     fs::path imagePath = fs::path() / fmt::format("{}/{}/slice_{:03d}.tif", unit_test::k_BinaryTestOutputDir.view(), tempDirName, i + offset);
@@ -115,7 +112,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
     REQUIRE(std::filesystem::remove(imagePath));
   }
 
-  // Now make sure there are no files left in the directory.
+  // Confirm that the directory contains no files.
   int count = 0;
   for(const auto& entry : std::filesystem::directory_iterator(tempDirPath))
   {
@@ -124,9 +121,8 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   REQUIRE(count == 0);
 }
 
-// Reads a single written image file back into `readDs` as ImageGeom "ReadGeom". Single-slice writes
-// do not append an index to the file name, so tests read the file back directly with ReadImageFilter
-// instead of through a generated file list.
+// Reads one single-slice output into ImageGeom "ReadGeom".
+// Single-slice names have no index, so ReadImageFilter reads them directly.
 void readBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
 {
   ReadImageFilter reader;
@@ -139,9 +135,8 @@ void readBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
   SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
 }
 
-// Writes a single-slice scalar ramp of type T through the inline color-table path, then compares the
-// read-back RGB image tuple-by-tuple against an independent CreateColorMap -> RGB reference. The oracle
-// is the real CreateColorMap chain, so this asserts parity across every numeric input type.
+// Writes a scalar ramp through the inline color-table path.
+// Compares read-back RGB tuples with an independent CreateColorMap reference.
 template <typename T>
 void RunColorRoundtripForType()
 {
@@ -211,9 +206,8 @@ void RunColorRoundtripForType()
     ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
     auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
-    // NOTE: store the execute result before asserting; SIMPLNX_RESULT_REQUIRE_VALID expands its
-    // argument multiple times, so inlining ccm.execute(...) would re-run execute and fail because
-    // the RGB output array already exists on the second call.
+    // Store the execute result before asserting.
+    // The result macro evaluates its argument more than once.
     auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
   }
@@ -233,8 +227,8 @@ void RunColorRoundtripForType()
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
 
-  // ReadImageFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
-  // the R,G,B components per pixel so the assertion is robust if a reader ever emits RGBA.
+  // ReadImageFilter returns RGB or RGBA uint8 values.
+  // Compare only the first three components for each pixel.
   const usize readComps = readArrayPtr->getNumberOfComponents();
   const usize numPixels = readStore.getNumberOfTuples();
   REQUIRE(numPixels == expectedRgbStore.getNumberOfTuples());
@@ -249,8 +243,7 @@ void RunColorRoundtripForType()
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Builds a 4x4x1 image geometry with a `numComponents`-component array of type T and runs WriteImageFilter
-// preflight (color table OFF) against the given output file name, returning the preflight result.
+// Builds a 4 by 4 image with T values and runs WriteImageFilter preflight.
 template <typename T>
 IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, usize numComponents = 1)
 {
@@ -560,8 +553,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table 3D multi-slice acro
 
   const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
 
-  // Build a 3D volume with DISTINCT dimensions so every plane's slice count and slice shape differ,
-  // exercising the ColorizeVolumeFunctor slice loop and its XY/XZ/YZ index branches.
+  // Use distinct dimensions so each plane exercises a different slice shape and count.
   const usize dimX = 3;
   const usize dimY = 4;
   const usize dimZ = 5;
@@ -581,8 +573,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table 3D multi-slice acro
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Oracle: run Create Color Map once. Its RGB output is parallel to the scalar array (tuple index
-  // = z*dimY*dimX + y*dimX + x), giving an independent reference for every voxel's expected color.
+  // Create one RGB oracle. Its tuple order matches the scalar array's Z, Y, X order.
   {
     CreateColorMapFilter ccm;
     Arguments ccmArgs;
@@ -602,8 +593,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table 3D multi-slice acro
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
   const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
 
-  // Writes the volume through the color-table path for the given plane, reads every written slice
-  // back, and compares each read pixel to the oracle RGB using an INDEPENDENT source-index derivation.
+  // Writes each plane, reads every slice, and compares pixels with an independent source-index oracle.
   auto checkPlane = [&](uint64 planeIndex, usize sliceCount, usize sliceW, usize sliceH) {
     ScopedTempDir planeDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
     {
@@ -955,9 +945,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Writes a single-component uint8 image of the given (dimX, dimY) with the supplied row-major pixel
-  // values to a fresh temp dir as a PNG with the given flip mode, reads it back via ReadImageStackFilter,
-  // and returns the read-back single-component pixel values in row-major (y then x) order.
+  // Writes a row-major uint8 image with the selected flip mode.
+  // Reads it back and returns row-major pixel values.
   auto writeAndReadBackFlip = [&](uint64 flipMode, uint64 dimX, uint64 dimY, const std::vector<uint8>& pixelValues) -> std::vector<uint8> {
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -1061,8 +1050,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Writes a 4x4x1 scalar ramp through the color-table path with the given flip mode and returns the
-  // read-back RGB image as a flat vector of 4*4*3 uint8 values in row-major (y then x) order.
+  // Writes a 4 by 4 scalar ramp through the color-table path.
+  // Returns the read-back RGB pixels in row-major order.
   auto writeColorAndReadBack = [&](uint64 flipMode) -> std::vector<uint8> {
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -1130,9 +1119,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
   constexpr usize width = 4;
   constexpr usize height = 4;
 
-  // Build the expected row-reversed image from the None result (4 rows of 4 pixels * 3 components)
-  // and compare against the FlipAboutXAxis result: this proves the flip composes with the color
-  // path without re-asserting the color math (already covered by the roundtrip tests above).
+  // Reverse rows in the None image and compare with the X-flipped output.
+  // This checks flip composition without repeating color calculations.
   std::vector<uint8> expectedFlipXImage(noneImage.size());
   for(usize y = 0; y < height; y++)
   {
@@ -1143,8 +1131,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
   }
   REQUIRE(flipXImage == expectedFlipXImage);
 
-  // Build the expected column-reversed image from the None result by reversing the 3-byte RGB pixel
-  // groups within each row (multi-byte pixel stride) and compare against the FlipAboutYAxis result.
+  // Reverse RGB pixel groups within each row and compare with the Y-flipped output.
   std::vector<uint8> expectedFlipYImage(noneImage.size());
   for(usize y = 0; y < height; y++)
   {
@@ -1253,10 +1240,9 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar pads the written image with 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Writes a 200x100 single-component uint8 ramp at 0.5 µm/pixel as PNG (with or without the
-  // scale bar / inline color table), reads the file back via ReadImageStackFilter into readDs.
-  // Follows the writeAndReadBackFlip pattern. When createColorTable is true the filter's default
-  // preset is used (the preset argument is left unset so IFilter fills in the parameter default).
+  // Writes a 200 by 100 uint8 ramp at 0.5 micrometers per pixel.
+  // Reads the result through ReadImageStackFilter.
+  // The default color preset applies when createColorTable is true.
   auto writeAndReadBack = [&](bool addScaleBar, bool createColorTable, DataStructure& readDs) {
     constexpr usize dimX = 200;
     constexpr usize dimY = 100;
@@ -1474,7 +1460,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar composes with flip and RGB i
   const auto& readStore = readArrayPtr->getDataStoreRef();
   REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
 
-  // Flip about X applies to the image region only: source row 1 is now on top, the band stays below.
+  // Flip about X affects only the image region. The scale-bar band stays below it.
   const std::vector<uint8> expectedTopRows = {110, 111, 112, 120, 121, 122, 130, 131, 132, 10, 11, 12, 20, 21, 22, 30, 31, 32};
   for(usize i = 0; i < expectedTopRows.size(); i++)
   {
@@ -1492,9 +1478,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar on XZ-plane slices locks per
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Distinct dims per axis so the XZ slice's W (=dimX) and H (=dimZ) can't be confused with dimY
-  // (the XZ slice count). Spacing is likewise distinct per axis so an XZ write using the wrong
-  // (Y-axis) spacing for the bar's horizontal axis would be caught.
+  // Distinct dimensions identify XZ width, height, and slice count.
+  // Distinct spacing values expose an incorrect horizontal-axis spacing.
   constexpr usize dimX = 8;
   constexpr usize dimY = 4;
   constexpr usize dimZ = 6;

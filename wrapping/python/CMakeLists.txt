@@ -337,4 +337,9 @@ if(SIMPLNX_BUILD_PYTHON_TESTS)
   # Include CMake files that define the tests that need to be run
   include(${simplnx_SOURCE_DIR}/wrapping/python/examples/scripts/SourceList.cmake)
   include(${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/SourceList.cmake)
+
+  CreatePythonTests(PREFIX "PY_SIMPLNX"
+    INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
+    TEST_NAMES storage_contract_test
+  )
 endif()

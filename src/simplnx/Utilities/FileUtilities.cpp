@@ -42,7 +42,7 @@ int64 LinesInFile(const std::string& filepath)
     return -1;
   }
 
-  // Check if the very last character is NOT a newline character
+  // Count a final line that has no newline terminator.
   fseek(fd, -1, SEEK_END);
   char last[1];
   usize bytesRead = fread(last, 1, 1, fd);
@@ -56,7 +56,6 @@ int64 LinesInFile(const std::string& filepath)
   }
   rewind(fd);
 
-  // Read through the rest of the file
   char buf[BUFFER_SIZE + 1];
   while(true)
   {
@@ -95,10 +94,8 @@ Result<> ValidateCSVFile(const std::string& filePath)
     return MakeErrorResult(-301, fmt::format("CSV input file is a directory: {}", absPath.string()));
   }
 
-  // Obtain the file size
   usize fileSize = std::filesystem::file_size(absPath);
 
-  // Open the file
   std::ifstream in(absPath.c_str(), std::ios_base::binary);
   if(!in.is_open())
   {
@@ -108,7 +105,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
   auto isUtf8 = IsUtf8(absPath);
   if(isUtf8.first)
   {
-    // The file is UTF8 with a BOM marker, so read the first 3 bytes and dump them.
+    // Exclude the three-byte UTF-8 byte-order mark from the text probe.
     char a = '\0';
     char b = '\0';
     char c = '\0';
@@ -122,10 +119,8 @@ Result<> ValidateCSVFile(const std::string& filePath)
     actualSize = fileSize;
   }
 
-  // Allocate the buffer
   std::vector<char> buffer(actualSize, 0);
 
-  // Copy the file contents into the buffer
   try
   {
     in.read(buffer.data(), actualSize);
@@ -134,18 +129,17 @@ Result<> ValidateCSVFile(const std::string& filePath)
     return MakeErrorResult(-302, fmt::format("There was an error reading the data from file: {}.  Exception: {}", absPath.string(), e.what()));
   }
 
-  // Check the buffer for invalid characters, tab characters, new-line characters, and carriage return characters
   bool hasNewLines = false;
   bool hasCarriageReturns = false;
   bool hasTabs = false;
-  // If the first line of the file is > 2048 then this will fail! (MJ)
+  // A line longer than the bounded probe can contain no observed delimiter and
+  // can produce the possible-binary error below.
   for(size_t i = 0; i < actualSize; i++)
   {
     const char currentChar = buffer[i];
 
     if(currentChar < 32 && currentChar != 9 && currentChar != 10 && currentChar != 13)
     {
-      // This is an unprintable character
       return MakeErrorResult(-303, fmt::format("Unprintable characters have been detected in file: {}.  Please import a different file.", absPath.string()));
     }
     if(currentChar == 9)
@@ -164,7 +158,6 @@ Result<> ValidateCSVFile(const std::string& filePath)
 
   if(!hasNewLines && !hasCarriageReturns && !hasTabs)
   {
-    // This might be a binary file
     return MakeErrorResult(-304, fmt::format("The file \"{}\" might be a binary file, because line-feed, tab, or carriage return characters have not been detected. Using this file may crash the "
                                              "program or cause unexpected results.  Please import a different file.",
                                              absPath.string()));
@@ -173,13 +166,11 @@ Result<> ValidateCSVFile(const std::string& filePath)
   return {};
 }
 
-//-----------------------------------------------------------------------------
 bool HasWriteAccess(const std::string& path)
 {
   return FSPP_ACCESS_FUNC_NAME(path.c_str(), k_CheckWritable) == k_HasAccess;
 }
 
-//-----------------------------------------------------------------------------
 Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, bool isFile)
 {
   if(path.empty())
@@ -193,9 +184,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
   {
     checkedPath = parentPath;
   }
-  // We now have the parent directory. Let us see if *any* part of the path exists
-
-  // If the path is relative, then make it absolute
+  // Resolve relative input before the ancestor walk so the root is explicit.
   if(!checkedPath.is_absolute())
   {
     try
@@ -211,14 +200,8 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
 
   auto rootPath = checkedPath.root_path();
 
-  // The idea here is to start walking up from the deepest directory and hopefully
-  // find an existing directory. If we get to the top if the path and we are still
-  // empty then:
-  //  On unix based systems not sure if it would happen. Even if the user set a path
-  // to another drive that didn't exist, at some point you hit the '/' and then you
-  // can try to create the directories.
-  //  On Windows the user put in a bogus drive letter which is just a hard failure
-  // because we can't make up a new drive letter.
+  // Check the deepest existing ancestor. A POSIX path reaches its root. A Windows
+  // path with a nonexistent drive reaches a root that also does not exist.
   while(!std::filesystem::exists(checkedPath) && checkedPath != rootPath)
   {
     checkedPath = checkedPath.parent_path();
@@ -235,7 +218,6 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
                            fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' resolved to '{}'. The drive does not exist on this system.", path.string(), checkedPath.string()));
   }
 
-  // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
   {
     return {};
@@ -271,6 +253,38 @@ const int32 k_InvalidArrayType = -106;
 const int32 k_FileNotOpen = -108;
 const int32 k_CannotSkipToLine = -115;
 const int32 k_EmptyLine = -119;
+
+namespace
+{
+/**
+ * @brief Flushes each non-null parser and merges column-qualified errors.
+ * @param dataParsers Supplies parsers aligned with all CSV columns.
+ * @return Merged result from every attempted flush.
+ */
+Result<> FlushParsersImpl(const ParsersVector& dataParsers)
+{
+  std::vector<Result<>> flushResults;
+  flushResults.reserve(dataParsers.size());
+  for(const auto& dataParser : dataParsers)
+  {
+    if(dataParser == nullptr)
+    {
+      continue;
+    }
+
+    Result<> flushResult = dataParser->flush();
+    if(flushResult.invalid())
+    {
+      for(Error& error : flushResult.errors())
+      {
+        error.message = fmt::format("Array \"{}\": ", dataParser->columnName()) + error.message;
+      }
+    }
+    flushResults.push_back(std::move(flushResult));
+  }
+  return MergeResults(std::move(flushResults));
+}
+} // namespace
 
 AbstractDataParser::AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex)
 : m_Array(array)
@@ -383,8 +397,13 @@ Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const
   return {std::move(dataParsers)};
 }
 
+Result<> FlushParsers(const ParsersVector& dataParsers)
+{
+  return FlushParsersImpl(dataParsers);
+}
+
 Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
-                   usize beginIndex)
+                   usize beginIndex, bool& flushRequired)
 {
   std::string line;
   std::getline(inStream, line);
@@ -392,7 +411,7 @@ Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
   std::vector<std::string> tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
   if(tokens.empty())
   {
-    // This is an empty line in the middle of the CSV file, which just shouldn't happen
+    // An empty interior row cannot provide one token for each configured column.
     return MakeErrorResult(k_EmptyLine, fmt::format("Line #{} is empty!  You should not have any empty lines in the file.", std::to_string(lineNumber)));
   }
 
@@ -414,7 +433,7 @@ Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
 
     usize index = dataParser->columnIndex();
 
-    Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex);
+    Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex, flushRequired);
     if(result.invalid())
     {
       for(Error& error : result.errors())
@@ -446,9 +465,8 @@ std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& heade
 {
   for(auto& headerName : headers)
   {
-    // Replace all illegal characters with '_' character. The header names become array names which is the issue.
-    // This should have been taken care of in the GUI, but if someone is trying this from Python they will not have done that
-    // or if they are just reading it in through nxrunner.
+    // Filter-level callers include Python and nxrunner, which do not apply GUI name validation.
+    // Normalize each header before it becomes a data-array name.
     headerName = StringUtilities::replace(headerName, "&", "_");
     headerName = StringUtilities::replace(headerName, ":", "_");
     headerName = StringUtilities::replace(headerName, "/", "_");
@@ -482,13 +500,11 @@ Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, u
     return MakeErrorResult<std::vector<std::string>>(k_FileNotOpen, fmt::format("Could not open file for reading: {}", inputFilePath));
   }
 
-  // Skip to the headers line
   if(!SkipNumberOfLines(in, headersLineNum))
   {
     return MakeErrorResult<std::vector<std::string>>(k_CannotSkipToLine, fmt::format("Could not skip to the chosen header line ({}).", headersLineNum));
   }
 
-  // Read the headers line
   std::string headersLine;
   std::getline(in, headersLine);
   auto headers = StringUtilities::split(headersLine, delimiters, consecutiveDelimiters);

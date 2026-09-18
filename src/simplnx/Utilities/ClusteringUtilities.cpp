@@ -2,12 +2,20 @@
 
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <random>
 
 using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Creates a deterministic feature-ID permutation with feature zero fixed.
+ * @param totalFeatures Total feature count, including feature zero.
+ * @return Mapping from each old feature ID to a permuted ID.
+ * @pre totalFeatures is nonzero and totalFeatures - 1 fits int32.
+ */
 std::vector<int32> CreateRandomizedIdsList(usize totalFeatures)
 {
   const usize rangeMin = 1;
@@ -18,10 +26,10 @@ std::vector<int32> CreateRandomizedIdsList(usize totalFeatures)
   std::vector<int32> randomIds(totalFeatures);
   std::iota(randomIds.begin(), randomIds.end(), 0);
 
-  //--- Shuffle elements by randomly exchanging each with one other.
+  // Start at one and reject index zero so the background feature remains fixed.
   for(usize i = 1; i < totalFeatures; i++)
   {
-    auto r = static_cast<usize>(std::floor(dist(gen) * static_cast<float64>(rangeMax))); // Random remaining position.
+    auto r = static_cast<usize>(std::floor(dist(gen) * static_cast<float64>(rangeMax)));
     if(r < rangeMin)
     {
       continue;
@@ -36,34 +44,66 @@ std::vector<int32> CreateRandomizedIdsList(usize totalFeatures)
 
 namespace nx::core::ClusterUtilities
 {
-void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures)
+Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures)
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
-  // Now adjust all the Grain ID values for each Voxel
-  // instead of taking total points as an input just extract the size, so we don't walk off
+  // Fixed-size bulk transfers avoid one disk-backed access for each cell.
   usize totalPoints = featureIdsStore.getSize();
-  for(int64 i = 0; i < totalPoints; ++i)
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> chunkBuf(k_ChunkSize);
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
   {
-    featureIdsStore[i] = randomIds[featureIdsStore[i]];
+    usize count = std::min(k_ChunkSize, totalPoints - offset);
+    auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(chunkBuf.data(), count));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    for(usize i = 0; i < count; i++)
+    {
+      chunkBuf[i] = randomIds[chunkBuf[i]];
+    }
+    auto writeResult = featureIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(chunkBuf.data(), count));
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
   }
+  return {};
 }
 
-void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
+Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
-  // Now adjust all the Grain ID values for each Voxel
-  // instead of taking total points as an input just extract the size, so we don't walk off
+  // Fixed-size bulk transfers avoid one disk-backed access for each cell.
   usize totalPoints = featureIdsStore.getSize();
-  for(int64 i = 0; i < totalPoints; ++i)
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> chunkBuf(k_ChunkSize);
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
   {
-    featureIdsStore[i] = randomIds[featureIdsStore[i]];
+    usize count = std::min(k_ChunkSize, totalPoints - offset);
+    auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(chunkBuf.data(), count));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    for(usize i = 0; i < count; i++)
+    {
+      chunkBuf[i] = randomIds[chunkBuf[i]];
+    }
+    auto writeResult = featureIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(chunkBuf.data(), count));
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
   }
 
   if(!featureIArrays.empty())
   {
-    // We use a visitation pattern to prevent reverting swaps
+    // Visitation prevents a later mapping entry from reversing an earlier tuple swap.
+    // This state scales with feature count, not cell count.
     std::vector<bool> visited(randomIds.size(), false);
     for(usize i = 0; i < randomIds.size(); i++)
     {
@@ -81,5 +121,6 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
       }
     }
   }
+  return {};
 }
 } // namespace nx::core::ClusterUtilities

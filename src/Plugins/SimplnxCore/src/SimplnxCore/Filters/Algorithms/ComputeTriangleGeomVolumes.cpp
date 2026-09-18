@@ -42,7 +42,11 @@ Result<> ComputeTriangleGeomVolumes::operator()()
 
   ShapeType tDims = {static_cast<usize>(*maxFaceLabel) + 1ULL};
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
-  featAttrMat.resizeTuples(tDims);
+  Result<> resizeResult = featAttrMat.resizeTuples(tDims);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
   volumes.fill(0.0f); // Initialize all volumes to ZERO
 

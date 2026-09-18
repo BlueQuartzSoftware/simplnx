@@ -538,10 +538,19 @@ public:
   ~AbstractListStore() override = default;
 
   /**
-   * @brief Creates a deep copy of this AbstractListStore.
-   * @return std::unique_ptr<AbstractListStore> Unique pointer to the deep copy
+   * @brief Copies list storage into the required destination format.
+   * @param destinationFormat Resolved destination format; empty and the canonical in-memory name select memory.
+   * @return Independent values with the same shape, or an independent placeholder without values.
+   * @throws std::runtime_error If the selected factory or copy fails, or an OOC build rejects an unavailable format.
+   * @throws std::bad_alloc If an allocation fails.
+   *
+   * In-core builds use memory for unavailable formats. OOC builds reject unavailable formats. Factory failures never fall back.
+   * Generic transfer holds one list plus backend buffers.
+   * @warning For materialized stores, explicit in-memory selection requires a complete resident destination and can exhaust available RAM.
+   * This store obeys destinationFormat and does not resolve storage policy itself.
+   * Resolve the destination policy before this call. Use NeighborList::deepCopy for automatic policy selection.
    */
-  virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
+  virtual std::unique_ptr<AbstractListStore> deepCopy(const std::string& destinationFormat) const = 0;
 
   /**
    * @brief Adds a new entry to the list at the specified grain/tuple index.

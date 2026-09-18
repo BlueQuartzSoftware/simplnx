@@ -107,13 +107,21 @@ Result<> CombineGeometryElements(DataStructure& ds, NodeGeomType* outputGeomPtr,
 
   // Resize the vertex/cell array
   auto* array = getArray(outputGeomPtr);
-  array->resizeTuples({totalTuples});
+  Result<> resizeResult = array->resizeTuples({totalTuples});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // Resize the vertex/cell attribute matrix
   auto* attrMatrix = getAttrMatrix(outputGeomPtr);
   if(attrMatrix != nullptr)
   {
-    attrMatrix->resizeTuples({totalTuples});
+    resizeResult = attrMatrix->resizeTuples({totalTuples});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
 
   // For each array name in the map, concatenate all the arrays from the input geometries
@@ -137,8 +145,20 @@ Result<> CombineGeometryElements(DataStructure& ds, NodeGeomType* outputGeomPtr,
   return {};
 }
 
-Result<> CombineVertexElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
-                               const std::atomic_bool& shouldCancel)
+/**
+ * @brief Concatenates the vertex arrays of every input geometry into the output geometry.
+ * @param ds Owns the input and output geometries.
+ * @param outputGeomPath Identifies the combined output geometry.
+ * @param inputGeometryPaths Identifies the geometries to concatenate, in order.
+ * @param msgHandler Receives progress messages.
+ * @param shouldCancel Stops before later input geometries when true.
+ * @return The first resize or copy error from the underlying stores, or success.
+ *
+ * The output arrays are resized before the copies, so a storage failure must reach the
+ * caller: a discarded error leaves an undersized output that later filters read past.
+ */
+[[nodiscard]] Result<> CombineVertexElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
+                                             const std::atomic_bool& shouldCancel)
 {
   auto getVerticesArrayFunc = [](INodeGeometry0D* ptr) -> auto { return ptr->getVertices(); };
   auto getVertexAttrMatrixFunc = [](INodeGeometry0D* ptr) -> auto { return ptr->getVertexAttributeMatrix(); };
@@ -152,8 +172,20 @@ Result<> CombineVertexElements(DataStructure& ds, const DataPath& outputGeomPath
   return CombineGeometryElements<INodeGeometry0D>(ds, outputGeom0d, inputGeoms, getVerticesArrayFunc, INodeGeometry0D::k_SharedVertexListName, getVertexAttrMatrixFunc, msgHandler, shouldCancel);
 }
 
-Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
-                             const std::atomic_bool& shouldCancel)
+/**
+ * @brief Concatenates the edge arrays of every input geometry into the output geometry.
+ * @param ds Owns the input and output geometries.
+ * @param outputGeomPath Identifies the combined output geometry.
+ * @param inputGeometryPaths Identifies the geometries to concatenate, in order.
+ * @param msgHandler Receives progress messages.
+ * @param shouldCancel Stops before later input geometries when true.
+ * @return The first resize or copy error from the underlying stores, or success.
+ *
+ * The output arrays are resized before the copies, so a storage failure must reach the
+ * caller: a discarded error leaves an undersized output that later filters read past.
+ */
+[[nodiscard]] Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
+                                           const std::atomic_bool& shouldCancel)
 {
   auto getEdgesArrayFunc = [](INodeGeometry1D* ptr) -> auto { return ptr->getEdges(); };
   auto getEdgeAttrMatrixFunc = [](INodeGeometry1D* ptr) -> auto { return ptr->getEdgeAttributeMatrix(); };
@@ -209,8 +241,20 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
   return {};
 }
 
-Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
-                             const std::atomic_bool& shouldCancel)
+/**
+ * @brief Concatenates the face arrays of every input geometry into the output geometry.
+ * @param ds Owns the input and output geometries.
+ * @param outputGeomPath Identifies the combined output geometry.
+ * @param inputGeometryPaths Identifies the geometries to concatenate, in order.
+ * @param msgHandler Receives progress messages.
+ * @param shouldCancel Stops before later input geometries when true.
+ * @return The first resize or copy error from the underlying stores, or success.
+ *
+ * The output arrays are resized before the copies, so a storage failure must reach the
+ * caller: a discarded error leaves an undersized output that later filters read past.
+ */
+[[nodiscard]] Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
+                                           const std::atomic_bool& shouldCancel)
 {
   auto getFacesArrayFunc = [](INodeGeometry2D* ptr) -> auto { return ptr->getFaces(); };
   auto getFaceAttrMatrixFunc = [](INodeGeometry2D* ptr) -> auto { return ptr->getFaceAttributeMatrix(); };
@@ -265,8 +309,20 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
   return {};
 }
 
-Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
-                             const std::atomic_bool& shouldCancel)
+/**
+ * @brief Concatenates the polyhedra arrays of every input geometry into the output geometry.
+ * @param ds Owns the input and output geometries.
+ * @param outputGeomPath Identifies the combined output geometry.
+ * @param inputGeometryPaths Identifies the geometries to concatenate, in order.
+ * @param msgHandler Receives progress messages.
+ * @param shouldCancel Stops before later input geometries when true.
+ * @return The first resize or copy error from the underlying stores, or success.
+ *
+ * The output arrays are resized before the copies, so a storage failure must reach the
+ * caller: a discarded error leaves an undersized output that later filters read past.
+ */
+[[nodiscard]] Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
+                                           const std::atomic_bool& shouldCancel)
 {
   auto getPolyArrayFunc = [](INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedra(); };
   auto getPolyAttrMatrixFunc = [](INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedraAttributeMatrix(); };
@@ -350,10 +406,25 @@ void CombineNodeBasedGeometries::sendMessage(const std::string& message)
 // -----------------------------------------------------------------------------
 Result<> CombineNodeBasedGeometries::operator()()
 {
-  CombineVertexElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
-  CombineEdgeElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
-  CombineFaceElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
-  CombinePolyElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  // Each stage resizes the output arrays before it copies into them, so the first failure
+  // must stop the chain: continuing would copy into arrays that were never resized.
+  Result<> vertexResult = CombineVertexElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  if(vertexResult.invalid())
+  {
+    return vertexResult;
+  }
 
-  return {};
+  Result<> edgeResult = CombineEdgeElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  if(edgeResult.invalid())
+  {
+    return edgeResult;
+  }
+
+  Result<> faceResult = CombineFaceElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  if(faceResult.invalid())
+  {
+    return faceResult;
+  }
+
+  return CombinePolyElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
 }

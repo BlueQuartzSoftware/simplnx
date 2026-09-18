@@ -72,9 +72,14 @@ void INodeGeometry1D::setEdgeListId(const std::optional<IdType>& edgeList)
   m_EdgeDataArrayId = edgeList;
 }
 
-void INodeGeometry1D::resizeEdgeList(usize size)
+Result<> INodeGeometry1D::resizeEdgeList(usize size)
 {
-  getEdgesRef().getIDataStoreRef().resizeTuples({size});
+  Result<> resizeResult = getEdgesRef().getIDataStoreRef().resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    resizeResult.errors()[0].message = fmt::format("Geometry '{}' failed to resize its edge list to {} tuples: {}", getName(), size, resizeResult.errors()[0].message);
+  }
+  return resizeResult;
 }
 
 usize INodeGeometry1D::getNumberOfCells() const
@@ -248,11 +253,18 @@ void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroi
   m_CellCentroidsDataArrayId = centroidsId;
 }
 
+void INodeGeometry1D::copyMembersInto(INodeGeometry1D& copy, const DataPath& copyPath)
+{
+  INodeGeometry0D::copyMembersInto(copy, copyPath);
+
+  copy.m_EdgeAttributeMatrixId = deepCopyOwnedChild(copyPath, getEdgeAttributeMatrix());
+}
+
 void INodeGeometry1D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
   INodeGeometry0D::checkUpdatedIdsImpl(updatedIdsMap);
 
-  std::vector<bool> visited(7, false);
+  std::vector<bool> visited(5, false);
 
   for(const auto& updatedId : updatedIdsMap)
   {
@@ -261,7 +273,6 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::I
     m_CellContainingVertDataArrayId = nx::core::VisitDataStructureId(m_CellContainingVertDataArrayId, updatedId, visited, 2);
     m_CellNeighborsDataArrayId = nx::core::VisitDataStructureId(m_CellNeighborsDataArrayId, updatedId, visited, 3);
     m_CellCentroidsDataArrayId = nx::core::VisitDataStructureId(m_CellCentroidsDataArrayId, updatedId, visited, 4);
-    m_ElementSizesId = nx::core::VisitDataStructureId(m_ElementSizesId, updatedId, visited, 5);
   }
 }
 

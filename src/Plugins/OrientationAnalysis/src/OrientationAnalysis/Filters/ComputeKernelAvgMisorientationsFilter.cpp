@@ -18,42 +18,36 @@ using namespace nx::core;
 
 namespace nx::core
 {
-//------------------------------------------------------------------------------
 std::string ComputeKernelAvgMisorientationsFilter::name() const
 {
   return FilterTraits<ComputeKernelAvgMisorientationsFilter>::name.str();
 }
 
-//------------------------------------------------------------------------------
 std::string ComputeKernelAvgMisorientationsFilter::className() const
 {
   return FilterTraits<ComputeKernelAvgMisorientationsFilter>::className;
 }
 
-//------------------------------------------------------------------------------
 Uuid ComputeKernelAvgMisorientationsFilter::uuid() const
 {
   return FilterTraits<ComputeKernelAvgMisorientationsFilter>::uuid;
 }
 
-//------------------------------------------------------------------------------
 std::string ComputeKernelAvgMisorientationsFilter::humanName() const
 {
   return "Compute Kernel Average Misorientations";
 }
 
-//------------------------------------------------------------------------------
 std::vector<std::string> ComputeKernelAvgMisorientationsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Crystallography", "Misorientation", "KAM"};
 }
 
-//------------------------------------------------------------------------------
 Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
+  // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
                                                        std::vector<std::string>{"X", "Y", "Z"}));
@@ -84,7 +78,6 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
   return params;
 }
 
-//------------------------------------------------------------------------------
 IFilter::VersionType ComputeKernelAvgMisorientationsFilter::parametersVersion() const
 {
   return 2;
@@ -94,13 +87,11 @@ IFilter::VersionType ComputeKernelAvgMisorientationsFilter::parametersVersion() 
   // original per-grain behavior; false enables per-voxel KAM per issue #1613)
 }
 
-//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeKernelAvgMisorientationsFilter>();
 }
 
-//------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
@@ -126,11 +117,10 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  // Return actions and updated preflight values.
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-//------------------------------------------------------------------------------
 Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {

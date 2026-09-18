@@ -110,6 +110,10 @@ Result<> WriteSPParksSitesFilter::executeImpl(DataStructure& dataStructure, cons
   auto result = WriteSPParksSites(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())
   {
+    if(shouldCancel)
+    {
+      return MakeErrorResult(-1, "Filter cancelled");
+    }
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {

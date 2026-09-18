@@ -92,14 +92,27 @@ Result<> validateDataSetExtents(const std::filesystem::path& filePath, const std
 }
 
 template <typename T>
-void copyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset)
+Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset,
+                     const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
   auto& dataRef = dataStructure.getDataRefAs<ArrayType>(inputValues->CellAttributeMatrixPath.createChildPath(name));
-  auto* dataStorePtr = dataRef.getDataStore();
-
-  const nonstd::span<T> rawDataSpan(reinterpret_cast<T*>(reader.getPointerByName(name)), count);
-  std::copy(rawDataSpan.begin(), rawDataSpan.end(), dataStorePtr->begin() + offset);
+  const auto* rawData = reinterpret_cast<const T*>(reader.getPointerByName(name));
+  constexpr usize k_ValuesPerBatch = 65536;
+  for(usize localOffset = 0; localOffset < count; localOffset += k_ValuesPerBatch)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const usize batchCount = std::min(k_ValuesPerBatch, count - localOffset);
+    Result<> result = dataRef.getDataStoreRef().copyFromBuffer(offset + localOffset, nonstd::span<const T>(rawData + localOffset, batchCount));
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
 }
 
 /**
@@ -107,12 +120,18 @@ void copyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStru
  * point of one scan's tuple slab.
  */
 template <typename T>
-void convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalPoints, usize tupleOffset, DataStructure& dataStructure)
+Result<> convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalPoints, usize tupleOffset, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
 
   const auto& crystalStructuresRef = dataStructure.getDataRefAs<UInt32Array>(inputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
   const auto& crystalStructuresDSRef = crystalStructuresRef.getDataStoreRef();
+  std::vector<uint32> crystalStructures(crystalStructuresDSRef.getNumberOfTuples());
+  Result<> result = crystalStructuresDSRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size()));
+  if(result.invalid())
+  {
+    return result;
+  }
 
   const auto& cellPhasesRef = dataStructure.getDataRefAs<ArrayType>(inputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Phase));
   const auto& cellPhasesDSRef = cellPhasesRef.getDataStoreRef();
@@ -120,16 +139,42 @@ void convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalP
   auto& eulerRef = dataStructure.getDataRefAs<Float32Array>(inputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Euler));
   auto& eulerDataStoreRef = eulerRef.getDataStoreRef();
 
-  // Only this scan's slab is visited. Looping from 0 every time would shift the first
-  // scan's points once per scan and never reach the later scans' points.
-  for(usize tupleIdx = tupleOffset; tupleIdx < tupleOffset + totalPoints; tupleIdx++)
+  constexpr usize k_TuplesPerBatch = 65536;
+  std::vector<T> phases(k_TuplesPerBatch);
+  std::vector<float32> eulers(k_TuplesPerBatch * 3);
+  for(usize localOffset = 0; localOffset < totalPoints; localOffset += k_TuplesPerBatch)
   {
-    if(crystalStructuresDSRef[cellPhasesDSRef[tupleIdx]] == ebsdlib::CrystalStructure::Hexagonal_High)
+    if(shouldCancel)
     {
-      const auto phi2 = static_cast<float64>(eulerDataStoreRef[3 * tupleIdx + 2]);
-      eulerDataStoreRef[3 * tupleIdx + 2] = static_cast<float32>(phi2 + k_HexagonalAlignmentRadians);
+      return {};
+    }
+    const usize count = std::min(k_TuplesPerBatch, totalPoints - localOffset);
+    result = cellPhasesDSRef.copyIntoBuffer(tupleOffset + localOffset, nonstd::span<T>(phases.data(), count));
+    if(result.invalid())
+    {
+      return result;
+    }
+    result = eulerDataStoreRef.copyIntoBuffer((tupleOffset + localOffset) * 3, nonstd::span<float32>(eulers.data(), count * 3));
+    if(result.invalid())
+    {
+      return result;
+    }
+    for(usize index = 0; index < count; index++)
+    {
+      const usize phase = static_cast<usize>(phases[index]);
+      if(crystalStructures[phase] == ebsdlib::CrystalStructure::Hexagonal_High)
+      {
+        const auto phi2 = static_cast<float64>(eulers[index * 3 + 2]);
+        eulers[index * 3 + 2] = static_cast<float32>(phi2 + k_HexagonalAlignmentRadians);
+      }
+    }
+    result = eulerDataStoreRef.copyFromBuffer((tupleOffset + localOffset) * 3, nonstd::span<const float32>(eulers.data(), count * 3));
+    if(result.invalid())
+    {
+      return result;
     }
   }
+  return {};
 }
 
 } // namespace
@@ -140,10 +185,8 @@ ReadH5OinaData::ReadH5OinaData(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-// -----------------------------------------------------------------------------
 ReadH5OinaData::~ReadH5OinaData() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ReadH5OinaData::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
@@ -208,14 +251,29 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
     return extentResults;
   }
 
-  copyRawData<uint8>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::BandContrast, tupleOffset);
-  copyRawData<uint8>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::BandSlope, tupleOffset);
-  copyRawData<uint8>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::Bands, tupleOffset);
-  copyRawData<uint8>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::Error, tupleOffset);
+  const auto copy = [this](auto typeTag, usize count, const std::string& name, usize offset) {
+    return copyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
+  };
+  Result<> result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandContrast, tupleOffset);
+  if(result.invalid())
+    return result;
+  result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandSlope, tupleOffset);
+  if(result.invalid())
+    return result;
+  result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Bands, tupleOffset);
+  if(result.invalid())
+    return result;
+  result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Error, tupleOffset);
+  if(result.invalid())
+    return result;
   // Euler carries three components per scan point, so both the element count and the
   // destination offset are three times the tuple counts.
-  copyRawData<float32>(m_InputValues, totalPoints * 3, m_DataStructure, *m_Reader, ebsdlib::H5OINA::Euler, tupleOffset * 3);
-  copyRawData<float32>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::MeanAngularDeviation, tupleOffset);
+  result = copy(float32{}, totalPoints * 3, ebsdlib::H5OINA::Euler, tupleOffset * 3);
+  if(result.invalid())
+    return result;
+  result = copy(float32{}, totalPoints, ebsdlib::H5OINA::MeanAngularDeviation, tupleOffset);
+  if(result.invalid())
+    return result;
 
   // The phase value of every point indexes the ensemble arrays, both in the alignment
   // loop below and in every downstream filter, so it is range checked before it is
@@ -238,18 +296,38 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   {
     const nonstd::span<uint8> rawDataSpan(reinterpret_cast<uint8*>(m_Reader->getPointerByName(ebsdlib::H5OINA::Phase)), totalPoints);
     auto& dataRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Phase));
-    auto* dataStorePtr = dataRef.getDataStore();
-    for(usize tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
+    constexpr usize k_TuplesPerBatch = 65536;
+    std::vector<int32> phaseBuffer(k_TuplesPerBatch);
+    for(usize localOffset = 0; localOffset < totalPoints; localOffset += k_TuplesPerBatch)
     {
-      dataStorePtr->setValue(tupleIdx + tupleOffset, static_cast<int32>(rawDataSpan[tupleIdx]));
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      const usize count = std::min(k_TuplesPerBatch, totalPoints - localOffset);
+      for(usize index = 0; index < count; index++)
+      {
+        phaseBuffer[index] = static_cast<int32>(rawDataSpan[localOffset + index]);
+      }
+      result = dataRef.getDataStoreRef().copyFromBuffer(tupleOffset + localOffset, nonstd::span<const int32>(phaseBuffer.data(), count));
+      if(result.invalid())
+      {
+        return result;
+      }
     }
   }
   else
   {
-    copyRawData<uint8>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::Phase, tupleOffset);
+    result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Phase, tupleOffset);
+    if(result.invalid())
+      return result;
   }
-  copyRawData<float32>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::X, tupleOffset);
-  copyRawData<float32>(m_InputValues, totalPoints, m_DataStructure, *m_Reader, ebsdlib::H5OINA::Y, tupleOffset);
+  result = copy(float32{}, totalPoints, ebsdlib::H5OINA::X, tupleOffset);
+  if(result.invalid())
+    return result;
+  result = copy(float32{}, totalPoints, ebsdlib::H5OINA::Y, tupleOffset);
+  if(result.invalid())
+    return result;
 
   if(m_ShouldCancel)
   {
@@ -260,12 +338,14 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   {
     if(m_InputValues->ConvertPhaseToInt32)
     {
-      convertHexEulerAngle<int32>(m_InputValues, totalPoints, tupleOffset, m_DataStructure);
+      result = convertHexEulerAngle<int32>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }
     else
     {
-      convertHexEulerAngle<uint8>(m_InputValues, totalPoints, tupleOffset, m_DataStructure);
+      result = convertHexEulerAngle<uint8>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }
+    if(result.invalid())
+      return result;
   }
 
   return {};

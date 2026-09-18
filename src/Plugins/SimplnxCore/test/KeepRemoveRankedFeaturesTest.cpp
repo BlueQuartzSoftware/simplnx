@@ -638,7 +638,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath));
     auto& featureAmRef = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath);
-    featureAmRef.resizeTuples({1});
+    auto featureAmRefResizeResult = featureAmRef.resizeTuples({1});
+    SIMPLNX_RESULT_REQUIRE_VALID(featureAmRefResizeResult);
 
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
     auto preflightResult = filter.preflight(dataStructure, args);

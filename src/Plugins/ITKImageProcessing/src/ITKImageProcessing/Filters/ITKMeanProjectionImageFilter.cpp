@@ -179,8 +179,6 @@ Result<> ITKMeanProjectionImageFilter::executeImpl(DataStructure& dataStructure,
 
   // Update the AttributeMatrix with the new tuple shape. THIS WILL ALSO CHANGE ANY OTHER DATA ARRAY THAT IS ALSO
   // STORED IN THAT ATTRIBUTE MATRIX
-  dataStructure.getDataAs<AttributeMatrix>(outputArrayPath.getParent())->resizeTuples(iArrayTupleShape);
-
-  return {};
+  return dataStructure.getDataAs<AttributeMatrix>(outputArrayPath.getParent())->resizeTuples(iArrayTupleShape);
 }
 } // namespace nx::core

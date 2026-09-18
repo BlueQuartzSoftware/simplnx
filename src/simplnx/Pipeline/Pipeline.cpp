@@ -3,6 +3,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/FilterList.hpp"
+#include "simplnx/Pipeline/AbstractPipelineFilter.hpp"
 #include "simplnx/Pipeline/Messaging/NodeAddedMessage.hpp"
 #include "simplnx/Pipeline/Messaging/NodeMovedMessage.hpp"
 #include "simplnx/Pipeline/Messaging/NodeRemovedMessage.hpp"
@@ -325,7 +326,11 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
     auto* filter = iter->get();
     if(filter->isEnabled())
     {
-      filter->sendFilterRunStateMessage(currentIndex++, RunState::Queued);
+      const auto* filterNode = dynamic_cast<const AbstractPipelineFilter*>(filter);
+      const std::optional<int32> assignedIndex = filterNode == nullptr ? std::nullopt : filterNode->getAssignedIndex();
+      const int32 notificationIndex = assignedIndex.value_or(static_cast<int32>(currentIndex));
+      filter->sendFilterRunStateMessage(notificationIndex, RunState::Queued);
+      ++currentIndex;
     }
   }
 

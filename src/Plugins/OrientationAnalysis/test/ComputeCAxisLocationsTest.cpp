@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeCAxisLocationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -181,6 +182,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal p
   REQUIRE(ContainsCode(executeResult.result.warnings(), -3523));
 
   REQUIRE(dataStructure.containsData(cAxisLocationsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath));
   const auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
   REQUIRE(std::all_of(cAxisLocations.cbegin(), cAxisLocations.cend(), [](float32 value) { return std::isnan(value); }));
 
@@ -232,6 +234,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(dataStructure.containsData(cAxisLocationsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath));
   auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
   for(usize i = 0; i < size; i++)
   {
@@ -268,9 +271,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
   crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
   crystalStructures->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
 
-  // Alternate hexagonal (phase 1) and cubic (phase 2) cells so a single execution exercises
-  // both the computed c-axis path and the non-hexagonal NaN path, and verifies the NaN
-  // branch does not disturb neighboring computed values.
+  // Alternate hexagonal and cubic cells in one execution.
+  // This checks computed c-axes, non-hexagonal NaNs, and neighboring values.
   Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
   for(usize i = 0; i < size; i++)
   {
@@ -296,6 +298,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
   REQUIRE(ContainsCode(executeResult.result.warnings(), -3523));
 
   REQUIRE(dataStructure.containsData(cAxisLocationsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath));
   auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
   for(usize i = 0; i < size; i++)
   {
@@ -355,4 +358,47 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Com
       CHECK(args.value<std::string>(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32 invalidPhaseIdx = GENERATE(-1, 2);
+  CAPTURE(invalidPhaseIdx);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  DataStructure dataStructure;
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"Quats"}), {2}, {4});
+  auto* quatsArrayPtr = Float32Array::Create(dataStructure, "Quats", quatsStore);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(quatsArrayPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  quatsArrayPtr->fill(0.0F);
+  (*quatsArrayPtr)[3] = 1.0F;
+  (*quatsArrayPtr)[7] = 1.0F;
+
+  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Phases"}), {2}, {1});
+  auto* cellPhasesArrayPtr = Int32Array::Create(dataStructure, "Phases", cellPhasesStore);
+  (*cellPhasesArrayPtr)[0] = 1;
+  (*cellPhasesArrayPtr)[1] = invalidPhaseIdx;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, DataPath({"CrystalStructures"}), {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStructuresStore);
+  (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+
+  ComputeCAxisLocationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Quats"})));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Phases"})));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key, std::make_any<std::string>("CAxisLocations"));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -3524);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

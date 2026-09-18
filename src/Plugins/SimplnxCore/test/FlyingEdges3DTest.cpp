@@ -40,6 +40,9 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar_v2.tar.gz", "flying_edges_exemplar.dream3d");
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/flying_edges_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -64,10 +67,12 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     // This is in here because the exemplar face attribute matrix is not sized correctly. This will
     // correct that value allowing the test to proceed normally.
     auto& exemplarContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath);
-    exemplarContourTriGeom.getFaceAttributeMatrixRef().resizeTuples({70});
+    auto faceAttributeMatrixResizeResult = exemplarContourTriGeom.getFaceAttributeMatrixRef().resizeTuples({70});
+    SIMPLNX_RESULT_REQUIRE_VALID(faceAttributeMatrixResizeResult);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 

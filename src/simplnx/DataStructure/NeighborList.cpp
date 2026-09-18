@@ -4,6 +4,8 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
+#include "simplnx/Utilities/StoreCopyUtilities.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 namespace nx::core
@@ -110,7 +112,16 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
     return *this;
   }
 
-  m_Store = rhs.m_Store->deepCopy();
+  const auto* destination = getDataStructure();
+  const auto paths = getDataPaths();
+  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  {
+    throw std::runtime_error("NeighborList assignment to '" + getName() + "' requires an available destination array path");
+  }
+  // Tuple count supplies the existing lower-bound estimate without reading any list values.
+  const auto bytes = CalculateStoreCopyBytes(rhs.getTupleShape(), ShapeType{1}, sizeof(T));
+  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  m_Store = rhs.m_Store->deepCopy(format);
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
 
@@ -141,10 +152,13 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  // Don't construct with identifier since it will get created when inserting into data structure
-  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getTupleShape()));
+  // This lower-bound estimate avoids reading lists merely to select destination storage.
+  const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
+  const auto format = ArrayCreationUtilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
+  auto copiedStore = m_Store->deepCopy(format);
+  // Insertion assigns the identifier for the copy.
+  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<store_type>(std::move(copiedStore))));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
-  copy->m_Store = m_Store->deepCopy();
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
@@ -171,13 +185,16 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
   auto indicesSize = static_cast<usize>(idxs.size());
   if(indicesSize >= getNumberOfTuples())
   {
-    resizeTuples(ShapeType{0});
+    Result<> resizeResult = resizeTuples(ShapeType{0});
+    if(resizeResult.invalid())
+    {
+      return resizeResult.errors()[0].code;
+    }
     return 0;
   }
 
   usize arraySize = m_Store->size();
-  // Sanity Check the Indices in the vector to make sure we are not trying to remove any indices that are
-  // off the end of the array and return an error code.
+  // Reject an index outside the list before the copy changes any values.
   for(usize idx : idxs)
   {
     if(idx >= arraySize)
@@ -186,8 +203,21 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
 
-  auto copy = m_Store->deepCopy();
-  copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
+  const auto* destination = getDataStructure();
+  const auto paths = getDataPaths();
+  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  {
+    return k_MissingCopyDestinationError;
+  }
+  // Parent order selects the first available path. The estimate does not read list values.
+  const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
+  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  auto copy = m_Store->deepCopy(format);
+  Result<> resizeResult = copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
+  if(resizeResult.invalid())
+  {
+    return resizeResult.errors()[0].code;
+  }
 
   usize idxsIndex = 0;
   usize rIdx = 0;
@@ -282,7 +312,11 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
-    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    Result<> resizeResult = m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    if(resizeResult.invalid())
+    {
+      throw std::runtime_error(resizeResult.errors()[0].message);
+    }
     m_IsAllocated = true;
     // Initialize with zero length Vectors
     for(usize i = old; i < m_Store->size(); ++i)
@@ -312,7 +346,11 @@ void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborLis
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    Result<> resizeResult = m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    if(resizeResult.invalid())
+    {
+      throw std::runtime_error(resizeResult.errors()[0].message);
+    }
     m_IsAllocated = true;
   }
   m_Store->setList(grainId, neighborList);
@@ -323,7 +361,11 @@ void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    Result<> resizeResult = m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
+    if(resizeResult.invalid())
+    {
+      throw std::runtime_error(resizeResult.errors()[0].message);
+    }
     m_IsAllocated = true;
   }
   m_Store->setList(grainId, neighborList);

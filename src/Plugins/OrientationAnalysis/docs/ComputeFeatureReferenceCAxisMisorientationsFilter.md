@@ -35,6 +35,24 @@ Results may differ from the DREAM3D 6.6 version by approximately 0.0001 degrees 
 - **Average C-Axes** -- produced by [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md).
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
+## Algorithm
+
+For each cell, the quaternion is converted to an active rotation matrix (transpose of the passive orientation matrix) and applied to the <001> c-axis to find the c-axis direction in the sample reference frame. The angle between this cell-level c-axis and the feature's average c-axis is computed. Angles exceeding 90 degrees are folded to (180 - angle) to account for the antipodal symmetry of hexagonal c-axes. The per-cell misorientation values are then used to compute the average and population standard deviation per feature.
+
+### In-Core Path
+
+Cell-level arrays are iterated directly. Crystal structure validation ensures at least one hexagonal phase is present.
+
+### Out-of-Core Path
+
+Cell-level data (feature IDs, phases, quaternions) is processed one Z-slice at a time. For each slice, all input arrays are bulk-read via `copyIntoBuffer` into pre-allocated slice buffers, the misorientation is computed for every cell in the slice, and results are bulk-written via `copyFromBuffer`. The feature-level average c-axes array is cached locally at startup. Crystal structures are also cached from the ensemble-level array.
+
+A second Z-slice pass re-reads the cell-level feature IDs and the just-written misorientation output to compute the population standard deviation per feature.
+
+### Performance
+
+The Z-slice processing pattern is well-suited for ImageGeom data where HDF5 chunks are often aligned by slice. Each slice is a single contiguous range in the linear cell index, so the bulk reads are sequential and cache-friendly. The two-pass approach (mean then standard deviation) avoids storing all cell values in memory simultaneously.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

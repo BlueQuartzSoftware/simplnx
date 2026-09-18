@@ -72,9 +72,14 @@ void INodeGeometry0D::setVertexListId(const std::optional<IdType>& vertices)
   m_VertexDataArrayId = vertices;
 }
 
-void INodeGeometry0D::resizeVertexList(usize size)
+Result<> INodeGeometry0D::resizeVertexList(usize size)
 {
-  getVerticesRef().getIDataStoreRef().resizeTuples({size});
+  Result<> resizeResult = getVerticesRef().getIDataStoreRef().resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    resizeResult.errors()[0].message = fmt::format("Geometry '{}' failed to resize its vertex list to {} tuples: {}", getName(), size, resizeResult.errors()[0].message);
+  }
+  return resizeResult;
 }
 
 usize INodeGeometry0D::getNumberOfVertices() const
@@ -241,6 +246,14 @@ DataPath INodeGeometry0D::getVertexAttributeMatrixDataPath() const
 void INodeGeometry0D::setVertexAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
   m_VertexAttributeMatrixId = attributeMatrix.getId();
+}
+
+void INodeGeometry0D::copyMembersInto(INodeGeometry0D& copy, const DataPath& copyPath)
+{
+  IGeometry::copyMembersInto(copy, copyPath);
+
+  copy.m_VertexAttributeMatrixId = deepCopyOwnedChild(copyPath, getVertexAttributeMatrix());
+  copy.m_VertexDataArrayId = deepCopyOwnedChild(copyPath, getVertices());
 }
 
 void INodeGeometry0D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)

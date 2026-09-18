@@ -16,6 +16,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct CropImageGeometryInputValues
+ * @brief Collects crop settings, paths, and effective inclusive voxel bounds.
+ */
 struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
 {
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
@@ -30,7 +34,7 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
   BoolParameter::ValueType CropYDim;
   BoolParameter::ValueType CropZDim;
 
-  // Precomputed bounds from preflight
+  // Preflight computes these inclusive voxel indices.
   uint64 XMin;
   uint64 XMax;
   uint64 YMin;
@@ -41,12 +45,24 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
 
 /**
  * @class CropImageGeometry
- * @brief This algorithm implements support code for the CropImageGeometryFilter
+ * @brief Copies an inclusive voxel region to a smaller ImageGeom.
+ *
+ * Resident pairs copy selected rows directly.
+ * Other pairs use buffers with a 1 MiB total cap for
+ * each task.
+ * Storage backends and caches can allocate more memory.
  */
-
 class SIMPLNXCORE_EXPORT CropImageGeometry
 {
 public:
+  /**
+   * @brief Initializes image-geometry cropping.
+   * @param dataStructure Contains source and destination geometry.
+   * @param mesgHandler Receives per-array progress messages.
+   * @param shouldCancel Signals cancellation between row or slab transfers.
+   * @param inputValues Identifies paths, options, and effective bounds.
+   * @pre All arguments and the inputValues object outlive this executor.
+   */
   CropImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CropImageGeometryInputValues* inputValues);
   ~CropImageGeometry() noexcept;
 
@@ -55,6 +71,18 @@ public:
   CropImageGeometry& operator=(const CropImageGeometry&) = delete;
   CropImageGeometry& operator=(CropImageGeometry&&) noexcept = delete;
 
+  /**
+   * @brief Copies cell arrays and optionally renumbers feature data.
+   * @return Success, or a validation, transfer, deep-copy, or feature-processing error.
+   *
+   * Cell-array tasks can run concurrently across separate arrays. The shared
+   * task result propagates the first transfer error.
+   *
+   * Cancellation returns success.
+   * Each started task fills
+   * its destination before transfers.
+   * Completed transfers and prior structural changes remain.
+   */
   Result<> operator()();
 
 private:

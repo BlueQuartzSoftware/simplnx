@@ -36,6 +36,37 @@ Two optional outputs can also be stored:
 
 This filter handles Image Geometries of all dimensions (0D/1D/2D/3D). Thus, it is up to the user to ensure spacing is set inline with intended behavior, specifically for Shared Surface Area List calculation. For more details see the Image Geometry section of the Geometry documentation (currently in the python docs).
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. It employs compile-time dimension specialization (via C++ templates) to handle 0D, 1D, 2D, and 3D image geometries without runtime branching in the inner loops.
+
+Processing is split into two stages:
+
+1. **Boundary cells** (corners, edges, faces): Each voxel's face neighbors are checked with validity guards since boundary voxels do not have all 6 neighbors.
+2. **Internal cells** (3D only): All 6 face neighbors are guaranteed to exist, so no validity checks are needed in the innermost loop.
+
+Surface area accumulation uses per-face area values computed from the geometry spacing, correctly handling non-cubic voxels. This fixes a bug present in DREAM3D 6.5 where all faces were assumed to have the same area.
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array is backed by chunked on-disk storage (out-of-core), the **Scanline** algorithm is used. Out-of-core data lives in compressed chunks on disk; random per-element access would trigger repeated chunk load/decompress/evict cycles ("chunk thrashing"), making the algorithm catastrophically slow.
+
+The Scanline algorithm avoids this by reading data one Z-slice at a time using bulk I/O, maintaining a rolling window of 3 Z-slices in memory:
+
+- **Previous slice** (z-1): Used for -Z neighbor lookups
+- **Current slice** (z): The slice being processed
+- **Next slice** (z+1): Used for +Z neighbor lookups
+
+Within each slice, +/-X and +/-Y neighbors are resolved by simple index arithmetic on the in-memory buffer. After processing a slice, the buffers rotate (prev gets cur, cur gets next, next loads z+2) and the BoundaryCells output is written back via bulk I/O.
+
+### Performance
+
+The in-core Direct algorithm accesses data through per-element getValue() calls, which are essentially pointer dereferences for in-memory data. The out-of-core Scanline algorithm uses sequential bulk I/O (copyIntoBuffer/copyFromBuffer), reading one Z-slice at a time. Memory usage is bounded to 3 Z-slices of FeatureIds plus 1 Z-slice of BoundaryCells, regardless of the total volume size.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

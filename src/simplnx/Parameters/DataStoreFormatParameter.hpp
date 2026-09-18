@@ -5,18 +5,30 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nx::core
 {
+
+/**
+ * @class DataStoreFormatParameter
+ * @brief Selects a registered data-store format or automatic selection.
+ *
+ * An empty value selects automatic format resolution. A non-empty value must
+ * match a format currently registered with Application.
+ */
 class SIMPLNX_EXPORT DataStoreFormatParameter : public ValueParameter
 {
 public:
   using ValueType = std::string;
+
   using AvailableValuesType = std::vector<std::string>;
 
   DataStoreFormatParameter() = delete;
+
   DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+
   ~DataStoreFormatParameter() override = default;
 
   DataStoreFormatParameter(const DataStoreFormatParameter&) = delete;
@@ -25,68 +37,46 @@ public:
   DataStoreFormatParameter& operator=(const DataStoreFormatParameter&) = delete;
   DataStoreFormatParameter& operator=(DataStoreFormatParameter&&) noexcept = delete;
 
-  /**
-   * @brief
-   * @return
-   */
   Uuid uuid() const override;
 
-  /**
-   * @brief
-   * @return
-   */
   AcceptedTypes acceptedTypes() const override;
 
-  /**
-   * @brief
-   * @return
-   */
   UniquePointer clone() const override;
 
-  /**
-   * @brief
-   * @return
-   */
   std::any defaultValue() const override;
 
-  /**
-   * @brief Returns version integer.
-   * The Initial version should always be 1.
-   * Should be incremented everytime the json format changes.
-   * @return uint64
-   */
   VersionType getVersion() const override;
 
-  /**
-   * @brief
-   * @return
-   */
   ValueType defaultString() const;
 
   /**
-   * @brief
-   * @retrurn
+   * @brief Returns registered format identifiers.
+   * @return Format identifiers without display names.
+   *
+   * The result queries Application each call so plugin registrations are visible.
    */
   AvailableValuesType availableValues() const;
 
   /**
-   * @brief
-   * @param value
-   * @return
+   * @brief Returns registered format identifiers with display names.
+   *
+   * Application provides Automatic, In Memory, and registered plugin formats.
+   * @return Format identifier and display-name pairs.
+   */
+  std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() const;
+
+  /**
+   * @brief Validates a selected data-store format.
+   * @param value ValueType stored in std::any.
+   * @return Error when value is not empty and is not registered.
+   *
+   * An empty value requests automatic selection and is always valid.
    */
   Result<> validate(const std::any& value) const override;
 
 protected:
-  /**
-   * @brief
-   * @param value
-   */
   nlohmann::json toJsonImpl(const std::any& value) const override;
 
-  /**
-   * @brief
-   * @return
-   */
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:

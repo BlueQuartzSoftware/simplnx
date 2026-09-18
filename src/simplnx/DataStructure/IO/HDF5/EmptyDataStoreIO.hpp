@@ -1,28 +1,42 @@
 #pragma once
 
-#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
 
-#include <memory>
+#include <iterator>
+#include <utility>
 
 namespace nx::core::HDF5
 {
 namespace EmptyDataStoreIO
 {
 /**
- * @brief Attempts to read an EmptyDataStore from HDF5.
- * @param datasetReader
- * @return std::unique_ptr<EmptyDataStore<T>>
+ * @brief Reads numeric tuple and component shapes without creating a store.
+ * @param datasetReader Source HDF5 dataset.
+ * @return Exact stored shapes or the first attribute-read error.
  */
-template <typename T>
-static std::unique_ptr<EmptyDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
+inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::HDF5::DatasetIO& datasetReader)
 {
-  auto tupleShape = IDataStoreIO::ReadTupleShape(datasetReader);
-  auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);
+  auto tupleShapeResult = IDataStoreIO::ReadTupleShape(datasetReader);
+  if(tupleShapeResult.invalid())
+  {
+    return ConvertInvalidResult<std::pair<ShapeType, ShapeType>>(std::move(tupleShapeResult));
+  }
+  auto warnings = std::move(tupleShapeResult.warnings());
+  auto componentShapeResult = IDataStoreIO::ReadComponentShape(datasetReader);
+  if(componentShapeResult.invalid())
+  {
+    auto result = ConvertInvalidResult<std::pair<ShapeType, ShapeType>>(std::move(componentShapeResult));
+    result.warnings().insert(result.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
+    return result;
+  }
 
-  // Create DataStore
-  auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
-  return dataStore;
+  Result<std::pair<ShapeType, ShapeType>> result{std::pair<ShapeType, ShapeType>{std::move(tupleShapeResult.value()), std::move(componentShapeResult.value())}};
+  result.warnings() = std::move(warnings);
+  for(auto&& warning : componentShapeResult.warnings())
+  {
+    result.warnings().push_back(std::move(warning));
+  }
+  return result;
 }
 } // namespace EmptyDataStoreIO
 } // namespace nx::core::HDF5

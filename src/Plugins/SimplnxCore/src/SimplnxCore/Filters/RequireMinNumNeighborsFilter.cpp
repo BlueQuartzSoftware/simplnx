@@ -23,37 +23,31 @@ constexpr int32 k_FeatureIdsTupleCountMismatch = -55571;
 
 } // namespace
 
-//------------------------------------------------------------------------------
 std::string RequireMinNumNeighborsFilter::name() const
 {
   return FilterTraits<RequireMinNumNeighborsFilter>::name;
 }
 
-//------------------------------------------------------------------------------
 std::string RequireMinNumNeighborsFilter::className() const
 {
   return FilterTraits<RequireMinNumNeighborsFilter>::className;
 }
 
-//------------------------------------------------------------------------------
 Uuid RequireMinNumNeighborsFilter::uuid() const
 {
   return FilterTraits<RequireMinNumNeighborsFilter>::uuid;
 }
 
-//------------------------------------------------------------------------------
 std::string RequireMinNumNeighborsFilter::humanName() const
 {
   return "Require Minimum Number of Neighbors";
 }
 
-//------------------------------------------------------------------------------
 std::vector<std::string> RequireMinNumNeighborsFilter::defaultTags() const
 {
   return {className(), "Minimum", "Neighbors", "Memory Management", "Cleanup", "Remove Features"};
 }
 
-//------------------------------------------------------------------------------
 Parameters RequireMinNumNeighborsFilter::parameters() const
 {
   Parameters params;
@@ -87,19 +81,16 @@ Parameters RequireMinNumNeighborsFilter::parameters() const
   return params;
 }
 
-//------------------------------------------------------------------------------
 IFilter::VersionType RequireMinNumNeighborsFilter::parametersVersion() const
 {
   return 1;
 }
 
-//------------------------------------------------------------------------------
 IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
 {
   return std::make_unique<RequireMinNumNeighborsFilter>();
 }
 
-//------------------------------------------------------------------------------
 IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
@@ -142,24 +133,23 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  // Inform users that the following arrays are going to be modified in place
-  // Cell Data is going to be modified
+  // Report arrays that the filter modifies in place.
+  // Cell Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
-  // Feature Data is going to be modified
+  // Feature Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
 
-  // This section will warn the user about the removal of NeighborLists
+  // Report removed NeighborList arrays.
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numNeighborsPath, resultOutputActions);
   if(result.outputActions.invalid())
   {
     return result;
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  // Return actions and updated preflight values.
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-//------------------------------------------------------------------------------
 Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {

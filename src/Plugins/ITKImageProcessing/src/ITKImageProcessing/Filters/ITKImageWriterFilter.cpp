@@ -46,8 +46,17 @@ bool IsValidFillCharacter(char fillCharacter)
          fillCharacter != '*' && fillCharacter != '?' && fillCharacter != '"' && fillCharacter != '<' && fillCharacter != '>' && fillCharacter != '|';
 }
 
+/**
+ * @brief Writes one ITK image to an atomic destination.
+ * @tparam PixelT Specifies the image pixel type.
+ * @tparam Dimensions Specifies the image dimension count.
+ * @param image Provides the image to write.
+ * @param filePath Identifies the destination file.
+ * @param shouldCancel Prevents publication when cancellation occurs during the ITK write.
+ * @return Atomic-file, ITK writer, cancellation, or commit error.
+ */
 template <typename PixelT, uint32 Dimensions>
-Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath)
+Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath, const std::atomic_bool& shouldCancel)
 {
   auto atomicFileResult = AtomicFile::Create(filePath);
   if(atomicFileResult.invalid())
@@ -71,6 +80,10 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
     return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
   }
 
+  if(shouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
   Result<> commitResult = atomicFile.commit();
   if(commitResult.invalid())
   {
@@ -79,21 +92,46 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
   return {};
 }
 
+/**
+ * @brief Wraps one resident data store and writes it as an ITK image.
+ * @tparam PixelT Specifies the image pixel type.
+ * @tparam Dimensions Specifies the image dimension count.
+ * @param dataStore Provides resident image values.
+ * @param imageGeom Provides image metadata.
+ * @param filePath Identifies the destination file.
+ * @param shouldCancel Prevents publication after cancellation.
+ * @return Atomic-file, ITK writer, cancellation, or commit error.
+ */
 template <class PixelT, uint32 Dimensions>
-Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath)
+Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, const std::atomic_bool& shouldCancel)
 {
   auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
 
   typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
-  return WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
+  return WriteAsOneFile<PixelT, Dimensions>(*image, filePath, shouldCancel);
 }
 
+/**
+ * @struct WriteImageFunctor
+ * @brief Adapts runtime array dispatch to the typed ITK image writer.
+ * @tparam InputT Specifies the input scalar type.
+ * @tparam OutputT Specifies the ITK pixel type.
+ * @tparam Dimensions Specifies the image dimension count.
+ */
 template <class InputT, class OutputT, uint32 Dimensions>
 struct WriteImageFunctor
 {
-  Result<> operator()(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath) const
+  /**
+   * @brief Writes one dispatched image.
+   * @param dataStore Provides resident image values.
+   * @param imageGeom Provides image metadata.
+   * @param filePath Identifies the destination file.
+   * @param shouldCancel Prevents publication after cancellation.
+   * @return Atomic-file, ITK writer, cancellation, or commit error.
+   */
+  Result<> operator()(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, const std::atomic_bool& shouldCancel) const
   {
-    return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath);
+    return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath, shouldCancel);
   }
 };
 
@@ -111,7 +149,15 @@ fs::path GenerateOutputFilePath(const fs::path& filePath, usize slice, usize max
   return fs::path(ss.str());
 }
 
-Result<> SaveImageData(const fs::path& fileName, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom)
+/**
+ * @brief Selects an ITK writer for one image slice.
+ * @param fileName Identifies the destination file.
+ * @param sliceData Provides resident slice values.
+ * @param imageGeom Provides slice metadata.
+ * @param shouldCancel Prevents publication after cancellation.
+ * @return Directory, dispatch, writer, cancellation, or commit error.
+ */
+Result<> SaveImageData(const fs::path& fileName, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, const std::atomic_bool& shouldCancel)
 {
   // If the parent path does not exist then try to create it.
   if(!fs::exists(fileName.parent_path()))
@@ -124,9 +170,9 @@ Result<> SaveImageData(const fs::path& fileName, IDataStore& sliceData, const IT
 
   if(sliceData.getNumberOfComponents() == 4)
   {
-    return ITK::ArraySwitchFunc<WriteImageFunctor, RgbRgbaArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName);
+    return ITK::ArraySwitchFunc<WriteImageFunctor, RgbRgbaArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, shouldCancel);
   }
-  return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName);
+  return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, shouldCancel);
 }
 
 struct CopyXYSlicesFunctor
@@ -316,7 +362,7 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   {
     return {MakeErrorResult<OutputActions>(-25602, fmt::format("The fill character '{}' is not valid for format strings and file names.", fillChar))};
   }
-  if(!imageArray.getDataFormat().empty())
+  if(imageArrayStore.getStoreType() == IDataStore::StoreType::OutOfCore || imageArrayStore.getPlannedStoreType() == IDataStore::StoreType::OutOfCore)
   {
     return {MakeErrorResult<OutputActions>(ITK::Constants::k_OutOfCoreDataNotSupported,
                                            fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()))};
@@ -403,7 +449,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getZ(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getZ(), outputFilePath.string()));
-      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom, shouldCancel);
       if(result.invalid())
       {
         return result;
@@ -434,7 +480,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getY(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getY(), outputFilePath.string()));
-      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom, shouldCancel);
       if(result.invalid())
       {
         return result;
@@ -465,7 +511,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
       }
       const fs::path outputFilePath = cxITKImageWriterFilter::GenerateOutputFilePath(filePath, slice + indexOffset, dims.getX(), totalDigits, fillChar);
       messageHandler(fmt::format("Writing file {} of {}: \"{}\"", slice + 1, dims.getX(), outputFilePath.string()));
-      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(outputFilePath, *sliceData, newImageGeom, shouldCancel);
       if(result.invalid())
       {
         return result;
@@ -498,14 +544,14 @@ Result<Arguments> ITKImageWriterFilter::FromSIMPLJson(const nlohmann::json& json
   Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_PlaneKey, k_Plane_Key);
   if(planeResult.valid())
   {
-    // This parameter does not appear in some 6.5 pipeline, thus we only include it in the output if it's valid
+    // Some 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(planeResult));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FileNameKey, k_FileName_Key));
   Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IndexOffsetKey, k_IndexOffset_Key);
   if(offsetResult.valid())
   {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    // 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(offsetResult));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageGeomPath_Key));

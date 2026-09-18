@@ -61,6 +61,10 @@ Result<> WriteDREAM3D::operator()()
   auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
   if(results.valid())
   {
+    if(m_ShouldCancel)
+    {
+      return MakeErrorResult(-1, "Filter cancelled");
+    }
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {

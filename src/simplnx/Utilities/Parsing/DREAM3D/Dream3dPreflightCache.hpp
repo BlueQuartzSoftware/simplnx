@@ -16,143 +16,146 @@ namespace nx::core::DREAM3D
 {
 /**
  * @class Dream3dPreflightCache
- * @brief Process-wide cache of preflight (metadata-only) DataStructures imported
- * from .dream3d files, keyed by canonical file path and validated by file size
- * and modification time on every fetch.
+ * @brief Caches metadata-only DataStructures from DREAM3D files.
  *
- * Why this exists: a pipeline re-preflights whenever any filter parameter
- * changes, and every preflight of a ReadDREAM3DFilter re-imports the HDF5
- * metadata tree of its input file. That traversal is hundreds of small,
- * latency-bound reads (object headers, B-tree nodes, attributes). On local
- * disks it is milliseconds; on high-latency storage such as NAS/SMB mounts it
- * can take many seconds — repeated on every edit, for metadata that has not
- * changed. Caching the imported preflight structure reduces every fetch after
- * the first to a single filesystem stat.
+ * Parameter edits can preflight the same ReadDREAM3DFilter many times. An HDF5
+ * metadata traversal performs many small reads. Network storage can make that
+ * traversal slow. A valid cache hit needs only filesystem metadata checks.
  *
- * fetch() never hands out the cached master DataStructure itself; it returns
- * a copy whose arrays own freshly created store instances, so mutations made
- * by one preflight pass can never bleed into another pass or into the master.
- * Preflight stores are metadata-only, so allocating fresh copies costs no
- * bulk data.
+ * A canonical path identifies each entry. File size and modification time form
+ * its validation token. Recently modified files bypass the cache because a
+ * network filesystem can round modification times.
  *
- * Staleness guarantee: every fetch stats the file and compares (size, mtime)
- * against the values captured when the entry was populated; any mismatch
- * evicts the entry and re-reads from disk. Files whose mtime is younger than
- * k_MtimeTrustWindow are never served from the cache because network
- * filesystems round mtimes coarsely enough that a very recent rewrite could
- * otherwise go undetected.
+ * A fetch returns a DataStructure copy with independent array stores. Therefore,
+ * one preflight cannot mutate the cached master or another handout. Ordinary
+ * numeric datasets remain metadata placeholders. Small legacy Statistics
+ * attributes remain populated because their values have no deferred reload path.
+ *
+ * The singleton supports concurrent callers. It serializes complete HDF5 imports
+ * and protects the in-memory entry table with a separate mutex.
  */
 class SIMPLNX_EXPORT Dream3dPreflightCache
 {
 public:
   /**
-   * @brief The maximum number of entries the cache holds. Once a fetch would
-   * grow the table past this size, the least-recently-used entry (by fetch
-   * recency, tracked per-entry and updated on every hit or insert) is evicted
-   * first. Preflight structures store only shapes and names (kilobytes), so
-   * this bounds bookkeeping, not memory pressure.
+   * @brief Specifies the maximum entry count.
+   *
+   * Insertion evicts the least-recently-used entry when the table exceeds this value.
+   * The limit bounds long-session bookkeeping, not bulk data memory.
    */
   static constexpr usize k_Capacity = 8;
 
   /**
-   * @brief Files modified more recently than this are never served from the
-   * cache. Guards against coarse mtime granularity on network filesystems
-   * (SMB/NFS commonly round to 1-2 s), where a same-size rewrite inside the
-   * rounding window would otherwise be indistinguishable from the cached state.
+   * @brief Specifies the modification-time trust window.
+   *
+   * A younger file bypasses the cache. This prevents a same-size rewrite from
+   * hiding inside coarse SMB or NFS timestamp resolution.
    */
   static constexpr std::chrono::seconds k_MtimeTrustWindow{2};
 
   /**
-   * @brief Returns the process-wide cache instance. A singleton because the
-   * cache must be shared across every filter instance and pipeline that reads
-   * the same file, and because preflight runs on worker threads that have no
-   * shared context other than process globals.
+   * @brief Gets the process-wide cache.
+   * @return Shared singleton instance.
+   *
+   * All filter and pipeline instances share entries across preflight worker threads.
    */
   static Dream3dPreflightCache& Instance();
 
   /**
-   * @brief Returns a preflight DataStructure for the given file.
+   * @brief Gets an isolated metadata-only DataStructure for one file.
+   * @param filePath Identifies the DREAM3D file.
+   * @return Independent handout, or the underlying file-open or import error.
    *
-   * Stats the file first: on a (size, mtime) match with a cached entry this
-   * is a pure in-memory operation; otherwise the file is opened and its
-   * metadata imported exactly as ImportDataStructureFromFile(reader, true)
-   * would, and the result cached. Errors (missing/unreadable file, malformed
-   * content) are returned unchanged from the underlying reader so callers keep
-   * their existing error contracts; failures are never cached.
-   * @param filePath Path to the .dream3d file.
-   * @return Result<DataStructure> An isolated handout: every array's store is
-   * a fresh instance, never shared with the cached master or any other
-   * handout, or import errors.
+   * A matching trusted token serves a cache hit. Other cases serialize a disk
+   * import. Failed and recently modified reads are not cached.
    */
   Result<DataStructure> fetch(const std::filesystem::path& filePath);
 
   /**
-   * @brief Removes the entry for the given file, if present. Exists so tests
-   * and callers that know a file changed can force the next fetch to re-read
-   * without waiting for stat-based detection.
-   * @param filePath Path whose entry should be dropped.
+   * @brief Removes one file entry if present.
+   * @param filePath Identifies the entry through canonical path resolution.
+   *
+   * The next fetch reads the file even if its validation token did not change.
    */
   void invalidate(const std::filesystem::path& filePath);
 
   /**
-   * @brief Removes all entries. Primarily for test isolation.
+   * @brief Removes all entries for test or application reset.
    */
   void clear();
 
   /**
-   * @brief Number of fetches served from the cache since the last resetStats().
-   * Tests assert on these counters instead of wall-clock time so the I/O
-   * behavior is verified deterministically on any machine.
+   * @brief Gets cache hits since resetStats().
+   * @return Atomic hit count.
+   *
+   * Tests use counters instead of timing to verify I/O behavior deterministically.
    */
   uint64 hitCount() const;
 
   /**
-   * @brief Number of fetches that read the file since the last resetStats().
+   * @brief Gets disk-read attempts since resetStats().
+   * @return Atomic miss count.
    */
   uint64 missCount() const;
 
   /**
-   * @brief Resets hit/miss counters to zero. For test isolation.
+   * @brief Resets hit and miss counters for test isolation.
+   *
+   * Concurrent fetches can increment a counter during the two independent stores.
    */
   void resetStats();
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  /**
+   * @brief Forces the calling thread's filesystem metadata lookup to fail.
+   * @param forceFailure True to exercise the readable-file stat bypass.
+   * @note Available only in test builds. The setting is thread-local and does not change cache state.
+   */
+  static void SetForceFileMetadataFailure(bool forceFailure);
+#endif
 
 private:
   Dream3dPreflightCache() = default;
 
   /**
-   * @brief Replaces every array store in the given structure with a freshly
-   * allocated copy.
+   * @brief Replaces each array store with an independent handout store.
+   * @param dataStructure Supplies the handout to isolate in place.
+   * @return Planning and numeric replacement warnings or errors.
    *
-   * Why: DataStructure copy-construction shallow-copies each DataObject, so a
-   * copied array still points at the SAME store instance as its source. A
-   * handout built by plain copy would therefore share mutable state with the
-   * cached master and with every other handout — mutating one preflight pass
-   * could corrupt another. Replacing the stores severs that link. Preflight
-   * stores are metadata-only (empty stores holding shapes), so the copies
-   * allocate no bulk data.
-   * @param dataStructure The handout to isolate, modified in place.
+   * DataStructure copy construction shares DataObject stores. Numeric placeholders
+   * receive fresh plans, populated numeric stores receive policy-selected value
+   * copies, and list/string stores receive independent copies.
    */
-  static void RefreshStores(DataStructure& dataStructure);
+  static Result<> RefreshStores(DataStructure& dataStructure);
 
   /**
-   * @brief Looks up a cached entry for the given key and, if it is still valid
-   * for the supplied (size, mtime) token, records a hit, refreshes its recency,
-   * and returns an isolated handout copy; returns nullopt on a miss.
-   *
-   * Acquires m_Mutex internally (the caller must not already hold it) and, on a
-   * hit, releases it before isolating the copy via RefreshStores so that work
-   * never runs under the table lock. Shared by the fast path and the miss
-   * path's post-read-lock re-check so both consult the cache identically.
-   * @param key Canonical cache key for the file.
-   * @param fileSize Current on-disk size, compared against the cached token.
-   * @param mtime Current on-disk modification time, compared against the token.
-   * @return An isolated handout on a hit, or nullopt on a miss.
+   * @brief Applies current policy and store isolation to a copied handout.
+   * @param handout Supplies the copied metadata graph.
+   * @param filePath Identifies the source file for error context.
+   * @return Prepared handout or contextual refresh error.
    */
-  std::optional<DataStructure> tryServeFromCache(const std::string& key, uint64 fileSize, const std::filesystem::file_time_type& mtime);
+  static Result<DataStructure> PrepareHandout(DataStructure handout, const std::filesystem::path& filePath);
 
   /**
-   * @brief One cached file: the immutable master structure plus the (size,
-   * mtime) token captured when it was read, used to detect on-disk changes.
+   * @brief Serves one valid cached entry and refreshes its recency.
+   * @param key Specifies the canonical file key.
+   * @param fileSize Specifies the current file size.
+   * @param mtime Specifies the current modification time.
+   * @param filePath Identifies the source file for handout error context.
+   * @return Isolated handout on a hit, std::nullopt on a miss, or a preparation error.
+   * @pre The caller does not hold m_Mutex.
+   *
+   * The method copies the master under m_Mutex, then isolates stores after it
+   * releases the table lock. Both fast and post-read recheck paths use it.
+   */
+  Result<std::optional<DataStructure>> tryServeFromCache(const std::string& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
+
+  /**
+   * @struct Entry
+   * @brief Stores one immutable metadata master, validation token, and LRU tick.
+   *
+   * Numeric content normally consists of placeholders. Small legacy Statistics
+   * arrays can contain authoritative eager values that each handout copies.
    */
   struct Entry
   {
@@ -163,17 +166,11 @@ private:
   };
 
   /**
-   * @brief Serializes the cache's own metadata reads from disk so no two HDF5
-   * imports run concurrently. The bundled HDF5 C library is built without its
-   * thread-safe option, so its API cannot be called from multiple threads at
-   * once; every cache miss reads the file through this mutex to honor that
-   * constraint. It is deliberately distinct from m_Mutex, which guards only the
-   * in-memory entry table: a cache hit takes m_Mutex alone and never blocks on
-   * an in-flight read, keeping the common per-edit fetch path lock-light.
+   * @brief Serializes complete metadata imports through non-thread-safe HDF5.
    *
-   * Lock ordering: whenever both are held, m_ReadMutex is acquired before
-   * m_Mutex, never the reverse. Hits take only m_Mutex; the miss path takes
-   * m_ReadMutex first and then briefly m_Mutex to consult and update the table.
+   * This mutex is separate from m_Mutex, which protects only the entry table.
+   * Therefore, a cache hit does not wait for an unrelated disk read. When code
+   * needs both locks, it gets m_ReadMutex before m_Mutex. Hit paths get only m_Mutex.
    */
   std::mutex m_ReadMutex;
   mutable std::mutex m_Mutex;
