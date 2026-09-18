@@ -325,6 +325,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
           }
         }
       }
+      AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
       if(pRemoveOriginalGeometry)
       {
