@@ -92,7 +92,7 @@ void WriteTiledUInt8(const fs::path& path, uint16_t samplesPerPixel, uint16_t ph
 
   const usize tilePixelCount = static_cast<usize>(k_TileWidth) * k_TileHeight;
   const usize bufferSize = planarConfig == PLANARCONFIG_CONTIG ? tilePixelCount * samplesPerPixel : tilePixelCount;
-  std::vector<uint8> tile(bufferSize, 0);
+  std::vector<uint8_t> tile(bufferSize, 0);
 
   for(uint32_t tileY = 0; tileY < k_Height; tileY += k_TileHeight)
   {
@@ -101,7 +101,7 @@ void WriteTiledUInt8(const fs::path& path, uint16_t samplesPerPixel, uint16_t ph
       const uint16_t planeCount = planarConfig == PLANARCONFIG_CONTIG ? 1 : samplesPerPixel;
       for(uint16_t plane = 0; plane < planeCount; ++plane)
       {
-        std::fill(tile.begin(), tile.end(), uint8{0});
+        std::fill(tile.begin(), tile.end(), uint8_t{0});
         for(uint32_t localY = 0; localY < k_TileHeight; ++localY)
         {
           for(uint32_t localX = 0; localX < k_TileWidth; ++localX)
@@ -183,35 +183,35 @@ void WriteStrippedUInt8(const fs::path& path)
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, 1) == 1);
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
 
-  std::array<uint8, k_Width> row{};
+  std::array<uint8_t, k_Width> row{};
   for(uint32_t y = 0; y < k_Height; ++y)
   {
     for(uint32_t x = 0; x < k_Width; ++x)
     {
-      row[x] = static_cast<uint8>((x + 3 * y) % 251);
+      row[x] = static_cast<uint8_t>((x + 3 * y) % 251);
     }
     REQUIRE(TIFFWriteScanline(tiff.get(), row.data(), y) == 1);
   }
 }
 
-std::vector<uint8> ReadDirect(const fs::path& path, usize byteCount)
+std::vector<uint8_t> ReadDirect(const fs::path& path, usize byteCount)
 {
   TiffImageIO imageIO;
-  std::vector<uint8> pixels(byteCount, 0xCD);
+  std::vector<uint8_t> pixels(byteCount, 0xCD);
   auto result = imageIO.readPixelData(path, pixels);
   SIMPLNX_RESULT_REQUIRE_VALID(result)
   return pixels;
 }
 
-std::vector<uint8> ReadRows(const fs::path& path, usize samplesPerPixel, usize bytesPerSample, std::vector<uint8>& coverage)
+std::vector<uint8_t> ReadRows(const fs::path& path, usize samplesPerPixel, usize bytesPerSample, std::vector<uint8_t>& coverage)
 {
   const usize pixelCount = static_cast<usize>(k_Width) * k_Height;
   const usize bytesPerPixel = samplesPerPixel * bytesPerSample;
-  std::vector<uint8> pixels(pixelCount * bytesPerPixel, 0xCD);
+  std::vector<uint8_t> pixels(pixelCount * bytesPerPixel, 0xCD);
   coverage.assign(pixelCount, 0);
 
   TiffImageIO imageIO;
-  auto result = imageIO.readPixelDataRows(path, [&](usize row, usize columnOffset, usize segmentPixelCount, std::span<const uint8> segment) -> Result<> {
+  auto result = imageIO.readPixelDataRows(path, [&](usize row, usize columnOffset, usize segmentPixelCount, std::span<const uint8_t> segment) -> Result<> {
     REQUIRE(row < k_Height);
     REQUIRE(columnOffset + segmentPixelCount <= k_Width);
     REQUIRE(segment.size() == segmentPixelCount * bytesPerPixel);
@@ -226,13 +226,13 @@ std::vector<uint8> ReadRows(const fs::path& path, usize samplesPerPixel, usize b
   return pixels;
 }
 
-std::array<uint8, 4> ColorValue(uint32_t x, uint32_t y)
+std::array<uint8_t, 4> ColorValue(uint32_t x, uint32_t y)
 {
-  return {static_cast<uint8>((x + 3 * y) % 101), static_cast<uint8>((17 + 5 * x + 7 * y) % 131), static_cast<uint8>((29 + 11 * x + 13 * y) % 151), static_cast<uint8>(160 + (x + y) % 80)};
+  return {static_cast<uint8_t>((x + 3 * y) % 101), static_cast<uint8_t>((17 + 5 * x + 7 * y) % 131), static_cast<uint8_t>((29 + 11 * x + 13 * y) % 151), static_cast<uint8_t>(160 + (x + y) % 80)};
 }
 } // namespace
 
-TEST_CASE("TiffImageIO:: tiled uint8 grayscale preserves photometric and orientation", "[TiffImageIO]")
+TEST_CASE("TiffImageIO:: tiled uint8_t grayscale preserves photometric and orientation", "[TiffImageIO]")
 {
   TemporaryTiffFile file("TiffImageIO_tiled_grayscale.tif");
   const std::array<uint16_t, 2> photometrics = {PHOTOMETRIC_MINISBLACK, PHOTOMETRIC_MINISWHITE};
@@ -242,13 +242,13 @@ TEST_CASE("TiffImageIO:: tiled uint8 grayscale preserves photometric and orienta
     for(uint16_t orientation = ORIENTATION_TOPLEFT; orientation <= ORIENTATION_LEFTBOT; ++orientation)
     {
       CAPTURE(photometric, orientation);
-      WriteTiledUInt8(file.path(), 1, photometric, orientation, PLANARCONFIG_CONTIG, [](uint32_t x, uint32_t y, uint16_t) -> uint8 { return static_cast<uint8>((x + 3 * y) % 251); });
+      WriteTiledUInt8(file.path(), 1, photometric, orientation, PLANARCONFIG_CONTIG, [](uint32_t x, uint32_t y, uint16_t) -> uint8_t { return static_cast<uint8_t>((x + 3 * y) % 251); });
 
       const usize pixelCount = static_cast<usize>(k_Width) * k_Height;
-      const std::vector<uint8> direct = ReadDirect(file.path(), pixelCount);
-      std::vector<uint8> coverage;
-      const std::vector<uint8> rows = ReadRows(file.path(), 1, 1, coverage);
-      REQUIRE(coverage == std::vector<uint8>(pixelCount, 1));
+      const std::vector<uint8_t> direct = ReadDirect(file.path(), pixelCount);
+      std::vector<uint8_t> coverage;
+      const std::vector<uint8_t> rows = ReadRows(file.path(), 1, 1, coverage);
+      REQUIRE(coverage == std::vector<uint8_t>(pixelCount, 1));
       REQUIRE(rows == direct);
 
       const bool flipX = orientation == ORIENTATION_TOPRIGHT || orientation == ORIENTATION_BOTRIGHT || orientation == ORIENTATION_RIGHTTOP || orientation == ORIENTATION_RIGHTBOT;
@@ -259,8 +259,8 @@ TEST_CASE("TiffImageIO:: tiled uint8 grayscale preserves photometric and orienta
         {
           const usize sourceX = flipX ? k_Width - 1 - outputX : outputX;
           const usize sourceY = flipY ? k_Height - 1 - outputY : outputY;
-          const uint8 raw = static_cast<uint8>((sourceX + 3 * sourceY) % 251);
-          const uint8 expected = photometric == PHOTOMETRIC_MINISWHITE ? static_cast<uint8>(255 - raw) : raw;
+          const uint8_t raw = static_cast<uint8_t>((sourceX + 3 * sourceY) % 251);
+          const uint8_t expected = photometric == PHOTOMETRIC_MINISWHITE ? static_cast<uint8_t>(255 - raw) : raw;
           REQUIRE(direct[outputY * k_Width + outputX] == expected);
         }
       }
@@ -268,20 +268,20 @@ TEST_CASE("TiffImageIO:: tiled uint8 grayscale preserves photometric and orienta
   }
 }
 
-TEST_CASE("TiffImageIO:: tiled uint8 preserves RGB and RGBA components", "[TiffImageIO]")
+TEST_CASE("TiffImageIO:: tiled uint8_t preserves RGB and RGBA components", "[TiffImageIO]")
 {
   const std::array<std::pair<uint16_t, uint16_t>, 3> layouts = {{{3, PLANARCONFIG_CONTIG}, {3, PLANARCONFIG_SEPARATE}, {4, PLANARCONFIG_CONTIG}}};
   for(const auto [samplesPerPixel, planarConfig] : layouts)
   {
     CAPTURE(samplesPerPixel, planarConfig);
     TemporaryTiffFile file("TiffImageIO_tiled_color.tif");
-    WriteTiledUInt8(file.path(), samplesPerPixel, PHOTOMETRIC_RGB, ORIENTATION_TOPLEFT, planarConfig, [](uint32_t x, uint32_t y, uint16_t component) -> uint8 { return ColorValue(x, y)[component]; });
+    WriteTiledUInt8(file.path(), samplesPerPixel, PHOTOMETRIC_RGB, ORIENTATION_TOPLEFT, planarConfig, [](uint32_t x, uint32_t y, uint16_t component) -> uint8_t { return ColorValue(x, y)[component]; });
 
     const usize byteCount = static_cast<usize>(k_Width) * k_Height * samplesPerPixel;
-    const std::vector<uint8> direct = ReadDirect(file.path(), byteCount);
-    std::vector<uint8> coverage;
-    const std::vector<uint8> rows = ReadRows(file.path(), samplesPerPixel, 1, coverage);
-    REQUIRE(coverage == std::vector<uint8>(static_cast<usize>(k_Width) * k_Height, 1));
+    const std::vector<uint8_t> direct = ReadDirect(file.path(), byteCount);
+    std::vector<uint8_t> coverage;
+    const std::vector<uint8_t> rows = ReadRows(file.path(), samplesPerPixel, 1, coverage);
+    REQUIRE(coverage == std::vector<uint8_t>(static_cast<usize>(k_Width) * k_Height, 1));
     REQUIRE(rows == direct);
 
     for(usize y = 0; y < k_Height; ++y)
@@ -304,10 +304,10 @@ TEST_CASE("TiffImageIO:: tiled uint16 and float32 remain lossless", "[TiffImageI
   {
     TemporaryTiffFile file("TiffImageIO_tiled_uint16.tif");
     WriteTiledScalar<uint16>(file.path(), SAMPLEFORMAT_UINT, [](uint32_t x, uint32_t y) -> uint16 { return static_cast<uint16>(1000 + x * 17 + y * 31); });
-    const std::vector<uint8> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(uint16));
-    std::vector<uint8> coverage;
-    const std::vector<uint8> rowBytes = ReadRows(file.path(), 1, sizeof(uint16), coverage);
-    REQUIRE(coverage == std::vector<uint8>(static_cast<usize>(k_Width) * k_Height, 1));
+    const std::vector<uint8_t> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(uint16));
+    std::vector<uint8_t> coverage;
+    const std::vector<uint8_t> rowBytes = ReadRows(file.path(), 1, sizeof(uint16), coverage);
+    REQUIRE(coverage == std::vector<uint8_t>(static_cast<usize>(k_Width) * k_Height, 1));
     REQUIRE(rowBytes == bytes);
     std::vector<uint16> actual(static_cast<usize>(k_Width) * k_Height);
     std::memcpy(actual.data(), rowBytes.data(), rowBytes.size());
@@ -324,10 +324,10 @@ TEST_CASE("TiffImageIO:: tiled uint16 and float32 remain lossless", "[TiffImageI
   {
     TemporaryTiffFile file("TiffImageIO_tiled_float32.tif");
     WriteTiledScalar<float32>(file.path(), SAMPLEFORMAT_IEEEFP, [](uint32_t x, uint32_t y) -> float32 { return static_cast<float32>(x) * 0.25F - static_cast<float32>(y) * 1.5F; });
-    const std::vector<uint8> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(float32));
-    std::vector<uint8> coverage;
-    const std::vector<uint8> rowBytes = ReadRows(file.path(), 1, sizeof(float32), coverage);
-    REQUIRE(coverage == std::vector<uint8>(static_cast<usize>(k_Width) * k_Height, 1));
+    const std::vector<uint8_t> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(float32));
+    std::vector<uint8_t> coverage;
+    const std::vector<uint8_t> rowBytes = ReadRows(file.path(), 1, sizeof(float32), coverage);
+    REQUIRE(coverage == std::vector<uint8_t>(static_cast<usize>(k_Width) * k_Height, 1));
     REQUIRE(rowBytes == bytes);
     std::vector<float32> actual(static_cast<usize>(k_Width) * k_Height);
     std::memcpy(actual.data(), rowBytes.data(), rowBytes.size());
@@ -341,20 +341,20 @@ TEST_CASE("TiffImageIO:: tiled uint16 and float32 remain lossless", "[TiffImageI
   }
 }
 
-TEST_CASE("TiffImageIO:: tiled uint8 row callback returns the first error", "[TiffImageIO]")
+TEST_CASE("TiffImageIO:: tiled uint8_t row callback returns the first error", "[TiffImageIO]")
 {
   TemporaryTiffFile file("TiffImageIO_callback_error.tif");
-  WriteTiledUInt8(file.path(), 1, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG, [](uint32_t x, uint32_t y, uint16_t) -> uint8 { return static_cast<uint8>((x + 3 * y) % 251); });
+  WriteTiledUInt8(file.path(), 1, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG, [](uint32_t x, uint32_t y, uint16_t) -> uint8_t { return static_cast<uint8_t>((x + 3 * y) % 251); });
 
   constexpr int32_t k_CallbackError = -98765;
   constexpr usize k_FailingCallback = 3;
   usize callbackCount = 0;
   TiffImageIO imageIO;
-  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8>) -> Result<> {
+  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8_t>) -> Result<> {
     ++callbackCount;
     if(callbackCount == k_FailingCallback)
     {
-      return MakeErrorResult(k_CallbackError, "Intentional tiled uint8 TIFF row callback failure.");
+      return MakeErrorResult(k_CallbackError, "Intentional tiled uint8_t TIFF row callback failure.");
     }
     return {};
   });
@@ -363,7 +363,7 @@ TEST_CASE("TiffImageIO:: tiled uint8 row callback returns the first error", "[Ti
   REQUIRE(callbackCount == k_FailingCallback);
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().code == k_CallbackError);
-  REQUIRE(result.errors().front().message == "Intentional tiled uint8 TIFF row callback failure.");
+  REQUIRE(result.errors().front().message == "Intentional tiled uint8_t TIFF row callback failure.");
 }
 
 TEST_CASE("TiffImageIO:: raw tiled callback returns the first error", "[TiffImageIO]")
@@ -375,7 +375,7 @@ TEST_CASE("TiffImageIO:: raw tiled callback returns the first error", "[TiffImag
   constexpr usize k_FailingCallback = 3;
   usize callbackCount = 0;
   TiffImageIO imageIO;
-  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8>) -> Result<> {
+  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8_t>) -> Result<> {
     ++callbackCount;
     if(callbackCount == k_FailingCallback)
     {
@@ -400,7 +400,7 @@ TEST_CASE("TiffImageIO:: stripped callback returns the first error", "[TiffImage
   constexpr usize k_FailingCallback = 3;
   usize callbackCount = 0;
   TiffImageIO imageIO;
-  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8>) -> Result<> {
+  auto result = imageIO.readPixelDataRows(file.path(), [&callbackCount](usize, usize, usize, std::span<const uint8_t>) -> Result<> {
     ++callbackCount;
     if(callbackCount == k_FailingCallback)
     {
@@ -421,12 +421,12 @@ TEST_CASE("TiffImageIO:: direct read rejects a short buffer without mutation", "
   TemporaryTiffFile file("TiffImageIO_short_direct_buffer.tif");
   WriteTiledScalar<float32>(file.path(), SAMPLEFORMAT_IEEEFP, [](uint32_t x, uint32_t y) -> float32 { return static_cast<float32>(x) * 0.25F - static_cast<float32>(y) * 1.5F; });
 
-  std::vector<uint8> poison(static_cast<usize>(k_Width) * k_Height * sizeof(float32) - 1, 0xCD);
+  std::vector<uint8_t> poison(static_cast<usize>(k_Width) * k_Height * sizeof(float32) - 1, 0xCD);
   TiffImageIO imageIO;
   const auto result = imageIO.readPixelData(file.path(), poison);
 
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().code == -20105);
-  REQUIRE(std::all_of(poison.cbegin(), poison.cend(), [](uint8 value) { return value == 0xCD; }));
+  REQUIRE(std::all_of(poison.cbegin(), poison.cend(), [](uint8_t value) { return value == 0xCD; }));
 }

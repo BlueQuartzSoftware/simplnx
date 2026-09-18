@@ -33,8 +33,8 @@ const std::string k_ImageDataName = "ImageData";
 
 // Values for ReadImageFilter::k_OriginSpacingProcessing_Key
 // 0 = Preprocessed, 1 = Postprocessed
-constexpr uint64 k_Preprocessed = 0;
-constexpr uint64 k_Postprocessed = 1;
+constexpr uint64_t k_Preprocessed = 0;
+constexpr uint64_t k_Postprocessed = 1;
 
 class TemporaryTiledFilterFixture
 {
@@ -60,12 +60,12 @@ public:
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
 
-    std::vector<uint8> tile(static_cast<usize>(k_TileWidth) * k_TileHeight, 0);
+    std::vector<uint8_t> tile(static_cast<usize>(k_TileWidth) * k_TileHeight, 0);
     for(uint32_t tileY = 0; tileY < k_Height; tileY += k_TileHeight)
     {
       for(uint32_t tileX = 0; tileX < k_Width; tileX += k_TileWidth)
       {
-        std::fill(tile.begin(), tile.end(), uint8{0});
+        std::fill(tile.begin(), tile.end(), uint8_t{0});
         for(uint32_t localY = 0; localY < k_TileHeight; ++localY)
         {
           for(uint32_t localX = 0; localX < k_TileWidth; ++localX)
@@ -74,7 +74,7 @@ public:
             const uint32_t sourceY = tileY + localY;
             if(sourceX < k_Width && sourceY < k_Height)
             {
-              tile[static_cast<usize>(localY) * k_TileWidth + localX] = static_cast<uint8>((sourceX + 3 * sourceY) % 251);
+              tile[static_cast<usize>(localY) * k_TileWidth + localX] = static_cast<uint8_t>((sourceX + 3 * sourceY) % 251);
             }
           }
         }
@@ -139,8 +139,8 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Tiled_Tiff_Photometric_Orientation", "[
     {
       const usize sourceX = TemporaryTiledFilterFixture::k_Width - 1 - outputX;
       const usize sourceY = TemporaryTiledFilterFixture::k_Height - 1 - outputY;
-      const uint8 raw = static_cast<uint8>((sourceX + 3 * sourceY) % 251);
-      REQUIRE(pixels[outputY * TemporaryTiledFilterFixture::k_Width + outputX] == static_cast<uint8>(255 - raw));
+      const uint8_t raw = static_cast<uint8_t>((sourceX + 3 * sourceY) % 251);
+      REQUIRE(pixels[outputY * TemporaryTiledFilterFixture::k_Width + outputX] == static_cast<uint8_t>(255 - raw));
     }
   }
 }
@@ -183,7 +183,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Read_Basic", "[SimplnxCore][ReadImageFi
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -229,7 +229,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Override_Origin", "[SimplnxCore][ReadIm
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -273,7 +273,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Centering_Origin", "[SimplnxCore][ReadI
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -319,7 +319,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Override_Spacing", "[SimplnxCore][ReadI
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -377,7 +377,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: OriginSpacing_Preprocessed", "[SimplnxC
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -435,7 +435,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: OriginSpacing_Postprocessed", "[Simplnx
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -451,7 +451,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: DataType_Conversion", "[SimplnxCore][Re
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
-  const uint64 k_DataTypeUInt16 = 1;
+  const uint64_t k_DataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -482,7 +482,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: DataType_Conversion", "[SimplnxCore][Re
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -506,7 +506,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Interaction_Crop_DataType", "[SimplnxCo
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64 k_DataTypeUInt32 = 2;
+  const uint64_t k_DataTypeUInt32 = 2;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -538,7 +538,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Interaction_Crop_DataType", "[SimplnxCo
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint32>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint32_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -564,7 +564,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Interaction_All", "[SimplnxCore][ReadIm
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64 k_DataTypeUInt16 = 1;
+  const uint64_t k_DataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -599,7 +599,7 @@ TEST_CASE("SimplnxCore::ReadImageFilter: Interaction_All", "[SimplnxCore][ReadIm
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
