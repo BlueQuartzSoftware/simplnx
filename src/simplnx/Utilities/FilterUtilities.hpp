@@ -339,4 +339,24 @@ SIMPLNX_EXPORT void MarkDataPathModified(const DataStructure& dataStructure, nx:
 SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& featureIdsPath, const DataPath& numNeighborsPath,
                                                                          nx::core::Result<OutputActions>& resultOutputActions);
 
+/**
+ * @brief When renumber features is enabled, iterates the Feature Attribute Matrix and appends
+ * preflight updated values for stale regular arrays and invalidated NeighborLists.
+ * @param dataStructure The DataStructure object
+ * @param cellFeatureAmPath DataPath to the Feature Attribute Matrix
+ * @param featureIdsArrayPath DataPath to the FeatureIds array (used in warning messages)
+ * @param preflightUpdatedValues Vector to append preflight updated values into
+ */
+SIMPLNX_EXPORT void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
+                                                      std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
+
+/**
+ * @brief Scans child paths being copied verbatim for any AttributeMatrix objects and emits a
+ * consolidated preflight warning listing those whose arrays will be stale after the geometry operation.
+ * @param dataStructure The DataStructure object
+ * @param childPaths The child paths being copied to the new geometry
+ * @param resultOutputActions Reference to the OutputActions that needs to be updated
+ */
+SIMPLNX_EXPORT void AppendCopiedAMStaleWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, nx::core::Result<OutputActions>& resultOutputActions);
+
 } // namespace nx::core
