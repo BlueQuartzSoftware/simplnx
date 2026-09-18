@@ -56,6 +56,8 @@ Result<> ResampleRectGridToImageGeom::operator()()
     return {};
   }
 
+  // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
+  CopyFromArray::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   auto& destCellDataAM = imageGeom.getCellDataRef();
 
@@ -72,10 +74,9 @@ Result<> ResampleRectGridToImageGeom::operator()()
     auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
     m_MessageHandler(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
-    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);
+    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, taskResult, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-
-  return {};
+  return taskResult.takeResult();
 }

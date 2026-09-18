@@ -13,6 +13,10 @@ equations and algorithms. The algorithm is the following:
 + Divide each component by the length
 + Store the length as the 4th component in the output array
 
+## Out-of-Core Execution
+
+For in-memory arrays, the filter retains its parallel tuple traversal. If either the input or output is disk-backed, it reads three-component Rodrigues vectors and writes four-component results in fixed-size bulk chunks. The chunked path preserves the same tuple/component order and `sqrtf` arithmetic, including the existing NaN result for the normalized components of a zero-length vector, while keeping memory independent of the total tuple count.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -40,6 +40,10 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Sam
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));
 
+  auto preflight = filter.preflight(dataStructure, args);
+  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, 1);
+  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, std::vector<DataPath>{DataPath({".TestArray"})});
+
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 

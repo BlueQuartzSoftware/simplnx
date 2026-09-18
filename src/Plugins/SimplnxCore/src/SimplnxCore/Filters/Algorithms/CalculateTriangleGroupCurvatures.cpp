@@ -108,7 +108,6 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
   }
   triPatch.insert(triId);
 
-  extractedData->resizeTuples({triPatch.size()}); // Resize the TriPatch DataArray
   return extractedData;
 }
 } // namespace

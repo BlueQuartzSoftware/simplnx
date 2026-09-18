@@ -31,13 +31,14 @@ const std::atomic_bool& ComputeSlipTransmissionMetrics::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeSlipTransmissionMetrics::operator()()
 {
-  auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
+  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
-  usize totalFeatures = featurePhases.getNumberOfTuples();
+  const usize totalFeatures = featurePhasesArrayRef.getNumberOfTuples();
+  const usize numCrystalStructures = crystalStructuresArrayRef.getNumberOfTuples();
 
   auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListArrayPath);
 
@@ -48,55 +49,78 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   float64 LD[3] = {0.0, 0.0, 1.0};
 
-  int32 nName;
-  float32 mPrime, F1, F1sPt, F7;
-
   bool emitLaueClassWarning = false;
 
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    usize listLength = neighborList[i].size();
-    F1Lists[i].assign(listLength, 0.0f);
-    F1sPtLists[i].assign(listLength, 0.0f);
-    F7Lists[i].assign(listLength, 0.0f);
-    mPrimeLists[i].assign(listLength, 0.0f);
-    for(usize j = 0; j < listLength; j++)
+    const usize listLength = neighborList[featureIdx].size();
+    F1Lists[featureIdx].assign(listLength, 0.0F);
+    F1sPtLists[featureIdx].assign(listLength, 0.0F);
+    F7Lists[featureIdx].assign(listLength, 0.0F);
+    mPrimeLists[featureIdx].assign(listLength, 0.0F);
+    for(usize neighborIdx = 0; neighborIdx < listLength; neighborIdx++)
     {
-      nName = neighborList[i][j];
-      ebsdlib::QuatD q1(avgQuats[i * 4], avgQuats[i * 4 + 1], avgQuats[i * 4 + 2], avgQuats[i * 4 + 3]);
-      ebsdlib::QuatD q2(avgQuats[nName * 4], avgQuats[nName * 4 + 1], avgQuats[nName * 4 + 2], avgQuats[nName * 4 + 3]);
+      const int32 neighborFeatureIdx = neighborList[featureIdx][neighborIdx];
+      const ebsdlib::QuatD q1(avgQuatsArrayRef[featureIdx * 4], avgQuatsArrayRef[featureIdx * 4 + 1], avgQuatsArrayRef[featureIdx * 4 + 2], avgQuatsArrayRef[featureIdx * 4 + 3]);
+      const ebsdlib::QuatD q2(avgQuatsArrayRef[neighborFeatureIdx * 4], avgQuatsArrayRef[neighborFeatureIdx * 4 + 1], avgQuatsArrayRef[neighborFeatureIdx * 4 + 2],
+                              avgQuatsArrayRef[neighborFeatureIdx * 4 + 3]);
 
-      uint32 laueClassI = static_cast<uint32>(featurePhases[i]);
-      uint32 laueClassN = static_cast<uint32>(featurePhases[nName]);
+      const int32 currentPhaseIdx = featurePhasesArrayRef[featureIdx];
+      const int32 neighborFeaturePhaseIdx = featurePhasesArrayRef[neighborFeatureIdx];
 
-      if(laueClassI == laueClassN && laueClassN != 1)
+      if(currentPhaseIdx == neighborFeaturePhaseIdx && neighborFeaturePhaseIdx != 1)
       {
         emitLaueClassWarning = true;
       }
-      // Make sure we only run the algorithm on CubicOps: orientationOps[1];
-      if(crystalStructures[laueClassI] == crystalStructures[laueClassN] && featurePhases[i] > 0 && laueClassN == 1)
+
+      float32 mPrime = 0.0F;
+      float32 F1 = 0.0F;
+      float32 F1sPt = 0.0F;
+      float32 F7 = 0.0F;
+
+      // The algorithm calculates metrics only when the current Phase is positive and the neighbor belongs to Phase 1.
+      if(currentPhaseIdx > 0 && neighborFeaturePhaseIdx == 1)
       {
-        mPrime = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getmPrime(q1, q2, LD));
-        F1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getF1(q1, q2, LD, true));
-        F1sPt = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getF1spt(q1, q2, LD, true));
-        F7 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getF7(q1, q2, LD, true));
+        if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
+        {
+          return MakeErrorResult(
+              -94742, fmt::format("Feature Phases array '{}' has value {} at Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
+                                  m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, featureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                                  numCrystalStructures));
+        }
+        if(static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
+        {
+          return MakeErrorResult(
+              -94742,
+              fmt::format("Feature Phases array '{}' has value {} at neighbor Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
+                          m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                          numCrystalStructures));
+        }
+
+        const uint32 currentLaueIndex = crystalStructuresArrayRef[currentPhaseIdx];
+        const uint32 neighborLaueIndex = crystalStructuresArrayRef[neighborFeaturePhaseIdx];
+        if(currentLaueIndex == neighborLaueIndex)
+        {
+          if(currentLaueIndex >= orientationOps.size())
+          {
+            return MakeErrorResult(-94743, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
+                                                       m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
+          }
+          mPrime = static_cast<float32>(orientationOps[currentLaueIndex]->getmPrime(q1, q2, LD));
+          F1 = static_cast<float32>(orientationOps[currentLaueIndex]->getF1(q1, q2, LD, true));
+          F1sPt = static_cast<float32>(orientationOps[currentLaueIndex]->getF1spt(q1, q2, LD, true));
+          F7 = static_cast<float32>(orientationOps[currentLaueIndex]->getF7(q1, q2, LD, true));
+        }
       }
-      else
-      {
-        mPrime = 0.0f;
-        F1 = 0.0f;
-        F1sPt = 0.0f;
-        F7 = 0.0f;
-      }
-      mPrimeLists[i][j] = mPrime;
-      F1Lists[i][j] = F1;
-      F1sPtLists[i][j] = F1sPt;
-      F7Lists[i][j] = F7;
+      mPrimeLists[featureIdx][neighborIdx] = mPrime;
+      F1Lists[featureIdx][neighborIdx] = F1;
+      F1sPtLists[featureIdx][neighborIdx] = F1sPt;
+      F7Lists[featureIdx][neighborIdx] = F7;
     }
   }
 
@@ -127,7 +151,7 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   if(emitLaueClassWarning)
   {
-    return MakeWarningVoidResult(-94739, fmt::format("A phase other then Cubic m-3m is being analyzed. This filter only works on Cubic m-3m Laue classes. Those phases have a result of 0.0."));
+    return MakeWarningVoidResult(-94739, "A Phase other than Cubic m-3m is being analyzed. This filter only works on Cubic m-3m Laue classes. Those Phases have a result of 0.0.");
   }
 
   return {};

@@ -52,13 +52,19 @@ TEST_CASE("Test Loading Plugins")
     IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
-    filter->execute(dataStructure, {});
+    // Test Filter declares a generated file list whose default input path is empty, so
+    // preflight rejects an empty argument set. The execution still has to report that.
+    auto filterExecutionResult = filter->execute(dataStructure, {});
+    SIMPLNX_RESULT_REQUIRE_INVALID(filterExecutionResult.result);
   }
   {
     IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
-    filter2->execute(dataStructure, {});
+    // Test Filter 2 accepts every default argument, so executing it from the loaded plugin
+    // must succeed.
+    auto filter2ExecutionResult = filter2->execute(dataStructure, {});
+    SIMPLNX_RESULT_REQUIRE_VALID(filter2ExecutionResult.result);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -96,13 +102,19 @@ TEST_CASE("Test Singleton")
     IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
-    filter->execute(dataStructure, {});
+    // Test Filter declares a generated file list whose default input path is empty, so
+    // preflight rejects an empty argument set. The execution still has to report that.
+    auto filterExecutionResult = filter->execute(dataStructure, {});
+    SIMPLNX_RESULT_REQUIRE_INVALID(filterExecutionResult.result);
   }
   {
     IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
-    filter2->execute(dataStructure, {});
+    // Test Filter 2 accepts every default argument, so executing it from the loaded plugin
+    // must succeed.
+    auto filter2ExecutionResult = filter2->execute(dataStructure, {});
+    SIMPLNX_RESULT_REQUIRE_VALID(filter2ExecutionResult.result);
   }
 
   Application::DeleteInstance();

@@ -102,7 +102,7 @@ bool MMCellMap::valid() const
 }
 
 // ----------------------------------------------------------------------------
-bool MMCellMap::init()
+Result<> MMCellMap::init()
 {
   // Initialize interior cell contents. Each cell stores the label of it's bottom-left back corner.
   usize cellIndex = 0;
@@ -134,7 +134,7 @@ bool MMCellMap::init()
 }
 
 // ----------------------------------------------------------------------------
-bool MMCellMap::setCellVertices()
+Result<> MMCellMap::setCellVertices()
 {
   // Set cell type and count cell vertices. There are no vertices in right, front,
   // top faces.
@@ -161,13 +161,17 @@ bool MMCellMap::setCellVertices()
   // Create cell vertices. There are no vertices in right, front, top faces.
   try
   {
-    m_VerticesStoreRef.resizeTuples(ShapeType{numVertices});
+    Result<> resizeResult = m_VerticesStoreRef.resizeTuples(ShapeType{numVertices});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
     m_VertexArray.resize(numVertices);
   } catch(std::bad_alloc& ba)
   {
     delete[] m_cellArray;
     m_cellArray = nullptr;
-    return false;
+    return MakeErrorResult(-843871, "SurfaceNets could not allocate its cell-vertex index.");
   }
   int idxVtx = 0;
   for(int k = 0; k < m_arraySize[2] - 1; k++)
@@ -193,7 +197,7 @@ bool MMCellMap::setCellVertices()
       }
     }
   }
-  return true;
+  return {};
 }
 
 int32_t MMCellMap::label(const int32 cellIndex[3]) const

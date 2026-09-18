@@ -15,7 +15,10 @@
 #include <catch2/catch.hpp>
 #include <hdf5.h>
 
+#include <atomic>
 #include <filesystem>
+#include <fstream>
+#include <string>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -233,4 +236,71 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   ::TraverseFile(k_ExemplarFilePath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication preserves the destination", "[OrientationAnalysis][EbsdToH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_to_h5ebsd_cancellation.h5ebsd";
+  const std::string sentinel = "existing h5ebsd bytes";
+
+  for(const bool destinationExists : {true, false})
+  {
+    DYNAMIC_SECTION((destinationExists ? "Existing destination" : "Absent destination"))
+    {
+      std::error_code cleanupError;
+      fs::remove(outputPath, cleanupError);
+      REQUIRE_FALSE(cleanupError);
+      if(destinationExists)
+      {
+        std::ofstream outputStream(outputPath, std::ios::binary);
+        REQUIRE(outputStream.is_open());
+        outputStream << sentinel;
+      }
+
+      EbsdToH5EbsdFilter filter;
+      DataStructure dataStructure;
+      Arguments args;
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+
+      auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
+      std::atomic_bool shouldCancel = false;
+      bool sawSaveCheckpoint = false;
+      const std::string saveMessage = fmt::format("Saving converted data to '{}'", outputPath.string());
+      IFilter::MessageHandler cancelAtSaveCheckpoint{[&](const IFilter::Message& message) {
+        if(message.type == IFilter::Message::Type::Info && message.message == saveMessage)
+        {
+          sawSaveCheckpoint = true;
+          shouldCancel.store(true);
+        }
+      }};
+      const auto executeResult = filter.execute(dataStructure, args, nullptr, cancelAtSaveCheckpoint, shouldCancel);
+
+      REQUIRE(sawSaveCheckpoint);
+      REQUIRE(shouldCancel.load());
+      SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+      REQUIRE_FALSE(executeResult.result.errors().empty());
+      REQUIRE(executeResult.result.errors().front().code == -1);
+      if(destinationExists)
+      {
+        std::ifstream inputStream(outputPath, std::ios::binary);
+        REQUIRE(inputStream.is_open());
+        const std::string contents((std::istreambuf_iterator<char>(inputStream)), std::istreambuf_iterator<char>());
+        REQUIRE(contents == sentinel);
+      }
+      else
+      {
+        REQUIRE_FALSE(fs::exists(outputPath));
+      }
+
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
 }

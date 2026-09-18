@@ -243,10 +243,13 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   }
 
   messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
-  if(!RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel))
+  Result<> removeResult = RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel);
+  if(removeResult.invalid())
   {
-    return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", args.FeatureAttributeMatrixPath.toString()));
+    return removeResult;
   }
+  // RemoveInactiveObjects reports a cancelled compaction as success. No work follows this
+  // call, so a cancelled and a completed run both leave through the empty valid Result below.
 
   return {};
 }

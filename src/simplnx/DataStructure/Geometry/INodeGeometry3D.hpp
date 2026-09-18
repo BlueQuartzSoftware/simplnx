@@ -58,9 +58,10 @@ public:
 
   /**
    * @brief Resizes the polyhedra list to the target size.
-   * @param size
+   * @param size Specifies the new polyhedra count.
+   * @return Error if the polyhedra store cannot resize.
    */
-  void resizePolyhedraList(usize size);
+  [[nodiscard]] Result<> resizePolyhedraList(usize size);
 
   /**
    * @brief Returns the optional ID of the polyhedra data AttributeMatrix.
@@ -146,11 +147,6 @@ public:
    * @param coords The coordinates of each vertex
    */
   void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
-
-  /****************************************************************************
-   * These functions get values related to where the Vertex Coordinates are
-   * stored in the DataStructure
-   */
 
   /**
    * @brief Returns the DataStructure unique ID of the polyhedron list array.
@@ -251,6 +247,17 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the DataStructure object.
    */
+  /**
+   * @brief Copies the members INodeGeometry3D declares into a geometry copy.
+   *
+   * Chains to INodeGeometry2D::copyMembersInto so that a copy performed at any level of the hierarchy
+   * reproduces every inherited member exactly once.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(INodeGeometry3D& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_PolyhedronListId;
   std::optional<IdType> m_PolyhedronAttributeMatrixId;
   std::optional<IdType> m_UnsharedFaceListId;

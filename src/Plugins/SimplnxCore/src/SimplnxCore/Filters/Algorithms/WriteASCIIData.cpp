@@ -105,6 +105,10 @@ Result<> WriteASCIIData::operator()()
       OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, includeIndex, includeHeaders);
     }
 
+    if(m_ShouldCancel)
+    {
+      return MakeErrorResult(-1, "Filter cancelled");
+    }
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {

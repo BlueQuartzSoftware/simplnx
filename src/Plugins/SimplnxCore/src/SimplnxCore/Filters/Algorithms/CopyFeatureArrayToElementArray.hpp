@@ -12,6 +12,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct CopyFeatureArrayToElementArrayInputValues
+ * @brief Stores selected feature-array paths and output naming.
+ */
 struct SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayInputValues
 {
   StringParameter::ValueType CreatedArraySuffix;
@@ -21,14 +25,29 @@ struct SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayInputValues
 
 /**
  * @class CopyFeatureArrayToElementArray
- * @brief Copies each selected Feature-level array down to the Element (cell) level: for every
- * Element i, the created array's tuple is the source array's tuple at index FeatureIds[i].
+ * @brief Dispatches feature-to-cell array broadcasts by storage.
+ *
+ * Every cell receives the tuple of its Feature Id. Feature Id, selected feature,
+ * and created cell arrays all drive dispatch because mixed storage is valid.
+ *
+ * @see CopyFeatureArrayToElementArrayDirect, CopyFeatureArrayToElementArrayScanline, DispatchAlgorithm
  */
 class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArray
 {
 public:
+  /**
+   * @brief Creates a feature-to-cell dispatcher.
+   * @param dataStructure Provides selected arrays.
+   * @param mesgHandler Receives progress messages.
+   * @param shouldCancel Stops later arrays or chunks when true.
+   * @param inputValues Specifies validated paths and naming. The caller must
+   * keep this object alive for the dispatcher lifetime.
+   */
   CopyFeatureArrayToElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                  const CopyFeatureArrayToElementArrayInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning dispatcher.
+   */
   ~CopyFeatureArrayToElementArray() noexcept;
 
   CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;
@@ -37,8 +56,10 @@ public:
   CopyFeatureArrayToElementArray& operator=(CopyFeatureArrayToElementArray&&) noexcept = delete;
 
   /**
-   * @brief Runs the copy for every selected feature array.
-   * @return Invalid Result on FeatureIds range-validation failure (-5355 / -5351).
+   * @brief Broadcasts every selected feature array.
+   * @return Error from Feature Id validation or the selected implementation.
+   *
+   * Cancellation can retain output from completed arrays or chunks.
    */
   Result<> operator()();
 

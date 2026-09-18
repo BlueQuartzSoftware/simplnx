@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -43,11 +44,10 @@ const std::string k_CrystalStructuresName = "CrystalStructures";
 const std::string k_CAxisMisalignmentListOutName = "CAxisMisalignmentList";
 const std::string k_AvgCAxisMisalignmentsOutName = "AvgCAxisMisalignments";
 
-// Quaternion for a pure Bunge ZXZ Euler rotation (phi1=0, Phi=phiDeg, phi2=0). This is a pure
-// rotation about the x-axis by phiDeg degrees, which tilts the crystal c-axis (originally along z)
-// by phiDeg degrees from the global z-axis. For two cells with pure-Phi tilts of phiA and phiB
-// degrees, the c-axis misalignment is exactly |phiA - phiB| degrees (folded into [0, 90]) — see
-// the V&V provenance doc for the closed-form derivation.
+// A pure Bunge ZXZ Euler rotation (0, phiDeg, 0) rotates about the x-axis.
+// The rotation tilts the crystal c-axis by phiDeg from the global z-axis.
+// Two pure-Phi tilts have c-axis misalignment |phiA - phiB|, folded into [0, 90] degrees.
+// The V&V provenance document contains the closed-form derivation.
 std::array<float32, 4> QuatFromPhiDeg(float32 phiDeg)
 {
   const float32 halfAngleRad = (phiDeg * 0.5f) * 3.14159265358979323846f / 180.0f;
@@ -91,12 +91,18 @@ FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usiz
   td.featureAM = AttributeMatrix::Create(td.ds, "CellFeatureData", ShapeType{numFeatures}, td.geom->getId());
   td.ensembleAM = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  td.featureIds = CreateTestDataArray<int32>(td.ds, k_FeatureIdsName, {nZ, nY, nX}, {1}, td.cellAM->getId());
-  td.cellPhases = CreateTestDataArray<int32>(td.ds, k_CellPhasesName, {nZ, nY, nX}, {1}, td.cellAM->getId());
-  td.featurePhases = CreateTestDataArray<int32>(td.ds, k_FeaturePhasesName, {numFeatures}, {1}, td.featureAM->getId());
-  td.avgQuats = CreateTestDataArray<float32>(td.ds, k_AvgQuatsName, {numFeatures}, {4}, td.featureAM->getId());
+  const ShapeType cellTupleShape = {nZ, nY, nX};
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
+  td.featureIds = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cellAM->getId());
+  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
+  td.cellPhases = Int32Array::Create(td.ds, k_CellPhasesName, cellPhasesStore, td.cellAM->getId());
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_FeatureDataPath.createChildPath(k_FeaturePhasesName), {numFeatures}, {1});
+  td.featurePhases = Int32Array::Create(td.ds, k_FeaturePhasesName, featurePhasesStore, td.featureAM->getId());
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
+  td.avgQuats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.featureAM->getId());
   td.neighborList = NeighborList<int32>::Create(td.ds, k_NeighborListName, ShapeType{numFeatures}, td.featureAM->getId());
-  td.crystalStructures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensembleAM->getId());
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
+  td.crystalStructures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensembleAM->getId());
 
   for(usize i = 0; i < td.totalCells; ++i)
   {
@@ -139,11 +145,13 @@ Arguments BuildArgs(bool findAvgMisals)
 
 const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& ds)
 {
+  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName)));
   return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName));
 }
 
 const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
 {
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName)));
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
 }
 
@@ -234,13 +242,9 @@ FixtureData BuildRealisticMicrostructure()
 } // namespace AnalyticalFixtures
 } // namespace
 
-// Retired 2026-06-04 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
-// `compute_feature_neighbor_caxis_misalignments.tar.gz` was removed. The exemplar arrays (suffixed
-// `(7_5)`) were generated from a pre-fix SIMPL 6.5.171 pipeline run on a HEX-ONLY dataset — the
-// divisor bug at algorithm.cpp:111 (`hexNeighborListSize` reassigned inside the inner j-loop) is
-// therefore not exercised by the exemplar (no mismatch decrements ever fire), and the exemplar
-// would have happily passed even on the buggy code. The 4 hand-derived data fixtures below cover
-// the 6 algorithmic paths and include 3 bug-exposing per-feature configurations.
+// The retired exemplar comparison consumed `compute_feature_neighbor_caxis_misalignments.tar.gz`.
+// Its hex-only data did not exercise mismatch decrements and could not detect the divisor defect.
+// Four hand-derived fixtures cover six algorithm paths and three defect-sensitive feature configurations.
 // See `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for retirement details.
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: SIMPL Backwards Compatibility",
@@ -291,11 +295,9 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 // =====================================================================================
 // Class 1 (Analytical) data fixtures + Class 4 (Invariant) companion.
 //
-// All Class 1 fixtures use pure Bunge ZXZ Euler rotations (0, Phi, 0) about the x-axis, which tilt
-// the crystal c-axis (originally along z) by Phi degrees from the global z-axis. For two cells with
-// pure-Phi tilts of phiA and phiB degrees, the c-axis misalignment is exactly |phiA - phiB|
-// degrees (folded into [0, 90]). This makes the oracle closed-form — see the V&V provenance doc
-// for the closed-form derivation.
+// Class 1 fixtures use pure Bunge ZXZ rotations (0, Phi, 0) about the x-axis.
+// Two rotations have c-axis misalignment |phiA - phiB|, folded into [0, 90] degrees.
+// The V&V provenance document contains the closed-form derivation.
 // =====================================================================================
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Class 1 - Simple Hex Pair", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
@@ -531,10 +533,9 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 {
   UnitTest::LoadPlugins();
 
-  // The filter validates that the NeighborList, AvgQuats, and FeaturePhases feature-level arrays
-  // all share the same number of tuples. Build a synthetic DataStructure where FeaturePhases lives
-  // in a separate AttributeMatrix with a deliberately different tuple count (7 != 8) so the
-  // validateNumberOfTuples() guard in preflightImpl fails and returns error -1560.
+  // The filter requires equal tuple counts for NeighborList, AvgQuats, and FeaturePhases.
+  // FeaturePhases uses a separate AttributeMatrix with seven tuples instead of eight.
+  // This mismatch makes preflight return error -1560.
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({8, 1, 1});
@@ -564,4 +565,51 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -1560);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32 invalidPhaseIdx = GENERATE(-1, 2);
+  CAPTURE(invalidPhaseIdx);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  AnalyticalFixtures::FixtureData fixture = AnalyticalFixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/3, /*numCrystalStructures=*/2);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(fixture.featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  (*fixture.featurePhases)[1] = 1;
+  (*fixture.featurePhases)[2] = 1;
+  fixture.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2}));
+
+  ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
+
+  SECTION("Current Feature Phase returns an error")
+  {
+    (*fixture.featurePhases)[1] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -1564);
+  }
+
+  SECTION("Neighbor Feature Phase returns an error")
+  {
+    (*fixture.featurePhases)[2] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -1564);
+  }
+
+  SECTION("Feature zero is ignored")
+  {
+    (*fixture.featurePhases)[0] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }

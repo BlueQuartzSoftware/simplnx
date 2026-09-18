@@ -9,11 +9,16 @@ namespace nx::core
 
 /**
  * @class TiffImageIO
- * @brief IImageIO backend using libtiff for TIFF format support.
+ * @brief Reads and writes TIFF images with libtiff.
  *
  * Supports uint8, uint16, and float32 pixel types.
- * Reads/writes scanline-by-scanline.
- * Captures libtiff error messages via a thread-local error handler.
+ * Reads scanlines or tiles and writes scanlines.
+ * Captures
+ * libtiff error messages with a per-handle error handler.
+ * Tiled uint8 reads apply libtiff photometric conversion.
+ * The reader normalizes these tiles to TOPLEFT with mirror-only handling for
+ * transposed tags.
+ * Stripped input and other tiled types retain stored sample interpretation and row order.
  */
 class SIMPLNX_EXPORT TiffImageIO : public IImageIO
 {
@@ -22,7 +27,20 @@ public:
   ~TiffImageIO() noexcept override = default;
 
   Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const override;
-  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const override;
+  /**
+   * @brief Reads the requested TIFF page into the destination buffer.
+   */
+  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex = 0) const override;
+
+  /**
+   * @brief Supplies TIFF scanlines or tile-row segments to a callback.
+   * @param filePath Identifies the TIFF file.
+   * @param callback Receives bounded first-page row segments.
+   * @return Valid result on success, or a decoder or callback error.
+   *
+   * The bounded segments let callers crop or convert directly into destination pages.
+   */
+  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const override;
   Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const override;
   std::set<DataType> supportedWriteDataTypes() const override;
   std::set<usize> supportedWriteComponentCounts() const override;

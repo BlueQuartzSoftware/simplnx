@@ -10,6 +10,16 @@ This **Filter** calculates the *centroid* of each **Feature** by determining the
 
 A **Feature** with no **Cells** (an unused Feature Id) keeps a centroid of (0, 0, 0).
 
+## Algorithm
+
+The algorithm iterates over all voxels, accumulating each voxel's XYZ coordinate (computed from its flat index, the geometry origin, and spacing) into a per-feature Kahan sum. After all voxels are processed, each feature's centroid is the accumulated sum divided by the voxel count.
+
+If *Is Periodic* is enabled, a post-processing step checks whether any feature's bounding box spans the full extent of a dimension (indicating it wraps around a periodic boundary) and adjusts the centroid accordingly.
+
+### Performance
+
+This filter is optimized for out-of-core (OOC) data storage. The Feature IDs array is read in fixed-size chunks (64K tuples) via `copyIntoBuffer()` rather than accessing each voxel individually. All accumulation is performed in plain `std::vector` buffers (Kahan sums, compensators, voxel counts, XYZ ranges) to avoid per-element virtual dispatch through the DataStore interface. The final centroids are written to the output array in a single `copyFromBuffer()` call.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

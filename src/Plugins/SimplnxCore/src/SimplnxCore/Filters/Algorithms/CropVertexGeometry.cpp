@@ -79,12 +79,20 @@ Result<> CropVertexGeometry::operator()()
 
   auto& crop = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
   usize numTuples = croppedPoints.size();
-  crop.resizeVertexList(numTuples);
+  Result<> resizeResult = crop.resizeVertexList(numTuples);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   ShapeType tDims = {numTuples};
 
   DataPath croppedVertexDataPath = m_InputValues->OutputVertexGeometryPath.createChildPath(m_InputValues->VertexAttributeMatrixName);
   auto& vertexDataAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
-  vertexDataAttMatrix.resizeTuples(tDims);
+  resizeResult = vertexDataAttMatrix.resizeTuples(tDims);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   for(usize i = 0; i < numTuples; i++)
   {

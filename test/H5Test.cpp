@@ -21,6 +21,7 @@
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
@@ -40,6 +41,7 @@
 
 #include <hdf5.h>
 
+#include <mutex>
 #include <numeric>
 #include <string>
 #include <type_traits>
@@ -57,6 +59,106 @@ static_assert(std::is_same_v<hsize_t, nx::core::HDF5::SizeType>, "H5::SizeType m
 
 namespace
 {
+/**
+ * @struct DatatypeFixtureFile
+ * @brief Removes the datatype test file after its HDF5 wrappers have closed.
+ */
+struct DatatypeFixtureFile
+{
+  fs::path path;
+
+  ~DatatypeFixtureFile()
+  {
+    std::error_code error;
+    fs::remove(path, error);
+  }
+};
+
+/**
+ * @class CallerOwnedDatatype
+ * @brief Closes only the datatype identifier returned to this test by getTypeId().
+ */
+class CallerOwnedDatatype
+{
+public:
+  /**
+   * @brief Adopts the identifier that the getter transfers to its caller.
+   * @param identifier Supplies the owned datatype identifier.
+   */
+  explicit CallerOwnedDatatype(hid_t identifier)
+  : m_Id(identifier)
+  {
+  }
+
+  /**
+   * @brief Releases the test's own handle if an assertion skips its explicit close.
+   */
+  ~CallerOwnedDatatype()
+  {
+    if(m_Id >= 0)
+    {
+      static_cast<void>(close());
+    }
+  }
+
+  CallerOwnedDatatype(const CallerOwnedDatatype&) = delete;
+  CallerOwnedDatatype& operator=(const CallerOwnedDatatype&) = delete;
+
+  hid_t getId() const
+  {
+    return m_Id;
+  }
+
+  /**
+   * @brief Explicitly releases the caller-owned identifier under the existing HDF5 API lock.
+   * @return HDF5 close status.
+   */
+  herr_t close()
+  {
+    std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+    const herr_t status = H5Tclose(m_Id);
+    if(status >= 0)
+    {
+      m_Id = -1;
+    }
+    return status;
+  }
+
+private:
+  hid_t m_Id = -1;
+};
+
+/**
+ * @brief Counts datatype identifiers, including transient types without an associated file.
+ * @return Open datatype count, or a negative HDF5 error status.
+ */
+int64 CountHdf5DatatypeIds()
+{
+  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  return static_cast<int64>(H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_DATATYPE));
+}
+
+/**
+ * @brief Returns the number of open HDF5 dataset identifiers.
+ * @return Open dataset count, or a negative HDF5 error status.
+ */
+int64 CountHdf5DatasetIds()
+{
+  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  return static_cast<int64>(H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_DATASET));
+}
+
+/**
+ * @brief Tests whether an HDF5 identifier is valid.
+ * @param id Identifies the HDF5 object to test.
+ * @return True if HDF5 reports a valid identifier.
+ */
+bool IsHdf5IdValid(hid_t id)
+{
+  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  return H5Iis_valid(id) > 0;
+}
+
 namespace Constants
 {
 const fs::path k_DataDir = "test/data";
@@ -66,13 +168,13 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir()
 {
-  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
+  return fs::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetLegacyFilepath()
 {
   std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
-  return std::filesystem::path(path);
+  return fs::path(path);
 }
 
 fs::path GetComplexH5File()
@@ -200,7 +302,7 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
-  // Now create some "Cell" data for the Vertex Geometry
+  // Create cell-level arrays for the Vertex Geometry.
   ShapeType tupleShape = {vertexGeometry->getNumberOfVertices()};
   usize numComponents = 1;
   Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
@@ -634,10 +736,10 @@ H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedCl
 TEST_CASE("Read Legacy DREAM3D-NX Data")
 {
   auto app = Application::GetOrCreateInstance();
-  std::filesystem::path filepath = GetLegacyFilepath();
+  fs::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   {
-    Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
+    Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filepath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     DataStructure dataStructure = result.value();
 
@@ -737,9 +839,8 @@ TEST_CASE("ImageGeometryIO")
   }
 }
 
-// Reading an attribute from an invalid HDF5 object must return a recoverable error rather
-// than throwing an uncaught exception. Previously the error-message formatting called
-// GetNameFromBuffer() on an empty name, which threw and aborted the process. See issue #1642.
+// Invalid HDF5 objects must return recoverable attribute errors instead of throwing.
+// This test exercises the empty-name formatting path.
 TEST_CASE("HDF5 ObjectIO: Invalid object reads recover gracefully")
 {
   auto app = Application::GetOrCreateInstance();
@@ -1069,8 +1170,8 @@ TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter]
 
 TEST_CASE("DataStructureAppend")
 {
-  const std::filesystem::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
-  const std::filesystem::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
+  const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
+  const fs::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
   const DataPath originalArrayPath({"foo"});
 
   DataStructure baseDataStructure;
@@ -1083,9 +1184,7 @@ TEST_CASE("DataStructureAppend")
   Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, false);
-  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-  DataStructure exemplarDataStructure = std::move(readResult.value());
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(inputFilePath);
 
   usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
   for(const DataObject* object : exemplarDataStructure.getTopLevelData())
@@ -1095,10 +1194,7 @@ TEST_CASE("DataStructureAppend")
     auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
-    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath, false);
-    SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
-
-    DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
+    DataStructure appendedDataStructure = UnitTest::LoadDataStructure(outputFilePath);
 
     currentTopLevelSize++;
 
@@ -1206,14 +1302,181 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
   REQUIRE(info->hasDeflate == false);
 }
 
+TEST_CASE("DatasetIO: value getters release temporary datatype handles", "[simplnx][HDF5][DatasetIO][Lifetime]")
+{
+  const fs::path path = GetDataDir() / "dataset_type_getter_lifetime.h5";
+  fs::create_directories(path.parent_path());
+  DatatypeFixtureFile cleanup{path};
+  auto file = HDF5::FileIO::WriteFile(path);
+  REQUIRE(file.isValid());
+  auto dataset = file.createDataset("values");
+  const std::vector<int32> values{7, 11, 19, 23};
+  const auto written = dataset.writeSpan<int32>({values.size()}, nonstd::span<const int32>(values.data(), values.size()));
+  REQUIRE(written.valid());
+  REQUIRE(dataset.getId() >= 0);
+  const int64 baseline = CountHdf5DatatypeIds();
+  REQUIRE(baseline >= 0);
+  constexpr usize k_Repetitions = 32;
+
+  SECTION("getClassType returns the class without retaining temporary identifiers")
+  {
+    for(usize repetition = 0; repetition < k_Repetitions; ++repetition)
+    {
+      CHECK(dataset.getClassType() == H5T_INTEGER);
+    }
+    CHECK(CountHdf5DatatypeIds() == baseline);
+  }
+  SECTION("getTypeSize returns the scalar size without retaining temporary identifiers")
+  {
+    for(usize repetition = 0; repetition < k_Repetitions; ++repetition)
+    {
+      CHECK(dataset.getTypeSize() == sizeof(int32));
+    }
+    CHECK(CountHdf5DatatypeIds() == baseline);
+  }
+  SECTION("getTypeId preserves caller ownership until explicit close")
+  {
+    CallerOwnedDatatype type(dataset.getTypeId());
+    REQUIRE(type.getId() >= 0);
+    {
+      // Getter calls lock themselves. Only direct HDF5 queries belong inside this leaf scope.
+      std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+      CHECK(H5Iis_valid(type.getId()) > 0);
+      CHECK(H5Tget_class(type.getId()) == H5T_INTEGER);
+      CHECK(H5Tget_size(type.getId()) == sizeof(int32));
+    }
+    CHECK(CountHdf5DatatypeIds() == baseline + 1);
+    REQUIRE(type.close() >= 0);
+    CHECK(CountHdf5DatatypeIds() == baseline);
+  }
+}
+
+TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[simplnx][HDF5][DatasetIO][Lifetime]")
+{
+  const fs::path path = GetDataDir() / "dataset_move_assignment_lifetime.h5";
+  fs::create_directories(path.parent_path());
+  DatatypeFixtureFile cleanup{path};
+  const std::vector<int32> firstValues{11};
+  const std::vector<int32> secondValues{22};
+  const int64 initialDatasetCount = CountHdf5DatasetIds();
+  REQUIRE(initialDatasetCount >= 0);
+
+  {
+    auto file = HDF5::FileIO::WriteFile(path);
+    REQUIRE(file.isValid());
+    {
+      auto first = file.createDataset("first");
+      REQUIRE(first.writeSpan<int32>({firstValues.size()}, nonstd::span<const int32>(firstValues.data(), firstValues.size())).valid());
+      auto second = file.createDataset("second");
+      REQUIRE(second.writeSpan<int32>({secondValues.size()}, nonstd::span<const int32>(secondValues.data(), secondValues.size())).valid());
+    }
+    REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+
+    {
+      auto destination = file.openDataset("first");
+      auto source = file.openDataset("second");
+      const hid_t displacedId = destination.getId();
+      const hid_t transferredId = source.getId();
+      REQUIRE(displacedId > 0);
+      REQUIRE(transferredId > 0);
+      REQUIRE(CountHdf5DatasetIds() == initialDatasetCount + 2);
+      source.setCompressionLevel(6);
+
+      destination = std::move(source);
+
+      CHECK_FALSE(source.isValid());
+      CHECK(destination.getId() == transferredId);
+      CHECK(destination.getCompressionLevel() == 6);
+      CHECK_FALSE(IsHdf5IdValid(displacedId));
+      CHECK(IsHdf5IdValid(transferredId));
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount + 1);
+    }
+    REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+
+    {
+      HDF5::DatasetIO destination;
+      auto source = file.openDataset("first");
+      const hid_t transferredId = source.getId();
+      REQUIRE(transferredId > 0);
+      REQUIRE(CountHdf5DatasetIds() == initialDatasetCount + 1);
+
+      destination = std::move(source);
+
+      CHECK_FALSE(source.isValid());
+      CHECK(destination.getId() == transferredId);
+      CHECK(IsHdf5IdValid(transferredId));
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount + 1);
+    }
+    REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+
+    {
+      auto destination = file.openDataset("first");
+      auto source = file.openDataset("second");
+      const hid_t displacedId = destination.getId();
+      REQUIRE(displacedId > 0);
+      REQUIRE(CountHdf5DatasetIds() == initialDatasetCount + 1);
+
+      destination = std::move(source);
+
+      CHECK_FALSE(source.isValid());
+      CHECK_FALSE(destination.isValid());
+      CHECK(destination.getNamePath() == "second");
+      CHECK_FALSE(IsHdf5IdValid(displacedId));
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount);
+      CHECK(destination.getId() > 0);
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount + 1);
+    }
+    REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+
+    {
+      HDF5::DatasetIO destination;
+      HDF5::DatasetIO source;
+
+      destination = std::move(source);
+
+      CHECK_FALSE(source.isValid());
+      CHECK_FALSE(destination.isValid());
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount);
+    }
+
+    {
+      auto dataset = file.openDataset("first");
+      const hid_t originalId = dataset.getId();
+      REQUIRE(originalId > 0);
+      dataset.setCompressionLevel(4);
+      auto* alias = &dataset;
+
+      dataset = std::move(*alias);
+
+      CHECK(dataset.getId() == originalId);
+      CHECK(dataset.getCompressionLevel() == 4);
+      CHECK(IsHdf5IdValid(originalId));
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount + 1);
+    }
+    REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+
+    {
+      auto dataset = file.openDataset("second");
+      auto* alias = &dataset;
+
+      dataset = std::move(*alias);
+
+      CHECK_FALSE(dataset.isValid());
+      CHECK(dataset.getNamePath() == "second");
+      CHECK(CountHdf5DatasetIds() == initialDatasetCount);
+    }
+  }
+
+  REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
+  auto replacement = HDF5::FileIO::WriteFile(path);
+  REQUIRE(replacement.isValid());
+}
+
 TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][HDF5]")
 {
 #ifdef H5Support_USE_MUTEX
-  // Regression guard for the original H5SUPPORT_MUTEX_LOCK() bug: the macro used to
-  // declare a fresh per-call local std::mutex (serializing nothing). Hammer a shared
-  // counter from many threads under the macro — a real lock on the one shared ApiLock
-  // yields exactly threads*iters with no lost updates; the old no-op macro would lose
-  // updates (and the unsynchronized increments would be a data race).
+  // Each thread increments one shared counter under H5SUPPORT_MUTEX_LOCK().
+  // The exact total proves that one shared ApiLock protects every update.
   constexpr int k_Threads = 8;
   constexpr int k_Iters = 20000;
   int counter = 0;

@@ -50,6 +50,30 @@ For hexagonal and trigonal phases the **IPF color itself is convention-independe
 
 The 6/m, -3m, and -3 Laue classes use wider/shifted triangle wedges (so their green/blue corners are different crystal directions), but the apex is always [0001] = red. Each legend image prints the convention it was generated with as a footnote along its bottom edge.
 
+## Algorithm
+
+For each voxel, the filter converts the stored Euler angles (phi1, Phi, phi2) into an orientation matrix, transforms the user-specified reference direction from the sample frame into the crystal frame, and maps the resulting crystal-frame direction to a position on the inverse pole figure triangle for the voxel's Laue symmetry class. That position determines the RGB color.
+
+Voxels that are masked out (bad data), that have an unindexed phase (phase 0), or whose phase ID exceeds the crystal structures ensemble array are colored black (0, 0, 0). If any voxels have out-of-range phase IDs, the filter returns an error with a count of affected voxels.
+
+### In-Core Path (ComputeIPFColorsDirect)
+
+When all arrays reside in contiguous in-memory storage, the algorithm uses `ParallelDataAlgorithm` to split the voxel range across threads. Each thread independently computes IPF colors for its assigned sub-range using direct `AbstractDataStore` access.
+
+### Out-of-Core Path (ComputeIPFColorsScanline)
+
+When any of the Euler-angle, phase, or IPF-color arrays are backed by chunked (OOC) disk storage, the algorithm switches to a sequential chunk-based approach. It processes voxels in fixed-size chunks of 65,536 tuples:
+
+1. Bulk-read Euler angles, phase IDs, and (optionally) the mask for the chunk via `copyIntoBuffer()`.
+2. Compute IPF colors for every tuple in the chunk using the same `LaueOps::generateIPFColor()` logic.
+3. Bulk-write the computed RGB colors back via `copyFromBuffer()`.
+
+This linear access pattern reads each OOC disk chunk at most once, avoiding the random-access chunk thrashing that would occur if the in-core parallel path accessed OOC stores concurrently.
+
+### Performance
+
+The in-core path achieves near-linear multi-threaded speedup. The OOC path is single-threaded but disk-I/O-limited, with throughput determined by sequential read/write bandwidth rather than random-access latency. For datasets that fit in RAM, the in-core path is significantly faster; for datasets that exceed available memory, the OOC path avoids catastrophic slowdowns from virtual memory paging or chunk eviction.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

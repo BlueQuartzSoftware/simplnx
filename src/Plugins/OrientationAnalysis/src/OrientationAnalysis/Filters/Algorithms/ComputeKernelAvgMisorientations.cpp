@@ -1,174 +1,73 @@
 #include "ComputeKernelAvgMisorientations.hpp"
 
-#include "simplnx/Common/Constants.hpp"
+#include "ComputeKernelAvgMisorientationsDirect.hpp"
+#include "ComputeKernelAvgMisorientationsScanline.hpp"
+
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
-#include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <nonstd/span.hpp>
+
 #include <algorithm>
-#include <chrono>
+#include <vector>
 
 using namespace nx::core;
 
-namespace
+Result<> nx::core::ValidateKernelAvgMisorientationsPhaseIndices(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues)
 {
-class FindKernelAvgMisorientationsImpl
-{
-public:
-  FindKernelAvgMisorientationsImpl(ProgressMessageHelper& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
-                                   const std::atomic_bool& shouldCancel)
-  : m_ProgressMessageHelper(progressMessenger)
-  , m_DataStructure(dataStructure)
-  , m_InputValues(inputValues)
-  , m_ShouldCancel(shouldCancel)
+  constexpr usize k_ValidationChunkTuples = 65536;
+  const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
+  const auto& cellPhasesStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues.CellPhasesArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = dataStructure.getDataRefAs<UInt32Array>(inputValues.CrystalStructuresArrayPath).getDataStoreRef();
+  const usize numCrystalStructures = crystalStructuresStoreRef.getNumberOfTuples();
+  std::vector<uint32> crystalStructuresCache(numCrystalStructures);
+  if(Result<> readResult = crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), crystalStructuresCache.size())); readResult.invalid())
   {
-    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+    return readResult;
   }
-
-  // For each valid focal cell in the chunk: walk the (2rx+1)x(2ry+1)x(2rz+1) kernel, admit
-  // neighbors per the Use Feature Ids mode, accumulate symmetry-reduced misorientation via
-  // LaueOps, and store the average (degrees) at the focal cell. Invalid focal cells get 0.
-  void convert(size_t zStart, size_t zEnd, size_t yStart, size_t yEnd, size_t xStart, size_t xEnd) const
+  const usize numLaueOperations = ebsdlib::LaueOps::GetAllOrientationOps().size();
+  const usize totalTuples = featureIdsStoreRef.getNumberOfTuples();
+  std::vector<int32> featureIdsBuffer(k_ValidationChunkTuples);
+  std::vector<int32> cellPhasesBuffer(k_ValidationChunkTuples);
+  for(usize tupleOffset = 0; tupleOffset < totalTuples; tupleOffset += k_ValidationChunkTuples)
   {
-    // Input Arrays / Parameter Data
-    const auto& cellPhasesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-    const auto& cellPhases = cellPhasesArray.getDataStoreRef();
-    const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-    const auto& featureIds = featureIdsArray.getDataStoreRef();
-    const auto& quatsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-    const auto& quats = quatsArray.getDataStoreRef();
-    const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-    const auto& crystalStructures = crystalStructuresArray.getDataStoreRef();
-    const auto kernelSize = m_InputValues->KernelSize;
-    const bool useFeatureIds = m_InputValues->UseFeatureIds;
-
-    // Output Arrays
-    auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName);
-    auto& kernelAvgMisorientations = kernelAvgMisorientationsArray.getDataStoreRef();
-
-    const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-    SizeVec3 udims = imageGeom.getDimensions();
-
-    ebsdlib::QuatD q1;
-    ebsdlib::QuatD q2;
-
-    // messenger values
-    usize counter = 0;
-    usize increment = std::max(static_cast<usize>(1), (zEnd - zStart) / 100);
-
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
-
-    auto xPoints = static_cast<int64_t>(udims[0]);
-    auto yPoints = static_cast<int64_t>(udims[1]);
-    auto zPoints = static_cast<int64_t>(udims[2]);
-    for(size_t plane = zStart; plane < zEnd; plane++)
+    const usize tupleCount = std::min(k_ValidationChunkTuples, totalTuples - tupleOffset);
+    if(Result<> readResult = featureIdsStoreRef.copyIntoBuffer(tupleOffset, nonstd::span<int32>(featureIdsBuffer.data(), tupleCount)); readResult.invalid())
     {
-      if(counter > increment)
+      return readResult;
+    }
+    if(Result<> readResult = cellPhasesStoreRef.copyIntoBuffer(tupleOffset, nonstd::span<int32>(cellPhasesBuffer.data(), tupleCount)); readResult.invalid())
+    {
+      return readResult;
+    }
+    for(usize chunkTupleIdx = 0; chunkTupleIdx < tupleCount; chunkTupleIdx++)
+    {
+      const int32 currentPhaseIdx = cellPhasesBuffer[chunkTupleIdx];
+      if(featureIdsBuffer[chunkTupleIdx] <= 0 || currentPhaseIdx <= 0)
       {
-        progressMessenger.sendProgressMessage(counter);
-        counter = 0;
+        continue;
       }
-
-      for(size_t row = yStart; row < yEnd; row++)
+      if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
       {
-        if(m_ShouldCancel)
-        {
-          return;
-        }
-
-        for(size_t col = xStart; col < xEnd; col++)
-        {
-          size_t point = (plane * xPoints * yPoints) + (row * xPoints) + col;
-          if(featureIds[point] > 0 && cellPhases[point] > 0)
-          {
-            float totalMisorientation = 0.0f;
-            int32 numVoxel = 0;
-
-            size_t quatIndex = point * 4;
-            q1[0] = quats[quatIndex];
-            q1[1] = quats[quatIndex + 1];
-            q1[2] = quats[quatIndex + 2];
-            q1[3] = quats[quatIndex + 3];
-
-            for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
-            {
-              const int64_t zIdx = static_cast<int64_t>(plane) + j;
-              if(zIdx < 0 || zIdx > zPoints - 1)
-              {
-                continue;
-              }
-              for(int32_t k = -kernelSize[1]; k < kernelSize[1] + 1; k++)
-              {
-                const int64_t yIdx = static_cast<int64_t>(row) + k;
-                if(yIdx < 0 || yIdx > yPoints - 1)
-                {
-                  continue;
-                }
-                for(int32_t l = -kernelSize[0]; l < kernelSize[0] + 1; l++)
-                {
-                  const int64_t xIdx = static_cast<int64_t>(col) + l;
-                  if(xIdx < 0 || xIdx > xPoints - 1)
-                  {
-                    continue;
-                  }
-                  // All three indices are clamped in-bounds, so the flattened neighbor index is
-                  // always valid; no separate negative-index guard is needed.
-                  const auto neighborIdx = static_cast<size_t>((zIdx * xPoints * yPoints) + (yIdx * xPoints) + xIdx);
-                  // Per-grain mode: neighbor must belong to the same feature as the central cell.
-                  // Per-voxel mode (use_feature_ids == false): neighbor must be a valid cell
-                  // (featureId > 0) of the same phase as the central cell.
-                  const bool neighborContributes = useFeatureIds ? (featureIds[point] == featureIds[neighborIdx]) : (featureIds[neighborIdx] > 0 && cellPhases[neighborIdx] == cellPhases[point]);
-                  if(neighborContributes)
-                  {
-                    quatIndex = neighborIdx * 4;
-                    q2[0] = quats[quatIndex];
-                    q2[1] = quats[quatIndex + 1];
-                    q2[2] = quats[quatIndex + 2];
-                    q2[3] = quats[quatIndex + 3];
-                    uint32_t laueClass = crystalStructures[cellPhases[point]];
-                    ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
-                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiF);
-                    numVoxel++;
-                  }
-                }
-              }
-            }
-            // numVoxel is always >= 1 here: the focal cell passes both neighbor gates (j=k=l=0)
-            // and contributes a self-misorientation of 0 degrees.
-            kernelAvgMisorientations[point] = totalMisorientation / static_cast<float>(numVoxel);
-          }
-          else
-          {
-            kernelAvgMisorientations[point] = 0.0f;
-          }
-
-          counter++;
-        }
+        return MakeErrorResult(-67203,
+                               fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
+                                           inputValues.CellPhasesArrayPath.toString(), currentPhaseIdx, tupleOffset + chunkTupleIdx, inputValues.CrystalStructuresArrayPath.toString(),
+                                           numCrystalStructures, numCrystalStructures));
+      }
+      const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
+      if(currentLaueIndex >= numLaueOperations)
+      {
+        return MakeErrorResult(-67204, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
+                                                   inputValues.CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, numLaueOperations, numLaueOperations));
       }
     }
-    progressMessenger.sendProgressMessage(counter);
   }
+  return {};
+}
 
-  void operator()(const Range3D& range) const
-  {
-    convert(range[4], range[5], range[2], range[3], range[0], range[1]);
-  }
-
-private:
-  ProgressMessageHelper& m_ProgressMessageHelper;
-  DataStructure& m_DataStructure;
-  const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
-  const std::atomic_bool& m_ShouldCancel;
-  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
-};
-
-} // namespace
-
-// -----------------------------------------------------------------------------
 ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                  ComputeKernelAvgMisorientationsInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -178,32 +77,16 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  SizeVec3 udims = imageGeom.getDimensions();
+  const auto* featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+  const auto* phases = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
+  const auto* quats = m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath);
+  const auto* crystalStructures = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath);
+  const auto* output = m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-
-  progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
-  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
-
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath));
-
-  ParallelData3DAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
-  parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressMessageHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
-
-  return {};
+  return DispatchAlgorithm<ComputeKernelAvgMisorientationsDirect, ComputeKernelAvgMisorientationsScanline>({featureIds, phases, quats, crystalStructures, output}, m_DataStructure, m_MessageHandler,
+                                                                                                           m_ShouldCancel, m_InputValues);
 }

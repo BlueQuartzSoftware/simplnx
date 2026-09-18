@@ -53,6 +53,14 @@ This **Filter** operates in place and does not create a new geometry or output a
 
 Setting *Minimum Number Neighbors* to *0* retains all existing feature tuples, but negative Feature IDs may still be reassigned.
 
+## Algorithm and Performance
+
+The filter first marks features below the neighbor threshold as inactive. It scans the per-cell Feature IDs in fixed-size bulk chunks, setting removed IDs to `-1` and compacting surviving IDs in the same pass. This avoids both per-voxel OOC writes and a second full-volume renumber pass.
+
+The resulting negative voxels are filled iteratively by majority vote among their six face neighbors. Each pass processes one cell array at a time with rolling previous/current/next Z-slices of Feature IDs and target tuples. Feature IDs are updated last, so all transferred arrays use the same iteration snapshot without a cell-count-wide source/destination map. All DataStore access uses bulk slice transfers.
+
+Peak cell-level scratch is `O(Dx * Dy * largest_tuple_width)`: three Feature ID slices plus three slices of the one target array currently being processed. No resident allocation scales with the volume cell count.
+
 ## WARNING: Feature Data Will Become Invalid
 
 Modifying Feature IDs changes the feature topology. Previously computed feature-level data may therefore be invalid even after its tuples are compacted. Rerun filters that compute feature data after this **Filter**.

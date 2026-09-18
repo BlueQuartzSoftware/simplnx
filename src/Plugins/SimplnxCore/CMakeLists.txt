@@ -109,21 +109,15 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RandomizeFeatureIdsFilter
-  ReadBinaryCTNorthstarFilter
   ReadCSVFileFilter
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
   ReadHDF5DatasetFilter
-  ReadImageFilter
-  ReadImageStackFilter
-  ReadNIfTIFileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadStringDataArrayFilter
   ReadTextDataArrayFilter
-  ReadVolumeGraphicsFileFilter
   ReadVtkStructuredPointsFilter
-  ReadZeissTxmFileFilter
   RegularGridSampleSurfaceMeshFilter
   RegularizeZSpacingFilter
   RemoveFlaggedEdgesFilter
@@ -167,7 +161,6 @@ set(FilterList
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
-  WriteImageFilter
 )
 
 set(ActionList
@@ -179,7 +172,6 @@ set(AlgorithmList
   AlignSectionsFeatureCentroid
   AlignSectionsList
   AppendImageGeometry
-  ApplyTransformationToGeometry
   ApproximatePointCloudHull
   ArrayCalculator
   CalculateTriangleGroupCurvatures
@@ -193,30 +185,53 @@ set(AlgorithmList
   ComputeArrayStatistics
   ComputeBiasedFeatures
   ComputeBoundaryCells
+  ComputeBoundaryCellsDirect
+  ComputeBoundaryCellsScanline
   ComputeBoundingBoxStats
+  ComputeBoundingBoxStatsDirect
+  ComputeBoundingBoxStatsScanline
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
+  ComputeCoordinateThresholdDirect
+  ComputeCoordinateThresholdScanline
   ComputeBoundaryElementFractions
   ComputeDifferencesMap
   ComputeEuclideanDistMap
+  ComputeEuclideanDistMapScanline
   ComputeFeatureBounds
+  ComputeFeatureBoundsDirect
+  ComputeFeatureBoundsScanline
   ComputeFeatureCentroids
   ComputeFeatureClustering
   ComputeFeatureNeighbors
+  ComputeFeatureNeighborsDirect
+  ComputeFeatureNeighborsScanline
   ComputeFeaturePhases
   ComputeFeaturePhasesBinary
   ComputeFeatureRect
   ComputeFeatureSizes
+  ComputeFeatureSizesDirect
+  ComputeFeatureSizesScanline
   ComputeGroupingDensity
   ComputeKMeans
+  ComputeKMeansDirect
+  ComputeKMeansScanline
   ComputeKMedoids
+  ComputeKMedoidsDirect
+  ComputeKMedoidsScanline
   ComputeLargestCrossSections
+  ComputeLargestCrossSectionsDirect
+  ComputeLargestCrossSectionsScanline
   ComputeMomentInvariants2D
   ComputeNeighborhoods
   ComputeNeighborListStatistics
 #  ComputeNumFeatures
   ComputeSurfaceAreaToVolume
+  ComputeSurfaceAreaToVolumeDirect
+  ComputeSurfaceAreaToVolumeScanline
   ComputeSurfaceFeatures
+  ComputeSurfaceFeaturesDirect
+  ComputeSurfaceFeaturesScanline
 #  ComputeTriangleAreas
   ComputeTriangleGeomCentroids
   ComputeTriangleGeomVolumes
@@ -225,13 +240,16 @@ set(AlgorithmList
 #  ComputeVolumeFractions
   ConcatenateDataArrays
   ConditionalSetValue
-  ConvertColorToGrayScale
   ConvertData
  # CopyDataObject
   CopyFeatureArrayToElementArray
+  CopyFeatureArrayToElementArrayDirect
+  CopyFeatureArrayToElementArrayScanline
   CreateAMScanPaths
  # CreateAttributeMatrix
   CreateColorMap
+  CreateColorMapDirect
+  CreateColorMapScanline
  # CreateDataArray
 #  CreateDataArrayAdvanced
 #  CreateDataGroup
@@ -243,6 +261,8 @@ set(AlgorithmList
   CropImageGeometry
   CropVertexGeometry
   DBSCAN
+  DBSCANDirect
+  DBSCANScanline
  # DeleteData
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
@@ -254,11 +274,16 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
+  FillBadDataBFS
+  FillBadDataCCL
+  FillBadVoxels
   FindNRingNeighbors
   FlyingEdges3D
   HierarchicalSmooth
   IdentifyDuplicateVertices
   IdentifySample
+  IdentifySampleBFS
+  IdentifySampleCCL
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
@@ -271,39 +296,42 @@ set(AlgorithmList
   MapPointCloudToRegularGrid
 #  MoveData
   MultiThresholdObjects
+  MultiThresholdObjectsDirect
+  MultiThresholdObjectsScanline
   NearestPointFuseRegularGrids
+  NearestPointFuseRegularGridsDirect
+  NearestPointFuseRegularGridsScanline
   PadImageGeometry
   PartitionGeometry
+  PartitionGeometryDirect
+  PartitionGeometryScanline
   PointSampleEdgeGeometry
   ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
   QuickSurfaceMesh
-  ReadBinaryCTNorthstar
+  QuickSurfaceMeshDirect
+  QuickSurfaceMeshScanline
   ReadCSVFile
   ReadDeformKeyFileV12
 #  ReadDREAM3D
   ReadHDF5Dataset
-  ReadImage
-  ReadImageStack
-  ReadNIfTIFile
   ReadRawBinary
   ReadStlFile
   ReadStringDataArray
   ReadTextDataArray
-  ReadVolumeGraphicsFile
   ReadVtkStructuredPoints
-  ReadZeissTxmFile
   RegularGridSampleSurfaceMesh
   RegularizeZSpacing
   RemoveFlaggedEdges
   RemoveFlaggedFeatures
+  RemoveFlaggedFeaturesDirect
+  RemoveFlaggedFeaturesScanline
   RemoveFlaggedTriangles
   RemoveFlaggedVertices
  # RenameDataObject
   ReplaceElementAttributesWithNeighborValues
   RequireMinNumNeighbors
   RequireMinimumSizeFeatures
-  ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
   ReverseTriangleWinding
@@ -313,10 +341,14 @@ set(AlgorithmList
  # SetImageGeomOriginScaling
   SharedFeatureFace
   Silhouette
+  SilhouetteDirect
+  SilhouetteScanline
   SliceTriangleGeometry
   SplitDataArrayByComponent
   SplitDataArrayByTuple
   SurfaceNets
+  SurfaceNetsDirect
+  SurfaceNetsScanline
   TriangleCentroid
   TriangleDihedralAngle
   TriangleNormal
@@ -337,7 +369,6 @@ set(AlgorithmList
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
-  WriteImage
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}
@@ -372,15 +403,10 @@ get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DI
 set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${reproc_dll_path})
 
 
-# ------------------------------------------------------------------------------
-# The ReadNIfTIFileFilter requires zlib for transparent .nii/.nii.gz support
-# ------------------------------------------------------------------------------
-find_package(ZLIB REQUIRED)
-
 #------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
-target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++ ZLIB::ZLIB)
+target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
 
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
@@ -394,9 +420,6 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/VtkUtilities.hpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nifti1.h"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.hpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
@@ -409,20 +432,18 @@ set(PLUGIN_EXTRA_SOURCES
     # "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMGeometryOBJ.h"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMSurfaceNet.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMSurfaceNet.h"
+    # Shared header for the IdentifySample BFS/CCL variants (no .cpp, so the
+    # AlgorithmList stem-expansion does not pick it up).
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/IdentifySampleCommon.hpp"
+    # Shared header for the RemoveFlaggedFeatures direct/scanline variants (no .cpp,
+    # so the AlgorithmList stem-expansion does not pick it up).
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/RemoveFlaggedFeaturesCommon.hpp"
 
-)
-
-set(OLESS_SOURCES 
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless_common.hpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.cpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.h"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.cpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.h"
 )
 
 target_sources(${PLUGIN_NAME}
   PRIVATE
-    ${PLUGIN_EXTRA_SOURCES} ${OLESS_SOURCES}
+    ${PLUGIN_EXTRA_SOURCES}
 )
 
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" 
@@ -467,14 +488,6 @@ string(APPEND PYTHON_PLUGIN_META_TEMPLATE "0x00")
 
 cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.in.hpp"
                                GENERATED_FILE_PATH "${${PLUGIN_NAME}_BINARY_DIR}/generated/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.hpp")
-
-                               #------------------------------------------------------------------------------
-# If there are additional include directories that are needed for this plugin
-# you can use the target_include_directories(.....) cmake call
-target_include_directories(${PLUGIN_NAME}
-  PUBLIC
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless"
-)
 
 # -----------------------------------------------------------------------
 # Install example pipelines

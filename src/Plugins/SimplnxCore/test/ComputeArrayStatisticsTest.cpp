@@ -1,18 +1,36 @@
+#include "SimplnxCore/Filters/Algorithms/ComputeArrayStatistics.hpp"
 #include "SimplnxCore/Filters/ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
+#include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
+#include <array>
+#include <atomic>
 #include <catch2/catch.hpp>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
+#include <memory>
+#include <nonstd/span.hpp>
+#include <optional>
+#include <system_error>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
@@ -20,16 +38,1222 @@ namespace fs = std::filesystem;
 
 namespace
 {
+std::optional<UnitTest::AlgorithmTestScenario> SelectScanlineInMemoryScenario()
+{
+  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto iter = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  if(iter == scenarios.cend())
+  {
+    return std::nullopt;
+  }
+  return *iter;
+}
+
+template <typename T>
+class StatisticsFailingReadDataStore : public DataStore<T>
+{
+public:
+  StatisticsFailingReadDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, int32 errorCode)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  {
+    return MakeErrorResult(m_ErrorCode, "Injected statistics bulk-read failure");
+  }
+
+private:
+  int32 m_ErrorCode = 0;
+};
+
+template <typename T>
+class StatisticsFailingWriteDataStore : public DataStore<T>
+{
+public:
+  StatisticsFailingWriteDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, int32 errorCode)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  {
+    return MakeErrorResult(m_ErrorCode, "Injected statistics bulk-write failure");
+  }
+
+private:
+  int32 m_ErrorCode = 0;
+};
+
+template <typename T>
+class StatisticsCancelAfterReadDataStore : public DataStore<T>
+{
+public:
+  StatisticsCancelAfterReadDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, std::atomic_bool& shouldCancel)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    Result<> result = DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    if(result.valid() && !m_DidCancel)
+    {
+      m_DidCancel = true;
+      m_ShouldCancel.store(true);
+    }
+    return result;
+  }
+
+private:
+  std::atomic_bool& m_ShouldCancel;
+  mutable bool m_DidCancel = false;
+};
+
+template <typename T>
+class StatisticsCancelAfterWriteDataStore : public DataStore<T>
+{
+public:
+  StatisticsCancelAfterWriteDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, std::atomic_bool& shouldCancel)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  Result<> copyFromBuffer(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    Result<> result = DataStore<T>::copyFromBuffer(startIndex, buffer);
+    if(result.valid() && !m_DidCancel)
+    {
+      m_DidCancel = true;
+      m_ShouldCancel.store(true);
+    }
+    return result;
+  }
+
+private:
+  std::atomic_bool& m_ShouldCancel;
+  bool m_DidCancel = false;
+};
+
+ComputeArrayStatisticsInputValues CreateMinimalStatisticsInputValues(const DataPath& inputPath, const DataPath& destinationPath)
+{
+  ComputeArrayStatisticsInputValues inputValues{};
+  inputValues.RangeType = to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None);
+  inputValues.Range = {0, -1};
+  inputValues.SelectedArrayPath = inputPath;
+  inputValues.DestinationAttributeMatrix = destinationPath;
+  inputValues.FeatureHasDataArrayName = destinationPath.createChildPath("FeatureHasData");
+  inputValues.LengthArrayName = destinationPath.createChildPath("Length");
+  inputValues.MinimumArrayName = destinationPath.createChildPath("Minimum");
+  inputValues.MaximumArrayName = destinationPath.createChildPath("Maximum");
+  inputValues.MeanArrayName = destinationPath.createChildPath("Mean");
+  inputValues.MedianArrayName = destinationPath.createChildPath("Median");
+  inputValues.ModeArrayName = destinationPath.createChildPath("Mode");
+  inputValues.StdDeviationArrayName = destinationPath.createChildPath("StandardDeviation");
+  inputValues.SummationArrayName = destinationPath.createChildPath("Summation");
+  inputValues.StandardizedArrayName = inputPath.replaceName("Standardized");
+  inputValues.NumUniqueValuesName = destinationPath.createChildPath("NumUniqueValues");
+  inputValues.FeatureIdMapArrayPath = destinationPath.createChildPath("FeatureIdMap");
+  return inputValues;
+}
+
 template <typename T>
 bool VectorContains(const std::vector<T>& vector, T value)
 {
   return (std::find(vector.begin(), vector.end(), value) != vector.end());
 }
+
+Arguments CreateAllStatisticsArguments(const DataPath& inputPath, const DataPath& destinationPath, const std::optional<DataPath>& featureIdsPath = {}, const std::optional<DataPath>& maskPath = {},
+                                       ChoicesParameter::ValueType rangeType = 0, std::vector<int32> range = {0, -1})
+{
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(destinationPath));
+  if(featureIdsPath.has_value())
+  {
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(*featureIdsPath));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_RangeType_Key, std::make_any<ChoicesParameter::ValueType>(rangeType));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<std::vector<int32>>(std::move(range)));
+  }
+  if(maskPath.has_value())
+  {
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(*maskPath));
+  }
+  return args;
+}
+
+template <typename T>
+void RunCompactNumericStatistics(UnitTest::AlgorithmTestScope& scope)
+{
+  DataStructure dataStructure;
+  auto* values = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, "Values", {4}, {1});
+  REQUIRE(values != nullptr);
+  const std::array<T, 4> input = {static_cast<T>(1), static_cast<T>(2), static_cast<T>(2), static_cast<T>(5)};
+  auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  if constexpr(std::is_integral_v<T> && !std::is_same_v<T, bool>)
+  {
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+  }
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == 4);
+  REQUIRE(dataStructure.getDataRefAs<DataArray<T>>(DataPath({"Statistics", "Minimum"}))[0] == static_cast<T>(1));
+  REQUIRE(dataStructure.getDataRefAs<DataArray<T>>(DataPath({"Statistics", "Maximum"}))[0] == static_cast<T>(5));
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"}))[0] == Approx(10.0F));
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[0] == Approx(2.5F));
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == Approx(2.0F));
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[0] == Approx(1.5F));
+  REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == 3);
+  if constexpr(std::is_integral_v<T> && !std::is_same_v<T, bool>)
+  {
+    REQUIRE(dataStructure.getDataRefAs<NeighborList<T>>(DataPath({"Statistics", "Mode"})).getList(0) == std::vector<T>{static_cast<T>(2)});
+  }
+}
+
+template <>
+void RunCompactNumericStatistics<bool>(UnitTest::AlgorithmTestScope& scope)
+{
+  DataStructure dataStructure;
+  auto* values = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Values", {4}, {1});
+  REQUIRE(values != nullptr);
+  const std::array<bool, 4> input = {false, true, true, true};
+  auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == 4);
+  REQUIRE_FALSE(dataStructure.getDataRefAs<BoolArray>(DataPath({"Statistics", "Minimum"}))[0]);
+  REQUIRE(dataStructure.getDataRefAs<BoolArray>(DataPath({"Statistics", "Maximum"}))[0]);
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"}))[0] == 3.0F);
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[0] == 0.75F);
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == 1.0F);
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[0] == Approx(0.4330127F));
+  REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == 2);
+}
+
+struct StatisticsParityResult
+{
+  std::vector<uint64> Length;
+  std::vector<int32> Minimum;
+  std::vector<int32> Maximum;
+  std::vector<float32> Mean;
+  std::vector<float32> Median;
+  std::vector<float32> StandardDeviation;
+  std::vector<float32> Summation;
+  std::vector<int32> Unique;
+  std::vector<uint8> FeatureHasData;
+  std::vector<std::vector<int32>> Modes;
+  std::vector<float32> Standardized;
+};
+
+StatisticsParityResult RunStatisticsParityCase(UnitTest::AlgorithmTestScope& scope, bool computeByIndex, int32 maskKind)
+{
+  DataStructure dataStructure;
+  auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(inputGroup != nullptr);
+  constexpr usize k_TupleCount = 8;
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {k_TupleCount}, {1}, inputGroup->getId());
+  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {k_TupleCount}, {1}, inputGroup->getId());
+  REQUIRE(values != nullptr);
+  REQUIRE(featureIds != nullptr);
+  const std::array<int32, k_TupleCount> input = {4, 1, 4, 2, 8, 2, 6, 1};
+  const std::array<int32, k_TupleCount> ids = {0, 0, 1, 1, 2, 2, 4, 4};
+  const std::array<bool, k_TupleCount> boolMaskValues = {true, true, true, false, true, true, false, true};
+  const std::array<uint8, k_TupleCount> uint8MaskValues = {1, 1, 1, 0, 1, 1, 0, 1};
+  auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+  auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, ids);
+  SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+  std::optional<DataPath> maskPath;
+  if(maskKind == 1)
+  {
+    auto* mask = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {k_TupleCount}, {1}, inputGroup->getId());
+    REQUIRE(mask != nullptr);
+    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, boolMaskValues);
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+    maskPath = DataPath({"Input", "Mask"});
+  }
+  else if(maskKind == 2)
+  {
+    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {k_TupleCount}, {1}, inputGroup->getId());
+    REQUIRE(mask != nullptr);
+    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, uint8MaskValues);
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+    maskPath = DataPath({"Input", "Mask"});
+  }
+
+  ComputeArrayStatisticsFilter filter;
+  Arguments args =
+      CreateAllStatisticsArguments(DataPath({"Input", "Values"}), DataPath({"Statistics"}), computeByIndex ? std::optional<DataPath>{DataPath({"Input", "FeatureIds"})} : std::nullopt, maskPath);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath statisticsPath({"Statistics"});
+  const usize groupCount = dataStructure.getDataRefAs<UInt64Array>(statisticsPath.createChildPath("Length")).getNumberOfTuples();
+  StatisticsParityResult result;
+  result.Length.resize(groupCount);
+  result.Minimum.resize(groupCount);
+  result.Maximum.resize(groupCount);
+  result.Mean.resize(groupCount);
+  result.Median.resize(groupCount);
+  result.StandardDeviation.resize(groupCount);
+  result.Summation.resize(groupCount);
+  result.Unique.resize(groupCount);
+  result.Modes.resize(groupCount);
+  result.Standardized.resize(k_TupleCount);
+  auto lengthReadResult = dataStructure.getDataRefAs<UInt64Array>(statisticsPath.createChildPath("Length")).getDataStoreRef().copyIntoBuffer(0, result.Length);
+  SIMPLNX_RESULT_REQUIRE_VALID(lengthReadResult);
+  auto minimumReadResult = dataStructure.getDataRefAs<Int32Array>(statisticsPath.createChildPath("Minimum")).getDataStoreRef().copyIntoBuffer(0, result.Minimum);
+  SIMPLNX_RESULT_REQUIRE_VALID(minimumReadResult);
+  auto maximumReadResult = dataStructure.getDataRefAs<Int32Array>(statisticsPath.createChildPath("Maximum")).getDataStoreRef().copyIntoBuffer(0, result.Maximum);
+  SIMPLNX_RESULT_REQUIRE_VALID(maximumReadResult);
+  auto meanReadResult = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Mean")).getDataStoreRef().copyIntoBuffer(0, result.Mean);
+  SIMPLNX_RESULT_REQUIRE_VALID(meanReadResult);
+  auto medianReadResult = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Median")).getDataStoreRef().copyIntoBuffer(0, result.Median);
+  SIMPLNX_RESULT_REQUIRE_VALID(medianReadResult);
+  auto standardDeviationReadResult = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("StandardDeviation")).getDataStoreRef().copyIntoBuffer(0, result.StandardDeviation);
+  SIMPLNX_RESULT_REQUIRE_VALID(standardDeviationReadResult);
+  auto summationReadResult = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Summation")).getDataStoreRef().copyIntoBuffer(0, result.Summation);
+  SIMPLNX_RESULT_REQUIRE_VALID(summationReadResult);
+  auto numUniqueValuesReadResult = dataStructure.getDataRefAs<Int32Array>(statisticsPath.createChildPath("NumUniqueValues")).getDataStoreRef().copyIntoBuffer(0, result.Unique);
+  SIMPLNX_RESULT_REQUIRE_VALID(numUniqueValuesReadResult);
+  auto standardizedReadResult = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"})).getDataStoreRef().copyIntoBuffer(0, result.Standardized);
+  SIMPLNX_RESULT_REQUIRE_VALID(standardizedReadResult);
+  if(computeByIndex)
+  {
+    result.FeatureHasData.resize(groupCount);
+    auto featureHasData = std::make_unique<bool[]>(groupCount);
+    auto featureHasDataReadResult =
+        dataStructure.getDataRefAs<BoolArray>(statisticsPath.createChildPath("FeatureHasData")).getDataStoreRef().copyIntoBuffer(0, nonstd::span<bool>(featureHasData.get(), groupCount));
+    SIMPLNX_RESULT_REQUIRE_VALID(featureHasDataReadResult);
+    for(usize group = 0; group < groupCount; ++group)
+    {
+      result.FeatureHasData[group] = featureHasData[group] ? 1 : 0;
+    }
+  }
+  const auto& mode = dataStructure.getDataRefAs<NeighborList<int32>>(statisticsPath.createChildPath("Mode"));
+  for(usize group = 0; group < groupCount; ++group)
+  {
+    result.Modes[group] = mode.getList(static_cast<int32>(group));
+  }
+  return result;
+}
+#if SIMPLNX_TEST_ALGORITHM_PATH == 1
+class FailingStatisticsExternalSort : public IExternalSort
+{
+public:
+  explicit FailingStatisticsExternalSort(int32 errorCode)
+  : m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> append(uint64, nonstd::span<const std::byte>, const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  {
+    return MakeErrorResult(m_ErrorCode, "Injected statistics external-sort append failure");
+  }
+
+  Result<> finish(const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  {
+    return {};
+  }
+
+  Result<uint64> read(uint64, uint64, nonstd::span<std::byte>, const std::atomic_bool&) const override
+  {
+    return {uint64{0}};
+  }
+
+  uint64 recordCount() const override
+  {
+    return 0;
+  }
+
+private:
+  int32 m_ErrorCode = 0;
+};
+
+class FailingStatisticsExternalSortManager : public IDataIOManager
+{
+public:
+  FailingStatisticsExternalSortManager(std::string format, int32 errorCode)
+  : m_Format(std::move(format))
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  std::string formatName() const override
+  {
+    return m_Format;
+  }
+
+  bool supportsExternalSort() const override
+  {
+    return true;
+  }
+
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  {
+    return {std::make_unique<FailingStatisticsExternalSort>(m_ErrorCode)};
+  }
+
+private:
+  std::string m_Format;
+  int32 m_ErrorCode = 0;
+};
+
+class StatisticsIOManagerRestore
+{
+public:
+  StatisticsIOManagerRestore(DataIOCollection& collection, std::shared_ptr<IDataIOManager> manager)
+  : m_Collection(collection)
+  , m_Manager(std::move(manager))
+  {
+  }
+
+  ~StatisticsIOManagerRestore()
+  {
+    if(m_Manager != nullptr)
+    {
+      (void)m_Collection.addIOManager(m_Manager);
+    }
+  }
+
+private:
+  DataIOCollection& m_Collection;
+  std::shared_ptr<IDataIOManager> m_Manager;
+};
+
+#endif
 } // namespace
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Direct and Scanline mask grouping parity", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool computeByIndex = GENERATE(false, true);
+  const int32 maskKind = GENERATE(0, 1, 2);
+  CAPTURE(computeByIndex, maskKind);
+  StatisticsParityResult expected;
+  bool hasExpectedResult = false;
+  const auto requireFloatParity = [](const std::vector<float32>& actual, const std::vector<float32>& expectedValues) {
+    REQUIRE(actual.size() == expectedValues.size());
+    for(usize index = 0; index < actual.size(); ++index)
+    {
+      if(std::isnan(expectedValues[index]))
+      {
+        REQUIRE(std::isnan(actual[index]));
+      }
+      else
+      {
+        REQUIRE(actual[index] == Approx(expectedValues[index]).margin(1.0E-5F));
+      }
+    }
+  };
+  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+  for(const auto scenario : scenarios)
+  {
+    CAPTURE(scenario);
+    UnitTest::AlgorithmTestScope scope(scenario);
+    const auto actual = RunStatisticsParityCase(scope, computeByIndex, maskKind);
+    // Reduce the eight known input values independently. This reference uses
+    // sorted small vectors and population variance, without production helpers.
+    const std::array<int32, 8> input = {4, 1, 4, 2, 8, 2, 6, 1};
+    const std::array<usize, 8> groups = {0, 0, 1, 1, 2, 2, 4, 4};
+    const usize groupCount = computeByIndex ? 5 : 1;
+    REQUIRE(actual.Length.size() == groupCount);
+    REQUIRE(actual.Minimum.size() == groupCount);
+    REQUIRE(actual.Maximum.size() == groupCount);
+    REQUIRE(actual.Mean.size() == groupCount);
+    REQUIRE(actual.Median.size() == groupCount);
+    REQUIRE(actual.StandardDeviation.size() == groupCount);
+    REQUIRE(actual.Summation.size() == groupCount);
+    REQUIRE(actual.Unique.size() == groupCount);
+    REQUIRE(actual.Modes.size() == groupCount);
+    REQUIRE(actual.Standardized.size() == input.size());
+    for(usize groupIdx = 0; groupIdx < groupCount; ++groupIdx)
+    {
+      CAPTURE(groupIdx);
+      std::vector<int32> selected;
+      for(usize tupleIdx = 0; tupleIdx < input.size(); ++tupleIdx)
+      {
+        if((maskKind == 0 || (tupleIdx != 3 && tupleIdx != 6)) && (!computeByIndex || groups[tupleIdx] == groupIdx))
+        {
+          selected.push_back(input[tupleIdx]);
+        }
+      }
+      CHECK(actual.Length[groupIdx] == selected.size());
+      if(computeByIndex)
+      {
+        REQUIRE(actual.FeatureHasData.size() == groupCount);
+        CHECK(actual.FeatureHasData[groupIdx] == (selected.empty() ? 0 : 1));
+      }
+      if(selected.empty())
+      {
+        CHECK(actual.Minimum[groupIdx] == std::numeric_limits<int32>::max());
+        CHECK(actual.Maximum[groupIdx] == std::numeric_limits<int32>::min());
+        CHECK(actual.Mean[groupIdx] == 0.0F);
+        CHECK(actual.Median[groupIdx] == 0.0F);
+        CHECK(actual.StandardDeviation[groupIdx] == 0.0F);
+        CHECK(actual.Summation[groupIdx] == 0.0F);
+        CHECK(actual.Unique[groupIdx] == 0);
+        CHECK(actual.Modes[groupIdx].empty());
+        continue;
+      }
+      std::sort(selected.begin(), selected.end());
+      float64 sum = 0.0;
+      for(const int32 value : selected)
+      {
+        sum += value;
+      }
+      const float64 mean = sum / static_cast<float64>(selected.size());
+      float64 variance = 0.0;
+      for(const int32 value : selected)
+      {
+        variance += (value - mean) * (value - mean);
+      }
+      const float64 deviation = std::sqrt(variance / static_cast<float64>(selected.size()));
+      CHECK(actual.Minimum[groupIdx] == selected.front());
+      CHECK(actual.Maximum[groupIdx] == selected.back());
+      CHECK(actual.Summation[groupIdx] == Approx(sum));
+      CHECK(actual.Mean[groupIdx] == Approx(mean));
+      CHECK(actual.StandardDeviation[groupIdx] == Approx(deviation).margin(1.0E-5));
+      CHECK(actual.Median[groupIdx] == Approx((selected[(selected.size() - 1) / 2] + selected[selected.size() / 2]) / 2.0));
+      std::vector<int32> modes;
+      usize maxFrequency = 0;
+      int32 uniqueCount = 0;
+      for(usize index = 0; index < selected.size();)
+      {
+        const usize next = static_cast<usize>(std::upper_bound(selected.begin() + index, selected.end(), selected[index]) - selected.begin());
+        const usize frequency = next - index;
+        if(frequency > maxFrequency)
+        {
+          modes.clear();
+          maxFrequency = frequency;
+        }
+        if(frequency == maxFrequency)
+        {
+          modes.push_back(selected[index]);
+        }
+        ++uniqueCount;
+        index = next;
+      }
+      CHECK(actual.Unique[groupIdx] == uniqueCount);
+      CHECK(actual.Modes[groupIdx] == modes);
+      for(usize tupleIdx = 0; tupleIdx < input.size(); ++tupleIdx)
+      {
+        if(computeByIndex && groups[tupleIdx] != groupIdx)
+        {
+          continue;
+        }
+        if(maskKind != 0 && (tupleIdx == 3 || tupleIdx == 6))
+        {
+          CHECK(actual.Standardized[tupleIdx] == 0.0F);
+        }
+        else if(deviation == 0.0)
+        {
+          CHECK(std::isnan(actual.Standardized[tupleIdx]));
+        }
+        else
+        {
+          CHECK(actual.Standardized[tupleIdx] == Approx((input[tupleIdx] - mean) / deviation).margin(1.0E-5));
+        }
+      }
+    }
+    if(hasExpectedResult)
+    {
+      REQUIRE(actual.Length == expected.Length);
+      REQUIRE(actual.Minimum == expected.Minimum);
+      REQUIRE(actual.Maximum == expected.Maximum);
+      REQUIRE(actual.Unique == expected.Unique);
+      REQUIRE(actual.FeatureHasData == expected.FeatureHasData);
+      REQUIRE(actual.Modes == expected.Modes);
+      requireFloatParity(actual.Mean, expected.Mean);
+      requireFloatParity(actual.Median, expected.Median);
+      requireFloatParity(actual.StandardDeviation, expected.StandardDeviation);
+      requireFloatParity(actual.Summation, expected.Summation);
+      requireFloatParity(actual.Standardized, expected.Standardized);
+    }
+    else
+    {
+      expected = actual;
+      hasExpectedResult = true;
+    }
+  }
+}
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Scanline propagates bulk store failures", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline transfer contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  constexpr int32 k_ReadError = -923901;
+  constexpr int32 k_WriteError = -923902;
+
+  SECTION("input bulk read")
+  {
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto inputStore = std::make_shared<StatisticsFailingReadDataStore<int32>>(ShapeType{4}, ShapeType{1}, std::optional<int32>{1}, k_ReadError);
+    auto* values = Int32Array::Create(dataStructure, "Values", inputStore, inputGroup->getId());
+    auto* length = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Length", {1}, {1}, output->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(length != nullptr);
+
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindLength = true;
+    const std::atomic_bool shouldCancel = false;
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().front().code == k_ReadError);
+  }
+
+  SECTION("numeric output bulk write")
+  {
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, inputGroup->getId());
+    auto lengthStore = std::make_shared<StatisticsFailingWriteDataStore<uint64>>(ShapeType{1}, ShapeType{1}, std::optional<uint64>{0}, k_WriteError);
+    auto* length = UInt64Array::Create(dataStructure, "Length", lengthStore, output->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(length != nullptr);
+    const std::array<int32, 4> input = {1, 2, 3, 4};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindLength = true;
+    const std::atomic_bool shouldCancel = false;
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    REQUIRE(executeResult.invalid());
+    REQUIRE(executeResult.errors().front().code == k_WriteError);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: a damaged out-of-core backing file surfaces as a filter error", "[SimplnxCore][ComputeArrayStatisticsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  auto& ioCollection = DataStoreUtilities::GetIOCollection();
+  if(!ioCollection.hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+    return;
+  }
+
+  UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_TupleCount = (64ULL * 1024ULL * 1024ULL) / sizeof(int32);
+  const DataPath inputPath({"DamagedInput"});
+  const DataPath statisticsPath({"Statistics"});
+
+  DataStructure dataStructure;
+  auto inputStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputPath, {k_TupleCount}, {1});
+  REQUIRE(inputStore != nullptr);
+  auto* inputArray = Int32Array::Create(dataStructure, inputPath.getTargetName(), inputStore);
+  REQUIRE(inputArray != nullptr);
+  REQUIRE(inputArray->getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+
+  const auto recoveryMetadata = inputArray->getDataStoreRef().getRecoveryMetadata();
+  const auto backingPathIter = recoveryMetadata.find("OocBackingFilePath");
+  REQUIRE(backingPathIter != recoveryMetadata.cend());
+  const fs::path backingPath = backingPathIter->second;
+  REQUIRE(fs::exists(backingPath));
+
+  ioCollection.finalizeStores(dataStructure);
+  ioCollection.shutdownManagers();
+  std::error_code resizeError;
+  fs::resize_file(backingPath, 1024, resizeError);
+  INFO("Could not truncate the out-of-core backing file '" << backingPath.string() << "': " << resizeError.message());
+  REQUIRE_FALSE(resizeError);
+
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statisticsPath));
+
+  const auto executeResult = filter.execute(dataStructure, args);
+  REQUIRE(executeResult.result.invalid());
+  REQUIRE_FALSE(executeResult.result.errors().empty());
+  const std::string expectedMessage = "bulk read failed for array '" + inputPath.toString() + "'";
+  const bool identifiesBulkReadFailure = std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(),
+                                                     [&expectedMessage](const Error& error) { return error.code == -6032 && error.message.find(expectedMessage) != std::string::npos; });
+  REQUIRE(identifiesBulkReadFailure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: entry and mid-pass cancellation preserve unwritten outputs", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline transfer contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+
+  SECTION("entry cancellation")
+  {
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, inputGroup->getId());
+    auto* length = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Length", {1}, {1}, output->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(length != nullptr);
+    length->fill(91);
+    const std::atomic_bool shouldCancel = true;
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindLength = true;
+    const auto executeResult = ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE((*length)[0] == 91);
+  }
+
+  SECTION("mid-pass cancellation")
+  {
+    constexpr usize k_TupleCount = 65537;
+    std::atomic_bool shouldCancel = false;
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto inputStore = std::make_shared<StatisticsCancelAfterReadDataStore<int32>>(ShapeType{k_TupleCount}, ShapeType{1}, std::optional<int32>{1}, shouldCancel);
+    auto* values = Int32Array::Create(dataStructure, "Values", inputStore, inputGroup->getId());
+    auto* length = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Length", {1}, {1}, output->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(length != nullptr);
+    length->fill(92);
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindLength = true;
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(shouldCancel.load());
+    REQUIRE((*length)[0] == 92);
+  }
+
+  SECTION("between output writes")
+  {
+    std::atomic_bool shouldCancel = false;
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, inputGroup->getId());
+    auto lengthStore = std::make_shared<StatisticsCancelAfterWriteDataStore<uint64>>(ShapeType{1}, ShapeType{1}, std::optional<uint64>{0}, shouldCancel);
+    auto* length = UInt64Array::Create(dataStructure, "Length", lengthStore, output->getId());
+    auto* minimum = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Minimum", {1}, {1}, output->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(length != nullptr);
+    REQUIRE(minimum != nullptr);
+    const std::array<int32, 4> input = {4, 3, 2, 1};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+    minimum->fill(93);
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindLength = true;
+    inputValues.FindMin = true;
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    REQUIRE(shouldCancel.load());
+    REQUIRE((*length)[0] == 4);
+    REQUIRE((*minimum)[0] == 93);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Unique-only without Length", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  auto* group = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(group != nullptr);
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {5}, {1}, group->getId());
+  REQUIRE(values != nullptr);
+  const std::array<int32, 5> input = {4, 4, 2, 7, 2};
+  auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(input.data(), input.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+  scope.requireExpectedStore(*values);
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"})));
+  const auto& unique = dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}));
+  REQUIRE(unique.getDataStoreRef()[0] == 3);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: bounded exact fallback without external sort", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline transfer contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
+  {
+    SUCCEED("An external-sort provider is registered; the no-provider fallback does not apply.");
+    return;
+  }
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  DataStructure dataStructure;
+  auto* group = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(group != nullptr);
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {6}, {1}, group->getId());
+  auto* mask = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {6}, {1}, group->getId());
+  REQUIRE(values != nullptr);
+  REQUIRE(mask != nullptr);
+  const std::array<int32, 6> input = {5, 1, 5, 3, 3, 9};
+  const std::array<bool, 6> maskValues = {true, true, true, true, true, true};
+  auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+  auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, maskValues);
+  SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Mask"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == 6);
+  REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Minimum"}))[0] == 1);
+  REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Maximum"}))[0] == 9);
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[0] == Approx(26.0F / 6.0F));
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == 4.0F);
+  REQUIRE(dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0) == std::vector<int32>{3, 5});
+  REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"}))[0] == 26.0F);
+  REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == 4);
+
+  constexpr usize k_UniqueCount = 257;
+  DataStructure uniqueData;
+  auto* uniqueInputGroup = DataGroup::Create(uniqueData, "Input");
+  REQUIRE(uniqueInputGroup != nullptr);
+  auto* uniqueInput = Int32Array::CreateWithStore<DataStore<int32>>(uniqueData, "Values", {k_UniqueCount}, {1}, uniqueInputGroup->getId());
+  REQUIRE(uniqueInput != nullptr);
+  std::array<int32, k_UniqueCount> descending = {};
+  std::vector<int32> expectedModes(k_UniqueCount);
+  for(usize index = 0; index < k_UniqueCount; ++index)
+  {
+    descending[index] = static_cast<int32>(k_UniqueCount - index - 1);
+    expectedModes[index] = static_cast<int32>(index);
+  }
+  auto uniqueInputWriteResult = uniqueInput->getDataStoreRef().copyFromBuffer(0, descending);
+  SIMPLNX_RESULT_REQUIRE_VALID(uniqueInputWriteResult);
+  Arguments uniqueArgs = filter.getDefaultArguments();
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+  uniqueArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  auto uniquePreflight = filter.preflight(uniqueData, uniqueArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(uniquePreflight.outputActions);
+  auto uniqueResult = scope.executeFilter(filter, uniqueData, uniqueArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(uniqueResult.result);
+  REQUIRE(uniqueData.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == k_UniqueCount);
+  REQUIRE(uniqueData.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == 128.0F);
+  REQUIRE(uniqueData.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == k_UniqueCount);
+  REQUIRE(uniqueData.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0) == expectedModes);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: sparse negative range and empty selection semantics", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  SECTION("ShrinkToFit preserves negative and sparse FeatureIds")
+  {
+    DataStructure dataStructure;
+    auto* group = DataGroup::Create(dataStructure, "Input");
+    REQUIRE(group != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {5}, {1}, group->getId());
+    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {5}, {1}, group->getId());
+    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {5}, {1}, group->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(featureIds != nullptr);
+    REQUIRE(mask != nullptr);
+    const std::array<int32, 5> input = {10, 20, 30, 40, 50};
+    const std::array<int32, 5> ids = {-2, 0, 3, 3, -2};
+    const std::array<uint8, 5> maskValues = {1, 1, 1, 0, 1};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+    auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, ids);
+    SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, maskValues);
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+
+    ComputeArrayStatisticsFilter filter;
+    Arguments args = CreateAllStatisticsArguments(DataPath({"Input", "Values"}), DataPath({"Statistics"}), DataPath({"Input", "FeatureIds"}), DataPath({"Input", "Mask"}),
+                                                  to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::ShrinkToFit));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const std::array<int32, 6> expectedMapping = {-2, -1, 0, 1, 2, 3};
+    const std::array<uint64, 6> expectedLength = {2, 0, 1, 0, 0, 1};
+    const std::array<bool, 6> expectedHasData = {true, false, true, false, false, true};
+    std::array<int32, 6> actualMapping = {};
+    std::array<uint64, 6> actualLength = {};
+    std::array<bool, 6> actualHasData = {};
+    auto reducedFeatureIdsIndicesReadResult = dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Reduced Feature Ids Indices"})).getDataStoreRef().copyIntoBuffer(0, actualMapping);
+    SIMPLNX_RESULT_REQUIRE_VALID(reducedFeatureIdsIndicesReadResult);
+    auto lengthReadResult = dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"})).getDataStoreRef().copyIntoBuffer(0, actualLength);
+    SIMPLNX_RESULT_REQUIRE_VALID(lengthReadResult);
+    auto featureHasDataReadResult = dataStructure.getDataRefAs<BoolArray>(DataPath({"Statistics", "FeatureHasData"})).getDataStoreRef().copyIntoBuffer(0, actualHasData);
+    SIMPLNX_RESULT_REQUIRE_VALID(featureHasDataReadResult);
+    REQUIRE(actualMapping == expectedMapping);
+    REQUIRE(actualLength == expectedLength);
+    REQUIRE(actualHasData == expectedHasData);
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == 30.0F);
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == 2);
+    REQUIRE(dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0) == std::vector<int32>{10, 50});
+    const auto& standardized = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"}));
+    REQUIRE(standardized[0] == Approx(-1.0F));
+    REQUIRE(std::isnan(standardized[1]));
+    REQUIRE(std::isnan(standardized[2]));
+    REQUIRE(standardized[3] == 0.0F);
+    REQUIRE(standardized[4] == Approx(1.0F));
+  }
+
+  SECTION("all-negative None range is a valid zero-group result")
+  {
+    DataStructure dataStructure;
+    auto* group = DataGroup::Create(dataStructure, "Input");
+    REQUIRE(group != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {3}, {1}, group->getId());
+    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {3}, {1}, group->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(featureIds != nullptr);
+    const std::array<int32, 3> input = {10, 20, 30};
+    const std::array<int32, 3> ids = {-3, -2, -1};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+    auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, ids);
+    SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+    ComputeArrayStatisticsFilter filter;
+    Arguments args = filter.getDefaultArguments();
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Statistics"})).getNumberOfTuples() == 0);
+    REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"})).getNumberOfTuples() == 0);
+  }
+
+  SECTION("all-false UInt8 mask produces initialized global outputs")
+  {
+    DataStructure dataStructure;
+    auto* group = DataGroup::Create(dataStructure, "Input");
+    REQUIRE(group != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, group->getId());
+    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {4}, {1}, group->getId());
+    REQUIRE(values != nullptr);
+    REQUIRE(mask != nullptr);
+    const std::array<int32, 4> input = {1, 2, 3, 4};
+    const std::array<uint8, 4> maskValues = {0, 0, 0, 0};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, maskValues);
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+    ComputeArrayStatisticsFilter filter;
+    Arguments args = CreateAllStatisticsArguments(DataPath({"Input", "Values"}), DataPath({"Statistics"}), {}, DataPath({"Input", "Mask"}));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == 0);
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Minimum"}))[0] == 0);
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Maximum"}))[0] == 0);
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[0] == 0.0F);
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Median"}))[0] == 0.0F);
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[0] == 0.0F);
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"}))[0] == 0.0F);
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "NumUniqueValues"}))[0] == 0);
+    REQUIRE(dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0).empty());
+    std::array<float32, 4> standardized = {};
+    auto standardizedReadResult = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"})).getDataStoreRef().copyIntoBuffer(0, standardized);
+    SIMPLNX_RESULT_REQUIRE_VALID(standardizedReadResult);
+    REQUIRE(standardized == std::array<float32, 4>{0, 0, 0, 0});
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Scanline range and degenerate edges", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline transfer contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+
+  SECTION("zero tuples")
+  {
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    REQUIRE(inputGroup != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {0}, {1}, inputGroup->getId());
+    REQUIRE(values != nullptr);
+    ComputeArrayStatisticsFilter filter;
+    Arguments args = CreateAllStatisticsArguments(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}))[0] == 0);
+    REQUIRE(dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0).empty());
+    REQUIRE(dataStructure.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"})).getNumberOfTuples() == 0);
+  }
+
+  SECTION("Custom and padded maximum minus one use the observed maximum")
+  {
+    const auto runRange = [&scanlineScenario](ComputeArrayStatistics::FeatureIdRangeControls rangeType, std::vector<int32> range) {
+      DataStructure dataStructure;
+      auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+      REQUIRE(inputGroup != nullptr);
+      auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, inputGroup->getId());
+      auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {4}, {1}, inputGroup->getId());
+      REQUIRE(values != nullptr);
+      REQUIRE(featureIds != nullptr);
+      const std::array<int32, 4> input = {2, 5, 5, 9};
+      const std::array<int32, 4> ids = {2, 5, 5, 9};
+      auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+      SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+      auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, ids);
+      SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+      ComputeArrayStatisticsFilter filter;
+      Arguments args = filter.getDefaultArguments();
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_RangeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(rangeType)));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<std::vector<int32>>(std::move(range)));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+      auto executeResult = scope.executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+      const auto& mapping = dataStructure.getDataRefAs<Int32Array>(DataPath({"Statistics", "Reduced Feature Ids Indices"}));
+      const auto& length = dataStructure.getDataRefAs<UInt64Array>(DataPath({"Statistics", "Length"}));
+      std::vector<int32> mappingValues(mapping.getNumberOfTuples());
+      std::vector<uint64> lengthValues(length.getNumberOfTuples());
+      auto mappingReadResult = mapping.getDataStoreRef().copyIntoBuffer(0, mappingValues);
+      SIMPLNX_RESULT_REQUIRE_VALID(mappingReadResult);
+      auto lengthReadResult = length.getDataStoreRef().copyIntoBuffer(0, lengthValues);
+      SIMPLNX_RESULT_REQUIRE_VALID(lengthReadResult);
+      return std::make_pair(std::move(mappingValues), std::move(lengthValues));
+    };
+
+    const auto custom = runRange(ComputeArrayStatistics::FeatureIdRangeControls::CustomRange, {3, -1});
+    REQUIRE(custom.first == std::vector<int32>{3, 4, 5, 6, 7, 8, 9});
+    REQUIRE(custom.second == std::vector<uint64>{0, 0, 2, 0, 0, 0, 1});
+    const auto padded = runRange(ComputeArrayStatistics::FeatureIdRangeControls::PaddedCustomRange, {1, -1});
+    REQUIRE(padded.first == std::vector<int32>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+    REQUIRE(padded.second == std::vector<uint64>{0, 1, 0, 0, 2, 0, 0, 0, 1});
+  }
+
+  SECTION("range errors and FeatureId span overflow")
+  {
+    const auto runInvalidRange = [](const std::array<int32, 2>& ids, ComputeArrayStatistics::FeatureIdRangeControls rangeType, std::vector<int32> range) {
+      DataStructure dataStructure;
+      auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+      REQUIRE(inputGroup != nullptr);
+      auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {2}, {1}, inputGroup->getId());
+      auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {2}, {1}, inputGroup->getId());
+      REQUIRE(values != nullptr);
+      REQUIRE(featureIds != nullptr);
+      const std::array<int32, 2> input = {1, 2};
+      auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+      SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+      auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, ids);
+      SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+      ComputeArrayStatisticsFilter filter;
+      Arguments args = filter.getDefaultArguments();
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_RangeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(rangeType)));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<std::vector<int32>>(std::move(range)));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
+      args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      REQUIRE(executeResult.result.invalid());
+      return executeResult.result.errors().front().code;
+    };
+
+    REQUIRE(runInvalidRange({2, 9}, ComputeArrayStatistics::FeatureIdRangeControls::CustomRange, {10, 12}) == -506671);
+    REQUIRE(runInvalidRange({std::numeric_limits<int32>::min(), std::numeric_limits<int32>::max()}, ComputeArrayStatistics::FeatureIdRangeControls::ShrinkToFit, {0, -1}) == -57300);
+  }
+
+  SECTION("constant values and numeric extremes")
+  {
+    DataStructure constantData;
+    auto* inputGroup = DataGroup::Create(constantData, "Input");
+    REQUIRE(inputGroup != nullptr);
+    auto* values = Int32Array::CreateWithStore<DataStore<int32>>(constantData, "Values", {3}, {1}, inputGroup->getId());
+    REQUIRE(values != nullptr);
+    const std::array<int32, 3> input = {7, 7, 7};
+    auto valuesWriteResult = values->getDataStoreRef().copyFromBuffer(0, input);
+    SIMPLNX_RESULT_REQUIRE_VALID(valuesWriteResult);
+    ComputeArrayStatisticsFilter filter;
+    Arguments args = CreateAllStatisticsArguments(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    auto preflightResult = filter.preflight(constantData, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    UnitTest::AlgorithmTestScope constantScope(*scanlineScenario);
+    auto executeResult = constantScope.executeFilter(filter, constantData, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(constantData.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[0] == 0.0F);
+    REQUIRE(constantData.getDataRefAs<NeighborList<int32>>(DataPath({"Statistics", "Mode"})).getList(0) == std::vector<int32>{7});
+    const auto& standardized = constantData.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"}));
+    REQUIRE(std::isnan(standardized[0]));
+    REQUIRE(std::isnan(standardized[1]));
+    REQUIRE(std::isnan(standardized[2]));
+
+    DataStructure extremeData;
+    auto* extremeInputGroup = DataGroup::Create(extremeData, "Input");
+    REQUIRE(extremeInputGroup != nullptr);
+    auto* extremes = Int64Array::CreateWithStore<DataStore<int64>>(extremeData, "Values", {2}, {1}, extremeInputGroup->getId());
+    REQUIRE(extremes != nullptr);
+    const std::array<int64, 2> extremeInput = {std::numeric_limits<int64>::lowest(), std::numeric_limits<int64>::max()};
+    auto extremesWriteResult = extremes->getDataStoreRef().copyFromBuffer(0, extremeInput);
+    SIMPLNX_RESULT_REQUIRE_VALID(extremesWriteResult);
+    Arguments extremeArgs = filter.getDefaultArguments();
+    extremeArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+    extremeArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+    extremeArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+    extremeArgs.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+    auto extremePreflight = filter.preflight(extremeData, extremeArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(extremePreflight.outputActions);
+    UnitTest::AlgorithmTestScope extremeScope(*scanlineScenario);
+    auto extremeResult = extremeScope.executeFilter(filter, extremeData, extremeArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(extremeResult.result);
+    REQUIRE(extremeData.getDataRefAs<Int64Array>(DataPath({"Statistics", "Minimum"}))[0] == std::numeric_limits<int64>::lowest());
+    REQUIRE(extremeData.getDataRefAs<Int64Array>(DataPath({"Statistics", "Maximum"}))[0] == std::numeric_limits<int64>::max());
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: every supported scalar type", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  RunCompactNumericStatistics<int8>(scope);
+  RunCompactNumericStatistics<uint8>(scope);
+  RunCompactNumericStatistics<int16>(scope);
+  RunCompactNumericStatistics<uint16>(scope);
+  RunCompactNumericStatistics<int32>(scope);
+  RunCompactNumericStatistics<uint32>(scope);
+  RunCompactNumericStatistics<int64>(scope);
+  RunCompactNumericStatistics<uint64>(scope);
+  RunCompactNumericStatistics<float32>(scope);
+  RunCompactNumericStatistics<float64>(scope);
+  RunCompactNumericStatistics<bool>(scope);
+}
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -73,7 +1297,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
   const std::string standardization = "Standardization";
   const std::string numUniqueValues = "NumUniqueValues";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -104,16 +1328,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);
@@ -190,6 +1411,9 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -249,7 +1473,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
   const std::string standardization = "Standardization";
   const std::string numUniqueValues = "NumUniqueValues";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -280,16 +1504,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);
@@ -415,6 +1636,9 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Ignore 0", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -475,7 +1699,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
   const std::string numUniqueValues = "NumUniqueValues";
   const std::string featureIdMapping = "FeatureIdMapping";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -510,16 +1734,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);
@@ -632,6 +1853,9 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Shrink to Fit", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -692,7 +1916,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
   const std::string numUniqueValues = "NumUniqueValues";
   const std::string featureIdMapping = "FeatureIdMapping";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -727,16 +1951,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);
@@ -871,6 +2092,9 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Padded Custom Range", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -932,7 +2156,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
   const std::string featureIdMapping = "FeatureIdMapping";
   const std::string featureHasData = "FeatureHasData";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -969,16 +2193,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);
@@ -1106,6 +2327,9 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Custom Range", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -1166,7 +2390,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
   const std::string numUniqueValues = "NumUniqueValues";
   const std::string featureIdMapping = "FeatureIdMapping";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
@@ -1202,16 +2426,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
     REQUIRE(amPtr != nullptr);

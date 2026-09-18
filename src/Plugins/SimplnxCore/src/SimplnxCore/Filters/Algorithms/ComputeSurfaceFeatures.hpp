@@ -14,6 +14,13 @@
 namespace nx::core
 {
 
+/**
+ * @struct ComputeSurfaceFeaturesInputValues
+ * @brief Stores paths and surface-marking options.
+ *
+ * A feature is surface when one voxel reaches the geometry boundary. Feature Id
+ * 0 neighbors also mark a feature when the selected option is true.
+ */
 struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
 {
   AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
@@ -25,13 +32,28 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
 
 /**
  * @class ComputeSurfaceFeatures
- * @brief This algorithm implements support code for the ComputeSurfaceFeaturesFilter
+ * @brief Dispatches surface-feature labeling by Feature Id storage.
+ *
+ * The cell-scale Feature Id array drives dispatch because face-neighbor reads can
+ * thrash disk chunks. The feature-level output does not affect selection.
+ *
+ * @see ComputeSurfaceFeaturesDirect, ComputeSurfaceFeaturesScanline, DispatchAlgorithm
  */
-
 class SIMPLNXCORE_EXPORT ComputeSurfaceFeatures
 {
 public:
+  /**
+   * @brief Creates a surface-feature dispatcher.
+   * @param dataStructure Provides the selected arrays and geometry.
+   * @param mesgHandler Receives progress messages.
+   * @param shouldCancel Stops later slices when true.
+   * @param inputValues Specifies validated paths and options. The caller must
+   * keep this object alive for the dispatcher lifetime.
+   */
   ComputeSurfaceFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceFeaturesInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning dispatcher.
+   */
   ~ComputeSurfaceFeatures() noexcept;
 
   ComputeSurfaceFeatures(const ComputeSurfaceFeatures&) = delete;
@@ -39,6 +61,10 @@ public:
   ComputeSurfaceFeatures& operator=(const ComputeSurfaceFeatures&) = delete;
   ComputeSurfaceFeatures& operator=(ComputeSurfaceFeatures&&) noexcept = delete;
 
+  /**
+   * @brief Dispatches surface-feature labeling.
+   * @return Error from the selected implementation.
+   */
   Result<> operator()();
 
 private:

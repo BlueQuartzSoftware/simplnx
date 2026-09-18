@@ -39,6 +39,11 @@ public:
   ComputeBoundaryStrengths& operator=(const ComputeBoundaryStrengths&) = delete;
   ComputeBoundaryStrengths& operator=(ComputeBoundaryStrengths&&) noexcept = delete;
 
+  /**
+   * @brief Computes boundary-strength metrics for internal feature faces.
+   * @return An error for an invalid phase or Laue index. Returns a warning
+   *         when the algorithm processes a non-cubic phase.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

@@ -99,8 +99,6 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
-  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
-
   nx::core::Result<OutputActions> resultOutputActions;
 
   ShapeType tupleDims = {};
@@ -138,6 +136,8 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
                           "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
+
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{nComp}, arrayPath, dataFormat);
 

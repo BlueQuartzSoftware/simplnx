@@ -1,6 +1,7 @@
 #include "CropImageGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -8,26 +9,61 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
 
+#include <algorithm>
+#include <cstring>
+#include <initializer_list>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+
 using namespace nx::core;
 
 namespace
 {
 const std::string k_TempGeometryName = ".cropped_image_geometry";
+constexpr usize k_CropScratchBytes = 1024 * 1024;
+constexpr usize k_ZSliceBatch = 32;
 
 /**
- * @brief
- * @tparam T
+ * @class CropImageGeomDataArray
+ * @brief Copies one cropped cell array with storage-specific transfers.
+ * @tparam T Cell-array value type.
+ *
+ * Resident pairs copy selected rows directly.
+ * Other pairs use buffers with a 1 MiB
+ * total cap for each task.
+ * Storage backends and caches can allocate more memory.
+ *
+ * Parallel tasks own separate array pairs.
+ * The shared task result propagates the first transfer error.
+ *
+ * Cancellation keeps completed transfers.
  */
 template <typename T>
 class CropImageGeomDataArray
 {
 public:
-  CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
+  /**
+   * @brief Creates one array-cropping task.
+   * @param oldCellArray Supplies source cell tuples.
+   * @param newCellArray Receives cropped cell tuples.
+   * @param srcImageGeom Supplies source dimensions.
+   * @param bounds Specifies half-open XYZ crop bounds.
+   * @param shouldCancel Stops the task between row or slab transfers.
+   * @param taskResult Stores the first validation or transfer error.
+   */
+  CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel,
+                         CopyFromArray::ParallelTaskResult& taskResult)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_SourceArrayName(oldCellArray.getName())
+  , m_DestinationArrayName(newCellArray.getName())
   , m_SrcImageGeom(srcImageGeom)
   , m_Bounds(bounds)
   , m_ShouldCancel(shouldCancel)
+  , m_TaskResult(taskResult)
   {
   }
 
@@ -46,29 +82,191 @@ public:
 protected:
   void convert() const
   {
-    size_t numComps = m_OldCellStore.getNumberOfComponents();
+    const usize numComps = m_OldCellStore.getNumberOfComponents();
 
+    if(m_ShouldCancel || m_TaskResult.shouldAbort())
+    {
+      return;
+    }
     m_NewCellStore.fill(static_cast<T>(-1));
 
-    auto srcDims = m_SrcImageGeom.getDimensions();
+    const auto srcDims = m_SrcImageGeom.getDimensions();
+    const uint64 srcDimX = srcDims[0];
+    const uint64 srcDimY = srcDims[1];
+    const uint64 srcDimZ = srcDims[2];
 
-    uint64 destTupleIndex = 0;
-    for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
+    // Read the half-open copy bounds prepared by the outer executor.
+    const uint64 xMin = m_Bounds[0];
+    const uint64 xMax = m_Bounds[1];
+    const uint64 yMin = m_Bounds[2];
+    const uint64 yMax = m_Bounds[3];
+    const uint64 zMin = m_Bounds[4];
+    const uint64 zMax = m_Bounds[5];
+
+    if(xMin >= xMax || xMax > srcDimX || yMin >= yMax || yMax > srcDimY || zMin >= zMax || zMax > srcDimZ)
     {
-      if(m_ShouldCancel)
+      m_TaskResult.store(MakeErrorResult(-953, fmt::format("Cannot crop source array '{}' with XYZ dimensions [{}, {}, {}]. The internal half-open XYZ bounds are [{}, {}), [{}, {}), and [{}, {}). "
+                                                           "Select bounds inside the source geometry.",
+                                                           m_SourceArrayName, srcDimX, srcDimY, srcDimZ, xMin, xMax, yMin, yMax, zMin, zMax)));
+      return;
+    }
+
+    const uint64 cropX = xMax - xMin;
+    const uint64 cropY = yMax - yMin;
+    const uint64 cropZ = zMax - zMin;
+    const auto checkedProduct = [](std::initializer_list<uint64> factors) -> std::optional<usize> {
+      usize product = 1;
+      for(const uint64 factor : factors)
       {
-        return;
-      }
-      for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
-      {
-        for(uint64 xIndex = m_Bounds[0]; xIndex < m_Bounds[1]; xIndex++)
+        if(factor == 0 || factor > (std::numeric_limits<usize>::max)() / product)
         {
-          uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
-          for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+          return std::nullopt;
+        }
+        product *= static_cast<usize>(factor);
+      }
+      return product;
+    };
+    const auto sourceValues = checkedProduct({srcDimX, srcDimY, srcDimZ, numComps});
+    const auto destinationValues = checkedProduct({cropX, cropY, cropZ, numComps});
+    const usize destinationNumComps = m_NewCellStore.getNumberOfComponents();
+    if(!sourceValues.has_value() || !destinationValues.has_value() || *sourceValues != m_OldCellStore.getSize() || *destinationValues != m_NewCellStore.getSize() || destinationNumComps != numComps)
+    {
+      m_TaskResult.store(MakeErrorResult(
+          -953,
+          fmt::format("Cannot crop source array '{}' with XYZ dimensions [{}, {}, {}] to destination array '{}' with XYZ dimensions [{}, {}, {}]. The source store has {} components and {} "
+                      "values. The destination store has {} components and {} values. Make each array shape match its image geometry before cropping.",
+                      m_SourceArrayName, srcDimX, srcDimY, srcDimZ, m_DestinationArrayName, cropX, cropY, cropZ, numComps, m_OldCellStore.getSize(), destinationNumComps, m_NewCellStore.getSize())));
+      return;
+    }
+
+    const usize sourceDimX = static_cast<usize>(srcDimX);
+    const usize sourceDimY = static_cast<usize>(srcDimY);
+    const usize xMinIndex = static_cast<usize>(xMin);
+    const usize yMinIndex = static_cast<usize>(yMin);
+    const usize yMaxIndex = static_cast<usize>(yMax);
+    const usize zMinIndex = static_cast<usize>(zMin);
+    const usize zMaxIndex = static_cast<usize>(zMax);
+    const usize cropDimX = static_cast<usize>(cropX);
+    const usize cropDimY = static_cast<usize>(cropY);
+    const usize cropDimZ = static_cast<usize>(cropZ);
+    const usize sourceSliceTuples = sourceDimX * sourceDimY;
+    const usize destinationSliceTuples = cropDimX * cropDimY;
+    const usize rowElements = cropDimX * numComps;
+
+    const auto* sourceStore = dynamic_cast<const DataStore<T>*>(&m_OldCellStore);
+    auto* destinationStore = dynamic_cast<DataStore<T>*>(&m_NewCellStore);
+    if(m_OldCellStore.getStoreType() == IDataStore::StoreType::InMemory && m_NewCellStore.getStoreType() == IDataStore::StoreType::InMemory && sourceStore != nullptr && destinationStore != nullptr)
+    {
+      const T* sourceData = sourceStore->data();
+      T* destinationData = destinationStore->data();
+      for(usize zIndex = zMinIndex; zIndex < zMaxIndex; ++zIndex)
+      {
+        for(usize yIndex = yMinIndex; yIndex < yMaxIndex; ++yIndex)
+        {
+          if(m_ShouldCancel || m_TaskResult.shouldAbort())
           {
-            m_NewCellStore.setValue(destTupleIndex * numComps + compIndex, m_OldCellStore.getValue(srcIndex * numComps + compIndex));
+            return;
           }
-          destTupleIndex++;
+          const usize sourceOffset = ((zIndex * sourceDimY + yIndex) * sourceDimX + xMinIndex) * numComps;
+          const usize destinationOffset = ((zIndex - zMinIndex) * cropDimY + yIndex - yMinIndex) * rowElements;
+          std::copy_n(sourceData + sourceOffset, rowElements, destinationData + destinationOffset);
+        }
+      }
+      return;
+    }
+
+    constexpr usize maxScratchValues = k_CropScratchBytes / sizeof(T);
+    const bool sourceSliceFits = sourceSliceTuples <= maxScratchValues / numComps;
+    const bool destinationSliceFits = destinationSliceTuples <= maxScratchValues / numComps;
+    usize batchLimit = 0;
+    if(sourceSliceFits && destinationSliceFits)
+    {
+      const usize sourceSliceValues = sourceSliceTuples * numComps;
+      const usize destinationSliceValues = destinationSliceTuples * numComps;
+      if(sourceSliceValues <= maxScratchValues - destinationSliceValues)
+      {
+        const usize combinedSliceValues = sourceSliceValues + destinationSliceValues;
+        batchLimit = (std::min)(k_ZSliceBatch, maxScratchValues / combinedSliceValues);
+      }
+    }
+
+    if(batchLimit > 0)
+    {
+      const usize initialBatch = (std::min)(batchLimit, cropDimZ);
+      auto sourceSlab = std::make_unique<T[]>(initialBatch * sourceSliceTuples * numComps);
+      auto destinationSlab = std::make_unique<T[]>(initialBatch * destinationSliceTuples * numComps);
+      const usize rowBytes = rowElements * sizeof(T);
+
+      for(usize zStart = zMinIndex; zStart < zMaxIndex; zStart += batchLimit)
+      {
+        if(m_ShouldCancel || m_TaskResult.shouldAbort())
+        {
+          return;
+        }
+        const usize batch = (std::min)(batchLimit, zMaxIndex - zStart);
+        const usize sourceSlabElements = batch * sourceSliceTuples * numComps;
+        const usize destinationSlabElements = batch * destinationSliceTuples * numComps;
+
+        Result<> readResult = m_OldCellStore.copyIntoBuffer(zStart * sourceSliceTuples * numComps, nonstd::span<T>(sourceSlab.get(), sourceSlabElements));
+        if(readResult.invalid())
+        {
+          m_TaskResult.store(std::move(readResult));
+          return;
+        }
+
+        // The slab route reduces HDF5 calls when both crop-owned buffers fit the cap.
+        for(usize zOffset = 0; zOffset < batch; ++zOffset)
+        {
+          const T* sourceSlice = sourceSlab.get() + zOffset * sourceSliceTuples * numComps;
+          T* destinationSlice = destinationSlab.get() + zOffset * destinationSliceTuples * numComps;
+          for(usize yOffset = 0; yOffset < cropDimY; ++yOffset)
+          {
+            const T* sourceRow = sourceSlice + ((yMinIndex + yOffset) * sourceDimX + xMinIndex) * numComps;
+            T* destinationRow = destinationSlice + yOffset * rowElements;
+            std::memcpy(destinationRow, sourceRow, rowBytes);
+          }
+        }
+
+        Result<> writeResult = m_NewCellStore.copyFromBuffer((zStart - zMinIndex) * destinationSliceTuples * numComps, nonstd::span<const T>(destinationSlab.get(), destinationSlabElements));
+        if(writeResult.invalid())
+        {
+          m_TaskResult.store(std::move(writeResult));
+          return;
+        }
+      }
+      return;
+    }
+
+    // Align segments to complete tuples when one tuple fits. Wider tuples must split at flat value offsets.
+    const usize segmentValues = numComps <= maxScratchValues ? (maxScratchValues / numComps) * numComps : maxScratchValues;
+    const usize bufferValues = (std::min)(rowElements, segmentValues);
+    auto buffer = std::make_unique<T[]>(bufferValues);
+    for(usize zIndex = zMinIndex; zIndex < zMaxIndex; ++zIndex)
+    {
+      for(usize yIndex = yMinIndex; yIndex < yMaxIndex; ++yIndex)
+      {
+        const usize sourceOffset = ((zIndex * sourceDimY + yIndex) * sourceDimX + xMinIndex) * numComps;
+        const usize destinationOffset = ((zIndex - zMinIndex) * cropDimY + yIndex - yMinIndex) * rowElements;
+        for(usize rowValue = 0; rowValue < rowElements;)
+        {
+          if(m_ShouldCancel || m_TaskResult.shouldAbort())
+          {
+            return;
+          }
+          const usize count = (std::min)(bufferValues, rowElements - rowValue);
+          Result<> readResult = m_OldCellStore.copyIntoBuffer(sourceOffset + rowValue, nonstd::span<T>(buffer.get(), count));
+          if(readResult.invalid())
+          {
+            m_TaskResult.store(std::move(readResult));
+            return;
+          }
+          Result<> writeResult = m_NewCellStore.copyFromBuffer(destinationOffset + rowValue, nonstd::span<const T>(buffer.get(), count));
+          if(writeResult.invalid())
+          {
+            m_TaskResult.store(std::move(writeResult));
+            return;
+          }
+          rowValue += count;
         }
       }
     }
@@ -77,9 +275,12 @@ protected:
 private:
   const AbstractDataStore<T>& m_OldCellStore;
   AbstractDataStore<T>& m_NewCellStore;
+  std::string m_SourceArrayName;
+  std::string m_DestinationArrayName;
   const ImageGeom& m_SrcImageGeom;
   std::array<uint64, 6> m_Bounds;
   const std::atomic_bool& m_ShouldCancel;
+  CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
 } // namespace
 
@@ -114,7 +315,7 @@ Result<> CropImageGeometry::operator()()
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-  // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
+  // Source and destination paths are resolved before array tasks start.
   SizeVec3 udims = srcImageGeom.getDimensions();
 
   int64 dims[3] = {
@@ -165,8 +366,9 @@ Result<> CropImageGeometry::operator()()
 
   std::array<uint64, 6> bounds = {xMin, xMax + 1, yMin, yMax + 1, zMin, zMax + 1};
 
-  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
+  // Each task owns one source and destination array. Arrays can copy in parallel.
+  // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
+  CopyFromArray::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
@@ -183,19 +385,21 @@ Result<> CropImageGeometry::operator()()
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
     m_MessageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
-    ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, m_ShouldCancel);
+    ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, m_ShouldCancel, taskResult);
   }
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  taskRunner.wait();
+  Result<> cropResult = taskResult.takeResult();
+  if(cropResult.invalid())
+  {
+    return cropResult;
+  }
 
   if(m_ShouldCancel)
   {
     return {};
   }
 
-  // Careful with this next section. We purposefully copy in the original dataStructure arrays
-  // into the destination feature attribute matrix so that we have somewhere to start.
-  // During the renumbering phase is when those copied arrays will get potentially resized
-  // to their proper number of tuples.
+  // Copy feature arrays before renumbering so each tuple supplies initial data.
   if(shouldRenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
@@ -219,11 +423,8 @@ Result<> CropImageGeometry::operator()()
       dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
     }
 
-    // Loop over all the DataPaths and do a deep copy on each DataArray|StringArray
-    // so that the updating of the Feature level data can happen. We do a bit of
-    // under-the-covers where we actually remove the existing array that preflight
-    // created, so we can use the convenience of the DataArray.deepCopy() function.
-    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
+    // DeepCopy replaces preflight outputs before renumbering resizes feature data.
+    for(usize index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
       DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
       if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
@@ -244,7 +445,7 @@ Result<> CropImageGeometry::operator()()
       }
     }
 
-    // NOW DO THE ACTUAL RENUMBERING and updating.
+    // Renumber copied feature data and cropped cell Feature IDs together.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
     return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }

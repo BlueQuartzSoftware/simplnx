@@ -56,7 +56,6 @@ Parameters ComputeVectorColorsFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Apply to Good Voxels Only (Bad Voxels Will Be Black)", "Whether or not to assign colors to bad voxels or leave them black", false));
@@ -70,7 +69,6 @@ Parameters ComputeVectorColorsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Element Data Object"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellVectorColorsArrayName_Key, "Vector Colors", "RGB colors", "Vector Colors Array"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
@@ -109,11 +107,10 @@ IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStru
 
   if(!pUseGoodVoxelsValue)
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath, CreateArrayAction::k_DefaultDataFormat, "true");
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath, "", "true");
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

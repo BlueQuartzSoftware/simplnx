@@ -7,8 +7,10 @@
 #include <catch2/catch.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 namespace fs = std::filesystem;
 
@@ -151,4 +153,75 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
 
   REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid1.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid1.ang"));
   REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid2.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid2.ang"));
+}
+
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Cancellation before publication preserves each output", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "convert_hex_grid_cancellation";
+  const fs::path existingOutputPath = outputPath / "Sqr_hex_grid1.ang";
+  const fs::path absentOutputPath = outputPath / "Sqr_hex_grid2.ang";
+  const std::string sentinel = "existing converted-file bytes";
+
+  std::error_code cleanupError;
+  fs::remove_all(outputPath, cleanupError);
+  REQUIRE_FALSE(cleanupError);
+  fs::create_directories(outputPath, cleanupError);
+  REQUIRE_FALSE(cleanupError);
+  {
+    std::ofstream outputStream(existingOutputPath, std::ios::binary);
+    REQUIRE(outputStream.is_open());
+    outputStream << sentinel;
+  }
+  REQUIRE_FALSE(fs::exists(absentOutputPath));
+
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  GeneratedFileListParameter::ValueType inputFileList;
+  inputFileList.startIndex = 1;
+  inputFileList.incrementIndex = 1;
+  inputFileList.endIndex = 2;
+  inputFileList.inputPath = fmt::format("{}/{}/multi", unit_test::k_TestFilesDir, k_HexToSqrTestFilesDir);
+  inputFileList.filePrefix = "hex_grid";
+  inputFileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  inputFileList.paddingDigits = 0;
+  inputFileList.fileExtension = ".ang";
+  inputFileList.fileSuffix = "";
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(inputFileList));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(outputPath));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
+
+  auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
+  std::atomic_bool shouldCancel = false;
+  bool sawSaveCheckpoint = false;
+  IFilter::MessageHandler cancelAtSaveCheckpoint{[&](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info && message.message == "Saving converted files")
+    {
+      sawSaveCheckpoint = true;
+      shouldCancel.store(true);
+    }
+  }};
+  const auto executeResult = filter.execute(dataStructure, args, nullptr, cancelAtSaveCheckpoint, shouldCancel);
+
+  REQUIRE(sawSaveCheckpoint);
+  REQUIRE(shouldCancel.load());
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE_FALSE(executeResult.result.errors().empty());
+  REQUIRE(executeResult.result.errors().front().code == -1);
+  std::ifstream inputStream(existingOutputPath, std::ios::binary);
+  REQUIRE(inputStream.is_open());
+  const std::string contents((std::istreambuf_iterator<char>(inputStream)), std::istreambuf_iterator<char>());
+  REQUIRE(contents == sentinel);
+  inputStream.close();
+  REQUIRE_FALSE(fs::exists(absentOutputPath));
+
+  fs::remove_all(outputPath, cleanupError);
+  REQUIRE_FALSE(cleanupError);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

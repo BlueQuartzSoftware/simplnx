@@ -1,12 +1,17 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Filters/ITKImageWriterFilter.hpp"
 #include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
@@ -29,6 +34,26 @@ using namespace nx::core;
 
 namespace
 {
+class PlannedOocManager : public IDataIOManager
+{
+public:
+  static inline constexpr StringLiteral k_Format = "itk-planned-ooc-test";
+
+  PlannedOocManager()
+  {
+    addDataStoreCreationFnc(k_Format.str(),
+                            []([[maybe_unused]] DataType dataType, [[maybe_unused]] const ShapeType& tupleShape, [[maybe_unused]] const ShapeType& componentShape,
+                               [[maybe_unused]] const std::optional<ShapeType>& chunkShape, [[maybe_unused]] DataStoreInitializationMode initializationMode) -> std::unique_ptr<IDataStore> {
+                              throw std::runtime_error("ITK planned-residency preflight must not create values");
+                            });
+  }
+
+  std::string formatName() const override
+  {
+    return "itk-planned-ooc-test-manager";
+  }
+};
+
 const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
 const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
@@ -62,7 +87,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
     REQUIRE(std::filesystem::remove(imagePath));
   }
 
-  // Now make sure there are no files left in the directory.
+  // Confirm that the directory contains no files.
   int count = 0;
   for(const auto& entry : std::filesystem::directory_iterator(tempDirPath))
   {
@@ -70,7 +95,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   }
   REQUIRE(count == 0);
 
-  // Now delete the temp directory
+  // Delete the temporary directory.
   try
   {
     std::filesystem::remove_all(tempDirPath);
@@ -300,6 +325,45 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Dimension Mismatch Validati
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors()[0].code == -25600);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ITK StorageFormatPlan: writer preflight rejects planned out-of-core input", "[ITKImageProcessing][ITKImageWriterFilter][StorageFormatPlan]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  REQUIRE(app->getIOCollection().addIOManager(std::make_shared<PlannedOocManager>()).valid());
+
+  DataStructure dataStructure;
+  const SizeVec3 imageDims = {3, 1, 1};
+  const ShapeType arrayDims{1, 1, 3};
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions(imageDims);
+  auto* cellData = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, arrayDims, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto storeResult = EmptyDataStore<uint8>::Create(arrayDims, {1}, PlannedOocManager::k_Format.str());
+  SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
+  std::shared_ptr<EmptyDataStore<uint8>> store(std::move(storeResult.value()));
+  REQUIRE(UInt8Array::Create(dataStructure, "ImageData", std::move(store), cellData->getId()) != nullptr);
+
+  auto helperResult = ITK::detail::DataCheckImpl<uint8, uint8, 3>(dataStructure, k_ImageDataPath, k_ImageGeomPath, k_ImageDataPath.replaceName("Output"));
+  UnitTest::RequireAutomaticCreateArrayActions(helperResult, 1);
+
+  ITKImageWriterFilter filter;
+  Arguments args;
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>("planned_ooc.tif"));
+  args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(ITKImageWriterFilter::k_XYPlane));
+  args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  REQUIRE(preflight.outputActions.invalid());
+  REQUIRE_FALSE(preflight.outputActions.errors().empty());
+  CHECK(preflight.outputActions.errors().front().code == ITK::Constants::k_OutOfCoreDataNotSupported);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Single Slice Keeps Exact Output Name", "[ITKImageProcessing][ITKImageWriterFilter]")

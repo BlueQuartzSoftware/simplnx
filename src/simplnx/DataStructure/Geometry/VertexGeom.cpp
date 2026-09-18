@@ -81,32 +81,8 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
-    if(m_VertexAttributeMatrixId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getVertexAttributeMatrix()))
-      {
-        const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedDataPath);
-    }
+    INodeGeometry0D::copyMembersInto(*copy, copyPath);
 
-    if(m_VertexDataArrayId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getVertices()))
-      {
-        const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
-      }
-      copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
-    {
-      copy->m_ElementSizesId = voxelSizesCopy->getId();
-    }
     return copy;
   }
   return nullptr;

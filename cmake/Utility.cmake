@@ -67,6 +67,7 @@ function(simplnx_enable_warnings)
         /we4459 # C4459: declaration of 'identifier' hides global declaration
         /we4263 # C4263: 'function' : member function does not override any base class virtual member function
         /we4266 # C4266: 'function' : no override available for virtual member function from base 'type'; function is hidden
+        /we4834 # C4834: discarding return value of function with 'nodiscard' attribute. Keeps every [[nodiscard]] Result from being dropped.
 
         /permissive- # Standards compliance
     )
@@ -92,6 +93,7 @@ function(simplnx_enable_warnings)
         -Werror=parentheses # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
         -Werror=return-type # Wreturn-type: Warn about any "return" statement with no return value in a function whose return type is not "void"
         -Werror=${SHADOW_WARNING} # Wshadow: Warn whenever a local variable or type declaration shadows another variable, parameter, type, class member (in C++), or instance variable (in Objective-C) or whenever a built-in function is shadowed.
+        -Werror=unused-result # Wunused-result: Warn when the return value of a [[nodiscard]] function is discarded. Keeps every [[nodiscard]] Result from being dropped.
         ${CLANG_WARNINGS}
     )
   

@@ -13,6 +13,10 @@ namespace nx::core
 class ImageGeom;
 class IDataArray;
 
+/**
+ * @struct WriteVtkRectilinearGridInputValues
+ * @brief Stores output format, geometry path, and selected arrays.
+ */
 struct SIMPLNXCORE_EXPORT WriteVtkRectilinearGridInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
@@ -22,14 +26,27 @@ struct SIMPLNXCORE_EXPORT WriteVtkRectilinearGridInputValues
 };
 
 /**
- * @class VtkRectilinearGridWriter
- * @brief This filter ...
+ * @class WriteVtkRectilinearGrid
+ * @brief Writes ImageGeom data as a legacy VTK RECTILINEAR_GRID file.
+ *
+ * Coordinate arrays are generated from image origin and spacing. Selected data
+ * arrays use bounded typed pages through WriteVtkDataArrayFunctor.
  */
-
 class SIMPLNXCORE_EXPORT WriteVtkRectilinearGrid
 {
 public:
+  /**
+   * @brief Creates a legacy VTK rectilinear-grid writer.
+   * @param dataStructure Provides image metadata and selected arrays.
+   * @param mesgHandler Receives per-array messages.
+   * @param shouldCancel Is retained but not inspected.
+   * @param inputValues Specifies validated output settings. The caller must keep
+   * this object alive for the writer lifetime.
+   */
   WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteVtkRectilinearGridInputValues* inputValues);
+  /**
+   * @brief Destroys the non-owning writer.
+   */
   ~WriteVtkRectilinearGrid() noexcept;
 
   WriteVtkRectilinearGrid(const WriteVtkRectilinearGrid&) = delete;
@@ -37,23 +54,37 @@ public:
   WriteVtkRectilinearGrid& operator=(const WriteVtkRectilinearGrid&) = delete;
   WriteVtkRectilinearGrid& operator=(WriteVtkRectilinearGrid&&) noexcept = delete;
 
+  /**
+   * @brief Writes the header, coordinates, and selected cell arrays.
+   * @return File-open, coordinate-write, source-read, or binary-write error.
+   *
+   * The writer replaces the destination directly and does not inspect cancellation.
+   * Header and ASCII FILE write status is not reported.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
 
+  /**
+   * @brief Writes the configured VTK rectilinear-grid header.
+   * @param outputFile Receives header text.
+   *
+   * The method does not report FILE write status.
+   */
   void writeVtkHeader(FILE* outputFile) const;
 
   /**
-   * @brief This function writes a set of Axis coordinates to that are needed
-   * for a Rectilinear Grid based data set.
-   * @param outputFile The "C" FILE* pointer to the file being written to.
-   * @param axis The name of the Axis that is being written
-   * @param type The type of primitive being written (float, int, ...)
-   * @param nPoints The total number of points in the array
-   * @param min The minimum value of the axis
-   * @param max The maximum value of the axis
-   * @param step The step value between each point on the axis.
-   * @param binary Whether or not to write the vtk file data in binary
+   * @brief Writes regularly spaced coordinates for one axis.
+   * @tparam T Specifies the coordinate scalar type.
+   * @param outputFile Receives coordinates.
+   * @param axis Specifies the VTK axis keyword.
+   * @param type Specifies the VTK scalar token.
+   * @param nPoints Specifies coordinate count.
+   * @param min Specifies the first coordinate.
+   * @param step Specifies coordinate increment.
+   * @return Binary-write error, or success.
+   *
+   * ASCII FILE write status is not reported.
    */
   template <typename T>
   Result<> writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T step);

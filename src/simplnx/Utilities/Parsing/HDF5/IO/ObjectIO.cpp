@@ -4,6 +4,8 @@
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
+#include <mutex>
+
 namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
@@ -126,10 +128,16 @@ ObjectIO::ObjectType ObjectIO::getObjectType() const
     return ObjectType::Unknown;
   }
 
+  // getName() self-locks (it calls open()); resolve the parent id and name before the
+  // leaf-locked bare H5Oget_info_by_name3.
+  const hid_t parentId = getParentId();
+  const std::string name = getName();
   herr_t error = 1;
   H5O_info2_t objectInfo{};
-
-  error = H5Oget_info_by_name3(getParentId(), getName().c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    error = H5Oget_info_by_name3(parentId, name.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+  }
   if(error < 0)
   {
     return ObjectType::Unknown;
@@ -168,7 +176,10 @@ usize ObjectIO::getNumAttributes() const
     return 0;
   }
 
-  return H5Aget_num_attrs(getId());
+  // getId() self-locks; resolve it before the leaf-locked bare H5Aget_num_attrs.
+  const hid_t selfId = getId();
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  return H5Aget_num_attrs(selfId);
 }
 
 std::vector<std::string> ObjectIO::getAttributeNames() const
@@ -184,19 +195,28 @@ std::vector<std::string> ObjectIO::getAttributeNames() const
 
 std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
 {
-  hid_t attrId = H5Aopen_idx(getId(), idx);
+  // getId() self-locks; resolve it before the leaf-locked bare H5A* calls, which form one
+  // leaf critical section (open, query name, close).
+  const hid_t selfId = getId();
   const size_t size = 1024;
   char buffer[size];
-  H5Aget_name(attrId, size, buffer);
-  H5Aclose(attrId);
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    hid_t attrId = H5Aopen_idx(selfId, idx);
+    H5Aget_name(attrId, size, buffer);
+    H5Aclose(attrId);
+  }
   return GetNameFromBuffer(buffer);
 }
 
 void ObjectIO::deleteAttribute(const std::string& name)
 {
-  if(H5Aexists(getId(), name.c_str()))
+  // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
+  const hid_t selfId = getId();
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  if(H5Aexists(selfId, name.c_str()))
   {
-    H5Adelete(getId(), name.c_str());
+    H5Adelete(selfId, name.c_str());
   }
 }
 
@@ -215,50 +235,63 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   std::vector<char> attributeOutput;
   Result<std::string> returnResult = {};
 
+  // Resolve self-locking accessors before the attribute leaf critical section.
   open();
   if(!hasAttribute(attributeName))
   {
     return MakeErrorResult<std::string>(-445, fmt::format("Attribute '{}' does not exist in Object '{}'", attributeName, getName()));
   }
 
-  hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
-  hid_t attrTypeId = H5Aget_type(attribId);
-  auto isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
-  if(isVariableString == 1)
+  const hid_t selfId = getId();
+  bool isVariableString = false;
+  herr_t readError = 0;
+  bool attributeOpened = false;
   {
-    H5Aclose(attribId);
-
-    data.clear();
-    std::string ss = fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName);
-    return MakeErrorResult<std::string>(-440, ss);
-  }
-  if(attribId >= 0)
-  {
-    hsize_t size = H5Aget_storage_size(attribId);
-    attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
-    if(attrTypeId >= 0)
+    // One leaf critical section spanning the bare H5A*/H5T* open, read and close calls.
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    hid_t attribId = H5Aopen(selfId, attributeName.c_str(), H5P_DEFAULT);
+    hid_t attrTypeId = H5Aget_type(attribId);
+    if(H5Tis_variable_str(attrTypeId) == 1) // Test if the string is variable length
     {
-      herr_t error = H5Aread(attribId, attrTypeId, attributeOutput.data());
-      if(error < 0)
+      H5Aclose(attribId);
+      H5Tclose(attrTypeId);
+      isVariableString = true;
+    }
+    else
+    {
+      if(attribId >= 0)
       {
-        std::string ss = fmt::format("Error reading attribute: '{}'", attributeName);
-        returnResult = MakeErrorResult<std::string>(-450, ss);
-        std::cout << "Error Reading Attribute." << std::endl;
-      }
-      else
-      {
-        if(attributeOutput[size - 1] == 0) // null Terminated string
+        attributeOpened = true;
+        hsize_t size = H5Aget_storage_size(attribId);
+        attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
+        if(attrTypeId >= 0)
         {
-          size -= 1;
+          readError = H5Aread(attribId, attrTypeId, attributeOutput.data());
+          if(readError >= 0)
+          {
+            if(size > 0 && attributeOutput[size - 1] == 0) // null Terminated string
+            {
+              size -= 1;
+            }
+            data.append(attributeOutput.data(), size); // Append the data to the passed in string
+          }
         }
-        data.append(attributeOutput.data(),
-                    size); // Append the data to the passed in string
-        returnResult = {data};
       }
+      H5Aclose(attribId);
+      H5Tclose(attrTypeId);
     }
   }
-  H5Aclose(attribId);
-  H5Tclose(attrTypeId);
+
+  if(isVariableString)
+  {
+    return MakeErrorResult<std::string>(-440, fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName));
+  }
+  if(attributeOpened && readError < 0)
+  {
+    std::cout << "Error Reading Attribute." << std::endl;
+    return MakeErrorResult<std::string>(-450, fmt::format("Error reading attribute: '{}'", attributeName));
+  }
+  returnResult = {data};
   return returnResult;
 }
 
@@ -267,13 +300,16 @@ Result<> ObjectIO::writeStringAttribute(const std::string& attributeName, const 
   Result<> returnError = {};
   size_t size = text.size();
 
+  // Resolve self-locking deletion and ID access before the attribute leaf section.
   deleteAttribute(attributeName);
+  const hid_t selfId = getId();
 
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   hid_t attributeType = H5Tcopy(H5T_C_S1);
   H5Tset_size(attributeType, size);
   H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
   hid_t attributeSpaceID = H5Screate(H5S_SCALAR);
-  hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t attributeId = H5Acreate(selfId, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
   if(attributeId < 0)
   {
     returnError = MakeErrorResult(attributeId, "Error Creating String Attribute");
@@ -303,45 +339,59 @@ FileIO* ObjectIO::parentFile() const
 
 bool ObjectIO::hasAttribute(const std::string& attributeName) const
 {
-  return H5Aexists(getId(), attributeName.c_str()) > 0;
+  // getId() self-locks; resolve it before the leaf-locked bare H5Aexists.
+  const hid_t selfId = getId();
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
 usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
 {
-  hid_t attrType = H5Aget_type(attribId);
-  size_t typeSize = H5Tget_size(attrType);
+  // getTypeFromId() self-locks, so retain the local HDF5 handles across the
+  // lock boundary and call it without holding the non-recursive ApiLock.
   std::vector<hsize_t> dims;
-  hid_t dataspaceId = H5Aget_space(attribId);
-  if(dataspaceId >= 0)
+  hid_t attrType = -1;
+  hid_t dataspaceId = -1;
+  size_t typeSize = 0;
   {
-    Type type = getTypeFromId(attrType);
-    if(type == Type::string)
-    {
-      size_t rank = 1;
-      dims.resize(rank);
-      dims[0] = typeSize;
-    }
-    else
-    {
-      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
-      std::vector<hsize_t> hdims(rank, 0);
-      /* Get dimensions */
-      herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
-      if(error < 0)
-      {
-        std::cout << "Error Getting Attribute dims" << std::endl;
-        H5Sclose(dataspaceId);
-        H5Tclose(attrType);
-        return 0;
-      }
-      // Copy the dimensions into the dims vector
-      dims.clear(); // Erase everything in the Vector
-      dims.resize(rank);
-      std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
-    }
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    attrType = H5Aget_type(attribId);
+    typeSize = H5Tget_size(attrType);
+    dataspaceId = H5Aget_space(attribId);
   }
-  H5Sclose(dataspaceId);
-  H5Tclose(attrType);
+  const Type type = getTypeFromId(attrType);
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    if(dataspaceId >= 0)
+    {
+      if(type == Type::string)
+      {
+        size_t rank = 1;
+        dims.resize(rank);
+        dims[0] = typeSize;
+      }
+      else
+      {
+        size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
+        std::vector<hsize_t> hdims(rank, 0);
+        /* Get dimensions */
+        herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+        if(error < 0)
+        {
+          std::cout << "Error Getting Attribute dims" << std::endl;
+          H5Sclose(dataspaceId);
+          H5Tclose(attrType);
+          return 0;
+        }
+        // Copy the dimensions into the dims vector
+        dims.clear(); // Erase everything in the Vector
+        dims.resize(rank);
+        std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
+      }
+    }
+    H5Sclose(dataspaceId);
+    H5Tclose(attrType);
+  }
 
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
   return numElements;

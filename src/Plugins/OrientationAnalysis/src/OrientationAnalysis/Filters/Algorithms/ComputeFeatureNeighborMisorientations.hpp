@@ -21,7 +21,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientationsInputValu
 };
 
 /**
- * @class
+ * @class ComputeFeatureNeighborMisorientations
+ * @brief Computes crystallographic misorientations between feature neighbors.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientations
 {
@@ -35,6 +36,10 @@ public:
   ComputeFeatureNeighborMisorientations& operator=(const ComputeFeatureNeighborMisorientations&) = delete;
   ComputeFeatureNeighborMisorientations& operator=(ComputeFeatureNeighborMisorientations&&) noexcept = delete;
 
+  /**
+   * @brief Computes neighbor misorientation lists and optional averages.
+   * @return An error for an invalid Feature Phase index.
+   */
   Result<> operator()();
 
 private:

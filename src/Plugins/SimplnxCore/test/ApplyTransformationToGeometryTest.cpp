@@ -460,7 +460,6 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image", 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -484,6 +483,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image", "[S
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz", "apply_transformation_to_geometry.dream3d");
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
 
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -552,9 +554,18 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image", "[S
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+      UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, dataStructure.getDataRefAs<AttributeMatrix>(inputCellAMPath).getSize());
+      std::vector<DataPath> expectedArrayPaths;
+      const DataPath outputCellPath({fmt::format(".{}", inputGeometryPath.getTargetName()), inputCellAMPath.getTargetName()});
+      for([[maybe_unused]] const auto& [id, child] : dataStructure.getDataRefAs<AttributeMatrix>(inputCellAMPath))
+      {
+        expectedArrayPaths.push_back(outputCellPath.createChildPath(child->getName()));
+      }
+      UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, expectedArrayPaths);
 
       // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
+      UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+      auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -643,6 +654,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[Sim
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz", "apply_transformation_to_geometry.dream3d");
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
@@ -687,7 +701,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[Sim
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
       // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
+      UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+      auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
 
@@ -710,6 +725,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", 
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz", "apply_transformation_to_geometry.dream3d");
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
 
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -755,7 +773,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", 
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
       // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
+      UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+      auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
 

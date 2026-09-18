@@ -53,7 +53,7 @@ public:
 
   /**
    * @brief Sets the internal reference to vertex coordinates to vertices
-   * @param vertices The coordinate array that will now be used for the vertex coordinates
+   * @param vertices Coordinate array to use for vertex coordinates.
    */
   void setVertices(const SharedVertexList& vertices);
 
@@ -71,9 +71,10 @@ public:
 
   /**
    * @brief Resizes the vertex list to the target size.
-   * @param size
+   * @param size Specifies the new vertex count.
+   * @return Error if the vertex store cannot resize.
    */
-  void resizeVertexList(usize size);
+  [[nodiscard]] Result<> resizeVertexList(usize size);
 
   /**
    * @brief Returns the number of vertices in the geometry.
@@ -127,11 +128,6 @@ public:
    * @param coords
    */
   void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
-
-  /****************************************************************************
-   * These functions get values related to where the Vertex Coordinates are
-   * stored in the DataStructure
-   */
 
   /**
    * @brief Returns the DataStructure unique ID of the vertex coordinate array
@@ -218,6 +214,17 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the DataStructure object.
    */
+  /**
+   * @brief Copies the members INodeGeometry0D declares into a geometry copy.
+   *
+   * Chains to IGeometry::copyMembersInto so that a copy performed at any level of the hierarchy
+   * reproduces every inherited member exactly once.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(INodeGeometry0D& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_VertexDataArrayId;
   std::optional<IdType> m_VertexAttributeMatrixId;
 

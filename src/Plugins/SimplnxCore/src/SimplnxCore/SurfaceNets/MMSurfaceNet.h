@@ -48,6 +48,7 @@
 #ifndef MM_SURFACE_NET_H
 #define MM_SURFACE_NET_H
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
@@ -88,11 +89,23 @@ public:
     return m_cellMap;
   }
 
+  /**
+   * @brief Moves the cell-map initialization result to the caller.
+   * @return The vertex-store resize or allocation error.
+   *
+   * Construction cannot return a Result, so the filter retrieves the initialization status explicitly.
+   */
+  Result<> takeInitializationResult()
+  {
+    return std::move(m_InitializationResult);
+  }
+
 private:
   // friend class MMGeometryGL;
   // friend class MMGeometryOBJ;
 
   MMCellMapPtr m_cellMap = nullptr;
+  Result<> m_InitializationResult;
 };
 
 #endif

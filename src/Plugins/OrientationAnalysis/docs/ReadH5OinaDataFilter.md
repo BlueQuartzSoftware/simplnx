@@ -83,6 +83,10 @@ H5OINA imports. See the migration notes below before comparing an H5OINA import 
 a `.dream3d` file, a regression baseline, or a pipeline result produced by one of those
 releases.
 
+## Algorithm
+
+Selected scans are appended in selection order along the **Image Geometry** Z direction. Each scan's scalar, phase, and Euler values are written at that scan's tuple offset; Euler values use three components per tuple. When hexagonal alignment is enabled, the second Euler component is corrected after the scan offset is applied. Pattern data, when provided by the reader, is stored as unsigned 16-bit values at the corresponding tuple and component offsets. Output transfers use bounded batches, allowing the created arrays to use out-of-core storage.
+
 ### The Axis Alignment Issue for Hexagonal Symmetry [1]
 
 + The issue with hexagonal materials is the alignment of the Cartesian coordinate system used for calculations with the crystal coordinate system (the Bravais lattice).

@@ -306,3 +306,42 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: SIMPL Backwards Co
     }
   }
 }
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Laue Index Bounds", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_gbcd_metric_based" / "compute_gbcd_metric_based.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath);
+  crystalStructuresArrayRef.getDataStoreRef()[1] = 999U;
+
+  const fs::path distributionOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_metric_bounds_distribution.dat";
+  const fs::path errorsOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_metric_bounds_errors.dat";
+
+  ComputeGBCDMetricBasedFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F, 60.0F}));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(distributionOutput));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(errorsOutput));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleDataContainerPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(k_FaceNormalsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(k_FaceAreasPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FeatureFaceLabelsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AvgEulerAnglesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -7240);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

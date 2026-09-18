@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(20) Fiji Microscopy Montage Import.d3dpipeline",
+  "markdown_file": "(20) Fiji Microscopy Montage Import.md",
+  "title": "Fiji Microscopy Montage Import",
+  "summary": "Imports a Fiji registered tile configuration and its image tiles while preserving tile positions and metadata in a DREAM3D-NX data group.",
+  "primary_industries": [
+    "Biological microscopy",
+    "Materials microscopy"
+  ],
+  "secondary_industries": [
+    "Digital pathology",
+    "Large-area surface inspection"
+  ],
+  "use_cases": [
+    "Import a Fiji Grid/Collection Stitching result",
+    "Preserve tile positions for later montage analysis",
+    "Transfer a registered large-area microscopy acquisition into DREAM3D-NX"
+  ],
+  "keywords": [
+    "Fiji",
+    "microscopy",
+    "montage",
+    "tile stitching",
+    "registration"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/io/fiji/TileConfiguration.registered.txt",
+      "role": "Source for ImportFijiMontageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/16_Fiji_Montage/fiji_montage.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ImportFijiMontageFilter",
+      "uuid": "b9c66c77-5c7f-4951-bb02-981db3c297ae",
+      "role": "Import the registered microscopy tiles and preserve their positions and metadata.",
+      "inputs": [
+        {
+          "parameter": "input_file",
+          "value": "Data/ImageProcessing_Examples/io/fiji/TileConfiguration.registered.txt"
+        }
+      ],
+      "outputs": [],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "change_image_data_type": false,
+        "change_origin": false,
+        "color_weights": [
+          0.21250000596046448,
+          0.715399980545044,
+          0.07209999859333038
+        ],
+        "convert_to_gray_scale": false,
+        "data_container_path": "Tile",
+        "data_group_name": "Fiji Montage",
+        "image_data_array_name": "Image",
+        "image_data_type_index": 0,
+        "input_file": "Data/ImageProcessing_Examples/io/fiji/TileConfiguration.registered.txt",
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent_data_group": true
+      }
+    },
+    {
+      "index": 1,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/16_Fiji_Montage/fiji_montage.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/16_Fiji_Montage/fiji_montage.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Globally optimal stitching of tiled 3D microscopic image acquisitions",
+      "authors": [
+        "Stephan Preibisch",
+        "Stephan Saalfeld",
+        "Pavel Tomancak"
+      ],
+      "year": 2009,
+      "journal": "Bioinformatics",
+      "doi": "10.1093/bioinformatics/btp184",
+      "url": "https://doi.org/10.1093/bioinformatics/btp184",
+      "role": "Primary scientific basis for Fiji tile registration and global montage placement.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The paper describes microscopy acquisitions but does not provide one canonical tile set for exact reproduction.",
+        "url": "",
+        "doi": "",
+        "license": "No separate canonical dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The example imports a tested Fiji tile configuration and reproduces the registered-montage data flow, not a named paper figure."
+      }
+    },
+    {
+      "title": "Fiji: An open-source platform for biological-image analysis",
+      "authors": [
+        "Johannes Schindelin",
+        "Ignacio Arganda-Carreras",
+        "Erwin Frise",
+        "Verena Kaynig",
+        "Mark Longair",
+        "Tobias Pietzsch",
+        "Stephan Preibisch",
+        "Curtis Rueden",
+        "Stephan Saalfeld",
+        "Benjamin Schmid",
+        "Jean-Yves Tinevez",
+        "Daniel J. White",
+        "Volker Hartenstein",
+        "Kevin Eliceiri",
+        "Pavel Tomancak",
+        "Albert Cardona"
+      ],
+      "year": 2012,
+      "journal": "Nature Methods",
+      "doi": "10.1038/nmeth.2019",
+      "url": "https://doi.org/10.1038/nmeth.2019",
+      "role": "Scientific reference for the Fiji ecosystem that produces the montage configuration.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Import a Fiji Grid/Collection Stitching result",
+      "Preserve tile positions for later montage analysis",
+      "Transfer a registered large-area microscopy acquisition into DREAM3D-NX"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "The Fiji configuration paths resolve relative to the included tile files.",
+      "The configuration uses translations that match the imported image coordinate system.",
+      "Registration quality was reviewed in Fiji before import.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(19) Serial-Section Stack Reconstruction.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "measured-compatible-fixture",
+    "asset_keys": [
+      "io/fiji"
+    ],
+    "paper_doi": "10.1093/bioinformatics/btp184",
+    "paper_url": "",
+    "reference_visual": "Overlapping microscopy tiles with a registered Fiji tile configuration and preserved tile positions.",
+    "target_traits": [
+      "measured microscopy tiles",
+      "overlap",
+      "registered translations",
+      "tile metadata"
+    ],
+    "known_differences": "The paper's exact confocal acquisition is unavailable. Existing measured BlueQuartz tiles are retained because they exercise the same Fiji registration contract.",
+    "archive_provenance_file": "Provenance.json"
+  }
+}

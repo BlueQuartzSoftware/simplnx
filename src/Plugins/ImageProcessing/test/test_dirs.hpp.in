@@ -1,0 +1,30 @@
+#pragma once
+
+#include "simplnx/Common/StringLiteral.hpp"
+
+#cmakedefine SIMPLNX_WRITE_TEST_OUTPUT
+
+namespace nx::core
+{
+namespace unit_test
+{
+inline constexpr StringLiteral k_SimplnxSourceDIr = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_SimplnxTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
+inline constexpr StringLiteral k_SimplnxTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
+inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_DataDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
+inline constexpr StringLiteral k_TestDataSourceDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
+inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+inline constexpr StringLiteral k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
+inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
+inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
+inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
+
+// ITK-sourced real-image golden test data (referenced in place during ITKImageProcessing coexistence).
+// ImageProcessing and ITKImageProcessing are siblings under src/Plugins, so build the sibling path from this
+// plugin's source dir. std::filesystem collapses the ".." when the file is opened. Relocated at ITK removal.
+inline constexpr StringLiteral k_ItkDataDir = "@PLUGIN_SOURCE_DIR_NORM@/../ITKImageProcessing/data/JSONFilters";
+inline constexpr StringLiteral k_ItkInputDir = "@PLUGIN_SOURCE_DIR_NORM@/../ITKImageProcessing/data/JSONFilters/Input";
+inline constexpr StringLiteral k_ItkBaselineDir = "@PLUGIN_SOURCE_DIR_NORM@/../ITKImageProcessing/data/JSONFilters/Baseline";
+} // namespace unit_test
+} // namespace nx::core

@@ -1,20 +1,35 @@
+#include "SimplnxCore/Filters/Algorithms/CropImageGeometry.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <algorithm>
+#include <array>
+#include <atomic>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <numeric>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -22,6 +37,193 @@ namespace fs = std::filesystem;
 namespace
 {
 inline constexpr StringLiteral k_DataContainer("DataContainer2");
+inline constexpr usize k_CropScratchBytes = 1024 * 1024;
+
+/**
+ * @class CropProbeStore
+ * @brief Records crop transfer sizes and injects transfer behavior.
+ * @tparam T Stored value type.
+ *
+ * Each fixture gives this store to one array task. The test reads
+ * the recorded
+ * state after the crop executor joins all tasks.
+ */
+template <typename T>
+class CropProbeStore : public DataStore<T>
+{
+public:
+  /**
+   * @brief Creates a probe with resident or fallback behavior.
+   * @param tupleShape Tuple dimensions.
+   * @param componentShape Component dimensions.
+   * @param resident True to report
+   * in-memory storage.
+   * @param initValue Initial value for all elements.
+   */
+  CropProbeStore(ShapeType tupleShape, ShapeType componentShape, bool resident, T initValue = T{})
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_Resident(resident)
+  {
+  }
+
+  /**
+   * @brief Reports the storage route that the crop must use.
+   * @return InMemory for direct-copy fixtures, or OutOfCore for bulk fixtures.
+   */
+  IDataStore::StoreType getStoreType() const override
+  {
+    return m_Resident ? IDataStore::StoreType::InMemory : IDataStore::StoreType::OutOfCore;
+  }
+
+  /**
+   * @brief Records and performs one bulk read.
+   * @param startIndex First flat value index.
+   * @param buffer Receives the values.
+   * @return The injected error or the DataStore read
+   * result.
+   */
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    ++readCalls;
+    readBytes.push_back(buffer.size() * sizeof(T));
+    largestReadBytes = (std::max)(largestReadBytes, readBytes.back());
+    if(failRead)
+    {
+      return MakeErrorResult(-95100, "Injected crop source read failure.");
+    }
+    return DataStore<T>::copyIntoBuffer(startIndex, buffer);
+  }
+
+  /**
+   * @brief Records and performs one bulk write.
+   * @param startIndex First flat value index.
+   * @param buffer Supplies the values.
+   * @return The injected error or the DataStore write
+   * result.
+   */
+  Result<> copyFromBuffer(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    ++writeCalls;
+    writeBytes.push_back(buffer.size() * sizeof(T));
+    largestWriteBytes = (std::max)(largestWriteBytes, writeBytes.back());
+    if(failWrite)
+    {
+      return MakeErrorResult(-95101, "Injected crop destination write failure.");
+    }
+    auto result = DataStore<T>::copyFromBuffer(startIndex, buffer);
+    if(result.valid() && cancelAfterWrite != nullptr)
+    {
+      cancelAfterWrite->store(true);
+    }
+    return result;
+  }
+
+  bool failRead = false;
+  bool failWrite = false;
+  std::atomic_bool* cancelAfterWrite = nullptr;
+  mutable usize readCalls = 0;
+  usize writeCalls = 0;
+  mutable usize largestReadBytes = 0;
+  usize largestWriteBytes = 0;
+  mutable std::vector<usize> readBytes;
+  std::vector<usize> writeBytes;
+
+private:
+  bool m_Resident = true;
+};
+
+/**
+ * @brief Creates source and destination image geometries for a direct crop test.
+ * @tparam T Stored value type.
+ * @param sourceStore Source probe store.
+ * @param destinationStore Destination
+ * probe store.
+ * @param sourceDimensions Source XYZ dimensions.
+ * @param cropDimensions Destination XYZ dimensions.
+ * @return Data structure that owns both test arrays.
+ */
+template <typename T>
+DataStructure CreateCropProbeData(const std::shared_ptr<CropProbeStore<T>>& sourceStore, const std::shared_ptr<CropProbeStore<T>>& destinationStore, const SizeVec3& sourceDimensions,
+                                  const SizeVec3& cropDimensions)
+{
+  DataStructure dataStructure;
+  dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
+
+  auto* sourceGeom = ImageGeom::Create(dataStructure, "Source");
+  auto* destinationGeom = ImageGeom::Create(dataStructure, "Destination");
+  REQUIRE(sourceGeom != nullptr);
+  REQUIRE(destinationGeom != nullptr);
+  sourceGeom->setDimensions(sourceDimensions);
+  destinationGeom->setDimensions(cropDimensions);
+  sourceGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  destinationGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  sourceGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  destinationGeom->setSpacing({1.0F, 1.0F, 1.0F});
+
+  auto* sourceCellData = AttributeMatrix::Create(dataStructure, "Cell Data", sourceStore->getTupleShape(), sourceGeom->getId());
+  auto* destinationCellData = AttributeMatrix::Create(dataStructure, "Cell Data", destinationStore->getTupleShape(), destinationGeom->getId());
+  REQUIRE(sourceCellData != nullptr);
+  REQUIRE(destinationCellData != nullptr);
+  sourceGeom->setCellData(*sourceCellData);
+  destinationGeom->setCellData(*destinationCellData);
+  REQUIRE(DataArray<T>::Create(dataStructure, "Values", sourceStore, sourceCellData->getId()) != nullptr);
+  REQUIRE(DataArray<T>::Create(dataStructure, "Values", destinationStore, destinationCellData->getId()) != nullptr);
+  return dataStructure;
+}
+
+/**
+ * @brief Creates direct-executor input values for inclusive voxel bounds.
+ * @param xMin Minimum X index.
+ * @param xMax Maximum X index.
+ * @param yMin Minimum Y index.
+ * @param yMax Maximum Y
+ * index.
+ * @param zMin Minimum Z index.
+ * @param zMax Maximum Z index.
+ * @return Crop input values for the test geometries.
+ */
+CropImageGeometryInputValues CreateCropInputValues(uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax)
+{
+  CropImageGeometryInputValues values{};
+  values.InputImageGeometryPath = DataPath({"Source"});
+  values.OutputImageGeometryPath = DataPath({"Destination"});
+  values.XMin = xMin;
+  values.XMax = xMax;
+  values.YMin = yMin;
+  values.YMax = yMax;
+  values.ZMin = zMin;
+  values.ZMax = zMax;
+  return values;
+}
+
+/**
+ * @brief Runs the crop executor with no message callback.
+ * @param dataStructure Contains the test geometries.
+ * @param values Supplies the crop bounds and paths.
+ * @param shouldCancel
+ * Supplies the cancellation state.
+ * @return Crop execution result.
+ */
+Result<> RunCrop(DataStructure& dataStructure, CropImageGeometryInputValues& values, const std::atomic_bool& shouldCancel)
+{
+  const IFilter::MessageHandler messageHandler{};
+  return CropImageGeometry(dataStructure, messageHandler, shouldCancel, &values)();
+}
+
+/**
+ * @brief Fills a probe with a repeating flat-index pattern.
+ * @tparam T Stored value type.
+ * @param store Receives the values.
+ * @param modulus Controls the repeating pattern.
+ */
+template <typename T>
+void FillProbeStore(CropProbeStore<T>& store, usize modulus)
+{
+  for(usize valueIndex = 0; valueIndex < store.getSize(); ++valueIndex)
+  {
+    store.data()[valueIndex] = static_cast<T>(valueIndex % modulus);
+  }
+}
 
 struct CompareDataArrayFunctor
 {
@@ -54,6 +256,359 @@ DataStructure CreateDataStructure()
   return dataStructure;
 }
 } // namespace
+
+TEMPLATE_TEST_CASE("SimplnxCore::CropImageGeometry: resident stores avoid slab transfers", "[SimplnxCore][CropImageGeometryFilter][CropScratch]", bool, int32, float32)
+{
+  UnitTest::LoadPlugins();
+  const usize components = GENERATE(usize{1}, usize{3});
+  auto sourceStore = std::make_shared<CropProbeStore<TestType>>(ShapeType{3, 512, 1024}, ShapeType{components}, true);
+  auto destinationStore = std::make_shared<CropProbeStore<TestType>>(ShapeType{3, 1, 1}, ShapeType{components}, true);
+  FillProbeStore(*sourceStore, 71);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{1024, 512, 3}, SizeVec3{1, 1, 3});
+  auto values = CreateCropInputValues(19, 19, 37, 37, 0, 2);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(sourceStore->readCalls == 0);
+  CHECK(destinationStore->writeCalls == 0);
+  for(usize zIndex = 0; zIndex < 3; ++zIndex)
+  {
+    for(usize componentIndex = 0; componentIndex < components; ++componentIndex)
+    {
+      const usize sourceValueIndex = ((zIndex * 512 + 37) * 1024 + 19) * components + componentIndex;
+      const usize destinationValueIndex = zIndex * components + componentIndex;
+      CHECK(destinationStore->data()[destinationValueIndex] == static_cast<TestType>(sourceValueIndex % 71));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback bounds wide selected rows", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_SourceX = 300000;
+  constexpr usize k_CropX = 299999;
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 1, k_SourceX}, ShapeType{1}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 1, k_CropX}, ShapeType{1}, false);
+  FillProbeStore(*sourceStore, 101);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{k_SourceX, 1, 2}, SizeVec3{k_CropX, 1, 2});
+  auto values = CreateCropInputValues(1, k_SourceX - 1, 0, 0, 0, 1);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(sourceStore->readCalls >= 4);
+  REQUIRE(destinationStore->writeCalls >= 4);
+  CHECK(sourceStore->largestReadBytes <= k_CropScratchBytes);
+  CHECK(destinationStore->largestWriteBytes <= k_CropScratchBytes);
+  usize mismatchIndex = destinationStore->getSize();
+  for(usize destinationValueIndex = 0; destinationValueIndex < destinationStore->getSize(); ++destinationValueIndex)
+  {
+    const usize zIndex = destinationValueIndex / k_CropX;
+    const usize xIndex = destinationValueIndex % k_CropX;
+    const usize sourceValueIndex = zIndex * k_SourceX + xIndex + 1;
+    if(destinationStore->data()[destinationValueIndex] != static_cast<int32>(sourceValueIndex % 101))
+    {
+      mismatchIndex = destinationValueIndex;
+      break;
+    }
+  }
+  INFO("First mismatched output value index: " << mismatchIndex);
+  REQUIRE(mismatchIndex == destinationStore->getSize());
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback aligns ordinary segments to complete tuples", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Components = 3;
+  constexpr usize k_CropX = 100000;
+  constexpr usize k_SourceX = k_CropX + 2;
+  constexpr usize k_TupleBytes = k_Components * sizeof(int32);
+  constexpr usize k_AlignedSegmentBytes = (k_CropScratchBytes / k_TupleBytes) * k_TupleBytes;
+  constexpr usize k_TailBytes = (k_CropX * k_TupleBytes) - k_AlignedSegmentBytes;
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_SourceX}, ShapeType{k_Components}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_CropX}, ShapeType{k_Components}, false);
+  FillProbeStore(*sourceStore, 109);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{k_SourceX, 1, 1}, SizeVec3{k_CropX, 1, 1});
+  auto values = CreateCropInputValues(1, k_CropX, 0, 0, 0, 0);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(sourceStore->readBytes == std::vector<usize>{k_AlignedSegmentBytes, k_TailBytes});
+  REQUIRE(destinationStore->writeBytes == sourceStore->readBytes);
+  for(const usize transferBytes : sourceStore->readBytes)
+  {
+    CHECK(transferBytes <= k_CropScratchBytes);
+    CHECK(transferBytes % k_TupleBytes == 0);
+  }
+  usize mismatchIndex = destinationStore->getSize();
+  for(usize destinationValueIndex = 0; destinationValueIndex < destinationStore->getSize(); ++destinationValueIndex)
+  {
+    const usize destinationTuple = destinationValueIndex / k_Components;
+    const usize componentIndex = destinationValueIndex % k_Components;
+    const usize sourceValueIndex = (destinationTuple + 1) * k_Components + componentIndex;
+    if(destinationStore->data()[destinationValueIndex] != static_cast<int32>(sourceValueIndex % 109))
+    {
+      mismatchIndex = destinationValueIndex;
+      break;
+    }
+  }
+  INFO("First mismatched output value index: " << mismatchIndex);
+  REQUIRE(mismatchIndex == destinationStore->getSize());
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback segments tuples wider than the buffer", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Components = k_CropScratchBytes + 1;
+  auto sourceStore = std::make_shared<CropProbeStore<uint8>>(ShapeType{2, 1, 2}, ShapeType{k_Components}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<uint8>>(ShapeType{2, 1, 1}, ShapeType{k_Components}, false);
+  FillProbeStore(*sourceStore, 251);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{2, 1, 2}, SizeVec3{1, 1, 2});
+  auto values = CreateCropInputValues(1, 1, 0, 0, 0, 1);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(sourceStore->readCalls >= 4);
+  REQUIRE(destinationStore->writeCalls >= 4);
+  CHECK(sourceStore->largestReadBytes <= k_CropScratchBytes);
+  CHECK(destinationStore->largestWriteBytes <= k_CropScratchBytes);
+  usize mismatchIndex = destinationStore->getSize();
+  for(usize destinationValueIndex = 0; destinationValueIndex < destinationStore->getSize(); ++destinationValueIndex)
+  {
+    const usize zIndex = destinationValueIndex / k_Components;
+    const usize componentIndex = destinationValueIndex % k_Components;
+    const usize sourceValueIndex = (zIndex * 2 + 1) * k_Components + componentIndex;
+    if(destinationStore->data()[destinationValueIndex] != static_cast<uint8>(sourceValueIndex % 251))
+    {
+      mismatchIndex = destinationValueIndex;
+      break;
+    }
+  }
+  INFO("First mismatched output value index: " << mismatchIndex);
+  REQUIRE(mismatchIndex == destinationStore->getSize());
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback keeps a small slab transfer", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_Components = 3;
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{3, 6, 8}, ShapeType{k_Components}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{3, 3, 5}, ShapeType{k_Components}, false);
+  FillProbeStore(*sourceStore, 113);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{8, 6, 3}, SizeVec3{5, 3, 3});
+  auto values = CreateCropInputValues(1, 5, 2, 4, 0, 2);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(sourceStore->readCalls == 1);
+  REQUIRE(destinationStore->writeCalls == 1);
+  CHECK(sourceStore->readBytes.front() + destinationStore->writeBytes.front() <= k_CropScratchBytes);
+  for(usize zIndex = 0; zIndex < 3; ++zIndex)
+  {
+    for(usize yIndex = 0; yIndex < 3; ++yIndex)
+    {
+      for(usize xIndex = 0; xIndex < 5; ++xIndex)
+      {
+        for(usize componentIndex = 0; componentIndex < k_Components; ++componentIndex)
+        {
+          const usize sourceValueIndex = (((zIndex * 6 + yIndex + 2) * 8 + xIndex + 1) * k_Components) + componentIndex;
+          const usize destinationValueIndex = (((zIndex * 3 + yIndex) * 5 + xIndex) * k_Components) + componentIndex;
+          CHECK(destinationStore->data()[destinationValueIndex] == static_cast<int32>(sourceValueIndex % 113));
+        }
+      }
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback propagates bulk transfer errors", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+
+  SECTION("source read")
+  {
+    auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 3, 4}, ShapeType{1}, false);
+    auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 1, 2}, ShapeType{1}, false, 7);
+    FillProbeStore(*sourceStore, 17);
+    sourceStore->failRead = true;
+    auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{4, 3, 2}, SizeVec3{2, 1, 2});
+    auto values = CreateCropInputValues(1, 2, 1, 1, 0, 1);
+    const std::atomic_bool shouldCancel = false;
+
+    const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -95100);
+    CHECK(sourceStore->readCalls == 1);
+    CHECK(destinationStore->writeCalls == 0);
+    CHECK(std::all_of(destinationStore->data(), destinationStore->data() + destinationStore->getSize(), [](int32 value) { return value == -1; }));
+  }
+
+  SECTION("destination write")
+  {
+    auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{33, 3, 4}, ShapeType{1}, false);
+    auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{33, 1, 2}, ShapeType{1}, false, 7);
+    FillProbeStore(*sourceStore, 17);
+    destinationStore->failWrite = true;
+    auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{4, 3, 33}, SizeVec3{2, 1, 33});
+    auto values = CreateCropInputValues(1, 2, 1, 1, 0, 32);
+    const std::atomic_bool shouldCancel = false;
+
+    const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -95101);
+    CHECK(sourceStore->readCalls == 1);
+    CHECK(destinationStore->writeCalls == 1);
+    CHECK(std::all_of(destinationStore->data(), destinationStore->data() + destinationStore->getSize(), [](int32 value) { return value == -1; }));
+  }
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: pre-cancellation preserves destination values", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 3, 4}, ShapeType{1}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 1, 2}, ShapeType{1}, false, 7);
+  FillProbeStore(*sourceStore, 17);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{4, 3, 2}, SizeVec3{2, 1, 2});
+  auto values = CreateCropInputValues(1, 2, 1, 1, 0, 1);
+  const std::atomic_bool shouldCancel = true;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(sourceStore->readCalls == 0);
+  CHECK(destinationStore->writeCalls == 0);
+  CHECK(std::all_of(destinationStore->data(), destinationStore->data() + destinationStore->getSize(), [](int32 value) { return value == 7; }));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback copies a one-value tail", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_CropX = (k_CropScratchBytes / sizeof(int32)) + 1;
+  constexpr usize k_SourceX = k_CropX + 2;
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_SourceX}, ShapeType{1}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_CropX}, ShapeType{1}, false);
+  FillProbeStore(*sourceStore, 127);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{k_SourceX, 1, 1}, SizeVec3{k_CropX, 1, 1});
+  auto values = CreateCropInputValues(1, k_CropX, 0, 0, 0, 0);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(sourceStore->readBytes == std::vector<usize>{k_CropScratchBytes, sizeof(int32)});
+  REQUIRE(destinationStore->writeBytes == std::vector<usize>{k_CropScratchBytes, sizeof(int32)});
+  CHECK(destinationStore->data()[k_CropX - 1] == static_cast<int32>(k_CropX % 127));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: fallback cancellation preserves completed segments", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_CropX = (k_CropScratchBytes / sizeof(int32)) + 1;
+  constexpr usize k_SourceX = k_CropX + 2;
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_SourceX}, ShapeType{1}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{1, 1, k_CropX}, ShapeType{1}, false, 7);
+  FillProbeStore(*sourceStore, 127);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{k_SourceX, 1, 1}, SizeVec3{k_CropX, 1, 1});
+  auto values = CreateCropInputValues(1, k_CropX, 0, 0, 0, 0);
+  std::atomic_bool shouldCancel = false;
+  destinationStore->cancelAfterWrite = &shouldCancel;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(shouldCancel.load());
+  CHECK(sourceStore->readCalls == 1);
+  CHECK(destinationStore->writeCalls == 1);
+  CHECK(destinationStore->data()[0] == 1);
+  CHECK(destinationStore->data()[(k_CropScratchBytes / sizeof(int32)) - 1] == static_cast<int32>((k_CropScratchBytes / sizeof(int32)) % 127));
+  CHECK(destinationStore->data()[k_CropX - 1] == -1);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: rejects a store size that disagrees with the source geometry", "[SimplnxCore][CropImageGeometryFilter][CropScratch]")
+{
+  UnitTest::LoadPlugins();
+  auto sourceStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 3, 3}, ShapeType{1}, false);
+  auto destinationStore = std::make_shared<CropProbeStore<int32>>(ShapeType{2, 1, 2}, ShapeType{1}, false);
+  auto dataStructure = CreateCropProbeData(sourceStore, destinationStore, SizeVec3{4, 3, 2}, SizeVec3{2, 1, 2});
+  auto values = CreateCropInputValues(1, 2, 1, 1, 0, 1);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -953);
+  CHECK(sourceStore->readCalls == 0);
+  CHECK(destinationStore->writeCalls == 0);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: real OOC stores preserve cropped values", "[SimplnxCore][CropImageGeometryFilter][CropScratch][OOC]")
+{
+  UnitTest::LoadPlugins();
+  auto& ioCollection = DataStoreUtilities::GetIOCollection();
+  if(!ioCollection.hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+#if SIMPLNX_TEST_ALGORITHM_PATH == 1
+    FAIL("The OOC-only build did not register HDF5-OOC storage.");
+#endif
+    return;
+  }
+
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  const DataPath sourceGeomPath({"Source"});
+  const DataPath destinationGeomPath({"Destination"});
+  const DataPath sourceArrayPath = sourceGeomPath.createChildPath("Cell Data").createChildPath("Values");
+  const DataPath destinationArrayPath = destinationGeomPath.createChildPath("Cell Data").createChildPath("Values");
+  CreateImageGeometryAction sourceGeometryAction(sourceGeomPath, {4, 3, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data");
+  CreateImageGeometryAction destinationGeometryAction(destinationGeomPath, {2, 2, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data");
+  auto sourceGeometryActionApplyResult = sourceGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(sourceGeometryActionApplyResult);
+  auto destinationGeometryActionApplyResult = destinationGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(destinationGeometryActionApplyResult);
+  CreateArrayAction sourceArrayAction(DataType::int32, {2, 3, 4}, {2}, sourceArrayPath);
+  CreateArrayAction destinationArrayAction(DataType::int32, {2, 2, 2}, {2}, destinationArrayPath);
+  auto sourceArrayActionApplyResult = sourceArrayAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(sourceArrayActionApplyResult);
+  auto destinationArrayActionApplyResult = destinationArrayAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(destinationArrayActionApplyResult);
+
+  auto& sourceArray = dataStructure.getDataRefAs<Int32Array>(sourceArrayPath);
+  auto& destinationArray = dataStructure.getDataRefAs<Int32Array>(destinationArrayPath);
+  REQUIRE(sourceArray.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  REQUIRE(destinationArray.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  REQUIRE(sourceArray.getDataFormat() == "HDF5-OOC");
+  REQUIRE(destinationArray.getDataFormat() == "HDF5-OOC");
+  std::array<int32, 48> sourceValues = {};
+  std::iota(sourceValues.begin(), sourceValues.end(), 100);
+  auto sourceArrayWriteResult = sourceArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.data(), sourceValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(sourceArrayWriteResult);
+  auto values = CreateCropInputValues(1, 2, 1, 2, 0, 1);
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = RunCrop(dataStructure, values, shouldCancel);
+
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  std::array<int32, 16> actualValues = {};
+  auto destinationArrayReadResult = destinationArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actualValues.data(), actualValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(destinationArrayReadResult);
+  constexpr std::array<int32, 16> k_ExpectedValues = {110, 111, 112, 113, 118, 119, 120, 121, 134, 135, 136, 137, 142, 143, 144, 145};
+  REQUIRE(actualValues == k_ExpectedValues);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter(Instantiate)", "[SimplnxCore][CropImageGeometryFilter]")
 {

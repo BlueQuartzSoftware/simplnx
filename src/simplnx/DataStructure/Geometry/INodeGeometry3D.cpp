@@ -72,9 +72,14 @@ void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
   m_PolyhedronListId = polyhedra.getId();
 }
 
-void INodeGeometry3D::resizePolyhedraList(usize size)
+Result<> INodeGeometry3D::resizePolyhedraList(usize size)
 {
-  getPolyhedraRef().getIDataStoreRef().resizeTuples({size});
+  Result<> resizeResult = getPolyhedraRef().getIDataStoreRef().resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    resizeResult.errors()[0].message = fmt::format("Geometry '{}' failed to resize its polyhedra list to {} tuples: {}", getName(), size, resizeResult.errors()[0].message);
+  }
+  return resizeResult;
 }
 
 usize INodeGeometry3D::getNumberOfPolyhedra() const
@@ -220,6 +225,16 @@ INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTr
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
   SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
   return triangles;
+}
+
+void INodeGeometry3D::copyMembersInto(INodeGeometry3D& copy, const DataPath& copyPath)
+{
+  INodeGeometry2D::copyMembersInto(copy, copyPath);
+
+  copy.m_PolyhedronAttributeMatrixId = deepCopyOwnedChild(copyPath, getPolyhedraAttributeMatrix());
+  copy.m_UnsharedFaceListId = adoptCopiedChild<MeshIndexArrayType>(copyPath, k_UnsharedFacesListName);
+  // A 3D geometry owns its polyhedra; its faces are derived by findFaces() and adopted under the shared name.
+  copy.m_FaceListId = adoptCopiedChild<MeshIndexArrayType>(copyPath, INodeGeometry3D::k_SharedFacesListName);
 }
 
 void INodeGeometry3D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)

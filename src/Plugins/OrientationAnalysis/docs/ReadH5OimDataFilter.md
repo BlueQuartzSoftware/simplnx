@@ -31,6 +31,10 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 If the user is importing more than a single slice from the HDF5 file and using the [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md) filter,
 the user should **CHECK** the option **ON** for "Perform Slice By Slice Transform".
 
+## Algorithm
+
+Each selected scan is appended in selection order along the **Image Geometry** Z direction. Phase values are clamped and Euler components are interleaved into their output array; scalar measurements, including X and Y positions, are copied at that scan's tuple offset. Pattern data uses the same tuple offset multiplied by its pattern component count. Output arrays are written in bounded bulk transfers, which supports out-of-core output storage.
+
 ## Thresholding out Unindexed Scan Points
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality. **Confidence Index** and **Image Quality** are per-pixel metrics that describe how reliable each individual measurement is.

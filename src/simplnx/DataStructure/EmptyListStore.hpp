@@ -1,5 +1,8 @@
 #pragma once
 
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Utilities/StoreCopyUtilities.hpp"
+
 #include "AbstractListStore.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
@@ -64,12 +67,27 @@ public:
   }
 
   /**
-   * @brief Returns a copy of the current list store.
-   * @return std::unique<AbstractListStore<T>>
+   * @brief Copies list shape metadata without allocating values.
+   * @param destinationFormat Resolved destination format; empty and the canonical in-memory name select memory.
+   * @return Independent metadata placeholder with the same shape and no values.
+   * @throws std::runtime_error If metadata validation fails or an OOC build rejects an unavailable format.
+   * @throws std::bad_alloc If a metadata allocation fails.
+   *
+   * In-core builds use the in-memory selection for unavailable formats. OOC builds reject unavailable formats.
+   * This placeholder has no planned-format field. Format validation does not allocate a destination value store.
+   * This store validates destinationFormat and does not resolve storage policy itself.
+   * Resolve destination policy before this call. Use NeighborList::deepCopy for automatic policy selection.
    */
-  std::unique_ptr<parent_type> deepCopy() const override
+  std::unique_ptr<parent_type> deepCopy(const std::string& destinationFormat) const override
   {
-    return std::make_unique<EmptyListStore>(*this);
+    auto copy = CopyListStore(*this, GetDataType<T>(), destinationFormat);
+    auto* typedCopy = dynamic_cast<parent_type*>(copy.get());
+    if(typedCopy == nullptr)
+    {
+      throw std::runtime_error("List store copy returned an incompatible type for format '" + destinationFormat + "'");
+    }
+    copy.release();
+    return std::unique_ptr<parent_type>(typedCopy);
   }
 
   /**
@@ -83,13 +101,17 @@ public:
   }
 
   /**
-   * @brief Resizes the list store to the specified tuple shape.
-   * @param tupleShape The new shape of the tuple dimensions
+   * @brief Changes the placeholder tuple shape without accessing lists.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
+   * @return Always valid because preflight placeholders contain no list values.
+   *
+   * Preflight must resize metadata before execution materializes the list store.
    */
-  void resizeTuples(const ShapeType& tupleShape) override
+  [[nodiscard]] Result<> resizeTuples(const ShapeType& tupleShape) override
   {
     m_TupleShape = tupleShape;
     m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return {};
   }
 
   /**
@@ -223,7 +245,7 @@ public:
   }
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Rejects indexed list access because the placeholder has no values.
    * @param grainId
    * @return vector_type
    */
@@ -233,7 +255,7 @@ public:
   }
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Rejects indexed list access because the placeholder has no values.
    * @param grainId
    * @return vector_type
    */
@@ -275,7 +297,8 @@ public:
     }
     else
     {
-      resizeTuples(tupleDimsResult.value());
+      m_TupleShape = tupleDimsResult.value();
+      m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
     }
   }
 

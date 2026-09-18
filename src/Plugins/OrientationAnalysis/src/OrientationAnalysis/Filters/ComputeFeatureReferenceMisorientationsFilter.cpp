@@ -144,9 +144,7 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
+  // This filter does not return updated preflight values.
 
   DataPath cellDataGroup = pCellPhasesArrayPathValue.getParent();
 

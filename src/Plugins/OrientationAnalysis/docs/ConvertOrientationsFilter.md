@@ -102,6 +102,22 @@ While every effort has been made to ensure the correctness of each transformatio
 
 The input array must be of type **float32**. Conversions are performed in float32 precision. (DREAM3D 6.5.171 additionally accepted float64 input arrays; see the V&V deviations for this filter.)
 
+## Algorithm
+
+The filter converts each element's orientation from the input representation to the output representation using the EbsdLib orientation conversion library. The conversion is performed element-by-element through a chain of intermediate representations as needed (e.g., Euler to Quaternion may go through an orientation matrix). Euler angle inputs are range-checked and clamped before conversion. The computation is parallelized using `ParallelDataAlgorithm` with a macro-generated converter class for each output type.
+
+### In-Core Path
+
+Input and output DataArrays are accessed through the AbstractDataStore API. The parallel converter reads input and writes output directly.
+
+### Out-of-Core Path
+
+Each parallel converter processes its assigned tuple range in 4096-tuple chunks. Within each chunk, input data is bulk-read via `copyIntoBuffer`, the orientation conversion is performed element-by-element on the local buffer, and results are bulk-written via `copyFromBuffer`. This chunked approach is embedded in the `OC_TBB_IMPL` macro that generates all eight converter classes.
+
+### Performance
+
+The chunked I/O within each parallel range avoids per-element virtual dispatch on the DataStore while preserving parallelism across ranges. Since the conversion is purely per-element with no neighbor dependencies, the chunks can be processed independently with excellent scaling.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

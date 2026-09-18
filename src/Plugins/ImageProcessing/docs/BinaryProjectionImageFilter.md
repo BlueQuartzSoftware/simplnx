@@ -1,0 +1,35 @@
+# Binary Projection Image Filter
+
+Projects a scalar image along one axis, marking each output voxel foreground if any voxel in its column matches the foreground value.
+
+## Group (Subgroup)
+
+ImageProcessing (Projection)
+
+## Description
+
+Collapses the selected **Projection Dimension** of a scalar Image Geometry to a single voxel. For each column of voxels running along that axis, the output voxel is set to the **Foreground Value** if *any* voxel in that column equals the **Foreground Value**; otherwise it is set to the **Background Value**. The projected axis becomes size 1 in the output geometry; the other two axes keep their sizes. The output geometry's origin and spacing are copied verbatim from the input (they are not rescaled), and the output element type matches the input element type.
+
+The **Projection Dimension** selects the collapsed axis: 0 = X, 1 = Y, 2 = Z.
+
+The **Foreground Value** and **Background Value** are supplied as floating-point numbers and cast to the input element type; the foreground equality test is performed in the input element type. This matches the legacy ITK Binary Projection accumulator, which initializes each column to background and switches it to foreground the first time a voxel equal to the foreground value is encountered.
+
+When **Perform In-Place** is enabled, the input Image Geometry is replaced by the projected (collapsed) geometry containing the output array. Because the whole original geometry is replaced, any *other* arrays that were in its cell-data Attribute Matrix are discarded (they have the original, non-collapsed shape and cannot survive the projection); the filter emits a preflight warning listing them. Disable **Perform In-Place** to keep the original geometry: the input geometry is then preserved and the result is written to a newly created geometry named by **Created Image Geometry**, whose cell-data Attribute Matrix name is copied from the input geometry.
+
+The input array must be single-component (scalar) and one of the scalar numeric types (`int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `int64`, `uint64`, `float32`, or `float64`). This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Binary Projection Image Filter.
+
+## Algorithm
+
+The filter reduces each input pencil along the selected X, Y, or Z axis and writes one value to the corresponding slot in the collapsed image. A pencil emits the foreground value when any input equals the configured foreground; otherwise it emits the background value. In-memory and three-dimensional inputs use axis-aware slab staging. For a true two-dimensional image with an out-of-core endpoint, fixed-budget row blocks or X tiles and bulk datastore transfers keep resident cell data at or below 64 MiB.
+
+% Auto generated parameter table will be inserted here
+
+## Example Pipelines
+
+## License & Copyright
+
+Please see the description file distributed with this plugin.
+
+## DREAM3D-NX Help
+
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

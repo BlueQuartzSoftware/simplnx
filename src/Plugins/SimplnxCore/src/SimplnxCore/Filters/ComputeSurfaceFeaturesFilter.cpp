@@ -53,7 +53,6 @@ Parameters ComputeSurfaceFeaturesFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_MarkFeature0Neighbors, "Mark Feature 0 Neighbors",
                                                 "Marks features that are neighbors with feature 0.  If this option is off, only features that reside on the edge of the geometry will be marked.",
@@ -109,8 +108,8 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
     tupleDims = surfaceFeaturesParent->getShape();
   }
 
-  auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(
-      DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
+  auto createSurfaceFeaturesAction =
+      std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), "", "0");
   resultOutputActions.value().appendAction(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -146,8 +145,7 @@ Result<Arguments> ComputeSurfaceFeaturesFilter::FromSIMPLJson(const nlohmann::js
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureGeometryPath_Key));
   results.push_back(
-      // The feature attribute matrix comes from the created SurfaceFeatures array (e.g. "CellFeatureData"),
-      // not from FeatureIdsArrayPath, which lives in the cell attribute matrix (e.g. "CellData").
+      // The legacy output path supplies the feature AttributeMatrix, not the Feature IDs parent.
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(

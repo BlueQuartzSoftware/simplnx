@@ -137,7 +137,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   dataArrayPaths.push_back(pCellPhasesArrayPathValue);
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
-  // collect the rest of the geometry's arrays that aren't ignored to check the tuple count
+  // Collect geometry arrays that are not ignored for the tuple-count check.
   DataPath parentPath = pConfidenceIndexArrayPathValue.getParent();
   const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
   auto childArrays = parent.findAllChildrenOfType<IDataArray>();

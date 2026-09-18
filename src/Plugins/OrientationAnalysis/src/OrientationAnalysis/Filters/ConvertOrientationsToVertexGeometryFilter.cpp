@@ -158,8 +158,6 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     DataPath destinationDataPath = vertexAttrMatrixPath.createChildPath(sourceDataArray.getName());
     auto numTuples = sourceDataArray.getNumberOfTuples();
     auto components = sourceDataArray.getComponentShape();
-    const std::string dataStoreFormat = sourceDataArray.getDataFormat();
-
     if(numTuples != inputOrientationsArray.getNumberOfTuples())
     {
       return {MakeErrorResult<OutputActions>(-1004, fmt::format("Array at path {} only has {} tuples, but it MUST have {} tuples to be copied into output vertex attribute matrix at path {}!",
@@ -170,7 +168,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     // CopyArrayAction will have the destination DataArray have the same tuple shape
     // as the source array, but in this case we don't want that. So we use the CreateArrayAction
     // instead and manually update the tuple shape later one.
-    auto action = std::make_unique<CreateArrayAction>(type, ShapeType{numTuples}, components, destinationDataPath, dataStoreFormat);
+    auto action = std::make_unique<CreateArrayAction>(type, ShapeType{numTuples}, components, destinationDataPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 

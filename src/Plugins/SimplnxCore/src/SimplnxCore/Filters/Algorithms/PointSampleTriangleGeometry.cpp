@@ -60,9 +60,17 @@ Result<> PointSampleTriangleGeometry::operator()()
   auto numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
 
   auto& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
-  vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
+  Result<> resizeResult = vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
-  vertex.getVertexAttributeMatrix()->resizeTuples(tupleShape);
+  resizeResult = vertex.getVertexAttributeMatrix()->resizeTuples(tupleShape);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   std::mt19937_64 generator(m_Inputs->Seed);
   std::uniform_real_distribution<> distribution(0.0f, 1.0f);

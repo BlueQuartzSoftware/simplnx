@@ -65,6 +65,20 @@ In previous versions a file would have been produced instead. If you wish to rec
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 - **Mask** (optional) -- a boolean array marking valid cells, typically produced by a threshold operation such as [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
+## Algorithm
+
+### In-Core Path
+
+For each pair of adjacent Z-sections, the algorithm computes the misorientation between voxels across the section boundary. It tests candidate X-Y shifts to find the shift that minimizes the total misorientation between the two sections. All voxel comparisons use direct array indexing with `operator[]`.
+
+### Out-of-Core Path
+
+Reads pairs of adjacent Z-slices into reusable local buffers using `copyIntoBuffer()`, including the optional Bool/UInt8 mask. Crystal structures are cached once because they are ensemble data. All misorientation comparisons for a given slice pair operate entirely on those buffers. After a shift is selected, every DataArray in the image cell data is shifted one Z-slice at a time through reusable typed buffers and bulk writes; unsupported non-DataArray children retain their existing in-core behavior. This converts random cross-slice access into sequential bulk I/O and bounds working memory to two comparison slices plus two shift slices per processed array.
+
+### Performance
+
+The OOC optimization matters most for large datasets that exceed available RAM. By reading entire Z-slices in bulk rather than accessing individual voxels across slice boundaries, the algorithm avoids repeatedly decompressing the same disk chunks. For in-memory datasets, the two paths produce identical results with negligible overhead difference.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

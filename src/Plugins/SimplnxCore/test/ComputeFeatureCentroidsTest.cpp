@@ -4,6 +4,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -16,6 +17,8 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -50,6 +53,29 @@ struct Scaffold
   DataPath featureIdsPath;
   DataPath featureAMPath;
   DataPath centroidsPath;
+};
+
+class CentroidsFailOnLaterReadStore : public DataStore<int32>
+{
+public:
+  CentroidsFailOnLaterReadStore(const ShapeType& tupleShape, int32 errorCode)
+  : DataStore<int32>(tupleShape, ShapeType{1}, int32{0})
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
+  {
+    if(++m_ReadCount == 2)
+    {
+      return MakeErrorResult(m_ErrorCode, "Injected ComputeFeatureCentroids later-page read failure");
+    }
+    return DataStore<int32>::copyIntoBuffer(offset, buffer);
+  }
+
+private:
+  int32 m_ErrorCode;
+  mutable usize m_ReadCount = 0;
 };
 
 // Build an ImageGeom + Cell Data AM (with FeatureIds) + empty Feature Data AM sized to numFeatures.
@@ -212,6 +238,60 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds
 
   auto executeResult = filter.execute(s.ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure propagation", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
+{
+  using namespace CentroidToy;
+  UnitTest::LoadPlugins();
+  constexpr usize k_CellCount = 65537;
+  const std::array<float32, 3> k_Spacing = {2.0F, 3.0F, 4.0F};
+  const std::array<float32, 3> k_Origin = {10.0F, -2.0F, 1.0F};
+
+  SECTION("feature crosses the 65536-cell boundary with nonunit coordinates")
+  {
+    std::vector<int32> featureIds(k_CellCount, 2);
+    featureIds[0] = 1;
+    featureIds.back() = 1;
+    auto scaffold = Build(k_CellCount, 1, 1, k_Spacing, k_Origin, 3, featureIds);
+    const auto centroids = Run(scaffold, false);
+
+    RequireCentroid(centroids, 0, 0.0F, 0.0F, 0.0F);
+    // Feature 1 contains x indices 0 and 65536. Their centers are 11 and 131083.
+    RequireCentroid(centroids, 1, 65547.0F, -0.5F, 3.0F);
+    // Feature 2 contains the contiguous interior [1, 65535]. Its independently derived mean is also 65547.
+    RequireCentroid(centroids, 2, 65547.0F, -0.5F, 3.0F);
+    UnitTest::CheckArraysInheritTupleDims(scaffold.ds);
+  }
+
+  SECTION("second page FeatureIds failure leaves the final centroid publication untouched")
+  {
+    constexpr int32 k_ReadError = -91911;
+    std::vector<int32> featureIds(k_CellCount, 1);
+    auto scaffold = Build(k_CellCount, 1, 1, k_Spacing, k_Origin, 2, featureIds);
+    auto failingStore = std::make_shared<CentroidsFailOnLaterReadStore>(ShapeType{k_CellCount}, k_ReadError);
+    for(usize cellIdx = 0; cellIdx < k_CellCount; cellIdx++)
+    {
+      (*failingStore)[cellIdx] = 1;
+    }
+    auto setStoreResult = scaffold.ds.getDataRefAs<Int32Array>(scaffold.featureIdsPath).setDataStore(failingStore);
+    SIMPLNX_RESULT_REQUIRE_VALID(setStoreResult);
+
+    ComputeFeatureCentroidsFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(scaffold.geomPath));
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(scaffold.featureIdsPath));
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(scaffold.featureAMPath));
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+
+    const auto executeResult = filter.execute(scaffold.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+    REQUIRE(executeResult.result.errors().front().code == k_ReadError);
+    REQUIRE_NOTHROW(scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroidsPath));
+    const auto& centroids = scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroidsPath);
+    REQUIRE(centroids[3] == 0.0F);
+  }
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureCentroidsFilter][BackwardsCompatibility]")
