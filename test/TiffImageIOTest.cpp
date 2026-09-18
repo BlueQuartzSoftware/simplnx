@@ -275,7 +275,8 @@ TEST_CASE("TiffImageIO:: tiled uint8_t preserves RGB and RGBA components", "[Tif
   {
     CAPTURE(samplesPerPixel, planarConfig);
     TemporaryTiffFile file("TiffImageIO_tiled_color.tif");
-    WriteTiledUInt8(file.path(), samplesPerPixel, PHOTOMETRIC_RGB, ORIENTATION_TOPLEFT, planarConfig, [](uint32_t x, uint32_t y, uint16_t component) -> uint8_t { return ColorValue(x, y)[component]; });
+    WriteTiledUInt8(file.path(), samplesPerPixel, PHOTOMETRIC_RGB, ORIENTATION_TOPLEFT, planarConfig,
+                    [](uint32_t x, uint32_t y, uint16_t component) -> uint8_t { return ColorValue(x, y)[component]; });
 
     const usize byteCount = static_cast<usize>(k_Width) * k_Height * samplesPerPixel;
     const std::vector<uint8_t> direct = ReadDirect(file.path(), byteCount);
@@ -344,7 +345,8 @@ TEST_CASE("TiffImageIO:: tiled uint16 and float32 remain lossless", "[TiffImageI
 TEST_CASE("TiffImageIO:: tiled uint8_t row callback returns the first error", "[TiffImageIO]")
 {
   TemporaryTiffFile file("TiffImageIO_callback_error.tif");
-  WriteTiledUInt8(file.path(), 1, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG, [](uint32_t x, uint32_t y, uint16_t) -> uint8_t { return static_cast<uint8_t>((x + 3 * y) % 251); });
+  WriteTiledUInt8(file.path(), 1, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG,
+                  [](uint32_t x, uint32_t y, uint16_t) -> uint8_t { return static_cast<uint8_t>((x + 3 * y) % 251); });
 
   constexpr int32_t k_CallbackError = -98765;
   constexpr usize k_FailingCallback = 3;

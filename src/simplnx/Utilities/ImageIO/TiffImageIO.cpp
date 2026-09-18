@@ -227,7 +227,8 @@ Result<> ReadTiledUInt8Rows(const TiffFile& tiffFile, const std::string& pathStr
         for(usize localColumn = 0; localColumn < validWidth; ++localColumn)
         {
           const uint32_t rgba = rgbaTile[rgbaRowOffset + localColumn];
-          const std::array<uint8_t, 4> components = {static_cast<uint8_t>(TIFFGetR(rgba)), static_cast<uint8_t>(TIFFGetG(rgba)), static_cast<uint8_t>(TIFFGetB(rgba)), static_cast<uint8_t>(TIFFGetA(rgba))};
+          const std::array<uint8_t, 4> components = {static_cast<uint8_t>(TIFFGetR(rgba)), static_cast<uint8_t>(TIFFGetG(rgba)), static_cast<uint8_t>(TIFFGetB(rgba)),
+                                                     static_cast<uint8_t>(TIFFGetA(rgba))};
           const usize destinationOffset = localColumn * samplesPerPixel;
           std::copy_n(components.begin(), samplesPerPixel, convertedRow.begin() + destinationOffset);
         }
