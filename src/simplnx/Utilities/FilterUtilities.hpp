@@ -340,15 +340,17 @@ SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const D
                                                                          nx::core::Result<OutputActions>& resultOutputActions);
 
 /**
- * @brief When renumber features is enabled, iterates the Feature Attribute Matrix and appends
- * preflight updated values for stale regular arrays and invalidated NeighborLists.
+ * @brief Iterates the Feature Attribute Matrix and appends preflight updated values for stale
+ * regular arrays and optionally invalidated NeighborLists. Set warnNeighborLists to false when
+ * NeighborListRemovalPreflightCode is already handling NeighborList messaging to avoid duplicates.
  * @param dataStructure The DataStructure object
  * @param cellFeatureAmPath DataPath to the Feature Attribute Matrix
  * @param featureIdsArrayPath DataPath to the FeatureIds array (used in warning messages)
  * @param preflightUpdatedValues Vector to append preflight updated values into
+ * @param warnNeighborLists When true, also emits a preflight value for invalidated NeighborLists
  */
 SIMPLNX_EXPORT void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                                      std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
+                                                      std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists = true);
 
 /**
  * @brief Scans child paths being copied verbatim for any AttributeMatrix objects and emits a

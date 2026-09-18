@@ -96,7 +96,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 
 // -----------------------------------------------------------------------------
 void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists)
 {
   const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
   if(srcCellFeatureData == nullptr)
@@ -113,7 +113,7 @@ void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const
     {
       arrayWarningMsg += objectText;
     }
-    else if(dynamic_cast<const INeighborList*>(object.get()) != nullptr)
+    else if(warnNeighborLists && dynamic_cast<const INeighborList*>(object.get()) != nullptr)
     {
       neighborListWarningMsg += objectText;
     }
