@@ -987,7 +987,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1083,7 +1083,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes"
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1123,7 +1123,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D", "[SimplnxCo
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1163,7 +1163,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element 
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1203,7 +1203,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[Simplnx
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1243,7 +1243,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Elemen
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1280,7 +1280,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure", "[Simp
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_execution.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_execution.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
 
@@ -1359,7 +1359,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_preflight.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_preflight.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
 
@@ -1421,7 +1421,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test", "[Simpln
 
 // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/legacy_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/legacy_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

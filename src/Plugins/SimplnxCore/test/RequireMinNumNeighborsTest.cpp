@@ -591,13 +591,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  {
-    // The optional output supports manual inspection of the coarsened arrays.
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
-    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
-  }
+  // The optional output supports manual inspection of the coarsened arrays.
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

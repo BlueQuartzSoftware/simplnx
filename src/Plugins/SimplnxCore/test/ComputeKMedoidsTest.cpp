@@ -422,7 +422,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[Simpln
 
   // The optional output supports manual inspection of the clustering result.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_medoids_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_medoids_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

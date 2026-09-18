@@ -343,7 +343,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_default.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_default.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
@@ -418,7 +418,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult5);
   }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_non_compatible.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_non_compatible.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
