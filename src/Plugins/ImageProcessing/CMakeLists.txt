@@ -124,6 +124,9 @@ create_simplnx_plugin(NAME ${PLUGIN_NAME}
 
 find_package(ZLIB REQUIRED)
 target_link_libraries(${PLUGIN_NAME} PRIVATE ZLIB::ZLIB)
+if(MSVC)
+  target_compile_options(${PLUGIN_NAME} PRIVATE /bigobj)
+endif()
 
 set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FijiMontageUtilities.hpp"
