@@ -320,6 +320,120 @@ std::vector<CellArraySnapshot> SnapshotCellArrays(const DataStructure& dataStruc
 } // namespace SmallIn100Invariants
 } // namespace
 
+// Verifies production-scale array-transfer invariants after the Small IN100 pipeline.
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
+{
+  UnitTest::LoadPlugins();
+  // One quaternion Z slice uses 607824 bytes. An OOC-enabled build keeps the full array disk-backed.
+  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceOutOfCore, 600000);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+
+  auto* filterList = Application::Instance()->getFilterList();
+
+  auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_PhasesArrayPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
+  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterList);
+  SmallIn100::ExecuteAlignSectionsMisorientation(dataStructure, *filterList, fs::path(fmt::format("{}/AlignSectionsMisorientation_1.txt", unit_test::k_BinaryDir)));
+  SmallIn100::ExecuteIdentifySample(dataStructure, *filterList);
+  SmallIn100::ExecuteAlignSectionsFeatureCentroid(dataStructure, *filterList, fs::path(fmt::format("{}/AlignSectionsFeatureCentroid_1.txt", unit_test::k_BinaryDir)));
+  SmallIn100::ExecuteBadDataNeighborOrientationCheck(dataStructure, *filterList);
+
+  // The snapshot supports production-scale transfer invariants without an exemplar output file.
+  const std::vector<SmallIn100Invariants::CellArraySnapshot> preFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+  REQUIRE(!preFilterCellData.empty());
+
+  constexpr float32 k_SmallIn100MinConfidence = 0.2f;
+
+  {
+    auto filter = filterList->createFilter(k_NeighborOrientationCorrelationFilterHandle);
+    REQUIRE(nullptr != filter);
+
+    Arguments args;
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MinConfidence_Key, std::make_any<float32>(k_SmallIn100MinConfidence));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(2));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CorrelationArrayPath_Key, std::make_any<DataPath>(k_ConfidenceIndexArrayPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>());
+
+    auto preflightResult = filter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = filter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+
+  // The snapshot checks three invariants without an exemplar file.
+  // High-confidence cells stay unchanged. Each changed cell had low confidence. At least one low-confidence cell changes.
+  {
+    const std::vector<SmallIn100Invariants::CellArraySnapshot> postFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+    REQUIRE(postFilterCellData.size() == preFilterCellData.size());
+
+    const std::vector<float64>* preCIPtr = nullptr;
+    for(const auto& snapshot : preFilterCellData)
+    {
+      if(snapshot.path == k_ConfidenceIndexArrayPath)
+      {
+        preCIPtr = &snapshot.values;
+      }
+    }
+    REQUIRE(preCIPtr != nullptr);
+    const std::vector<float64>& preCI = *preCIPtr;
+    const usize numCells = preCI.size();
+
+    // Combine changes across all arrays so each changed cell is counted once.
+    std::vector<bool> cellModified(numCells, false);
+    for(usize arrayIdx = 0; arrayIdx < preFilterCellData.size(); arrayIdx++)
+    {
+      const auto& before = preFilterCellData[arrayIdx];
+      const auto& after = postFilterCellData[arrayIdx];
+      REQUIRE(after.path == before.path);
+      REQUIRE(after.values.size() == before.values.size());
+      const usize comps = before.numComponents;
+      for(usize valueIdx = 0; valueIdx < before.values.size(); valueIdx++)
+      {
+        if(before.values[valueIdx] != after.values[valueIdx])
+        {
+          cellModified[valueIdx / comps] = true;
+        }
+      }
+    }
+
+    usize modifiedCount = 0;
+    usize highConfidenceViolations = 0;
+    for(usize cell = 0; cell < numCells; cell++)
+    {
+      if(cellModified[cell])
+      {
+        modifiedCount++;
+        if(preCI[cell] >= static_cast<float64>(k_SmallIn100MinConfidence))
+        {
+          highConfidenceViolations++;
+        }
+      }
+    }
+    INFO(fmt::format("{} of {} cells modified; {} high-confidence cells illegally modified", modifiedCount, numCells, highConfidenceViolations));
+    REQUIRE(highConfidenceViolations == 0);
+    REQUIRE(modifiedCount > 0);
+  }
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+}
+
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight Error - Cell array tuple count mismatch (-580093)",
           "[OrientationAnalysis][NeighborOrientationCorrelationFilter][preflight]")
 {

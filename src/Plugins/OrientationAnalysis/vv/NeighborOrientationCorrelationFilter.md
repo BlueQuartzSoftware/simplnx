@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port with bug fixes** — statement-for-statement port of `NeighborOrientationCorrelation` with four deliberate correctness deltas: stale-w fix, double-precision quaternion math, restored `6 − Level` pass schedule, argmax neighbor selection. |
 | Oracle (confirmed)     | **Class 2 (Reference implementation) + Class 1 (Analytical) + Class 4 (Invariant)** — NumPy reference (`reference_noc.py`) with 35 hand-derivation cross-checks; encoded as 12 inline fixtures `Oracle F01`–`F12` + invariant tests in `test/NeighborOrientationCorrelationTest.cpp`, all pass. |
-| Code paths enumerated  | 20 of 21 exercised; the cancel path is not directly tested (requires cancel-signal injection). |
-| Tests today            | 18 ctest cases — 14 oracle/invariant fixtures (incl. `Oracle F13` verifying that NeighborList and String cell arrays are transferred) + 1 production-scale invariant verification (Small IN100, archive-free snapshot) + 2 preflight validation tests + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
+| Code paths enumerated  | 20 of 22 exercised; the cancel path and within-pass ascending-copy order dependence remain documented gaps. |
+| Tests today            | 19 public ctest cases run in both builds — 14 oracle/invariant fixtures (including `Oracle F13`), 1 production-scale Small IN100 invariant test, 2 preflight validation tests, 1 phase/Laue bounds test, and 1 SIMPL backward-compatibility test. The OOC build adds one registered 200³ real-HDF5 boundary test. |
 | Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. The v1 archive was retired because its comparison was hollow from its 2022-07-24 introduction (`d199bc749`; archive SHA unchanged since first registration `e34baf1f2`, 2022-12-02), and a regenerated exemplar would be a circular oracle — so no replacement archive exists. |
 | Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171**, fixtures + production scale. Fixtures: 6.5.171 differs on exactly the 5 of 12 whose outcome depends on a defect (D1–D3); the 7 fully-tied fixtures are identical because SIMPLNX's argmax resolves ties to the same last-in-scan-order neighbor 6.5.171 picked. Production (Small IN100, 4.44M cells, Level 2): 14.29% of cells differ, decomposed per deviation entry. Each root cause proven by applying the surgical fix to a local build of the legacy source — then bit-identical to SIMPLNX on all 12 fixtures **and all 4,444,713 production cells** (which also bounds D4 precision at zero observed). |
 | Bug flags              | D1 (legacy stale-w), D2 (double level decrement, was also in SIMPLNX — fixed), D3 (last-wins selection, was also in SIMPLNX — fixed). D4 is precision, not a bug. Plus: hollow exemplar comparison in the v1 test (fixed). |
@@ -97,16 +97,18 @@ counting + best-neighbor selection), (c) per-pass in-place tuple transfer, repea
 | 21 | (b+c) | cancel requested → abort scan / abort transfer tasks | *Not directly tested. Requires cancel-signal injection; low-value guard.* |
 
 Non-algorithm coverage (not code paths of the algorithm, tracked in the test inventory):
-SIMPL 6.4/6.5 JSON parameter conversion (`SIMPL Backwards Compatibility`, 2 DYNAMIC_SECTIONs)
-and the production-scale invariant verification (`Small IN100 Pipeline`, 4.44M cells, Level 2).
+SIMPL 6.4/6.5 JSON parameter conversion (`SIMPL Backwards Compatibility`, 2 DYNAMIC_SECTIONs),
+phase and Laue index bounds (`Phase and Laue Index Bounds`), the production-scale invariant
+verification (`Small IN100 Pipeline`, 4.44M cells, Level 2), and the OOC-only 200³ storage-boundary test.
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Small IN100 Pipeline` | kept (modified) | Runs the 6-filter Small IN100 chain + this filter, then verifies the Class 4 invariants at 4.4M cells against an in-memory pre-filter snapshot of all 8 CellData arrays (high-confidence cells untouched everywhere; every modified cell was low-confidence; ≥ 1 cell modified). **Modified for V&V:** the previous exemplar comparison was hollow — bisect-proven hollow from its introduction (`d199bc749`, 2022-07-24: already mapped to `Exemplar Data` with a silent `continue`; archive SHA512 unchanged from `e34baf1f2`, 2022-12-02, to retirement) — and a regenerated exemplar would be a circular oracle, so the archive dependency was removed entirely. |
+| `Small IN100 Pipeline` | kept (modified) | Runs the 6-filter Small IN100 chain + this filter, then verifies the Class 4 invariants at 4.4M cells against a pre-filter snapshot of all 8 CellData arrays (high-confidence cells untouched everywhere; every modified cell was low-confidence; ≥ 1 cell modified). The in-core build uses resident stores and the OOC build verifies the same assertions with actual HDF5-OOC stores. **Modified for V&V:** the previous exemplar comparison was hollow — bisect-proven hollow from its introduction (`d199bc749`, 2022-07-24: already mapped to `Exemplar Data` with a silent `continue`; archive SHA512 unchanged from `e34baf1f2`, 2022-12-02, to retirement) — and a regenerated exemplar would be a circular oracle, so the archive dependency was removed entirely. |
 | `Preflight Error - Cell array tuple count mismatch (-580093)` | kept | Verifies the `validateNumberOfTuples` guard and error code. |
 | `Preflight - Level validation (-580094 error, -580095 warning)` | new-for-V&V | 3 SECTIONs: negative Level errors; Level ≥ 6 warns (zero passes); Level < 6 does not warn. |
+| `Phase and Laue Index Bounds` | new-for-OOC recertification | Uses OOC-aware stores and verifies that invalid participating phase and Laue indices return their exact execution errors, while invalid indices on skipped cells do not fail execution. |
 | `SIMPL Backwards Compatibility` | kept | 2 DYNAMIC_SECTIONs (6.5 UUID / 6.4 Filter_Name), 9 argument checks each. |
 | `Oracle F01 - uniform neighbors 3D` | new-for-V&V | Full-tuple snapshot verify of the replacement (+Z, last of 6 tied counts) + I1 on all other cells (6 arrays × 125 cells). |
 | `Oracle F02 - dissimilar neighbors untouched` | new-for-V&V | Whole-volume untouched verify; covers the no-similar-pair path. |
@@ -122,14 +124,15 @@ and the production-scale invariant verification (`Small IN100 Pipeline`, 4.44M c
 | `Oracle F11 - volume corner` | new-for-V&V | 3-valid-neighbor boundary case. |
 | `Oracle F12 - anisotropic dims` | new-for-V&V | 4×5×3 (nx≠ny≠nz) so stride/axis-swap bugs cannot hide behind dimension symmetry; secondary D3 pin (last-of-maxes beats a later count-1 pair). |
 | `Class 4 - Level >= 6 is a no-op (I4)` | new-for-V&V | Default parameter value performs zero passes (now also surfaced as preflight warning `-580095`). |
+| `200x200x200 Large OOC` | new-for-OOC recertification | OOC-only registered test with actual HDF5-OOC input stores. It processes and inspects one Z slice at a time and asserts that the filter modifies at least one low-confidence block-boundary or deterministic-noise cell. |
 
-All 18 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`simplnx-ooc-Rel`) builds.
+All 19 public cases pass in both DREAM3D-NX builds. The OOC-only 200³ boundary case also passes in the OOC build.
 
 ## Exemplar archive
 
 - **Archive:** None — this filter has no exemplar-archive dependency. All oracle data is
   built inline by the test fixtures, and the production-scale test verifies invariants
-  against an in-memory pre-filter snapshot.
+  against a pre-filter snapshot.
 - **Retired:** `neighbor_orientation_correlation.tar.gz` (v1 — hollow comparison: the
   container name mismatch caused every array lookup to fail and the silent `continue` to
   skip all comparisons. Bisect-proven hollow from birth: the loop was introduced already
