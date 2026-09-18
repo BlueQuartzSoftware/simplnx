@@ -304,47 +304,99 @@ private:
   std::unique_ptr<ITemporaryRecordStore> m_FinalLabelStore;
   std::unique_ptr<BoundedRecordPageCache<int32>> m_FinalLabelCache;
 };
-} // namespace
 
-SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
-: m_DataStructure(dataStructure)
-, m_ShouldCancel(shouldCancel)
-, m_MessageHelper(mesgHandler)
+/**
+ * @brief Adopts or unites one backward neighbor's provisional label.
+ * @param assignedLabel Provides and receives the voxel's provisional label.
+ * @param neighborLabel Specifies the neighbor's provisional label.
+ * @param index Specifies the flat voxel index.
+ * @param neighborIndex Specifies the flat neighbor index.
+ * @param segmenter Provides the neighbor-similarity comparison.
+ * @param equivalences Receives the union of two provisional labels.
+ * @param shouldCancel Stops external cache work when true.
+ * @return External-store error, or success.
+ *
+ * The forward scan applies one rule to every backward neighbor. The first similar
+ * neighbor supplies the label. A later similar neighbor with a different label makes
+ * the two labels equivalent, because the scan cannot relabel earlier voxels.
+ */
+Result<> adoptOrUniteNeighbor(int32& assignedLabel, int32 neighborLabel, int64 index, int64 neighborIndex, SegmentFeatures& segmenter, LabelEquivalence& equivalences,
+                              const std::atomic_bool& shouldCancel)
 {
+  if(neighborLabel > 0 && segmenter.areNeighborsSimilar(index, neighborIndex))
+  {
+    if(assignedLabel == 0)
+    {
+      assignedLabel = neighborLabel;
+    }
+    else if(assignedLabel != neighborLabel)
+    {
+      auto uniteResult = equivalences.unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighborLabel), shouldCancel);
+      if(uniteResult.invalid())
+      {
+        return uniteResult;
+      }
+    }
+  }
+  return {};
 }
 
-SegmentFeatures::~SegmentFeatures() = default;
-
-// CCL uses three stages. The forward scan creates provisional labels and
-// equivalences. Periodic merging joins wrapped boundaries. Final resolution writes dense IDs.
-Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore, bool usesOutOfCoreInput)
+/**
+ * @brief Unites one wrapped boundary pair of provisional labels.
+ * @param labelA Specifies the first voxel's provisional label.
+ * @param labelB Specifies the second voxel's provisional label.
+ * @param indexA Specifies the first flat voxel index.
+ * @param indexB Specifies the second flat voxel index.
+ * @param segmenter Provides the neighbor-similarity comparison.
+ * @param equivalences Receives the union of two provisional labels.
+ * @param hasNonContiguousFeature Receives true when the pair joins.
+ * @param shouldCancel Stops external cache work when true.
+ * @return External-store error, or success.
+ *
+ * Periodic merging compares opposite boundary voxels that the forward scan cannot
+ * reach. A similar pair joins two provisional labels and marks the run as holding
+ * a feature that wraps across a boundary.
+ */
+Result<> unitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 indexB, SegmentFeatures& segmenter, LabelEquivalence& equivalences, bool& hasNonContiguousFeature,
+                           const std::atomic_bool& shouldCancel)
 {
-  const SizeVec3 udims = gridGeom->getDimensions();
-  const int64 dimX = static_cast<int64>(udims[0]);
-  const int64 dimY = static_cast<int64>(udims[1]);
-  const int64 dimZ = static_cast<int64>(udims[2]);
-  const usize totalVoxels = static_cast<usize>(dimX) * static_cast<usize>(dimY) * static_cast<usize>(dimZ);
-
-  const int64 sliceStride = dimX * dimY;
-
-  const bool useFaceOnly = (m_NeighborScheme == NeighborScheme::Face);
-  bool hasNonContiguousFeature = false;
-
-  const bool usesOutOfCoreStore = usesOutOfCoreInput || featureIdsStore.getStoreType() == IDataStore::StoreType::OutOfCore;
-  const bool useExternalEquivalence = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
-  RecordAlgorithmPathExecution(useExternalEquivalence ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
-
-  auto equivalenceResult = LabelEquivalence::Create(useExternalEquivalence, static_cast<uint64>(totalVoxels), !usesOutOfCoreStore);
-  if(equivalenceResult.invalid())
+  if(labelA > 0 && labelB > 0 && segmenter.areNeighborsSimilar(indexA, indexB))
   {
-    return ConvertResult(std::move(equivalenceResult));
+    auto uniteResult = equivalences.unite(static_cast<uint64>(labelA), static_cast<uint64>(labelB), shouldCancel);
+    if(uniteResult.invalid())
+    {
+      return uniteResult;
+    }
+    hasNonContiguousFeature = true;
   }
-  auto equivalences = std::move(equivalenceResult.value());
-  int32 nextLabel = 1;
+  return {};
+}
+
+/**
+ * @brief Assigns provisional labels to every valid voxel in Z-Y-X order.
+ * @param segmenter Provides voxel validity, neighbor similarity, and slice preparation.
+ * @param featureIdsStore Receives one provisional-label slice per Z index.
+ * @param equivalences Receives new labels and the unions between them.
+ * @param dimX Specifies X cells.
+ * @param dimY Specifies Y cells.
+ * @param dimZ Specifies Z cells.
+ * @param useFaceOnly Selects three backward face neighbors instead of thirteen.
+ * @param nextLabel Provides and receives the next unused provisional label.
+ * @param shouldCancel Stops before the next slice when true.
+ * @return Subclass, capacity, or Feature-ID I/O error, or success.
+ *
+ * Backward neighbors live in the current and previous Z slices only, so a two-slice
+ * rolling buffer keeps label memory proportional to slice area. Cancellation returns
+ * success and leaves provisional labels in the written slices.
+ */
+Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, bool useFaceOnly, int32& nextLabel,
+                        const std::atomic_bool& shouldCancel)
+{
+  const int64 sliceStride = dimX * dimY;
+  const usize sliceSize = static_cast<usize>(sliceStride);
 
   // Backward neighbors use only the current and previous Z slices. A two-slice
   // rolling buffer therefore keeps label memory proportional to slice area.
-  const usize sliceSize = static_cast<usize>(sliceStride);
   std::vector<int32> labelBuffer(2 * sliceSize, 0);
 
   // The forward pass writes one complete Feature-ID slice at a time.
@@ -352,12 +404,12 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
   for(int64 iz = 0; iz < dimZ; iz++)
   {
-    if(m_ShouldCancel)
+    if(shouldCancel)
     {
       return {};
     }
 
-    auto prepareResult = prepareForSlice(iz, dimX, dimY, dimZ);
+    auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
     if(prepareResult.invalid())
     {
       return prepareResult;
@@ -377,7 +429,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
         const int64 index = iz * sliceStride + iy * dimX + ix;
         const usize bufIdx = currentSliceOffset + static_cast<usize>(iy * dimX + ix);
 
-        if(!isValidVoxel(index))
+        if(!segmenter.isValidVoxel(index))
         {
           continue;
         }
@@ -394,61 +446,29 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
           if(ix > 0)
           {
             const int64 neighIdx = index - 1;
-            int32 neighLabel = labelBuffer[bufIdx - 1];
-            if(neighLabel > 0 && areNeighborsSimilar(index, neighIdx))
+            auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[bufIdx - 1], index, neighIdx, segmenter, equivalences, shouldCancel);
+            if(neighborResult.invalid())
             {
-              if(assignedLabel == 0)
-              {
-                assignedLabel = neighLabel;
-              }
-              else if(assignedLabel != neighLabel)
-              {
-                auto uniteResult = equivalences->unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-                if(uniteResult.invalid())
-                {
-                  return uniteResult;
-                }
-              }
+              return neighborResult;
             }
           }
           if(iy > 0)
           {
             const int64 neighIdx = index - dimX;
-            int32 neighLabel = labelBuffer[currentSliceOffset + static_cast<usize>((iy - 1) * dimX + ix)];
-            if(neighLabel > 0 && areNeighborsSimilar(index, neighIdx))
+            auto neighborResult =
+                adoptOrUniteNeighbor(assignedLabel, labelBuffer[currentSliceOffset + static_cast<usize>((iy - 1) * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
+            if(neighborResult.invalid())
             {
-              if(assignedLabel == 0)
-              {
-                assignedLabel = neighLabel;
-              }
-              else if(assignedLabel != neighLabel)
-              {
-                auto uniteResult = equivalences->unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-                if(uniteResult.invalid())
-                {
-                  return uniteResult;
-                }
-              }
+              return neighborResult;
             }
           }
           if(iz > 0)
           {
             const int64 neighIdx = index - sliceStride;
-            int32 neighLabel = labelBuffer[prevSliceOffset + static_cast<usize>(iy * dimX + ix)];
-            if(neighLabel > 0 && areNeighborsSimilar(index, neighIdx))
+            auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[prevSliceOffset + static_cast<usize>(iy * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
+            if(neighborResult.invalid())
             {
-              if(assignedLabel == 0)
-              {
-                assignedLabel = neighLabel;
-              }
-              else if(assignedLabel != neighLabel)
-              {
-                auto uniteResult = equivalences->unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-                if(uniteResult.invalid())
-                {
-                  return uniteResult;
-                }
-              }
+              return neighborResult;
             }
           }
         }
@@ -508,21 +528,10 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
                 }
 
                 const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
-                int32 neighLabel = labelBuffer[neighSliceOffset + static_cast<usize>(ny * dimX + nx)];
-                if(neighLabel > 0 && areNeighborsSimilar(index, neighIdx))
+                auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[neighSliceOffset + static_cast<usize>(ny * dimX + nx)], index, neighIdx, segmenter, equivalences, shouldCancel);
+                if(neighborResult.invalid())
                 {
-                  if(assignedLabel == 0)
-                  {
-                    assignedLabel = neighLabel;
-                  }
-                  else if(assignedLabel != neighLabel)
-                  {
-                    auto uniteResult = equivalences->unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-                    if(uniteResult.invalid())
-                    {
-                      return uniteResult;
-                    }
-                  }
+                  return neighborResult;
                 }
               }
             }
@@ -537,7 +546,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
             return MakeErrorResult(-87014, "SegmentFeatures exceeded the Int32 provisional-label capacity.");
           }
           assignedLabel = nextLabel++;
-          auto initializeResult = equivalences->initialize(static_cast<uint64>(assignedLabel), m_ShouldCancel);
+          auto initializeResult = equivalences.initialize(static_cast<uint64>(assignedLabel), shouldCancel);
           if(initializeResult.invalid())
           {
             return initializeResult;
@@ -559,320 +568,336 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     }
   }
 
-  if(m_ShouldCancel)
+  return {};
+}
+
+/**
+ * @brief Joins opposite face boundaries for a periodic grid.
+ * @param segmenter Provides neighbor similarity and slice preparation.
+ * @param featureIdsStore Provides the provisional-label slices.
+ * @param equivalences Receives the unions between wrapped labels.
+ * @param dimX Specifies X cells.
+ * @param dimY Specifies Y cells.
+ * @param dimZ Specifies Z cells.
+ * @param hasNonContiguousFeature Receives true when any pair joins.
+ * @param shouldCancel Stops external cache work when true.
+ * @return Subclass or Feature-ID I/O error, or success.
+ *
+ * Face connectivity gives each axis one wrapped neighbor, so the three axis passes
+ * stay independent. The X and Y passes read one Z slice at a time. The Z pass holds
+ * the first and last slices together.
+ */
+Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
+                                     bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel)
+{
+  const int64 sliceStride = dimX * dimY;
+  const usize sliceSize = static_cast<usize>(sliceStride);
+  std::vector<int32> featureIdsSliceCur(sliceSize, 0);
+
+  // X boundaries share one Z slice.
+  if(dimX > 1)
   {
-    return {};
+    for(int64 iz = 0; iz < dimZ; iz++)
+    {
+      auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
+      if(readResult.invalid())
+      {
+        return readResult;
+      }
+      auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
+      if(prepareResult.invalid())
+      {
+        return prepareResult;
+      }
+
+      for(int64 iy = 0; iy < dimY; iy++)
+      {
+        const int64 idxA = iz * sliceStride + iy * dimX;
+        const int64 idxB = iz * sliceStride + iy * dimX + (dimX - 1);
+        const int32 labelA = featureIdsSliceCur[static_cast<usize>(iy * dimX)];
+        const int32 labelB = featureIdsSliceCur[static_cast<usize>(iy * dimX + (dimX - 1))];
+        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        if(uniteResult.invalid())
+        {
+          return uniteResult;
+        }
+      }
+    }
   }
 
-  // The forward scan cannot see wrapped neighbors with higher linear indexes.
-  // Periodic merging reads one or two label slices and joins opposite boundaries.
-  if(m_IsPeriodic)
+  // Y boundaries share one Z slice.
+  if(dimY > 1)
   {
-    std::vector<int32> featureIdsSliceCur(sliceSize, 0);
-
-    if(useFaceOnly)
+    for(int64 iz = 0; iz < dimZ; iz++)
     {
-      // Face connectivity compares low and high boundary faces independently.
-
-      // X boundaries share one Z slice.
-      if(dimX > 1)
+      auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
+      if(readResult.invalid())
       {
-        for(int64 iz = 0; iz < dimZ; iz++)
-        {
-          auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
-          if(readResult.invalid())
-          {
-            return readResult;
-          }
-          auto prepareResult = prepareForSlice(iz, dimX, dimY, dimZ);
-          if(prepareResult.invalid())
-          {
-            return prepareResult;
-          }
-
-          for(int64 iy = 0; iy < dimY; iy++)
-          {
-            const int64 idxA = iz * sliceStride + iy * dimX;
-            const int64 idxB = iz * sliceStride + iy * dimX + (dimX - 1);
-            const int32 labelA = featureIdsSliceCur[static_cast<usize>(iy * dimX)];
-            const int32 labelB = featureIdsSliceCur[static_cast<usize>(iy * dimX + (dimX - 1))];
-            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
-            {
-              auto uniteResult = equivalences->unite(static_cast<uint64>(labelA), static_cast<uint64>(labelB), m_ShouldCancel);
-              if(uniteResult.invalid())
-              {
-                return uniteResult;
-              }
-              hasNonContiguousFeature = true;
-            }
-          }
-        }
+        return readResult;
+      }
+      auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
+      if(prepareResult.invalid())
+      {
+        return prepareResult;
       }
 
-      // Y boundaries share one Z slice.
-      if(dimY > 1)
+      for(int64 ix = 0; ix < dimX; ix++)
       {
-        for(int64 iz = 0; iz < dimZ; iz++)
+        const int64 idxA = iz * sliceStride + ix;
+        const int64 idxB = iz * sliceStride + (dimY - 1) * dimX + ix;
+        const int32 labelA = featureIdsSliceCur[static_cast<usize>(ix)];
+        const int32 labelB = featureIdsSliceCur[static_cast<usize>((dimY - 1) * dimX + ix)];
+        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        if(uniteResult.invalid())
         {
-          auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
-          if(readResult.invalid())
-          {
-            return readResult;
-          }
-          auto prepareResult = prepareForSlice(iz, dimX, dimY, dimZ);
-          if(prepareResult.invalid())
-          {
-            return prepareResult;
-          }
-
-          for(int64 ix = 0; ix < dimX; ix++)
-          {
-            const int64 idxA = iz * sliceStride + ix;
-            const int64 idxB = iz * sliceStride + (dimY - 1) * dimX + ix;
-            const int32 labelA = featureIdsSliceCur[static_cast<usize>(ix)];
-            const int32 labelB = featureIdsSliceCur[static_cast<usize>((dimY - 1) * dimX + ix)];
-            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
-            {
-              auto uniteResult = equivalences->unite(static_cast<uint64>(labelA), static_cast<uint64>(labelB), m_ShouldCancel);
-              if(uniteResult.invalid())
-              {
-                return uniteResult;
-              }
-              hasNonContiguousFeature = true;
-            }
-          }
+          return uniteResult;
         }
       }
+    }
+  }
 
-      // Z boundaries use separate first-slice and last-slice buffers.
-      if(dimZ > 1)
+  // Z boundaries use separate first-slice and last-slice buffers.
+  if(dimZ > 1)
+  {
+    std::vector<int32> featureIdsSliceOther(sliceSize, 0);
+    auto firstReadResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
+    if(firstReadResult.invalid())
+    {
+      return firstReadResult;
+    }
+    auto lastReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(dimZ - 1) * sliceSize, nonstd::span<int32>(featureIdsSliceOther.data(), sliceSize));
+    if(lastReadResult.invalid())
+    {
+      return lastReadResult;
+    }
+
+    // Prepare both boundary slices for subclass comparisons.
+    auto firstPrepareResult = segmenter.prepareForSlice(0, dimX, dimY, dimZ);
+    if(firstPrepareResult.invalid())
+    {
+      return firstPrepareResult;
+    }
+    auto lastPrepareResult = segmenter.prepareForSlice(dimZ - 1, dimX, dimY, dimZ);
+    if(lastPrepareResult.invalid())
+    {
+      return lastPrepareResult;
+    }
+
+    for(int64 iy = 0; iy < dimY; iy++)
+    {
+      for(int64 ix = 0; ix < dimX; ix++)
       {
-        std::vector<int32> featureIdsSliceOther(sliceSize, 0);
-        auto firstReadResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
-        if(firstReadResult.invalid())
+        const usize inSlice = static_cast<usize>(iy * dimX + ix);
+        const int64 idxA = iy * dimX + ix;
+        const int64 idxB = (dimZ - 1) * sliceStride + iy * dimX + ix;
+        const int32 labelA = featureIdsSliceCur[inSlice];
+        const int32 labelB = featureIdsSliceOther[inSlice];
+        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        if(uniteResult.invalid())
         {
-          return firstReadResult;
-        }
-        auto lastReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(dimZ - 1) * sliceSize, nonstd::span<int32>(featureIdsSliceOther.data(), sliceSize));
-        if(lastReadResult.invalid())
-        {
-          return lastReadResult;
-        }
-
-        // Prepare both boundary slices for subclass comparisons.
-        auto firstPrepareResult = prepareForSlice(0, dimX, dimY, dimZ);
-        if(firstPrepareResult.invalid())
-        {
-          return firstPrepareResult;
-        }
-        auto lastPrepareResult = prepareForSlice(dimZ - 1, dimX, dimY, dimZ);
-        if(lastPrepareResult.invalid())
-        {
-          return lastPrepareResult;
-        }
-
-        for(int64 iy = 0; iy < dimY; iy++)
-        {
-          for(int64 ix = 0; ix < dimX; ix++)
-          {
-            const usize inSlice = static_cast<usize>(iy * dimX + ix);
-            const int64 idxA = iy * dimX + ix;
-            const int64 idxB = (dimZ - 1) * sliceStride + iy * dimX + ix;
-            const int32 labelA = featureIdsSliceCur[inSlice];
-            const int32 labelB = featureIdsSliceOther[inSlice];
-            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
-            {
-              auto uniteResult = equivalences->unite(static_cast<uint64>(labelA), static_cast<uint64>(labelB), m_ShouldCancel);
-              if(uniteResult.invalid())
-              {
-                return uniteResult;
-              }
-              hasNonContiguousFeature = true;
-            }
-          }
+          return uniteResult;
         }
       }
+    }
+  }
+
+  return {};
+}
+
+/**
+ * @brief Joins wrapped boundaries for a periodic grid with complete connectivity.
+ * @param segmenter Provides neighbor similarity and slice preparation.
+ * @param featureIdsStore Provides the provisional-label slices.
+ * @param equivalences Receives the unions between wrapped labels.
+ * @param dimX Specifies X cells.
+ * @param dimY Specifies Y cells.
+ * @param dimZ Specifies Z cells.
+ * @param hasNonContiguousFeature Receives true when any pair joins.
+ * @param shouldCancel Stops before the next Z slice when true.
+ * @return Subclass or Feature-ID I/O error, or success.
+ *
+ * Complete connectivity can wrap across one, two, or three axes at once, so the axes
+ * cannot be processed separately. Each boundary voxel walks its 26 neighbors and keeps
+ * only the wrapped pairs the forward scan could not reach. Cancellation returns success.
+ */
+Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
+                                         bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel)
+{
+  const int64 sliceStride = dimX * dimY;
+  const usize sliceSize = static_cast<usize>(sliceStride);
+  std::vector<int32> featureIdsSliceCur(sliceSize, 0);
+
+  // Process one current Z slice and one optional wrapped partner slice.
+  // Keep first and last labels available for both Z-boundary passes.
+  std::vector<int32> featureIdsSlice0(sliceSize, 0);
+  std::vector<int32> featureIdsSliceLast(sliceSize, 0);
+  auto firstReadResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(featureIdsSlice0.data(), sliceSize));
+  if(firstReadResult.invalid())
+  {
+    return firstReadResult;
+  }
+  if(dimZ > 1)
+  {
+    auto lastReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(dimZ - 1) * sliceSize, nonstd::span<int32>(featureIdsSliceLast.data(), sliceSize));
+    if(lastReadResult.invalid())
+    {
+      return lastReadResult;
+    }
+  }
+
+  for(int64 iz = 0; iz < dimZ; iz++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
+    // Reuse boundary buffers and read each interior slice when needed.
+    if(iz == 0)
+    {
+      std::copy(featureIdsSlice0.begin(), featureIdsSlice0.end(), featureIdsSliceCur.begin());
+    }
+    else if(iz == dimZ - 1)
+    {
+      std::copy(featureIdsSliceLast.begin(), featureIdsSliceLast.end(), featureIdsSliceCur.begin());
     }
     else
     {
-      // Complete connectivity can wrap across one, two, or three axes. Process
-      // one current Z slice and one optional wrapped partner slice.
-      // Keep first and last labels available for both Z-boundary passes.
-      std::vector<int32> featureIdsSlice0(sliceSize, 0);
-      std::vector<int32> featureIdsSliceLast(sliceSize, 0);
-      auto firstReadResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(featureIdsSlice0.data(), sliceSize));
-      if(firstReadResult.invalid())
+      auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
+      if(readResult.invalid())
       {
-        return firstReadResult;
+        return readResult;
       }
-      if(dimZ > 1)
+    }
+
+    auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
+    if(prepareResult.invalid())
+    {
+      return prepareResult;
+    }
+
+    // Only first and last Z slices need a wrapped partner.
+    int64 wrappedPartnerZ = -1; // sentinel: no Z-wrapped partner
+    const int32* wrappedSlicePtr = nullptr;
+    if(iz == 0 && dimZ > 1)
+    {
+      wrappedPartnerZ = dimZ - 1;
+      wrappedSlicePtr = featureIdsSliceLast.data();
+      // Prepare the wrapped partner for cross-slice comparisons.
+      auto wrappedPrepareResult = segmenter.prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
+      if(wrappedPrepareResult.invalid())
       {
-        auto lastReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(dimZ - 1) * sliceSize, nonstd::span<int32>(featureIdsSliceLast.data(), sliceSize));
-        if(lastReadResult.invalid())
-        {
-          return lastReadResult;
-        }
+        return wrappedPrepareResult;
       }
-
-      for(int64 iz = 0; iz < dimZ; iz++)
+    }
+    else if(iz == dimZ - 1 && dimZ > 1)
+    {
+      wrappedPartnerZ = 0;
+      wrappedSlicePtr = featureIdsSlice0.data();
+      auto wrappedPrepareResult = segmenter.prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
+      if(wrappedPrepareResult.invalid())
       {
-        if(m_ShouldCancel)
+        return wrappedPrepareResult;
+      }
+    }
+
+    for(int64 iy = 0; iy < dimY; iy++)
+    {
+      for(int64 ix = 0; ix < dimX; ix++)
+      {
+        // Only boundary voxels can have wrapped neighbors.
+        const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
+        if(!onBoundary)
         {
-          return {};
+          continue;
         }
 
-        // Reuse boundary buffers and read each interior slice when needed.
-        if(iz == 0)
+        const usize inSlice = static_cast<usize>(iy * dimX + ix);
+        const int64 index = iz * sliceStride + iy * dimX + ix;
+        const int32 labelCurrent = featureIdsSliceCur[inSlice];
+        if(labelCurrent <= 0)
         {
-          std::copy(featureIdsSlice0.begin(), featureIdsSlice0.end(), featureIdsSliceCur.begin());
+          continue;
         }
-        else if(iz == dimZ - 1)
+
+        for(int64 dz = -1; dz <= 1; ++dz)
         {
-          std::copy(featureIdsSliceLast.begin(), featureIdsSliceLast.end(), featureIdsSliceCur.begin());
-        }
-        else
-        {
-          auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
-          if(readResult.invalid())
+          int64 nz = iz + dz;
+          bool wrappedZ = false;
+          if(nz < 0)
           {
-            return readResult;
+            nz += dimZ;
+            wrappedZ = true;
           }
-        }
-
-        auto prepareResult = prepareForSlice(iz, dimX, dimY, dimZ);
-        if(prepareResult.invalid())
-        {
-          return prepareResult;
-        }
-
-        // Only first and last Z slices need a wrapped partner.
-        int64 wrappedPartnerZ = -1; // sentinel: no Z-wrapped partner
-        const int32* wrappedSlicePtr = nullptr;
-        if(iz == 0 && dimZ > 1)
-        {
-          wrappedPartnerZ = dimZ - 1;
-          wrappedSlicePtr = featureIdsSliceLast.data();
-          // Prepare the wrapped partner for cross-slice comparisons.
-          auto wrappedPrepareResult = prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
-          if(wrappedPrepareResult.invalid())
+          else if(nz >= dimZ)
           {
-            return wrappedPrepareResult;
+            nz -= dimZ;
+            wrappedZ = true;
           }
-        }
-        else if(iz == dimZ - 1 && dimZ > 1)
-        {
-          wrappedPartnerZ = 0;
-          wrappedSlicePtr = featureIdsSlice0.data();
-          auto wrappedPrepareResult = prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
-          if(wrappedPrepareResult.invalid())
-          {
-            return wrappedPrepareResult;
-          }
-        }
 
-        for(int64 iy = 0; iy < dimY; iy++)
-        {
-          for(int64 ix = 0; ix < dimX; ix++)
+          for(int64 dy = -1; dy <= 1; ++dy)
           {
-            // Only boundary voxels can have wrapped neighbors.
-            const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
-            if(!onBoundary)
+            int64 ny = iy + dy;
+            bool wrappedY = false;
+            if(ny < 0)
             {
-              continue;
+              ny += dimY;
+              wrappedY = true;
+            }
+            else if(ny >= dimY)
+            {
+              ny -= dimY;
+              wrappedY = true;
             }
 
-            const usize inSlice = static_cast<usize>(iy * dimX + ix);
-            const int64 index = iz * sliceStride + iy * dimX + ix;
-            const int32 labelCurrent = featureIdsSliceCur[inSlice];
-            if(labelCurrent <= 0)
+            for(int64 dx = -1; dx <= 1; ++dx)
             {
-              continue;
-            }
-
-            for(int64 dz = -1; dz <= 1; ++dz)
-            {
-              int64 nz = iz + dz;
-              bool wrappedZ = false;
-              if(nz < 0)
+              if(dx == 0 && dy == 0 && dz == 0)
               {
-                nz += dimZ;
-                wrappedZ = true;
-              }
-              else if(nz >= dimZ)
-              {
-                nz -= dimZ;
-                wrappedZ = true;
+                continue;
               }
 
-              for(int64 dy = -1; dy <= 1; ++dy)
+              int64 nx = ix + dx;
+              bool wrappedX = false;
+              if(nx < 0)
               {
-                int64 ny = iy + dy;
-                bool wrappedY = false;
-                if(ny < 0)
-                {
-                  ny += dimY;
-                  wrappedY = true;
-                }
-                else if(ny >= dimY)
-                {
-                  ny -= dimY;
-                  wrappedY = true;
-                }
+                nx += dimX;
+                wrappedX = true;
+              }
+              else if(nx >= dimX)
+              {
+                nx -= dimX;
+                wrappedX = true;
+              }
 
-                for(int64 dx = -1; dx <= 1; ++dx)
-                {
-                  if(dx == 0 && dy == 0 && dz == 0)
-                  {
-                    continue;
-                  }
+              // The forward scan already processed every nonwrapped pair.
+              if(!wrappedX && !wrappedY && !wrappedZ)
+              {
+                continue;
+              }
 
-                  int64 nx = ix + dx;
-                  bool wrappedX = false;
-                  if(nx < 0)
-                  {
-                    nx += dimX;
-                    wrappedX = true;
-                  }
-                  else if(nx >= dimX)
-                  {
-                    nx -= dimX;
-                    wrappedX = true;
-                  }
+              const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
+              // Process each symmetric pair only from its smaller flat index.
+              if(neighIdx <= index)
+              {
+                continue;
+              }
 
-                  // The forward scan already processed every nonwrapped pair.
-                  if(!wrappedX && !wrappedY && !wrappedZ)
-                  {
-                    continue;
-                  }
+              // Select the current or wrapped label slice from the neighbor Z index.
+              int32 labelNeigh = 0;
+              if(nz == iz)
+              {
+                labelNeigh = featureIdsSliceCur[static_cast<usize>(ny * dimX + nx)];
+              }
+              else if(nz == wrappedPartnerZ && wrappedSlicePtr != nullptr)
+              {
+                labelNeigh = wrappedSlicePtr[static_cast<usize>(ny * dimX + nx)];
+              }
 
-                  const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
-                  // Process each symmetric pair only from its smaller flat index.
-                  if(neighIdx <= index)
-                  {
-                    continue;
-                  }
-
-                  // Select the current or wrapped label slice from the neighbor Z index.
-                  int32 labelNeigh = 0;
-                  if(nz == iz)
-                  {
-                    labelNeigh = featureIdsSliceCur[static_cast<usize>(ny * dimX + nx)];
-                  }
-                  else if(nz == wrappedPartnerZ && wrappedSlicePtr != nullptr)
-                  {
-                    labelNeigh = wrappedSlicePtr[static_cast<usize>(ny * dimX + nx)];
-                  }
-
-                  if(labelNeigh > 0 && areNeighborsSimilar(index, neighIdx))
-                  {
-                    auto uniteResult = equivalences->unite(static_cast<uint64>(labelCurrent), static_cast<uint64>(labelNeigh), m_ShouldCancel);
-                    if(uniteResult.invalid())
-                    {
-                      return uniteResult;
-                    }
-                    hasNonContiguousFeature = true;
-                  }
-                }
+              auto uniteResult = unitePeriodicPair(labelCurrent, labelNeigh, index, neighIdx, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+              if(uniteResult.invalid())
+              {
+                return uniteResult;
               }
             }
           }
@@ -881,30 +906,43 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     }
   }
 
-  if(hasNonContiguousFeature)
-  {
-    m_MessageHelper.sendMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
-  }
+  return {};
+}
 
-  if(m_ShouldCancel)
-  {
-    return {};
-  }
+/**
+ * @brief Replaces provisional labels with dense final Feature IDs.
+ * @param featureIdsStore Provides provisional labels and receives final Feature IDs.
+ * @param equivalences Provides the root of each provisional label.
+ * @param dimX Specifies X cells.
+ * @param dimY Specifies Y cells.
+ * @param dimZ Specifies Z cells.
+ * @param nextLabel Specifies one past the largest provisional label.
+ * @param finalFeatureCount Receives the number of features found.
+ * @param shouldCancel Stops before the next slice when true.
+ * @return Allocation, capacity, or Feature-ID I/O error, or success.
+ *
+ * One slice-sequential pass keeps resident memory proportional to slice area. First
+ * voxel appearance determines final Feature-ID order. Cancellation returns success and
+ * leaves a partially resolved Feature-ID array, so the caller discards the count.
+ */
+Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, int32 nextLabel, int32& finalFeatureCount,
+                          const std::atomic_bool& shouldCancel)
+{
+  const int64 sliceStride = dimX * dimY;
+  const usize sliceSize = static_cast<usize>(sliceStride);
 
-  // Resolve roots and write dense final IDs in one slice-sequential pass.
-  // First voxel appearance determines final Feature-ID order.
-  auto prepareFinalLabelsResult = equivalences->prepareFinalLabels(static_cast<uint64>(nextLabel));
+  auto prepareFinalLabelsResult = equivalences.prepareFinalLabels(static_cast<uint64>(nextLabel));
   if(prepareFinalLabelsResult.invalid())
   {
     return prepareFinalLabelsResult;
   }
-  int32 finalFeatureCount = 0;
+  finalFeatureCount = 0;
 
   std::vector<int32> sliceData(sliceSize);
 
   for(int64 iz = 0; iz < dimZ; iz++)
   {
-    if(m_ShouldCancel)
+    if(shouldCancel)
     {
       return {};
     }
@@ -923,7 +961,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
         int32 label = sliceData[inSlice];
         if(label > 0)
         {
-          auto finalLabelResult = equivalences->resolveFinalLabel(static_cast<uint64>(label), finalFeatureCount, m_ShouldCancel);
+          auto finalLabelResult = equivalences.resolveFinalLabel(static_cast<uint64>(label), finalFeatureCount, shouldCancel);
           if(finalLabelResult.invalid())
           {
             return ConvertResult(std::move(finalLabelResult));
@@ -938,6 +976,105 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     {
       return writeResult;
     }
+  }
+
+  return {};
+}
+} // namespace
+
+SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+: m_DataStructure(dataStructure)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHelper(mesgHandler)
+{
+}
+
+SegmentFeatures::~SegmentFeatures() = default;
+
+// CCL uses three stages. The forward scan creates provisional labels and
+// equivalences. Periodic merging joins wrapped boundaries. Final resolution writes dense IDs.
+Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore, bool usesOutOfCoreInput)
+{
+  const SizeVec3 udims = gridGeom->getDimensions();
+  const int64 dimX = static_cast<int64>(udims[0]);
+  const int64 dimY = static_cast<int64>(udims[1]);
+  const int64 dimZ = static_cast<int64>(udims[2]);
+  const usize totalVoxels = static_cast<usize>(dimX) * static_cast<usize>(dimY) * static_cast<usize>(dimZ);
+
+  const bool useFaceOnly = (m_NeighborScheme == NeighborScheme::Face);
+  bool hasNonContiguousFeature = false;
+
+  const bool usesOutOfCoreStore = usesOutOfCoreInput || featureIdsStore.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool useExternalEquivalence = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useExternalEquivalence ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+
+  auto equivalenceResult = LabelEquivalence::Create(useExternalEquivalence, static_cast<uint64>(totalVoxels), !usesOutOfCoreStore);
+  if(equivalenceResult.invalid())
+  {
+    return ConvertResult(std::move(equivalenceResult));
+  }
+  auto equivalences = std::move(equivalenceResult.value());
+  int32 nextLabel = 1;
+
+  // The forward scan creates provisional labels and the equivalences between them.
+  auto forwardScanResult = runForwardScan(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, useFaceOnly, nextLabel, m_ShouldCancel);
+  if(forwardScanResult.invalid())
+  {
+    return forwardScanResult;
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // The forward scan cannot see wrapped neighbors with higher linear indexes.
+  // Periodic merging reads one or two label slices and joins opposite boundaries.
+  if(m_IsPeriodic)
+  {
+    if(useFaceOnly)
+    {
+      auto mergeResult = mergePeriodicFaceBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel);
+      if(mergeResult.invalid())
+      {
+        return mergeResult;
+      }
+    }
+    else
+    {
+      auto mergeResult = mergePeriodicCompleteBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel);
+      if(mergeResult.invalid())
+      {
+        return mergeResult;
+      }
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+    }
+  }
+
+  if(hasNonContiguousFeature)
+  {
+    m_MessageHelper.sendMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // Resolve roots and write dense final IDs in one slice-sequential pass.
+  int32 finalFeatureCount = 0;
+  auto finalLabelsResult = writeFinalLabels(featureIdsStore, *equivalences, dimX, dimY, dimZ, nextLabel, finalFeatureCount, m_ShouldCancel);
+  if(finalLabelsResult.invalid())
+  {
+    return finalLabelsResult;
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
   }
 
   auto flushResult = equivalences->flush(m_ShouldCancel);
