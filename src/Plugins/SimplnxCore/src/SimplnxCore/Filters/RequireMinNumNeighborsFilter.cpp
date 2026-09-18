@@ -114,9 +114,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
-  std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
-                                           "level data should be rerun to ensure accurate final results from your pipeline.";
-  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -147,6 +144,9 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
   // Feature Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
+
+  // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion below
+  nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, numNeighborsPath.getParent(), featureIdsPath, preflightUpdatedValues, false);
 
   // This section will warn the user about the removal of NeighborLists
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numNeighborsPath, resultOutputActions);
