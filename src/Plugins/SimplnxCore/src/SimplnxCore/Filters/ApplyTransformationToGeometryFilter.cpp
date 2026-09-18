@@ -443,6 +443,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           }
         }
       }
+      AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
       if(pRemoveOriginalGeometry)
       {
