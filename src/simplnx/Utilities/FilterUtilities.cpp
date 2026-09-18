@@ -1,5 +1,8 @@
 #include "FilterUtilities.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
@@ -89,6 +92,67 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
     resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
   }
   return {};
+}
+
+// -----------------------------------------------------------------------------
+void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
+                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+{
+  const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+  if(srcCellFeatureData == nullptr)
+  {
+    return;
+  }
+
+  std::string neighborListWarningMsg;
+  std::string arrayWarningMsg;
+  for(const auto& [identifier, object] : *srcCellFeatureData)
+  {
+    std::string objectText = "\n" + cellFeatureAmPath.toString() + "/" + object->getName();
+    if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
+    {
+      arrayWarningMsg += objectText;
+    }
+    else if(dynamic_cast<const INeighborList*>(object.get()) != nullptr)
+    {
+      neighborListWarningMsg += objectText;
+    }
+  }
+
+  if(!neighborListWarningMsg.empty())
+  {
+    preflightUpdatedValues.push_back(
+        {"Invalidated NeighborLists",
+         fmt::format(
+             "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+             featureIdsArrayPath.toString(), neighborListWarningMsg)});
+  }
+  if(!arrayWarningMsg.empty())
+  {
+    preflightUpdatedValues.push_back(
+        {"Stale Arrays", fmt::format("This filter will modify the Cell Level Array(s) '{}', due to the dependent nature of feature level arrays, the pruning process will cause the data contained "
+                                     "within to be stale. It's highly recommended to recalculate the following:{}",
+                                     featureIdsArrayPath.toString(), arrayWarningMsg)});
+  }
+}
+
+// -----------------------------------------------------------------------------
+void AppendCopiedAMStaleWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, nx::core::Result<OutputActions>& resultOutputActions)
+{
+  std::string amWarningMsg;
+  for(const auto& childPath : childPaths)
+  {
+    if(dataStructure.getDataAs<AttributeMatrix>(childPath) != nullptr)
+    {
+      amWarningMsg += "\n" + childPath.toString();
+    }
+  }
+  if(!amWarningMsg.empty())
+  {
+    resultOutputActions.m_Warnings.emplace_back(
+        -4015,
+        fmt::format("Attribute Matrices with arrays dependent upon Cell Data will be copied across as-is. It's highly recommended to recalculate the child arrays in the following:{}", amWarningMsg));
+  }
 }
 
 } // namespace nx::core

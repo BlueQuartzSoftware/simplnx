@@ -4,7 +4,6 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -19,6 +18,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -413,6 +413,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         {"Cropped Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin,
                                                                                                      srcImageGeomPtr->getUnits())});
   }
+
   // This section covers the option of renumbering the Feature Data where we need to do a
   // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's
   // Feature Attribute Matrix
@@ -421,7 +422,6 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     ignorePaths.push_back(cellFeatureAmPath);
 
     const auto& srcCellFeatureData = dataStructure.getDataRefAs<AttributeMatrix>(cellFeatureAmPath);
-    std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
     auto tDims = srcCellFeatureData.getShape();
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
@@ -434,19 +434,9 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
-      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
-      {
-        warningMsg += "\n" + cellFeatureAmPath.toString() + "/" + srcNeighborListArray->getName();
-      }
     }
-    if(!warningMsg.empty())
-    {
-      preflightUpdatedValues.push_back(
-          {"Invalidated NeighborLists",
-           fmt::format(
-               "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-               featureIdsArrayPath.toString(), warningMsg)});
-    }
+
+    AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAmPath, featureIdsArrayPath, preflightUpdatedValues);
   }
 
   // This section covers copying the other Attribute Matrix objects from the source geometry
@@ -478,6 +468,8 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
       }
     }
   }
+
+  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   if(pRemoveOriginalGeometry)
   {
