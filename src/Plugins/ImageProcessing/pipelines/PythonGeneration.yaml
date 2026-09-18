@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "imageprocessing-python-generation-v1",
+  "title": "ImageProcessing pipeline to Python generation",
+  "description": "Generate a temporary runnable Python program from an authoritative DREAM3D-NX pipeline.",
+  "source_authority": ".d3dpipeline",
+  "converter_api": "simplnx_utilities.generate_python_pipeline",
+  "required_modules": [
+    "simplnx",
+    "imageprocessing",
+    "simplnx_utilities"
+  ],
+  "working_directory": "DREAM3D-NX application binary directory",
+  "output_lifetime": "temporary",
+  "failure_behavior": "Stop with a nonzero result if pipeline loading, code generation, syntax validation, or any generated filter execution fails.",
+  "regeneration_rule": "Generate a new temporary program after any filter, argument, comment, or path changes in the .d3dpipeline file.",
+  "path_rules": {
+    "pipeline_reference_base": "pipeline_suite_root",
+    "runtime_data_base": "application_binary_directory",
+    "input_paths": "Keep the Data/ImageProcessing_Examples paths from the pipeline unchanged.",
+    "output_paths": "Keep the Data/Output/ImageProcessing_Examples paths from the pipeline unchanged."
+  },
+  "generation": {
+    "language": "Python",
+    "minimum_python_version": "3.12",
+    "steps": [
+      "Import simplnx, imageprocessing, and simplnx_utilities before loading the pipeline so all filters are registered.",
+      "Load the authoritative file with simplnx.Pipeline.from_file(pipeline_path).",
+      "Call simplnx_utilities.generate_python_pipeline(pipeline).",
+      "Compile the returned text before execution.",
+      "Write the text to a UTF-8 .py file inside a temporary directory.",
+      "Run the temporary file with the DREAM3D-NX Anaconda Python executable from the application binary directory.",
+      "Discard the temporary directory after the run."
+    ],
+    "reference_code": [
+      "import imageprocessing",
+      "import simplnx as nx",
+      "import simplnx_utilities",
+      "pipeline = nx.Pipeline.from_file(pipeline_path)",
+      "code = simplnx_utilities.generate_python_pipeline(pipeline)",
+      "compile(code, str(pipeline_path), 'exec')"
+    ]
+  },
+  "validation": {
+    "syntax": "Compile generated text with Python compile().",
+    "structure": "Compare generated Filter.execute calls with the enabled filter order in the source pipeline.",
+    "paths": "Require all relative input and output paths from the pipeline to remain in the generated program.",
+    "execution": "Run every generated program end to end with packaged example data and require exit code 0.",
+    "storage": "When OOC is under test, use an application build with the registered disk-backed storage backend."
+  },
+  "mcp_guidance": {
+    "when_user_requests_python": "Generate from the .d3dpipeline file at request time. Do not look for or create a persistent Python sidecar unless the user explicitly asks for one.",
+    "when_user_changes_pipeline": "Regenerate from the modified .d3dpipeline file before returning Python code.",
+    "when_generation_fails": "Report the pipeline path, converter error, and missing module or unsupported parameter type. Do not hand-translate filter arguments as a silent fallback."
+  }
+}

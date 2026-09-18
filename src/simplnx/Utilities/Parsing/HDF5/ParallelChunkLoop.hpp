@@ -29,6 +29,14 @@ namespace nx::core::HDF5
  * Multicore builds use the process-wide oneTBB scheduler. Other builds use the
  * calling thread. Each invocation receives a different position. Exceptions use
  * the active scheduler's propagation behavior.
+ *
+ * Per-chunk work is data-dependent: deflate cost varies with chunk content, and
+ * a partial edge chunk carries fewer tuples than an interior chunk. The calling
+ * machine's cores can also be asymmetric (e.g. performance/efficiency cores).
+ * A fixed a-priori split cannot balance across either source of variance, so
+ * this loop uses tbb::auto_partitioner to divide the range dynamically based on
+ * observed task duration, matching the partitioner ParallelDataAlgorithm uses
+ * for in-core work.
  */
 template <class Body>
 void ParallelForChunkPositions(usize chunkCount, const Body& body)
@@ -36,7 +44,7 @@ void ParallelForChunkPositions(usize chunkCount, const Body& body)
 #ifdef SIMPLNX_ENABLE_MULTICORE
   if(chunkCount > 1)
   {
-    tbb::static_partitioner partitioner;
+    tbb::auto_partitioner partitioner;
     tbb::parallel_for(
         tbb::blocked_range<usize>(0, chunkCount, 1),
         [&body](const tbb::blocked_range<usize>& range) {

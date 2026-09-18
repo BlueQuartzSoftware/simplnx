@@ -16,6 +16,10 @@
 #include <fmt/core.h>
 #include <zlib.h>
 
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/task_group.h>
+#endif
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -841,17 +845,41 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   // chunk is no larger than 64 MiB. A larger nominal chunk forms a one-chunk
   // batch. Commits stay serial because alternating H5Dwrite_chunk workers can corrupt adjacent chunks.
   const usize nominalChunkBytes = m_NominalChunkElements * m_ElementSize;
-  const usize batchChunksByBytes = nominalChunkBytes == 0 ? 1 : std::max<usize>(1, k_MaxPreparedBatchBytes / nominalChunkBytes);
-  const usize maxBatchChunks = std::min(k_MaxPreparedBatchChunks, batchChunksByBytes);
+  const usize baseBatchChunksByBytes = nominalChunkBytes == 0 ? 1 : std::max<usize>(1, k_MaxPreparedBatchBytes / nominalChunkBytes);
+  const usize baseMaxBatchChunks = std::min(k_MaxPreparedBatchChunks, baseBatchChunksByBytes);
 
-  for(usize batchStart = 0; batchStart < chunkCount; batchStart += maxBatchChunks)
-  {
-    const usize batchChunkCount = std::min(maxBatchChunks, chunkCount - batchStart);
-    std::vector<PendingChunkWrite> pendingWrites(batchChunkCount);
-    std::atomic<bool> ok{true};
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  // More than one base-sized batch lets the pipeline below overlap one batch's
+  // serial commit with the next batch's parallel preparation, so two batches'
+  // prepared bytes (the one committing and the one preparing) are resident at
+  // once instead of one. Halving both per-batch caps in that case holds the
+  // pipelined peak at today's single-batch peak. A call whose chunks fit in one
+  // base-sized batch has no second batch to overlap with, so it keeps today's
+  // exact sizing and its single-batch prepare-then-commit flow.
+  const bool pipelineActive = chunkCount > baseMaxBatchChunks;
+#else
+  // Without SIMPLNX_ENABLE_MULTICORE, ParallelForChunkPositions already runs
+  // every position on this thread, so there is no worker to run preparation
+  // ahead of a commit; pipelining could not overlap anything here.
+  constexpr bool pipelineActive = false;
+#endif
+  const usize maxChunksCap = pipelineActive ? std::max<usize>(1, k_MaxPreparedBatchChunks / 2) : k_MaxPreparedBatchChunks;
+  const usize batchChunksByBytes = pipelineActive ? std::max<usize>(1, baseBatchChunksByBytes / 2) : baseBatchChunksByBytes;
+  const usize maxBatchChunks = std::min(maxChunksCap, batchChunksByBytes);
+
+  // Set once by the first prepare or commit failure. Every prepare task and the
+  // committing loop poll this before doing more work, so one failure anywhere
+  // stops all further preparation and commits without a second lock.
+  std::atomic<bool> failed{false};
+
+  // Prepares one batch's chunks in parallel. gatherChunkBytes and
+  // prepareChunkBytesImpl touch only memory and zlib, never an HDF5 handle, so
+  // this is safe to run concurrently with the serial H5Dwrite_chunk commits below.
+  auto prepareBatch = [&](usize batchStart, usize batchChunkCount, std::vector<PendingChunkWrite>& pendingWrites) {
+    pendingWrites.assign(batchChunkCount, PendingChunkWrite{});
 
     const auto prepareOne = [&](usize batchIndex) {
-      if(!ok.load(std::memory_order_relaxed))
+      if(failed.load(std::memory_order_relaxed))
       {
         return;
       }
@@ -889,7 +917,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
         PreparedChunkBytes prepared = prepareChunkBytesImpl(idx, nominal, firstErrorOut, errorMutex);
         if(prepared.filterMask == 0 && prepared.filteredBytes.empty())
         {
-          ok.store(false, std::memory_order_relaxed);
+          failed.store(true, std::memory_order_relaxed);
           return;
         }
 
@@ -912,23 +940,99 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
       {
         // Worker failures become a false result with the first diagnostic retained.
         recordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: exception while gathering/compressing chunk {} of '{}:{}'", idx, m_FilePath.string(), m_DatasetPath));
-        ok.store(false, std::memory_order_relaxed);
+        failed.store(true, std::memory_order_relaxed);
       }
     };
 
     ParallelForChunkPositions(batchChunkCount, prepareOne);
-    if(!ok.load(std::memory_order_relaxed))
-    {
-      return false;
-    }
+  };
 
+  // Commits one already-prepared batch serially in flatChunkIndices order.
+  // Stops at the first observed failure, including one raised by a concurrently
+  // preparing batch, so no chunk after the failure point is written.
+  auto commitBatch = [&](usize batchStart, usize batchChunkCount, const std::vector<PendingChunkWrite>& pendingWrites) {
     for(usize batchIndex = 0; batchIndex < batchChunkCount; ++batchIndex)
     {
-      const PendingChunkWrite& pending = pendingWrites[batchIndex];
-      if(!writeCompressedChunkImpl(flatChunkIndices[batchStart + batchIndex], pending.storedBytes(), pending.filterMask, firstErrorOut, errorMutex))
+      if(failed.load(std::memory_order_relaxed))
       {
         return false;
       }
+      const PendingChunkWrite& pending = pendingWrites[batchIndex];
+      if(!writeCompressedChunkImpl(flatChunkIndices[batchStart + batchIndex], pending.storedBytes(), pending.filterMask, firstErrorOut, errorMutex))
+      {
+        failed.store(true, std::memory_order_relaxed);
+        return false;
+      }
+    }
+    return true;
+  };
+
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  if(pipelineActive)
+  {
+    // Two-stage pipeline: while `current` commits serially on this thread, the
+    // batch after it prepares in parallel on a tbb::task_group worker into
+    // `next`. `current` and `next` are two disjoint buffers pointed to by
+    // swappable pointers; this thread is the only reader/writer of `current`,
+    // and the task started this iteration is the only writer of `next`.
+    // group.wait() joins that task before `next` is read (via the swap) or the
+    // function returns, so every prepared buffer's writes are visible before its
+    // reader touches it and no buffer is reassigned while a task still holds it.
+    // No lock beyond `failed` and the existing error mutex guards this by
+    // construction: the two threads never touch the same buffer at the same time.
+    std::vector<PendingChunkWrite> bufferA;
+    std::vector<PendingChunkWrite> bufferB;
+    std::vector<PendingChunkWrite>* current = &bufferA;
+    std::vector<PendingChunkWrite>* next = &bufferB;
+
+    prepareBatch(0, std::min(maxBatchChunks, chunkCount), *current);
+
+    tbb::task_group group;
+    for(usize batchStart = 0; batchStart < chunkCount; batchStart += maxBatchChunks)
+    {
+      const usize batchChunkCount = std::min(maxBatchChunks, chunkCount - batchStart);
+      const usize nextStart = batchStart + maxBatchChunks;
+
+      // Stop issuing new preparation once a failure is known. A task already
+      // running when a failure appears finishes on its own; group.wait() below
+      // still joins it before this function touches its buffer again.
+      if(nextStart < chunkCount && !failed.load(std::memory_order_relaxed))
+      {
+        const usize nextCount = std::min(maxBatchChunks, chunkCount - nextStart);
+        group.run([&prepareBatch, nextStart, nextCount, next]() { prepareBatch(nextStart, nextCount, *next); });
+      }
+
+      const bool committed = !failed.load(std::memory_order_relaxed) && commitBatch(batchStart, batchChunkCount, *current);
+
+      // Drain the sibling prepare task before swapping buffers or returning.
+      group.wait();
+
+      if(!committed)
+      {
+        return false;
+      }
+
+      std::swap(current, next);
+    }
+
+    return true;
+  }
+#endif
+
+  // Today's non-pipelined flow: one batch prepares in parallel and then commits
+  // serially before the next batch starts.
+  for(usize batchStart = 0; batchStart < chunkCount; batchStart += maxBatchChunks)
+  {
+    const usize batchChunkCount = std::min(maxBatchChunks, chunkCount - batchStart);
+    std::vector<PendingChunkWrite> pendingWrites;
+    prepareBatch(batchStart, batchChunkCount, pendingWrites);
+    if(failed.load(std::memory_order_relaxed))
+    {
+      return false;
+    }
+    if(!commitBatch(batchStart, batchChunkCount, pendingWrites))
+    {
+      return false;
     }
   }
 

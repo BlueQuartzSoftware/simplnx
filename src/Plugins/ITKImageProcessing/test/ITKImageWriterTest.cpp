@@ -41,10 +41,11 @@ public:
 
   PlannedOocManager()
   {
-    addDataStoreCreationFnc(
-        k_Format.str(),
-        []([[maybe_unused]] DataType dataType, [[maybe_unused]] const ShapeType& tupleShape, [[maybe_unused]] const ShapeType& componentShape,
-           [[maybe_unused]] const std::optional<ShapeType>& chunkShape) -> std::unique_ptr<IDataStore> { throw std::runtime_error("ITK planned-residency preflight must not create values"); });
+    addDataStoreCreationFnc(k_Format.str(),
+                            []([[maybe_unused]] DataType dataType, [[maybe_unused]] const ShapeType& tupleShape, [[maybe_unused]] const ShapeType& componentShape,
+                               [[maybe_unused]] const std::optional<ShapeType>& chunkShape, [[maybe_unused]] DataStoreInitializationMode initializationMode) -> std::unique_ptr<IDataStore> {
+                              throw std::runtime_error("ITK planned-residency preflight must not create values");
+                            });
   }
 
   std::string formatName() const override

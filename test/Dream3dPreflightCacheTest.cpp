@@ -88,7 +88,8 @@ public:
   {
     addDataStoreCreationFnc(k_CacheTestFormat.str(),
                             [counter = m_FactoryCalls]([[maybe_unused]] DataType dataType, [[maybe_unused]] const ShapeType& tupleShape, [[maybe_unused]] const ShapeType& componentShape,
-                                                       [[maybe_unused]] const std::optional<ShapeType>& chunkShape) -> std::unique_ptr<IDataStore> {
+                                                       [[maybe_unused]] const std::optional<ShapeType>& chunkShape,
+                                                       [[maybe_unused]] DataStoreInitializationMode initializationMode) -> std::unique_ptr<IDataStore> {
                               ++(*counter);
                               throw std::runtime_error("injected cache value-store factory failure");
                             });

@@ -33,20 +33,25 @@ class DataStructure;
 class IDataFactory;
 
 /**
- * @namespace nx::core
- * @brief Contains simplnx core types and functions.
+ * @brief Selects the initial physical-storage policy for a new DataStore.
+ *
+ * DeferredZeroFill preserves logical zero reads. A storage provider can defer
+ * physical zero writes until a caller overwrites a chunk.
  */
+enum class DataStoreInitializationMode : uint8
+{
+  Default,
+  DeferredZeroFill
+};
 
 /**
  * @class IDataIOManager
  * @brief Defines factories and lifecycle hooks for one storage format.
  *
- * DataIOCollection holds managers by format name. Each manager retains shared
- * DataObject factories and owning store-creation callbacks. Derived managers
- * register factories during application setup.
+ * DataIOCollection holds managers by format name. Each manager retains shared DataObject factories and owning store-creation callbacks.
+ * Derived managers register factories during application setup.
  *
- * Registration and lifecycle changes are not synchronized with factory lookup.
- * Complete manager configuration before concurrent store creation or import.
+ * Registration and lifecycle changes are not synchronized with factory lookup. Complete manager configuration before concurrent store creation or import.
  */
 class SIMPLNX_EXPORT IDataIOManager
 {
@@ -69,10 +74,10 @@ public:
   /**
    * @brief Names a callback that creates a writable numeric store.
    *
-   * The callback transfers ownership to its caller. The optional chunk shape is
-   * a factory hint that an in-memory manager can ignore.
+   * The callback takes the numeric type, shapes, optional chunk-shape hint, and initialization policy.
+   * The callback transfers store ownership to its caller.
    */
-  using DataStoreCreateFnc = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&)>;
+  using DataStoreCreateFnc = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode)>;
 
   /**
    * @brief Names a callback that creates a writable NeighborList store.

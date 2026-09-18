@@ -1,0 +1,550 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(05) AM XCT Porosity Segmentation.d3dpipeline",
+  "markdown_file": "(05) AM XCT Porosity Segmentation.md",
+  "title": "AM XCT Porosity Segmentation",
+  "summary": "Segments and labels internal pores in an additive-manufactured metal part from an XCT volume, then creates contours and a physical signed-distance map.",
+  "primary_industries": [
+    "Metal additive manufacturing",
+    "Aerospace quality assurance"
+  ],
+  "secondary_industries": [
+    "Medical implant manufacturing",
+    "Industrial computed tomography"
+  ],
+  "use_cases": [
+    "Screen an AM coupon or part for internal porosity",
+    "Prepare a clean pore mask for defect statistics",
+    "Create boundary and distance arrays for wall-thickness review"
+  ],
+  "keywords": [
+    "AM",
+    "XCT",
+    "porosity",
+    "defect segmentation",
+    "distance map"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/am/xct_porosity.mha",
+      "role": "Source for ReadMhaFileFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/01_AM_XCT/pore_contours.tif",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/01_AM_XCT/am_xct_porosity.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "role": "Import the volume with its physical spacing and scalar type.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/am/xct_porosity.mha"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "AM XCT"
+        },
+        {
+          "parameter": "output_transformation_matrix_path",
+          "value": "MHA Image/TransformationMatrix"
+        }
+      ],
+      "key_parameters": {
+        "apply_image_transformation": false,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/am/xct_porosity.mha",
+        "image_data_array_name": "XCT Intensity",
+        "interpolation_type_index": 0,
+        "output_geometry_path": "AM XCT",
+        "output_transformation_matrix_path": "MHA Image/TransformationMatrix",
+        "save_image_transformation": false,
+        "transpose_transform_matrix": false
+      }
+    },
+    {
+      "index": 1,
+      "filter": "IntensityWindowingImageFilter",
+      "uuid": "d053ffc3-007d-42ff-9ad5-d905ebe60c74",
+      "role": "Window the reconstructed XCT range before denoising and segmentation.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Windowed Intensity"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "AM XCT/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "AM XCT",
+        "output_array_name": "Windowed Intensity",
+        "output_maximum": 65535.0,
+        "output_minimum": 0.0,
+        "window_maximum": 50000.0,
+        "window_minimum": 0.0
+      }
+    },
+    {
+      "index": 2,
+      "filter": "NormalizeImageFilter",
+      "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1",
+      "role": "Convert the windowed XCT data to a normalized floating-point field.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Windowed Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Normalized Intensity"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "AM XCT/Cell Data/Windowed Intensity",
+        "input_image_geometry_path": "AM XCT",
+        "output_array_name": "Normalized Intensity"
+      }
+    },
+    {
+      "index": 3,
+      "filter": "CurvatureAnisotropicDiffusionImageFilter",
+      "uuid": "9e29d66d-a3f7-47fd-9749-a7e2bea8e158",
+      "role": "Reduce reconstruction noise while retaining pore boundaries.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Denoised Intensity"
+        }
+      ],
+      "key_parameters": {
+        "conductance_parameter": 3.0,
+        "conductance_scaling_update_interval": 1,
+        "input_image_data_path": "AM XCT/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "AM XCT",
+        "number_of_iterations": 3,
+        "output_array_name": "Denoised Intensity",
+        "time_step": 0.001
+      }
+    },
+    {
+      "index": 4,
+      "filter": "BinaryThresholdImageFilter",
+      "uuid": "4bf09378-e159-4437-9ce2-3f4c3b5ad7ae",
+      "role": "Segment low-density pores and lack-of-fusion regions from the metal volume.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Denoised Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Pore Mask"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "AM XCT/Cell Data/Denoised Intensity",
+        "input_image_geometry_path": "AM XCT",
+        "inside_value": 1,
+        "lower_threshold": -20.0,
+        "output_array_name": "Pore Mask",
+        "outside_value": 0,
+        "upper_threshold": -2.0
+      }
+    },
+    {
+      "index": 5,
+      "filter": "BinaryMorphologicalClosingImageFilter",
+      "uuid": "73a22075-6760-44e8-b385-68aed4dd56c7",
+      "role": "Close one-voxel gaps inside segmented defects.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Pore Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Closed Pore Mask"
+        }
+      ],
+      "key_parameters": {
+        "foreground_value": 1.0,
+        "input_image_data_path": "AM XCT/Cell Data/Pore Mask",
+        "input_image_geometry_path": "AM XCT",
+        "kernel_radius": [
+          1,
+          1,
+          1
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Closed Pore Mask",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 6,
+      "filter": "ConnectedComponentImageFilter",
+      "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41",
+      "role": "Assign one label to each face-connected pore.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Closed Pore Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Pore Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": false,
+        "input_image_data_path": "AM XCT/Cell Data/Closed Pore Mask",
+        "input_image_geometry_path": "AM XCT",
+        "output_array_name": "Pore Labels"
+      }
+    },
+    {
+      "index": 7,
+      "filter": "RelabelComponentImageFilter",
+      "uuid": "de830a9e-1fc0-47fa-9c2d-895366af832a",
+      "role": "Remove very small detections and sort retained pores by size.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Pore Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Relabeled Pores"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "AM XCT/Cell Data/Pore Labels",
+        "input_image_geometry_path": "AM XCT",
+        "minimum_object_size": 8,
+        "output_array_name": "Relabeled Pores",
+        "sort_by_object_size": true
+      }
+    },
+    {
+      "index": 8,
+      "filter": "BinaryContourImageFilter",
+      "uuid": "da623f5e-1c20-4c7b-a750-2bf72a421a51",
+      "role": "Extract pore boundaries for visual review.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Closed Pore Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Pore Contours"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "foreground_value": 1.0,
+        "fully_connected": false,
+        "input_image_data_path": "AM XCT/Cell Data/Closed Pore Mask",
+        "input_image_geometry_path": "AM XCT",
+        "output_array_name": "Pore Contours"
+      }
+    },
+    {
+      "index": 9,
+      "filter": "SignedMaurerDistanceMapImageFilter",
+      "uuid": "7958cf68-fb34-4616-aee7-35ddfc0e49f2",
+      "role": "Measure signed physical distance from each voxel to the pore boundary.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "AM XCT/Cell Data/Closed Pore Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Signed Pore Distance"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "input_image_data_path": "AM XCT/Cell Data/Closed Pore Mask",
+        "input_image_geometry_path": "AM XCT",
+        "inside_is_positive": false,
+        "output_array_name": "Signed Pore Distance",
+        "squared_distance": false,
+        "use_image_spacing": true
+      }
+    },
+    {
+      "index": 10,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the pore contour stack for review outside DREAM3D-NX.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "AM XCT"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/01_AM_XCT/pore_contours.tif"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": false,
+        "file_name": "Data/Output/ImageProcessing_Examples/01_AM_XCT/pore_contours.tif",
+        "flip_mode_index": 0,
+        "image_array_path": "AM XCT/Cell Data/Pore Contours",
+        "index_offset": 0,
+        "input_image_geometry_path": "AM XCT",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 11,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete XCT porosity analysis.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/01_AM_XCT/am_xct_porosity.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/01_AM_XCT/am_xct_porosity.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Standard method for microCT-based additive manufacturing quality control 1: Porosity analysis",
+      "authors": [
+        "Anton du Plessis",
+        "Philip Sperling",
+        "Andre Beerlink",
+        "Lerato Tshabalala",
+        "Shafick Hoosain",
+        "Nontombi Mathe",
+        "Stephan G. le Roux"
+      ],
+      "year": 2018,
+      "journal": "MethodsX",
+      "doi": "10.1016/j.mex.2018.09.005",
+      "url": "https://doi.org/10.1016/j.mex.2018.09.005",
+      "role": "Primary industrial workflow for threshold-based XCT porosity analysis in additive manufacturing.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The paper's raw XCT volume is unavailable. The generated volume represents a cropped coupon interior, is smaller, uses a deterministic intensity model, and does not reproduce the paper's exact pore statistics."
+      }
+    },
+    {
+      "title": "Scale-space and edge detection using anisotropic diffusion",
+      "authors": [
+        "Pietro Perona",
+        "Jitendra Malik"
+      ],
+      "year": 1990,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/34.56205",
+      "url": "https://doi.org/10.1109/34.56205",
+      "role": "Foundational edge-preserving diffusion method used before segmentation or edge detection.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "A linear time algorithm for computing exact Euclidean distance transforms of binary images in arbitrary dimensions",
+      "authors": [
+        "Calvin R. Maurer Jr.",
+        "Rensheng Qi",
+        "Vijay Raghavan"
+      ],
+      "year": 2003,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/TPAMI.2003.1177156",
+      "url": "https://doi.org/10.1109/TPAMI.2003.1177156",
+      "role": "Exact Euclidean distance-transform basis for physical pore and wall-distance measurements.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Screen an AM coupon or part for internal porosity",
+      "Prepare a clean pore mask for defect statistics",
+      "Create boundary and distance arrays for wall-thickness review"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Low-density defects are darker than the metal matrix.",
+      "The MHA spacing is calibrated in physical units.",
+      "The example thresholds are tuned to the included fixture, not to every scanner or alloy.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "(14) Projection-Based Quality Summaries.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "am/xct_porosity.mha"
+    ],
+    "paper_doi": "10.1016/j.mex.2018.09.005",
+    "paper_url": "",
+    "reference_visual": "Paper XCT coupon-interior cross-sections and segmented 3-D gas-pore and lack-of-fusion renderings.",
+    "target_traits": [
+      "cropped metal coupon interior",
+      "rounded gas pores",
+      "elongated lack-of-fusion voids",
+      "reconstruction noise",
+      "weak ring artifacts"
+    ],
+    "known_differences": "The paper's raw XCT volume is unavailable. The generated volume represents a cropped coupon interior, is smaller, uses a deterministic intensity model, and does not reproduce the paper's exact pore statistics.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

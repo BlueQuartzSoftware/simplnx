@@ -1,0 +1,433 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(16) Phase and Angle Field Transforms.d3dpipeline",
+  "markdown_file": "(16) Phase and Angle Field Transforms.md",
+  "title": "Phase and Angle Field Transforms",
+  "summary": "Applies forward trigonometric functions to a phase field and inverse trigonometric functions to a normalized response field with valid mathematical domains.",
+  "primary_industries": [
+    "Optical metrology",
+    "Interferometry"
+  ],
+  "secondary_industries": [
+    "Coherent imaging",
+    "Wave and orientation analysis"
+  ],
+  "use_cases": [
+    "Create sine and cosine components from phase",
+    "Convert normalized responses back to principal angles",
+    "Demonstrate safe domains for trigonometric image filters"
+  ],
+  "keywords": [
+    "phase",
+    "interferometry",
+    "trigonometry",
+    "angle field",
+    "optical metrology"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/am/calibration/phase_radians.mha",
+      "role": "Source for ReadMhaFileFilter."
+    },
+    {
+      "path": "Data/ImageProcessing_Examples/am/calibration/normalized_response.mha",
+      "role": "Source for ReadMhaFileFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/12_Phase_Angles/phase_and_angle_transforms.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "role": "Import the volume with its physical spacing and scalar type.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/am/calibration/phase_radians.mha"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Phase Field"
+        },
+        {
+          "parameter": "output_transformation_matrix_path",
+          "value": "MHA Image/TransformationMatrix"
+        }
+      ],
+      "key_parameters": {
+        "apply_image_transformation": false,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/am/calibration/phase_radians.mha",
+        "image_data_array_name": "Phase Radians",
+        "interpolation_type_index": 0,
+        "output_geometry_path": "Phase Field",
+        "output_transformation_matrix_path": "MHA Image/TransformationMatrix",
+        "save_image_transformation": false,
+        "transpose_transform_matrix": false
+      }
+    },
+    {
+      "index": 1,
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "role": "Import the volume with its physical spacing and scalar type.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/am/calibration/normalized_response.mha"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Normalized Response"
+        },
+        {
+          "parameter": "output_transformation_matrix_path",
+          "value": "MHA Image/TransformationMatrix"
+        }
+      ],
+      "key_parameters": {
+        "apply_image_transformation": false,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/am/calibration/normalized_response.mha",
+        "image_data_array_name": "Normalized Response",
+        "interpolation_type_index": 0,
+        "output_geometry_path": "Normalized Response",
+        "output_transformation_matrix_path": "MHA Image/TransformationMatrix",
+        "save_image_transformation": false,
+        "transpose_transform_matrix": false
+      }
+    },
+    {
+      "index": 2,
+      "filter": "SinImageFilter",
+      "uuid": "aed02f24-b85c-406f-b733-15e6379d0652",
+      "role": "Calculate the sine component of the phase field.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Phase Field/Cell Data/Phase Radians"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Phase Field"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Sine"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Phase Field/Cell Data/Phase Radians",
+        "input_image_geometry_path": "Phase Field",
+        "output_array_name": "Sine"
+      }
+    },
+    {
+      "index": 3,
+      "filter": "CosImageFilter",
+      "uuid": "aa53d925-b57a-4d3f-8d98-876ff196ea2d",
+      "role": "Calculate the cosine component of the phase field.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Phase Field/Cell Data/Phase Radians"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Phase Field"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Cosine"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Phase Field/Cell Data/Phase Radians",
+        "input_image_geometry_path": "Phase Field",
+        "output_array_name": "Cosine"
+      }
+    },
+    {
+      "index": 4,
+      "filter": "TanImageFilter",
+      "uuid": "fa76aaa5-77e3-4381-b86b-0b0d9eff73a4",
+      "role": "Calculate the tangent of a phase field that avoids singularities.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Phase Field/Cell Data/Phase Radians"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Phase Field"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Tangent"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Phase Field/Cell Data/Phase Radians",
+        "input_image_geometry_path": "Phase Field",
+        "output_array_name": "Tangent"
+      }
+    },
+    {
+      "index": 5,
+      "filter": "AsinImageFilter",
+      "uuid": "3a196037-7f21-465b-9e26-dfa48d6c784f",
+      "role": "Convert a normalized sine response to an angle.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Normalized Response/Cell Data/Normalized Response"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Normalized Response"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Inverse Sine"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Normalized Response/Cell Data/Normalized Response",
+        "input_image_geometry_path": "Normalized Response",
+        "output_array_name": "Inverse Sine"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "AcosImageFilter",
+      "uuid": "82473d89-6383-4897-8863-240ddd818138",
+      "role": "Convert a normalized cosine response to an angle.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Normalized Response/Cell Data/Normalized Response"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Normalized Response"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Inverse Cosine"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Normalized Response/Cell Data/Normalized Response",
+        "input_image_geometry_path": "Normalized Response",
+        "output_array_name": "Inverse Cosine"
+      }
+    },
+    {
+      "index": 7,
+      "filter": "AtanImageFilter",
+      "uuid": "b7a2c2b9-a693-4e64-860e-d306c92417ae",
+      "role": "Convert a normalized tangent-like response to an angle.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Normalized Response/Cell Data/Normalized Response"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Normalized Response"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Inverse Tangent"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Normalized Response/Cell Data/Normalized Response",
+        "input_image_geometry_path": "Normalized Response",
+        "output_array_name": "Inverse Tangent"
+      }
+    },
+    {
+      "index": 8,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/12_Phase_Angles/phase_and_angle_transforms.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/12_Phase_Angles/phase_and_angle_transforms.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Digital phase-shifting interferometry: A simple error-compensating phase calculation algorithm",
+      "authors": [
+        "P. Hariharan",
+        "B. F. Oreb",
+        "T. Eiju"
+      ],
+      "year": 1987,
+      "journal": "Applied Optics",
+      "doi": "10.1364/AO.26.002504",
+      "url": "https://doi.org/10.1364/AO.26.002504",
+      "role": "Primary scientific workflow for converting sinusoidal intensity measurements into phase fields.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The paper's interferograms are unavailable. The generated analytical field tests the phase mathematics but not phase-step nonlinearity or experimental noise."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Create sine and cosine components from phase",
+      "Convert normalized responses back to principal angles",
+      "Demonstrate safe domains for trigonometric image filters"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Phase values are in radians.",
+      "Inverse sine and inverse cosine inputs remain in [-1, 1].",
+      "Principal-value inverse functions do not perform phase unwrapping.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(15) Radiography Intensity Calibration.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "am/calibration/phase_radians.mha"
+    ],
+    "paper_doi": "10.1364/AO.26.002504",
+    "paper_url": "",
+    "reference_visual": "Smooth interferometric phase containing carrier tilt and a localized surface-height feature, with normalized sinusoidal response.",
+    "target_traits": [
+      "radian phase",
+      "carrier tilt",
+      "localized phase bump",
+      "valid inverse-function domain",
+      "no tangent singularity"
+    ],
+    "known_differences": "The paper's interferograms are unavailable. The generated analytical field tests the phase mathematics but not phase-step nonlinearity or experimental noise.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

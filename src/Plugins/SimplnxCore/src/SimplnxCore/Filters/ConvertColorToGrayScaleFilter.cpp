@@ -1,10 +1,6 @@
 #include "ConvertColorToGrayScaleFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
-
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -13,6 +9,7 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 
 using namespace nx::core;
 
@@ -90,57 +87,13 @@ IFilter::UniquePointer ConvertColorToGrayScaleFilter::clone() const
 IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pConversionAlgorithmValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionAlgorithm_Key);
-  auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  auto pColorChannelValue = filterArgs.value<int32>(k_ColorChannel_Key);
-  auto inputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayPath_Key);
-  auto outputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
-
-  PreflightResult preflightResult;
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  if(pConversionAlgorithmValue == 3 && pColorChannelValue > 3)
-  {
-    return {MakeErrorResult<OutputActions>(-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", pColorChannelValue))};
-  }
-
-  if(pConversionAlgorithmValue == 0)
-  {
-    if(pColorWeightsValue[0] < 0.0F || pColorWeightsValue[1] < 0.0F || pColorWeightsValue[2] < 0.0F)
-    {
-      return {MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
-    }
-
-    float colorWeightSum = pColorWeightsValue[0] + pColorWeightsValue[1] + pColorWeightsValue[2];
-    if(colorWeightSum < .9800 || colorWeightSum > 1.02)
-    {
-      return {MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
-    }
-  }
-
-  if(inputDataArrayPaths.empty())
-  {
-    return {MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
-  }
-
-  DataPath outputDataArrayPath;
-  for(const auto& inputDataArrayPath : inputDataArrayPaths)
-  {
-    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
-    std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
-    std::string inputArrayName = inputDataArrayPath.getTargetName();
-    std::string outputArrayName = fmt::format("{}{}", outputArrayPrefix, inputArrayName);
-    inputPathVector.back() = outputArrayName;
-    outputDataArrayPath = DataPath(inputPathVector);
-    resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(nx::core::DataType::uint8, inputArray.getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
-  }
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  ConvertColorToGrayScaleInputValues inputValues;
+  inputValues.ConversionAlgorithm = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionAlgorithm_Key);
+  inputValues.ColorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
+  inputValues.ColorChannel = filterArgs.value<int32>(k_ColorChannel_Key);
+  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayPath_Key);
+  inputValues.OutputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
+  return PreflightColorToGrayScale(dataStructure, inputValues);
 }
 
 //------------------------------------------------------------------------------
@@ -166,7 +119,7 @@ Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure
     inputValues.OutputDataArrayPaths.push_back(outputDataArrayPath);
   }
 
-  return ConvertColorToGrayScale(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ConvertColorToGrayScaleArrays(dataStructure, inputValues, messageHandler, shouldCancel);
 }
 } // namespace nx::core
 

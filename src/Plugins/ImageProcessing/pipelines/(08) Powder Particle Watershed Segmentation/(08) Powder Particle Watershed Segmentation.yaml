@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(08) Powder Particle Watershed Segmentation.d3dpipeline",
+  "markdown_file": "(08) Powder Particle Watershed Segmentation.md",
+  "title": "Powder Particle Watershed Segmentation",
+  "summary": "Uses marker-controlled watershed to separate touching powder particles after Gaussian smoothing, gradient calculation, and shallow-minimum suppression.",
+  "primary_industries": [
+    "Metal additive manufacturing",
+    "Powder characterization"
+  ],
+  "secondary_industries": [
+    "Pharmaceutical powders",
+    "Particle microscopy"
+  ],
+  "use_cases": [
+    "Separate touching particles before size and shape analysis",
+    "Reduce watershed over-segmentation with H-minima suppression",
+    "Create labeled particle boundaries for visual review"
+  ],
+  "keywords": [
+    "powder",
+    "particles",
+    "watershed",
+    "markers",
+    "segmentation"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/materials/powder_particles.png",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/04_Powder_Particles/powder_particles.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/materials/powder_particles.png"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/materials/powder_particles.png",
+        "image_data_array_name": "Particle Intensity",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Powder Particles",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "DiscreteGaussianImageFilter",
+      "uuid": "2ddd8df9-a4d8-44e0-94b3-0776c1cdf096",
+      "role": "Smooth small intensity variations before edge detection.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Particle Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Smoothed Particles"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Powder Particles/Cell Data/Particle Intensity",
+        "input_image_geometry_path": "Powder Particles",
+        "maximum_error": [
+          0.01,
+          0.01,
+          0.01
+        ],
+        "maximum_kernel_width": 16,
+        "output_array_name": "Smoothed Particles",
+        "use_image_spacing": true,
+        "variance": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "filter": "GradientMagnitudeRecursiveGaussianImageFilter",
+      "uuid": "d9b71e00-6c15-4cb5-92bd-a8c2d9be57f2",
+      "role": "Create a smooth edge-strength surface for watershed segmentation.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Smoothed Particles"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Particle Gradient"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Powder Particles/Cell Data/Smoothed Particles",
+        "input_image_geometry_path": "Powder Particles",
+        "normalize_across_scale": false,
+        "output_array_name": "Particle Gradient",
+        "sigma": 1.0
+      }
+    },
+    {
+      "index": 3,
+      "filter": "HMinimaImageFilter",
+      "uuid": "2fea5169-5fa2-495f-87d7-e1dc5a73b890",
+      "role": "Suppress shallow minima that would over-segment powder particles.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Particle Gradient"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Suppressed Minima"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "height": 5.0,
+        "input_image_data_path": "Powder Particles/Cell Data/Particle Gradient",
+        "input_image_geometry_path": "Powder Particles",
+        "output_array_name": "Suppressed Minima"
+      }
+    },
+    {
+      "index": 4,
+      "filter": "RegionalMinimaImageFilter",
+      "uuid": "38b0d575-d728-49e9-9611-42c7df83c96c",
+      "role": "Find the remaining regional minima as particle markers.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Suppressed Minima"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Marker Mask"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "flat_is_minima": true,
+        "foreground_value": 1.0,
+        "fully_connected": true,
+        "input_image_data_path": "Powder Particles/Cell Data/Suppressed Minima",
+        "input_image_geometry_path": "Powder Particles",
+        "output_array_name": "Marker Mask"
+      }
+    },
+    {
+      "index": 5,
+      "filter": "ConnectedComponentImageFilter",
+      "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41",
+      "role": "Assign a unique label to each watershed marker.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Marker Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Marker Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Powder Particles/Cell Data/Marker Mask",
+        "input_image_geometry_path": "Powder Particles",
+        "output_array_name": "Marker Labels"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "MorphologicalWatershedFromMarkersImageFilter",
+      "uuid": "5a489229-9421-4191-a059-04943147f7ed",
+      "role": "Grow the particle markers across the gradient surface without merging touching particles.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Particle Gradient"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Particle Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Powder Particles/Cell Data/Particle Gradient",
+        "input_image_geometry_path": "Powder Particles",
+        "mark_watershed_line": true,
+        "marker_image_data_path": "Powder Particles/Cell Data/Marker Labels",
+        "output_array_name": "Particle Labels"
+      }
+    },
+    {
+      "index": 7,
+      "filter": "LabelContourImageFilter",
+      "uuid": "060339d1-56c9-4253-9b52-d4be6a58eafb",
+      "role": "Extract the final particle boundaries.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Particles/Cell Data/Particle Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Particles"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Particle Boundaries"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "fully_connected": true,
+        "input_image_data_path": "Powder Particles/Cell Data/Particle Labels",
+        "input_image_geometry_path": "Powder Particles",
+        "output_array_name": "Particle Boundaries"
+      }
+    },
+    {
+      "index": 8,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the separated powder-particle labels and intermediate images.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/04_Powder_Watershed/powder_particles.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/04_Powder_Watershed/powder_particles.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Standard method for microCT-based additive manufacturing quality control 4: Metal powder analysis",
+      "authors": [
+        "Anton du Plessis",
+        "Philip Sperling",
+        "Andre Beerlink",
+        "Werner du Preez",
+        "Stephan G. le Roux"
+      ],
+      "year": 2018,
+      "journal": "MethodsX",
+      "doi": "10.1016/j.mex.2018.10.021",
+      "url": "https://doi.org/10.1016/j.mex.2018.10.021",
+      "role": "Primary industrial workflow for image-based metal-powder particle characterization.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The paper's powder volume is unavailable. The generated image is a 2-D analogue and cannot reproduce 3-D sphericity or internal particle porosity."
+      }
+    },
+    {
+      "title": "Watersheds in digital spaces: An efficient algorithm based on immersion simulations",
+      "authors": [
+        "Luc Vincent",
+        "Pierre Soille"
+      ],
+      "year": 1991,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/34.87344",
+      "url": "https://doi.org/10.1109/34.87344",
+      "role": "Foundational watershed segmentation method used to separate basins and touching objects.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "Morphological grayscale reconstruction in image analysis: Applications and efficient algorithms",
+      "authors": [
+        "Luc Vincent"
+      ],
+      "year": 1993,
+      "journal": "IEEE Transactions on Image Processing",
+      "doi": "10.1109/83.217222",
+      "url": "https://doi.org/10.1109/83.217222",
+      "role": "Foundational reference for reconstruction, extrema suppression, and top-hat morphology.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Separate touching particles before size and shape analysis",
+      "Reduce watershed over-segmentation with H-minima suppression",
+      "Create labeled particle boundaries for visual review"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Particle boundaries create a usable gradient ridge.",
+      "Each retained regional minimum corresponds to one intended particle seed.",
+      "The example uses 2-D processing and does not infer hidden 3-D particle shape.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(09) Microstructure Watershed Segmentation.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "materials/powder_particles.png"
+    ],
+    "paper_doi": "10.1016/j.mex.2018.10.021",
+    "paper_url": "",
+    "reference_visual": "Metal-powder XCT or microscopy views with irregular particles, a broad size distribution, edge shading, and touching clusters.",
+    "target_traits": [
+      "irregular elliptical particles",
+      "broad diameter distribution",
+      "touching particles",
+      "bright rims",
+      "dark background"
+    ],
+    "known_differences": "The paper's powder volume is unavailable. The generated image is a 2-D analogue and cannot reproduce 3-D sphericity or internal particle porosity.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

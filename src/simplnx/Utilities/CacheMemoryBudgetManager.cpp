@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 
@@ -12,7 +13,73 @@ namespace
 {
 constexpr uint64 k_MinBudget = uint64{1} * 1024 * 1024 * 1024;          // 1 GiB
 constexpr uint64 k_BudgetReserveBytes = uint64{6} * 1024 * 1024 * 1024; // 6 GiB OS/app headroom
+
+uint64 SaturatingAdd(uint64 lhs, uint64 rhs)
+{
+  if(rhs > std::numeric_limits<uint64>::max() - lhs)
+  {
+    return std::numeric_limits<uint64>::max();
+  }
+  return lhs + rhs;
+}
 } // namespace
+
+CacheMemoryBudgetManager::WorkingMemoryReservation::WorkingMemoryReservation(WorkingMemoryReservationKey, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept
+: m_Manager(manager)
+, m_SizeBytes(sizeBytes)
+{
+}
+
+CacheMemoryBudgetManager::WorkingMemoryReservation::~WorkingMemoryReservation() noexcept
+{
+  release();
+}
+
+CacheMemoryBudgetManager::WorkingMemoryReservation::WorkingMemoryReservation(WorkingMemoryReservation&& other) noexcept
+: m_Manager(std::exchange(other.m_Manager, nullptr))
+, m_SizeBytes(std::exchange(other.m_SizeBytes, 0))
+{
+}
+
+CacheMemoryBudgetManager::WorkingMemoryReservation& CacheMemoryBudgetManager::WorkingMemoryReservation::operator=(WorkingMemoryReservation&& other) noexcept
+{
+  if(this != &other)
+  {
+    release();
+    m_Manager = std::exchange(other.m_Manager, nullptr);
+    m_SizeBytes = std::exchange(other.m_SizeBytes, 0);
+  }
+  return *this;
+}
+
+uint64 CacheMemoryBudgetManager::WorkingMemoryReservation::sizeBytes() const noexcept
+{
+  return m_SizeBytes;
+}
+
+void CacheMemoryBudgetManager::WorkingMemoryReservation::shrinkTo(uint64 sizeBytes) noexcept
+{
+  if(sizeBytes >= m_SizeBytes)
+  {
+    return;
+  }
+  const uint64 releasedBytes = m_SizeBytes - sizeBytes;
+  m_SizeBytes = sizeBytes;
+  if(m_Manager != nullptr)
+  {
+    m_Manager->releaseWorkingMemory(releasedBytes);
+  }
+}
+
+void CacheMemoryBudgetManager::WorkingMemoryReservation::release() noexcept
+{
+  if(m_Manager != nullptr)
+  {
+    m_Manager->releaseWorkingMemory(m_SizeBytes);
+    m_Manager = nullptr;
+    m_SizeBytes = 0;
+  }
+}
 
 uint64 CacheMemoryBudgetManager::totalSystemRamBytes()
 {
@@ -207,6 +274,22 @@ void CacheMemoryBudgetManager::release(AllocationHandle handle)
   }
 }
 
+CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::reserveWorkingMemory(uint64 requestedBytes)
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  const uint64 maximumWorkingBytes = m_BudgetBytes / 4;
+  const uint64 remainingWorkingBytes = maximumWorkingBytes > m_ReservedWorkingMemoryBytes ? maximumWorkingBytes - m_ReservedWorkingMemoryBytes : 0;
+  const uint64 grantedBytes = std::min(requestedBytes, remainingWorkingBytes);
+  if(grantedBytes == 0)
+  {
+    return {};
+  }
+
+  makeRoom(grantedBytes);
+  m_ReservedWorkingMemoryBytes += grantedBytes;
+  return WorkingMemoryReservation(WorkingMemoryReservationKey{}, this, grantedBytes);
+}
+
 bool CacheMemoryBudgetManager::setBudgetBytes(uint64 bytes)
 {
   // Clamp only the upper bound. Calculate the machine limit before acquiring m_Mutex.
@@ -241,6 +324,24 @@ uint64 CacheMemoryBudgetManager::pinnedBytes() const
   return m_PinnedBytes;
 }
 
+uint64 CacheMemoryBudgetManager::maximumWorkingMemoryBytes() const
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  return m_BudgetBytes / 4;
+}
+
+uint64 CacheMemoryBudgetManager::reservedWorkingMemoryBytes() const
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  return m_ReservedWorkingMemoryBytes;
+}
+
+uint64 CacheMemoryBudgetManager::effectiveCacheBudgetBytes() const
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  return m_BudgetBytes > m_ReservedWorkingMemoryBytes ? m_BudgetBytes - m_ReservedWorkingMemoryBytes : 0;
+}
+
 void CacheMemoryBudgetManager::clear()
 {
   std::lock_guard<std::mutex> lock(m_Mutex);
@@ -260,8 +361,10 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
 {
   std::vector<AllocationHandle> evicted;
 
-  const auto lacksRoom = [this, needed]() { return needed > m_BudgetBytes || m_UsedBytes > m_BudgetBytes - needed; };
-  while(!m_Entries.empty() && lacksRoom())
+  const uint64 effectiveCacheBudget = m_BudgetBytes > m_ReservedWorkingMemoryBytes ? m_BudgetBytes - m_ReservedWorkingMemoryBytes : 0;
+  auto exceedsEffectiveBudget = [this, effectiveCacheBudget, needed]() { return m_UsedBytes > effectiveCacheBudget || needed > effectiveCacheBudget - m_UsedBytes; };
+
+  while(!m_Entries.empty() && exceedsEffectiveBudget())
   {
     auto oldest = m_Entries.end();
     for(auto it = m_Entries.begin(); it != m_Entries.end(); ++it)
@@ -285,11 +388,8 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
     if(handlerIter != m_SubsystemHandlers.end())
     {
       // A delegated subsystem releases entries later. Avoid duplicate requests while its accounting is pending.
-      const uint64 existingDeficit = m_UsedBytes > m_BudgetBytes ? m_UsedBytes - m_BudgetBytes : 0;
-      const uint64 remainingBudget = m_UsedBytes < m_BudgetBytes ? m_BudgetBytes - m_UsedBytes : 0;
-      const uint64 requestDeficit = needed - remainingBudget;
-      const uint64 maxDeficit = std::numeric_limits<uint64>::max();
-      const uint64 deficit = requestDeficit > maxDeficit - existingDeficit ? maxDeficit : existingDeficit + requestDeficit;
+      const uint64 combinedBytes = SaturatingAdd(m_UsedBytes, needed);
+      const uint64 deficit = combinedBytes > effectiveCacheBudget ? combinedBytes - effectiveCacheBudget : 0;
       handlerIter->second(deficit);
       break;
     }
@@ -306,6 +406,12 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
   }
 
   return evicted;
+}
+
+void CacheMemoryBudgetManager::releaseWorkingMemory(uint64 sizeBytes) noexcept
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  m_ReservedWorkingMemoryBytes = sizeBytes <= m_ReservedWorkingMemoryBytes ? m_ReservedWorkingMemoryBytes - sizeBytes : 0;
 }
 
 } // namespace nx::core

@@ -87,7 +87,6 @@
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
-#include "SimplnxCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
 #include "SimplnxCore/Filters/ReadDeformKeyFileV12Filter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
@@ -95,7 +94,6 @@
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/Filters/ReadTextDataArrayFilter.hpp"
-#include "SimplnxCore/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/RegularizeZSpacingFilter.hpp"
@@ -188,12 +186,10 @@ namespace nx::core
     {nx::core::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {nx::core::FilterTraits<ComputeVolumeFractionsFilter>::uuid, &ComputeVolumeFractionsFilter::FromSIMPLJson}}, // ComputeVolumeFractions
     {nx::core::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {nx::core::FilterTraits<CreateColorMapFilter>::uuid, &CreateColorMapFilter::FromSIMPLJson}}, // CreateColorMap
     {nx::core::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), {nx::core::FilterTraits<IdentifySampleFilter>::uuid, &IdentifySampleFilter::FromSIMPLJson}}, // IdentifySampleFilter
-    {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
     {nx::core::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), {nx::core::FilterTraits<ReadCSVFileFilter>::uuid, &ReadCSVFileFilter::FromSIMPLJson}}, // ReadASCIIData
     {nx::core::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), {nx::core::FilterTraits<ReadDREAM3DFilter>::uuid, &ReadDREAM3DFilter::FromSIMPLJson}}, // DataContainerReader
     {nx::core::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), {nx::core::FilterTraits<ReadHDF5DatasetFilter>::uuid, &ReadHDF5DatasetFilter::FromSIMPLJson}}, // ImportHDF5Dataset
     {nx::core::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), {nx::core::FilterTraits<ReadTextDataArrayFilter>::uuid, &ReadTextDataArrayFilter::FromSIMPLJson}}, // ImportAsciDataArray
-    {nx::core::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), {nx::core::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid, &ReadVolumeGraphicsFileFilter::FromSIMPLJson}}, // ImportVolumeGraphicsFileFilter
     {nx::core::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), {nx::core::FilterTraits<InitializeImageGeomCellDataFilter>::uuid, &InitializeImageGeomCellDataFilter::FromSIMPLJson}}, // InitializeDataFilter
     {nx::core::Uuid::FromString("4b551c15-418d-5081-be3f-d3aeb62408e5").value(), {nx::core::FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid, &InterpolatePointCloudToRegularGridFilter::FromSIMPLJson}}, // InterpolatePointCloudToRegularGrid
     {nx::core::Uuid::FromString("6c8fb24b-5b12-551c-ba6d-ae2fa7724764").value(), {nx::core::FilterTraits<IterativeClosestPointFilter>::uuid, &IterativeClosestPointFilter::FromSIMPLJson}}, // IterativeClosestPoint
@@ -277,5 +273,7 @@ namespace nx::core
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
+  // ----------------------------------------------------------------------------------------------
+  // Retired ITKImageProcessing (NX) image-reader Uuid  ->  new SimplnxCore reader Uuid.
 } // namespace nx::core
 /* clang-format on */

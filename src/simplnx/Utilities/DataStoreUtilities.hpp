@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 
 #include <iterator>
+#include <optional>
 
 /**
  * @namespace nx::core
@@ -48,6 +49,16 @@ namespace nx::core::DataStoreUtilities
  * @return Reference to the Application's DataIOCollection.
  */
 SIMPLNX_EXPORT DataIOCollection& GetIOCollection();
+
+/**
+ * @brief Creates a bounded fixed-record scratch store through the first registered storage provider.
+ * @param config Specifies the record layout, capacity, staging size, and cancellation flag.
+ * @return Created store or a provider error.
+ */
+inline Result<std::unique_ptr<ITemporaryRecordStore>> CreateTemporaryRecordStore(const TemporaryRecordStoreConfig& config)
+{
+  return GetIOCollection().createTemporaryRecordStore(config);
+}
 
 /**
  * @brief Creates value storage for a DataArray.
@@ -156,7 +167,61 @@ Result<std::shared_ptr<AbstractDataStore<T>>> CreatePlannedDataStore(const DataS
 }
 
 /**
- * @brief Creates storage for a NeighborList.
+ * @brief Create an AbstractDataStore whose backing format MIRRORS an existing store's actual format -- @p dataFormat
+ * is the empty string "" for the in-memory default, or a concrete out-of-core format string. Unlike @ref
+ * CreateDataStore this does NOT consult the DataStorageMode/size resolver: it uses @p dataFormat verbatim, so the
+ * created store lands in exactly the same storage mode as whatever array it was taken from.
+ *
+ * Use this for a SCRATCH store that must inherit the storage mode of the input array it is derived from -- pass
+ * @c inputArray.getDataFormat(). This keeps a streamed (out-of-core) algorithm's scratch out-of-core (so its memory
+ * bound is preserved) and an in-core run's scratch in-core, whereas @ref CreateDataStore would re-resolve by
+ * preference + size and could route a scratch to a different mode than the input it shadows (an empty requested
+ * format is ambiguous there -- it means "let the resolver decide", not "force in-core"). Only meaningful for arrays
+ * under a geometry that supports the format (Image/RectGrid); for scratch derived from such an input that always
+ * holds.
+ *
+ * In Preflight mode returns an EmptyDataStore (shape metadata only, no allocation); in Execute mode allocates the
+ * real backing store through the registered IO managers. @p dataFormat must be a format the running build has a
+ * manager for -- guaranteed when it comes from an existing array's getDataFormat().
+ *
+ * @tparam T Primitive type (int8, float32, uint64, etc.)
+ * @param dataFormat The backing format to use verbatim ("" for in-memory, else a registered out-of-core format)
+ * @param tupleShape The tuple dimensions
+ * @param componentShape The component dimensions
+ * @param mode PREFLIGHT returns an EmptyDataStore; EXECUTE allocates real storage
+ * @param chunkShapeHint Optional tuple-space chunk dimensions forwarded to the selected store factory
+ * @param initializationMode Initial physical-storage policy forwarded to the selected store factory
+ * @return Shared pointer to the created AbstractDataStore
+ */
+template <class T>
+std::shared_ptr<AbstractDataStore<T>> CreateDataStoreWithFormat(const std::string& dataFormat, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                                                IDataAction::Mode mode = IDataAction::Mode::Execute, const std::optional<ShapeType>& chunkShapeHint = {},
+                                                                DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
+{
+  switch(mode)
+  {
+  case IDataAction::Mode::Preflight: {
+    // The placeholder validates its shape. This overload has no Result channel, so an
+    // invalid shape throws like the invalid-mode case below.
+    auto placeholderResult = EmptyDataStore<T>::Create(tupleShape, componentShape, std::string{});
+    if(placeholderResult.invalid())
+    {
+      throw std::runtime_error(placeholderResult.errors().front().message);
+    }
+    return std::shared_ptr<AbstractDataStore<T>>(std::move(placeholderResult.value()));
+  }
+  case IDataAction::Mode::Execute: {
+    return GetIOCollection().createDataStoreWithType<T>(dataFormat, tupleShape, componentShape, chunkShapeHint, initializationMode);
+  }
+  default: {
+    throw std::runtime_error("Invalid mode");
+  }
+  }
+}
+
+/**
+ * @brief Creates a ListStore whose format is resolved through the IOCollection's
+ * registered format resolver.
  *
  * Execute mode applies an explicit format and then the DataStructure resolver.
  *

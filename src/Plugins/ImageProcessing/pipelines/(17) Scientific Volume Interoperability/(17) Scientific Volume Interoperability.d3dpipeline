@@ -1,0 +1,326 @@
+{
+  "isDisabled": false,
+  "name": "(17) Scientific Volume Interoperability.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "apply_image_transformation": {
+          "value": false,
+          "version": 1
+        },
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "cropping_options_index": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/ImageProcessing_Examples/io/scientific/sample.mha",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "MHA Data",
+          "version": 1
+        },
+        "interpolation_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "MHA Volume",
+          "version": 1
+        },
+        "output_transformation_matrix_path": {
+          "value": "MHA Image/TransformationMatrix",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "save_image_transformation": {
+          "value": false,
+          "version": 1
+        },
+        "transpose_transform_matrix": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Import the volume with its physical spacing and scalar type.",
+      "filter": {
+        "name": "nx::core::ReadMhaFileFilter",
+        "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "apply_scaling_transform": {
+          "value": true,
+          "version": 1
+        },
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "cropping_options_index": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "NIfTI Data",
+          "version": 1
+        },
+        "input_file_path": {
+          "value": "Data/ImageProcessing_Examples/io/scientific/sample.nii.gz",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "NIfTI Volume",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_affine_if_present": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Import a compressed NIfTI volume with its affine metadata and scaling.",
+      "filter": {
+        "name": "nx::core::ReadNIfTIFileFilter",
+        "uuid": "e69e51e5-2a9f-40ca-8038-1d2be7925c62"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "add_scale_bar": {
+          "value": false,
+          "version": 1
+        },
+        "create_color_table": {
+          "value": false,
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/mha_round_trip.mha",
+          "version": 1
+        },
+        "flip_mode_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "MHA Volume/Cell Data/MHA Data",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "MHA Volume",
+          "version": 1
+        },
+        "invalid_color_value": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "leading_digit_character": {
+          "value": "0",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 5,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        },
+        "selected_preset": {
+          "value": "Black-Body Radiation",
+          "version": 1
+        },
+        "total_index_digits": {
+          "value": 3,
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Write the imported MHA volume as a new MHA file.",
+      "filter": {
+        "name": "nx::core::WriteImageFilter",
+        "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "add_scale_bar": {
+          "value": false,
+          "version": 1
+        },
+        "create_color_table": {
+          "value": false,
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/nifti_slice.tif",
+          "version": 1
+        },
+        "flip_mode_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "NIfTI Volume/Cell Data/NIfTI Data",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "NIfTI Volume",
+          "version": 1
+        },
+        "invalid_color_value": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "leading_digit_character": {
+          "value": "0",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 5,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        },
+        "selected_preset": {
+          "value": "Black-Body Radiation",
+          "version": 1
+        },
+        "total_index_digits": {
+          "value": 3,
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Write the imported NIfTI volume as a TIFF slice series.",
+      "filter": {
+        "name": "nx::core::WriteImageFilter",
+        "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/scientific_volumes.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the complete workflow result.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

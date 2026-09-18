@@ -25,6 +25,7 @@ constexpr int32 k_ErrorWriteFailed = -20002;
 constexpr int32 k_ErrorUnsupportedWriteFormat = -20003;
 constexpr int32 k_ErrorUnsupportedDataType = -20004;
 constexpr int32 k_ErrorBufferSizeMismatch = -20005;
+constexpr int32 k_ErrorInvalidPage = -20006;
 } // namespace
 
 Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& filePath) const
@@ -67,8 +68,15 @@ Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& file
   return {std::move(metadata)};
 }
 
-Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const
+// -----------------------------------------------------------------------------
+Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex) const
 {
+  // PNG/JPEG/BMP are single-image formats; only page 0 exists.
+  if(pageIndex != 0)
+  {
+    return MakeErrorResult(k_ErrorInvalidPage, fmt::format("Page index {} is out of range for single-image format '{}'; only page 0 is available.", pageIndex, filePath.string()));
+  }
+
   Result<ImageMetadata> metaResult = readMetadata(filePath);
   if(metaResult.invalid())
   {
@@ -85,16 +93,26 @@ Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::s
   }
 
   const usize rowBytes = metadata.width * metadata.numComponents * bpe;
-  return readPixelDataRows(filePath, [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels) -> Result<> {
-    const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bpe;
-    const usize byteCount = pixelCount * metadata.numComponents * bpe;
-    std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
-    return {};
-  });
+  return readPixelDataRows(
+      filePath,
+      [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels) -> Result<> {
+        const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bpe;
+        const usize byteCount = pixelCount * metadata.numComponents * bpe;
+        std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
+        return {};
+      },
+      pageIndex);
 }
 
-Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const
+// -----------------------------------------------------------------------------
+Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex) const
 {
+  // PNG/JPEG/BMP are single-image formats; only page 0 exists.
+  if(pageIndex != 0)
+  {
+    return MakeErrorResult(k_ErrorInvalidPage, fmt::format("Page index {} is out of range for single-image format '{}'; only page 0 is available.", pageIndex, filePath.string()));
+  }
+
   Result<ImageMetadata> metaResult = readMetadata(filePath);
   if(metaResult.invalid())
   {

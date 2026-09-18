@@ -1,8 +1,10 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
 #include "simplnx/Utilities/ExternalEquivalence.hpp"
@@ -10,6 +12,7 @@
 
 #include <array>
 #include <cstring>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -220,6 +223,76 @@ TEST_CASE("DataIOCollection discovers a temporary record-store provider", "[Temp
   REQUIRE(result.value()->recordCount() == 4);
 }
 
+TEST_CASE("DataIOCollection forwards datastore chunk-shape hints and CreateArrayAction retains them", "[TemporaryRecordStore]")
+{
+  struct RecordedHint
+  {
+    std::optional<ShapeType> value;
+    DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default;
+  };
+
+  class HintRecordingManager : public IDataIOManager
+  {
+  public:
+    explicit HintRecordingManager(std::shared_ptr<RecordedHint> recordedHintRef)
+    : m_RecordedHint(std::move(recordedHintRef))
+    {
+      addDataStoreCreationFnc(formatName(), [recordedState = m_RecordedHint](DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                                                             const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode) {
+        recordedState->value = chunkShapeHint;
+        recordedState->initializationMode = initializationMode;
+        if(dataType != DataType::int32)
+        {
+          return std::unique_ptr<IDataStore>{};
+        }
+        return std::unique_ptr<IDataStore>(std::make_unique<DataStore<int32>>(tupleShape, componentShape, 0));
+      });
+    }
+
+    std::string formatName() const override
+    {
+      return "ChunkHintRecording";
+    }
+
+  private:
+    std::shared_ptr<RecordedHint> m_RecordedHint;
+  };
+
+  const std::optional<ShapeType> chunkShapeHint = ShapeType{1, 7, 32};
+  auto recordedHint = std::make_shared<RecordedHint>();
+  DataIOCollection collection;
+  Result<> addIOManagerResult = collection.addIOManager(std::make_shared<HintRecordingManager>(recordedHint));
+  SIMPLNX_RESULT_REQUIRE_VALID(addIOManagerResult);
+  auto store = collection.createDataStoreWithType<int32>("ChunkHintRecording", ShapeType{8, 17, 32}, ShapeType{1}, chunkShapeHint);
+  REQUIRE(store != nullptr);
+  REQUIRE(recordedHint->value == chunkShapeHint);
+  REQUIRE(recordedHint->initializationMode == DataStoreInitializationMode::Default);
+
+  store = collection.createDataStoreWithType<int32>("ChunkHintRecording", ShapeType{8, 17, 32}, ShapeType{1}, chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
+  REQUIRE(store != nullptr);
+  REQUIRE(recordedHint->value == chunkShapeHint);
+  REQUIRE(recordedHint->initializationMode == DataStoreInitializationMode::DeferredZeroFill);
+
+  CreateArrayAction action(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Data"}), "", "", chunkShapeHint);
+  REQUIRE(action.chunkShapeHint() == chunkShapeHint);
+  REQUIRE(action.initializationMode() == DataStoreInitializationMode::Default);
+  const auto clone = action.clone();
+  const auto* clonedAction = dynamic_cast<const CreateArrayAction*>(clone.get());
+  REQUIRE(clonedAction != nullptr);
+  REQUIRE(clonedAction->chunkShapeHint() == chunkShapeHint);
+  REQUIRE(clonedAction->initializationMode() == DataStoreInitializationMode::Default);
+
+  CreateArrayAction deferredAction(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Deferred"}), "", "", chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
+  REQUIRE(deferredAction.initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
+  const auto deferredClone = deferredAction.clone();
+  const auto* clonedDeferredAction = dynamic_cast<const CreateArrayAction*>(deferredClone.get());
+  REQUIRE(clonedDeferredAction != nullptr);
+  REQUIRE(clonedDeferredAction->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
+
+  CreateArrayAction fillAction(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Filled"}), "", "12", chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
+  REQUIRE(fillAction.initializationMode() == DataStoreInitializationMode::Default);
+}
+
 TEST_CASE("ExternalEquivalence handles chains, sparse labels, duplicates, cancellation, and flush", "[TemporaryRecordStore]")
 {
   TemporaryRecordStoreConfig config;
@@ -302,6 +375,53 @@ TEST_CASE("BoundedRecordPageCache obeys cache hits, LRU eviction, partial pages,
   BoundedRecordPageCache<uint64> pageTooLarge(store, 3, 1);
   auto pageTooLargeReadResult = pageTooLarge.read(0, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(pageTooLargeReadResult);
+}
+
+TEST_CASE("BoundedRecordPageCache bulk read preserves request order across pages", "[TemporaryRecordStore]")
+{
+  const std::atomic_bool active = false;
+  SpyTemporaryRecordStore store(8, sizeof(uint64), 4);
+  const std::array<uint64, 8> storedValues = {11, 12, 13, 14, 21, 22, 23, 24};
+  std::memcpy(store.m_Bytes.data(), storedValues.data(), sizeof(storedValues));
+  BoundedRecordPageCache<uint64> cache(store, 4, 2);
+
+  const std::array<uint64, 6> indices = {0, 1, 3, 4, 5, 7};
+  std::array<uint64, 6> values = {};
+  Result<> readManyResult = cache.readMany(indices, values, active);
+  SIMPLNX_RESULT_REQUIRE_VALID(readManyResult);
+  REQUIRE(values == std::array<uint64, 6>{11, 12, 14, 21, 22, 24});
+  REQUIRE(store.readOffsets == std::vector<uint64>{0, 4});
+
+  Result<> shortIndicesResult = cache.readMany(nonstd::span<const uint64>(indices.data(), indices.size() - 1), values, active);
+  SIMPLNX_RESULT_REQUIRE_INVALID(shortIndicesResult);
+  const std::array<uint64, 1> invalidIndex = {8};
+  std::array<uint64, 1> invalidValue = {};
+  Result<> invalidIndexResult = cache.readMany(invalidIndex, invalidValue, active);
+  SIMPLNX_RESULT_REQUIRE_INVALID(invalidIndexResult);
+}
+
+TEST_CASE("BoundedRecordPageCache inspects and modifies a cached record in place", "[TemporaryRecordStore]")
+{
+  const std::atomic_bool active = false;
+  SpyTemporaryRecordStore store(4, sizeof(uint64), 2);
+  const std::array<uint64, 4> storedValues = {3, 5, 7, 9};
+  std::memcpy(store.m_Bytes.data(), storedValues.data(), sizeof(storedValues));
+  BoundedRecordPageCache<uint64> cache(store, 2, 1);
+
+  uint64 inspectedValue = 0;
+  Result<> inspectResult = cache.inspect(1, [&inspectedValue](const uint64& value) noexcept { inspectedValue = value; }, active);
+  SIMPLNX_RESULT_REQUIRE_VALID(inspectResult);
+  REQUIRE(inspectedValue == 5);
+  Result<> modifyResult = cache.modify(1, [](uint64& value) noexcept { value = 41; }, active);
+  SIMPLNX_RESULT_REQUIRE_VALID(modifyResult);
+  Result<> flushResult = cache.flush(active);
+  SIMPLNX_RESULT_REQUIRE_VALID(flushResult);
+
+  uint64 storedValue = 0;
+  std::memcpy(&storedValue, store.m_Bytes.data() + sizeof(uint64), sizeof(storedValue));
+  REQUIRE(storedValue == 41);
+  REQUIRE(store.readCalls == 1);
+  REQUIRE(store.writeCalls == 1);
 }
 
 TEST_CASE("BoundedRecordPageCache retains dirty data after failed eviction write", "[TemporaryRecordStore]")

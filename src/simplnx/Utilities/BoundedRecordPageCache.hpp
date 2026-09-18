@@ -2,13 +2,18 @@
 
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <list>
 #include <new>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 /**
@@ -33,6 +38,9 @@ namespace nx::core
 template <typename T>
 class BoundedRecordPageCache
 {
+private:
+  struct Page;
+
 public:
   static_assert(std::is_trivially_copyable_v<T>);
   /**
@@ -71,6 +79,98 @@ public:
     }
     const auto& page = pageResult.value().get();
     return {page.records[static_cast<usize>(index % m_RecordsPerPage)]};
+  }
+
+  /**
+   * @brief Reads requested records in order while reusing one page lookup for consecutive indexes on that page.
+   * @return A valid result or a cancellation, configuration, range, allocation, or store-I/O error.
+   */
+  Result<> readMany(nonstd::span<const uint64> indices, nonstd::span<T> values, const std::atomic_bool& shouldCancel)
+  {
+    if(indices.size() != values.size())
+    {
+      return MakeErrorResult(-6040, fmt::format("Temporary record page-cache bulk read requires equal index and output counts. Index count: {}; output count: {}.", indices.size(), values.size()));
+    }
+    if(indices.empty())
+    {
+      return {};
+    }
+    if(m_RecordsPerPage == 0)
+    {
+      return MakeErrorResult(-6040, "Temporary record page-cache bulk read has zero records per page.");
+    }
+
+    uint64 currentPageIndex = std::numeric_limits<uint64>::max();
+    Page* currentPage = nullptr;
+    for(usize index = 0; index < indices.size(); ++index)
+    {
+      const uint64 recordIndex = indices[index];
+      const uint64 pageIndex = recordIndex / m_RecordsPerPage;
+      if(currentPage == nullptr || pageIndex != currentPageIndex)
+      {
+        auto pageResult = loadPage(pageIndex, shouldCancel);
+        if(pageResult.invalid())
+        {
+          return ConvertResult(std::move(pageResult));
+        }
+        currentPage = &pageResult.value().get();
+        currentPageIndex = pageIndex;
+      }
+      if(recordIndex < currentPage->firstRecord || recordIndex - currentPage->firstRecord >= currentPage->recordCount)
+      {
+        return MakeErrorResult(-6041, fmt::format("Temporary record page-cache bulk read index {} is outside its loaded page range [{}, {}).", recordIndex, currentPage->firstRecord,
+                                                  currentPage->firstRecord + currentPage->recordCount));
+      }
+      values[index] = currentPage->records[static_cast<usize>(recordIndex - currentPage->firstRecord)];
+    }
+    return {};
+  }
+
+  /** @brief Invokes a non-throwing visitor with a cached record without copying the record. */
+  template <typename VisitorT>
+  Result<> inspect(uint64 index, VisitorT&& visitor, const std::atomic_bool& shouldCancel)
+  {
+    static_assert(std::is_nothrow_invocable_v<VisitorT&&, const T&>);
+    if(m_RecordsPerPage == 0)
+    {
+      return MakeErrorResult(-6040, "Temporary record page-cache inspection has zero records per page.");
+    }
+    if(index >= m_Store.recordCount())
+    {
+      return MakeErrorResult(-6041, fmt::format("Temporary record page-cache inspection index {} is outside the {}-record store.", index, m_Store.recordCount()));
+    }
+    auto pageResult = loadPage(index / m_RecordsPerPage, shouldCancel);
+    if(pageResult.invalid())
+    {
+      return ConvertResult(std::move(pageResult));
+    }
+    const auto& page = pageResult.value().get();
+    std::forward<VisitorT>(visitor)(page.records[static_cast<usize>(index % m_RecordsPerPage)]);
+    return {};
+  }
+
+  /** @brief Invokes a non-throwing modifier on one cached record and marks its page dirty. */
+  template <typename ModifierT>
+  Result<> modify(uint64 index, ModifierT&& modifier, const std::atomic_bool& shouldCancel)
+  {
+    static_assert(std::is_nothrow_invocable_v<ModifierT&&, T&>);
+    if(m_RecordsPerPage == 0)
+    {
+      return MakeErrorResult(-6040, "Temporary record page-cache modification has zero records per page.");
+    }
+    if(index >= m_Store.recordCount())
+    {
+      return MakeErrorResult(-6041, fmt::format("Temporary record page-cache modification index {} is outside the {}-record store.", index, m_Store.recordCount()));
+    }
+    auto pageResult = loadPage(index / m_RecordsPerPage, shouldCancel);
+    if(pageResult.invalid())
+    {
+      return ConvertResult(std::move(pageResult));
+    }
+    auto& page = pageResult.value().get();
+    std::forward<ModifierT>(modifier)(page.records[static_cast<usize>(index % m_RecordsPerPage)]);
+    page.dirty = true;
+    return {};
   }
 
   /**
@@ -155,12 +255,22 @@ private:
     {
       return MakeErrorResult<std::reference_wrapper<Page>>(-6041, "Temporary record page-cache request is outside the store");
     }
-    auto found = std::find_if(m_Pages.begin(), m_Pages.end(), [firstRecord](const Page& page) { return page.firstRecord == firstRecord; });
-    if(found != m_Pages.end())
+    if(!m_Pages.empty() && m_Pages.front().firstRecord == firstRecord)
     {
-      m_Pages.splice(m_Pages.begin(), m_Pages, found);
       return {std::ref(m_Pages.front())};
     }
+    auto found = m_PageIndex.find(firstRecord);
+    if(found != m_PageIndex.end())
+    {
+      m_Pages.splice(m_Pages.begin(), m_Pages, found->second);
+      return {std::ref(m_Pages.front())};
+    }
+    const uint64 count = std::min(m_RecordsPerPage, m_Store.recordCount() - firstRecord);
+    if(count > std::numeric_limits<usize>::max() || count > std::numeric_limits<usize>::max() / sizeof(T))
+    {
+      return MakeErrorResult<std::reference_wrapper<Page>>(-6042, "Temporary record page-cache page size overflows memory limits");
+    }
+
     if(m_Pages.size() == m_MaximumPages)
     {
       auto result = flushPage(m_Pages.back(), shouldCancel);
@@ -168,38 +278,59 @@ private:
       {
         return ConvertInvalidResult<std::reference_wrapper<Page>>(std::move(result));
       }
-      m_Pages.pop_back();
+      m_PageIndex.erase(m_Pages.back().firstRecord);
+      m_Pages.splice(m_Pages.begin(), m_Pages, std::prev(m_Pages.end()));
     }
-    const uint64 count = std::min(m_RecordsPerPage, m_Store.recordCount() - firstRecord);
-    Page page;
+    else
+    {
+      try
+      {
+        m_Pages.emplace_front();
+      } catch(const std::exception&)
+      {
+        return MakeErrorResult<std::reference_wrapper<Page>>(-6044, "Temporary record page-cache allocation failed");
+      }
+    }
+
+    Page& page = m_Pages.front();
     page.firstRecord = firstRecord;
     page.recordCount = count;
-    if(count > std::numeric_limits<usize>::max() || count > std::numeric_limits<usize>::max() / sizeof(T))
-    {
-      return MakeErrorResult<std::reference_wrapper<Page>>(-6042, "Temporary record page-cache page size overflows memory limits");
-    }
+    page.dirty = false;
     try
     {
       page.records.resize(static_cast<usize>(count));
     } catch(const std::bad_alloc&)
     {
+      m_Pages.pop_front();
       return MakeErrorResult<std::reference_wrapper<Page>>(-6044, "Temporary record page-cache allocation failed");
     } catch(const std::length_error&)
     {
+      m_Pages.pop_front();
       return MakeErrorResult<std::reference_wrapper<Page>>(-6044, "Temporary record page-cache allocation failed");
     }
     auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(page.records.data()), page.records.size() * sizeof(T));
     auto readResult = m_Store.read(firstRecord, count, bytes, shouldCancel);
     if(readResult.invalid() || readResult.value() != count)
     {
+      m_Pages.pop_front();
       return readResult.invalid() ? ConvertInvalidResult<std::reference_wrapper<Page>>(std::move(readResult)) :
                                     MakeErrorResult<std::reference_wrapper<Page>>(-6043, "Temporary record page-cache received a short page read");
     }
     try
     {
-      m_Pages.push_front(std::move(page));
-    } catch(const std::bad_alloc&)
+      const auto [indexIterator, inserted] = m_PageIndex.emplace(firstRecord, m_Pages.begin());
+      static_cast<void>(indexIterator);
+      if(!inserted)
+      {
+        m_Pages.pop_front();
+        return MakeErrorResult<std::reference_wrapper<Page>>(-6044, "Temporary record page-cache index insertion failed");
+      }
+    } catch(const std::exception&)
     {
+      if(!m_Pages.empty() && m_Pages.front().firstRecord == firstRecord)
+      {
+        m_Pages.pop_front();
+      }
       return MakeErrorResult<std::reference_wrapper<Page>>(-6044, "Temporary record page-cache allocation failed");
     }
     return {std::ref(m_Pages.front())};
@@ -230,5 +361,6 @@ private:
   uint64 m_RecordsPerPage;
   usize m_MaximumPages;
   std::list<Page> m_Pages;
+  std::unordered_map<uint64, typename std::list<Page>::iterator> m_PageIndex;
 };
 } // namespace nx::core

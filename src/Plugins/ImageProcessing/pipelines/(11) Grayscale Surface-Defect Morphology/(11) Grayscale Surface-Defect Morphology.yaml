@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+  "markdown_file": "(11) Grayscale Surface-Defect Morphology.md",
+  "title": "Grayscale Surface-Defect Morphology",
+  "summary": "Compares grayscale morphology, reconstruction, top-hat transforms, morphological gradient, fill-hole, grind-peak, and H-convex operations for bright and dark surface defects.",
+  "primary_industries": [
+    "Surface inspection",
+    "Semiconductor and metals manufacturing"
+  ],
+  "secondary_industries": [
+    "Microscopy",
+    "Non-destructive evaluation"
+  ],
+  "use_cases": [
+    "Enhance small bright or dark surface defects",
+    "Remove peaks or fill dark basins",
+    "Compare classical morphology with reconstruction-based morphology"
+  ],
+  "keywords": [
+    "surface defects",
+    "grayscale morphology",
+    "top-hat",
+    "reconstruction",
+    "morphological gradient"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/materials/grayscale_defects.png",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/07_Grayscale_Morphology/grayscale_morphology.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/materials/grayscale_defects.png"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/materials/grayscale_defects.png",
+        "image_data_array_name": "Defect Intensity",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Grayscale Defects",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "GrayscaleDilateImageFilter",
+      "uuid": "6c5fb0d3-3db5-49fe-b5d6-eddef082cd68",
+      "role": "Expand local bright regions across the structuring element.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Local Maximum"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Local Maximum"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "GrayscaleErodeImageFilter",
+      "uuid": "b9ec6f58-64bc-4318-b30d-5aefe1eb7a97",
+      "role": "Expand local dark regions across the structuring element.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Local Minimum"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Local Minimum"
+      }
+    },
+    {
+      "index": 3,
+      "filter": "GrayscaleFillholeImageFilter",
+      "uuid": "aa11f464-039e-4e7b-b748-18cc72b3f054",
+      "role": "Fill dark holes that do not connect to the image boundary.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Filled Dark Holes"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "output_array_name": "Filled Dark Holes"
+      }
+    },
+    {
+      "index": 4,
+      "filter": "GrayscaleGrindPeakImageFilter",
+      "uuid": "49fc01b5-630f-4592-9b06-d04ff4a7e1d2",
+      "role": "Remove bright peaks that do not connect to the image boundary.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Ground Peaks"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "output_array_name": "Ground Peaks"
+      }
+    },
+    {
+      "index": 5,
+      "filter": "GrayscaleMorphologicalClosingImageFilter",
+      "uuid": "71b54df2-dec2-453e-b558-3cd4f7a81af8",
+      "role": "Close small dark defects and narrow troughs.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Grayscale Closed"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Grayscale Closed",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 6,
+      "filter": "GrayscaleMorphologicalOpeningImageFilter",
+      "uuid": "74ad4b11-a144-4986-9259-2daf6da22fc0",
+      "role": "Remove small bright defects and narrow peaks.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Grayscale Opened"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Grayscale Opened",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 7,
+      "filter": "OpeningByReconstructionImageFilter",
+      "uuid": "652094ae-9781-4164-a4eb-afceb343418f",
+      "role": "Remove small bright regions without distorting the surviving regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Opening Reconstruction"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Opening Reconstruction",
+        "preserve_intensities": true
+      }
+    },
+    {
+      "index": 8,
+      "filter": "ClosingByReconstructionImageFilter",
+      "uuid": "85036c6c-402a-4c54-88cc-c62b0e35a785",
+      "role": "Fill small dark regions without distorting the surviving regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Closing Reconstruction"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Closing Reconstruction",
+        "preserve_intensities": true
+      }
+    },
+    {
+      "index": 9,
+      "filter": "BlackTopHatImageFilter",
+      "uuid": "a2e561ae-4728-495a-84a3-84169553d86c",
+      "role": "Extract dark surface defects smaller than the structuring element.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Dark Defect Response"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Dark Defect Response",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 10,
+      "filter": "WhiteTopHatImageFilter",
+      "uuid": "c33fdeac-8313-4dcf-a3d2-e97fff859c54",
+      "role": "Extract bright surface defects smaller than the structuring element.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Bright Defect Response"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Bright Defect Response",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 11,
+      "filter": "MorphologicalGradientImageFilter",
+      "uuid": "c199ce3f-501e-453d-92c9-145d7958a843",
+      "role": "Measure local grayscale contrast around defect boundaries.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Morphological Gradient"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "kernel_radius": [
+          3,
+          3,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Morphological Gradient"
+      }
+    },
+    {
+      "index": 12,
+      "filter": "HConvexImageFilter",
+      "uuid": "a11f18b6-87df-41a4-9fd7-87050ecf147e",
+      "role": "Retain bright peaks that rise at least 20 intensity units above their surroundings.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Grayscale Defects/Cell Data/Defect Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Grayscale Defects"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Prominent Bright Defects"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "height": 20.0,
+        "input_image_data_path": "Grayscale Defects/Cell Data/Defect Intensity",
+        "input_image_geometry_path": "Grayscale Defects",
+        "output_array_name": "Prominent Bright Defects"
+      }
+    },
+    {
+      "index": 13,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/07_Grayscale_Morphology/grayscale_defects.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/07_Grayscale_Morphology/grayscale_defects.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Defect Detection Algorithm in Steel Billets Using Morphological Top-Hat filter",
+      "authors": [
+        "Dongwook Lee",
+        "Young-il Kang",
+        "Changhyun Park",
+        "Sangchul Won"
+      ],
+      "year": 2009,
+      "journal": "IFAC Proceedings Volumes",
+      "doi": "10.3182/20091014-3-CL-4011.00038",
+      "url": "https://doi.org/10.3182/20091014-3-CL-4011.00038",
+      "scope": "pipeline_workflow",
+      "role": "Workflow reference for industrial surface-defect detection under nonuniform brightness using grayscale morphology and top-hat background suppression.",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "Production-line billet images are unavailable. The generated texture has analogous defect scales but no real oxide-scale physics."
+      }
+    },
+    {
+      "title": "Morphological grayscale reconstruction in image analysis: Applications and efficient algorithms",
+      "authors": [
+        "Luc Vincent"
+      ],
+      "year": 1993,
+      "journal": "IEEE Transactions on Image Processing",
+      "doi": "10.1109/83.217222",
+      "url": "https://doi.org/10.1109/83.217222",
+      "role": "Foundational reference for reconstruction, extrema suppression, and top-hat morphology.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Enhance small bright or dark surface defects",
+      "Remove peaks or fill dark basins",
+      "Compare classical morphology with reconstruction-based morphology"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Defect scale can be represented by a structuring element.",
+      "Intensity order is meaningful even if absolute calibration is not available.",
+      "Independent branches are used for comparison; they are not a prescribed serial chain.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "(13) Denoising and Edge Detection.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "materials/grayscale_defects.png"
+    ],
+    "paper_doi": "10.3182/20091014-3-CL-4011.00038",
+    "paper_url": "",
+    "reference_visual": "Scale-covered steel billet surface with nonuniform texture, long dark defects, pits, and bright inclusions.",
+    "target_traits": [
+      "rolling texture",
+      "nonuniform brightness",
+      "long dark defects",
+      "dark pits",
+      "bright inclusions"
+    ],
+    "known_differences": "Production-line billet images are unavailable. The generated texture has analogous defect scales but no real oxide-scale physics.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

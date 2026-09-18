@@ -1,0 +1,568 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+  "markdown_file": "(10) Binary Mask Repair and Skeletonization.md",
+  "title": "Binary Mask Repair and Skeletonization",
+  "summary": "Demonstrates binary cleanup, reconstruction, topology-preserving thinning, inversion, and label-preserving object morphology on a defect or network mask.",
+  "primary_industries": [
+    "Non-destructive evaluation",
+    "Materials image analysis"
+  ],
+  "secondary_industries": [
+    "Additive manufacturing",
+    "Biomedical imaging"
+  ],
+  "use_cases": [
+    "Repair a binary defect mask",
+    "Extract a skeleton for path and connectivity analysis",
+    "Compare binary morphology with label-preserving object morphology"
+  ],
+  "keywords": [
+    "binary morphology",
+    "mask repair",
+    "skeleton",
+    "thinning",
+    "topology"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/materials/binary_mask.png",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/06_Binary_Morphology/binary_morphology.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/materials/binary_mask.png"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/materials/binary_mask.png",
+        "image_data_array_name": "Mask",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Binary Mask",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "BinaryDilateImageFilter",
+      "uuid": "d9e33b21-670e-4bab-bc42-f5bbf38891ab",
+      "role": "Expand the mask to bridge narrow breaks.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Dilated Mask"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "boundary_to_foreground": false,
+        "foreground_value": 1.0,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Dilated Mask"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "BinaryErodeImageFilter",
+      "uuid": "cad4a094-2f2a-4ccf-8575-50f865251192",
+      "role": "Shrink the mask to remove thin attachments.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Eroded Mask"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "boundary_to_foreground": true,
+        "foreground_value": 1.0,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Eroded Mask"
+      }
+    },
+    {
+      "index": 3,
+      "filter": "BinaryMorphologicalOpeningImageFilter",
+      "uuid": "31536589-71e4-4a0c-82c6-371c1ef89a98",
+      "role": "Remove small isolated foreground objects.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Opened Mask"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "foreground_value": 1.0,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Opened Mask"
+      }
+    },
+    {
+      "index": 4,
+      "filter": "BinaryMorphologicalClosingImageFilter",
+      "uuid": "73a22075-6760-44e8-b385-68aed4dd56c7",
+      "role": "Fill small gaps while preserving larger regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Closed Mask"
+        }
+      ],
+      "key_parameters": {
+        "foreground_value": 1.0,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Closed Mask",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 5,
+      "filter": "BinaryOpeningByReconstructionImageFilter",
+      "uuid": "ebb01ba2-ec09-4eee-915f-2d51ba280a18",
+      "role": "Remove small objects and restore each surviving object to its original shape.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Reconstructed Opening"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "foreground_value": 1.0,
+        "fully_connected": true,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Reconstructed Opening"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "BinaryThinningImageFilter",
+      "uuid": "863b660a-56dd-4edf-b6bc-d5af5c19c87c",
+      "role": "Reduce foreground tracks to one-pixel centerlines.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Skeleton"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "output_array_name": "Skeleton"
+      }
+    },
+    {
+      "index": 7,
+      "filter": "NotImageFilter",
+      "uuid": "43271832-5e1f-4f5b-9cbb-0c56a78aaae3",
+      "role": "Invert the binary mask for background-focused processing.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Inverse Mask"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "output_array_name": "Inverse Mask"
+      }
+    },
+    {
+      "index": 8,
+      "filter": "ConnectedComponentImageFilter",
+      "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41",
+      "role": "Assign one label to each mask object.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Object Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Binary Mask/Cell Data/Mask",
+        "input_image_geometry_path": "Binary Mask",
+        "output_array_name": "Object Labels"
+      }
+    },
+    {
+      "index": 9,
+      "filter": "DilateObjectMorphologyImageFilter",
+      "uuid": "4e00bb78-e3cc-41ee-b6f6-86e49fd34b4c",
+      "role": "Expand label 1 without treating all labels as one binary object.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Object Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Dilated Label 1"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Binary Mask/Cell Data/Object Labels",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "object_value": 1.0,
+        "output_array_name": "Dilated Label 1"
+      }
+    },
+    {
+      "index": 10,
+      "filter": "ErodeObjectMorphologyImageFilter",
+      "uuid": "a5459d96-bb89-4a17-a802-cc1fb17b2bed",
+      "role": "Shrink label 1 while preserving the other label values.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Binary Mask/Cell Data/Object Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Binary Mask"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Eroded Label 1"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "input_image_data_path": "Binary Mask/Cell Data/Object Labels",
+        "input_image_geometry_path": "Binary Mask",
+        "kernel_radius": [
+          2,
+          2,
+          0
+        ],
+        "kernel_type_index": 1,
+        "object_value": 1.0,
+        "output_array_name": "Eroded Label 1"
+      }
+    },
+    {
+      "index": 11,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/06_Binary_Mask/binary_mask_repair.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/06_Binary_Mask/binary_mask_repair.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Morphological Approach to Quantifying Soil Cracks: Application to Dynamic Crack Patterns during Wetting-Drying Cycles",
+      "authors": [
+        "Ce Wang",
+        "Zhan-yu Zhang",
+        "Wei Qi",
+        "Shi-min Fan"
+      ],
+      "year": 2018,
+      "journal": "Soil Science Society of America Journal",
+      "doi": "10.2136/sssaj2017.03.0088",
+      "url": "https://doi.org/10.2136/sssaj2017.03.0088",
+      "scope": "pipeline_workflow",
+      "role": "Workflow reference for binary segmentation, morphological cleanup, skeletonization, outline extraction, distance transforms, and crack-network analysis.",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The soil images are unavailable. The generated mask captures network topology but not wetting-drying evolution or measured soil texture."
+      }
+    },
+    {
+      "title": "Building skeleton models via 3-D medial surface/axis thinning algorithms",
+      "authors": [
+        "Ta-Chih Lee",
+        "Rangasami L. Kashyap",
+        "Chong-Nam Chu"
+      ],
+      "year": 1994,
+      "journal": "CVGIP: Graphical Models and Image Processing",
+      "doi": "10.1006/cgip.1994.1042",
+      "url": "https://doi.org/10.1006/cgip.1994.1042",
+      "role": "Foundational 3-D thinning method for topology-preserving skeleton extraction.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "Morphological grayscale reconstruction in image analysis: Applications and efficient algorithms",
+      "authors": [
+        "Luc Vincent"
+      ],
+      "year": 1993,
+      "journal": "IEEE Transactions on Image Processing",
+      "doi": "10.1109/83.217222",
+      "url": "https://doi.org/10.1109/83.217222",
+      "role": "Foundational reference for reconstruction, extrema suppression, and top-hat morphology.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Repair a binary defect mask",
+      "Extract a skeleton for path and connectivity analysis",
+      "Compare binary morphology with label-preserving object morphology"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Foreground value 1 represents the structure of interest.",
+      "Kernel sizes are expressed in voxels and must be related to physical spacing.",
+      "Skeleton topology is meaningful only after segmentation artifacts are removed.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "materials/binary_mask.png"
+    ],
+    "paper_doi": "10.2136/sssaj2017.03.0088",
+    "paper_url": "",
+    "reference_visual": "Thresholded desiccation-crack networks with branches, variable widths, gaps, and segmentation debris before skeletonization.",
+    "target_traits": [
+      "connected crack network",
+      "multiple branch nodes",
+      "variable line width",
+      "small gaps",
+      "isolated specks"
+    ],
+    "known_differences": "The soil images are unavailable. The generated mask captures network topology but not wetting-drying evolution or measured soil texture.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

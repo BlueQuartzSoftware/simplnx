@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(18) Industrial XCT Format Import.d3dpipeline",
+  "markdown_file": "(18) Industrial XCT Format Import.md",
+  "title": "Industrial XCT Format Import",
+  "summary": "Imports representative North Star Imaging, Volume Graphics, and Zeiss TXM datasets into separate DREAM3D-NX image geometries.",
+  "primary_industries": [
+    "Industrial computed tomography",
+    "Dimensional metrology"
+  ],
+  "secondary_industries": [
+    "Additive manufacturing",
+    "Non-destructive testing"
+  ],
+  "use_cases": [
+    "Import North Star Imaging header and binary pairs",
+    "Import Volume Graphics VGI data",
+    "Import Zeiss TXM volumes for common downstream analysis"
+  ],
+  "keywords": [
+    "industrial CT",
+    "North Star",
+    "Volume Graphics",
+    "Zeiss TXM",
+    "metrology"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/io/northstar/sample.nsihdr",
+      "role": "Source for ReadBinaryCTNorthstarFilter."
+    },
+    {
+      "path": "Data/ImageProcessing_Examples/io/volume_graphics/VolumeGraphicsTest.vgi",
+      "role": "Source for ReadVolumeGraphicsFileFilter."
+    },
+    {
+      "path": "Data/ImageProcessing_Examples/io/zeiss/sample.txm",
+      "role": "Source for ReadZeissTxmFileFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/14_Industrial_XCT/industrial_xct_imports.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadBinaryCTNorthstarFilter",
+      "uuid": "5469af5c-368a-465b-87b7-7c0dfdf73666",
+      "role": "Import a compound North Star Imaging XCT volume from its header and binary data files.",
+      "inputs": [
+        {
+          "parameter": "input_header_file",
+          "value": "Data/ImageProcessing_Examples/io/northstar/sample.nsihdr"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "North Star XCT"
+        }
+      ],
+      "outputs": [],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "density_array_name": "Density",
+        "end_voxel_coord": [
+          1,
+          1,
+          1
+        ],
+        "import_subvolume": false,
+        "input_header_file": "Data/ImageProcessing_Examples/io/northstar/sample.nsihdr",
+        "input_image_geometry_path": "North Star XCT",
+        "length_unit_index": 6,
+        "start_voxel_coord": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "ReadVolumeGraphicsFileFilter",
+      "uuid": "dfd93665-b455-499a-abed-36ae7dbcdf57",
+      "role": "Import a Volume Graphics header and its companion raw volume.",
+      "inputs": [
+        {
+          "parameter": "vg_header_file",
+          "value": "Data/ImageProcessing_Examples/io/volume_graphics/VolumeGraphicsTest.vgi"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_image_geometry_path",
+          "value": "Volume Graphics XCT"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "density_array_name": "Density",
+        "output_image_geometry_path": "Volume Graphics XCT",
+        "vg_header_file": "Data/ImageProcessing_Examples/io/volume_graphics/VolumeGraphicsTest.vgi"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "ReadZeissTxmFileFilter",
+      "uuid": "7e3ffc15-51a3-182c-97c2-a82f7af325bf",
+      "role": "Import a Zeiss TXM XCT volume with its stored geometry metadata.",
+      "inputs": [
+        {
+          "parameter": "input_file_path",
+          "value": "Data/ImageProcessing_Examples/io/zeiss/sample.txm"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_image_geometry_path",
+          "value": "Zeiss XCT"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "ct_data_array_name": "CT Data",
+        "input_file_path": "Data/ImageProcessing_Examples/io/zeiss/sample.txm",
+        "output_image_geometry_path": "Zeiss XCT"
+      }
+    },
+    {
+      "index": 3,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/14_Industrial_XCT/industrial_xct_imports.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/14_Industrial_XCT/industrial_xct_imports.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Computed tomography for dimensional metrology",
+      "authors": [
+        "Jean-Pierre Kruth",
+        "Markus Bartscher",
+        "Simone Carmignato",
+        "Robert Schmitt",
+        "Leonardo De Chiffre",
+        "Albert Weckenmann"
+      ],
+      "year": 2011,
+      "journal": "CIRP Annals",
+      "doi": "10.1016/j.cirp.2011.05.006",
+      "url": "https://doi.org/10.1016/j.cirp.2011.05.006",
+      "role": "Primary industrial context for XCT ingestion, dimensional metrology, and material inspection.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The review contains industrial examples but no single reusable multi-vendor source dataset.",
+        "url": "",
+        "doi": "",
+        "license": "Vendor and specimen data terms vary.",
+        "included": false,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "The example demonstrates three vendor import paths with tested fixtures. It does not reproduce a dimensional-metrology result from the review."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Import North Star Imaging header and binary pairs",
+      "Import Volume Graphics VGI data",
+      "Import Zeiss TXM volumes for common downstream analysis"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Compound formats include all companion files at the expected relative paths.",
+      "Vendor metadata is trusted only after a dimensional check.",
+      "The three imports stay separate because they represent alternative sources, not registered copies.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(17) Scientific Volume Interoperability.d3dpipeline",
+      "(14) Projection-Based Quality Summaries.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "tested-format-fixture",
+    "asset_keys": [
+      "io/northstar",
+      "io/volume_graphics",
+      "io/zeiss/sample.txm"
+    ],
+    "paper_doi": "10.1016/j.cirp.2011.05.006",
+    "paper_url": "",
+    "reference_visual": "Industrial XCT volumes with calibrated dimensions and internal material structure across vendor formats.",
+    "target_traits": [
+      "valid compound formats",
+      "vendor metadata",
+      "dimensions",
+      "spacing",
+      "scalar values"
+    ],
+    "known_differences": "The review has no common multi-vendor dataset. Tested format fixtures are retained because import correctness is more important than visual imitation.",
+    "archive_provenance_file": "Provenance.json"
+  }
+}

@@ -1,5 +1,6 @@
 #include "ImageIOFactory.hpp"
 
+#include "simplnx/Utilities/ImageIO/MhaImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/StbImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/TiffImageIO.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -22,5 +23,10 @@ Result<std::unique_ptr<IImageIO>> nx::core::CreateImageIO(const std::filesystem:
     return {std::make_unique<TiffImageIO>()};
   }
 
-  return MakeErrorResult<std::unique_ptr<IImageIO>>(-20200, fmt::format("Unsupported image format '{}'. Supported: .png, .jpg, .jpeg, .bmp, .tif, .tiff", ext));
+  if(ext == ".mha")
+  {
+    return {std::make_unique<MhaImageIO>()};
+  }
+
+  return MakeErrorResult<std::unique_ptr<IImageIO>>(-20200, fmt::format("Unsupported image format '{}'. Supported: .png, .jpg, .jpeg, .bmp, .tif, .tiff, .mha", ext));
 }
