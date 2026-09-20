@@ -5,6 +5,7 @@
 #include "OrientationAnalysisTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/util/ReadCSVData.hpp"
@@ -12,8 +13,10 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -42,6 +45,32 @@ constexpr StringLiteral k_ExemplarTriangleDumperResults("ExemplarTriangleDumperR
 constexpr StringLiteral k_NXTriangleDumperResults("NXTriangleDumperResults");
 
 constexpr float32 k_EPSILON = 0.001;
+
+template <typename T>
+class CancelAfterReadDataStore : public DataStore<T>
+{
+public:
+  CancelAfterReadDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, std::atomic_bool& shouldCancel)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    Result<> result = DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    if(result.valid() && !m_DidCancel)
+    {
+      m_DidCancel = true;
+      m_ShouldCancel.store(true);
+    }
+    return result;
+  }
+
+private:
+  std::atomic_bool& m_ShouldCancel;
+  mutable bool m_DidCancel = false;
+};
 
 } // namespace
 
@@ -193,6 +222,81 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before publication preserves the destination", "[OrientationAnalysis][WriteGBCDTriangleDataFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  UnitTest::LoadPlugins();
+
+  const fs::path sourcePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
+  const DataPath smallIn100Group({Constants::k_SmallIN100});
+  const DataPath featureEulerAnglesPath = smallIn100Group.createChildPath(Constants::k_Grain_Data).createChildPath(Constants::k_AvgEulerAngles);
+  const DataPath faceDataPath = DataPath({Constants::k_TriangleDataContainerName}).createChildPath(Constants::k_FaceData);
+  const DataPath faceLabelsPath = faceDataPath.createChildPath(Constants::k_FaceLabels);
+  const DataPath faceNormalsPath = faceDataPath.createChildPath(Constants::k_FaceNormals);
+  const DataPath faceAreasPath = faceDataPath.createChildPath(Constants::k_FaceAreas);
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_triangle_cancellation.ph";
+  const std::string sentinel = "existing triangle bytes";
+
+  for(const bool destinationExists : {true, false})
+  {
+    DYNAMIC_SECTION((destinationExists ? "Existing destination" : "Absent destination"))
+    {
+      std::error_code cleanupError;
+      fs::remove(outputPath, cleanupError);
+      REQUIRE_FALSE(cleanupError);
+      if(destinationExists)
+      {
+        std::ofstream outputStream(outputPath, std::ios::binary);
+        REQUIRE(outputStream.is_open());
+        outputStream << sentinel;
+      }
+
+      DataStructure dataStructure = UnitTest::LoadDataStructure(sourcePath);
+      auto& eulerAnglesArray = dataStructure.getDataRefAs<Float32Array>(featureEulerAnglesPath);
+      const auto& sourceStore = eulerAnglesArray.getDataStoreRef();
+      std::atomic_bool shouldCancel = false;
+      auto cancelStore = std::make_shared<CancelAfterReadDataStore<float32>>(eulerAnglesArray.getTupleShape(), eulerAnglesArray.getComponentShape(), 0.0F, shouldCancel);
+      std::vector<float32> eulerAngles(eulerAnglesArray.getSize());
+      auto copyIntoBufferResult = sourceStore.copyIntoBuffer(0, nonstd::span<float32>(eulerAngles.data(), eulerAngles.size()));
+      SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
+      auto copyFromBufferResult = cancelStore->copyFromBuffer(0, nonstd::span<const float32>(eulerAngles.data(), eulerAngles.size()));
+      SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
+      auto setStoreResult = eulerAnglesArray.setDataStore(cancelStore);
+      SIMPLNX_RESULT_REQUIRE_VALID(setStoreResult);
+
+      WriteGBCDTriangleDataFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteGBCDTriangleDataFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+      args.insertOrAssign(WriteGBCDTriangleDataFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
+      args.insertOrAssign(WriteGBCDTriangleDataFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceNormalsPath));
+      args.insertOrAssign(WriteGBCDTriangleDataFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(faceAreasPath));
+      args.insertOrAssign(WriteGBCDTriangleDataFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(featureEulerAnglesPath));
+
+      auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
+      const auto executeResult = filter.execute(dataStructure, args, nullptr, {}, shouldCancel);
+
+      REQUIRE(shouldCancel.load());
+      SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+      REQUIRE_FALSE(executeResult.result.errors().empty());
+      REQUIRE(executeResult.result.errors().front().code == -1);
+      if(destinationExists)
+      {
+        std::ifstream inputStream(outputPath, std::ios::binary);
+        REQUIRE(inputStream.is_open());
+        const std::string contents((std::istreambuf_iterator<char>(inputStream)), std::istreambuf_iterator<char>());
+        REQUIRE(contents == sentinel);
+      }
+      else
+      {
+        REQUIRE_FALSE(fs::exists(outputPath));
+      }
+
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
 }
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter execution")

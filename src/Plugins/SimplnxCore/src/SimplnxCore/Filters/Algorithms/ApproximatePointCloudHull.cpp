@@ -204,10 +204,18 @@ Result<> ApproximatePointCloudHull::operator()()
   }
 
   auto* hull = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
-  hull->resizeVertexList(tmpVerts.size() / 3);
+  Result<> resizeResult = hull->resizeVertexList(tmpVerts.size() / 3);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
   if(hull->getVertexAttributeMatrix() != nullptr)
   {
-    hull->getVertexAttributeMatrix()->resizeTuples({tmpVerts.size() / 3});
+    resizeResult = hull->getVertexAttributeMatrix()->resizeTuples({tmpVerts.size() / 3});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
   auto* hullVerts = hull->getVertices();
   auto tmpVertData = tmpVerts.data();

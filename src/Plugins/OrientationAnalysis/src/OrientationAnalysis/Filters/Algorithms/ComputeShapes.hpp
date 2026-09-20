@@ -54,14 +54,20 @@ private:
   std::vector<float> m_EFVec;
 
   /**
-   * @brief find_moments Determines the second order moments for each Feature
+   * @brief Computes the second-order moments for each three-dimensional feature.
+   * @return Success, cancellation, or the first store read error.
+   *
+   * The method returns store errors because the moment scan reads bounded slices.
    */
-  void findMoments();
+  Result<> findMoments();
 
   /**
-   * @brief find_moments2D Determines the second order moments for each Feature (2D version)
+   * @brief Computes the second-order moments for each two-dimensional feature.
+   * @return Success, cancellation, or the first store read error.
+   *
+   * The method returns store errors because the moment scan reads bounded rows.
    */
-  void findMoments2D();
+  Result<> findMoments2D();
 
   /**
    * @brief find_axes Determine principal axis lengths for each Feature

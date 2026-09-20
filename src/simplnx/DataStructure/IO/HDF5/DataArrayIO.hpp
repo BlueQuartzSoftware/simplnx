@@ -10,69 +10,132 @@
 #include "simplnx/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
+#include <iterator>
 #include <vector>
 
 namespace nx::core::HDF5
 {
+
 /**
- * @brief The DataArrayIO class serves as the basis for reading and writing DataArrays from HDF5
+ * @class DataArrayIO
+ * @brief Reads and writes one numeric DataArray type.
+ * @tparam T DataArray value type registered with this I/O factory.
  */
 template <typename T>
 class DataArrayIO : public IDataIO
 {
 public:
   using data_type = DataArray<T>;
+
   using store_type = AbstractDataStore<T>;
 
   DataArrayIO() = default;
+
   ~DataArrayIO() noexcept override = default;
 
   /**
-   * @brief Creates and imports a DataArray based on the provided DatasetIO
-   * @param dataStructure
-   * @param datasetReader
-   * @param dataArrayName
-   * @param importId
-   * @param err
-   * @param parentId
-   * @param preflight
+   * @brief Imports one typed data array from an HDF5 dataset.
+   * @tparam K Dataset value type to import.
+   * @param dataStructure Destination data structure.
+   * @param datasetReader Source HDF5 dataset.
+   * @param dataArrayName Imported array name.
+   * @param importId Imported object identifier.
+   * @param parentId Optional parent object identifier.
+   * @param preflight True to create an EmptyDataStore placeholder.
+   * @return Planning, insertion, or value-read errors and warnings.
+   *
+   * Preflight retains shapes without materializing values. The eager path skips
+   * a recovery placeholder after preserving its warnings.
    */
   template <typename K>
-  static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
-                              nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight)
+  static Result<> importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
+                                  const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
-    std::shared_ptr<AbstractDataStore<K>> dataStore =
-        preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader));
-    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
-    err = (data == nullptr) ? -400 : 0;
+    if(preflight)
+    {
+      auto shapesResult = EmptyDataStoreIO::ReadShapes(datasetReader);
+      if(shapesResult.invalid())
+      {
+        for(auto& error : shapesResult.errors())
+        {
+          error.message = fmt::format("Cannot read numeric metadata for dataset '{}': {}", datasetReader.getObjectPath(), error.message);
+        }
+        return ConvertResult(std::move(shapesResult));
+      }
+      auto [tupleShape, componentShape] = std::move(shapesResult.value());
+      auto warnings = std::move(shapesResult.warnings());
+      auto plannedResult = ConvertResult(DataArray<K>::ImportPlanned(dataStructure, dataArrayName, importId, tupleShape, componentShape, "", parentId));
+      plannedResult.warnings().insert(plannedResult.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
+      return plannedResult;
+    }
+
+    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<K>(datasetReader);
+    if(storeResult.invalid())
+    {
+      return ConvertResult(std::move(storeResult));
+    }
+    Result<> result;
+    result.warnings() = std::move(storeResult.warnings());
+    if(storeResult.value() == nullptr)
+    {
+      // A recovery placeholder has no inline values. Preserve warnings and skip it.
+      return result;
+    }
+    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(storeResult.value()), parentId);
+    if(data == nullptr)
+    {
+      auto errorResult = MakeErrorResult(-400, fmt::format("Cannot import numeric dataset '{}' into the DataStructure.", datasetReader.getObjectPath()));
+      errorResult.warnings() = std::move(result.warnings());
+      return errorResult;
+    }
+    return result;
   }
 
   /**
-   * @brief Imports and replaces a DataArray's data store from an HDF5 dataset.
-   * @tparam K The data type to import
-   * @param dataArray The DataArray to update
-   * @param dataPath The path to the DataArray
-   * @param datasetReader The HDF5 dataset reader to read from
-   * @return Result<> Result with any errors or warnings
+   * @brief Replaces an imported array's placeholder data store.
+   * @tparam K Dispatch type retained for this factory interface.
+   * @param dataArray Imported DataArray to update.
+   * @param dataPath Unused imported array path.
+   * @param datasetReader Source HDF5 dataset.
+   * @return Read warnings or errors.
+   * @pre dataArray is non-null.
+   *
+   * The current implementation reads the factory's T store type. K does not
+   * select the read type.
    */
   template <typename K>
   static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
   {
-    std::shared_ptr<AbstractDataStore<T>> dataStore = DataStoreIO::ReadDataStore<T>(datasetReader);
-    if(dataStore == nullptr)
+    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<T>(datasetReader);
+    if(storeResult.invalid())
     {
-      return MakeErrorResult(-150202, fmt::format("Failed to import DataArray data at path '{}'.", dataPath.toString()));
+      return ConvertResult(std::move(storeResult));
     }
-    dataArray->setDataStore(dataStore);
-    return {};
+    Result<> result;
+    result.m_Warnings = std::move(storeResult.warnings());
+    if(storeResult.value() == nullptr)
+    {
+      // A recovery placeholder has no inline values. Preserve warnings and skip it.
+      return result;
+    }
+    auto replaceResult = dataArray->setDataStore(std::move(storeResult.value()));
+    replaceResult.warnings().insert(replaceResult.warnings().begin(), std::make_move_iterator(result.warnings().begin()), std::make_move_iterator(result.warnings().end()));
+    if(replaceResult.invalid())
+    {
+      for(auto& error : replaceResult.errors())
+      {
+        error.message = fmt::format("Cannot install the imported numeric store at path '{}': {}", dataPath.toString(), error.message);
+      }
+    }
+    return replaceResult;
   }
 
   /**
-   * @brief Replaces the AbstractDataStore using data from the HDF5 dataset.
-   * @param dataStructure
-   * @param dataPath
-   * @param dataStructureReader
-   * @return Result<>
+   * @brief Materializes a deferred imported DataArray.
+   * @param dataStructure Destination data structure.
+   * @param dataPath Imported array path.
+   * @param parentGroupReader HDF5 group that owns the dataset.
+   * @return Read warnings or errors.
    */
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override
   {
@@ -89,10 +152,18 @@ public:
 
     auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(dataTypeStrResult.invalid())
+    {
+      return ConvertResult(std::move(dataTypeStrResult));
+    }
     std::string dataTypeStr = std::move(dataTypeStrResult.value());
     const bool isBoolArray = dataTypeStr == "DataArray<bool>";
 
     auto typeResult = datasetReader.getDataType();
+    if(typeResult.invalid())
+    {
+      return ConvertResult(std::move(typeResult));
+    }
     const auto type = std::move(typeResult.value());
     switch(type)
     {
@@ -131,15 +202,14 @@ public:
   }
 
   /**
-   * @brief Attempts to read the DataArray from HDF5.
-   * Returns a Result<> with any errors or warnings encountered during the process.
-   * @param dataStructureReader
-   * @param parentGroup
-   * @param dataArrayName
-   * @param importId
-   * @param parentId
-   * @param useEmptyDataStore = false
-   * @return Result<>
+   * @brief Imports a DataArray from its HDF5 dataset.
+   * @param dataStructureReader Destination reader context.
+   * @param parentGroup HDF5 group that owns the dataset.
+   * @param dataArrayName Dataset and array name.
+   * @param importId Imported object identifier.
+   * @param parentId Optional parent object identifier.
+   * @param useEmptyDataStore True for metadata-only import.
+   * @return Import warnings or errors.
    */
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataArrayName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
@@ -147,129 +217,124 @@ public:
     auto datasetReader = parentGroup.openDataset(dataArrayName);
 
     auto typeResult = datasetReader.getDataType();
+    if(typeResult.invalid())
+    {
+      return ConvertResult(std::move(typeResult));
+    }
     const auto type = typeResult.value();
 
     std::string dataTypeStr;
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(dataTypeStrResult.invalid())
+    {
+      return ConvertResult(std::move(dataTypeStrResult));
+    }
     dataTypeStr = std::move(dataTypeStrResult.value());
     const bool isBoolArray = (dataTypeStr == "DataArray<bool>");
 
-    // Check ability to import the data
-    int32 importable = 0;
+    // The importable attribute excludes objects that the writer marked unavailable.
     auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
-    if(importableResult.valid())
+    if(importableResult.invalid())
     {
-      importable = importableResult.value();
+      return ConvertResult(std::move(importableResult));
     }
+    const int32 importable = importableResult.value();
+    auto importableWarnings = std::move(importableResult.warnings());
     if(importable == 0)
     {
-      return {};
+      Result<> result;
+      result.warnings() = std::move(importableWarnings);
+      return result;
     }
 
-    int32 err = 0;
+    Result<> result;
     switch(type)
     {
     case DataType::float32:
-      importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::float64:
-      importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int8:
-      importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int16:
-      importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int32:
-      importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int64:
-      importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint8: {
       if(isBoolArray)
       {
-        importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+        result = importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+        break;
       }
-      else
-      {
-        importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      result = importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      break;
     }
-    break;
     case DataType::uint16:
-      importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint32:
-      importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint64:
-      importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      result = importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
-    default: {
-      err = -777;
+    default:
+      result = MakeErrorResult(-777, fmt::format("Cannot import numeric dataset '{}' because its type is unsupported.", datasetReader.getObjectPath()));
       break;
     }
-    }
-
-    if(err < 0)
-    {
-      return MakeErrorResult(err, fmt::format("Error importing dataset from HDF5 file. DataArray name '{}' that is a child of '{}'", dataArrayName, parentGroup.getName()));
-    }
-
-    return {};
+    result.warnings().insert(result.warnings().begin(), std::make_move_iterator(importableWarnings.begin()), std::make_move_iterator(importableWarnings.end()));
+    return result;
   }
 
   /**
-   * @brief Attempts to write a DataArray to HDF5.
-   * Returns a Result<> with any errors or warnings encountered during the process.
-   * @param dataStructureWriter
-   * @param dataArray
-   * @param parentGroup
-   * @param importable
-   * @return Result<>
+   * @brief Writes a DataArray and its HDF5 attributes.
+   * @param dataStructureWriter Writer that supplies options.
+   * @param dataArray Source array.
+   * @param parentGroup Destination HDF5 group.
+   * @param importable Stored importable state.
+   * @return Write warnings or errors.
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, group_writer_type& parentGroup, bool importable) const
   {
     auto datasetWriter = parentGroup.createDataset(dataArray.getName());
     datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
-    Result<> result = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
-    if(result.invalid())
+    Result<> storeResult = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
+    if(storeResult.invalid())
     {
-      result.errors().push_back({-43255, fmt::format("Error writing data array '{}' to hdf5 file.", dataArray.getName())});
-      return result;
+      storeResult.errors().push_back({-43255, fmt::format("Error writing data array '{}' to hdf5 file.", dataArray.getName())});
+      return storeResult;
     }
 
-    return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
+    auto storeWarnings = std::move(storeResult.warnings());
+    auto attributeResult = WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
+    attributeResult.warnings().insert(attributeResult.warnings().begin(), std::make_move_iterator(storeWarnings.begin()), std::make_move_iterator(storeWarnings.end()));
+    return attributeResult;
   }
 
-  /**
-   * @brief Returns the target DataObject::Type for this IO class.
-   * @return DataObject::Type
-   */
   DataObject::Type getDataType() const override
   {
     return DataObject::Type::DataArray;
   }
 
-  /**
-   * @brief Returns the target DataObject type name for this IO class.
-   * @return std::string
-   */
   std::string getTypeName() const override
   {
     return data_type::GetTypeName();
   }
 
   /**
-   * @brief Attempts to write the DataArray to HDF5.
-   * Returns an error if the provided DataObject could not be cast to the corresponding DataArray type.
-   * Otherwise, this method returns writeData(...)
-   * @param dataStructructureWriter
-   * @param dataObject
-   * @param parentWriter
-   * @return Result<>
+   * @brief Writes a DataObject after verifying the handled array type.
+   * @param dataStructureWriter Writer that supplies options.
+   * @param dataObject Object to write.
+   * @param parentWriter Destination HDF5 group.
+   * @return Type-validation or write errors.
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
   {

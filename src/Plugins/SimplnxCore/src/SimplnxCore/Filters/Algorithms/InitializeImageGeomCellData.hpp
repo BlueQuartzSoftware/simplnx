@@ -13,26 +13,13 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  InitializeImageGeomCellDataInputValues inputValues;
-  inputValues.CellArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(cell_arrays);
-  inputValues.InitRange = filterArgs.value<VectorFloat64Parameter::ValueType>(init_range);
-  inputValues.InitTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(init_type_index);
-  inputValues.InitValue = filterArgs.value<Float64Parameter::ValueType>(init_value);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_image_geometry_path);
-  inputValues.MaxPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(max_point);
-  inputValues.MinPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(min_point);
-  inputValues.SeedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(seed_array_name);
-  inputValues.SeedValue = filterArgs.value<UInt64Parameter::ValueType>(seed_value);
-  inputValues.UseSeed = filterArgs.value<BoolParameter::ValueType>(use_seed);
-  return InitializeImageGeomCellData(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
+/**
+ * @struct InitializeImageGeomCellDataInputValues
+ * @brief Stores arrays, inclusive bounds, mode, values, range, and seed behavior.
+ */
 struct SIMPLNXCORE_EXPORT InitializeImageGeomCellDataInputValues
 {
   MultiArraySelectionParameter::ValueType CellArrays;
@@ -49,13 +36,39 @@ struct SIMPLNXCORE_EXPORT InitializeImageGeomCellDataInputValues
 
 /**
  * @class InitializeImageGeomCellData
- * @brief This algorithm implements support code for the InitializeImageGeomCellDataFilter
+ * @brief Initializes an inclusive ImageGeom subvolume in selected cell arrays.
+ *
+ * Manual mode repeats one cast value for every component of a tuple. Random
+ * modes also generate one value per tuple and repeat it across components.
+ * Selected arrays process sequentially. Their effective seeds start at the
+ * stored seed and increment once per array, so selection order affects output.
+ *
+ * Row writes target 65,536 values but retain one complete tuple. A wider tuple
+ * creates a larger buffer. In-core and out-of-core telemetry labels use this
+ * same checked bulk-write implementation. The effective first seed is written
+ * to a top-level UInt64 array before any selected cell array changes.
+ *
+ * Floating full-range mode uses numeric_limits<T>::min(), which is the least
+ * positive normal value, not the lowest negative value. Integral random modes
+ * use uniform_int_distribution<int>; ranges outside int are not representable.
+ * Boolean arrays reach ExecuteNeighborFunction's unsupported-type exception.
  */
-
 class SIMPLNXCORE_EXPORT InitializeImageGeomCellData
 {
 public:
+  /**
+   * @brief Initializes the ImageGeom subvolume generator.
+   * @param dataStructure Contains geometry, selected arrays, and seed output.
+   * @param mesgHandler Preserves the common algorithm constructor signature.
+   * @param shouldCancel Signals cancellation between row chunks and arrays.
+   * @param inputValues Selects arrays, bounds, values, range, and seed behavior.
+   * @pre inputValues is not null.
+   * @pre All arguments outlive this executor.
+   */
   InitializeImageGeomCellData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeImageGeomCellDataInputValues* inputValues);
+  /**
+   * @brief Destroys the ImageGeom subvolume generator.
+   */
   ~InitializeImageGeomCellData() noexcept;
 
   InitializeImageGeomCellData(const InitializeImageGeomCellData&) = delete;
@@ -63,6 +76,17 @@ public:
   InitializeImageGeomCellData& operator=(const InitializeImageGeomCellData&) = delete;
   InitializeImageGeomCellData& operator=(InitializeImageGeomCellData&&) noexcept = delete;
 
+  /**
+   * @brief Initializes every selected array in selection order.
+   * @return Bounds, offset, or bulk-write result.
+   * @throws std::runtime_error If InitTypeIndex is invalid or an array is Boolean.
+   * @pre MinPoint and MaxPoint contain three in-range values, and each minimum is not greater than its maximum.
+   * @pre InitRange contains two values that convert to each selected type.
+   * @pre Selected arrays match the ImageGeom cells and do not have Boolean type.
+   *
+   * Cancellation returns success without rollback. The seed output and earlier
+   * array or row writes remain after cancellation or a later error.
+   */
   Result<> operator()();
 
 private:

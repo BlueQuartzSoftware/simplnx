@@ -65,6 +65,22 @@ In 3D, the Z Radius works the same way, extending into adjacent slices above and
 
 For related per-feature misorientation metrics, see the **Compute Feature Reference Misorientations** and **Compute Misorientation** filters.
 
+## Algorithm
+
+For each valid cell in the Image Geometry, the algorithm examines all cells within the user-specified kernel radius in X, Y, and Z. In per-grain mode, only neighbors with the same feature ID as the center cell are included. In per-voxel mode, any neighbor with a positive feature ID and the same phase as the center cell is included. The crystallographic misorientation angle between the center cell's quaternion and each qualifying neighbor's quaternion is computed using the appropriate LaueOps symmetry operators. The average of these misorientation angles is stored as the KAM value for the center cell.
+
+### In-Core Path
+
+For in-memory arrays, the filter uses its established parallel direct traversal.
+
+### Out-of-Core Path
+
+For out-of-core arrays, the filter processes one output Z plane at a time. It keeps a rolling, cache-budgeted window of **Feature IDs**, **Cell Phases**, and quaternions, and bulk-writes one output plane. Parallel workers access only these local buffers and write disjoint output ranges.
+
+### Memory Use
+
+The filter derives a cap for its dominant array-buffer payload from the **CacheMemoryBudgetManager**. If the clamped rolling window does not fit that cap, it uses a fixed tuple-block LRU cache whose input-cache and output buffers fit the cap instead of allocating an unrestricted Z slab. Fixed executor overhead, such as cache metadata and the small ensemble table, is independent of volume depth.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

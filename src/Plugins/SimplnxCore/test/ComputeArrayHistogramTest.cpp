@@ -6,10 +6,14 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -53,7 +57,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCor
 {
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ComputeArrayHistogramFilter filter;
   DataStructure dataStruct;
   Arguments args;
@@ -68,7 +72,6 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCor
   auto parentPath = dataPaths[0].getParent();
   auto dataGPath = parentPath.createChildPath("HistogramDataGroup");
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(4));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
@@ -77,11 +80,9 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCor
   args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinRangeName_Key, std::make_any<std::string>(std::string{::k_BinRangesName}));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>(std::string{::k_BinCountsName}));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStruct, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStruct, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -115,6 +116,9 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCor
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[SimplnxCore][ComputeArrayHistogram]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
@@ -154,7 +158,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
   const std::string mostPopulatedBin = "Most Populated Bin";
   const std::string modalBinRanges = "Modal Bin Ranges";
 
-  // Execute the Find Array Statistics Filter
+  // Execute the configured filter.
   {
     ComputeArrayHistogramFilter filter;
     Arguments args;
@@ -174,16 +178,13 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
     args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoMostPopulatedBinName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoModalBinRangesName_Key, std::make_any<std::string>(modalBinRanges));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Check resulting values
   {
     DataPath histogramPath = histogramsDataPath.createChildPath(fmt::format("\"{}\" Histogram", inputArrayName));
     auto* dataGroup = dataStructure.getDataAs<DataGroup>(histogramPath);
@@ -228,6 +229,91 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: Masked Bulk Reads Cross Chunk Boundary", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+
+  constexpr usize k_NumTuples = 65538;
+  DataStructure dataStructure;
+  auto* inputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {k_NumTuples}, {1});
+  auto* maskArray = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {k_NumTuples}, {1});
+  auto& inputStore = inputArray->getDataStoreRef();
+  auto& maskStore = maskArray->getDataStoreRef();
+  std::fill(inputStore.begin(), inputStore.end(), int32{0});
+  std::fill(maskStore.begin(), maskStore.end(), uint8{1});
+  inputStore[65535] = 4;
+  inputStore[65536] = 8;
+  inputStore[65537] = 100;
+  maskStore[65537] = 0;
+
+  const DataPath histogramGroupPath({"Histograms"});
+  ComputeArrayHistogramFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input"})}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(histogramGroupPath));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoModalBinRangesName_Key, std::make_any<std::string>("Modal Ranges"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinRangeName_Key, std::make_any<std::string>(std::string{::k_BinRangesName}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>(std::string{::k_BinCountsName}));
+
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath outputPath = histogramGroupPath.createChildPath("\"Input\" Histogram");
+  const Int32Array* ranges = nullptr;
+  REQUIRE_NOTHROW(ranges = &dataStructure.getDataRefAs<Int32Array>(outputPath.createChildPath(std::string{k_BinRangesName})));
+  const UInt64Array* counts = nullptr;
+  REQUIRE_NOTHROW(counts = &dataStructure.getDataRefAs<UInt64Array>(outputPath.createChildPath(std::string{k_BinCountsName})));
+  compareHistograms(ranges->getDataStoreRef(), std::array<int32, 4>{0, 4, 4, 9});
+  compareHistograms(counts->getDataStoreRef(), std::array<uint64, 2>{k_NumTuples - 2, 1});
+  const NeighborList<int32>* modalRanges = nullptr;
+  REQUIRE_NOTHROW(modalRanges = &dataStructure.getDataRefAs<NeighborList<int32>>(outputPath.createChildPath("Modal Ranges")));
+  const std::vector<int32> expectedModalRanges = {0, 3};
+  REQUIRE(modalRanges->getList(0) == expectedModalRanges);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Distinct Modal Values", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* inputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {1});
+  inputArray->getDataStoreRef()[0] = 5;
+  inputArray->getDataStoreRef()[1] = 1;
+  inputArray->getDataStoreRef()[2] = 3;
+
+  const DataPath histogramGroupPath({"Histograms"});
+  ComputeArrayHistogramFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input"})}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(histogramGroupPath));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoModalBinRangesName_Key, std::make_any<std::string>("Modal Ranges"));
+
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath modalPath = histogramGroupPath.createChildPath("\"Input\" Histogram").createChildPath("Modal Ranges");
+  const NeighborList<int32>* modalRanges = nullptr;
+  REQUIRE_NOTHROW(modalRanges = &dataStructure.getDataRefAs<NeighborList<int32>>(modalPath));
+  const std::vector<int32> expectedModalRanges = {1, 2, 3, 4, 0, 0};
+  REQUIRE(modalRanges->getList(0) == expectedModalRanges);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeArrayHistogramFilter][BackwardsCompatibility]")

@@ -90,6 +90,8 @@
 
 #include <fmt/ranges.h>
 
+#include <string_view>
+
 #include <filesystem>
 
 using namespace nx::core;
@@ -101,27 +103,104 @@ namespace fs = std::filesystem;
 using namespace pybind11::literals;
 
 template <>
+/**
+ * @struct fmt::formatter<nx::core::Error>
+ * @brief Formats an Error for Python representations and diagnostics.
+ */
 struct fmt::formatter<nx::core::Error>
 {
+  /**
+   * @brief Accepts the default fmt format specification.
+   * @param ctx Format-string parse context.
+   * @return Iterator at the start of the unconsumed specification.
+   */
   constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
+  /**
+   * @brief Writes an Error code and message.
+   * @param value Error to format.
+   * @param ctx Destination format context.
+   * @return Iterator after the formatted text.
+   */
   format_context::iterator format(const nx::core::Error& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "Error(code={}, message='{}')", value.code, value.message);
   }
 };
 
+namespace
+{
+/**
+ * @brief Raises a Python-visible exception for an invalid Result so a script never continues after a silently failed
+ * storage operation. Every error is reported as "code: message"; an invalid Result that carries no error is reported as an
+ * unknown failure instead of being indexed.
+ * @param result Result returned by the wrapped simplnx call.
+ */
+void ThrowIfInvalid(const nx::core::Result<>& result)
+{
+  if(result.valid())
+  {
+    return;
+  }
+  if(result.errors().empty())
+  {
+    throw std::runtime_error("operation failed without an error message");
+  }
+  std::string message;
+  for(const nx::core::Error& error : result.errors())
+  {
+    if(!message.empty())
+    {
+      message += "; ";
+    }
+    message += fmt::format("{}: {}", error.code, error.message);
+  }
+  throw std::runtime_error(message);
+}
+
+/**
+ * @brief Returns the attribute matrix a geometry resize binding must resize together with its shared element list, or raises
+ * when the geometry has none, because dereferencing the null pointer would crash the interpreter.
+ * @param attributeMatrix Attribute matrix pointer read from the geometry; may be null.
+ * @param geometry Geometry named in the exception.
+ * @param role Element role named in the exception ("vertex", "edge", "face", "polyhedra").
+ */
+nx::core::AttributeMatrix& RequireAttributeMatrix(nx::core::AttributeMatrix* attributeMatrix, const nx::core::DataObject& geometry, std::string_view role)
+{
+  if(attributeMatrix == nullptr)
+  {
+    throw std::runtime_error(fmt::format("Geometry '{}' has no {} attribute matrix to resize", geometry.getName(), role));
+  }
+  return *attributeMatrix;
+}
+} // namespace
+
 template <>
+/**
+ * @struct fmt::formatter<nx::core::Warning>
+ * @brief Formats a Warning for Python representations and diagnostics.
+ */
 struct fmt::formatter<nx::core::Warning>
 {
+  /**
+   * @brief Accepts the default fmt format specification.
+   * @param ctx Format-string parse context.
+   * @return Iterator at the start of the unconsumed specification.
+   */
   constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
+  /**
+   * @brief Writes a Warning code and message.
+   * @param value Warning to format.
+   * @param ctx Destination format context.
+   * @return Iterator after the formatted text.
+   */
   format_context::iterator format(const nx::core::Warning& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "Warning(code={}, message='{}')", value.code, value.message);
@@ -129,16 +208,22 @@ struct fmt::formatter<nx::core::Warning>
 };
 
 /**
- * @brief Equivalent to lhs.__eq__(rhs) in python
- * @param lhs
- * @param rhs
- * @return bool
+ * @brief Calls Python equality on two objects.
+ * @param lhs Object that supplies `__eq__`.
+ * @param rhs Object passed to `lhs.__eq__`.
+ * @return The Python result converted to bool.
  */
 bool PyIsEqual(py::handle lhs, py::handle rhs)
 {
   return (lhs.attr("__eq__")(rhs)).cast<bool>();
 }
 
+/**
+ * @brief Clones and inserts a linkable parameter into a Parameters collection.
+ * @tparam ParameterT Specifies the concrete parameter type.
+ * @param self Destination Parameters collection.
+ * @param param Parameter to clone.
+ */
 template <class ParameterT>
 void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
 {
@@ -146,6 +231,13 @@ void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
   self.insertLinkableParameter(std::move(clonedParam));
 }
 
+/**
+ * @brief Binds one numeric parameter type to Python.
+ * @tparam ParameterT Specifies the numeric parameter type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ */
 template <class ParameterT>
 auto BindNumberParameter(py::handle scope, const char* name)
 {
@@ -154,6 +246,13 @@ auto BindNumberParameter(py::handle scope, const char* name)
   return numberParameter;
 }
 
+/**
+ * @brief Binds one vector parameter type to Python.
+ * @tparam ParameterT Specifies the vector parameter type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ */
 template <class ParameterT>
 auto BindVectorParameter(py::handle scope, const char* name)
 {
@@ -164,9 +263,27 @@ auto BindVectorParameter(py::handle scope, const char* name)
   return vectorParameter;
 }
 
+/**
+ * @def SIMPLNX_PY_BIND_NUMBER_PARAMETER
+ * @brief Binds a numeric parameter with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete numeric parameter class.
+ */
 #define SIMPLNX_PY_BIND_NUMBER_PARAMETER(scope, className) BindNumberParameter<className>(scope, #className)
+/**
+ * @def SIMPLNX_PY_BIND_VECTOR_PARAMETER
+ * @brief Binds a vector parameter with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete vector parameter class.
+ */
 #define SIMPLNX_PY_BIND_VECTOR_PARAMETER(scope, className) BindVectorParameter<className>(scope, #className)
 
+/**
+ * @brief Binds a two-component vector value type to Python.
+ * @tparam T Specifies the vector element type.
+ * @param m Python module that receives the class.
+ * @param name Python class name.
+ */
 template <class T>
 static void BindVec2(py::module_& m, const char* name)
 {
@@ -202,6 +319,15 @@ static void BindVec2(py::module_& m, const char* name)
   py::implicitly_convertible<py::sequence, Vec>();
 }
 
+/**
+ * @brief Binds an in-memory DataStore type and its NumPy view to Python.
+ * @tparam T Specifies the store element type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ *
+ * The NumPy array keeps the bound DataStore alive while the view exists.
+ */
 template <class T>
 auto BindDataStore(py::handle scope, const char* name)
 {
@@ -219,10 +345,24 @@ auto BindDataStore(py::handle scope, const char* name)
       py::return_value_policy::reference_internal);
   dataStore.def("__getitem__", &DataStore<T>::at);
   dataStore.def("__len__", &DataStore<T>::getSize);
-  dataStore.def("resize_tuples", &DataStore<T>::resizeTuples, "Resize the tuples with the given shape");
+  dataStore.def(
+      "resize_tuples",
+      [](DataStore<T>& dataStore_, const ShapeType& tupleShape) {
+        Result<> result = dataStore_.resizeTuples(tupleShape);
+        ThrowIfInvalid(result);
+      },
+      "Resize the tuples with the given shape");
   return dataStore;
 }
 
+/**
+ * @brief Binds a DataArray type and its in-memory NumPy view to Python.
+ * @tparam T Specifies the array element type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ * @throws std::bad_cast If the DataArray does not use an in-memory DataStore.
+ */
 template <class T>
 auto BindDataArray(py::handle scope, const char* name)
 {
@@ -244,10 +384,35 @@ auto BindDataArray(py::handle scope, const char* name)
   return dataArray;
 }
 
+/**
+ * @def SIMPLNX_PY_BIND_DATA_ARRAY
+ * @brief Binds a DataArray with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete DataArray class.
+ */
 #define SIMPLNX_PY_BIND_DATA_ARRAY(scope, className) BindDataArray<className::value_type>(scope, #className)
+/**
+ * @def SIMPLNX_PY_BIND_DATA_STORE
+ * @brief Binds a DataStore with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete DataStore class.
+ */
 #define SIMPLNX_PY_BIND_DATA_STORE(scope, className) BindDataStore<className::value_type>(scope, #className)
+/**
+ * @def SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE
+ * @brief Binds an abstract data-store class with shared ownership.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete abstract-store class.
+ */
 #define SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, IDataStore, std::shared_ptr<className>)
 
+/**
+ * @brief Binds a NeighborList type to Python.
+ * @tparam T Specifies the list element type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ */
 template <class T>
 auto BindNeighborList(py::handle scope, const char* name)
 {
@@ -275,8 +440,21 @@ auto BindNeighborList(py::handle scope, const char* name)
   return neighborList;
 }
 
+/**
+ * @def SIMPLNX_PY_BIND_NEIGHBOR_LIST
+ * @brief Binds a NeighborList with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete NeighborList class.
+ */
 #define SIMPLNX_PY_BIND_NEIGHBOR_LIST(scope, className) BindNeighborList<className::value_type>(scope, #className)
 
+/**
+ * @brief Binds constructors for one two-dimensional geometry creation action.
+ * @tparam GeomT Specifies the concrete action type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ */
 template <class GeomT>
 auto BindCreateGeometry2DAction(py::handle scope, const char* name)
 {
@@ -288,6 +466,13 @@ auto BindCreateGeometry2DAction(py::handle scope, const char* name)
   return createGeometry2DAction;
 }
 
+/**
+ * @brief Binds constructors for one three-dimensional geometry creation action.
+ * @tparam GeomT Specifies the concrete action type.
+ * @param scope Python scope that receives the class.
+ * @param name Python class name.
+ * @return The new pybind11 class object.
+ */
 template <class GeomT>
 auto BindCreateGeometry3DAction(py::handle scope, const char* name)
 {
@@ -299,9 +484,26 @@ auto BindCreateGeometry3DAction(py::handle scope, const char* name)
   return createGeometry3DAction;
 }
 
+/**
+ * @def SIMPLNX_PY_BIND_CREATE_GEOMETRY_2D_ACTION
+ * @brief Binds a two-dimensional geometry action with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete action class.
+ */
 #define SIMPLNX_PY_BIND_CREATE_GEOMETRY_2D_ACTION(scope, className) BindCreateGeometry2DAction<className>(scope, #className)
+/**
+ * @def SIMPLNX_PY_BIND_CREATE_GEOMETRY_3D_ACTION
+ * @brief Binds a three-dimensional geometry action with its C++ class name.
+ * @param scope Python scope that receives the class.
+ * @param className Concrete action class.
+ */
 #define SIMPLNX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(scope, className) BindCreateGeometry3DAction<className>(scope, #className)
 
+/**
+ * @brief Copies the current errors and warnings from one pipeline filter node.
+ * @param filter Pipeline filter node to inspect.
+ * @return The filter errors followed by its warnings.
+ */
 std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(const PipelineFilter& filter)
 {
   std::vector<Error> filterErrors = filter.getErrors();
@@ -309,6 +511,14 @@ std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(cons
   return {std::move(filterErrors), std::move(filterWarnings)};
 }
 
+/**
+ * @brief Collects errors and warnings from a pipeline and its nested pipelines.
+ * @param pipeline Pipeline to inspect.
+ * @return The collected errors followed by the collected warnings.
+ *
+ * Collection stops after the first node whose fault state contains errors. This
+ * order matches pipeline execution and omits nodes that did not run.
+ */
 std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipeline& pipeline)
 {
   std::vector<Error> errors;
@@ -344,6 +554,12 @@ std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipe
   return {std::move(errors), std::move(warnings)};
 }
 
+/**
+ * @brief Executes a pipeline and converts node faults to a Result.
+ * @param pipeline Pipeline to execute.
+ * @param dataStructure DataStructure that the pipeline updates.
+ * @return Execution errors and warnings collected from the pipeline nodes.
+ */
 Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
 {
   bool success = pipeline.execute(dataStructure, false);
@@ -357,15 +573,33 @@ Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
   return result;
 }
 
+/**
+ * @brief Parses a DataPath for the Python constructor binding.
+ * @param path DataPath text.
+ * @return The parsed DataPath.
+ * @pre path must contain a valid DataPath because this helper accesses Result::value().
+ */
 nx::core::DataPath CreateDataPath(std::string_view path)
 {
   auto result = DataPath::FromString(path);
   return result.value();
 }
 
+/**
+ * @class ManualImportFinder
+ * @brief Maps module names to Python files or package directories for manual imports.
+ *
+ * Each path stem must be unique, and each stored path can identify only one
+ * module. The finder returns importlib specifications without importing modules.
+ */
 class ManualImportFinder
 {
 public:
+  /**
+   * @brief Adds a module path if its path and derived module name are unique.
+   * @param path Python file or package directory path.
+   * @return True if the finder inserted the path.
+   */
   bool insert(const fs::path& path)
   {
     if(containsPath(path))
@@ -382,6 +616,10 @@ public:
     return true;
   }
 
+  /**
+   * @brief Removes the entry for a path.
+   * @param path Stored path to remove.
+   */
   void removePath(const fs::path& path)
   {
     if(!containsPath(path))
@@ -393,6 +631,10 @@ public:
     m_PathToModuleMap.erase(path);
   }
 
+  /**
+   * @brief Removes the entry for a module name.
+   * @param modName Stored module name to remove.
+   */
   void removeModule(const std::string& modName)
   {
     if(!containsModule(modName))
@@ -404,22 +646,42 @@ public:
     m_PathToModuleMap.erase(modPath);
   }
 
+  /**
+   * @brief Removes all module-to-path mappings.
+   */
   void clear()
   {
     m_ModuleToPathMap.clear();
     m_PathToModuleMap.clear();
   }
 
+  /**
+   * @brief Tests whether a path has a registered module.
+   * @param path Path to find.
+   * @return True if the path is registered.
+   */
   bool containsPath(const fs::path& path) const
   {
     return m_PathToModuleMap.count(path) > 0;
   }
 
+  /**
+   * @brief Tests whether a module name has a registered path.
+   * @param modName Module name to find.
+   * @return True if the module is registered.
+   */
   bool containsModule(const std::string& modName) const
   {
     return m_ModuleToPathMap.count(modName) > 0;
   }
 
+  /**
+   * @brief Creates an importlib specification for a registered module.
+   * @param fullname Registered module name.
+   * @param path Unused Python finder path argument.
+   * @param target Unused Python reload target argument.
+   * @return An importlib specification, or Python None when fullname is not registered.
+   */
   py::object findSpec(const std::string& fullname, py::object path, py::object target) const
   {
     if(!containsModule(fullname))
@@ -692,7 +954,7 @@ PYBIND11_MODULE(simplnx, mod)
   dataPath.def("__len__", [](const DataPath& self) { return self.getLength(); });
   dataPath.def("to_string", [](const DataPath& self, const std::string& delimiter) { return self.toString(delimiter); });
   dataPath.def("create_child_path", [](const DataPath& self, const std::string& name) { return self.createChildPath(name); });
-  // Python "PathLib" type operations
+  // These bindings expose Python pathlib-style operations for DataPath.
   dataPath.def("parts", [](const DataPath& self) { return self.getPathVector(); });
   dataPath.def("parent", [](const DataPath& self) { return self.getParent(); });
   dataPath.def("name", [](const DataPath& self) { return self.getTargetName(); });
@@ -1016,8 +1278,10 @@ PYBIND11_MODULE(simplnx, mod)
   iNodeGeometry0D.def(
       "resize_vertices",
       [](INodeGeometry0D& nodeGeometry0D, usize size) {
-        nodeGeometry0D.resizeVertexList(size);
-        nodeGeometry0D.getVertexAttributeMatrix()->resizeTuples({size});
+        Result<> resizeResult = nodeGeometry0D.resizeVertexList(size);
+        ThrowIfInvalid(resizeResult);
+        resizeResult = RequireAttributeMatrix(nodeGeometry0D.getVertexAttributeMatrix(), nodeGeometry0D, "vertex").resizeTuples({size});
+        ThrowIfInvalid(resizeResult);
       },
       "This will resize the shared vertex list and also resize the associated attribute matrix");
   py::class_<VertexGeom, INodeGeometry0D, std::shared_ptr<VertexGeom>> vertexGeom(mod, "VertexGeom");
@@ -1026,8 +1290,10 @@ PYBIND11_MODULE(simplnx, mod)
   iNodeGeometry1D.def(
       "resize_edges",
       [](INodeGeometry1D& nodeGeometry1D, usize size) {
-        nodeGeometry1D.resizeEdgeList(size);
-        nodeGeometry1D.getEdgeAttributeMatrix()->resizeTuples({size});
+        Result<> resizeResult = nodeGeometry1D.resizeEdgeList(size);
+        ThrowIfInvalid(resizeResult);
+        resizeResult = RequireAttributeMatrix(nodeGeometry1D.getEdgeAttributeMatrix(), nodeGeometry1D, "edge").resizeTuples({size});
+        ThrowIfInvalid(resizeResult);
       },
       "This will resize the shared edge list and also resize the associated attribute matrix");
   py::class_<EdgeGeom, INodeGeometry1D, std::shared_ptr<EdgeGeom>> edgeGeom(mod, "EdgeGeom");
@@ -1036,8 +1302,11 @@ PYBIND11_MODULE(simplnx, mod)
   iNodeGeometry2D.def(
       "resize_faces",
       [](INodeGeometry2D& nodeGeometry2D, usize size) {
-        nodeGeometry2D.resizeFaceList(size);
-        nodeGeometry2D.getEdgeAttributeMatrix()->resizeTuples({size});
+        Result<> resizeResult = nodeGeometry2D.resizeFaceList(size);
+        ThrowIfInvalid(resizeResult);
+        // The face attribute matrix is resized together with the shared face list.
+        resizeResult = RequireAttributeMatrix(nodeGeometry2D.getFaceAttributeMatrix(), nodeGeometry2D, "face").resizeTuples({size});
+        ThrowIfInvalid(resizeResult);
       },
       "This will resize the shared triangle list and also resize the associated attribute matrix");
   py::class_<TriangleGeom, INodeGeometry2D, std::shared_ptr<TriangleGeom>> triangleGeom(mod, "TriangleGeom");
@@ -1047,8 +1316,10 @@ PYBIND11_MODULE(simplnx, mod)
   iNodeGeometry3D.def(
       "resize_polyhedra",
       [](INodeGeometry3D& nodeGeometry3D, usize size) {
-        nodeGeometry3D.resizePolyhedraList(size);
-        nodeGeometry3D.getPolyhedraAttributeMatrix()->resizeTuples({size});
+        Result<> resizeResult = nodeGeometry3D.resizePolyhedraList(size);
+        ThrowIfInvalid(resizeResult);
+        resizeResult = RequireAttributeMatrix(nodeGeometry3D.getPolyhedraAttributeMatrix(), nodeGeometry3D, "polyhedra").resizeTuples({size});
+        ThrowIfInvalid(resizeResult);
       },
       "This will resize the shared polyhedra list and also resize the associated attribute matrix");
   py::class_<TetrahedralGeom, INodeGeometry3D, std::shared_ptr<TetrahedralGeom>> tetrahedralGeom(mod, "TetrahedralGeom");
@@ -1057,7 +1328,13 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<DataGroup, BaseGroup, std::shared_ptr<DataGroup>> dataGroup(mod, "DataGroup");
 
   py::class_<AttributeMatrix, BaseGroup, std::shared_ptr<AttributeMatrix>> attributeMatrix(mod, "AttributeMatrix");
-  attributeMatrix.def("resize_tuples", &AttributeMatrix::resizeTuples, "Resize the tuples with the given shape");
+  attributeMatrix.def(
+      "resize_tuples",
+      [](AttributeMatrix& attributeMatrix_, const ShapeType& tupleShape) {
+        Result<> resizeResult = attributeMatrix_.resizeTuples(tupleShape);
+        ThrowIfInvalid(resizeResult);
+      },
+      "Resize the tuples with the given shape");
   attributeMatrix.def_property_readonly("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
   attributeMatrix.def_property_readonly("size", &AttributeMatrix::getNumberOfTuples, "Returns the total number of tuples");
 
@@ -1076,7 +1353,13 @@ PYBIND11_MODULE(simplnx, mod)
   iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
   iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
   iDataArray.def_property_readonly("data_type", &IDataArray::getDataType);
-  iDataArray.def("resize_tuples", &IDataArray::resizeTuples, "Resize the tuples with the given shape");
+  iDataArray.def(
+      "resize_tuples",
+      [](IDataArray& dataArray, const ShapeType& tupleShape) {
+        Result<> resizeResult = dataArray.resizeTuples(tupleShape);
+        ThrowIfInvalid(resizeResult);
+      },
+      "Resize the tuples with the given shape");
 
   py::class_<StringArray, IArray, std::shared_ptr<StringArray>> stringArray(mod, "StringArray");
   stringArray.def(
@@ -1116,7 +1399,13 @@ PYBIND11_MODULE(simplnx, mod)
   stringArray.def_property_readonly("tdims", &StringArray::getTupleShape);
   stringArray.def_property_readonly("cdims", &StringArray::getComponentShape);
   stringArray.def_property_readonly("values", &StringArray::values);
-  stringArray.def("resize_tuples", &StringArray::resizeTuples, "Resize the tuples with the given shape");
+  stringArray.def(
+      "resize_tuples",
+      [](StringArray& stringArray_, const ShapeType& tupleShape) {
+        Result<> resizeResult = stringArray_.resizeTuples(tupleShape);
+        ThrowIfInvalid(resizeResult);
+      },
+      "Resize the tuples with the given shape");
 
   auto iNeighborList = py::class_<INeighborList, IArray, std::shared_ptr<INeighborList>>(mod, "INeighborList");
 
@@ -1182,8 +1471,8 @@ PYBIND11_MODULE(simplnx, mod)
   copyDataObjectAction.def(py::init<const DataPath&, const DataPath&, const std::vector<DataPath>>(), "path"_a, "new_path"_a, "all_created_paths"_a);
 
   auto createArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateArrayAction, IDataCreationAction);
-  createArrayAction.def(py::init<DataType, const std::vector<usize>&, const std::vector<usize>&, const DataPath&, std::string>(), "type"_a, "t_dims"_a, "c_dims"_a, "path"_a,
-                        "data_format"_a = std::string(""));
+  createArrayAction.def(py::init<DataType, const std::vector<usize>&, const std::vector<usize>&, const DataPath&, std::string, std::string>(), "type"_a, "t_dims"_a, "c_dims"_a, "path"_a,
+                        "data_format"_a = std::string(""), "fill_value"_a = std::string(""));
 
   auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, IDataCreationAction);
   createAttributeMatrixAction.def(py::init<const DataPath&, const ShapeType&>(), "path"_a, "shape"_a);
@@ -1676,8 +1965,8 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
 
-  // Parameter value types conversions must be registered after the value types are bound
-  // but before the filters are bound so that the filters signatures are properly generated.
+  // Register conversions after their value types and before their filters.
+  // This order lets filter binding generate the correct Python signatures.
 
   internals->addConversion<ArrayCreationParameter>();
   internals->addConversion<ArraySelectionParameter>();
@@ -1805,7 +2094,7 @@ PYBIND11_MODULE(simplnx, mod)
   manualImportFinder.def("contains_path", &ManualImportFinder::containsPath, "path"_a);
   manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
 
-  // Geometry Helper Methods
+  // These helper bindings create common geometry objects through their filters.
   mod.def(
       "create_image_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const std::vector<uint64>& dims, const std::vector<float32>& origin, const std::vector<float32>& spacing,

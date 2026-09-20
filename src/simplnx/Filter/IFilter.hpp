@@ -142,8 +142,11 @@ public:
 
   /**
    * @brief Result of the execute operation including any errors and output values.
+   *
+   * The type is nodiscard because a discarded execute result hides every storage,
+   * cancellation, and exception failure the filter reported.
    */
-  struct ExecuteResult
+  struct [[nodiscard]] ExecuteResult
   {
     Result<> result;
     std::vector<PreflightValue> outputValues;

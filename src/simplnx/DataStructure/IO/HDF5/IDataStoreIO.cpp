@@ -10,24 +10,12 @@
 
 using namespace nx::core;
 
-ShapeType nx::core::HDF5::IDataStoreIO::ReadTupleShape(const nx::core::HDF5::DatasetIO& datasetReader)
+Result<ShapeType> nx::core::HDF5::IDataStoreIO::ReadTupleShape(const nx::core::HDF5::DatasetIO& datasetReader)
 {
-  ShapeType tupleShape;
-  auto tupleShapeResult = datasetReader.readVectorAttribute<usize>(IOConstants::k_TupleShapeTag);
-  if(tupleShapeResult.valid())
-  {
-    tupleShape = std::move(tupleShapeResult.value());
-  }
-  return tupleShape;
+  return datasetReader.readVectorAttribute<usize>(IOConstants::k_TupleShapeTag);
 }
 
-ShapeType nx::core::HDF5::IDataStoreIO::ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader)
+Result<ShapeType> nx::core::HDF5::IDataStoreIO::ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader)
 {
-  ShapeType compShape;
-  auto compShapeResult = datasetReader.readVectorAttribute<usize>(IOConstants::k_ComponentShapeTag);
-  if(compShapeResult.valid())
-  {
-    compShape = std::move(compShapeResult.value());
-  }
-  return compShape;
+  return datasetReader.readVectorAttribute<usize>(IOConstants::k_ComponentShapeTag);
 }

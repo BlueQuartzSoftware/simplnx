@@ -129,6 +129,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform No Spr
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // 5 vertices: 2 map to voxel 0, 1 each to voxels 5, 10, 15
   // ImageGeom: 4x4x1 (16 voxels), kernel < spacing means no spreading
   std::vector<uint64> voxelIndices = {0, 0, 5, 10, 15};
@@ -142,7 +145,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform No Spr
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Interpolated FaceAreas (weighted average, float64)
@@ -192,6 +196,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform With K
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // 1 vertex at voxel 5 (x=1,y=1,z=0) in a 4x4x1 grid
   // Kernel size 2.0, spacing 1.0 -> kernelNumVoxels = (1,1,1) -> 3x3x1 effective kernel
   // With Uniform kernel, all weights = 1.0
@@ -209,7 +216,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform With K
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   auto& interpFA = dataStructure.getDataRefAs<Float64Array>(k_InterpGroupPath.createChildPath("FaceAreas"));
@@ -236,6 +244,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian With 
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // 2 vertices: voxel 5 (x=1,y=1,z=0) FaceArea=10.0, voxel 6 (x=2,y=1,z=0) FaceArea=20.0
   // Kernel size 2.0, spacing 1.0 -> 3x3x1 Gaussian kernel, sigmas=(1,1,1)
   std::vector<uint64> voxelIndices = {5, 6};
@@ -249,7 +260,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian With 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   auto& interpFA = dataStructure.getDataRefAs<Float64Array>(k_InterpGroupPath.createChildPath("FaceAreas"));
@@ -274,6 +286,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Masked Vertice
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   // 5 vertices, mask out vertex 1 (second vertex at voxel 0 with FaceArea=20.0)
   std::vector<uint64> voxelIndices = {0, 0, 5, 10, 15};
   std::vector<float64> faceAreas = {10.0, 20.0, 30.0, 40.0, 50.0};
@@ -286,7 +301,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Masked Vertice
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   auto& interpFA = dataStructure.getDataRefAs<Float64Array>(k_InterpGroupPath.createChildPath("FaceAreas"));

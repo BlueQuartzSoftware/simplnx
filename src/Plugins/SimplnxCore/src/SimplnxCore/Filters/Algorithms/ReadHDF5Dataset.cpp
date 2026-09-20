@@ -13,7 +13,6 @@
 using namespace nx::core;
 namespace fs = std::filesystem;
 
-// -----------------------------------------------------------------------------
 ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadHDF5DatasetInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -22,10 +21,8 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-// -----------------------------------------------------------------------------
 ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ReadHDF5Dataset::operator()()
 {
   auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;
@@ -42,12 +39,16 @@ Result<> ReadHDF5Dataset::operator()()
   std::map<std::string, hid_t> openedParentPathsMap;
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     std::string datasetPath = datasetImportInfo.dataSetPath;
     auto datasetReader = h5FileReader.openDataset(datasetPath);
 
     std::string objectName = datasetReader.getName();
 
-    // Read dataset into DREAM3D-NX structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto h5TypeResult = datasetReader.getDataType();
@@ -103,7 +104,7 @@ Result<> ReadHDF5Dataset::operator()()
     {
       return fillArrayResults;
     }
-  } // End For Loop over dataset import info list
+  }
 
   return {};
 }

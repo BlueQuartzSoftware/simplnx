@@ -149,8 +149,16 @@ Result<> RemoveFlaggedEdges::operator()()
 
   // define new sizing
   size = vertexListIndices.size();
-  reducedEdgeGeom.resizeVertexList(size); // resize accordingly
-  reducedEdgeGeom.getVertexAttributeMatrix()->resizeTuples({size});
+  Result<> resizeResult = reducedEdgeGeom.resizeVertexList(size);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = reducedEdgeGeom.getVertexAttributeMatrix()->resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // load reduced Geometry Vertex list according to used vertices
   Point3Df coords = {0.0f, 0.0f, 0.0f};
@@ -167,8 +175,16 @@ Result<> RemoveFlaggedEdges::operator()()
 
   // Set up preprocessing conditions (allocation for parallelization)
   size = newEdgesIndexList.size();
-  reducedEdgeGeom.resizeEdgeList(size); // resize accordingly
-  reducedEdgeGeom.getEdgeAttributeMatrix()->resizeTuples({size});
+  resizeResult = reducedEdgeGeom.resizeEdgeList(size);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = reducedEdgeGeom.getEdgeAttributeMatrix()->resizeTuples({size});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // parse Edges and reassign indexes to match new vertex list
   ParallelDataAlgorithm dataAlg;

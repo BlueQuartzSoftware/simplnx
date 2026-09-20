@@ -12,19 +12,31 @@ using namespace nx::core;
 namespace
 {
 /**
- * @brief
- * @tparam T
+ * @class CropEdgeGeomArray
+ * @brief Copies retained geometry-element tuples and records the first copy error.
+ * @tparam T Specifies the array value type.
  */
 template <typename T>
 class CropEdgeGeomArray
 {
 public:
-  CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const AttributeMatrix& srcAttrMatrix, const std::vector<bool>& tupleMask, const std::atomic_bool& shouldCancel)
+  /**
+   * @brief Creates one retained-tuple copy task.
+   * @param oldCellArray Supplies source tuples.
+   * @param newCellArray Receives retained tuples.
+   * @param srcAttrMatrix Supplies the source tuple count.
+   * @param tupleMask Selects retained tuples.
+   * @param shouldCancel Stops later tuple copies.
+   * @param taskResult Stores the first copy error from all array tasks.
+   */
+  CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const AttributeMatrix& srcAttrMatrix, const std::vector<bool>& tupleMask, const std::atomic_bool& shouldCancel,
+                    CopyFromArray::ParallelTaskResult& taskResult)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcAttrMatrix(srcAttrMatrix)
   , m_TupleMask(tupleMask)
   , m_ShouldCancel(shouldCancel)
+  , m_TaskResult(taskResult)
   {
   }
 
@@ -40,13 +52,18 @@ public:
     usize newIndex = 0;
     for(usize i = 0; i < m_SrcAttrMatrix.getNumberOfTuples(); ++i)
     {
-      if(m_ShouldCancel)
+      if(m_ShouldCancel || m_TaskResult.shouldAbort())
       {
         return;
       }
       else if(m_TupleMask[i])
       {
-        CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, newIndex, i, 1);
+        Result<> copyResult = CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, newIndex, i, 1);
+        if(copyResult.invalid())
+        {
+          m_TaskResult.store(std::move(copyResult));
+          return;
+        }
         newIndex++;
       }
     }
@@ -58,6 +75,7 @@ private:
   const AttributeMatrix& m_SrcAttrMatrix;
   const std::vector<bool> m_TupleMask;
   const std::atomic_bool& m_ShouldCancel;
+  CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
 
 /**
@@ -217,10 +235,26 @@ Result<> CropEdgeGeometry::operator()()
   auto behavior = static_cast<BoundaryIntersectionBehavior>(m_InputValues->boundaryIntersectionBehavior);
 
   // Resize vertices, vertex attribute matrix, edges, and edges attribute matrix to the maximum size
-  destVertices.resizeTuples({numVertices});
-  destVertexAttrMatrix.resizeTuples({numVertices});
-  destEdges.resizeTuples({numEdges});
-  destEdgesAttrMatrix.resizeTuples({numEdges});
+  Result<> resizeResult = destVertices.resizeTuples({numVertices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destVertexAttrMatrix.resizeTuples({numVertices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destEdges.resizeTuples({numEdges});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destEdgesAttrMatrix.resizeTuples({numEdges});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   std::vector<bool> edgesMask(numEdges, false);
   std::vector<bool> vertexReferenced(numVertices, false);
@@ -309,10 +343,26 @@ Result<> CropEdgeGeometry::operator()()
   usize totalEdgesKept = std::count(edgesMask.begin(), edgesMask.end(), true);
 
   // Resize to proper sizes
-  destVertices.resizeTuples({totalVerticesReferenced});
-  destVertexAttrMatrix.resizeTuples({totalVerticesReferenced});
-  destEdges.resizeTuples({totalEdgesKept});
-  destEdgesAttrMatrix.resizeTuples({totalEdgesKept});
+  resizeResult = destVertices.resizeTuples({totalVerticesReferenced});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destVertexAttrMatrix.resizeTuples({totalVerticesReferenced});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destEdges.resizeTuples({totalEdgesKept});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = destEdgesAttrMatrix.resizeTuples({totalEdgesKept});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // Create a mapping from old vertex indices to new indices
   std::vector<int64> vertexMapping(numVertices, -1);
@@ -341,6 +391,8 @@ Result<> CropEdgeGeometry::operator()()
 
   // Crop each vertex data array in parallel
   {
+    // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
+    CopyFromArray::ParallelTaskResult taskResult;
     ParallelTaskAlgorithm taskRunner;
     for(const auto& [dataId, oldDataObject] : srcVertexAttrMatrix)
     {
@@ -355,9 +407,14 @@ Result<> CropEdgeGeometry::operator()()
       auto& newDataArray = dynamic_cast<IDataArray&>(destVertexAttrMatrix.at(srcName));
 
       m_MessageHandler(fmt::format("Cropping Volume || Copying Vertex Array {}", srcName));
-      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcVertexAttrMatrix, vertexReferenced, m_ShouldCancel);
+      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcVertexAttrMatrix, vertexReferenced, m_ShouldCancel, taskResult);
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+    Result<> copyResult = taskResult.takeResult();
+    if(copyResult.invalid())
+    {
+      return copyResult;
+    }
   }
 
   // Create final edges with remapped vertex indices
@@ -383,6 +440,8 @@ Result<> CropEdgeGeometry::operator()()
 
   // Crop each edge data array in parallel
   {
+    // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
+    CopyFromArray::ParallelTaskResult taskResult;
     ParallelTaskAlgorithm taskRunner;
     for(const auto& [dataId, oldDataObject] : srcEdgesAttrMatrix)
     {
@@ -397,9 +456,14 @@ Result<> CropEdgeGeometry::operator()()
       auto& newDataArray = dynamic_cast<IDataArray&>(destEdgesAttrMatrix.at(srcName));
 
       m_MessageHandler(fmt::format("Cropping Volume || Copying Edge Array {}", srcName));
-      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcEdgesAttrMatrix, edgesMask, m_ShouldCancel);
+      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcEdgesAttrMatrix, edgesMask, m_ShouldCancel, taskResult);
     }
     taskRunner.wait();
+    Result<> copyResult = taskResult.takeResult();
+    if(copyResult.invalid())
+    {
+      return copyResult;
+    }
   }
 
   return {};

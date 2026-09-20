@@ -63,9 +63,10 @@ public:
 
   /**
    * @brief Resizes the edge list to the target size.
-   * @param size
+   * @param size Specifies the new edge count.
+   * @return Error if the edge store cannot resize.
    */
-  void resizeEdgeList(usize size);
+  [[nodiscard]] Result<> resizeEdgeList(usize size);
 
   /**
    * @brief Returns the number of edges in the geometry.
@@ -167,11 +168,6 @@ public:
    * @brief Deletes the element centroids array from the geometry.
    */
   void deleteElementCentroids();
-
-  /****************************************************************************
-   * These functions get values related to where the Vertex Coordinates are
-   * stored in the DataStructure
-   */
 
   /**
    * @brief Returns the DataStructure unique ID of the edge list array.
@@ -294,6 +290,17 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the DataStructure object.
    */
+  /**
+   * @brief Copies the members INodeGeometry1D declares into a geometry copy.
+   *
+   * Chains to INodeGeometry0D::copyMembersInto so that a copy performed at any level of the hierarchy
+   * reproduces every inherited member exactly once.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(INodeGeometry1D& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_EdgeDataArrayId;
   std::optional<IdType> m_EdgeAttributeMatrixId;
   std::optional<IdType> m_CellContainingVertDataArrayId;

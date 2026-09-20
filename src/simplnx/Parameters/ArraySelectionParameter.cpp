@@ -15,6 +15,10 @@
 using namespace nx::core;
 
 template <>
+/**
+ * @struct fmt::formatter<nx::core::DataType>
+ * @brief Formats a simplnx DataType as its registered name.
+ */
 struct fmt::formatter<nx::core::DataType>
 {
   constexpr format_parse_context::iterator parse(format_parse_context& ctx)
@@ -55,7 +59,6 @@ IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-//------------------------------------------------------------------------------
 IParameter::VersionType ArraySelectionParameter::getVersion() const
 {
   return 1;
@@ -155,8 +158,8 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
-  // Only validate IDataArray? Ignore StringData Array because there is only a
-  // single type and component dims do not matter?
+  // StringArray has fixed string type and component shape. Numeric type,
+  // component-shape, and storage-location rules apply only to IDataArray.
   const auto* dataArray = dynamic_cast<const IDataArray*>(object);
   if(dataArray != nullptr)
   {
@@ -201,11 +204,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     {
       IDataStore::StoreType storeType = dataArray->getStoreType();
 
-      if(allowsInMemory() && (storeType == IDataStore::StoreType::Empty))
-      {
-        return {};
-      }
-      else if(allowsOutOfCore() && (storeType == IDataStore::StoreType::EmptyOutOfCore))
+      if(storeType == IDataStore::StoreType::Empty)
       {
         return {};
       }

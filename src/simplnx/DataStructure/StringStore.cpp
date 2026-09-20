@@ -1,5 +1,11 @@
 #include "StringStore.hpp"
 
+#include "simplnx/Utilities/StoreCopyUtilities.hpp"
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
+#include <exception>
 #include <numeric>
 
 namespace nx::core
@@ -32,11 +38,20 @@ const ShapeType& StringStore::getTupleShape() const
   return m_TupleShape;
 }
 
-void StringStore::resizeTuples(const ShapeType& tupleShape)
+Result<> StringStore::resizeTuples(const ShapeType& tupleShape)
 {
-  m_TupleShape = tupleShape;
-  m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-  m_Data.resize(m_NumTuples);
+  try
+  {
+    ShapeType newTupleShape = tupleShape;
+    const usize numTuples = std::accumulate(newTupleShape.cbegin(), newTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+    m_Data.resize(numTuples);
+    m_TupleShape = std::move(newTupleShape);
+    m_NumTuples = numTuples;
+  } catch(const std::exception& exception)
+  {
+    return MakeErrorResult(-6035, fmt::format("StringStore resize to shape [{}] failed: {}", fmt::join(tupleShape, ", "), exception.what()));
+  }
+  return {};
 }
 
 usize StringStore::size() const
@@ -72,9 +87,9 @@ void StringStore::setValue(usize index, const value_type& value)
   m_Data.at(index) = value;
 }
 
-std::unique_ptr<AbstractStringStore> StringStore::deepCopy() const
+std::unique_ptr<AbstractStringStore> StringStore::deepCopy(const std::string& destinationFormat) const
 {
-  return std::make_unique<StringStore>(m_Data, m_TupleShape);
+  return CopyStringStore(*this, destinationFormat);
 }
 
 AbstractStringStore& StringStore::operator=(const std::vector<std::string>& values)

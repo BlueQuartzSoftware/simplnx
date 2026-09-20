@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeBoundaryStrengthsFilter.hpp"
@@ -11,6 +13,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -120,4 +123,74 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: SIMPL Backwards 
       CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32 invalidPhaseIdx = GENERATE(-1, 2);
+  CAPTURE(invalidPhaseIdx);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  DataStructure dataStructure;
+  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FaceLabels"}), {1}, {2});
+  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, "FaceLabels", faceLabelsStore);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(faceLabelsArrayPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  (*faceLabelsArrayPtr)[0] = 1;
+  (*faceLabelsArrayPtr)[1] = 2;
+
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"AvgQuats"}), {3}, {4});
+  auto* avgQuatsArrayPtr = Float32Array::Create(dataStructure, "AvgQuats", avgQuatsStore);
+  avgQuatsArrayPtr->fill(0.0F);
+  (*avgQuatsArrayPtr)[7] = 1.0F;
+  (*avgQuatsArrayPtr)[11] = 1.0F;
+
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FeaturePhases"}), {3}, {1});
+  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, "FeaturePhases", featurePhasesStore);
+  featurePhasesArrayPtr->fill(0);
+  (*featurePhasesArrayPtr)[1] = 1;
+  (*featurePhasesArrayPtr)[2] = 1;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, DataPath({"CrystalStructures"}), {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStructuresStore);
+  (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  ComputeBoundaryStrengthsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(std::vector<float64>{0.0, 0.0, 1.0}));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceLabels"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"AvgQuats"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"FeaturePhases"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+
+  SECTION("Participating Phase returns an error")
+  {
+    (*featurePhasesArrayPtr)[2] = invalidPhaseIdx;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -94740);
+  }
+
+  SECTION("Participating Laue index returns an error")
+  {
+    (*crystalStructuresArrayPtr)[1] = 999U;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -94741);
+  }
+
+  SECTION("External Face is ignored")
+  {
+    (*faceLabelsArrayPtr)[1] = -1;
+    (*featurePhasesArrayPtr)[1] = invalidPhaseIdx;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

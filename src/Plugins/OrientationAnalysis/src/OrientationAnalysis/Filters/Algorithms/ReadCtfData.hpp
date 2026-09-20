@@ -12,6 +12,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ReadCtfDataInputValues
+ * @brief Identifies .ctf reader inputs.
+ */
 struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
@@ -24,13 +28,28 @@ struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
 
 /**
  * @class ReadCtfData
- * @brief This filter will read a single .ctf file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the
- * intermediate .h5ebsd file.
+ * @brief Reads one .ctf EBSD file into an Image Geometry.
+ *
+ * EbsdLib owns full reader buffers. Simplnx interleaves Euler components in
+ * bounded chunks with optional hex correction and unit conversion. Destination
+ * bulk-write and crystal-structure bulk-read Result values are not inspected.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadCtfData
 {
 public:
+  /**
+   * @brief Initializes .ctf file reading.
+   * @param dataStructure Provides output arrays.
+   * @param msgHandler Supplies progress messages.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies input and output paths.
+   * @pre dataStructure, msgHandler, shouldCancel, and inputValues outlive this
+   *      executor.
+   */
   ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadCtfDataInputValues* inputValues);
+  /**
+   * @brief Destroys the .ctf reader.
+   */
   ~ReadCtfData() noexcept;
 
   ReadCtfData(const ReadCtfData&) = delete;
@@ -38,6 +57,12 @@ public:
   ReadCtfData& operator=(const ReadCtfData&) = delete;
   ReadCtfData& operator=(ReadCtfData&&) noexcept = delete;
 
+  /**
+   * @brief Reads the .ctf file into output arrays.
+   * @return Success, or an EbsdLib or input-validation error.
+   *
+   * When a cancellation checkpoint observes the signal, the function returns success. Data copied before that checkpoint remains in the output arrays. Later data is not copied.
+   */
   Result<> operator()();
 
 private:
@@ -47,20 +72,16 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   /**
-   * @brief Populates the Ensemble Attribute Matrix arrays (CrystalStructures, MaterialName,
-   * LatticeConstants) from the phase sections that CtfReader parsed out of the file header.
-   * @param reader The CtfReader instance that has already successfully read the file.
-   * @return Invalid Result if the file declares no phases.
+   * @brief Initializes ensemble arrays from parsed .ctf phases.
+   * @param reader Provides parsed .ctf data.
+   * @return An error if the file declares no phases.
    */
   Result<> loadMaterialInfo(ebsdlib::CtfReader* reader) const;
 
   /**
-   * @brief Copies the per-scan-point data columns out of the CtfReader buffers into the
-   * Cell Attribute Matrix arrays, condensing Euler1/2/3 into the 3-component EulerAngles
-   * array and applying the optional EDAX hexagonal alignment (+30 degrees) and
-   * degrees-to-radians conversions.
-   * @param reader The CtfReader instance that has already successfully read the file.
-   * @return Invalid Result if the reader buffers cannot back the geometry created at preflight.
+   * @brief Copies parsed .ctf cell columns to output arrays.
+   * @param reader Provides parsed .ctf data.
+   * @return An error if reader buffers are shorter than the output geometry.
    */
   Result<> copyRawEbsdData(ebsdlib::CtfReader* reader) const;
 };

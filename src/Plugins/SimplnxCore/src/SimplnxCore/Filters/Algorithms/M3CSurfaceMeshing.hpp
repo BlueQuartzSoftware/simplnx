@@ -5,13 +5,20 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
+#include <vector>
+
 namespace nx::core
 {
 
+/**
+ * @struct M3CSurfaceMeshingInputValues
+ * @brief Stores meshing paths and winding-repair options.
+ */
 struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 {
   bool RepairTriangleWinding;
@@ -30,21 +37,37 @@ struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 
 /**
  * @class M3CSurfaceMeshing
- * @brief In-memory Multi-Material Marching Cubes surface meshing.
+ * @brief Multi-Material Marching Cubes surface meshing with resident and
+ * bounded external-scratch implementations.
  *
- * Port of the legacy DREAM3D `M3CEntireVolume` algorithm (the all-in-memory variant, contributed by
- * Dr. Sukbin Lee, CMU; based on Wu & Sullivan 2003). The slice-by-slice disk round-trip of
- * `M3CSliceBySlice` is intentionally NOT ported; the whole mesh is accumulated in memory and written
- * directly into the output TriangleGeom.
+ * This port retains the legacy DREAM3D M3CEntireVolume algorithm, contributed
+ * by Dr. Sukbin Lee at CMU and based on Wu and Sullivan 2003. Resident inputs
+ * use a sliding window. Disk-backed inputs use two passes with temporary record
+ * stores for volume and mesh state.
  *
- * Grafted from the slice variant: ghost-layer wrapping and FeatureId==0 renumbering (on a local copy).
+ * A local ghost layer and Feature Id 0 renumbering preserve legacy interfaces
+ * without changing the input array.
  */
 class SIMPLNXCORE_EXPORT M3CSurfaceMeshing
 {
 public:
+  /**
+   * @brief Defines indexes used by TriangleGeom mesh arrays.
+   */
   using MeshIndexType = IGeometry::MeshIndexType;
 
+  /**
+   * @brief Creates an M3C surface-meshing algorithm.
+   * @param dataStructure Provides selected geometries and arrays.
+   * @param inputValues Specifies validated meshing paths and options. The caller
+   * must keep this object alive for the algorithm lifetime.
+   * @param shouldCancel Stops later meshing phases when true.
+   * @param mesgHandler Receives progress messages.
+   */
   M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMeshingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  /**
+   * @brief Destroys the non-owning M3C algorithm.
+   */
   ~M3CSurfaceMeshing() noexcept;
 
   M3CSurfaceMeshing(const M3CSurfaceMeshing&) = delete;
@@ -52,6 +75,10 @@ public:
   M3CSurfaceMeshing& operator=(const M3CSurfaceMeshing&) = delete;
   M3CSurfaceMeshing& operator=(M3CSurfaceMeshing&&) noexcept = delete;
 
+  /**
+   * @brief Selects resident or external-scratch meshing.
+   * @return Error from selected meshing, or success after cancellation.
+   */
   Result<> operator()();
 
 private:
@@ -60,20 +87,32 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  // Whole-volume variant (the original M3CEntireVolume port): allocates all per-site scratch
-  // (squares/nodeType/newNodeIds) over the entire volume. Peak memory is O(volume).
+  /**
+   * @brief Runs the serial whole-volume reference implementation.
+   * @return Error during meshing, or success after cancellation.
+   *
+   * This validation path allocates per-site scratch for the complete volume.
+   */
   Result<> runEntireVolume();
 
-  // Sliding-window variant: sweeps the volume z-slice by z-slice, keeping only a few slices of the
-  // per-site square scratch resident at once, so that scratch is O(sliceArea) = O(N^2/3) instead of
-  // O(volume) (nodeType remains a whole-volume int8 array).
-  //   parallel == false: serial; byte-identical to runEntireVolume() (a reference, via M3C_SERIAL=1).
-  //   parallel == true : the DEFAULT. Multithreaded across the cubes of each slice (each cube flips a
-  //                      private edge copy, so cubes are independent). Byte-identical vertices,
-  //                      FaceLabels, and NodeTypes, and deterministic run-to-run, but a slightly
-  //                      different (still valid, watertight) triangulation than the serial path, since
-  //                      the legacy per-cube loop triangulation depends on inherently serial cross-cube
-  //                      edge-flip propagation.
+  /**
+   * @brief Sweeps resident input with bounded Z-window square scratch.
+   * @param parallel Selects serial legacy or parallel cube processing.
+   * @return Error during meshing, or success after cancellation.
+   *
+   * Node types still span the complete volume.
+   */
   Result<> runWindowed(bool parallel);
+
+  /**
+   * @brief Runs bounded external-scratch meshing for disk-backed targets.
+   *
+   * Temporary record stores hold volume and mesh state. Fixed pages limit RAM.
+   * Genuine OOC execution fails when external scratch storage is unavailable.
+   * @param dispatchTargets Provides residency target arrays.
+   * @param usesOutOfCoreStore Indicates actual disk-backed dispatch.
+   * @return Storage, topology, or output error, or success after cancellation.
+   */
+  Result<> runOutOfCore(const std::vector<const IArray*>& dispatchTargets, bool usesOutOfCoreStore);
 };
 } // namespace nx::core

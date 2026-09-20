@@ -34,6 +34,10 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Locates the executable that hosts this process.
+ * @return Executable path, or an error when the platform query fails.
+ */
 Result<std::filesystem::path> findCurrentPath()
 {
 #if defined(__linux__)
@@ -90,7 +94,7 @@ Application::Application()
   auto result = initialize();
   if(result.invalid())
   {
-    // Can't propagate error from constructor, so log it
+    // The constructor cannot return an error, so it logs the initialization failure.
     fmt::print(stderr, "Error initializing application: {}\n", result.errors()[0].message);
   }
 }
@@ -98,7 +102,6 @@ Application::Application()
 Application::Application(int argc, char** argv)
 : Application()
 {
-  // Initialization already happened in delegated constructor
 }
 
 Result<> Application::initialize()
@@ -108,7 +111,7 @@ Result<> Application::initialize()
   auto prefsResult = loadPreferences();
   if(prefsResult.invalid())
   {
-    // Non-fatal: can continue with default preferences
+    // Preference-load failures leave initialized defaults available to the application.
     combinedResult = MergeResults(std::move(combinedResult), std::move(prefsResult));
   }
 
@@ -147,7 +150,7 @@ Application::~Application()
   auto result = savePreferences();
   if(result.invalid())
   {
-    // Can't propagate error from destructor, so log it
+    // The destructor cannot return an error, so it logs the preference-write failure.
     fmt::print(stderr, "Error saving preferences in destructor: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
   }
   s_Instance = nullptr;
@@ -174,7 +177,7 @@ void Application::DeleteInstance()
     auto result = s_Instance->savePreferences();
     if(result.invalid())
     {
-      // Can't propagate error from static function, so log it
+      // The static shutdown API cannot return an error, so it logs the failure.
       fmt::print(stderr, "Error saving preferences on shutdown: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
     }
   }
@@ -292,7 +295,7 @@ Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool v
         auto result = loadPlugin(path, verbose);
         if(result.invalid())
         {
-          // Accumulate errors but continue loading other plugins
+          // Continue scanning so one library cannot hide independent plugin errors.
           combinedResult = MergeResults(std::move(combinedResult), std::move(result));
         }
       }
@@ -338,9 +341,9 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
-std::shared_ptr<DataIOCollection> Application::getIOCollection() const
+DataIOCollection& Application::getIOCollection() const
 {
-  return m_DataIOCollection;
+  return *m_DataIOCollection;
 }
 
 std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& formatName) const
@@ -368,7 +371,7 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
     return MakeErrorResult(-31, fmt::format("Plugin loaded from '{}' but returned null", path.string()));
   }
 
-  // Check for duplicate UUIDs
+  // Reject duplicate legacy UUIDs before appending the paired reverse mapping.
   AbstractPlugin::SIMPLMapType simplToSimplnxUuids = plugin->getSimplToSimplnxMap();
   for(auto const& [simplUuid, simplData] : simplToSimplnxUuids)
   {
@@ -390,7 +393,12 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
 
   for(const auto& pluginIO : plugin->getDataIOManagers())
   {
-    m_DataIOCollection->addIOManager(pluginIO);
+    auto addManagerResult = m_DataIOCollection->addIOManager(pluginIO);
+    if(addManagerResult.invalid())
+    {
+      return MakeErrorResult(
+          -34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", plugin->getName(), addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
+    }
   }
 
   return {};
@@ -413,4 +421,9 @@ DataObject::Type Application::getDataType(const std::string& name) const
 std::vector<std::string> Application::getDataStoreFormats() const
 {
   return m_DataIOCollection->getFormatNames();
+}
+
+std::vector<std::pair<std::string, std::string>> Application::getDataStoreFormatDisplayNames() const
+{
+  return m_DataIOCollection->getFormatDisplayNames();
 }

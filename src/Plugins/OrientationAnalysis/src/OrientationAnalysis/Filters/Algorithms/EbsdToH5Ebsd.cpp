@@ -58,19 +58,9 @@ Result<> EbsdToH5Ebsd::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  // Scope file writer in code block to get around file lock on windows (enforce destructor order)
+  // Scope file writer in code block to get around file lock on Windows (enforce destructor order)
   {
-    // Create output H5Ebsd File
-    hid_t fileId = H5Support::H5Utilities::createFile(absPath.string());
-    if(fileId < 0)
-    {
-      return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
-    }
-
-    // Use a file sentinel to ensure the file is closed before coming out of this scoped block of code
-    auto fileSentinel = H5Support::H5ScopedFileSentinel(fileId, true);
-
-    fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
+    hid_t fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
     if(fileId < 0)
     {
       return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
@@ -322,6 +312,11 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
+  if(m_ShouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
   Result<> commitResult = atomicFile.commit();
   if(commitResult.invalid())
   {

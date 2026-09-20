@@ -200,15 +200,27 @@ Result<> SharedFeatureFace::operator()()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
-  faceFeatureAttrMat.resizeTuples(tDims);
+  Result<> resizeResult = faceFeatureAttrMat.resizeTuples(tDims);
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
 #pragma GCC diagnostic pop
 #endif
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath)->getDataStoreRef();
   auto& surfaceMeshFeatureFaceNumTriangles = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath)->getDataStoreRef();
-  surfaceMeshFeatureFaceLabels.resizeTuples(tDims);
-  surfaceMeshFeatureFaceNumTriangles.resizeTuples(tDims);
+  resizeResult = surfaceMeshFeatureFaceLabels.resizeTuples(tDims);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = surfaceMeshFeatureFaceNumTriangles.resizeTuples(tDims);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   // For smaller data sets having data parallelization ON actually runs slower due to
   // all the overhead of the threads. We are just going to turn this off for

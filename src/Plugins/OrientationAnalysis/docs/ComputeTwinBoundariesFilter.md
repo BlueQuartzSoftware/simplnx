@@ -37,6 +37,26 @@ This filter operates on a grain-boundary surface mesh and requires the following
 - **Feature Phases** -- produced by [Compute Feature Phases](../SimplnxCore/ComputeFeaturePhasesFilter.md).
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
+## Algorithm
+
+For each triangle face in the surface mesh, the algorithm checks whether the two adjacent features are in the same phase with a cubic crystal structure. If so, the misorientation between the two features' average quaternions is computed using all symmetry operator pairs. A face is flagged as a twin boundary if any symmetric equivalent produces a misorientation within the user-defined angle and axis tolerances of the Sigma 3 twin relationship (60 degrees about <111>).
+
+When coherence computation is enabled, the crystal direction parallel to the face normal is determined and compared with the misorientation axis. The minimum angular deviation across all valid symmetry pairs is stored as the incoherence value.
+
+### In-Core Path
+
+Feature-level arrays (phases, average quaternions) and face-level arrays (labels, normals) are accessed through the AbstractDataStore API. The twin boundary check is parallelized using `ParallelDataAlgorithm`.
+
+### Out-of-Core Path
+
+All input arrays are bulk-read into local `std::vector` caches at startup: ensemble-level crystal structures, feature-level phases and average quaternions, and face-level labels and normals. The parallel workers (`CalculateTwinBoundaryImpl` and `CalculateTwinBoundaryWithIncoherenceImpl`) operate entirely on these local vectors with zero OOC virtual dispatch in the hot loop.
+
+Output is accumulated into local vectors and bulk-written to the DataStores via `copyFromBuffer` after the parallel computation completes.
+
+### Performance
+
+Pre-caching all arrays into contiguous local vectors enables safe parallel execution without any thread contending for OOC page locks. Face-level data scales with surface area (not volume), so it typically fits in memory even for large datasets. The parallel twin boundary check across all symmetry operator pairs is the dominant compute cost and benefits from the contention-free data access.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

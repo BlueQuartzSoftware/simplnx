@@ -96,7 +96,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath, inputArray.getDataFormat());
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
 
   OutputActions actions;
   actions.appendAction(std::move(action));

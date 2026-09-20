@@ -155,10 +155,26 @@ Result<> CombineStlFiles::operator()()
   auto* combinedVertexAM = combinedGeom.getVertexAttributeMatrix();
 
   // Make sure all arrays and Attribute Matrix are sized correctly.
-  combinedGeom.resizeFaceList(totalTriangles);
-  combinedGeom.resizeVertexList(totalVertices);
-  combinedFaceAM->resizeTuples(std::vector<usize>{totalTriangles});
-  combinedVertexAM->resizeTuples(std::vector<usize>{totalVertices});
+  Result<> resizeResult = combinedGeom.resizeFaceList(totalTriangles);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = combinedGeom.resizeVertexList(totalVertices);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = combinedFaceAM->resizeTuples(std::vector<usize>{totalTriangles});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = combinedVertexAM->resizeTuples(std::vector<usize>{totalVertices});
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   usize triOffset = 0;
   usize vertexOffset = 0;

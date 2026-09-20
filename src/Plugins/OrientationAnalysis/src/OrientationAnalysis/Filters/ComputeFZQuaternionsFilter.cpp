@@ -122,11 +122,12 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(),
-                                                               pFZQuatsArrayPathValue, CreateArrayAction::k_DefaultDataFormat, "0.0");
+  // An empty format lets the destination resolver select storage while the
+  // output retains the input tuple and component shapes.
+  auto createArrayAction =
+      std::make_unique<CreateArrayAction>(nx::core::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue, "", "0.0");
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions)};
 }
 

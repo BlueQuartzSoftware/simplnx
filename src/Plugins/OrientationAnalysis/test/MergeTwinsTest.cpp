@@ -98,6 +98,74 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Valid Execution", "[Orientatio
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Phase Index Bounds", "[OrientationAnalysis][MergeTwinsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "6_5_MergeTwins" / "6_5_MergeTwins.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+
+  const DataPath featureDataPath = k_DataContainerPath.createChildPath(k_FeatureData);
+  const DataPath featurePhasesPath = featureDataPath.createChildPath(k_Phases);
+  const DataPath avgQuatsPath = featureDataPath.createChildPath(k_AvgQuats);
+  const DataPath contiguousNeighborPath = featureDataPath.createChildPath("NeighborList2");
+  const DataPath featureIdsPath = k_DataContainerPath.createChildPath(k_CellData).createChildPath(k_FeatureIds);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featurePhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath));
+  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(featurePhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+
+  MergeTwinsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(MergeTwinsFilter::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(contiguousNeighborPath));
+  args.insertOrAssign(MergeTwinsFilter::k_AxisTolerance_Key, std::make_any<float32>(3.0F));
+  args.insertOrAssign(MergeTwinsFilter::k_AngleTolerance_Key, std::make_any<float32>(2.0F));
+  args.insertOrAssign(MergeTwinsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+  args.insertOrAssign(MergeTwinsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
+  args.insertOrAssign(MergeTwinsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(MergeTwinsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+  args.insertOrAssign(MergeTwinsFilter::k_CellParentIdsArrayName_Key, std::make_any<std::string>("Bounds ParentIds"));
+  args.insertOrAssign(MergeTwinsFilter::k_CreatedFeatureAttributeMatrixName_Key, std::make_any<std::string>("Bounds Parent Data"));
+  args.insertOrAssign(MergeTwinsFilter::k_FeatureParentIdsArrayName_Key, std::make_any<std::string>("Bounds ParentIds"));
+  args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+  args.insertOrAssign(MergeTwinsFilter::k_UseSeed_Key, std::make_any<bool>(true));
+  args.insertOrAssign(MergeTwinsFilter::k_SeedValue_Key, std::make_any<uint64>(5349));
+  args.insertOrAssign(MergeTwinsFilter::k_SeedArrayName_Key, std::make_any<std::string>("Bounds SeedValue"));
+  args.insertOrAssign(MergeTwinsFilter::k_RandomizeParentIds_Key, std::make_any<bool>(false));
+
+  SECTION("Participating Phase returns an error")
+  {
+    auto& featurePhasesStoreRef = featurePhasesArrayRef.getDataStoreRef();
+    for(usize featureIdx = 1; featureIdx < featurePhasesStoreRef.getNumberOfTuples(); featureIdx++)
+    {
+      featurePhasesStoreRef[featureIdx] = static_cast<int32>(crystalStructuresArrayRef.getNumberOfTuples());
+    }
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -23502);
+  }
+
+  SECTION("Nonpositive Phases are ignored")
+  {
+    auto& featurePhasesStoreRef = featurePhasesArrayRef.getDataStoreRef();
+    for(usize featureIdx = 1; featureIdx < featurePhasesStoreRef.getNumberOfTuples(); featureIdx++)
+    {
+      featurePhasesStoreRef[featureIdx] = -1;
+    }
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::MergeTwinsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][MergeTwinsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

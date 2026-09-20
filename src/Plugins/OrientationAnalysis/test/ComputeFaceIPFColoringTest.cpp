@@ -1,6 +1,8 @@
 #include "OrientationAnalysis/Filters/ComputeFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -11,6 +13,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -131,7 +134,7 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
   const std::vector<float64> faceNormalValues = {-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0};
   std::copy(faceNormalValues.begin(), faceNormalValues.end(), faceNormalsArray->begin());
 
-  // 4 features (index 0 unused). Distinct orientations per feature (see the derivation above):
+  // The fixture has four features, and index zero is unused. Each real feature has a distinct orientation:
   //   feature 1 (cubic): (pi/2, 0, 0)  feature 2 (hex): (pi/3, 0, 0)  feature 3 (cubic): identity
   auto* eulerAngles = UnitTest::CreateTestDataArray<float32>(dataStructure, "FeatureEulerAngles", {4}, {3}, topGroup->getId());
   std::fill(eulerAngles->begin(), eulerAngles->end(), 0.0F);
@@ -193,6 +196,91 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  auto* dataGroupPtr = DataGroup::Create(dataStructure, "Bounds Data");
+  REQUIRE(dataGroupPtr != nullptr);
+
+  const DataPath faceLabelsPath({"Bounds Data", "FaceLabels"});
+  const DataPath faceNormalsPath({"Bounds Data", "FaceNormals"});
+  const DataPath eulerAnglesPath({"Bounds Data", "FeatureEulerAngles"});
+  const DataPath boundsFeaturePhasesPath({"Bounds Data", "FeaturePhases"});
+  const DataPath crystalStructuresPath({"Bounds Data", "CrystalStructures"});
+
+  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, faceLabelsPath, {1}, {2});
+  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, faceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
+  REQUIRE(faceLabelsArrayPtr != nullptr);
+  (*faceLabelsStore)[0] = 1;
+  (*faceLabelsStore)[1] = 0;
+
+  auto faceNormalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, faceNormalsPath, {1}, {3});
+  auto* faceNormalsArrayPtr = Float64Array::Create(dataStructure, faceNormalsPath.getTargetName(), faceNormalsStore, dataGroupPtr->getId());
+  REQUIRE(faceNormalsArrayPtr != nullptr);
+  (*faceNormalsStore)[2] = 1.0;
+
+  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerAnglesPath, {2}, {3});
+  auto* eulerAnglesArrayPtr = Float32Array::Create(dataStructure, eulerAnglesPath.getTargetName(), eulerAnglesStore, dataGroupPtr->getId());
+  REQUIRE(eulerAnglesArrayPtr != nullptr);
+
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, boundsFeaturePhasesPath, {2}, {1});
+  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, boundsFeaturePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
+  REQUIRE(featurePhasesArrayPtr != nullptr);
+  (*featurePhasesStore)[0] = 0;
+  (*featurePhasesStore)[1] = 2;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
+  REQUIRE(crystalStructuresArrayPtr != nullptr);
+  (*crystalStructuresStore)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresStore)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(featurePhasesStore->getDataFormat() == "HDF5-OOC");
+    REQUIRE(faceLabelsStore->getDataFormat() == "HDF5-OOC");
+  }
+
+  ComputeFaceIPFColoringFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceNormalsPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(boundsFeaturePhasesPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>("First Bounds Colors"));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>("Second Bounds Colors"));
+
+  SECTION("First Feature Phase returns an error")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -24341);
+  }
+
+  SECTION("Second Feature Phase returns an error")
+  {
+    (*faceLabelsStore)[0] = 0;
+    (*faceLabelsStore)[1] = 1;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -24341);
+  }
+
+  SECTION("Unreferenced Feature Phase is ignored")
+  {
+    (*faceLabelsStore)[0] = 0;
+    (*faceLabelsStore)[1] = 0;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter execution", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
   UnitTest::LoadPlugins();
@@ -236,12 +324,9 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter exe
 }
 
 // -----------------------------------------------------------------------------
-// Plumbing test: the k_ColorKey_Key choice index must route through executeImpl's
-// switch into the right `ebsdlib::ColorKeyKind` and reach generateIPFColor. The
-// per-Laue-class correctness of TSL / PUCM / Nolze-Hielscher is covered by
-// EbsdLib's ColorKeyKindTest; here we only assert that the simplnx side wiring
-// is intact -- non-default choices must produce a different output array than
-// the default (TSL) run on the same input data.
+// This plumbing test routes k_ColorKey_Key through executeImpl to the selected ebsdlib::ColorKeyKind.
+// EbsdLib's ColorKeyKindTest verifies per-Laue-class correctness for TSL, PUCM, and Nolze-Hielscher.
+// This test verifies that each nondefault choice produces different output from TSL for the same input.
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: ColorKey choice reaches algorithm", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
   UnitTest::LoadPlugins();

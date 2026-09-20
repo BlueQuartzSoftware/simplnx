@@ -82,7 +82,6 @@ Parameters CreateDataArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
 
-  // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
 
   return params;
@@ -110,8 +109,6 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
-  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
-
   nx::core::Result<OutputActions> resultOutputActions;
 
   if(initValue.empty())
@@ -156,7 +153,8 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     }
   }
 
-  // Sanity check that init value can be converted safely to the final numeric type integrated into action
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
+
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat, initValue);
 
   resultOutputActions.value().appendAction(std::move(action));
@@ -192,10 +190,9 @@ Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& jso
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
-  // Initialize Type parameter is not applicable in NX
+  // NX has no equivalent for the legacy initialization-type parameter.
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitializationValue_Key));
-  // Initialization Range parameter is not applicable in NX
-  // Starting Index value parameter is not applicable in NX
+  // NX has no equivalent for the legacy initialization-range or starting-index parameters.
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

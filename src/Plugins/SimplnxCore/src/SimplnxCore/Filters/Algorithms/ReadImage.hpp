@@ -16,6 +16,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ReadImageInputValues
+ * @brief Stores file, output, spatial, type-conversion, and crop settings.
+ */
 struct SIMPLNXCORE_EXPORT ReadImageInputValues
 {
   std::filesystem::path inputFilePath;
@@ -35,13 +39,26 @@ struct SIMPLNXCORE_EXPORT ReadImageInputValues
 
 /**
  * @class ReadImage
- * @brief This algorithm reads a single 2D image file into a pre-allocated DataArray
- * using the IImageIO abstraction layer.
+ * @brief Streams one two-dimensional image into a preallocated DataArray.
+ *
+ * IImageIO supplies decoded row segments. Each segment is cropped, optionally
+ * normalized to another scalar type, and written directly to the destination store.
  */
 class SIMPLNXCORE_EXPORT ReadImage
 {
 public:
+  /**
+   * @brief Creates a single-image reader.
+   * @param dataStructure Receives decoded pixels.
+   * @param mesgHandler Receives file and conversion messages.
+   * @param shouldCancel Stops the decoder callback when true.
+   * @param inputValues Specifies validated file and output settings. The caller
+   * must keep this object alive for the reader lifetime.
+   */
   ReadImage(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadImageInputValues& inputValues);
+  /**
+   * @brief Destroys the non-owning reader.
+   */
   ~ReadImage() noexcept;
 
   ReadImage(const ReadImage&) = delete;
@@ -49,6 +66,12 @@ public:
   ReadImage& operator=(const ReadImage&) = delete;
   ReadImage& operator=(ReadImage&&) noexcept = delete;
 
+  /**
+   * @brief Reads, crops, converts, and writes decoded row segments.
+   * @return Decoder, metadata, crop, or destination-write error, or success after cancellation.
+   *
+   * Cancellation returns success and retains destination segments written before the callback stops.
+   */
   Result<> operator()();
 
 private:

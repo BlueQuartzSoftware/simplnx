@@ -28,6 +28,21 @@ target_sources(nxrunner
 
 target_link_libraries(nxrunner PRIVATE simplnx::simplnx)
 
+# Applies the shared warning-to-error set, including -Werror=unused-result, so a discarded
+# [[nodiscard]] Result in the command line runner fails the build.
+include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
+simplnx_enable_warnings(TARGET nxrunner)
+
+if(BUILD_TESTING)
+  add_test(
+    NAME "nxrunner cache memory budget CLI"
+    COMMAND ${CMAKE_COMMAND}
+      "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/test/CacheMemoryBudgetCliTest.cmake"
+  )
+
+endif()
+
 source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
 if(SIMPLNX_EMBED_PYTHON)

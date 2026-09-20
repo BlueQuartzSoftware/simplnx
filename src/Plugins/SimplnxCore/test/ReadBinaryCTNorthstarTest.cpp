@@ -1,6 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -12,8 +15,12 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+
+#include <nonstd/span.hpp>
 
 namespace fs = std::filesystem;
 
@@ -32,6 +39,14 @@ const usize yDim = 5;
 const usize zDim = 7;
 const usize file1ZCount = 3;
 const usize file2ZCount = 4;
+
+constexpr usize k_BenchmarkDim = 200;
+constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
+constexpr usize k_BenchmarkTotalTuples = k_BenchmarkDim * k_BenchmarkDim * k_BenchmarkDim;
+const std::string k_BenchmarkHeaderName = "ReadBinaryCTNorthstarOocBenchmark.nsihdr";
+const std::string k_BenchmarkDataName = "ReadBinaryCTNorthstarOocBenchmark.nsidat";
+const fs::path k_BenchmarkHeaderPath = k_TestDirPath / k_BenchmarkHeaderName;
+const fs::path k_BenchmarkDataPath = k_TestDirPath / k_BenchmarkDataName;
 
 void WriteNsiHeaderFile(const fs::path& nsiHeaderPath, const std::string& file1Name, const std::string& file2Name)
 {
@@ -54,6 +69,41 @@ void WriteNsiHeaderFile(const fs::path& nsiHeaderPath, const std::string& file1N
   nsiHeaderStream << "</North Star Imaging Volume Header>";
 
   nsiHeaderStream.close();
+}
+
+void WriteBenchmarkNsiHeaderFile()
+{
+  std::ofstream nsiHeaderStream(k_BenchmarkHeaderPath.string());
+  REQUIRE(nsiHeaderStream.good());
+
+  nsiHeaderStream << "<North Star Imaging Volume Header>\n";
+  nsiHeaderStream << fmt::format("  <Voxels> {} {} {}\n", k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim);
+  nsiHeaderStream << "  <Location>\n";
+  nsiHeaderStream << "    <Min> 0 0 0\n";
+  nsiHeaderStream << fmt::format("    <Max> {} {} {}\n", k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim);
+  nsiHeaderStream << "  </Location>\n";
+  nsiHeaderStream << "  <Files>\n";
+  nsiHeaderStream << fmt::format("    <Name>{}\n", k_BenchmarkDataName);
+  nsiHeaderStream << fmt::format("    <NbSlices> {}\n", k_BenchmarkDim);
+  nsiHeaderStream << "  </Files>\n";
+  nsiHeaderStream << "</North Star Imaging Volume Header>";
+}
+
+void WriteBenchmarkNsiDataFile()
+{
+  std::ofstream binaryDataStream(k_BenchmarkDataPath.string(), std::ios::out | std::ios::binary);
+  REQUIRE(binaryDataStream.good());
+
+  auto sliceBuffer = std::make_unique<float32[]>(k_BenchmarkSliceTuples);
+  for(usize offset = 0; offset < k_BenchmarkTotalTuples; offset += k_BenchmarkSliceTuples)
+  {
+    for(usize index = 0; index < k_BenchmarkSliceTuples; index++)
+    {
+      sliceBuffer[index] = static_cast<float32>(offset + index);
+    }
+    binaryDataStream.write(reinterpret_cast<const char*>(sliceBuffer.get()), static_cast<std::streamsize>(k_BenchmarkSliceTuples * sizeof(float32)));
+    REQUIRE(binaryDataStream.good());
+  }
 }
 
 template <usize voxelXDim, usize voxelYDim, usize file1Slices, usize file2Slices>
@@ -89,23 +139,20 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution")
 {
   UnitTest::LoadPlugins();
 
-  // Write binary test files
+  // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadBinaryCTNorthstarFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -124,26 +171,23 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution with
 {
   UnitTest::LoadPlugins();
 
-  // Write binary test files
+  // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadBinaryCTNorthstarFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{1, 2, 4}));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 6}));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -177,19 +221,17 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
 
   const usize file1WrongZCount = 2;
 
-  // Write binary test files
+  // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1WrongZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadBinaryCTNorthstarFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
@@ -204,19 +246,17 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
 
   const std::string k_MissingFileName = "this_should_not_exist.nsidat";
 
-  // Write binary test files
+  // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_MissingFileName);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadBinaryCTNorthstarFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
@@ -229,11 +269,11 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
 {
   UnitTest::LoadPlugins();
 
-  // Write binary test files
+  // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadBinaryCTNorthstarFilter filter;
   DataStructure dataStructure;
   Arguments args;

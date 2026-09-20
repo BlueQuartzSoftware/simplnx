@@ -9,10 +9,11 @@ using namespace nx::core;
 
 namespace nx::core
 {
-CreateNeighborListAction::CreateNeighborListAction(DataType type, const ShapeType& tupleShape, const DataPath& path)
+CreateNeighborListAction::CreateNeighborListAction(DataType type, const ShapeType& tupleShape, const DataPath& path, std::string dataFormat)
 : IDataCreationAction(path)
 , m_Type(type)
 , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+, m_DataFormat(std::move(dataFormat))
 {
 }
 
@@ -20,38 +21,39 @@ CreateNeighborListAction::~CreateNeighborListAction() noexcept = default;
 
 Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  // Validate the Numeric Type
+  // CreateNeighbors applies the requested format and resolver. An empty format
+  // selects automatic resolution.
   switch(m_Type)
   {
   case DataType::int8: {
-    return CreateNeighbors<int8>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<int8>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::uint8: {
-    return CreateNeighbors<uint8>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<uint8>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::int16: {
-    return CreateNeighbors<int16>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<int16>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::uint16: {
-    return CreateNeighbors<uint16>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<uint16>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::int32: {
-    return CreateNeighbors<int32>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<int32>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::uint32: {
-    return CreateNeighbors<uint32>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<uint32>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::int64: {
-    return CreateNeighbors<int64>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<int64>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::uint64: {
-    return CreateNeighbors<uint64>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<uint64>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::float32: {
-    return CreateNeighbors<float32>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<float32>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   case DataType::float64: {
-    return CreateNeighbors<float64>(dataStructure, m_TupleShape, getCreatedPath(), mode);
+    return CreateNeighbors<float64>(dataStructure, m_TupleShape, getCreatedPath(), mode, m_DataFormat);
   }
   default:
     throw std::runtime_error(fmt::format("CreateNeighborListAction: Invalid Numeric Type '{}'", to_underlying(m_Type)));
@@ -60,7 +62,7 @@ Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode
 
 IDataAction::UniquePointer CreateNeighborListAction::clone() const
 {
-  return std::make_unique<CreateNeighborListAction>(m_Type, m_TupleShape, getCreatedPath());
+  return std::make_unique<CreateNeighborListAction>(m_Type, m_TupleShape, getCreatedPath(), m_DataFormat);
 }
 
 DataType CreateNeighborListAction::type() const
@@ -81,5 +83,10 @@ DataPath CreateNeighborListAction::path() const
 std::vector<DataPath> CreateNeighborListAction::getAllCreatedPaths() const
 {
   return {getCreatedPath()};
+}
+
+std::string CreateNeighborListAction::dataFormat() const
+{
+  return m_DataFormat;
 }
 } // namespace nx::core

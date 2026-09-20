@@ -12,6 +12,8 @@
 
 #include <fmt/format.h>
 
+#include <iterator>
+
 namespace nx::core
 {
 Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
@@ -47,20 +49,22 @@ Result<> HDF5::ReadBaseGroup(DataStructureReader& dataStructureReader, const nx:
 Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore)
 {
   auto childrenNames = groupReader.getChildNames();
+  Result<> result;
   if(childrenNames.empty())
   {
-    return {};
+    return result;
   }
 
   for(const auto& childName : childrenNames)
   {
-    Result<> error = dataStructureReader.readObjectFromGroup(groupReader, childName, parentId, useEmptyDataStore);
-    if(error.invalid())
+    auto childResult = dataStructureReader.readObjectFromGroup(groupReader, childName, parentId, useEmptyDataStore);
+    result = MergeResults(std::move(result), std::move(childResult));
+    if(result.invalid())
     {
-      return error;
+      return result;
     }
   }
-  return {};
+  return result;
 }
 
 Result<> HDF5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core::HDF5::GroupIO& parentGroupIO, const BaseGroup* baseGroup, bool importable)

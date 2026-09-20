@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -50,7 +51,6 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
 {
   Parameters params;
 
-  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Array specifying which Ensemble each Cell belong",
                                                           DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
@@ -108,19 +108,51 @@ Result<> ComputeVolumeFractionsFilter::executeImpl(DataStructure& dataStructure,
   const auto& cellPhases = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key))->getDataStoreRef();
   auto& volFractions = dataStructure.getDataAs<Float32Array>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue))->getDataStoreRef();
 
+  const bool usesOutOfCoreStore = cellPhases.getStoreType() == IDataStore::StoreType::OutOfCore || volFractions.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore);
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+
   usize totalPoints = cellPhases.getNumberOfTuples();
   usize totalEnsembles = volFractions.getNumberOfTuples();
 
+  // Ensemble counts are output-scale state. Cell phases are streamed because a
+  // resident copy would grow with the image volume and add no reuse.
   std::vector<usize> ensembleElements(totalEnsembles, 0);
-  // Calculate the total number of elements in each Ensemble
-  for(usize index = 0; index < totalPoints; index++)
+  constexpr usize k_CellPhaseChunkSize = 65536;
+  std::vector<int32> phaseBuffer(std::min(k_CellPhaseChunkSize, totalPoints));
+  // Read phases sequentially. The ensemble count remains bounded by the output
+  // AttributeMatrix, not the number of cells.
+  for(usize offset = 0; offset < totalPoints; offset += k_CellPhaseChunkSize)
   {
-    ensembleElements[cellPhases[index]]++;
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const usize count = std::min(k_CellPhaseChunkSize, totalPoints - offset);
+    auto readResult = cellPhases.copyIntoBuffer(offset, nonstd::span<int32>(phaseBuffer.data(), count));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    for(usize index = 0; index < count; index++)
+    {
+      ensembleElements[phaseBuffer[index]]++;
+    }
   }
-  // Calculate the Volume Fraction
+  // Convert and write the small ensemble result once after the complete cell scan.
+  std::vector<float32> volumeFractionBuffer(totalEnsembles);
   for(usize index = 0; index < totalEnsembles; index++)
   {
-    volFractions[index] = static_cast<float32>(ensembleElements[index]) / static_cast<float32>(totalPoints);
+    volumeFractionBuffer[index] = static_cast<float32>(ensembleElements[index]) / static_cast<float32>(totalPoints);
+  }
+  if(shouldCancel)
+  {
+    return {};
+  }
+  auto writeResult = volFractions.copyFromBuffer(0, nonstd::span<const float32>(volumeFractionBuffer.data(), volumeFractionBuffer.size()));
+  if(writeResult.invalid())
+  {
+    return writeResult;
   }
 
   return {};
