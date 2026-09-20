@@ -89,7 +89,6 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
 
   DataPath vertexGeomPath({Constants::k_SmallIN100, Constants::k_VertexGeometry});
   DataPath vertexAMPath = vertexGeomPath.createChildPath(Constants::k_VertexDataGroupName);
-  std::vector<DataPath> arraySelection{vertexAMPath.createChildPath(Constants::k_SlipVector), vertexAMPath.createChildPath(Constants::k_FeatureIds)};
   DataPath maskPath = vertexAMPath.createChildPath(Constants::k_ConditionalArray);
   DataPath reducedVertexPath({Constants::k_SmallIN100, Constants::k_ReducedGeometry});
   DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -101,6 +100,17 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  std::vector<DataPath> expectedArrayPaths;
+  for([[maybe_unused]] const auto& [id, child] : dataStructure.getDataRefAs<AttributeMatrix>(vertexAMPath))
+  {
+    const DataPath sourcePath = vertexAMPath.createChildPath(child->getName());
+    if(sourcePath.getTargetName() != VertexGeom::k_SharedVertexListName)
+    {
+      expectedArrayPaths.push_back(reducedVertexAMPath.createChildPath(sourcePath.getTargetName()));
+    }
+  }
+  UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, expectedArrayPaths.size());
+  UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, expectedArrayPaths);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)

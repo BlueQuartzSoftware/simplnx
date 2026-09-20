@@ -8,7 +8,6 @@
 
 using namespace nx::core;
 
-// -----------------------------------------------------------------------------
 AppendImageGeometry::AppendImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -17,16 +16,13 @@ AppendImageGeometry::AppendImageGeometry(DataStructure& dataStructure, const IFi
 {
 }
 
-// -----------------------------------------------------------------------------
 AppendImageGeometry::~AppendImageGeometry() noexcept = default;
 
-// -----------------------------------------------------------------------------
 const std::atomic_bool& AppendImageGeometry::getCancel()
 {
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
 Result<> AppendImageGeometry::operator()()
 {
   Result<> results = {};
@@ -55,39 +51,35 @@ Result<> AppendImageGeometry::operator()()
     }
     destGeometry.setDimensions(newDestGeomDims);
     const std::vector<size_t> newDims = {newDestGeomDims[2], newDestGeomDims[1], newDestGeomDims[0]};
-    destCellData->resizeTuples(newDims);
+    Result<> resizeResult = destCellData->resizeTuples(newDims);
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
 
-  // Create a temporary data structure that we can use to create arrays with default values, if needed
+  // Temporary default-filled arrays supply data that a source geometry lacks.
   DataStructure tmpDataStructure;
 
+  // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
+  CopyFromArray::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   for(const auto& [dataId, dataObject] : *newCellData)
   {
-    if(getCancel())
+    if(m_ShouldCancel)
     {
       return {};
     }
-
     const std::string name = dataObject->getName();
 
     auto newDataArrayPath = newCellDataPath.createChildPath(name);
     auto destDataArrayPath = destCellDataPath.createChildPath(name);
     auto* newDataArray = m_DataStructure.getDataAs<IArray>(newDataArrayPath);
     auto* destDataArray = m_DataStructure.getDataAs<IArray>(destDataArrayPath);
-    //    if(destDataArray == nullptr && newDataArray == nullptr)
-    //    {
-    //      // One of these has to be valid, something has gone horribly wrong
-    //      return MakeErrorResult(-10001,
-    //                             fmt::format("There is no array at path '{}' in the given destination image geometry or at path '{}' in the given new image geometry.  Please contact the
-    //                             developers.",
-    //                                         destDataArrayPath.toString(), newDataArrayPath.toString()));
-    //    }
-
-    // Create default value destination data array if it doesn't exist
+    // A new output array can require a default-filled destination prefix.
     if(destDataArray == nullptr)
     {
-      // Use UUID as the new array's name to avoid naming clashes.  The name ultimately doesn't matter since it's in a temporary data structure and will never be publicly exposed.
+      // A UUID prevents name collisions for arrays that remain in the temporary structure.
       auto& dataStructure = m_InputValues->SaveAsNewGeometry ? tmpDataStructure : m_DataStructure;
       auto dataArrayName = m_InputValues->SaveAsNewGeometry ? Uuid::GenerateV4().str() : newDataArray->getName();
       auto destArrayDimsVec = destGeomDims.toContainer<std::vector<usize>>();
@@ -122,13 +114,11 @@ Result<> AppendImageGeometry::operator()()
 
       if(m_DataStructure.getData(inputCellDataPath.createChildPath(name)) == nullptr)
       {
-        results = MergeResults(
-            results,
-            MakeWarningVoidResult(
-                -8213, fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. The resulting appended data will be initialized to the chosen default value '{}'",
-                                   name, m_InputValues->DefaultValue)));
+        results.warnings().push_back(
+            {-8213, fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. The resulting appended data will be initialized to the chosen default value '{}'",
+                                name, m_InputValues->DefaultValue)});
 
-        // Use UUID as the new array's name to avoid naming clashes.  The name ultimately doesn't matter since it's in a temporary data structure and will never be publicly exposed.
+        // A UUID prevents name collisions in the temporary structure.
         auto result = CreateDefaultValueArrayFromArray(tmpDataStructure, destDataArray, Uuid::GenerateV4().str(), tupleShape, m_InputValues->DefaultValue);
         if(result.invalid())
         {
@@ -153,7 +143,7 @@ Result<> AppendImageGeometry::operator()()
       auto newGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath);
       auto newDestGeomDimsVec = newGeometry.getDimensions().toContainer<std::vector<usize>>();
       std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
-      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, newDestGeomDimsVec, m_InputValues->Direction, m_InputValues->MirrorGeometry);
+      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, taskResult, inputDataArrays, inputTupleShapes, newDestGeomDimsVec, m_InputValues->Direction, m_InputValues->MirrorGeometry);
     }
     else
     {
@@ -162,11 +152,11 @@ Result<> AppendImageGeometry::operator()()
       std::reverse(originalDestGeomDimsVec.begin(), originalDestGeomDimsVec.end());
       auto newDestGeomDimsVec = destGeometry.getDimensions().toContainer<std::vector<usize>>();
       std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
-      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->Direction,
+      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, taskResult, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->Direction,
                                        m_InputValues->MirrorGeometry);
     }
   }
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-
-  return results;
+  taskRunner.wait();
+  Result<> taskExecutionResult = taskResult.takeResult();
+  return MergeResults(std::move(results), std::move(taskExecutionResult));
 }

@@ -240,6 +240,17 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
 
+  /**
+   * @brief Copies the members IGridGeometry declares into a geometry copy.
+   *
+   * Chains to IGeometry::copyMembersInto so that a copy performed at any level of the hierarchy
+   * reproduces every inherited member exactly once.
+   *
+   * @param copy Geometry copy to populate
+   * @param copyPath Path of the geometry copy
+   */
+  void copyMembersInto(IGridGeometry& copy, const DataPath& copyPath);
+
   std::optional<IdType> m_CellDataId;
 };
 } // namespace nx::core

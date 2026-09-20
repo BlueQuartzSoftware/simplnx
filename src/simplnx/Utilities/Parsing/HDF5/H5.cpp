@@ -1,4 +1,5 @@
 #include "H5.hpp"
+#include "H5Support.hpp"
 
 #include <fmt/core.h>
 
@@ -46,6 +47,7 @@ nx::core::HDF5::Type nx::core::HDF5::getTypeFromId(IdType typeId)
   {
     return Type::unknown;
   }
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
     return Type::int8;
@@ -144,6 +146,7 @@ std::string nx::core::HDF5::GetNameFromBuffer(std::string_view buffer)
 
 std::string nx::core::HDF5::GetPathFromId(IdType id)
 {
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   ssize_t nameLength = H5Iget_name(id, nullptr, 0);
   if(nameLength <= 0)
   {

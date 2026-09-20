@@ -60,26 +60,53 @@ Do **not** use dispatch when:
 
 ```cpp
 bool IsOutOfCore(const IDataArray& array);
+bool IsOutOfCore(const IArray& array);
 ```
 
-Returns `true` if the array's data store has a chunk shape (indicating ZarrStore or similar chunked storage). Returns `false` for in-memory DataStore.
+`IDataArray` uses its `IDataStore::StoreType`; `INeighborList` uses its
+storage-neutral `IListStore::isOutOfCore()` query. Other `IArray` types, such
+as `StringArray`, are conservatively in-memory until they expose a residency
+contract. The private HDF5 list store overrides that query without adding a
+SimplnxOoc type dependency to public simplnx.
 
 ### AnyOutOfCore
 
 ```cpp
 bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays);
+bool AnyOutOfCore(const AlgorithmArrayTargets& targets);
 ```
 
 Returns `true` if **any** of the given arrays uses OOC storage. Null pointers in the list are skipped. Use this when a filter operates on multiple input/output arrays and any one of them being OOC should trigger the chunk-sequential algorithm path.
+
+The original `IDataArray` initializer-list overload is retained for source
+compatibility, including named `std::initializer_list<const IDataArray*>`
+variables and empty `{}` calls. `AlgorithmArrayTargets` owns a copied pointer
+list for NeighborList or other mixed targets, so it may safely be constructed
+in one statement and passed to dispatch later. It does not own the pointed-to
+arrays, which must remain alive for the call.
 
 ### DispatchAlgorithm
 
 ```cpp
 template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(std::initializer_list<const IDataArray*> arrays, ArgsT&&... args);
+Result<> DispatchAlgorithm(const AlgorithmArrayTargets& targets, ArgsT&&... args);
 ```
 
 Checks whether any array in `arrays` uses OOC storage, or if the global `ForceOocAlgorithm()` flag is set. If either condition is true, constructs `OocAlgo(args...)` and calls `operator()()`. Otherwise, constructs `InCoreAlgo(args...)` and calls `operator()()`.
+
+For existing data-array-only callers, continue using the familiar form:
+
+```cpp
+DispatchAlgorithm<Direct, Scanline>({featureIds, output}, args...);
+```
+
+For a modal NeighborList or a mixed target set, use the same braced form. It
+selects the `AlgorithmArrayTargets` overload automatically:
+
+```cpp
+DispatchAlgorithm<Direct, Scanline>({featureIds, modalNeighborList}, args...);
+```
 
 **Requirements for algorithm classes:**
 

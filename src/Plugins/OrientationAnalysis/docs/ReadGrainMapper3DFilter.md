@@ -26,6 +26,20 @@ PhaseId data will be converted to *int32* (when the *Create Compatible Phase Dat
 
 IPF (inverse pole figure) colors can be stored in the file as either *uint8* or *float32* values. To immediately view the IPF colors that came from the file, the user should check the box for *Create Compatible IPFColor Data*, which converts any *float32* color data to *uint8*.
 
+## Algorithm
+
+The reader transfers each LabDCT and AbsorptionCT HDF5 dataset in C-order
+hyperslabs.  The hyperslab iterator chooses a dimension whose trailing extent
+fits a fixed 65,536-value buffer, so scalar and vector image volumes never
+require a complete slice or volume in memory.  Every transfer is written to the
+destination DataArray with one bulk operation.
+
+When compatible Phase, Rodrigues, IPF color, or quaternion data is requested,
+the conversion is applied to each bounded source chunk before its bulk write.
+This preserves the file's tuple and component ordering while allowing the cell
+arrays to remain out-of-core.  Phase metadata remains ensemble-sized and is
+read normally.
+
 ## Special Notes
 
 The IPF colors (if any) that are read in from the file are **NOT** compatible with the IPF color legends provided by DREAM3D-NX or EBSDLib. There are two distinct options at play, and they should not be confused:

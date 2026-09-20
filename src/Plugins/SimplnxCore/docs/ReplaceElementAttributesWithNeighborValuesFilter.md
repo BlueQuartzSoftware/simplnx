@@ -80,6 +80,32 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
 
+## Algorithm
+
+This filter iteratively replaces voxel data that fails a user-defined threshold comparison with data from the best-scoring face neighbor.
+
+### Processing Steps
+
+For each pass over the volume:
+
+1. For each voxel, compare its value in the selected array against the threshold using the chosen comparison operator (less-than or greater-than).
+2. If the voxel fails the comparison (e.g., confidence index < 0.1), examine its 6 face-connected neighbors.
+3. Among neighbors that pass the threshold, find the one with the best value (highest for less-than mode, lowest for greater-than mode).
+4. Mark the failing voxel to be replaced by that neighbor's data.
+5. After each Z-slice is scanned, apply all replacements across every array in the Attribute Matrix (not just the comparison array).
+
+If **Loop Until Gone** is enabled, the algorithm repeats until no voxels fail the threshold. Each pass can improve neighbors of previously failing voxels, allowing the cleanup to propagate inward from good-data boundaries.
+
+### Performance
+
+This algorithm is optimized for both in-memory and out-of-core (OOC) data stores. When data resides on disk in chunked format, random voxel access can cause expensive chunk load/evict cycles. The implementation avoids this by:
+
+- **Sequential Z-slice processing**: The volume is scanned one Z-slice at a time, aligning with typical chunk boundaries.
+- **3-slice rolling window**: Three adjacent Z-slices of the comparison array are held in typed memory buffers, allowing face-neighbor value lookups without per-voxel store access.
+- **Immediate per-slice transfer**: Because replacement marks always point to face neighbors (within one Z-slice), each slice can be committed immediately after its scan completes, keeping writes sequential.
+- **O(sliceSize) memory**: A single per-slice mark array replaces a full-volume neighbor array, keeping peak memory proportional to one Z-slice.
+- **Type-dispatched inner loop**: The comparison and transfer logic is templated on the input array's element type, avoiding virtual dispatch overhead in the tight inner loop.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

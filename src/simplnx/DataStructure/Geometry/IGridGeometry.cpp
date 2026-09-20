@@ -111,4 +111,11 @@ Result<> IGridGeometry::validate() const
   return result;
 }
 
+void IGridGeometry::copyMembersInto(IGridGeometry& copy, const DataPath& copyPath)
+{
+  IGeometry::copyMembersInto(copy, copyPath);
+
+  copy.m_CellDataId = deepCopyOwnedChild(copyPath, getCellData());
+}
+
 } // namespace nx::core

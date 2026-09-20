@@ -1,0 +1,12 @@
+#pragma once
+
+// This header is generated from cmake/SimplnxConfig.hpp.in by configure_file().
+// It carries compile-time configuration into every translation unit that links
+// simplnx, including MOC, via simplnx's PUBLIC generated include directory.
+// Delivering values through a header (not per-target compile definitions) keeps
+// them identical across all consumers, which is required for ODR safety when a
+// macro gates inline code in public headers.
+//
+// Out-of-core support is no longer a compile-time switch in core simplnx; OOC is
+// provided at runtime by a registered IO manager (see DataIOCollection). This
+// header is retained for future compile-time configuration values.

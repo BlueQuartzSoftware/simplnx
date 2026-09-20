@@ -168,10 +168,8 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // Create the Ensemble AttributeMatrix. Slot 0 is always reserved for the "Invalid Phase",
-  // and the arrays are sized from the LARGEST phase index in the file (not the phase count)
-  // because the ensemble arrays are indexed by AngPhase::getPhaseIndex(), which is not
-  // guaranteed to be contiguous starting at 1.
+  // Slot 0 is reserved for the invalid phase.
+  // Size ensemble arrays from the largest phase index because phase indices can have gaps.
   std::vector<std::shared_ptr<ebsdlib::AngPhase>> angPhases = reader.getPhaseVector();
   size_t maxPhaseIndex = 0;
   for(const std::shared_ptr<ebsdlib::AngPhase>& angPhase : angPhases)

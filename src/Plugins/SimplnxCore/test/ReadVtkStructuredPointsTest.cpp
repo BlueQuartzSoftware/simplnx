@@ -1,7 +1,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -10,8 +13,9 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <filesystem>
-#include <fstream>
 namespace fs = std::filesystem;
 
 #include "SimplnxCore/Filters/Algorithms/ReadVtkStructuredPoints.hpp"
@@ -42,7 +46,6 @@ Arguments createArgs(const fs::path& filePath)
   const std::string pointDataContainerName = "VTK Point Data";
   const std::string pointAttrMatrixName = "Vertex Data";
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(filePath));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<BoolParameter::ValueType>(true));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadCellData_Key, std::make_any<BoolParameter::ValueType>(true));
@@ -56,12 +59,11 @@ Arguments createArgs(const fs::path& filePath)
 
 void test_invalid_case(const fs::path& filePath, int32 expectedErrCode)
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;
   DataStructure ds;
   Arguments args = createArgs(filePath);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
@@ -74,16 +76,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;
   DataStructure ds;
   Arguments args = createArgs(k_InputDirPath / "exemplary.vtk");
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 

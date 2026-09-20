@@ -1,5 +1,7 @@
 #include "IDataIOManager.hpp"
 
+#include "simplnx/DataStructure/AbstractStringStore.hpp"
+
 namespace nx::core
 {
 IDataIOManager::IDataIOManager() = default;
@@ -52,5 +54,25 @@ IDataIOManager::ListStoreCreateFnc IDataIOManager::listStoreCreationFnc(const st
 void IDataIOManager::addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc)
 {
   m_ListStoreCreationMap[type] = creationFnc;
+}
+
+bool IDataIOManager::hasStringStoreCreationFnc(const std::string& type) const
+{
+  return m_StringStoreCreationMap.find(type) != m_StringStoreCreationMap.cend();
+}
+
+IDataIOManager::StringStoreCreateFnc IDataIOManager::stringStoreCreationFnc(const std::string& type) const
+{
+  auto iter = m_StringStoreCreationMap.find(type);
+  if(iter == m_StringStoreCreationMap.cend())
+  {
+    return nullptr;
+  }
+  return iter->second;
+}
+
+void IDataIOManager::addStringStoreCreationFnc(const std::string& type, StringStoreCreateFnc creationFnc)
+{
+  m_StringStoreCreationMap[type] = std::move(creationFnc);
 }
 } // namespace nx::core

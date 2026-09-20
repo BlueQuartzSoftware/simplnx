@@ -312,7 +312,8 @@ inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, ChoicesParame
  * @param addExtraArgs Callback that inserts the mesher-specific arguments into the Arguments object.
  */
 template <class FilterT, class ExtraArgsFn>
-inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs)
+inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs,
+                            UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
 {
   MeshResult meshResult;
   meshResult.Structure = std::move(dataStructure);
@@ -324,8 +325,19 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
 
   auto preflightResult = filter.preflight(meshResult.Structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(meshResult.Structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  if(algorithmScope == nullptr)
+  {
+    const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+    CAPTURE(scenario);
+    UnitTest::AlgorithmTestScope localScope(scenario);
+    auto executeResult = localScope.executeFilter(filter, meshResult.Structure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  else
+  {
+    auto executeResult = algorithmScope->executeFilter(filter, meshResult.Structure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
 
   return meshResult;
 }
@@ -346,14 +358,22 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
  * every pre-existing call site); pass true to exercise the shipped default configuration instead.
  */
 template <class FilterT, class ExtraArgsFn>
-inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs, bool repairWinding = false)
+inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs, bool repairWinding = false,
+                             UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
 {
   FilterT filter;
   Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, boundingBoxSkinMode, addExtraArgs, repairWinding);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  return filter.execute(dataStructure, args).result;
+  if(algorithmScope == nullptr)
+  {
+    const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+    CAPTURE(scenario);
+    UnitTest::AlgorithmTestScope localScope(scenario);
+    return localScope.executeFilter(filter, dataStructure, args).result;
+  }
+  return algorithmScope->executeFilter(filter, dataStructure, args).result;
 }
 
 /**

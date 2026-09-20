@@ -267,7 +267,6 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
       }
     }
 
-    inputFile.tellg();
     getline(inputFile, buf); // Read the next line
     lineCount++;
     buf = StringUtilities::trimmed(buf);

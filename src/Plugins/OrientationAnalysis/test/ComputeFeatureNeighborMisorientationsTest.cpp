@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -24,13 +25,10 @@ using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
 // =============================================================================
-// V&V Class 1 (Analytical) + Class 4 (Invariant) oracle support — added 2026-06-02.
+// V&V Class 1 analytical and Class 4 invariant oracle support.
 //
-// These fixtures replace the regression-against-archive pattern (the exemplar tests that consume
-// `6_6_stats_test_v2.tar.gz`) with hand-derived analytical inputs and expected per-neighbor
-// misorientation lists + per-feature averages. The fixtures specifically include a "bug-exposing"
-// configuration that surfaces the divisor bug at algorithm `.cpp` line 75 (`tempMisoList =
-// featureNeighborList.size();` inside the inner j-loop, clobbering the per-mismatch decrement).
+// These fixtures replace archive regression with hand-derived inputs and expected neighbor misorientations and feature averages.
+// A defect-sensitive configuration detects incorrect reassignment of the per-feature divisor inside the neighbor loop.
 //
 // Reference: src/Plugins/OrientationAnalysis/vv/ComputeFeatureNeighborMisorientationsFilter.md
 // =============================================================================
@@ -83,10 +81,13 @@ FixtureData CreateScaffold(usize numFeatures, usize numCrystalStructures)
   td.featureAM = AttributeMatrix::Create(td.ds, "FeatureData", ShapeType{numFeatures}, td.geom->getId());
   td.ensembleAM = AttributeMatrix::Create(td.ds, "EnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  td.featurePhases = CreateTestDataArray<int32>(td.ds, k_FeaturePhasesName, {numFeatures}, {1}, td.featureAM->getId());
-  td.avgQuats = CreateTestDataArray<float32>(td.ds, k_AvgQuatsName, {numFeatures}, {4}, td.featureAM->getId());
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_FeatureDataPath.createChildPath(k_FeaturePhasesName), {numFeatures}, {1});
+  td.featurePhases = Int32Array::Create(td.ds, k_FeaturePhasesName, featurePhasesStore, td.featureAM->getId());
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
+  td.avgQuats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.featureAM->getId());
   td.neighborList = NeighborList<int32>::Create(td.ds, k_NeighborListName, ShapeType{numFeatures}, td.featureAM->getId());
-  td.crystalStructures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensembleAM->getId());
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
+  td.crystalStructures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensembleAM->getId());
 
   // Default: feature 0 sentinel; all other features phase=0 (unassigned); identity quats.
   for(usize i = 0; i < numFeatures; ++i)
@@ -130,11 +131,13 @@ Arguments BuildArgs(bool computeAvgMisors)
 
 const NeighborList<float32>& GetOutputMisorientationList(const DataStructure& ds)
 {
+  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName)));
   return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName));
 }
 
 const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 {
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName)));
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
 } // namespace AnalyticalFixtures
@@ -179,14 +182,9 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Pre
   REQUIRE(preflightResult.outputActions.errors()[0].code == -34501);
 }
 
-// Retired 2026-06-02 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
-// `6_6_stats_test_v2.tar.gz` and the `[.][UNIMPLEMENTED][!mayfail]` stub TEST_CASE for
-// `Misorientation Per Feature` were removed. The exemplar arrays in the archive were a circular
-// oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output); the precision shift surfaced on the
-// failing `ComputeFeatureNeighborMisorientationsFilter` ctest (test 1602 in the prior numbering).
-// The UNIMPLEMENTED stub left `ComputeAvgMisors=true` with zero CI coverage, which is why the
-// `tempMisoList` divisor bug at algorithm.cpp:75 (reassigning the divisor inside the inner j-loop)
-// went undetected for so long. The Class 1 + Class 4 data fixtures below replace both retirements.
+// The retired archive exemplar was a circular oracle generated from earlier SIMPLNX output.
+// Its unimplemented average-misorientation stub provided no coverage for the divisor defect.
+// The Class 1 and Class 4 fixtures replace both retired tests.
 // See `vv/provenance/ComputeFeatureNeighborMisorientationsFilter.md` for retirement details.
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIMPL Backwards Compatibility",
           "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter][BackwardsCompatibility]")
@@ -237,10 +235,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIM
 // V&V Class 1 + Class 4 data fixtures (added 2026-06-02 during V&V cycle).
 // =============================================================================
 
-// Fixture A: single-phase, single-feature with 2 neighbors. Verifies the per-neighbor
-// MisorientationList values and the per-feature average computation (Mode: ComputeAvgMisors=true).
-// Closed-form: pure phi1 rotations about z, cubic 4-fold doesn't reduce phi1 in [0, 45deg], so
-// misorientation between (0deg) and (5deg) is 5.0deg; between (0deg) and (10deg) is 10.0deg.
+// Fixture A has one Phase, one Feature, and two neighbors.
+// It verifies neighbor misorientations and the feature average when ComputeAvgMisors is true.
+// Cubic four-fold symmetry does not reduce pure phi1 rotations in [0, 45] degrees.
+// The two misorientations are 5 and 10 degrees.
 // Expected avg = (5 + 10) / 2 = 7.5deg.
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
@@ -271,11 +269,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
   REQUIRE(avg[1] == Approx(7.5f).margin(1e-3f));
 }
 
-// Fixture B: BUG-EXPOSING — mixed-phase neighbor list with phase-mismatch in the MIDDLE.
-// Neighbors are processed in order [match, mismatch, match]. The bug at algorithm.cpp:75
-// reassigns `tempMisoList = featureNeighborList.size()` every j-iteration; the per-mismatch
-// decrement at line 90 is therefore clobbered by the NEXT j-iteration's reassignment, and the
-// final divisor equals the full list size (3) instead of the number of phase-matched neighbors (2).
+// Fixture B has a Phase mismatch between two matching neighbors.
+// The neighbor order is [match, mismatch, match].
+// Reassigning the divisor during each iteration loses the mismatch decrement.
+// The incorrect divisor is three instead of the two Phase-matched neighbors.
 //   BUGGY  result: avg = (5 + 10) / 3 = 5.0deg  (FAILS this assertion)
 //   FIXED  result: avg = (5 + 10) / 2 = 7.5deg  (PASSES this assertion)
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mixed Phase Neighbors (exposes divisor bug)",
@@ -321,10 +318,9 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
   REQUIRE(avg[1] == Approx(7.5f).margin(1e-3f));
 }
 
-// Fixture C: Same neighbor composition as Fixture B, but the phase-mismatch is the LAST neighbor.
-// Bug doesn't fire in this ordering because the decrement at algorithm.cpp:90 is the last write
-// to tempMisoList (no subsequent inner-loop iteration to clobber it). Both buggy and fixed code
-// produce avg = (5 + 10) / 2 = 7.5deg.
+// Fixture C uses the same neighbors as Fixture B, but the Phase mismatch is last.
+// The final decrement cannot be overwritten by a later loop iteration.
+// Both implementations produce an average of 7.5 degrees.
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
@@ -357,10 +353,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
   REQUIRE(std::isnan(feature1List[2]));
 }
 
-// Fixture D: Class 4 invariants — runs the bug-exposing fixture and asserts only the invariants
-// (no specific avg value), so this test catches a future regression that preserves specific values
-// but breaks the invariants. Use a different neighbor order from Fixture B so we sample a different
-// path through the per-feature loop.
+// Fixture D applies Class 4 invariants to the defect-sensitive arrangement without exact average values.
+// It uses a different neighbor order to exercise another per-feature loop path.
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
@@ -407,4 +401,50 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
   REQUIRE(count > 0);
   const float32 expectedAvg = static_cast<float32>(sum / static_cast<float64>(count));
   REQUIRE(avg[1] == Approx(expectedAvg).margin(1e-4f));
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32 invalidPhaseIdx = GENERATE(-1, 2);
+  CAPTURE(invalidPhaseIdx);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  AnalyticalFixtures::FixtureData fixture = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/3, /*numCrystalStructures=*/2);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(fixture.featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  (*fixture.featurePhases)[1] = 1;
+  (*fixture.featurePhases)[2] = 1;
+  fixture.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2}));
+
+  ComputeFeatureNeighborMisorientationsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
+
+  SECTION("Current Feature Phase returns an error")
+  {
+    (*fixture.featurePhases)[1] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -34502);
+  }
+
+  SECTION("Neighbor Feature Phase returns an error")
+  {
+    (*fixture.featurePhases)[2] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -34502);
+  }
+
+  SECTION("Feature zero is ignored")
+  {
+    (*fixture.featurePhases)[0] = invalidPhaseIdx;
+    auto executeResult = filter.execute(fixture.ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }

@@ -115,7 +115,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/laplacian_smoothing_test.dream3d", unit_test::k_BinaryTestOutputDir));
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/laplacian_smoothing_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

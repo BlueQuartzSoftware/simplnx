@@ -58,5 +58,6 @@ jobs:
         if: steps.check_format.outcome != 'success'
         uses: reviewdog/action-suggester@v1
         with:
+          path: ${{ env.REPO_PATH }}
           tool_name: clang-format
           fail_level: error

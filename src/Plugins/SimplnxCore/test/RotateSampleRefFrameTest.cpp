@@ -152,6 +152,9 @@ void RequireValueBijection(const std::vector<int32>& output, usize inputCount)
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 dims = {3, 2, 1}; // 6 cells: [1 2 3 / 4 5 6]
   const std::vector<int32> expected = {6, 5, 4, 3, 2, 1};
 
@@ -165,7 +168,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
@@ -185,7 +189,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
@@ -213,6 +218,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutation pins chirality", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   auto [label, inDims, axisAngle, expectedDims, expected] =
       GENERATE(std::make_tuple("90 about Z", SizeVec3{3, 2, 1}, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{2, 3, 1}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
                std::make_tuple("90 about X", SizeVec3{1, 3, 2}, VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{1, 2, 3}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
@@ -228,7 +236,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutat
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -247,6 +256,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutat
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing permutes with the axes", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 5.0f, 1.0f});
   RotateSampleRefFrameFilter filter;
@@ -254,7 +266,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing perm
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -277,6 +290,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing perm
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about (111)", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 inDims = {2, 3, 4};
   const usize inCount = 2 * 3 * 4;
 
@@ -287,7 +303,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about 
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
@@ -306,6 +323,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 dims = {3, 2, 1};
   const FloatVec3 inputOrigin = {10.0f, 20.0f, 0.0f};
   const std::vector<int32> expectedValues = {4, 1, 5, 2, 6, 3}; // same permutation as the origin-0 90-about-Z case
@@ -320,7 +340,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", 
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -341,7 +362,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", 
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -363,6 +385,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations are lossless permutations", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 inDims = {4, 3, 2};
   const usize inCount = 4 * 3 * 2;
 
@@ -387,7 +412,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -411,7 +437,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
@@ -429,6 +456,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition is identity", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 inDims = {4, 3, 2};
 
   auto [label, axisAngle, repeats] = GENERATE(std::make_tuple("four 90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, 4),
@@ -450,7 +480,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
       Arguments args = MakeAxisAngleArgs(currentInput, stepOutput, axisAngle);
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      auto executeResult = filter.execute(dataStructure, args);
+      UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+      auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
       currentInput = stepOutput;
     }
@@ -472,6 +503,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls output origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 inDims = {4, 3, 2};
   const VectorFloat32Parameter::ValueType axisAngle{0.0f, 0.0f, 1.0f, 90.0f};
   RotateSampleRefFrameFilter filter;
@@ -483,7 +517,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/true);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
     REQUIRE(origin[0] == Approx(0.0f).margin(1e-4f));
@@ -498,7 +533,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/false);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
     REQUIRE(origin[0] == Approx(-3.0f).margin(1e-4f));
@@ -515,6 +551,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lossless per-slice flip", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
   const SizeVec3 inDims = {4, 3, 2};
   const usize inCount = 4 * 3 * 2;
   const VectorFloat32Parameter::ValueType axisAngle{0.0f, 1.0f, 0.0f, 180.0f};
@@ -530,7 +569,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
     Arguments args = MakeAxisAngleArgs(k_InputPath, slicePath, axisAngle, /*sliceBySlice=*/true);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, slicePath), inCount);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -542,7 +582,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
     Arguments args = MakeAxisAngleArgs(k_InputPath, fullPath, axisAngle, /*sliceBySlice=*/false);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, fullPath), inCount);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);

@@ -9,15 +9,31 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @struct RemoveFlaggedVerticesFunctor
+ * @brief Copies retained vertex data and returns the first destination-store error.
+ */
 struct RemoveFlaggedVerticesFunctor
 {
-  // copy data to masked geometry
+  /**
+   * @brief Copies retained tuples to the destination array.
+   * @tparam T Specifies the array value type.
+   * @param sourceIDataArray Source vertex data.
+   * @param destIDataArray Destination vertex data.
+   * @param maskCompare Selects removed vertices.
+   * @param numVerticesToKeep Destination tuple count.
+   * @return The first destination resize error.
+   */
   template <class T>
-  void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
+  Result<> operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
     const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-    destinationDataStore.resizeTuples({numVerticesToKeep});
+    Result<> resizeResult = destinationDataStore.resizeTuples({numVerticesToKeep});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
 
     const usize numInputTuples = sourceDataStore.getNumberOfTuples();
     const usize nComps = sourceDataStore.getNumberOfComponents();
@@ -35,6 +51,7 @@ struct RemoveFlaggedVerticesFunctor
         destTupleIndex++;
       }
     }
+    return {};
   }
 };
 } // namespace
@@ -77,8 +94,16 @@ Result<> RemoveFlaggedVertices::operator()()
 
   // Resize the reduced vertex geometry object
   auto& reducedVertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
-  reducedVertexGeom.resizeVertexList(numVerticesToKeep);
-  reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
+  Result<> resizeResult = reducedVertexGeom.resizeVertexList(numVerticesToKeep);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying vertices to reduced geometry")});
 
@@ -109,7 +134,11 @@ Result<> RemoveFlaggedVertices::operator()()
     auto& dest = m_DataStructure.getDataRefAs<IDataArray>(destinationPath);
     m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
 
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
+    Result<> copyResult = ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
+    if(copyResult.invalid())
+    {
+      return copyResult;
+    }
   }
 
   return {};

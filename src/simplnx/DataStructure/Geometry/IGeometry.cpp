@@ -195,6 +195,27 @@ std::string IGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
+std::optional<IGeometry::IdType> IGeometry::deepCopyOwnedChild(const DataPath& copyPath, DataObject* child)
+{
+  if(child == nullptr)
+  {
+    return {};
+  }
+
+  const DataPath copiedDataPath = copyPath.createChildPath(child->getName());
+  // The data map copy reproduces children this geometry parents; anything else is copied here.
+  if(!isParentOf(child))
+  {
+    const auto dataObjCopy = child->deepCopy(copiedDataPath);
+  }
+  return getDataStructureRef().getId(copiedDataPath);
+}
+
+void IGeometry::copyMembersInto(IGeometry& copy, const DataPath& copyPath)
+{
+  copy.m_ElementSizesId = adoptCopiedChild<Float32Array>(copyPath, k_VoxelSizes);
+}
+
 void IGeometry::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
   BaseGroup::checkUpdatedIdsImpl(updatedIdsMap);

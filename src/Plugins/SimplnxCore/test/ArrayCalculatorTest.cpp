@@ -5,6 +5,8 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
@@ -14,10 +16,13 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
 #include <numbers>
+#include <optional>
+#include <utility>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -48,6 +53,32 @@ const DataPath k_NumericArrayPath({k_NumericMatrix, k_CalculatedArray});
 const DataPath k_AttributeArrayPath({k_AttributeMatrix, k_CalculatedArray});
 
 const std::string k_Pi_Str = StringUtilities::number(numbers::pi);
+
+template <typename T>
+class ArrayCalculatorFailOnLaterReadStore : public DataStore<T>
+{
+public:
+  ArrayCalculatorFailOnLaterReadStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> value, int32 errorCode, usize failingRead)
+  : DataStore<T>(tupleShape, componentShape, value)
+  , m_ErrorCode(errorCode)
+  , m_FailingRead(failingRead)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> buffer) const override
+  {
+    if(++m_ReadCount == m_FailingRead)
+    {
+      return MakeErrorResult(m_ErrorCode, "Injected ArrayCalculator later-page read failure");
+    }
+    return DataStore<T>::copyIntoBuffer(offset, buffer);
+  }
+
+private:
+  int32 m_ErrorCode;
+  usize m_FailingRead;
+  mutable usize m_ReadCount = 0;
+};
 
 // -----------------------------------------------------------------------------
 DataStructure createDataStructure()
@@ -1372,6 +1403,111 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
   }
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary function operands", "[SimplnxCore][ArrayCalculatorFilter]")
+{
+  UnitTest::LoadPlugins();
+  const std::string equation = GENERATE("root(1,)", "root(,1)", "log(1,)", "log(,1)", "min(1,)", "min(,1)", "max(1,)", "max(,1)");
+  CAPTURE(equation);
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+  Arguments args;
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, equation, CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+
+  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = filter.preflight(ds, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InvalidEquation));
+  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and failure propagation", "[SimplnxCore][ArrayCalculatorFilter]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_TupleCount = 21847;
+  constexpr usize k_ComponentCount = 3;
+  const DataPath matrixPath({"BulkMatrix"});
+  const DataPath sourcePath = matrixPath.createChildPath("Input");
+  const DataPath outputPath = matrixPath.createChildPath("Calculated");
+
+  SECTION("indexed scalar broadcast crosses the final partial page")
+  {
+    const auto [equation, expectedOffset] =
+        GENERATE(std::make_pair("Input + Input[1, 1]", uint32{6}), std::make_pair("Input[1, 1] + Input", uint32{6}), std::make_pair("Input + (Input + Input)[1, 1]", uint32{12}));
+    CAPTURE(equation);
+    DataStructure ds;
+    auto* matrix = AttributeMatrix::Create(ds, matrixPath.getTargetName(), ShapeType{k_TupleCount});
+    REQUIRE(matrix != nullptr);
+    auto* source = Int32Array::CreateWithStore<DataStore<int32>>(ds, sourcePath.getTargetName(), matrix->getShape(), ShapeType{k_ComponentCount}, matrix->getId());
+    REQUIRE(source != nullptr);
+    for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
+    {
+      for(usize compIdx = 0; compIdx < k_ComponentCount; compIdx++)
+      {
+        (*source)[tupleIdx * k_ComponentCount + compIdx] = static_cast<int32>(tupleIdx * 5 + compIdx);
+      }
+    }
+
+    ArrayCalculatorFilter filter;
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{matrixPath, equation, CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(outputPath));
+    const auto& output = ds.getDataRefAs<UInt32Array>(outputPath);
+    REQUIRE(output.getNumberOfTuples() == k_TupleCount);
+    REQUIRE(output.getNumberOfComponents() == k_ComponentCount);
+    for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
+    {
+      for(usize compIdx = 0; compIdx < k_ComponentCount; compIdx++)
+      {
+        const auto expected = static_cast<uint32>(tupleIdx * 5 + compIdx + expectedOffset);
+        REQUIRE(output[tupleIdx * k_ComponentCount + compIdx] == expected);
+      }
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+
+  SECTION("later source page failure stops before the tail write")
+  {
+    constexpr int32 k_ReadError = -91901;
+    DataStructure ds;
+    auto* matrix = AttributeMatrix::Create(ds, matrixPath.getTargetName(), ShapeType{k_TupleCount});
+    REQUIRE(matrix != nullptr);
+    auto sourceStore = std::make_shared<ArrayCalculatorFailOnLaterReadStore<int32>>(ShapeType{k_TupleCount}, ShapeType{k_ComponentCount}, int32{0}, k_ReadError, 2);
+    auto* source = Int32Array::Create(ds, sourcePath.getTargetName(), sourceStore, matrix->getId());
+    REQUIRE(source != nullptr);
+    for(usize valueIdx = 0; valueIdx < source->getSize(); valueIdx++)
+    {
+      (*source)[valueIdx] = static_cast<int32>(valueIdx);
+    }
+
+    ArrayCalculatorFilter filter;
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{matrixPath, "Input + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+    REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == k_ReadError; }));
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(outputPath));
+    const auto& output = ds.getDataRefAs<UInt32Array>(outputPath);
+    REQUIRE(output[0] == 1U);
+    REQUIRE(output[output.getSize() - 1] == 0U);
+  }
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ArrayCalculatorFilter][BackwardsCompatibility]")

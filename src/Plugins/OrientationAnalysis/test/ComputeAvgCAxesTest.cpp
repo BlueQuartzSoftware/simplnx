@@ -3,12 +3,15 @@
 #include <cmath>
 #include <filesystem>
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeAvgCAxesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -284,4 +287,78 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibi
       CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}));
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr usize k_NumVoxels = 2;
+  constexpr usize k_NumFeatures = 2;
+  constexpr usize k_NumCrystalStructures = 2;
+  const int32 invalidPhaseIdx = GENERATE(-1, static_cast<int32>(k_NumCrystalStructures));
+  const bool invalidParticipatingPhase = GENERATE(false, true);
+  CAPTURE(invalidPhaseIdx, invalidParticipatingPhase);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({k_NumVoxels, 1, 1});
+  const ShapeType cellTupleShape = {1, 1, k_NumVoxels};
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "CellFeatureData", ShapeType{k_NumFeatures}, imageGeomPtr->getId());
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{k_NumCrystalStructures}, imageGeomPtr->getId());
+
+  const DataPath imageGeomPath({"ImageGeometry"});
+  const DataPath cellDataPath = imageGeomPath.createChildPath("CellData");
+  const DataPath featureDataPath = imageGeomPath.createChildPath("CellFeatureData");
+  const DataPath ensembleDataPath = imageGeomPath.createChildPath("CellEnsembleData");
+
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellTupleShape, {4});
+  auto* quatsArrayPtr = Float32Array::Create(dataStructure, "Quats", quatsStore, cellDataPtr->getId());
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(quatsArrayPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  quatsArrayPtr->fill(0.0F);
+  (*quatsArrayPtr)[3] = 1.0F;
+  (*quatsArrayPtr)[7] = 1.0F;
+
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("FeatureIds"), cellTupleShape, {1});
+  auto* featureIdsArrayPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
+  (*featureIdsArrayPtr)[0] = 0;
+  (*featureIdsArrayPtr)[1] = 1;
+
+  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellTupleShape, {1});
+  auto* cellPhasesArrayPtr = Int32Array::Create(dataStructure, "Phases", cellPhasesStore, cellDataPtr->getId());
+  (*cellPhasesArrayPtr)[0] = invalidParticipatingPhase ? 0 : invalidPhaseIdx;
+  (*cellPhasesArrayPtr)[1] = invalidParticipatingPhase ? invalidPhaseIdx : 1;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, ensembleDataPath.createChildPath("CrystalStructures"), ShapeType{k_NumCrystalStructures}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStructuresStore, ensembleDataPtr->getId());
+  (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+
+  ComputeAvgCAxesFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Quats")));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("FeatureIds")));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Phases")));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(ensembleDataPath.createChildPath("CrystalStructures")));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureDataPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>("AvgCAxes"));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  if(invalidParticipatingPhase)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -76404);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

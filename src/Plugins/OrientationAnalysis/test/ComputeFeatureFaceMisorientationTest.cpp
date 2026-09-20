@@ -2,10 +2,14 @@
 #include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -48,7 +52,8 @@ const DataPath k_PhaseDataPath = k_TriGeomPath.createChildPath(Constants::k_Phas
 const DataPath k_CrystalStructurePath = k_PhaseDataPath.createChildPath(Constants::k_CrystalStructures);
 
 /**
- * The data for this test structure was hand-rolled and provided by Mike Jackson.
+ * @brief Creates the hand-curated feature-face misorientation fixture.
+ * @return DataStructure that contains the fixture arrays.
  */
 DataStructure CreateTestDataStructure()
 {
@@ -507,13 +512,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(::CompareFloats(faceMisorientations[2], 0.0f));
   REQUIRE(::CompareFloats(faceMisorientations[3], 45.0f));
 
-  // F5<->F7 (Cubic_High features F5,F7 with phi1 = 0deg and 90deg about c-axis): a 90deg
-  // rotation about c is a 4-fold cubic symmetry op, so the symmetry-reduced misorientation
-  // is exactly 0deg. Previously this returned ~0.0212deg due to a precision-fragile
-  // (qco.z()+qco.w())/sqrt(2) followed by acos near 1 in CubicOps::calculateMisorientationInternal.
-  // EbsdLib was patched to compute the reduced-quaternion's |v| from explicit components
-  // (so cancellations like qco.z()-qco.w() preserve precision in IEEE 754); the misorientation
-  // is now extracted as 2*atan2(|v|, w), which gives exactly 0 in this case.
+  // F5 and F7 are Cubic_High features with 0-degree and 90-degree rotations about the c-axis.
+  // Cubic four-fold symmetry reduces this misorientation to exactly 0 degrees.
+  // EbsdLib calculates the reduced quaternion vector magnitude from explicit components to preserve IEEE 754 cancellation precision.
+  // It extracts misorientation as 2*atan2(|v|, w), which avoids precision loss from acos near 1.
   REQUIRE(::CompareFloats(faceMisorientations[4], 0.0f));
 
   REQUIRE(::CompareFloats(faceMisorientations[5], 0.0f));
@@ -554,6 +556,81 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(::CompareFloats(faceMisorientations[34], 45.0f)); // F41 (phi1=0) <-> F42 (phi1=45)
   REQUIRE(::CompareFloats(faceMisorientations[35], 30.0f)); // F41 (phi1=0) <-> F43 (phi1=90)
   REQUIRE(::CompareFloats(faceMisorientations[36], 60.0f)); // F41 (phi1=0) <-> F44 (phi1=180)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  auto* dataGroupPtr = DataGroup::Create(dataStructure, "Bounds Data");
+  REQUIRE(dataGroupPtr != nullptr);
+
+  const DataPath faceLabelsPath({"Bounds Data", "FaceLabels"});
+  const DataPath avgQuatsPath({"Bounds Data", "AvgQuats"});
+  const DataPath featurePhasesPath({"Bounds Data", "FeaturePhases"});
+  const DataPath crystalStructuresPath({"Bounds Data", "CrystalStructures"});
+
+  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, faceLabelsPath, {1}, {2});
+  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, faceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
+  REQUIRE(faceLabelsArrayPtr != nullptr);
+  (*faceLabelsStore)[0] = 1;
+  (*faceLabelsStore)[1] = 2;
+
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {3}, {4});
+  auto* avgQuatsArrayPtr = Float32Array::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, dataGroupPtr->getId());
+  REQUIRE(avgQuatsArrayPtr != nullptr);
+  for(usize featureIdx = 0; featureIdx < 3; featureIdx++)
+  {
+    avgQuatsStore->setComponent(featureIdx, 3, 1.0F);
+  }
+
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {3}, {1});
+  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
+  REQUIRE(featurePhasesArrayPtr != nullptr);
+  (*featurePhasesStore)[0] = 0;
+  (*featurePhasesStore)[1] = 2;
+  (*featurePhasesStore)[2] = 2;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
+  REQUIRE(crystalStructuresArrayPtr != nullptr);
+  (*crystalStructuresStore)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresStore)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(featurePhasesStore->getDataFormat() == "HDF5-OOC");
+    REQUIRE(faceLabelsStore->getDataFormat() == "HDF5-OOC");
+  }
+
+  ComputeFeatureFaceMisorientationFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
+  args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
+  args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+  args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_MisorientationArrayName_Key, std::make_any<std::string>("Bounds Misorientations"));
+
+  SECTION("Participating Phase returns an error")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -98412);
+  }
+
+  SECTION("Mismatched Phase is ignored")
+  {
+    (*featurePhasesStore)[2] = 1;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(faceLabelsPath.replaceName("Bounds Misorientations")));
+    const auto& misorientationsArrayRef = dataStructure.getDataRefAs<Float32Array>(faceLabelsPath.replaceName("Bounds Misorientations"));
+    REQUIRE(std::isnan(misorientationsArrayRef[0]));
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

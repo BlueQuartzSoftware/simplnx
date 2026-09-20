@@ -153,10 +153,9 @@ Result<Arguments> ComputeAvgCAxesFilter::FromSIMPLJson(const nlohmann::json& jso
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
 
-  // The legacy FindAvgCAxes filter had no Cell Phases or Crystal Structures inputs, so there is nothing
-  // to convert. Derive the conventional locations from the legacy FeatureIds path so common pipelines
-  // convert to a runnable filter: "Phases" sits next to the Feature Ids array and "CrystalStructures"
-  // lives in the DataContainer's "CellEnsembleData" attribute matrix. Non-standard names need editing.
+  // The legacy filter had no phase or crystal-structure inputs.
+  // Derive their conventional paths from the legacy FeatureIds path.
+  // Nonstandard names require manual editing after conversion.
   if(json.contains(SIMPL::k_FeatureIdsArrayPathKey))
   {
     Result<std::string> dcNameResult = SIMPLConversion::ReadDataContainerName(json[SIMPL::k_FeatureIdsArrayPathKey.view()], "FindAvgCAxes");

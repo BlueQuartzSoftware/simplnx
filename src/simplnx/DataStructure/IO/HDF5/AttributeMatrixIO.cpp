@@ -47,7 +47,7 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
     return result;
   }
 
-  return {};
+  return result;
 }
 
 Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& attributeMatrix, group_writer_type& parentGroup, bool importable) const

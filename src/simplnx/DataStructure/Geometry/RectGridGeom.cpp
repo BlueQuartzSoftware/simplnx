@@ -3,10 +3,14 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+
+#include <nonstd/span.hpp>
 
 #include <iterator>
 #include <stdexcept>
+#include <vector>
 
 using namespace nx::core;
 
@@ -68,59 +72,18 @@ DataObject* RectGridGeom::shallowCopy()
 std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with identifier since it will get created when inserting into data structure
+  // The non-import constructor generates an identifier for the copied geometry.
   auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName()));
   copy->setDimensions(m_Dimensions);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
-    if(m_CellDataId.has_value())
-    {
-      const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
-      // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(!isParentOf(getCellData()))
-      {
-        const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
-      }
-      copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
-    }
+    IGridGeometry::copyMembersInto(*copy, copyPath);
 
-    if(m_xBoundsId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getXBounds()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getXBounds()))
-      {
-        const auto dataObjCopy = getXBounds()->deepCopy(copiedDataPath);
-      }
-      copy->m_xBoundsId = dataStruct.getId(copiedDataPath);
-    }
-    if(m_yBoundsId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getYBounds()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getYBounds()))
-      {
-        const auto dataObjCopy = getYBounds()->deepCopy(copiedDataPath);
-      }
-      copy->m_yBoundsId = dataStruct.getId(copiedDataPath);
-    }
-    if(m_zBoundsId.has_value())
-    {
-      const DataPath copiedDataPath = copyPath.createChildPath(getZBounds()->getName());
-      // if this is not a parent of the data object, make a deep copy and insert it here
-      if(!isParentOf(getZBounds()))
-      {
-        const auto dataObjCopy = getZBounds()->deepCopy(copiedDataPath);
-      }
-      copy->m_zBoundsId = dataStruct.getId(copiedDataPath);
-    }
-
-    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
-    {
-      copy->m_ElementSizesId = voxelSizesCopy->getId();
-    }
+    copy->m_xBoundsId = deepCopyOwnedChild(copyPath, getXBounds());
+    copy->m_yBoundsId = deepCopyOwnedChild(copyPath, getYBounds());
+    copy->m_zBoundsId = deepCopyOwnedChild(copyPath, getZBounds());
     return copy;
   }
   return nullptr;
@@ -314,13 +277,15 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
 
   if(sizeArray == nullptr)
   {
-    // If we are here we are not recalculating so create array
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    // The resolver selects a disk-backed store for a large grid when a compatible
+    // OOC manager is registered.
+    std::vector<DataPath> geomPaths = getDataPaths();
+    DataPath sizesPath = geomPaths.empty() ? DataPath({getName(), k_VoxelSizes}) : geomPaths.front().createChildPath(k_VoxelSizes);
+    auto dataStore = DataStoreUtilities::CreateDataStore<float32>(*getDataStructure(), sizesPath, std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1});
     sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
     if(sizeArray == nullptr)
     {
       m_ElementSizesId.reset();
-      // Used to be error code `-1`
       return MakeErrorResult(-1834, "RectGridGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
@@ -328,50 +293,103 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
   const auto* xBnds = getXBounds();
   if(xBnds == nullptr)
   {
-    // Used to be error code `-1`
     return MakeErrorResult(-1830, "RectGridGeom Error: No valid X Bounds Array");
   }
   const auto* yBnds = getYBounds();
   if(yBnds == nullptr)
   {
-    // Used to be error code `-1`
     return MakeErrorResult(-1831, "RectGridGeom Error: No valid Y Bounds Array");
   }
   const auto* zBnds = getZBounds();
   if(zBnds == nullptr)
   {
-    // Used to be error code `-1`
     return MakeErrorResult(-1832, "RectGridGeom Error: No valid Z Bounds Array");
   }
-  float32 xRes = 0.0f;
-  float32 yRes = 0.0f;
-  float32 zRes = 0.0f;
 
-  for(usize z = 0; z < m_Dimensions[2]; z++)
+  // Copy each bounds array once and calculate axis spacings in memory. This
+  // avoids per-voxel virtual and cache access for out-of-core stores.
+  const usize dimX = m_Dimensions[0];
+  const usize dimY = m_Dimensions[1];
+  const usize dimZ = m_Dimensions[2];
+
+  std::vector<float32> xBndsBuf(dimX + 1);
+  std::vector<float32> yBndsBuf(dimY + 1);
+  std::vector<float32> zBndsBuf(dimZ + 1);
+  Result<> readResult = xBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(xBndsBuf.data(), xBndsBuf.size()));
+  if(readResult.invalid())
   {
-    for(usize y = 0; y < m_Dimensions[1]; y++)
+    m_ElementSizesId.reset();
+    return readResult;
+  }
+  readResult = yBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(yBndsBuf.data(), yBndsBuf.size()));
+  if(readResult.invalid())
+  {
+    m_ElementSizesId.reset();
+    return readResult;
+  }
+  readResult = zBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(zBndsBuf.data(), zBndsBuf.size()));
+  if(readResult.invalid())
+  {
+    m_ElementSizesId.reset();
+    return readResult;
+  }
+
+  std::vector<float32> xRes(dimX);
+  std::vector<float32> yRes(dimY);
+  std::vector<float32> zRes(dimZ);
+  for(usize x = 0; x < dimX; x++)
+  {
+    xRes[x] = xBndsBuf[x + 1] - xBndsBuf[x];
+    if(xRes[x] <= 0.0f)
     {
-      for(usize x = 0; x < m_Dimensions[0]; x++)
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along X.\nX-Index: {} | X-Spacing: {}", x, xRes[x]));
+    }
+  }
+  for(usize y = 0; y < dimY; y++)
+  {
+    yRes[y] = yBndsBuf[y + 1] - yBndsBuf[y];
+    if(yRes[y] <= 0.0f)
+    {
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along Y.\nY-Index: {} | Y-Spacing: {}", y, yRes[y]));
+    }
+  }
+  for(usize z = 0; z < dimZ; z++)
+  {
+    zRes[z] = zBndsBuf[z + 1] - zBndsBuf[z];
+    if(zRes[z] <= 0.0f)
+    {
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along Z.\nZ-Index: {} | Z-Spacing: {}", z, zRes[z]));
+    }
+  }
+
+  // Build one Z slice and write it with bulk I/O. This bounds the temporary
+  // voxel-size buffer and avoids per-voxel out-of-core writes.
+  auto& sizeStoreRef = sizeArray->getDataStoreRef();
+  const usize sliceSize = dimX * dimY;
+  std::vector<float32> sliceBuf(sliceSize);
+  for(usize z = 0; z < dimZ; z++)
+  {
+    for(usize y = 0; y < dimY; y++)
+    {
+      const float32 yzRes = yRes[y] * zRes[z];
+      for(usize x = 0; x < dimX; x++)
       {
-        xRes = xBnds->at(x + 1) - xBnds->at(x);
-        yRes = yBnds->at(y + 1) - yBnds->at(y);
-        zRes = zBnds->at(z + 1) - zBnds->at(z);
-        if(xRes <= 0.0f || yRes <= 0.0f || zRes <= 0.0f)
-        {
-          m_ElementSizesId.reset();
-          // Used to be error code `-1`
-          return MakeErrorResult(-1833,
-                                 fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
-                                             x, xRes, y, yRes, z, zRes));
-        }
-        sizeArray->setValue((m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x, zRes * yRes * xRes);
+        sliceBuf[y * dimX + x] = xRes[x] * yzRes;
       }
+    }
+    Result<> writeResult = sizeStoreRef.copyFromBuffer(z * sliceSize, nonstd::span<const float32>(sliceBuf.data(), sliceSize));
+    if(writeResult.invalid())
+    {
+      m_ElementSizesId.reset();
+      return writeResult;
     }
   }
 
   m_ElementSizesId = sizeArray->getId();
 
-  // Used to be error code `1`
   return {};
 }
 
@@ -390,7 +408,7 @@ void RectGridGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* s
   sm = 1.0 - pCoords[1];
   tm = 1.0 - pCoords[2];
 
-  // r derivatives
+  // Derivatives with respect to r.
   shape[0] = -sm * tm;
   shape[1] = sm * tm;
   shape[2] = -pCoords[1] * tm;
@@ -400,7 +418,7 @@ void RectGridGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* s
   shape[6] = -pCoords[1] * pCoords[2];
   shape[7] = pCoords[1] * pCoords[2];
 
-  // s derivatives
+  // Derivatives with respect to s.
   shape[8] = -rm * tm;
   shape[9] = -pCoords[0] * tm;
   shape[10] = rm * tm;
@@ -410,7 +428,7 @@ void RectGridGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* s
   shape[14] = rm * pCoords[2];
   shape[15] = pCoords[0] * pCoords[2];
 
-  // t derivatives
+  // Derivatives with respect to t.
   shape[16] = -rm * sm;
   shape[17] = -pCoords[0] * sm;
   shape[18] = -rm * pCoords[1];
@@ -712,7 +730,6 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
     return {};
   }
 
-  // Use standard distance to get the index of the returned iterator from adjacent_find
   usize x = std::distance(xBnds.begin(), std::adjacent_find(xBnds.begin(), xBnds.end(), [xCoord](const float32 a, const float32 b) { return (xCoord >= a && xCoord < b); }));
   usize y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float32 a, const float32 b) { return (yCoord >= a && yCoord < b); }));
   usize z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float32 a, const float32 b) { return (zCoord >= a && zCoord < b); }));

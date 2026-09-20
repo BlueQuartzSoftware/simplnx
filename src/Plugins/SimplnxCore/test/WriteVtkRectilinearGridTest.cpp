@@ -2,6 +2,10 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -10,12 +14,153 @@
 
 #include "SimplnxCore/Filters/WriteVtkRectilinearGridFilter.hpp"
 
+#include <algorithm>
+#include <bit>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
 using namespace nx::core::Constants;
+
+namespace
+{
+constexpr usize k_BoolCount = 4097;
+const DataPath k_BulkImagePath({"BulkImage"});
+const DataPath k_BulkCellDataPath = k_BulkImagePath.createChildPath("CellData");
+const DataPath k_BulkBoolPath = k_BulkCellDataPath.createChildPath("BoolValues");
+
+class VtkFailOnLaterReadStore : public DataStore<bool>
+{
+public:
+  explicit VtkFailOnLaterReadStore(int32 errorCode)
+  : DataStore<bool>(ShapeType{k_BoolCount}, ShapeType{1}, false)
+  , m_ErrorCode(errorCode)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<bool> buffer) const override
+  {
+    if(++m_ReadCount == 2)
+    {
+      return MakeErrorResult(m_ErrorCode, "Injected VTK writer second-page read failure");
+    }
+    return DataStore<bool>::copyIntoBuffer(offset, buffer);
+  }
+
+private:
+  int32 m_ErrorCode;
+  mutable usize m_ReadCount = 0;
+};
+
+BoolArray& CreateBulkBoolInput(DataStructure& ds, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
+{
+  auto* image = ImageGeom::Create(ds, k_BulkImagePath.getTargetName());
+  REQUIRE(image != nullptr);
+  image->setDimensions({k_BoolCount, 1, 1});
+  image->setSpacing({1.0F, 1.0F, 1.0F});
+  image->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellAM = AttributeMatrix::Create(ds, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, image->getId());
+  REQUIRE(cellAM != nullptr);
+  image->setCellData(*cellAM);
+  if(store == nullptr)
+  {
+    store = std::make_shared<DataStore<bool>>(cellAM->getShape(), ShapeType{1}, false);
+  }
+  auto* values = BoolArray::Create(ds, k_BulkBoolPath.getTargetName(), std::move(store), cellAM->getId());
+  REQUIRE(values != nullptr);
+  for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
+  {
+    (*values)[valueIdx] = valueIdx % 3 == 1;
+  }
+  return *values;
+}
+
+Arguments CreateWriterArguments(const fs::path& outputPath, bool binary)
+{
+  Arguments args;
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key, std::make_any<bool>(binary));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_BulkImagePath));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{k_BulkBoolPath}));
+  return args;
+}
+
+void AppendCoordinatesAscii(std::string& expected, const std::string& axis, usize count)
+{
+  expected += fmt::format("{} {} float\n", axis, count);
+  for(usize idx = 0; idx < count; idx++)
+  {
+    expected += fmt::format("{:.6f} ", static_cast<float32>(idx) - 0.5F);
+    if(idx % 20 == 0 && idx != 0)
+    {
+      expected += "\n";
+    }
+  }
+  expected += "\n";
+}
+
+void AppendBigEndianFloat(std::string& expected, float32 value)
+{
+  const uint32 bits = std::bit_cast<uint32>(value);
+  expected.push_back(static_cast<char>((bits >> 24U) & 0xFFU));
+  expected.push_back(static_cast<char>((bits >> 16U) & 0xFFU));
+  expected.push_back(static_cast<char>((bits >> 8U) & 0xFFU));
+  expected.push_back(static_cast<char>(bits & 0xFFU));
+}
+
+void AppendCoordinatesBinary(std::string& expected, const std::string& axis, usize count)
+{
+  expected += fmt::format("{} {} float\n", axis, count);
+  for(usize idx = 0; idx < count; idx++)
+  {
+    AppendBigEndianFloat(expected, static_cast<float32>(idx) - 0.5F);
+  }
+  expected += "\n";
+}
+
+std::string ExpectedBulkVtk(bool binary)
+{
+  std::string expected =
+      fmt::format("# vtk DataFile Version 2.0\nData set from DREAM3D-NX SimplnxCore version 7.0.0\n{}\n\nDATASET RECTILINEAR_GRID\nDIMENSIONS 4098 2 2\n", binary ? "BINARY" : "ASCII");
+  if(binary)
+  {
+    AppendCoordinatesBinary(expected, "X_COORDINATES", k_BoolCount + 1);
+    AppendCoordinatesBinary(expected, "Y_COORDINATES", 2);
+    AppendCoordinatesBinary(expected, "Z_COORDINATES", 2);
+  }
+  else
+  {
+    AppendCoordinatesAscii(expected, "X_COORDINATES", k_BoolCount + 1);
+    AppendCoordinatesAscii(expected, "Y_COORDINATES", 2);
+    AppendCoordinatesAscii(expected, "Z_COORDINATES", 2);
+  }
+  expected += "CELL_DATA 4097\nSCALARS BoolValues char 1\nLOOKUP_TABLE default\n";
+  for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
+  {
+    const int value = valueIdx % 3 == 1 ? 1 : 0;
+    if(binary)
+    {
+      expected.push_back(static_cast<char>(value));
+    }
+    else
+    {
+      if(valueIdx % 20 == 0 && valueIdx > 0)
+      {
+        expected += "\n";
+      }
+      expected += fmt::format(" {:d}", value);
+    }
+  }
+  expected += "\n";
+  return expected;
+}
+} // namespace
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
@@ -119,6 +264,53 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution"
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+}
+
+TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and failure propagation", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  SECTION("binary and ASCII output have independent exact bool payload oracles")
+  {
+    DataStructure ds;
+    auto& source = CreateBulkBoolInput(ds);
+    WriteVtkRectilinearGridFilter filter;
+
+    for(const bool binary : {false, true})
+    {
+      const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / (binary ? "bulk_bool_binary.vtk" : "bulk_bool_ascii.vtk");
+      const auto executeResult = filter.execute(ds, CreateWriterArguments(outputPath, binary));
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+      std::ifstream output(outputPath, std::ios::binary);
+      const std::string actual(std::istreambuf_iterator<char>(output), {});
+      REQUIRE(actual == ExpectedBulkVtk(binary));
+      std::error_code error;
+      fs::remove(outputPath, error);
+    }
+
+    for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
+    {
+      REQUIRE(source[valueIdx] == (valueIdx % 3 == 1));
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+
+  SECTION("second bool source page failure reaches the filter result")
+  {
+    constexpr int32 k_SourceError = -91931;
+    DataStructure ds;
+    auto failingStore = std::make_shared<VtkFailOnLaterReadStore>(k_SourceError);
+    CreateBulkBoolInput(ds, failingStore);
+    const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "bulk_bool_read_failure.vtk";
+
+    WriteVtkRectilinearGridFilter filter;
+    const auto executeResult = filter.execute(ds, CreateWriterArguments(outputPath, true));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+    REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == -2090; }));
+    REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == -2091; }));
+    std::error_code error;
+    fs::remove(outputPath, error);
+  }
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteVtkRectilinearGridFilter][BackwardsCompatibility]")

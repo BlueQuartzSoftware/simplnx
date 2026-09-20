@@ -85,19 +85,17 @@ public:
   GroupType getGroupType() const override;
 
   /**
-   * @brief Creates and returns a deep copy of the AttributeMatrix. The caller is
-   * responsible for deleting the returned pointer when it is no longer needed.
-   * @param copyPath The path where the deep copy should be placed
-   * @return std::shared_ptr<DataObject> Shared pointer to the deep copied AttributeMatrix
+   * @brief Creates a deep copy of the AttributeMatrix at a new path.
+   * @param copyPath Path for the copy.
+   * @return Shared pointer to the copy, or null when insertion fails.
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   * @brief Creates and returns a shallow copy of the AttributeMatrix. The caller is
-   * responsible for deleting the returned pointer when it is no longer needed
-   * as a copy cannot be added to the DataStructure anywhere the original
-   * exists without changing its name.
-   * @return DataObject* Pointer to the shallow copied AttributeMatrix
+   * @brief Creates a shallow copy of the AttributeMatrix.
+   * @return Raw pointer that the caller owns.
+   *
+   * The copy must use a different name before insertion into the source DataStructure.
    */
   DataObject* shallowCopy() override;
 
@@ -120,20 +118,16 @@ public:
   usize getNumberOfTuples() const;
 
   /**
-   * @brief Sets the tuple Shape and resizes all child arrays.
+   * @brief Sets the tuple shape and resizes each child array in order.
    *
-   * <b>This may result in loss of data if the over all number of tuples is less
-   * than the original number</b>. This action will <b>OVERWRITE</b> any existing
-   * tuple shape that DataArrays contained in this AttributeMatrix currently have.
+   * Shrinking can discard trailing values. A new shape with the same tuple count changes only shape metadata.
    *
-   * For example: If an underlying array has a Tuple Shape of [4][5] and this
-   * method is called with a Tuple Shape of [2][10], the underlying array will have
-   * its Tuple Shape changed to be [4][5]. Since the total number of tuples remain
-   * the same no data loss or memory allocation will take place.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
+   * @return Valid on success. The first child failure includes that child's path and propagates its error code.
    *
-   * @param tupleShape The new tuple shape to set
+   * The method stops at the first failure. The matrix and each earlier child retain the new shape. Later children retain their prior shapes.
    */
-  void resizeTuples(ShapeType tupleShape);
+  [[nodiscard]] Result<> resizeTuples(ShapeType tupleShape);
 
   /**
    * @brief Validates that every IArray held by this attribute matrix have the same number

@@ -59,8 +59,16 @@ Result<> ReadStlFile::operator()()
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->geometryPath);
 
-  triangleGeom.resizeFaceList(triCount);
-  triangleGeom.resizeVertexList(static_cast<usize>(triCount) * 3);
+  Result<> resizeResult = triangleGeom.resizeFaceList(triCount);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
+  resizeResult = triangleGeom.resizeVertexList(static_cast<usize>(triCount) * 3);
+  if(resizeResult.invalid())
+  {
+    return resizeResult;
+  }
 
   using SharedTriList = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
   using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
@@ -86,9 +94,14 @@ Result<> ReadStlFile::operator()()
   // portable. It starts just past the header and triangle count that were skipped above.
   uintmax_t fileOffset = StlConstants::k_StlFixedHeaderBytes;
 
+  // Check progress every 10,000 triangles to reduce work in the read loop.
+  constexpr int32_t k_ProgressStride = 10000;
   for(int32_t t = 0; t < triCount; ++t)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
+    if(t % k_ProgressStride == 0)
+    {
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
+    }
     if(m_ShouldCancel)
     {
       return {};
@@ -133,7 +146,6 @@ Result<> ReadStlFile::operator()()
       fileOffset += attrByteCount;
     }
 
-    // Write the data into the actual geometry
     faceNormalsStore[3 * t + 0] = static_cast<double>(fileVert[0]);
     faceNormalsStore[3 * t + 1] = static_cast<double>(fileVert[1]);
     faceNormalsStore[3 * t + 2] = static_cast<double>(fileVert[2]);

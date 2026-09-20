@@ -24,6 +24,13 @@ public:
   using iterator = typename store_type::iterator;
   using const_iterator = typename store_type::const_iterator;
 
+  /**
+   * @brief Identifies a partial erase without an available destination path.
+   *
+   * eraseTuples returns this code before copying or resizing the store.
+   */
+  static inline constexpr int32 k_MissingCopyDestinationError = -101;
+
   NeighborList() = default;
 
   NeighborList(const NeighborList& other);
@@ -80,9 +87,14 @@ public:
   DataObject* shallowCopy() override;
 
   /**
-   * @brief Returns a deep copy of the NeighborList including a deep copy of the
-   * data.
-   * @return DataObject*
+   * @brief Copies lists using the destination DataStructure policy.
+   * @param copyPath Destination path for policy selection and insertion.
+   * @return Inserted independent copy, or nullptr if the path exists or insertion fails.
+   * @throws std::runtime_error If destination selection or store copying fails.
+   * @throws std::bad_alloc If allocation fails.
+   *
+   * The policy estimate uses tuple count times sizeof(T), a lower bound that requires no list reads.
+   * Metadata placeholders remain empty. Explicit in-memory selection requires all destination lists in RAM.
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
@@ -93,12 +105,15 @@ public:
   virtual void setInitValue(value_type initValue);
 
   /**
-   * @brief Removes Tuples from the Array. If the size of the vector is Zero, nothing is done. If the size of the
-   * vector is greater than or Equal to the number of Tuples then the Array is Resized to Zero. If there are
-   * indices that are larger than the size of the original (before erasing operations), then an error code (-100) is
-   * returned from the program.
-   * @param idxs The indices to remove
-   * @return int32 Error code
+   * @brief Removes selected tuples through an independent store copy.
+   * @param idxs Sorted tuple indices to remove.
+   * @return Zero on success, -100 for an invalid index, -101 without a copy destination path, or a resize error.
+   * @throws std::runtime_error If policy selection or copying fails.
+   * @throws std::bad_alloc If allocation fails.
+   *
+   * An empty selection is a no-op. A selection that covers all tuples resizes directly to zero.
+   * Partial erasure resolves policy through the first available path in parent order before copying or resizing.
+   * The size estimate is tuple count times sizeof(T), a lower bound without list reads.
    */
   int32 eraseTuples(const std::vector<usize>& idxs);
 
@@ -436,9 +451,14 @@ public:
   const_iterator cend() const;
 
   /**
-   * @brief Copy assignment operator.
-   * @param rhs The NeighborList to copy from
-   * @return NeighborList& Reference to this NeighborList
+   * @brief Replaces this destination's values with an independent copy.
+   * @param rhs Source list whose values and tuple shape to copy.
+   * @return This destination list.
+   * @throws std::runtime_error If this destination has no DataStructure path or copy selection fails.
+   * @throws std::bad_alloc If allocation fails.
+   *
+   * The first available path in parent order supplies policy context. Tuple count times sizeof(T) is the lower-bound size estimate.
+   * A failure leaves the original store unchanged.
    */
   NeighborList& operator=(const NeighborList& rhs);
 

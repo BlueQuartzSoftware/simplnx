@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -20,14 +21,11 @@ class JsonPipelineBuilder;
 
 /**
  * @class Application
- * @brief The Application class serves as the core of the framework. The
- * Application instance provides access to the FilterList, PipelineBuilder,
- * and REST server. The Application handles loading available plugins into the
- * FilterList so that they can be used by the rest of the codebase.
- * When the Application is deleted, plugins are released and memory is cleaned
- * up. Pipelines or DataStructures are not cleaned up unless they are owned by
- * the REST server, but plugin-specific information or calculations will be
- * made unavailable.
+ * @brief Owns the process-wide filter, preference, and data-I/O services.
+ *
+ * The global instance owns loaded plugins and their registrations. Data
+ * structures and pipelines remain caller-owned. The global instance operations
+ * are not synchronized.
  */
 class SIMPLNX_EXPORT Application
 {
@@ -35,208 +33,187 @@ public:
   using name_type_map = std::map<std::string, DataObject::Type>;
 
   /**
-   * @brief Destroys the Application. If the destroyed Application matches the
-   * current Application::Instance(), the instance pointer is set to nullptr.
+   * @brief Saves preferences and clears the global instance pointer.
+   *
+   * The destructor logs a preference-write error because it cannot return it.
    */
   ~Application();
 
   /**
-   * @brief Returns a pointer to the current Application. This pointer is
-   * replaced when a new nx::core::Application is created, replacing the
-   * previous value. If the current Application is destroyed, this method will
-   * return nullptr until a new Application is created.
-   * @return Shared pointer to the current Application instance, or nullptr if none exists
+   * @brief Returns the global application instance without creating one.
+   * @return Shared instance, or nullptr when no instance exists.
+   *
+   * The global instance API is not thread-safe.
    */
   static std::shared_ptr<Application> Instance();
 
   /**
-   * @brief Gets the current Application instance, or creates a new one if none exists.
-   * @return Shared pointer to the Application instance
+   * @brief Returns the global application instance, creating it when needed.
+   * @return Shared global instance.
+   *
+   * The global instance API is not thread-safe.
    */
   static std::shared_ptr<Application> GetOrCreateInstance();
 
   /**
-   * @brief Deletes the current Application instance and sets it to nullptr.
+   * @brief Saves preferences and releases the global application instance.
+   *
+   * The method logs a preference-write error because it cannot return it.
    */
   static void DeleteInstance();
 
   /**
    * @brief Finds and loads plugins in the target directory.
+   * @param pluginDir Directory to scan for plugin libraries.
+   * @param verbose True to write load progress to standard output.
+   * @return Errors for an invalid directory or failed plugin loads.
    *
-   * Plugins are found by using the file extension of "".
-   * @param pluginDir
-   * @return Result<> indicating success or failure. Accumulates errors from individual plugin loads.
+   * The method selects the build-matching .simplnx library suffix. It continues
+   * after an individual plugin failure and returns the accumulated errors.
    */
   Result<> loadPlugins(const std::filesystem::path& pluginDir, bool verbose = false);
 
   /**
-   * @brief Returns a pointer to the Application's FilterList.
+   * @brief Returns the owned filter registry.
+   * @return FilterList owned by this application.
    *
-   * This pointer is owned by the Application and will remain valid for as long
-   * as the Application exists.
-   * @return FilterList*
+   * The pointer remains valid until this application is destroyed.
    */
   FilterList* getFilterList() const;
 
   /**
-   * @brief Convenience method to return the loaded plugins.
-   * @return Unordered set of pointers to all loaded plugins
+   * @brief Returns the loaded plugin objects.
+   * @return Non-owning pointers to loaded plugins.
+   *
+   * The pointers remain valid until the application releases the plugins.
    */
   std::unordered_set<AbstractPlugin*> getPluginList() const;
 
   /**
-   * @brief Returns the loaded plugin with the given uuid.
-   * Returns nullptr if no match.
-   * @param uuid The unique identifier of the plugin to retrieve
-   * @return Pointer to the plugin if found, nullptr otherwise
+   * @brief Finds a loaded plugin by UUID.
+   * @param uuid Plugin UUID to find.
+   * @return Non-owning plugin pointer, or nullptr when no plugin matches.
    */
   const AbstractPlugin* getPlugin(const Uuid& uuid) const;
 
   /**
-   * @brief Returns a pointer to the application preferences.
-   * The application should be in charge of saving or loading values.
-   * @return Pointer to the Preferences object
+   * @brief Returns the owned preference store.
+   * @return Preferences owned by this application.
+   *
+   * The pointer remains valid until this application is destroyed.
    */
   Preferences* getPreferences();
 
   /**
-   * @brief Saves user preferences to the default filepath.
-   * This method does not save default values.
-   * @return Result<> indicating success or failure
+   * @brief Saves explicit preferences to the default file path.
+   * @return Error when preferences are unavailable or cannot be saved.
+   *
+   * Default preference values are not serialized.
    */
   Result<> savePreferences();
 
   /**
-   * @brief Loads user preferences from the default filepath.
-   * @return Result<> indicating success or failure (warnings if file doesn't exist)
+   * @brief Loads preferences from the default file path.
+   * @return Error when the file cannot load or parse.
    */
   Result<> loadPreferences();
 
   /**
-   * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
-   * responsibility to delete the pointer when they are done with it.
-   * @return JsonPipelineBuilder*
+   * @brief Returns no JSON pipeline builder.
+   * @return nullptr.
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
   /**
    * @brief Returns the collection of data I/O managers.
-   * @return Shared pointer to the DataIOCollection
+   *
+   * @return DataIOCollection owned by this application.
+   *
+   * The reference remains valid until this application is destroyed.
    */
-  std::shared_ptr<DataIOCollection> getIOCollection() const;
+  DataIOCollection& getIOCollection() const;
 
   /**
-   * @brief Returns the I/O manager for the specified format.
-   * @param formatName The name of the data format
-   * @return Shared pointer to the IDataIOManager for the specified format
+   * @brief Finds a data-I/O manager by format name.
+   * @param formatName Registered data format name.
+   * @return Shared manager, or nullptr when no manager matches.
    */
   std::shared_ptr<IDataIOManager> getIOManager(const std::string& formatName) const;
 
-  /**
-   * @brief Returns the I/O manager for the specified format, cast to the specified type.
-   * @tparam T The type to cast the I/O manager to
-   * @param formatName The name of the data format
-   * @return Shared pointer to the I/O manager cast to type T, or nullptr if cast fails
-   */
   template <typename T>
   std::shared_ptr<T> getIOManagerAs(const std::string& formatName) const
   {
     return std::dynamic_pointer_cast<T>(getIOManager(formatName));
   }
 
-  /**
-   * @brief Returns a filepath pointing to the current executable.
-   * @return std::filesystem::path
-   */
   std::filesystem::path getCurrentPath() const;
 
-  /**
-   * @brief Returns a filepath pointing to the current executable's parent directory.
-   * @return std::filesystem::path
-   */
   std::filesystem::path getCurrentDir() const;
 
   /**
-   * @brief Returns the Simplnx filter UUID [v4] from the SIMPL filter UUID [v5].
-   * @param simplUuid The SIMPL filter UUID to convert
-   * @return Optional Simplnx UUID if a mapping exists, std::nullopt otherwise
+   * @brief Maps a legacy SIMPL filter UUID to a simplnx filter UUID.
+   * @param simplUuid Legacy filter UUID.
+   * @return Mapped simplnx UUID, or std::nullopt when no mapping exists.
    */
   std::optional<Uuid> getSimplnxUuid(const Uuid& simplUuid);
 
   /**
-   * @brief Returns the SIMPL filter UUID(s) [v5] from the Simplnx filter UUID [v4].
-   * @param simplnxUuid The Simplnx filter UUID to convert
-   * @return Vector of SIMPL UUIDs that map to the given Simplnx UUID (may be empty)
+   * @brief Maps a simplnx filter UUID to legacy SIMPL filter UUIDs.
+   * @param simplnxUuid Simplnx filter UUID.
+   * @return Legacy UUIDs that map to simplnxUuid.
    */
   std::vector<Uuid> getSimplUuid(const Uuid& simplnxUuid);
 
-  /**
-   * @brief Registers a data type with a name for lookup.
-   * @param type The DataObject type enumeration value
-   * @param name The string name to associate with the type
-   */
   void addDataType(DataObject::Type type, const std::string& name);
 
-  /**
-   * @brief Retrieves the DataObject type associated with a given name.
-   * @param name The string name of the data type
-   * @return The DataObject type enumeration value
-   */
   DataObject::Type getDataType(const std::string& name) const;
 
-  /**
-   * @brief Returns a list of all available data store format names.
-   * @return Vector of strings representing the available data store formats
-   */
   std::vector<std::string> getDataStoreFormats() const;
 
-protected:
   /**
-   * @brief Constructs an Application using default values and replaces the
-   * current Instance pointer.
+   * @brief Returns registered data-store format display names.
+   *
+   * The collection includes Automatic and In Memory entries. Registered I/O
+   * managers append their display names.
+   * @return Format-name and display-name pairs.
    */
+  std::vector<std::pair<std::string, std::string>> getDataStoreFormatDisplayNames() const;
+
+protected:
   Application();
 
   /**
-   * @brief Constructs an Application accepting a set of command line arguments.
-   *
-   * The current Application instance is replaced with the constructed Application.
-   * @param argc Number of command line arguments
-   * @param argv Array of command line argument strings
+   * @brief Constructs an application for a legacy command-line interface.
+   * @param argc Ignored command-line argument count.
+   * @param argv Ignored command-line arguments.
    */
   Application(int argc, char** argv);
 
   /**
-   * @brief Initializes the application components and sets up default configurations.
-   * @return Result indicating success or failure of initialization
+   * @brief Initializes preferences, executable path, and type mappings.
+   * @return Preference-load warnings or an executable-path error.
    */
   Result<> initialize();
 
 private:
-  /**
-   * @brief Initializes the default data type mappings.
-   */
   void initDefaultDataTypes();
 
   /**
-   * @brief Loads the plugin at the specified filepath and updates the
-   * FilterList with the new IFilters.
-   * @param path Filesystem path to the plugin library
-   * @param verbose If true, outputs verbose loading information
-   * @return Result indicating success or failure of plugin loading
+   * @brief Loads one plugin and registers its filter and I/O services.
+   * @param path Plugin library path.
+   * @param verbose True to write load progress to standard output.
+   * @return Error when loading, UUID mapping, or I/O registration fails.
+   *
+   * Legacy UUIDs remain unique so reverse mapping stays unambiguous.
    */
   Result<> loadPlugin(const std::filesystem::path& path, bool verbose = false);
 
-  //////////////////
-  // Static Variable
   static std::shared_ptr<Application> s_Instance;
 
-  ////////////
-  // Variables
   std::unique_ptr<nx::core::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Simplnx_Uuids
-  std::vector<Uuid> m_Simplnx_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
+  std::vector<Uuid> m_Simpl_Uuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
+  std::vector<Uuid> m_Simplnx_Uuids; // Values can repeat. Indices match m_Simpl_Uuids.
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   name_type_map m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;

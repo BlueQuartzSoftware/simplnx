@@ -7,6 +7,7 @@
 #ifndef MM_CELL_MAP_H
 #define MM_CELL_MAP_H
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
@@ -23,7 +24,13 @@ public:
 
   ~MMCellMap();
 
-  bool init();
+  /**
+   * @brief Initializes cells and creates vertex storage.
+   * @return The vertex-store resize error.
+   *
+   * The Result keeps a disk-backed vertex-store failure visible to the filter.
+   */
+  Result<> init();
   bool valid() const;
 
   // Relax vertex positions using relaxation attributes or reset to cell centers
@@ -77,7 +84,13 @@ private:
   TriangleGeom::SharedVertexList::store_type& m_VerticesStoreRef;
   Int32Array* m_NxLabelsPtr = nullptr;
 
-  bool setCellVertices();
+  /**
+   * @brief Assigns one output vertex to each active cell.
+   * @return The vertex-store resize or allocation error.
+   *
+   * The Result keeps a disk-backed vertex-store failure visible to the filter.
+   */
+  Result<> setCellVertices();
 
   // Access cell map
   size_t cellArrayIndex(int i, int j, int k) const;

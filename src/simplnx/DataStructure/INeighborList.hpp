@@ -159,15 +159,17 @@ public:
   /**
    * @brief Resizes the internal array to accommodate the specified tuple shape.
    * @param tupleShape The new shape for the tuples
+   * @return The list-store resize result. Error -6035 reports a resize failure.
+   *
+   * The result exposes storage failures to callers instead of discarding them.
    */
-  void resizeTuples(const ShapeType& tupleShape) override;
+  [[nodiscard]] Result<> resizeTuples(const ShapeType& tupleShape) override;
 
 protected:
   /**
    * @brief Constructs a new INeighborList
    * @param dataStructure
    * @param name
-   * @param numTuples
    */
   INeighborList(DataStructure& dataStructure, const std::string& name);
 
@@ -175,7 +177,6 @@ protected:
    * @brief Constructor for use when importing INeighborLists
    * @param dataStructure
    * @param name
-   * @param numTuples
    * @param importId
    */
   INeighborList(DataStructure& dataStructure, const std::string& name, IdType importId);

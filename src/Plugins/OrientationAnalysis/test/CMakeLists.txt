@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  AlgorithmDispatchStateTest.cpp
   AlignSectionsMisorientationTest.cpp
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
@@ -79,6 +80,14 @@ set(DISABLED_TESTS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
+# Compile the cross-module dispatch probe into the plugin, not the test
+# executable, so the test exercises state across the shared-library boundary.
+target_sources(${PLUGIN_NAME}
+  PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/AlgorithmDispatchTestSupport.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/AlgorithmDispatchTestSupport.cpp
+)
+
 # ------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
@@ -150,6 +159,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_Ang_Files.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d_v3.tar.gz SHA512 bfa9547e787b0f8e8122702da0eb4e519f48a48bf4f94aad020f72479d071d32dfc96a1425705874c68507a61ed391d28606d9c4f4acd559043ef0ace64fd33f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME segment_features_exemplars.tar.gz SHA512 004fdccf1d2af6dbea8690a9213cf485ddd8c3afb90416895de7d8f52c51f4c2e4b73edb335b01572934ad4d2ff188edc047b3a64f76beff8d280e55ef08e2ab)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_MergeTwins.tar.gz SHA512 756da6b9a2fdc6c7f1cf611243b889b8da0bdc172c1cd184f81672c3cdf651f1f450aecff2e2e0c9b1fa367735ca1df26436d88fa342cea1825b4e5665aa7dfd)

@@ -1,134 +1,13 @@
 #include "ComputeIPFColors.hpp"
 
-#include "simplnx/Common/Array.hpp"
-#include "simplnx/Common/RgbColor.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "ComputeIPFColorsDirect.hpp"
+#include "ComputeIPFColorsScanline.hpp"
 
-#include <EbsdLib/LaueOps/LaueOps.h>
-#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 using namespace nx::core;
 
-namespace
-{
-
-/**
- * @brief The ComputeIPFColorsImpl class implements a threaded algorithm that computes the IPF
- * colors for each element in a geometry
- */
-class ComputeIPFColorsImpl
-{
-public:
-  ComputeIPFColorsImpl(ComputeIPFColors* filter, nx::core::FloatVec3 referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
-                       int32_t numPhases, const nx::core::IDataArray* maskArray, nx::core::UInt8Array& colors, ebsdlib::ColorKeyKind colorKey)
-  : m_Filter(filter)
-  , m_ReferenceDir(referenceDir)
-  , m_CellEulerAngles(eulers.getDataStoreRef())
-  , m_CellPhases(phases.getDataStoreRef())
-  , m_CrystalStructures(crystalStructures.getDataStoreRef())
-  , m_NumPhases(numPhases)
-  , m_MaskArray(maskArray)
-  , m_CellIPFColors(colors.getDataStoreRef())
-  , m_ColorKey(colorKey)
-  {
-  }
-
-  virtual ~ComputeIPFColorsImpl() = default;
-
-  template <typename T>
-  void convert(size_t start, size_t end) const
-  {
-    using MaskArrayType = DataArray<T>;
-    const MaskArrayType* maskArray = nullptr;
-    if(nullptr != m_MaskArray)
-    {
-      maskArray = dynamic_cast<const MaskArrayType*>(m_MaskArray);
-    }
-
-    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
-    std::array<double, 3> refDir = {m_ReferenceDir[0], m_ReferenceDir[1], m_ReferenceDir[2]};
-    std::array<double, 3> dEuler = {0.0, 0.0, 0.0};
-    Rgba argb = 0x00000000;
-    int32_t phase = 0;
-    bool calcIPF = false;
-    size_t index = 0;
-    for(size_t i = start; i < end; i++)
-    {
-      if(m_Filter->shouldCancel())
-      {
-        return;
-      }
-      phase = m_CellPhases[i];
-      index = i * 3;
-      m_CellIPFColors.setValue(index, 0);
-      m_CellIPFColors.setValue(index + 1, 0);
-      m_CellIPFColors.setValue(index + 2, 0);
-      dEuler[0] = m_CellEulerAngles.getValue(index);
-      dEuler[1] = m_CellEulerAngles.getValue(index + 1);
-      dEuler[2] = m_CellEulerAngles.getValue(index + 2);
-
-      // Make sure we are using a valid Euler Angles with valid crystal symmetry
-      calcIPF = true;
-      if(nullptr != maskArray)
-      {
-        calcIPF = (*maskArray)[i];
-      }
-      // Sanity check the phase data to make sure we do not walk off the end of the array
-      if(phase >= m_NumPhases)
-      {
-        m_Filter->incrementPhaseWarningCount();
-      }
-
-      if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < ebsdlib::CrystalStructure::LaueGroupEnd)
-      {
-        argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false, m_ColorKey);
-        m_CellIPFColors.setValue(index, static_cast<uint8_t>(nx::core::RgbColor::dRed(argb)));
-        m_CellIPFColors.setValue(index + 1, static_cast<uint8_t>(nx::core::RgbColor::dGreen(argb)));
-        m_CellIPFColors.setValue(index + 2, static_cast<uint8_t>(nx::core::RgbColor::dBlue(argb)));
-      }
-    }
-  }
-
-  void run(size_t start, size_t end) const
-  {
-    if(m_MaskArray != nullptr)
-    {
-      if(m_MaskArray->getDataType() == DataType::boolean)
-      {
-        convert<bool>(start, end);
-      }
-      else if(m_MaskArray->getDataType() == DataType::uint8)
-      {
-        convert<uint8>(start, end);
-      }
-    }
-    else
-    {
-      convert<bool>(start, end);
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    run(range.min(), range.max());
-  }
-
-private:
-  ComputeIPFColors* m_Filter = nullptr;
-  nx::core::FloatVec3 m_ReferenceDir;
-  nx::core::Float32AbstractDataStore& m_CellEulerAngles;
-  nx::core::Int32AbstractDataStore& m_CellPhases;
-  nx::core::UInt32AbstractDataStore& m_CrystalStructures;
-  int32_t m_NumPhases = 0;
-  const nx::core::IDataArray* m_MaskArray = nullptr;
-  nx::core::UInt8AbstractDataStore& m_CellIPFColors;
-  ebsdlib::ColorKeyKind m_ColorKey = ebsdlib::ColorKeyKind::TSL;
-};
-} // namespace
-
-// -----------------------------------------------------------------------------
 ComputeIPFColors::ComputeIPFColors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeIPFColorsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_MessageHandler(mesgHandler)
@@ -137,67 +16,21 @@ ComputeIPFColors::ComputeIPFColors(DataStructure& dataStructure, const IFilter::
 {
 }
 
-// -----------------------------------------------------------------------------
 ComputeIPFColors::~ComputeIPFColors() noexcept = default;
 
-// -----------------------------------------------------------------------------
 Result<> ComputeIPFColors::operator()()
 {
-  nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
-  nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-
-  nx::core::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-
-  nx::core::UInt8Array& ipfColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->cellIpfColorsArrayPath);
-
-  m_PhaseWarningCount = 0;
-  size_t totalPoints = eulers.getNumberOfTuples();
-
-  int32_t numPhases = static_cast<int32_t>(crystalStructures.getNumberOfTuples());
-
-  // Make sure we are dealing with a unit 1 vector.
-  nx::core::FloatVec3 normRefDir = m_InputValues->referenceDirection; // Make a copy of the reference Direction
-  normRefDir = normRefDir.normalize();
-
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(&eulers);
-  algArrays.push_back(&phases);
-  algArrays.push_back(&crystalStructures);
-  algArrays.push_back(&ipfColors);
-
-  nx::core::IDataArray* maskArray = nullptr;
+  // Dispatch checks storage residency. The selected executor performs typed access.
+  auto* eulersArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellEulerAnglesArrayPath);
+  auto* phasesArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellPhasesArrayPath);
+  auto* crystalStructuresArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->crystalStructuresArrayPath);
+  auto* ipfColorsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellIpfColorsArrayPath);
+  IDataArray* maskArray = nullptr;
   if(m_InputValues->useMask)
   {
     maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
-    algArrays.push_back(maskArray);
   }
 
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, totalPoints);
-  dataAlg.requireArraysInMemory(algArrays);
-
-  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, maskArray, ipfColors, m_InputValues->colorKey));
-
-  if(m_PhaseWarningCount > 0)
-  {
-    std::string message = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
-This indicates a problem with the input cell phase data. DREAM3D-NX will give INCORRECT RESULTS.",
-                                      (numPhases - 1), m_PhaseWarningCount.load(), (numPhases - 1));
-
-    return nx::core::MakeErrorResult(-48000, message);
-  }
-
-  return {};
-}
-
-// -----------------------------------------------------------------------------
-void ComputeIPFColors::incrementPhaseWarningCount()
-{
-  ++m_PhaseWarningCount;
-}
-
-bool ComputeIPFColors::shouldCancel() const
-{
-  return m_ShouldCancel;
+  return DispatchAlgorithm<ComputeIPFColorsDirect, ComputeIPFColorsScanline>({eulersArray, phasesArray, crystalStructuresArray, maskArray, ipfColorsArray}, m_DataStructure, m_MessageHandler,
+                                                                             m_ShouldCancel, m_InputValues);
 }

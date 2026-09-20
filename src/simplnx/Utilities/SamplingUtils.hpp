@@ -54,11 +54,13 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
     }
   }
 
-  if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIds, totalFeatures, messageHandler, shouldCancel))
+  Result<> removeResult = RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIds, totalFeatures, messageHandler, shouldCancel);
+  if(removeResult.invalid())
   {
-    std::string ss = fmt::format("An error occurred while trying to remove the inactive objects from Attribute Matrix '{}'", destCellFeatAttributeMatrixPath.toString());
-    return MakeErrorResult(-606, ss);
+    return removeResult;
   }
+  // RemoveInactiveObjects reports a cancelled compaction as success. This function has no work
+  // left after the call, so a cancelled and a completed run both return an empty valid Result.
   return {};
 }
 } // namespace nx::core::Sampling

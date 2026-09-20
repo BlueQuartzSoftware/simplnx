@@ -4,16 +4,22 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
+#include <array>
 #include <filesystem>
+#include <memory>
 using namespace nx::core::UnitTest;
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -30,11 +36,8 @@ std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
 
 } // namespace compute_misorientations_test
 
-/**
- * This whole section is being left in here in case we hae to regenerate the test files
- * again. After generation the developer will need to hand validate the output from
- * these functions are correct. The hand verification was performed by MAJ in March 2025
- */
+// MAJ manually verified generated reference values in March 2025. Regeneration
+// requires fresh human validation before test data publication.
 #ifdef GENERATE_TEST_DATA
 Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
 {
@@ -57,8 +60,11 @@ Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
   result = CreateArray<int32>(dataStructure, tupleShape, compShape, phasePath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulersDataPath));
   auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(k_EulersDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_Eulers2DataPath));
   auto& eulers2Ref = dataStructure.getDataRefAs<Float32Array>(k_Eulers2DataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasePath));
   auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasePath);
   size_t tupleIdx = 0;
 
@@ -91,6 +97,7 @@ void GenerateReferenceOrientationTestData()
   Result<> result = CreateArray<uint32>(dataStructure, {12ULL}, {1ULL}, k_CrystalStructuresDataPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath));
   auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
   xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
@@ -110,7 +117,6 @@ void GenerateReferenceOrientationTestData()
     ComputeMisorientationsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
@@ -118,11 +124,9 @@ void GenerateReferenceOrientationTestData()
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
@@ -136,6 +140,7 @@ void GenerateTestDataInputArrays()
   Result<> result = CreateArray<uint32>(dataStructure, {12ULL}, {1ULL}, k_CrystalStructuresDataPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath));
   auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
   xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
@@ -155,7 +160,6 @@ void GenerateTestDataInputArrays()
     ComputeMisorientationsFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -164,11 +168,9 @@ void GenerateTestDataInputArrays()
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
@@ -201,7 +203,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     ComputeMisorientationsFilter filter;
     Arguments args;
     std::string computedArrayName = "Computed Values";
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -210,11 +211,9 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
@@ -246,7 +245,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     Arguments args;
 
     std::string computedArrayName = "Computed Values";
-    // Create default Parameters for the filter.
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
@@ -255,11 +253,9 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
@@ -269,6 +265,65 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeMisorientations]")
+{
+  UnitTest::LoadPlugins();
+
+  const ChoicesParameter::ValueType computationType = GENERATE(0ULL, 1ULL);
+  CAPTURE(computationType);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_misorientations.tar.gz", "compute_misorientations");
+
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_misorientations" / "ComputeMisorientationsFilter_Arrays.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  const DataPath inputOrientationsPath1 = DataPath::FromString("0/Eulers").value();
+  const DataPath inputOrientationsPath2 = DataPath::FromString("0/Eulers2").value();
+  const DataPath cellPhasesPath = DataPath::FromString("0/Phases").value();
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(cellPhasesPath));
+  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(cellPhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(compute_misorientations_test::k_CrystalStructuresDataPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(compute_misorientations_test::k_CrystalStructuresDataPath);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(cellPhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  ComputeMisorientationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(computationType));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(inputOrientationsPath1));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(inputOrientationsPath2));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesPath));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(compute_misorientations_test::k_CrystalStructuresDataPath));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 0.0F}));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>("Bounds Output"));
+
+  SECTION("Participating Phase returns an error")
+  {
+    cellPhasesArrayRef.getDataStoreRef()[0] = static_cast<int32>(crystalStructuresArrayRef.getNumberOfTuples());
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -68064);
+  }
+
+  SECTION("Participating Laue index returns an error")
+  {
+    crystalStructuresArrayRef.getDataStoreRef()[1] = 999U;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -68065);
+  }
+
+  SECTION("Nonpositive Phase is ignored")
+  {
+    cellPhasesArrayRef.getDataStoreRef()[0] = -1;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

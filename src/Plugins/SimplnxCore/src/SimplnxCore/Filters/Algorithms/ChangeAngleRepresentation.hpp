@@ -8,18 +8,13 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ChangeAngleRepresentationInputValues inputValues;
-  inputValues.AnglesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(angles_array_path);
-  inputValues.ConversionTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(conversion_type_index);
-  return ChangeAngleRepresentation(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
+/**
+ * @struct ChangeAngleRepresentationInputValues
+ * @brief Identifies the angle array and conversion direction.
+ */
 struct SIMPLNXCORE_EXPORT ChangeAngleRepresentationInputValues
 {
   ArraySelectionParameter::ValueType AnglesArrayPath;
@@ -28,12 +23,25 @@ struct SIMPLNXCORE_EXPORT ChangeAngleRepresentationInputValues
 
 /**
  * @class ChangeAngleRepresentation
- * @brief This algorithm implements support code for the ChangeAngleRepresentationFilter
+ * @brief Converts float32 angle values in place using storage-aware execution.
+ *
+ * Contiguous in-memory stores use direct parallel multiplication. Out-of-core
+ * stores use sequential pages of at most 65,536 values. Both paths modify the
+ * source array in place. Cancellation returns success and preserves converted
+ * values. A bulk-I/O error can leave earlier pages converted.
  */
 
 class SIMPLNXCORE_EXPORT ChangeAngleRepresentation
 {
 public:
+  /**
+   * @brief Initializes in-place angle conversion.
+   * @param dataStructure Provides the angle array.
+   * @param mesgHandler Supplies the filter message handler.
+   * @param shouldCancel Signals cancellation.
+   * @param inputValues Identifies the array and conversion direction.
+   * @pre All arguments outlive this executor.
+   */
   ChangeAngleRepresentation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ChangeAngleRepresentationInputValues* inputValues);
   ~ChangeAngleRepresentation() noexcept;
 
@@ -42,6 +50,11 @@ public:
   ChangeAngleRepresentation& operator=(const ChangeAngleRepresentation&) = delete;
   ChangeAngleRepresentation& operator=(ChangeAngleRepresentation&&) noexcept = delete;
 
+  /**
+   * @brief Converts every Float32 value between degrees and radians.
+   * @return Bulk-I/O errors from the page path.
+   * @pre ConversionTypeIndex is zero for degrees-to-radians or one for the reverse.
+   */
   Result<> operator()();
 
 private:

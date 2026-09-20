@@ -23,7 +23,7 @@ MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexList::store_type& verticesS
   {
     return;
   }
-  m_cellMap->init();
+  m_InitializationResult = m_cellMap->init();
 }
 
 MMSurfaceNet::~MMSurfaceNet() = default;

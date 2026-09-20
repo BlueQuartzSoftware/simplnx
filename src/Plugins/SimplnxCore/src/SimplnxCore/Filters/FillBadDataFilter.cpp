@@ -17,41 +17,35 @@ using namespace nx::core;
 
 namespace nx::core
 {
-//------------------------------------------------------------------------------
 std::string FillBadDataFilter::name() const
 {
   return FilterTraits<FillBadDataFilter>::name.str();
 }
 
-//------------------------------------------------------------------------------
 std::string FillBadDataFilter::className() const
 {
   return FilterTraits<FillBadDataFilter>::className;
 }
 
-//------------------------------------------------------------------------------
 Uuid FillBadDataFilter::uuid() const
 {
   return FilterTraits<FillBadDataFilter>::uuid;
 }
 
-//------------------------------------------------------------------------------
 std::string FillBadDataFilter::humanName() const
 {
   return "Fill Bad Data";
 }
 
-//------------------------------------------------------------------------------
 std::vector<std::string> FillBadDataFilter::defaultTags() const
 {
   return {className(), "Processing", "Cleanup"};
 }
 
-//------------------------------------------------------------------------------
 Parameters FillBadDataFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
+  // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_MinAllowedDefectSize_Key, "Minimum Allowed Defect Size", "The size at which a group of bad Cells are left unfilled as a 'defect'", 1));
   params.insertLinkableParameter(
@@ -68,25 +62,22 @@ Parameters FillBadDataFilter::parameters() const
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
-  // Associate the Linkable Parameter(s) to the children parameters that they control
+  // Link each parent parameter to the child parameters it controls.
   params.linkParameters(k_StoreAsNewPhase_Key, k_CellPhasesArrayPath_Key, true);
 
   return params;
 }
 
-//------------------------------------------------------------------------------
 IFilter::VersionType FillBadDataFilter::parametersVersion() const
 {
   return 1;
 }
 
-//------------------------------------------------------------------------------
 IFilter::UniquePointer FillBadDataFilter::clone() const
 {
   return std::make_unique<FillBadDataFilter>();
 }
 
-//------------------------------------------------------------------------------
 IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                           const ExecutionContext& executionContext) const
 {
@@ -106,8 +97,8 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
 
-  // Inform users that the following arrays are going to be modified in place
-  // Cell Data is going to be modified
+  // Report arrays that the filter modifies in place.
+  // Cell Data arrays are modified.
   auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), ignoredDataArrayPaths);
@@ -115,7 +106,6 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-//------------------------------------------------------------------------------
 Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {

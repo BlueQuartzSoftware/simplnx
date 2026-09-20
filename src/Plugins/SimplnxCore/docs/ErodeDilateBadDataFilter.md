@@ -53,6 +53,33 @@ The Filter refuses to run in two cases:
   required, otherwise there are no neighbors to erode or dilate across.
 - **-14602**: the selected **Image Geometry** has a dimension of *0* **Cells**. All three dimensions must be non-zero.
 
+## Algorithm
+
+This filter performs iterative morphological erosion or dilation on "bad" voxels (cells with FeatureId == 0) within an ImageGeom grid.
+
+### Erosion
+
+For each bad voxel, the algorithm examines its 6 face-connected neighbors and tallies the FeatureIds of any good (non-zero) neighbors. The bad voxel is then assigned the FeatureId that appears most frequently among its good neighbors (a "majority vote"). If there is a tie, one of the tied FeatureIds is chosen. This process shrinks bad-data regions by one cell per iteration.
+
+### Dilation
+
+For each bad voxel, the algorithm examines its 6 face-connected neighbors. Any good neighbor adjacent to the bad voxel has its FeatureId set to 0, effectively growing the bad-data region outward by one cell per iteration.
+
+In both cases, all sibling data arrays in the same Attribute Matrix (except those in the user's ignored list) are updated to match the FeatureId changes, so the data remains consistent.
+
+### Iteration
+
+The operation is repeated for the user-specified number of iterations. Each iteration makes a full pass over the volume. Because each pass modifies the data, subsequent iterations see the cumulative effect of all prior passes.
+
+### Performance
+
+This algorithm is optimized for both in-memory and out-of-core (OOC) data stores. When data resides on disk in chunked format, random voxel access can cause expensive chunk load/evict cycles. The implementation avoids this by:
+
+- **Sequential Z-slice processing**: The volume is scanned one Z-slice at a time, which aligns with typical chunk boundaries and avoids random access patterns.
+- **3-slice rolling window**: Three adjacent Z-slices of FeatureIds are held in memory simultaneously, allowing face-neighbor lookups without hitting the data store for each voxel.
+- **Deferred bulk writes**: Data modifications are batched per Z-slice and written back in bulk, minimizing the number of I/O operations.
+- **O(sliceSize) memory**: Per-slice mark arrays replace a full-volume neighbor array, keeping peak memory proportional to a single Z-slice rather than the entire volume.
+
 ## WARNING: Feature Data Will Become Invalid
 
 By modifying cell-level data, any feature-level data that was previously computed will most likely be invalid after this filter runs. Re-run any downstream feature-level computation filters to ensure accurate results.

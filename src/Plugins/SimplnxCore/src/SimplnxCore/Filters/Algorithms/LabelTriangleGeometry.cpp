@@ -92,7 +92,11 @@ Result<> LabelTriangleGeometry::operator()()
     }
 
     // Resize the Triangle Region AttributeMatrix
-    m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
+    Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
+    if(resizeResult.invalid())
+    {
+      return resizeResult;
+    }
   }
 
   // Clear ElementDynamicLists so write out is possible

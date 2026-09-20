@@ -3,8 +3,14 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
+
+#include <memory>
+#include <optional>
 
 using namespace nx::core;
 
@@ -12,6 +18,52 @@ namespace
 {
 const DataPath k_BaselinePath = DataPath({"baseline"});
 const DataPath k_ExemplarPath = DataPath({"exemplar"});
+const DataPath k_BulkIntPath = DataPath({"BulkInt"});
+const DataPath k_BulkBoolPath = DataPath({"BulkBool"});
+
+constexpr usize k_BulkTupleCount = 25000;
+constexpr usize k_BulkComponentCount = 3;
+
+DataStructure CreateBulkInitializationData(bool configuredStores)
+{
+  DataStructure dataStructure;
+  std::shared_ptr<AbstractDataStore<int32>> intStore;
+  std::shared_ptr<AbstractDataStore<bool>> boolStore;
+  if(configuredStores)
+  {
+    intStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BulkIntPath, {k_BulkTupleCount}, {k_BulkComponentCount});
+    boolStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_BulkBoolPath, {k_BulkTupleCount}, {k_BulkComponentCount});
+  }
+  else
+  {
+    intStore = std::make_shared<Int32DataStore>(std::vector<usize>{k_BulkTupleCount}, std::vector<usize>{k_BulkComponentCount}, std::optional<int32>{});
+    boolStore = std::make_shared<BoolDataStore>(std::vector<usize>{k_BulkTupleCount}, std::vector<usize>{k_BulkComponentCount}, std::optional<bool>{});
+  }
+  REQUIRE(Int32Array::Create(dataStructure, k_BulkIntPath.getTargetName(), intStore) != nullptr);
+  REQUIRE(BoolArray::Create(dataStructure, k_BulkBoolPath.getTargetName(), boolStore) != nullptr);
+  return dataStructure;
+}
+
+Arguments CreateIncrementalArguments(const DataPath& path, std::string start, std::string step)
+{
+  Arguments args;
+  args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(path));
+  args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>(std::move(start)));
+  args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>(std::move(step)));
+  return args;
+}
+
+template <typename T>
+std::vector<T> ReadBulkValues(const DataStructure& dataStructure, const DataPath& path)
+{
+  const auto& array = dataStructure.getDataRefAs<DataArray<T>>(path);
+  auto values = std::make_unique<T[]>(array.getSize());
+  auto arrayReadResult = array.getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(values.get(), array.getSize()));
+  SIMPLNX_RESULT_REQUIRE_VALID(arrayReadResult);
+  return std::vector<T>(values.get(), values.get() + array.getSize());
+}
 
 template <typename T, bool Standardized = false>
 void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds)
@@ -60,25 +112,26 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initializa
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("-3.14"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -91,25 +144,26 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fil
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("53"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -122,25 +176,26 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -153,27 +208,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Add
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("10.67"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -186,27 +242,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Inc
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("43"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -219,27 +276,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incr
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("-3;0;7"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -252,27 +310,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Sub
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_sub.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("0.567"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1.43"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -285,27 +344,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Inc
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("7"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("-1"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -318,27 +378,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incr
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("100;0;-1"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("2;16;-10"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -351,15 +412,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Ra
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -369,12 +433,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Ra
     args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("2.62"));
     args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("6666.66"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -387,15 +449,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value St
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -405,12 +470,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value St
     args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-6.283185")); // -2 pi
     args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("6.283185"));    // 2 pi
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -423,15 +486,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value No
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -441,12 +507,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value No
     args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-1000"));
     args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("1000"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -459,15 +523,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -477,12 +544,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non
     args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-500;0;19"));
     args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("-1;0;1000"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -495,25 +560,26 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("False"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -526,27 +592,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Increme
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_addition.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -559,27 +626,28 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Increme
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_subtraction.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
     args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -592,15 +660,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standar
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -610,12 +681,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standar
     args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("0"));
     args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("1;0;1"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -628,15 +697,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initial
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rand.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -644,12 +716,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initial
     args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
     args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -662,15 +732,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_stand_rand.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -678,12 +751,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
     args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
     args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(true));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -697,15 +768,18 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardize
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_non_stand_rand.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
@@ -713,12 +787,10 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardize
     args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
     args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -733,29 +805,55 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill I
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_bool_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
+    // Configure the filter arguments.
     InitializeDataFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
     args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("False"));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::InitializeDataFilter: Bounded Multi-Component Incremental Writes", "[SimplnxCore][InitializeDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure = CreateBulkInitializationData(false);
+  auto& array = dataStructure.getDataRefAs<IDataArray>(k_BulkIntPath);
+  scope.requireExpectedStore(array);
+
+  InitializeDataFilter filter;
+  const Arguments args = CreateIncrementalArguments(k_BulkIntPath, "1;10;-5", "2;-3;4");
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const auto values = ReadBulkValues<int32>(dataStructure, k_BulkIntPath);
+  for(usize tuple = 0; tuple < k_BulkTupleCount; tuple++)
+  {
+    REQUIRE(values[tuple * k_BulkComponentCount] == 1 + static_cast<int32>(tuple) * 2);
+    REQUIRE(values[tuple * k_BulkComponentCount + 1] == 10 - static_cast<int32>(tuple) * 3);
+    REQUIRE(values[tuple * k_BulkComponentCount + 2] == -5 + static_cast<int32>(tuple) * 4);
+  }
 }

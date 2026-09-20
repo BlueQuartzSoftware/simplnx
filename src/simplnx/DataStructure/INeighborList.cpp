@@ -64,9 +64,9 @@ usize INeighborList::getNumberOfTuples() const
   return getIListStoreRef().getNumberOfTuples();
 }
 
-void INeighborList::resizeTuples(const ShapeType& tupleShape)
+Result<> INeighborList::resizeTuples(const ShapeType& tupleShape)
 {
-  getIListStoreRef().resizeTuples(tupleShape);
+  return getIListStoreRef().resizeTuples(tupleShape);
 }
 
 usize INeighborList::getNumberOfComponents() const

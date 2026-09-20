@@ -1,0 +1,203 @@
+{
+  "isDisabled": false,
+  "name": "ooc_failure_pipeline.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "data_object_path": {
+          "value": "Data",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Creates the parent group so the out-of-core array below has the two-segment path 'Data/Array' that the acceptance tests look for in the failure message.",
+      "filter": {
+        "name": "nx::core::CreateDataGroupFilter",
+        "uuid": "e7d2f9b8-4131-4b28-a843-ea3c6950f101"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "HDF5-OOC",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "7",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "Data/Array",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              32.0,
+              512.0,
+              512.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "32 x 512 x 512 int32 values (32 MiB) forced onto disk with the HDF5-OOC data format. The size spans many chunks yet keeps the acceptance tests to a few seconds.",
+      "filter": {
+        "name": "nx::core::CreateDataArrayFilter",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compute_by_index": {
+          "value": false,
+          "version": 1
+        },
+        "destination_attribute_matrix_path": {
+          "value": "Statistics",
+          "version": 1
+        },
+        "feature_has_data_array_name": {
+          "value": "FeatureHasData",
+          "version": 1
+        },
+        "feature_ids_indexing_name": {
+          "value": "Reduced Feature Ids Indices",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "",
+          "version": 1
+        },
+        "find_length": {
+          "value": true,
+          "version": 1
+        },
+        "find_max": {
+          "value": true,
+          "version": 1
+        },
+        "find_mean": {
+          "value": true,
+          "version": 1
+        },
+        "find_median": {
+          "value": false,
+          "version": 1
+        },
+        "find_min": {
+          "value": true,
+          "version": 1
+        },
+        "find_mode": {
+          "value": false,
+          "version": 1
+        },
+        "find_std_deviation": {
+          "value": false,
+          "version": 1
+        },
+        "find_summation": {
+          "value": true,
+          "version": 1
+        },
+        "find_unique_values": {
+          "value": false,
+          "version": 1
+        },
+        "length_array_name": {
+          "value": "Length",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "maximum_array_name": {
+          "value": "Maximum",
+          "version": 1
+        },
+        "mean_array_name": {
+          "value": "Mean",
+          "version": 1
+        },
+        "median_array_name": {
+          "value": "Median",
+          "version": 1
+        },
+        "minimum_array_name": {
+          "value": "Minimum",
+          "version": 1
+        },
+        "mode_array_name": {
+          "value": "Mode",
+          "version": 1
+        },
+        "number_unique_values_name": {
+          "value": "NumUniqueValues",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "range": {
+          "value": [
+            0,
+            -1
+          ],
+          "version": 1
+        },
+        "range_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "selected_array_path": {
+          "value": "Data/Array",
+          "version": 1
+        },
+        "standardize_data": {
+          "value": false,
+          "version": 1
+        },
+        "standardized_array_name": {
+          "value": "Standardized",
+          "version": 1
+        },
+        "std_deviation_array_name": {
+          "value": "StandardDeviation",
+          "version": 1
+        },
+        "summation_array_name": {
+          "value": "Summation",
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Reads every tuple of 'Data/Array' in bands. With SIMPLNX_OOC_FAULT_INJECT armed, the session file backing that array is truncated after the previous filter, so this filter must report a bulk-read failure that names the array.",
+      "filter": {
+        "name": "nx::core::ComputeArrayStatisticsFilter",
+        "uuid": "645ecae2-cb30-4b53-8165-c9857dfa754f"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

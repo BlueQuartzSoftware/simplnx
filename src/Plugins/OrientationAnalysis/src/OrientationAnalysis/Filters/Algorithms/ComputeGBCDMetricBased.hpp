@@ -49,6 +49,10 @@ public:
   ComputeGBCDMetricBased& operator=(const ComputeGBCDMetricBased&) = delete;
   ComputeGBCDMetricBased& operator=(ComputeGBCDMetricBased&&) noexcept = delete;
 
+  /**
+   * @brief Computes the metric-based GBCD section.
+   * @return An error for an invalid Laue index, file operation, or bulk I/O.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

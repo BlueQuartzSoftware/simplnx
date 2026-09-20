@@ -51,7 +51,14 @@ namespace
 {
 constexpr int32 k_RbrFileTooSmall = -1010;
 
-// -----------------------------------------------------------------------------
+/**
+ * @brief Compares payload size with destination allocation.
+ * @param allocatedBytes Specifies destination bytes.
+ * @param fileSize Specifies total file bytes.
+ * @param skipHeaderBytes Specifies bytes before the payload.
+ * @return -1 for a short payload, 0 for an exact size, or 1 for trailing bytes.
+ * @pre skipHeaderBytes is not greater than fileSize.
+ */
 int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSize, usize skipHeaderBytes)
 {
   if(fileSize - skipHeaderBytes < allocatedBytes)
@@ -62,11 +69,21 @@ int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSiz
   {
     return 1;
   }
-  // File Size and Allocated Size are equal, so we are good to go
   return 0;
 }
 
-// -----------------------------------------------------------------------------
+/**
+ * @brief Validates one typed binary payload and imports it through bounded pages.
+ * @tparam T Specifies the binary scalar type.
+ * @param dataArrayPtr Receives imported values.
+ * @param filename Identifies the binary input file.
+ * @param skipHeaderBytes Specifies bytes before the payload.
+ * @param endian Specifies payload byte order.
+ * @return Error for a short file or failed paged import, or success.
+ *
+ * Endian conversion is performed within each local page before the checked
+ * destination write; the destination need not be resident.
+ */
 template <typename T>
 Result<> ReadBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
@@ -83,18 +100,8 @@ Result<> ReadBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, u
     return MakeErrorResult(k_RbrFileTooSmall, "The file size is smaller than the allocated size");
   }
 
-  Result<> result = ImportFromBinaryFile(std::filesystem::path(filename), *dataArray, skipHeaderBytes, k_DefaultBlockSize);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  if(endian != static_cast<ChoicesParameter::ValueType>(nx::core::endian::native))
-  {
-    dataArray->byteSwapElements();
-  }
-
-  return result;
+  const bool swapEndian = endian != static_cast<ChoicesParameter::ValueType>(nx::core::endian::native);
+  return ImportFromBinaryFile(std::filesystem::path(filename), *dataArray, skipHeaderBytes, k_DefaultBlockSize, swapEndian);
 }
 } // namespace
 
@@ -115,7 +122,6 @@ Result<> ReadRawBinary::operator()()
   return execute();
 }
 
-// -----------------------------------------------------------------------------
 Result<> ReadRawBinary::execute()
 {
   if(m_ShouldCancel)

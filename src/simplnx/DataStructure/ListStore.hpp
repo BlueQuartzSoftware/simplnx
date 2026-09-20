@@ -1,8 +1,15 @@
 #pragma once
 
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Utilities/StoreCopyUtilities.hpp"
+
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
+#include <exception>
 #include <memory>
 #include <vector>
 
@@ -22,9 +29,8 @@ public:
   using const_iterator = typename parent_type::const_iterator;
 
   /**
-   * @brief Constructs a ListStore using the specified tuple shape and list size.
-   * @param tupleShape
-   * @param listSize
+   * @brief Constructs a ListStore with empty lists for the tuple shape.
+   * @param tupleShape Initial tuple dimensions.
    */
   explicit ListStore(const ShapeType& tupleShape)
   : parent_type()
@@ -45,7 +51,8 @@ public:
   }
 
   /**
-   * @brief Copy constructor
+   * @brief Copies the list store.
+   * @param other Source store.
    */
   ListStore(const ListStore& other)
   : parent_type(other)
@@ -56,7 +63,8 @@ public:
   }
 
   /**
-   * @brief Move constructor
+   * @brief Moves the list store.
+   * @param copy Source store.
    */
   ListStore(ListStore&& copy) noexcept
   : parent_type(std::move(copy))
@@ -69,12 +77,28 @@ public:
   ~ListStore() override = default;
 
   /**
-   * @brief Returns a copy of the current list store.
-   * @return std::unique<AbstractListStore<T>>
+   * @brief Copies list storage into the required destination format.
+   * @param destinationFormat Resolved destination format; empty and the canonical in-memory name select memory.
+   * @return Independent values with the same shape, or an independent placeholder without values.
+   * @throws std::runtime_error If the selected factory or copy fails, or an OOC build rejects an unavailable format.
+   * @throws std::bad_alloc If an allocation fails.
+   *
+   * In-core builds use memory for unavailable formats. OOC builds reject unavailable formats. Factory failures never fall back.
+   * Generic transfer holds one list plus backend buffers.
+   * @warning Explicit in-memory selection requires a complete resident destination and can exhaust available RAM.
+   * This store obeys destinationFormat and does not resolve storage policy itself.
+   * Resolve the destination policy before this call. Use NeighborList::deepCopy for automatic policy selection.
    */
-  std::unique_ptr<parent_type> deepCopy() const override
+  std::unique_ptr<parent_type> deepCopy(const std::string& destinationFormat) const override
   {
-    return std::make_unique<ListStore>(*this);
+    auto copy = CopyListStore(*this, GetDataType<T>(), destinationFormat);
+    auto* typedCopy = dynamic_cast<parent_type*>(copy.get());
+    if(typedCopy == nullptr)
+    {
+      throw std::runtime_error("List store copy returned an incompatible type for format '" + destinationFormat + "'");
+    }
+    copy.release();
+    return std::unique_ptr<parent_type>(typedCopy);
   }
 
   /**
@@ -96,15 +120,27 @@ public:
   }
 
   /**
-   * @brief This method sets the shape of the dimensions to `tupleShape`.
-   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
-   * from *slowest* to *fastest*.
+   * @brief Changes the tuple shape and retains lists in the shared prefix.
+   * @param tupleShape New tuple dimensions in slowest-to-fastest order.
+   * @return Valid on success. Allocation failure returns error -6035 and preserves the prior store.
+   *
+   * The Result contract prevents an allocation failure from escaping across the store boundary.
    */
-  void resizeTuples(const ShapeType& tupleShape) override
+  [[nodiscard]] Result<> resizeTuples(const ShapeType& tupleShape) override
   {
-    m_TupleShape = tupleShape;
-    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-    m_Array.resize(m_NumTuples);
+    try
+    {
+      ShapeType newTupleShape = tupleShape;
+      const usize numTuples = std::accumulate(newTupleShape.cbegin(), newTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+      m_Array.resize(numTuples);
+      m_TupleShape = std::move(newTupleShape);
+      m_NumTuples = numTuples;
+    } catch(const std::exception& exception)
+    {
+      return MakeErrorResult(-6035, fmt::format("ListStore resize to shape [{}] failed: {}", fmt::join(tupleShape, ", "), exception.what()));
+    }
+
+    return {};
   }
 
   /**
@@ -248,7 +284,7 @@ public:
   }
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Returns a copy of the list at the specified index.
    * @param grainId
    * @return vector_type
    */
@@ -258,7 +294,7 @@ public:
   }
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Returns a copy of the list at the specified index.
    * @param grainId
    * @return vector_type
    */

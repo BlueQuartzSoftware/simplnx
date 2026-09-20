@@ -18,6 +18,10 @@
 #include <string>
 #include <vector>
 
+/**
+ * @def H5SUPPORT_MUTEX_LOCK
+ * @brief Locks the process HDF5 mutex for the current scope when mutex support is enabled.
+ */
 #ifdef H5Support_USE_MUTEX
 #define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
 #else
@@ -27,14 +31,31 @@
 // Defined in CMake
 // #define H5_USE_110_API
 
+/**
+ * @def HDF_ERROR_HANDLER_OFF
+ * @brief Saves and disables the HDF5 error callback in the current scope.
+ *
+ * HDF_ERROR_HANDLER_ON must run in the same scope to restore the saved callback.
+ */
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
   void* _oldHDF_error_client_data;                                                                                                                                                                     \
   H5Eget_auto(H5E_DEFAULT, &_oldHDF_error_func, &_oldHDF_error_client_data);                                                                                                                           \
   H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
 
+/**
+ * @def HDF_ERROR_HANDLER_ON
+ * @brief Restores the HDF5 error callback saved by HDF_ERROR_HANDLER_OFF.
+ */
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
+/**
+ * @def H5S_CLOSE_H5_ATTRIBUTE
+ * @brief Closes an attribute and records a close failure.
+ * @param attributeId HDF5 attribute identifier to close.
+ * @param error Receives the HDF5 close status.
+ * @param returnError Receives an error Result when close fails.
+ */
 #define H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)                                                                                                                                        \
   error = H5Aclose(attributeId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
@@ -43,6 +64,13 @@
     returnError = MakeErrorResult(error, "Error Closing Attribute");                                                                                                                                   \
   }
 
+/**
+ * @def H5S_CLOSE_H5_DATASPACE
+ * @brief Closes a data space and records a close failure.
+ * @param dataspaceId HDF5 data-space identifier to close.
+ * @param error Receives the HDF5 close status.
+ * @param returnError Receives an error Result when close fails.
+ */
 #define H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)                                                                                                                                        \
   error = H5Sclose(dataspaceId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
@@ -51,6 +79,13 @@
     returnError = MakeErrorResult(error, "Error Closing Dataspace");                                                                                                                                   \
   }
 
+/**
+ * @def H5S_CLOSE_H5_TYPE
+ * @brief Closes a data-type identifier and records a close failure.
+ * @param typeId HDF5 data-type identifier to close.
+ * @param error Receives the HDF5 close status.
+ * @param returnError Receives an error Result when close fails.
+ */
 #define H5S_CLOSE_H5_TYPE(typeId, error, returnError)                                                                                                                                                  \
   error = H5Tclose(typeId);                                                                                                                                                                            \
   if(error < 0)                                                                                                                                                                                        \
@@ -59,6 +94,14 @@
     returnError = MakeErrorResult(error, "Error closing DataType");                                                                                                                                    \
   }
 
+/**
+ * @def H5_CLOSE_H5_DATASET
+ * @brief Closes a dataset and records a close failure.
+ * @param datasetId HDF5 dataset identifier to close.
+ * @param error Receives the HDF5 close status.
+ * @param returnError Receives the negative HDF5 status when close fails.
+ * @param datasetName Dataset name included in the diagnostic.
+ */
 #define H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName)                                                                                                                                \
   error = H5Dclose(datasetId);                                                                                                                                                                         \
   if(error < 0)                                                                                                                                                                                        \
@@ -67,38 +110,49 @@
     returnError = error;                                                                                                                                                                               \
   }
 
+/**
+ * @namespace nx::core::HDF5
+ * @brief Contains HDF5 parsing and I/O utilities.
+ */
 namespace nx::core::HDF5
 {
+/**
+ * @namespace nx::core::HDF5::Support
+ * @brief Contains low-level HDF5 support functions.
+ */
 namespace Support
 {
 /**
- * @brief Returns if a given hdf5 object is a group
- * @param objectId The hdf5 object that contains an object with name objectName
- * @param objectName The name of the object to check
- * @return True if the given hdf5 object identifier is a group
+ * @brief Tests whether a named child is an HDF5 group.
+ * @param nodeId HDF5 location that contains objectName.
+ * @param objectName Child object name.
+ * @return True for a group. Returns false for another type or an HDF5 query error.
  */
 bool SIMPLNX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName);
 
 /**
- *
- * @param name
- * @param opData
- * @return
+ * @brief Compares one iterated attribute name with a requested name.
+ * @param locationId Unused HDF5 iteration location.
+ * @param name Iterated attribute name.
+ * @param info Unused attribute information.
+ * @param opData Points to the requested null-terminated attribute name.
+ * @return One for a match or zero to continue iteration.
  */
 herr_t SIMPLNX_EXPORT FindAttr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
- * @brief Inquires if an attribute named attributeName exists attached to the
- * object locationId.
- * @param locationId The location to search
- * @param attributeName The attribute to search for
- * @return Standard H5 Error condition
+ * @brief Searches an HDF5 object for a named attribute.
+ * @param locationId HDF5 object to search.
+ * @param attributeName Attribute name to find.
+ * @return Positive for a match, zero when absent, or a negative HDF5 error.
  */
 herr_t SIMPLNX_EXPORT FindAttribute(hid_t locationId, const std::string& attributeName);
 
 /**
- * @brief Returns the HDF Type for a given primitive value.
- * @return The H5 native type for the value
+ * @brief Returns the predefined HDF5 native type for a C++ primitive.
+ * @tparam T Specifies the primitive type.
+ * @return Predefined native type identifier that the caller must not close.
+ * @throws std::runtime_error If T is not supported.
  */
 template <typename T>
 inline hid_t HdfTypeForPrimitive()
@@ -170,15 +224,17 @@ inline hid_t HdfTypeForPrimitive()
 }
 
 /**
- * @brief Returns the associated string for the given HDF class type.
- * @param classType
- * @return std::string
+ * @brief Returns the symbolic name for an HDF5 type class.
+ * @param classType HDF5 type-class value.
+ * @return HDF5 class name, or OTHER for an unknown value.
  */
 std::string SIMPLNX_EXPORT HdfClassTypeAsStr(hid_t classType);
 
 /**
- * @brief Returns the HDF Type as a string for a given primitive value.
- * @return The H5 native type as a string for the value
+ * @brief Returns the symbolic HDF5 native type name for a C++ primitive.
+ * @tparam T Specifies the primitive type.
+ * @return Native type name.
+ * @throws std::runtime_error If T is not supported.
  */
 template <typename T>
 inline std::string HdfTypeForPrimitiveAsStr()
@@ -263,59 +319,52 @@ hid_t SIMPLNX_EXPORT getDatasetType(hid_t locationId, const std::string& dataset
 #endif
 
 /**
- * @brief Returns the path to an object
- * @param objectId The HDF5 identifier of the object
- * @return  The path to the object relative to the objectId
+ * @brief Returns an HDF5 object's path.
+ * @param locationId HDF5 object identifier.
+ * @return Path without a leading slash, except the root path remains "/".
  */
 std::string SIMPLNX_EXPORT GetObjectPath(hid_t locationId);
 
 /**
- * @brief Returns the H5T value for a given dataset.
+ * @brief Opens a dataset and returns its data-type identifier.
  *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
- * on the returned value or resource leaks will occur.
- * @param locationId A Valid HDF5 file or group identifier.
- * @param datasetName Path to the dataset
- * @return
+ * @param locationId Valid HDF5 file or group identifier.
+ * @param datasetName Dataset path.
+ * @return Owned data-type identifier, or a negative HDF5 error.
+ *
+ * The caller must close a nonnegative result with H5Tclose().
  */
 hid_t SIMPLNX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName);
 
 /**
- * @brief Returns a string version of the HDF Type
- * @param type The HDF5 Type to query
- * @return
+ * @brief Returns the symbolic native name for an HDF5 data type.
+ * @param dataTypeIdentifier HDF5 data-type identifier.
+ * @return Native type name, or Unknown when no supported type matches.
  */
 std::string SIMPLNX_EXPORT StringForHDFType(hid_t dataTypeIdentifier);
 
 /**
- * @brief Returns a std::string of the name of the given filter type.
- * @param id
- * @return std::string
+ * @brief Returns the symbolic name for an HDF5 filter.
+ * @param id HDF5 filter identifier.
+ * @return Filter name, NONE for no filter or an error value, or UNKNOWN for another identifier.
  */
 std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
 
 /**
  * @brief Returns the process-wide HDF5 API mutex.
+ * @return Immortal non-recursive mutex shared by all simplnx HDF5 call sites.
  *
- * The vcpkg HDF5 build is not thread-safe, so every thread that calls into the
- * HDF5 C library must serialize on this single lock. It is a Meyers singleton —
- * one instance for the whole process — so every translation unit linked into
- * libsimplnx shares the exact same mutex. It backs the H5SUPPORT_MUTEX_LOCK()
- * macro; any other code needing the HDF5 lock aliases it rather than defining a
- * second one (two locks guarding one non-thread-safe library would still race).
+ * The configured HDF5 library is not thread-safe. Threads serialize HDF5 C API
+ * calls with this single lock. A second lock would not protect the same library state.
  *
- * SCOPE — the lock currently guards only the four macro-guarded helpers listed
- * below. The many other direct H5* calls scattered through FileIO, DatasetIO,
- * and Dream3dIO are NOT serialized by it, so this does not by itself make all
- * HDF5 access thread-safe; it makes these four helpers safe and gives the rest a
- * single lock to adopt as they are hardened.
+ * H5SUPPORT_MUTEX_LOCK() uses this mutex when mutex support is enabled. Direct
+ * HDF5 call sites must explicitly acquire the same mutex.
  *
- * CONTRACT — this is a NON-recursive std::mutex. Lock it ONLY around leaf HDF5
- * C-API calls, and NEVER while calling a function that may re-acquire it — in
- * particular the macro-guarded helpers (IsGroup, GetObjectPath, GetDatasetType,
- * StringForHDFType), which lock it themselves. Re-entering on the same thread
- * would self-deadlock. Never hold it around heavy CPU work (e.g. (de)compression)
- * either — that must run off the lock.
+ * The mutex is non-recursive. Hold it only around leaf HDF5 calls. Do not call a
+ * helper that acquires it or perform compression while the lock is held.
+ *
+ * Heap allocation intentionally keeps the mutex alive during static destruction,
+ * when an HDF5 handle can still close.
  */
 SIMPLNX_EXPORT std::mutex& ApiLock();
 

@@ -8,106 +8,87 @@
 
 namespace nx::core
 {
+/**
+ * @brief Separates component values in initialization parameters.
+ */
 constexpr char k_DelimiterChar = ';';
 
+/**
+ * @enum InitializeType
+ * @brief Selects complete-array initialization behavior.
+ */
 enum InitializeType : uint64
 {
-  FillValue,
-  Incremental,
-  Random,
-  RangedRandom
-};
-
-enum StepType : uint64
-{
-  Addition,
-  Subtraction
+  FillValue,   ///< Repeats configured component values.
+  Incremental, ///< Adds or subtracts component steps after each tuple.
+  Random,      ///< Uses the implementation's full-type distribution.
+  RangedRandom ///< Uses configured component ranges.
 };
 
 /**
- * @brief Creates a formatted string representation of component values.
- *
- * This function generates a string by concatenating component values separated by commas.
- * If the number of components exceeds a visibility threshold (10 by default), it displays
- * only the first and last few values separated by ellipses. If a single component value is
- * provided, it replicates that value for the specified number of components.
- *
- * @param componentValues A vector of integer component values.
- * @param numComps The number of components to represent in the output string.
- * @return A formatted string representing the component values.
+ * @enum StepType
+ * @brief Selects the incremental operation.
+ */
+enum StepType : uint64
+{
+  Addition,   ///< Adds each step after generating a tuple.
+  Subtraction ///< Subtracts each step after generating a tuple.
+};
+
+/**
+ * @brief Formats integer component values for a preflight preview.
+ * @param componentValues Supplies one or all component values.
+ * @param numComps Number of represented components.
+ * @return Comma-delimited preview. More than 10 components show first and last values.
  */
 std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize numComps);
 
 /**
- * @brief Creates a formatted string representation of component values from string inputs.
- *
- * This function converts a vector of string component values to integers and then generates
- * a formatted string representation using the integer version of CreateCompValsStr.
- * If a single string component value is provided, it replicates that value for the specified
- * number of components.
- *
- * @param componentValuesStrs A vector of string component values.
- * @param numComps The number of components to represent in the output string.
- * @return A formatted string representing the component values.
+ * @brief Converts string component values and formats a preflight preview.
+ * @param componentValuesStrs Supplies Boolean text or integer text.
+ * @param numComps Number of represented components.
+ * @return Comma-delimited preview.
+ * @pre Every non-Boolean string converts through std::stoll().
  */
 std::string CreateCompValsStr(const std::vector<std::string>& componentValuesStrs, usize numComps);
 
 /**
- * @brief Generates preflight values for fill operations based on initial fill values.
- *
- * This function constructs a descriptive string detailing how tuples will be filled with
- * component values. If a single initial fill value is provided, it applies the same value
- * to all components; otherwise, it uses different values for each component.
- * The generated description is appended to the provided preflightUpdatedValues vector.
- *
- * @param initFillValueStr A semicolon-separated string of initial fill values.
- * @param numComps The number of components in each tuple.
- * @param preflightUpdatedValues A reference to a vector where the generated preflight
- *        values will be stored.
+ * @brief Appends a fill-value preflight preview for multi-component tuples.
+ * @param initFillValueStr Semicolon-delimited fill values.
+ * @param numComps Number of components per tuple.
+ * @param preflightUpdatedValues Receives the preview.
  */
 void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps, std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
 /**
- * @brief Generates preflight values for incremental fill operations on tuples.
- *
- * This function creates a descriptive summary of how tuples will be initialized and incremented
- * or decremented based on the provided step operation and step values. It includes a preview of
- * the first few tuples and issues a warning if any step value is zero, indicating that the corresponding
- * component values will remain unchanged.
- *
- * @param initFillValueStr A semicolon-separated string of initial fill values.
- * @param stepOperation The operation type for stepping (e.g., addition or subtraction).
- * @param stepValueStr A semicolon-separated string of step values for each component.
- * @param numTuples The total number of tuples to generate.
- * @param numComps The number of components in each tuple.
- * @param preflightUpdatedValues A reference to a vector where the generated preflight
- *        values will be stored.
+ * @brief Appends an incremental preview and zero-step warning.
+ * @param initFillValueStr Semicolon-delimited initial values.
+ * @param stepOperation Addition or subtraction choice index.
+ * @param stepValueStr Semicolon-delimited step values.
+ * @param numTuples Number of output tuples.
+ * @param numComps Number of components per tuple.
+ * @param preflightUpdatedValues Receives the preview.
  */
 void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize stepOperation, const std::string& stepValueStr, usize numTuples, usize numComps,
                                     std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
 /**
- * @brief Generates preflight values for random fill operations on tuples.
- *
- * This function constructs a descriptive summary of how tuples will be filled with random
- * values, either within a specified range or without. It accounts for the number of components
- * and tuples, and whether the random seed is standardized across components. For multiple
- * components, it details whether values are generated independently or based on a single seed.
- *
- * @param standardizeSeed Indicates whether to use a standardized seed for all components.
- * @param initType The type of initialization (e.g., random or ranged random).
- * @param initStartRange A semicolon-separated string representing the starting range for
- *        random values (used if initType is ranged random).
- * @param initEndRange A semicolon-separated string representing the ending range for
- *        random values (used if initType is ranged random).
- * @param numTuples The total number of tuples to generate.
- * @param numComps The number of components in each tuple.
- * @param preflightUpdatedValues A reference to a vector where the generated preflight
- *        values will be stored.
+ * @brief Appends a random-generation preflight preview.
+ * @param standardizeSeed True to seed all component engines identically.
+ * @param initType Random or ranged-random mode.
+ * @param initStartRange Semicolon-delimited lower bounds.
+ * @param initEndRange Semicolon-delimited upper bounds.
+ * @param numTuples Number of output tuples.
+ * @param numComps Number of components per tuple.
+ * @param preflightUpdatedValues Receives the preview.
  */
 void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, const std::string& initStartRange, const std::string& initEndRange, usize numTuples, usize numComps,
                                std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
+/**
+ * @struct InitializeDataInputValues
+ * @brief Stores target, mode, component values, ranges, steps, and seed behavior.
+ */
 struct SIMPLNXCORE_EXPORT InitializeDataInputValues
 {
   DataPath InputArrayPath;
@@ -124,45 +105,17 @@ struct SIMPLNXCORE_EXPORT InitializeDataInputValues
 
 /**
  * @struct ValidateMultiInputFunctor
- * @brief A functor for validating multi-component input strings.
- *
- * The `ValidateMultiInputFunctor` struct provides a templated functor to validate
- * delimited input strings containing multiple components. It ensures that the input
- * string:
- * - Contains the expected number of components or an alternative acceptable number.
- * - Does not contain empty values between delimiters.
- * - Each component can be successfully converted to the specified type `T`.
- *
- * If the validation fails, the functor returns an error with a specific error code
- * and descriptive message. Otherwise, it indicates successful validation.
+ * @brief Validates delimited component counts and value conversion.
  */
 struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
 {
-  // The single comp size validation defaults to off as size 0 is checked earlier in the function
-
   /**
-   * @brief Validates a delimited input string for the correct number of components and value types.
-   *
-   * This templated `operator()` performs the following validations on the input string:
-   * 1. Splits the input string `unfilteredStr` using the predefined delimiter `k_DelimiterChar`.
-   * 2. Checks if the resulting vector `splitVals` is empty. If empty, returns an error with code `-11610`.
-   * 3. Iterates through each split value to ensure:
-   *    - No value is empty. If an empty value is found, returns an error with code `-11611`.
-   *    - Each value can be converted to type `T`. If conversion fails, returns an error with code `-11612`.
-   * 4. Verifies the number of split components:
-   *    - If the number of components matches `expectedComp`, validation is successful.
-   *    - If `singleCompSize` is non-zero and matches the number of components, validation is successful.
-   *    - If there is one extra component and the input string ends with a delimiter, returns an error with code `-11613`.
-   *    - Otherwise, returns an error with code `-11614` indicating the number of components does not match expectations.
-   *
-   * @tparam T The type to which each component of the input string should be convertible.
-   * @param expectedComp The expected number of components in the input string.
-   * @param unfilteredStr The input string containing delimited components to be validated.
-   * @param singleCompSize An optional alternative number of components that is also considered valid. Defaults to `0`.
-   *
-   * @return An `IFilter::PreflightResult` indicating the success or failure of the validation.
-   *         - Returns an empty result if validation is successful.
-   *         - Returns an error result with a specific error code and message if validation fails.
+   * @brief Validates one semicolon-delimited component string.
+   * @tparam T Specifies the required conversion type.
+   * @param expectedComp Required component count.
+   * @param unfilteredStr Input component text.
+   * @param singleCompSize Accepted alternate count, or zero to disable it.
+   * @return Success, or a preflight error for empty, invalid, trailing, or mismatched values.
    */
   template <typename T>
   IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
@@ -208,13 +161,44 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
 
     return IFilter::MakePreflightErrorResult(-11614,
                                              fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
-  }
+  } // namespace nx::core
 };
 
+/**
+ * @class InitializeData
+ * @brief Initializes a complete DataArray through generated tuple chunks.
+ *
+ * Fill mode repeats component values. Incremental mode generates one sequence
+ * per component. Random modes use one mt19937_64 engine per component. Equal
+ * seeds produce equal draws only when the component distributions are equal.
+ *
+ * The transfer targets 65,536 values but always retains one complete tuple. A
+ * wider tuple creates a larger one-tuple buffer. All modes write completed chunks
+ * immediately. Cancellation returns success and does not restore those chunks.
+ * In-core and out-of-core telemetry labels use the same generator implementation.
+ *
+ * Preflight must validate all conversion strings. Runtime conversion Results are
+ * dereferenced without an error check. Signed incremental arithmetic must remain
+ * representable. Integral random distributions use int64 bounds and cannot
+ * represent the full UInt64 range. Unranged floating generation uses global
+ * rand() state for signs, so its output is not controlled only by seed.
+ */
 class InitializeData
 {
 public:
+  /**
+   * @brief Initializes the complete-array generator.
+   * @param dataStructure Contains the target array.
+   * @param mesgHandler Preserves the common algorithm constructor signature.
+   * @param shouldCancel Signals cancellation between generated chunks.
+   * @param inputValues Selects mode, values, ranges, steps, and seed behavior.
+   * @pre inputValues is not null.
+   * @pre All arguments outlive this executor.
+   */
   InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues);
+  /**
+   * @brief Destroys the complete-array generator.
+   */
   ~InitializeData() noexcept;
 
   InitializeData(const InitializeData&) = delete;
@@ -222,6 +206,14 @@ public:
   InitializeData& operator=(const InitializeData&) = delete;
   InitializeData& operator=(InitializeData&&) noexcept = delete;
 
+  /**
+   * @brief Generates and writes all target tuples.
+   * @return Bulk-write or invalid-mode result.
+   * @pre Component input lists contain one value or one value per component.
+   * @pre All configured strings convert to the target value type.
+   *
+   * Cancellation returns success with completed chunks retained.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

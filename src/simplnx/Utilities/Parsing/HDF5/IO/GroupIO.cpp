@@ -1,5 +1,6 @@
 #include "GroupIO.hpp"
 
+#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <H5Dpublic.h>
@@ -9,21 +10,31 @@
 #include <fmt/format.h>
 
 #include <iostream>
+#include <mutex>
 
 namespace nx::core::HDF5
 {
+/**
+ * @brief Opens an existing group or creates a missing group.
+ * @param parentId Identifies the parent object. It must remain valid.
+ * @param groupName Identifies the child group.
+ * @return Open group identifier, or a negative HDF5 identifier on failure.
+ * @pre The caller does not hold Support::ApiLock().
+ */
 IdType getGroupId(IdType parentId, const std::string& groupName)
 {
-  // Check if group exists
+  // Keep the probe and its dependent open or create operation atomic to HDF5 callers.
+  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+
   HDF_ERROR_HANDLER_OFF
   auto status = H5Gget_objinfo(parentId, groupName.c_str(), 0, NULL);
   HDF_ERROR_HANDLER_ON
 
-  if(status == 0) // if group exists...
+  if(status == 0)
   {
     return H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
   }
-  else // if group does not exist...
+  else
   {
     return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   }
@@ -48,40 +59,60 @@ hid_t GroupIO::open() const
   {
     return getId();
   }
-  hid_t id = H5Gopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
+  // Resolve wrapper state before the non-recursive HDF5 lock.
+  const hid_t parentId = getParentId();
+  const std::string namePath = getNamePath();
+  hid_t id = H5I_INVALID_HID;
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    id = H5Gopen(parentId, namePath.c_str(), H5P_DEFAULT);
+  }
   setId(id);
   return id;
 }
 
 void GroupIO::close()
 {
+  // Resolve the identifier before the non-recursive lock. This also serializes
+  // destruction with other HDF5 calls.
   if(isOpen())
   {
-    H5Gclose(getId());
+    const hid_t selfId = getId();
+    {
+      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      H5Gclose(selfId);
+    }
     setId(0);
   }
 }
 
 GroupIO GroupIO::openGroup(const std::string& name) const
 {
+  // Type checks and lazy opens acquire the lock. Complete them before the leaf call.
   if(!isGroup(name))
   {
     std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
     std::cout << ss << std::endl;
     return {};
   }
-  hid_t groupId = H5Gopen(getId(), name.c_str(), H5P_DEFAULT);
+  const hid_t selfId = getId();
+  hid_t groupId = H5I_INVALID_HID;
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    groupId = H5Gopen(selfId, name.c_str(), H5P_DEFAULT);
+  }
   if(groupId <= 0)
   {
     std::string ss = fmt::format("Failed to open Group '{}'.", name);
     std::cout << ss << std::endl;
     return {};
   }
-  return GroupIO(getId(), name, groupId);
+  return GroupIO(selfId, name, groupId);
 }
 
 DatasetIO GroupIO::openDataset(const std::string& name) const
 {
+  // The type check can acquire the lock. The returned DatasetIO opens lazily.
   if(!isDataset(name))
   {
     std::string ss = fmt::format("Could not open Dataset '{}'. Child object does not exist or object is not a Dataset", name);
@@ -98,16 +129,26 @@ usize GroupIO::getNumChildren() const
     return 0;
   }
 
+  // A lazy open can acquire the lock. Resolve it before the leaf call.
+  const hid_t selfId = getId();
   hsize_t numChildren = 0;
-  H5Gget_num_objs(getId(), &numChildren);
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    H5Gget_num_objs(selfId, &numChildren);
+  }
   return numChildren;
 }
 
 std::string GroupIO::getChildNameByIdx(hsize_t idx) const
 {
+  // A lazy open can acquire the lock. Resolve it before the leaf call.
+  const hid_t selfId = getId();
   const size_t size = 1024;
   char buffer[size];
-  H5Gget_objname_by_idx(getId(), idx, buffer, size);
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    H5Gget_objname_by_idx(selfId, idx, buffer, size);
+  }
   return GetNameFromBuffer(buffer);
 }
 
@@ -144,17 +185,22 @@ bool GroupIO::exists(const std::string& childName) const
 
 ObjectIO::ObjectType GroupIO::getObjectType(const std::string& childName) const
 {
+  // A lazy open acquires the non-recursive lock. Complete it before the query.
   open();
   if(!isValid())
   {
     return ObjectType::Unknown;
   }
 
+  const hid_t selfId = getId();
   herr_t error = 1;
   H5O_info2_t objectInfo{};
-  HDF_ERROR_HANDLER_OFF
-  error = H5Oget_info_by_name3(getId(), childName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
-  HDF_ERROR_HANDLER_ON
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    HDF_ERROR_HANDLER_OFF
+    error = H5Oget_info_by_name3(selfId, childName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+    HDF_ERROR_HANDLER_ON
+  }
   if(error < 0)
   {
     return ObjectType::Unknown;
@@ -186,18 +232,25 @@ GroupIO GroupIO::createGroup(const std::string& childName)
     std::cout << ss << std::endl;
     return {};
   }
+  // Type checks and lazy opens acquire the lock. Complete them before the leaf calls.
+  const bool childIsGroup = isGroup(childName);
+  const bool childExists = childIsGroup || exists(childName);
+  const hid_t selfId = getId();
   hid_t groupId = -1;
-  if(isGroup(childName))
   {
-    groupId = H5Gopen(getId(), childName.c_str(), H5P_DEFAULT);
-  }
-  else if(!exists(childName))
-  {
-    groupId = H5Gcreate(getId(), childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    if(childIsGroup)
+    {
+      groupId = H5Gopen(selfId, childName.c_str(), H5P_DEFAULT);
+    }
+    else if(!childExists)
+    {
+      groupId = H5Gcreate(selfId, childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
   }
   if(groupId > 0)
   {
-    return GroupIO(getId(), childName, groupId);
+    return GroupIO(selfId, childName, groupId);
   }
 
   std::string ss = fmt::format("Failed to create HDF5 group '{}' at path: ", childName, getObjectPath());
@@ -240,20 +293,26 @@ std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName)
 
 std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
 {
+  // The type check and lazy open can acquire the lock. Complete them first.
   if(!isGroup(name))
   {
     std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
     std::cout << ss << std::endl;
     return nullptr;
   }
-  hid_t groupId = H5Gopen(getId(), name.c_str(), H5P_DEFAULT);
+  const hid_t selfId = getId();
+  hid_t groupId = H5I_INVALID_HID;
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    groupId = H5Gopen(selfId, name.c_str(), H5P_DEFAULT);
+  }
   if(groupId <= 0)
   {
     std::string ss = fmt::format("Failed to open Group '{}'.", name);
     std::cout << ss << std::endl;
     return nullptr;
   }
-  return std::shared_ptr<GroupIO>(new GroupIO(getId(), name, groupId));
+  return std::shared_ptr<GroupIO>(new GroupIO(selfId, name, groupId));
 }
 
 DatasetIO GroupIO::createDataset(const std::string& childName)
@@ -292,12 +351,18 @@ Result<> GroupIO::createLink(const std::string& objectPath)
   }
   std::string objectName = objectPath.substr(index);
 
-  herr_t errorCode = H5Lcreate_hard(getParentId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  // A lazy open can acquire the lock. Resolve both identifiers before the leaf call.
+  const hid_t parentId = getParentId();
+  const hid_t selfId = getId();
+  herr_t errorCode = 0;
+  {
+    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    errorCode = H5Lcreate_hard(parentId, objectPath.c_str(), selfId, objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  }
   if(errorCode < 0)
   {
     return MakeErrorResult(errorCode, fmt::format("Error creating link to path: {}", objectPath));
   }
   return {};
 }
-// -----------------------------------------------------------------------------
 } // namespace nx::core::HDF5

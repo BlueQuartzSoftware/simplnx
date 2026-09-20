@@ -21,49 +21,18 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-// =============================================================================
-// Test pyramid for WritePoleFigureFilter:
-//
-//   EbsdLib's PoleFigureCompositorTest::All_Laue_Classes covers byte-level
-//   pixel reproducibility of the underlying rendering pipeline (Lambert,
-//   stereographic projection, canvas, color bar, font) across every Laue
-//   class. That's the right layer to pin the renderer.
-//
-//   This filter wraps PoleFigureCompositor::generateCompositeImage with just
-//   four things that EbsdLib doesn't do:
-//     1. Translate simplnx parameter indices to ebsdlib enums
-//        (HexConvention, ColorKeyKind, GenerationAlgorithm, ImageLayout).
-//     2. Filter Eulers by an optional Mask array before passing to EbsdLib.
-//     3. Resolve DataStructure paths + create output arrays in preflight.
-//     4. Convert legacy SIMPL JSON.
-//
-//   So the simplnx-side tests cover (2) and (1) here, (3) via the preflight
-//   path through the filter constructors, and (4) via the SIMPL conversion
-//   test below. We deliberately do NOT duplicate the EbsdLib pixel-level
-//   exemplar comparison -- doing so couples simplnx CI to EbsdLib rendering
-//   byte-identity, which was the source of the v5 baseline drift that
-//   bit us in the v3.0 release work.
-// =============================================================================
+// EbsdLib tests pin renderer pixels and projection details.
+// These tests cover the simplnx value-add: parameter mapping, mask filtering,
+// output-array creation, and SIMPL JSON conversion.
 
-// -----------------------------------------------------------------------------
-// Mask-effectiveness test (simplnx-unique behavior).
-//
-// The Pole_Figure_Exemplars_v6 archive contains 502 hex-Ti orientations with
-// a 251/251 mask. The unmasked pole figure shows several distinct clusters
-// per pole; with the mask applied, only 1-3 clusters per pole remain. So
-// the rendered output arrays must differ between use_mask=false and
-// use_mask=true by a substantial number of bytes if the simplnx mask filter
-// is wired correctly. If the mask is ignored (the bug we hit in 12.ang
-// pipeline debugging), the two outputs would be byte-identical.
-// -----------------------------------------------------------------------------
+// The mask fixture contains 502 orientations with 251 selected values.
+// Masked and unmasked outputs must differ by more than the configured threshold.
+// Identical outputs would prove that mask filtering did not reach the renderer.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  // decompressFiles=true so the .tar.gz is unpacked on first run, but
-  // removeTemp=false so the .dream3d survives between tests (the Mask test
-  // and the HexConvention test both consume it). With removeTemp=true the
-  // first test would wipe the file before the second could open it.
+  // Keep the extracted fixture for the later HexConvention test.
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
@@ -131,35 +100,19 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
   }
   INFO(fmt::format("Bytes that differ between mask-off and mask-on: {} / {} ({:.2f}%)", diffBytes, unmasked.size(), 100.0 * static_cast<double>(diffBytes) / static_cast<double>(unmasked.size())));
 
-  // The v6 fixture is constructed so the mask kills roughly half of the
-  // orientations and removes most of the visible clusters in each pole
-  // figure. A 1% byte-diff threshold is conservative but firmly above the
-  // noise floor of "the mask did literally nothing" (which would be 0%).
+  // The fixture masks roughly half of its orientations.
+  // A one-percent byte difference is above the zero-difference failure case.
   REQUIRE(diffBytes > unmasked.size() / 100);
 }
 
-// -----------------------------------------------------------------------------
-// HexConvention plumbing test (simplnx-unique parameter wiring).
-//
-// k_HexConvention_Key must route through executeImpl's switch to
-// ebsdlib::HexConvention and reach PoleFigureConfiguration_t::hexConvention.
-// EbsdLib's own LaueOpsTest::GenerateSphereCoords_HexConvention_* exercises
-// the per-class sphere-coord math under both bases; here we just confirm
-// the simplnx-side wiring is intact.
-//
-// For hex 6/mmm input (the v6 fixture), the basal-plane plane families
-// (<10-10> and <11-20>) rotate 30° between X||a and X||a* renderings, so
-// the produced intensity arrays MUST differ. If they don't, the simplnx
-// switch is collapsing both choices onto the same enum value.
-// -----------------------------------------------------------------------------
+// HexConvention must reach both EbsdLib configuration objects.
+// For hexagonal input, basal-plane families rotate 30 degrees between bases.
+// Intensity and composite outputs must therefore differ.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reaches algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  // decompressFiles=true so the .tar.gz is unpacked on first run, but
-  // removeTemp=false so the .dream3d survives between tests (the Mask test
-  // and the HexConvention test both consume it). With removeTemp=true the
-  // first test would wipe the file before the second could open it.
+  // Keep the extracted fixture for both HexConvention runs.
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
@@ -169,13 +122,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
   const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
-  // Two parallel snapshots per run -- the intensity array and the composite
-  // RGB image. These trace separate code paths in WritePoleFigure.cpp:
-  //   - intensity goes through PoleFigureConfiguration_t::hexConvention
-  //     (set unconditionally)
-  //   - composite RGB goes through CompositePoleFigureConfiguration_t::hexConvention
-  //     (was silently dropped on the floor pre-fix; bug found 2026-05-11)
-  // We need both to catch *both* plumbing paths in a single test.
+  // Capture both intensity and composite RGB outputs.
+  // They use separate configuration objects and must both honor HexConvention.
   struct ConvSnapshot
   {
     std::vector<float64> intensity;
@@ -214,15 +162,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 
     ConvSnapshot snap;
 
-    // Snapshot 1 -- the second-family intensity array. The output array
-    // names follow the user-supplied k_IntensityPlot{1,2,3}Name labels (here
-    // the defaults <001>/<011>/<111>), regardless of crystal structure --
-    // the contents are the family-0/1/2 intensities EbsdLib computed for
-    // the actual Laue class. For hex 6/mmm input that's c-axis / <10-10> /
-    // <11-20>. We pick family 1 (slot "<011>") because the basal-plane
-    // families rotate 30° between X||a and X||a*, so the array contents
-    // MUST differ. (Family 0 is the c-axis -- convention-invariant -- and
-    // would give a false-pass.)
+    // Snapshot the second-family intensity array.
+    // Basal-plane families rotate between X||a and X||a*, while the c-axis does not.
     const DataPath intensityPath = DataPath({intensityName, "Cell Data", "Phase_1_<011>"});
     const auto& intensityStore = dataStructure.getDataRefAs<Float64Array>(intensityPath).getDataStoreRef();
     snap.intensity.resize(intensityStore.getSize());
@@ -231,15 +172,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
       snap.intensity[i] = intensityStore[i];
     }
 
-    // Snapshot 2 -- the composite RGB image. This is the array that becomes
-    // the PNG on disk and the geometry array downstream consumers actually
-    // read. Pre-fix, WritePoleFigure.cpp set PoleFigureConfiguration_t::
-    // hexConvention but never set CompositePoleFigureConfiguration_t::
-    // hexConvention, so this image was always rendered with the default
-    // XParallelAStar regardless of the k_HexConvention_Key value. The
-    // intensity snapshot above honors hexConvention either way, so it can't
-    // catch the dropped-on-the-floor composite path -- we need this second
-    // snapshot to do that.
+    // Snapshot the composite RGB array that becomes the PNG and downstream geometry.
+    // This second snapshot verifies the composite configuration path separately.
     const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
     const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
     snap.compositeRgb.resize(compositeStore.getSize());
@@ -268,17 +202,12 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   }
   INFO(fmt::format("Intensity pixels that differ between X||a and X||a* (<10-10> family): {} / {}", diffPixels, xa.intensity.size()));
 
-  // Hex 6/mmm <10-10> intensity must rotate 30° between conventions. We
-  // expect *many* differing pixels; a 1% threshold is conservative and
-  // strictly above the noise floor of "the conventions are identical."
+  // Hexagonal basal-plane intensity must differ between conventions.
+  // Require more than one percent differing pixels.
   REQUIRE(diffPixels > xa.intensity.size() / 100);
 
-  // ---- Assertion 2 -- composite RGB also honors hexConvention ----
-  // This is the assertion that would have FAILED on the pre-fix code
-  // where compositeConfig.hexConvention was never set. The composite is
-  // a horizontal strip of three stereographic pole figures (one per
-  // family); the <10-10> and <11-20> halves of the strip rotate 30°
-  // between bases, so we expect substantially more than 1% byte-diff.
+  // The composite RGB output uses the same convention.
+  // Its basal-plane figures rotate, so require more than one percent differing bytes.
   REQUIRE(xa.compositeRgb.size() == xastar.compositeRgb.size());
   REQUIRE(xa.compositeRgb.size() > 0);
 
@@ -296,20 +225,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   REQUIRE(diffBytes > xa.compositeRgb.size() / 100);
 }
 
-// -----------------------------------------------------------------------------
-// Discrete-mode plumbing test (simplnx-unique parameter wiring).
-//
-// Pins two pieces of plumbing that no other test executes:
-//   1. k_GenerationAlgorithm_Key = 1 routes to the discrete (vector-marker)
-//      renderer — the discrete composite must differ from the Color one.
-//   2. k_DiscreteMarkerRadius_Key reaches CompositePoleFigureConfiguration_t::
-//      markerStyle.radiusFraction (executeImpl converts pixels to a fraction
-//      of the image size) — a radius of 1 px vs 10 px must change the
-//      rendered composite.
-// Pixel-exact rendering is pinned at the EbsdLib layer (see the test-pyramid
-// note at the top of this file); here we only assert the parameters actually
-// reach the renderer.
-// -----------------------------------------------------------------------------
+// Discrete mode must reach the renderer and differ from color mode.
+// Marker radii of 1 and 10 pixels must also produce different composites.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker radius reach algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
@@ -440,8 +357,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibi
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // The legacy filter had no output geometry, so the created Image Geometry path is intentionally
-      // left at its default ("PoleFigure") instead of reusing the input DataContainer name.
+      // Legacy conversion uses the default output geometry path.
+      // The old filter had no geometry parameter.
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_ImageGeometryPath_Key) == DataPath({"PoleFigure"}));
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(WritePoleFigureFilter::k_MaterialNameArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

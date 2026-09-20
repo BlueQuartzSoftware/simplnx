@@ -2,6 +2,7 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
@@ -141,27 +142,31 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
 
 Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
-  // Check if data has already been written
   if(hasDataBeenWritten(dataObject))
   {
-    // Create an HDF5 link
+    // Reuse the existing object through an HDF5 hard link.
     return writeDataObjectLink(dataObject, parentGroup);
   }
-  else
-  {
-    // Write new data
-    auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
-    if(factory == nullptr)
-    {
-      std::string ss = fmt::format("Could not find IO factory for datatype: {}", dataObject->getTypeName());
-      return MakeErrorResult(-5, ss);
-    }
 
-    auto result = factory->writeDataObject(*this, dataObject, parentGroup);
-    if(result.invalid())
-    {
-      return result;
-    }
+  // Recovery writers let registered managers replace disk-backed arrays with
+  // placeholder datasets and backing metadata. This preserves recovery links
+  // without copying data. An empty override uses the normal type factory.
+  if(auto overrideResult = Application::GetOrCreateInstance()->getIOCollection().onRecoveryWrite(*this, dataObject, parentGroup); overrideResult.has_value())
+  {
+    return overrideResult.value();
+  }
+
+  auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
+  if(factory == nullptr)
+  {
+    std::string ss = fmt::format("Could not find IO factory for datatype: {}", dataObject->getTypeName());
+    return MakeErrorResult(-5, ss);
+  }
+
+  auto result = factory->writeDataObject(*this, dataObject, parentGroup);
+  if(result.invalid())
+  {
+    return result;
   }
 
   return {};
@@ -201,7 +206,7 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
     return result;
   }
 
-  // NeighborList extra data link
+  // NeighborList links require the NumNeighbors companion array for reconstruction.
   if(const auto* neighborList = dynamic_cast<const INeighborList*>(dataObject))
   {
     auto numNeighborsName = neighborList->getNumNeighborsArrayName();

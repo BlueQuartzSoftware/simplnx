@@ -74,6 +74,80 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filt
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz", "feature_boundary_neighbor_slip_transmission_1");
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "feature_boundary_neighbor_slip_transmission_1" / "6_6_feature_boundary_neighbor_slip_transmission.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featurePhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath));
+  auto& neighborList = dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath);
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(featurePhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+
+  usize featureIdx = 1;
+  while(featureIdx < neighborList.getNumberOfTuples() && neighborList[featureIdx].empty())
+  {
+    featureIdx++;
+  }
+  REQUIRE(featureIdx < neighborList.getNumberOfTuples());
+  const int32 neighborFeatureIdx = neighborList[featureIdx][0];
+  REQUIRE(neighborFeatureIdx > 0);
+  REQUIRE(static_cast<usize>(neighborFeatureIdx) < featurePhasesArrayRef.getNumberOfTuples());
+
+  ComputeSlipTransmissionMetricsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborListPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_f1s));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_f1spts));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_f7s));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_mPrimes));
+
+  SECTION("Participating Phase returns an error")
+  {
+    featurePhasesArrayRef.getDataStoreRef()[featureIdx] = static_cast<int32>(crystalStructuresArrayRef.getNumberOfTuples());
+    featurePhasesArrayRef.getDataStoreRef()[neighborFeatureIdx] = 1;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -94742);
+  }
+
+  SECTION("Participating Laue index returns an error")
+  {
+    featurePhasesArrayRef.getDataStoreRef()[featureIdx] = 1;
+    featurePhasesArrayRef.getDataStoreRef()[neighborFeatureIdx] = 1;
+    crystalStructuresArrayRef.getDataStoreRef()[1] = 999U;
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -94743);
+  }
+
+  SECTION("Phase outside an ineligible pair is ignored")
+  {
+    auto& featurePhasesStoreRef = featurePhasesArrayRef.getDataStoreRef();
+    for(usize otherFeatureIdx = 0; otherFeatureIdx < featurePhasesStoreRef.getNumberOfTuples(); otherFeatureIdx++)
+    {
+      featurePhasesStoreRef[otherFeatureIdx] = 2;
+    }
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

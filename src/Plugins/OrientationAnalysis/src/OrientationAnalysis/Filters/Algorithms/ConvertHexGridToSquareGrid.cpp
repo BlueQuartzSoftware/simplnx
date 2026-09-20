@@ -206,7 +206,8 @@ public:
 
           // Write to the output file
           outFile << "  " << phi1[hexGridIndex] << "	" << PHI[hexGridIndex] << "	" << phi2[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iq[hexGridIndex] << "	" << ci[hexGridIndex]
-                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  " << "\n";
+                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  "
+                  << "\n";
         }
       }
 
@@ -222,6 +223,10 @@ public:
     {
       for(auto& atomicFile : m_AtomicFiles)
       {
+        if(m_ShouldCancel)
+        {
+          return MakeErrorResult(-1, "Filter cancelled");
+        }
         Result<> commitResult = atomicFile.value().commit();
         if(commitResult.invalid())
         {
@@ -417,6 +422,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
     }
   }
 
+  m_MessageHandler(IFilter::Message::Type::Info, "Saving converted files");
   result = MergeResults(converter.commitAllFiles(), result);
 
   return result;

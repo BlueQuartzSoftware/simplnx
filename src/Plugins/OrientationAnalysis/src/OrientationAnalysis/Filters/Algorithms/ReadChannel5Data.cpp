@@ -8,25 +8,49 @@
 
 #include <EbsdLib/Core/Orientation.hpp>
 
-using namespace nx::core;
+#include <algorithm>
+#include <memory>
 
-using FloatVec3Type = std::vector<float>;
+using namespace nx::core;
 
 namespace
 {
-template <typename T>
-void copyRawData(const ReadChannel5DataInputValues* m_InputValues, size_t numElements, DataStructure& m_DataStructure, ebsdlib::CprReader& m_Reader, const std::string& name, DataPath& dataArrayPath)
-{
-  using ArrayType = DataArray<T>;
-  auto& dataRef = m_DataStructure.getDataRefAs<ArrayType>(dataArrayPath);
-  auto* dataStorePtr = dataRef.getDataStore();
+constexpr usize k_ChunkTuples = 65536;
 
-  const nonstd::span<T> rawDataPtr(reinterpret_cast<T*>(m_Reader.getPointerByName(name)), numElements);
-  // std::copy(rawDataPtr.begin(), rawDataPtr.end(), dataStorePtr->begin() + offset);
-  for(size_t idx = 0; idx < numElements; idx++)
+/**
+ * @brief Copies one parsed Channel 5 array through bounded store writes.
+ * @tparam T Array value type.
+ * @param numElements Number of values to copy.
+ * @param dataStructure Contains the destination array.
+ * @param reader Owns the parsed source values.
+ * @param name Identifies the reader field.
+ * @param dataArrayPath Identifies the destination array.
+ * @param shouldCancel Signals cancellation between chunks.
+ * @return True after all chunks copy, false after cancellation, or the first store write error.
+ */
+template <typename T>
+Result<bool> CopyRawData(usize numElements, DataStructure& dataStructure, ebsdlib::CprReader& reader, const std::string& name, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
+{
+  auto& dataStore = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath).getDataStoreRef();
+  const auto* rawData = reinterpret_cast<const T*>(reader.getPointerByName(name));
+
+  // The reader already owns the complete source array. Limit each DataStore transfer
+  // without allocating a second cell-sized buffer.
+  for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
   {
-    dataStorePtr->setValue(idx, rawDataPtr[idx]);
+    if(shouldCancel)
+    {
+      return {false};
+    }
+
+    const usize count = std::min(k_ChunkTuples, numElements - offset);
+    if(Result<> ioResult = dataStore.copyFromBuffer(offset, nonstd::span<const T>(rawData + offset, count)); ioResult.invalid())
+    {
+      return ConvertInvalidResult<bool>(std::move(ioResult));
+    }
   }
+
+  return {true};
 }
 
 } // namespace
@@ -68,9 +92,7 @@ Result<> ReadChannel5Data::operator()()
     return {};
   }
 
-  copyRawEbsdData(&reader);
-
-  return {};
+  return copyRawEbsdData(&reader);
 }
 
 // -----------------------------------------------------------------------------
@@ -122,24 +144,19 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
 }
 
 // -----------------------------------------------------------------------------
-void ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
+Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
 
-  std::vector<size_t> cDims = {1};
-
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  const size_t totalCells = imageGeom.getNumberOfCells();
-
-  // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
-  const std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
-
+  const usize totalCells = imageGeom.getNumberOfCells();
   const std::vector<ebsdlib::CrcDataParser> fieldParsers = reader->createFieldParsers(m_InputValues->InputFile.string());
+
   for(const auto& parser : fieldParsers)
   {
     if(m_ShouldCancel)
     {
-      return;
+      return {};
     }
 
     const std::string fieldName = parser.FieldDefinition.FieldName;
@@ -147,51 +164,97 @@ void ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
 
     if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::Int32)
     {
-      copyRawData<int32_t>(m_InputValues, totalCells, m_DataStructure, *reader, fieldName, dataArrayPath);
+      Result<bool> copyResult = CopyRawData<int32>(totalCells, m_DataStructure, *reader, fieldName, dataArrayPath, m_ShouldCancel);
+      if(copyResult.invalid())
+      {
+        return ConvertResult(std::move(copyResult));
+      }
+      if(!copyResult.value())
+      {
+        return {};
+      }
     }
     else if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::Float)
     {
-      copyRawData<float32>(m_InputValues, totalCells, m_DataStructure, *reader, fieldName, dataArrayPath);
+      Result<bool> copyResult = CopyRawData<float32>(totalCells, m_DataStructure, *reader, fieldName, dataArrayPath, m_ShouldCancel);
+      if(copyResult.invalid())
+      {
+        return ConvertResult(std::move(copyResult));
+      }
+      if(!copyResult.value())
+      {
+        return {};
+      }
     }
     else if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::UInt8)
     {
-      copyRawData<uint8_t>(m_InputValues, totalCells, m_DataStructure, *reader, fieldName, dataArrayPath);
+      Result<bool> copyResult = CopyRawData<uint8>(totalCells, m_DataStructure, *reader, fieldName, dataArrayPath, m_ShouldCancel);
+      if(copyResult.invalid())
+      {
+        return ConvertResult(std::move(copyResult));
+      }
+      if(!copyResult.value())
+      {
+        return {};
+      }
     }
   }
 
-  // Copy the data from the 'Phase' array into the 'Phases' array
-  if(m_ShouldCancel)
-  {
-    return;
-  }
   if(m_InputValues->CreateCompatibleArrays)
   {
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
-    auto* phasePtr = reinterpret_cast<uint8_t*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
-    for(size_t i = 0; i < totalCells; i++)
+    auto& phaseStore = targetArray.getDataStoreRef();
+    const auto* phasePtr = reinterpret_cast<const uint8*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
+    auto phaseBuffer = std::make_unique<int32[]>(k_ChunkTuples);
+
+    for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
     {
-      targetArray[i] = phasePtr[i];
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
+      const usize count = std::min(k_ChunkTuples, totalCells - offset);
+      for(usize i = 0; i < count; i++)
+      {
+        phaseBuffer[i] = phasePtr[offset + i];
+      }
+      if(Result<> ioResult = phaseStore.copyFromBuffer(offset, nonstd::span<const int32>(phaseBuffer.get(), count)); ioResult.invalid())
+      {
+        return ConvertResult(std::move(ioResult));
+      }
     }
   }
 
-  // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
-  if(m_ShouldCancel)
-  {
-    return;
-  }
   if(m_InputValues->CreateCompatibleArrays)
   {
-    const auto* fComp0Ptr = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
-    const auto* fComp1Ptr = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
-    const auto* fComp2Ptr = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
-    cDims[0] = 3;
+    const auto* fComp0Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
+    const auto* fComp1Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
+    const auto* fComp2Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
-    for(size_t i = 0; i < totalCells; i++)
+    auto& eulerStore = cellEulerAngles.getDataStoreRef();
+    auto eulerBuffer = std::make_unique<float32[]>(k_ChunkTuples * 3);
+
+    for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
     {
-      cellEulerAngles[3 * i] = fComp0Ptr[i];
-      cellEulerAngles[3 * i + 1] = fComp1Ptr[i];
-      cellEulerAngles[3 * i + 2] = fComp2Ptr[i];
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
+      const usize count = std::min(k_ChunkTuples, totalCells - offset);
+      for(usize i = 0; i < count; i++)
+      {
+        eulerBuffer[3 * i] = fComp0Ptr[offset + i];
+        eulerBuffer[3 * i + 1] = fComp1Ptr[offset + i];
+        eulerBuffer[3 * i + 2] = fComp2Ptr[offset + i];
+      }
+      if(Result<> ioResult = eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuffer.get(), count * 3)); ioResult.invalid())
+      {
+        return ConvertResult(std::move(ioResult));
+      }
     }
   }
+  return {};
 }

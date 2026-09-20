@@ -2,15 +2,21 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <nonstd/span.hpp>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -27,9 +33,12 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_find_feature_ce
 
 TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", "[SimplnxCore][ExtractComponentAsArrayFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ExtractComponentAsArrayFilter filter;
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
@@ -39,19 +48,16 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
 
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(removeCompIndex));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayName_Key, std::make_any<std::string>(k_ExtractedComponents));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(alteredDs, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(alteredDs, args);
+  auto executeResult = scope.executeFilter(filter, alteredDs, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Load a clean copy of the datastructure prior to resize because original array is terminated after execution
@@ -105,19 +111,17 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution"
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Configure the filter arguments.
   ExtractComponentAsArrayFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(5)); // Invalid
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayName_Key, std::make_any<std::string>(k_ExtractedComponents));
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 

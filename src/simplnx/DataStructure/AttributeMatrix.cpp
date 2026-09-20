@@ -4,6 +4,8 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 
+#include <fmt/ranges.h>
+
 #include <exception>
 
 using namespace nx::core;
@@ -59,7 +61,7 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& dataStructure, std::stri
 std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with identifier since it will get created when inserting into data structure
+  // Insertion assigns the identifier for the copy.
   auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName(), m_TupleShape));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
@@ -111,14 +113,25 @@ usize AttributeMatrix::getNumberOfTuples() const
   return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
 }
 
-void AttributeMatrix::resizeTuples(ShapeType tupleShape)
+Result<> AttributeMatrix::resizeTuples(ShapeType tupleShape)
 {
   m_TupleShape = std::move(tupleShape);
   auto childArrays = findAllChildrenOfType<IArray>();
   for(const auto& array : childArrays)
   {
-    array->resizeTuples(m_TupleShape);
+    Result<> resizeResult = array->resizeTuples(m_TupleShape);
+    if(resizeResult.invalid())
+    {
+      const std::vector<DataPath> childPaths = array->getDataPaths();
+      const std::string childPath = childPaths.empty() ? array->getName() : childPaths.front().toString();
+      for(Error& error : resizeResult.errors())
+      {
+        error.message = fmt::format("AttributeMatrix '{}' failed to resize child array '{}' to shape [{}]: {}", getName(), childPath, fmt::join(m_TupleShape, ", "), error.message);
+      }
+      return resizeResult;
+    }
   }
+  return {};
 }
 
 Result<> AttributeMatrix::validate() const
