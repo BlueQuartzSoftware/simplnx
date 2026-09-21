@@ -198,7 +198,7 @@ Result<> ComputeFeatureCentroids::operator()()
         {
           phase += Constants::k_2Pi<double>;
         }
-        centroidsBuf[axisIdx] = static_cast<float32>(static_cast<double>(origin[axis]) + (phase / Constants::k_2Pi<double>) * domainLength[axis]);
+        centroidsBuf[axisIdx] = static_cast<float32>(static_cast<double>(origin[axis]) + (phase / Constants::k_2Pi<double>)*domainLength[axis]);
         anyAdjusted = true;
       }
     }
