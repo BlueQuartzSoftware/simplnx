@@ -29,10 +29,10 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <vector>
 #include <set>
 #include <string>
 #include <tuple>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -1164,7 +1164,7 @@ void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -1433,6 +1433,26 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a o
     INFO("vertical box edge at (" << cx << ", " << cy << ") has no vertex at z = " << zMid);
     REQUIRE(found);
   }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp edges with multiple thin axes", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto dims = GENERATE(SizeVec3(1, 1, 1), SizeVec3(1, 1, 4), SizeVec3(1, 4, 1), SizeVec3(4, 1, 1), SizeVec3(1, 4, 3), SizeVec3(4, 1, 3));
+  CAPTURE(dims[0], dims[1], dims[2]);
+  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+  DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, SingleFeatureLabeler);
+  RunM3CSharpEdges(dataStructure, true);
+
+  // Thin axes cannot collapse both walls onto one plane or leave unreferenced vertices.
+  RequireNoCoincidentVertices(dataStructure, k_SharpEdgesTriGeomPath);
+  RequireMeshReachesBounds(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesImageGeomPath);
+  CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
+  CheckMeshWithinVolume(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath));
+  REQUIRE(SurfaceMeshingTest::IsWatertight(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

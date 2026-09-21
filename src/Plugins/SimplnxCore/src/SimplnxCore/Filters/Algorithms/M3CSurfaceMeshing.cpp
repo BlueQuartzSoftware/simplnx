@@ -2448,14 +2448,79 @@ struct HalfCellLattice
 struct SharpEdgeResult
 {
   std::unordered_map<SiteId, Node> SnappedCoords;
+  std::unordered_map<SiteId, SiteId> MergedInto;
+  std::unordered_set<SiteId> Touched;
   int64 NumFacesRemoved = 0;
 };
 
-// Applies the Sharp Bounding Box Edges pass described above to the surviving triangles. Must run after
-// the exterior (+10) NodeType promotion, which is how boundary nodes are recognised, and before node
-// compaction, since it clears the NodeType of merged-away nodes and drops triangles in place.
-SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<int8>& nodeType, SiteId numCandidateNodes, const NodeCoords& nodeCoords,
-                                        const usize dims[3])
+/**
+ * @brief Remaps one triangle and rejects faces collapsed by the sharp-edge pass.
+ * @param triangle Receives representative candidate IDs.
+ * @param result Supplies node merges and coordinate overrides.
+ * @param nodeCoords Supplies coordinates for unchanged candidates.
+ * @return True if the remapped triangle survives.
+ */
+bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, const NodeCoords& nodeCoords)
+{
+  const auto finalCoord = [&result, &nodeCoords](SiteId id) -> Node {
+    const auto it = result.SnappedCoords.find(id);
+    return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
+  };
+  int numTouched = 0;
+  for(int corner = 0; corner < 3; corner++)
+  {
+    const auto it = result.MergedInto.find(triangle.node_id[corner]);
+    if(it != result.MergedInto.end())
+    {
+      triangle.node_id[corner] = it->second;
+    }
+    if(result.Touched.count(triangle.node_id[corner]) != 0)
+    {
+      numTouched++;
+    }
+  }
+  if(triangle.node_id[0] == triangle.node_id[1] || triangle.node_id[1] == triangle.node_id[2] || triangle.node_id[0] == triangle.node_id[2])
+  {
+    return false;
+  }
+  if(numTouched == 3)
+  {
+    const Node a = finalCoord(triangle.node_id[0]);
+    const Node b = finalCoord(triangle.node_id[1]);
+    const Node c = finalCoord(triangle.node_id[2]);
+    const double abx = static_cast<double>(b.coord[0]) - a.coord[0];
+    const double aby = static_cast<double>(b.coord[1]) - a.coord[1];
+    const double abz = static_cast<double>(b.coord[2]) - a.coord[2];
+    const double acx = static_cast<double>(c.coord[0]) - a.coord[0];
+    const double acy = static_cast<double>(c.coord[1]) - a.coord[1];
+    const double acz = static_cast<double>(c.coord[2]) - a.coord[2];
+    const double crossX = aby * acz - abz * acy;
+    const double crossY = abz * acx - abx * acz;
+    const double crossZ = abx * acy - aby * acx;
+    if(crossX == 0.0 && crossY == 0.0 && crossZ == 0.0)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * @brief Snaps boundary nodes and removes triangles collapsed along box edges.
+ * @tparam NodeTypes Specifies dense or sparse mutable node-type storage.
+ * @param triangles Contains surviving triangles and receives the compacted faces.
+ * @param mCubeID Contains matching source cubes and receives the compacted cube IDs.
+ * @param nodeType Contains exterior-promoted types and receives retired-node markers.
+ * @param numCandidateNodes Specifies the dense candidate count when candidateIds is empty.
+ * @param nodeCoords Supplies the original node coordinates and half-cell lattice.
+ * @param dims Specifies the three image dimensions in cells.
+ * @param candidateIds Selects sparse candidates in ascending order, or leaves the dense range selected.
+ * @return Coordinate overrides and merge records for output generation.
+ * @pre Exterior node promotion is complete, and node compaction has not started.
+ */
+template <typename NodeTypes>
+SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, NodeTypes& nodeType, SiteId numCandidateNodes, const NodeCoords& nodeCoords,
+                                        const usize dims[3], nonstd::span<const SiteId> candidateIds = {})
 {
   SharpEdgeResult result;
   const HalfCellLattice lattice{nodeCoords};
@@ -2467,9 +2532,11 @@ SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::v
   // Pass 1: for every boundary node decide its snapped lattice position; nodes landing on the same
   // position are merged into the first (lowest id) one to get there, which keeps the pass deterministic.
   std::unordered_map<uint64, SiteId> representativeByPosition;
-  std::unordered_map<SiteId, SiteId> mergedInto;
-  for(SiteId id = 0; id < numCandidateNodes; id++)
+  auto& mergedInto = result.MergedInto;
+  const SiteId count = candidateIds.empty() ? numCandidateNodes : static_cast<SiteId>(candidateIds.size());
+  for(SiteId index = 0; index < count; index++)
   {
+    const SiteId id = candidateIds.empty() ? index : candidateIds[static_cast<usize>(index)];
     if(nodeType[static_cast<usize>(id)] < 10)
     {
       continue; // interior node, or unused candidate
@@ -2538,7 +2605,7 @@ SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::v
 
   // Every node the pass touched (moved or merged into). Used to find the degenerate triangles left on the
   // edge lines, and afterwards to clear any of these nodes no surviving triangle references.
-  std::unordered_set<SiteId> touched;
+  auto& touched = result.Touched;
   for(const auto& [id, node] : result.SnappedCoords)
   {
     touched.insert(id);
@@ -2547,10 +2614,6 @@ SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::v
   {
     touched.insert(representative);
   }
-  const auto finalCoord = [&result, &nodeCoords](SiteId id) -> Node {
-    const auto it = result.SnappedCoords.find(id);
-    return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
-  };
 
   // Pass 2: remap the triangles' node ids and drop the ones the merge collapsed. A chamfer triangle has
   // two vertices on the same cell of the edge line, so after the merge it repeats a node id. The only
@@ -2562,41 +2625,9 @@ SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::v
   for(int64 i = 0; i < nTriangle; i++)
   {
     Triangle triangle = triangles[static_cast<usize>(i)];
-    int numTouched = 0;
-    for(int corner = 0; corner < 3; corner++)
-    {
-      const auto it = mergedInto.find(triangle.node_id[corner]);
-      if(it != mergedInto.end())
-      {
-        triangle.node_id[corner] = it->second;
-      }
-      if(touched.count(triangle.node_id[corner]) != 0)
-      {
-        numTouched++;
-      }
-    }
-    if(triangle.node_id[0] == triangle.node_id[1] || triangle.node_id[1] == triangle.node_id[2] || triangle.node_id[0] == triangle.node_id[2])
+    if(!RemapSharpEdgeTriangle(triangle, result, nodeCoords))
     {
       continue;
-    }
-    if(numTouched == 3)
-    {
-      const Node a = finalCoord(triangle.node_id[0]);
-      const Node b = finalCoord(triangle.node_id[1]);
-      const Node c = finalCoord(triangle.node_id[2]);
-      const double abx = static_cast<double>(b.coord[0]) - a.coord[0];
-      const double aby = static_cast<double>(b.coord[1]) - a.coord[1];
-      const double abz = static_cast<double>(b.coord[2]) - a.coord[2];
-      const double acx = static_cast<double>(c.coord[0]) - a.coord[0];
-      const double acy = static_cast<double>(c.coord[1]) - a.coord[1];
-      const double acz = static_cast<double>(c.coord[2]) - a.coord[2];
-      const double crossX = aby * acz - abz * acy;
-      const double crossY = abz * acx - abx * acz;
-      const double crossZ = abx * acy - aby * acx;
-      if(crossX == 0.0 && crossY == 0.0 && crossZ == 0.0)
-      {
-        continue;
-      }
     }
     triangles[static_cast<usize>(survivingCount)] = triangle;
     mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
@@ -2609,17 +2640,18 @@ SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::v
   // Pass 3: a touched node is normally still referenced by the wall triangles on either side of the
   // edge, but if every triangle that used it was a chamfer (possible once the Bounding Box Skin prune
   // has removed the walls around it) it is now an orphan and must not be emitted.
+  auto orphanCandidates = touched;
   for(const Triangle& triangle : triangles)
   {
     for(const SiteId nodeId : triangle.node_id)
     {
-      touched.erase(nodeId);
+      orphanCandidates.erase(nodeId);
     }
   }
-  for(const SiteId orphan : touched)
+  for(const SiteId orphan : orphanCandidates)
   {
     nodeType[static_cast<usize>(orphan)] = M3CNodeType::k_Unused;
-    result.SnappedCoords.erase(orphan);
+    // Coordinate overrides also classify collapsed faces during streamed regeneration.
   }
   return result;
 }
@@ -3276,7 +3308,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return MakeErrorResult(-90551, "M3C out-of-core square or candidate-node count overflows its site index type.");
   }
 
-  // Four LRU Z slices cover the 26-neighbor anomaly lookup while keeping the
+  // Four LRU Z slices cover local cube and slice-plane anomaly lookups while keeping the
   // padded ghost shell implicit. The cache also handles the NeighborAccessor's
   // toroidal border indices without materializing a padded volume.
   const usize sourceSliceSize = dims[0] * dims[1];
@@ -3411,7 +3443,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       for(int corner = 0; corner < 4; corner++)
       {
         const Neighbor cornerNeighbors = neighbors[corners[corner]];
-        for(int neighborIndex = 1; neighborIndex <= num_neigh; neighborIndex++)
+        // Match the eight slice-plane neighbors used by treat_anomaly().
+        for(int neighborIndex = 1; neighborIndex <= 8; neighborIndex++)
         {
           auto neighborSpin = sourceValue(cornerNeighbors.neigh_id[neighborIndex]);
           if(neighborSpin.invalid())
@@ -3533,6 +3566,41 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     const int spinB = triangle.nSpin[1];
     return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
   };
+  std::vector<Triangle> edgeTriangles;
+  std::vector<SiteId> edgeCubes;
+  const HalfCellLattice lattice{nodeCoords};
+  const auto cubeTouchesBoxEdge = [&](SiteId cube) {
+    const usize linear = static_cast<usize>(cube - 1);
+    const std::array<usize, 3> position = {linear % fileDim[0], (linear / fileDim[0]) % fileDim[1], linear / (fileDim[0] * fileDim[1])};
+    int wallAxes = 0;
+    int nearWallAxes = 0;
+    for(usize axis = 0; axis < 3; axis++)
+    {
+      wallAxes += (position[axis] == 0 || position[axis] == dims[axis]) ? 1 : 0;
+      nearWallAxes += (position[axis] <= 1 || position[axis] >= dims[axis] - 1) ? 1 : 0;
+    }
+    return wallAxes > 0 && nearWallAxes >= 2;
+  };
+  const auto touchesBoxEdge = [&](const Triangle& triangle) {
+    for(const SiteId nodeId : triangle.node_id)
+    {
+      const auto position = lattice(nodeId);
+      int wallAxes = 0;
+      int nearWallAxes = 0;
+      for(usize axis = 0; axis < 3; axis++)
+      {
+        const int64 upper = 2 * static_cast<int64>(dims[axis]);
+        const bool onWall = position[axis] == 0 || position[axis] == upper;
+        wallAxes += onWall ? 1 : 0;
+        nearWallAxes += (onWall || (dims[axis] >= 2 && (position[axis] == 1 || position[axis] == upper - 1))) ? 1 : 0;
+      }
+      if(wallAxes > 0 && nearWallAxes >= 2)
+      {
+        return true;
+      }
+    }
+    return false;
+  };
   for(SiteId cube = 1; cube <= lastCube; cube++)
   {
     if(m_ShouldCancel)
@@ -3626,7 +3694,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       maximumTrianglesPerCube = std::max(maximumTrianglesPerCube, static_cast<uint64>(count));
 
-      if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && count > 0)
+      if((m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || (m_InputValues->SharpBoundingBoxEdges && cubeTouchesBoxEdge(cube))) && count > 0)
       {
         std::vector<Triangle> countTriangles(static_cast<usize>(count));
         std::vector<SiteId> countCubes(static_cast<usize>(count));
@@ -3659,7 +3727,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         int64 survivingCount = 0;
         for(const Triangle& triangle : countTriangles)
         {
-          const bool dropTriangle = skipBackgroundSkinFace(triangle);
+          const bool dropTriangle = m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
           const uint8 referenceFlag = dropTriangle ? uint8{1} : uint8{2};
           for(const SiteId nodeId : triangle.node_id)
           {
@@ -3683,6 +3751,11 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
           else
           {
             survivingCount++;
+            if(m_InputValues->SharpBoundingBoxEdges && touchesBoxEdge(triangle))
+            {
+              edgeTriangles.push_back(triangle);
+              edgeCubes.push_back(cube);
+            }
           }
         }
         count = survivingCount;
@@ -3694,6 +3767,78 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       return writeResult;
     }
   }
+  SharpEdgeResult sharpEdges;
+  if(m_InputValues->SharpBoundingBoxEdges && !edgeTriangles.empty())
+  {
+    // Only edge-adjacent triangles remain resident. Their count grows with the sum of the three dimensions, not the volume.
+    std::unordered_map<SiteId, int8> edgeNodeTypes;
+    std::unordered_map<SiteId, int64> cubeCountChanges;
+    for(usize face = 0; face < edgeTriangles.size(); face++)
+    {
+      const auto& triangle = edgeTriangles[face];
+      cubeCountChanges[edgeCubes[face]]--;
+      for(const SiteId nodeId : triangle.node_id)
+      {
+        auto [entry, inserted] = edgeNodeTypes.try_emplace(nodeId, 0);
+        if(inserted)
+        {
+          auto node = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+          if(node.invalid())
+          {
+            return ConvertResult(std::move(node));
+          }
+          entry->second = node.value().type;
+        }
+        if((triangle.nSpin[0] < 0) != (triangle.nSpin[1] < 0) && entry->second < 10)
+        {
+          entry->second = static_cast<int8>(entry->second + 10);
+        }
+      }
+    }
+    std::vector<SiteId> edgeNodeIds;
+    edgeNodeIds.reserve(edgeNodeTypes.size());
+    for(const auto& [nodeId, type] : edgeNodeTypes)
+    {
+      edgeNodeIds.push_back(nodeId);
+    }
+    // Ascending candidate order preserves the in-core representative and vertex ordering.
+    std::sort(edgeNodeIds.begin(), edgeNodeIds.end());
+    sharpEdges = sharpenBoundingBoxEdges(edgeTriangles, edgeCubes, edgeNodeTypes, 0, nodeCoords, dims, nonstd::span<const SiteId>(edgeNodeIds));
+    for(const SiteId cube : edgeCubes)
+    {
+      cubeCountChanges[cube]++;
+    }
+    for(const auto& [cube, change] : cubeCountChanges)
+    {
+      auto count = triangleCounts.cache().read(static_cast<uint64>(cube), m_ShouldCancel);
+      if(count.invalid())
+      {
+        return ConvertResult(std::move(count));
+      }
+      auto write = triangleCounts.cache().write(static_cast<uint64>(cube), count.value() + change, m_ShouldCancel);
+      if(write.invalid())
+      {
+        return write;
+      }
+    }
+    for(const auto& [nodeId, type] : edgeNodeTypes)
+    {
+      auto node = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+      if(node.invalid())
+      {
+        return ConvertResult(std::move(node));
+      }
+      auto record = node.value();
+      record.type = type;
+      auto write = candidateNodes.cache().write(static_cast<uint64>(nodeId), record, m_ShouldCancel);
+      if(write.invalid())
+      {
+        return write;
+      }
+    }
+  }
+  std::vector<Triangle>().swap(edgeTriangles);
+  std::vector<SiteId>().swap(edgeCubes);
   auto flushNodesResult = candidateNodes.flush(m_ShouldCancel);
   if(flushNodesResult.invalid())
   {
@@ -3940,6 +4085,21 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       generated = survivingCount;
     }
+    if(m_InputValues->SharpBoundingBoxEdges)
+    {
+      usize survivingCount = 0;
+      for(usize index = 0; index < generated; index++)
+      {
+        Triangle triangle = localTriangles[index];
+        if(RemapSharpEdgeTriangle(triangle, sharpEdges, nodeCoords))
+        {
+          localTriangles[survivingCount] = triangle;
+          localCubes[survivingCount] = localCubes[index];
+          survivingCount++;
+        }
+      }
+      generated = survivingCount;
+    }
     uint64 expectedEnd = triangleTotal;
     if(cube != lastCube)
     {
@@ -4041,7 +4201,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         {
           firstCompact = node.compactId;
         }
-        const Node coordinate = nodeCoords[static_cast<SiteId>(current)];
+        const auto snapped = sharpEdges.SnappedCoords.find(static_cast<SiteId>(current));
+        const Node coordinate = snapped == sharpEdges.SnappedCoords.end() ? nodeCoords[static_cast<SiteId>(current)] : snapped->second;
         vertexValues[count * 3] = coordinate.coord[0];
         vertexValues[count * 3 + 1] = coordinate.coord[1];
         vertexValues[count * 3 + 2] = coordinate.coord[2];
