@@ -10,10 +10,10 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -22,6 +22,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -104,14 +105,14 @@ public:
    * @param mostPopulatedStore Receives most-populated bin data.
    * @param mask Selects accepted tuples.
    * @param overflow Counts values outside configured ranges.
-   * @param progressMessageHelper Reports progress.
+   * @param reportProgress Reports progress.
    * @param taskResult Stores the first bulk-I/O error from all feature workers.
-   * @pre Referenced stores, mask, and progress helper outlive this worker.
+   * @pre Referenced stores, mask, and progress callback outlive this worker.
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
                                const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
                                AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
-                               std::atomic<usize>& overflow, ProgressMessageHelper& progressMessageHelper, CopyFromArray::ParallelTaskResult& taskResult)
+                               std::atomic<usize>& overflow, const std::function<void(usize)>& reportProgress, CopyFromArray::ParallelTaskResult& taskResult)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -125,7 +126,7 @@ public:
   , m_FeatureIdsStore(featureIdsStore)
   , m_Mask(mask)
   , m_Overflow(overflow)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ReportProgress(reportProgress)
   , m_TaskResult(taskResult)
   {
   }
@@ -144,14 +145,14 @@ public:
    * @param mostPopulatedStore Receives most-populated bin data.
    * @param mask Selects accepted tuples.
    * @param overflow Counts values outside configured ranges.
-   * @param progressMessageHelper Reports progress.
+   * @param reportProgress Reports progress.
    * @param taskResult Stores the first bulk-I/O error from all feature workers.
-   * @pre Referenced stores, mask, and progress helper outlive this worker.
+   * @pre Referenced stores, mask, and progress callback outlive this worker.
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
                                bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
                                AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow,
-                               ProgressMessageHelper& progressMessageHelper, CopyFromArray::ParallelTaskResult& taskResult)
+                               const std::function<void(usize)>& reportProgress, CopyFromArray::ParallelTaskResult& taskResult)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -165,7 +166,7 @@ public:
   , m_FeatureIdsStore(featureIdsStore)
   , m_Mask(mask)
   , m_Overflow(overflow)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ReportProgress(reportProgress)
   , m_TaskResult(taskResult)
   {
   }
@@ -195,8 +196,6 @@ public:
    */
   void compute(usize start, usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
-
     const usize numTuples = m_FeatureIdsStore.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
@@ -384,13 +383,12 @@ public:
       progressCount++;
       if(progressCount > progressIncrement)
       {
-        progressMessenger.sendProgressMessage(progressCount,
-                                              [&](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
+        m_ReportProgress(progressCount);
         progressCount = 0;
       }
     }
 
-    progressMessenger.sendProgressMessage(progressCount);
+    m_ReportProgress(progressCount);
   }
 
 private:
@@ -407,7 +405,7 @@ private:
   AbstractDataStore<uint64>& m_MostPopulatedStore;
   NeighborList<Type>* m_ModalBinRangesList;
   std::atomic<usize>& m_Overflow;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  const std::function<void(usize)>& m_ReportProgress;
   CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
 
@@ -1382,6 +1380,7 @@ ComputeArrayHistogramByFeature::ComputeArrayHistogramByFeature(DataStructure& da
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -1408,7 +1407,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
   }
   const usize numFeatures = featureCountResult.value();
 
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
 
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
@@ -1456,8 +1455,8 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, numFeatures);
       const bool histFullRange = !m_InputValues->UserDefinedRange;
-      ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-      progressMessageHelper.setMaxProgresss(numFeatures);
+      const std::function<void(usize)> reportProgress = [this](usize count) { sendThreadSafeProgressMessage(count); };
+      m_Throttle.reset(numFeatures, "Calculating feature histograms");
       CopyFromArray::ParallelTaskResult taskResult;
 
       if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
@@ -1469,12 +1468,12 @@ Result<> ComputeArrayHistogramByFeature::operator()()
         }
         ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, modalBinRanges, inputData,
                                                                                         binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange, m_ShouldCancel,
-                                                                                        numBins, counts, mostPopulated, mask, overflow, progressMessageHelper, taskResult);
+                                                                                        numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       else
       {
         ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, inputData, binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange,
-                               histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, progressMessageHelper, taskResult);
+                               histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       return taskResult.takeResult();
     };
@@ -1511,13 +1510,19 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       return executeResult;
     }
 
-    messageHelper.sendMessage(fmt::format("Calculated {} feature histograms!", numFeatures));
+    messageHelper.sendInfoMessage(fmt::format("Calculated {} feature histograms!", numFeatures));
 
     if(overflow > 0)
     {
-      messageHelper.sendMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
+      messageHelper.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
     }
   }
 
   return {};
+}
+
+void ComputeArrayHistogramByFeature::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }

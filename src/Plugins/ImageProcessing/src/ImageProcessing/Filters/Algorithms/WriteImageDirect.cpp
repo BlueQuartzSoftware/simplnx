@@ -402,7 +402,7 @@ Result<> WriteImageDirect::operator()()
 
   // Encode and atomically commit one independently named slice file.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
     // Add an index only when the selection produces multiple slices.
     fs::path slicePath = parent / fmt::format("{}{}", stem.string(), ext.string());
     if(sliceCount > 1)

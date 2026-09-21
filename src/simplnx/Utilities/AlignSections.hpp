@@ -6,8 +6,11 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include "simplnx/simplnx_export.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -58,7 +61,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  MessageHelper& getMessageHelper();
+  const IFilter::MessageHandler& getMessageHelper();
 
 protected:
   /**
@@ -80,7 +83,8 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  MessageHelper m_MessageHelper;
+  std::mutex m_MessageMutex;
+  const IFilter::MessageHandler m_MessageHelper;
 };
 
 } // namespace nx::core

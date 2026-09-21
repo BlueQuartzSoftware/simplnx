@@ -525,7 +525,7 @@ Result<> WriteVtkStructuredPoints::operator()()
 
   for(const auto& arrayPath : m_InputValues->SelectedDataArrayPaths)
   {
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Writing {}", arrayPath.toString())});
+    m_MessageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Writing {}", arrayPath.toString())});
     auto& dataArray = m_DataStructure.getDataRefAs<IDataArray>(arrayPath);
     auto writeResult = DispatchAlgorithm<WriteVtkDataDirect, WriteVtkDataScanline>({&dataArray}, outStrm, dataArray, m_InputValues->WriteBinaryFile, vtkOutPath, arrayPath, m_ShouldCancel);
     if(writeResult.invalid())

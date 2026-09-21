@@ -422,7 +422,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Saving converted files");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Saving converted files");
   result = MergeResults(converter.commitAllFiles(), result);
 
   return result;

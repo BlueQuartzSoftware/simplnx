@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <limits>
 
@@ -195,8 +195,8 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   }
 
   // Explicit NaN keeps no-contribution features independent of FP settings.
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  ThrottledMessageHandler throttledMessenger(messageHelper);
   std::vector<float32> featureAverages(totalFeatures, 0.0f);
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
@@ -204,7 +204,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Computing per-feature average {:.2f}% completed", CalculatePercentComplete(featureId, totalFeatures)); });
+    throttledMessenger.queueMessage([&] { return fmt::format("Computing per-feature average {:.2f}% completed", CalculatePercentComplete(featureId, totalFeatures)); });
 
     if(counts[featureId] == 0)
     {

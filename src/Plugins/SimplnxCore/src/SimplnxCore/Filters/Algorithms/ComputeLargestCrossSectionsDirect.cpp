@@ -241,7 +241,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
     areaScalar = spacing[1] * spacing[2];
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", numPlanes));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", numPlanes));
 
   const auto* inMemoryFeatureIds = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
   auto* inMemoryLargestCrossSections = dynamic_cast<Float32DataStore*>(&largestCrossSectStore);

@@ -177,7 +177,7 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
       break;
     }
 
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), outputIndex + 1, outputArrayPaths.size())});
+    messageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), outputIndex + 1, outputArrayPaths.size())});
     auto& outputArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPaths[outputIndex]);
     auto& outputStore = dynamic_cast<DataStore<T>&>(outputArray.getDataStoreRef());
     const usize outputSplitCount = outputArray.getTupleShape()[splitDimension];
@@ -225,7 +225,7 @@ Result<> SplitDataArraysScanlineTyped(DataStructure& dataStructure, const DataPa
 
   for(usize outputIndex = 0; outputIndex < outputArrayPaths.size(); outputIndex++)
   {
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), outputIndex + 1, outputArrayPaths.size())});
+    messageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Splitting data array '{}' by tuple ({}/{})", inputArrayPath.toString(), outputIndex + 1, outputArrayPaths.size())});
   }
 
   // Outer-first traversal keeps source reads in ascending row-major order.

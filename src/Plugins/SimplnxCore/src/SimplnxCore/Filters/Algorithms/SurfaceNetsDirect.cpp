@@ -548,7 +548,7 @@ Result<> SurfaceNetsDirect::operator()()
   Result<> windingResult = {};
   if(m_InputValues->RepairTriangleWinding)
   {
-    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triangleGeom.findElementNeighbors(true);
     const auto optionalId = triangleGeom.getElementNeighborsId();
     if(!optionalId.has_value())
@@ -557,7 +557,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
     const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-    m_MessageHandler("Repairing Windings...");
+    m_MessageHandler.sendInfoMessage("Repairing Windings...");
 
     windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
                                                             m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);

@@ -18,6 +18,7 @@ using namespace nx::core;
 RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 , m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
 {
@@ -35,6 +36,7 @@ Result<> RotateEulerRefFrame::operator()()
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
   auto& eulerStore = eulerAngles.getDataStoreRef();
   const usize totalTuples = eulerAngles.getNumberOfTuples();
+  m_Throttle.reset(totalTuples, "Rotating Euler reference frame");
 
   FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
   const float32 axisMagnitude = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
@@ -79,6 +81,7 @@ Result<> RotateEulerRefFrame::operator()()
     {
       return writeResult;
     }
+    sendThreadSafeProgressMessage(count);
   }
 
   return {};
@@ -87,4 +90,10 @@ Result<> RotateEulerRefFrame::operator()()
 bool RotateEulerRefFrame::shouldCancel() const
 {
   return m_ShouldCancel;
+}
+
+void RotateEulerRefFrame::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }

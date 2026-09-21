@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,9 +45,10 @@ constexpr usize k_CancelPollStride = 1ULL << 20;
  * @param messageHelper Throttled progress messages.
  * @return The number of vacated cells seen in this pass. Zero means the fill is complete.
  */
-usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel,
+                        const IFilter::MessageHandler& messageHelper)
 {
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler throttledMessenger(messageHelper);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -74,7 +75,7 @@ usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      throttledMessenger.queueMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
       progressCounter = 0;
     }
     progressCounter++;
@@ -284,10 +285,10 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.ImageGeometryPath);
   auto& featureIds = dataStructure.getDataAs<Int32Array>(args.FeatureIdsArrayPath)->getDataStoreRef();
 
-  MessageHelper messageHelper(messageHandler);
+  const IFilter::MessageHandler& messageHelper = messageHandler;
   Result<> result;
 
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+  messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
 
   // Tuple 0 is the unused feature, so fewer than two tuples means there is no feature to keep.
   if(flaggedFeatures.size() < 2)
@@ -349,7 +350,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     while(true)
     {
       count++;
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+      messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
       std::fill(neighbors.begin(), neighbors.end(), -1);
       const usize unresolvedCellCount = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
 
@@ -362,7 +363,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
         break;
       }
 
-      messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCellCount)});
+      messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCellCount)});
       const usize filledCellCount = FindVoxelArrays(featureIds, neighbors, voxelArrays, shouldCancel);
 
       if(shouldCancel)
@@ -389,7 +390,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+  messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
   Result<> removeResult = RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel);
   if(removeResult.invalid())
   {

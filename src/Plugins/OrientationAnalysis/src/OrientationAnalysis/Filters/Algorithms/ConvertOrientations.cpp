@@ -144,7 +144,7 @@ void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
   }
 
   const auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalPoints)) * 100.0f);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
   m_InitialPoint = now;
 }
 
@@ -166,8 +166,8 @@ Result<> ConvertOrientations::operator()()
   const usize totalPoints = inputArray.getNumberOfTuples();
   m_TotalPoints = totalPoints;
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->InputType)],
-                                                             k_TypeNames[static_cast<usize>(m_InputValues->OutputType)]));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->InputType)],
+                                                                         k_TypeNames[static_cast<usize>(m_InputValues->OutputType)]));
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, totalPoints);

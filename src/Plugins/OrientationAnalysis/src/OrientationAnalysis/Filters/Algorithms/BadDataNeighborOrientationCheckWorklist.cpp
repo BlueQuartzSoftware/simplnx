@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -82,8 +82,8 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   // The count array uses four bytes per voxel and retains cascade state separately from the mask.
   std::vector<int32> neighborCount(totalPoints, 0);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  ThrottledMessageHandler throttledMessenger(messageHelper);
 
   // Initialize matching-neighbor counts before worklist propagation.
   for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -92,7 +92,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    throttledMessenger.queueMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
     if(!maskCompare->isTrue(voxelIndex))
     {
       ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);

@@ -92,7 +92,7 @@ public:
    * @brief Sends a throttled progress message.
    * @param counter Specifies completed feature estimates.
    *
-   * The mutex serializes counter and time updates from vMF and Watson workers.
+   * The mutex serializes throttle updates from vMF and Watson workers.
    */
   void sendThreadSafeProgressMessage(usize counter);
 

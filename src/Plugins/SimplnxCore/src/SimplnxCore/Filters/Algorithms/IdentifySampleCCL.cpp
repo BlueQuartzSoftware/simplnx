@@ -788,7 +788,7 @@ struct IdentifySampleSliceCCLFunctor
       {
         return {};
       }
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixed));
+      messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixed));
       if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
       {
         auto readResult = store.copyIntoBuffer(static_cast<usize>(fixed) * planeSize, nonstd::span<T>(planeBuffer.get(), planeSize));

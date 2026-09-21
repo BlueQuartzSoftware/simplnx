@@ -8,9 +8,9 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/SliceBufferedTransfer.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -71,6 +71,7 @@ NeighborOrientationCorrelation::NeighborOrientationCorrelation(DataStructure& da
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -119,8 +120,7 @@ Result<> NeighborOrientationCorrelation::operator()()
   std::array<int32, k_NumFaceNeighbors> neighborSimCount = {};
   const int32 startLevel = 6;
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  auto& throttledMessenger = m_Throttle;
 
   // Z-slice buffering: read 3 adjacent Z-slices of the most-accessed arrays
   // into local memory to eliminate OOC chunk thrashing. The algorithm accesses
@@ -224,7 +224,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
           if(processedVoxels % 10000 == 0)
           {
-            throttledMessenger.sendThrottledMessage([&]() {
+            throttledMessenger.queueMessage([&]() {
               return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
                                  CalculatePercentComplete(processedVoxels, totalVoxels));
             });
@@ -354,4 +354,10 @@ Result<> NeighborOrientationCorrelation::operator()()
   }
 
   return {};
+}
+
+void NeighborOrientationCorrelation::sendThreadSafeProgressMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.trySendMessage(message);
 }

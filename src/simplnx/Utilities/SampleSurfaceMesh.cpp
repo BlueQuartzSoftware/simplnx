@@ -129,7 +129,7 @@ struct SampleSlicesFunctor
    */
   template <typename OutputT, typename FaceLabelsT>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
-                      const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+                      const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper)
   {
     const usize numFeatures = faceLists.size();
 
@@ -149,11 +149,8 @@ struct SampleSlicesFunctor
     const usize cellsPerSlice = gridDims.getX() * gridDims.getY();
     const usize numSlices = gridDims.getZ();
 
-    messageHelper.sendMessage("Sampling triangle geometry ...");
-    ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-    progressMessageHelper.setMaxProgresss(numSlices);
-    progressMessageHelper.setProgressMessageTemplate("Sampling triangle geometry: {:.1f}%");
-    auto progressMessenger = progressMessageHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    messageHelper.sendInfoMessage("Sampling triangle geometry ...");
+    algorithm->resetProgress(numSlices, "Sampling triangle geometry");
 
     // Reuse point and output buffers whose size is proportional to one XY slice.
     std::vector<Point3Df> slicePoints(cellsPerSlice);
@@ -186,7 +183,7 @@ struct SampleSlicesFunctor
         return copyResult;
       }
 
-      progressMessenger.sendProgressMessage(1);
+      algorithm->sendThreadSafeProgressMessage(1);
     }
 
     if(overflowHit)
@@ -196,7 +193,7 @@ struct SampleSlicesFunctor
                                DataTypeToHumanString(GetDataType<FaceLabelsT>()), DataTypeToHumanString(polyIds.getDataType()), numFeatures - 1, DataTypeToHumanString(polyIds.getDataType())));
     }
 
-    messageHelper.sendMessage("Complete");
+    messageHelper.sendInfoMessage("Complete");
 
     return {};
   }
@@ -221,12 +218,12 @@ struct SampleSurfaceMeshFunctor
    */
   template <typename T>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const IDataArray& iFaceLabels, IDataArray& polyIds, const std::atomic_bool& shouldCancel,
-                      MessageHelper& messageHelper)
+                      const IFilter::MessageHandler& messageHelper)
   {
     const AbstractDataStore<T>& faceLabelsSM = dynamic_cast<const DataArray<T>&>(iFaceLabels).getDataStoreRef();
     const usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-    messageHelper.sendMessage("Counting number of Features...");
+    messageHelper.sendInfoMessage("Counting number of Features...");
 
     // The largest positive face label determines the feature-list count.
     T g1 = 0, g2 = 0;
@@ -254,7 +251,7 @@ struct SampleSurfaceMeshFunctor
     usize numFeatures = maxFeatureId + 1;
 
     std::vector<std::vector<T>> faceLists(numFeatures);
-    messageHelper.sendMessage("Counting number of triangle faces per feature ...");
+    messageHelper.sendInfoMessage("Counting number of triangle faces per feature ...");
 
     // Size each feature list from its positive label occurrences.
     for(usize i = 0; i < numFaces; i++)
@@ -276,7 +273,7 @@ struct SampleSurfaceMeshFunctor
       return {};
     }
 
-    messageHelper.sendMessage("Allocating triangle faces per feature ...");
+    messageHelper.sendInfoMessage("Allocating triangle faces per feature ...");
 
     // Track the next insertion position for each pre-sized face list.
     std::vector<int32> linkLoc(numFaces, 0);
@@ -337,7 +334,7 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::at
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(m_MessageHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -352,5 +349,22 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.FeatureIdsArrayPath);
 
   // Parameter validation restricts face labels to integer types.
-  return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHelper);
+  return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHandler);
+}
+
+const IFilter::MessageHandler& SampleSurfaceMesh::getMessageHandler() const
+{
+  return m_MessageHandler;
+}
+
+void SampleSurfaceMesh::resetProgress(usize maxProgress, std::string label)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.reset(maxProgress, std::move(label));
+}
+
+void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }

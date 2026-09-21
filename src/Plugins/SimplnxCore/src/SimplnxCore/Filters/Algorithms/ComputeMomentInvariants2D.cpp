@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <array>
@@ -527,7 +527,7 @@ public:
     // NOLINTNEXTLINE(modernize-avoid-c-arrays) -- The outer extent is runtime-sized; each fixed-size inner sequence is a std::array.
     auto rawMoments = std::make_unique<std::array<double, k_MatrixDimension * k_MatrixDimension>[]>(numFeatures);
     auto featureIdsBuffer = std::make_unique<std::array<int32, k_CellChunkSize>>();
-    MessageHelper messageHelper(m_MessageHandler);
+    ThrottledMessageHandler messageHelper(m_MessageHandler);
 
     for(usize cellOffset = 0; cellOffset < numCells; cellOffset += k_CellChunkSize)
     {

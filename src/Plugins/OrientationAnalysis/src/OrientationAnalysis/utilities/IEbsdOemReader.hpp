@@ -92,7 +92,7 @@ public:
         return {};
       }
 
-      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Importing Index {}", currentScanName)});
+      m_MessageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Importing Index {}", currentScanName)});
 
       Result<> readResults = readData(currentScanName);
       if(readResults.invalid())

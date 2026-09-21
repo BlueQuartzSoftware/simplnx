@@ -8,7 +8,6 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ExternalEquivalence.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/UnionFind.hpp"
 
 #include <algorithm>
@@ -985,7 +984,7 @@ Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquiva
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHelper(mesgHandler)
+, m_MessageHandler(mesgHandler)
 {
 }
 
@@ -1056,7 +1055,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
   if(hasNonContiguousFeature)
   {
-    m_MessageHelper.sendMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
+    m_MessageHandler.sendInfoMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
   }
 
   if(m_ShouldCancel)
@@ -1084,7 +1083,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   }
 
   m_FoundFeatures = finalFeatureCount;
-  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
+  m_MessageHandler.sendInfoMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
 
   return {};
 }
@@ -1106,6 +1105,6 @@ bool SegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
 
 Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
 {
-  m_MessageHelper.sendMessage("Randomizing Feature Ids");
+  m_MessageHandler.sendInfoMessage("Randomizing Feature Ids");
   return ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

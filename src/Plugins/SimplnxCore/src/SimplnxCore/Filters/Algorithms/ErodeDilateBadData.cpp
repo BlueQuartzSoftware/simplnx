@@ -19,6 +19,7 @@ ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilt
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -281,4 +282,10 @@ Result<> ErodeDilateBadData::operator()()
   }
 
   return {};
+}
+
+void ErodeDilateBadData::sendThreadSafeProgressMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.trySendMessage(message);
 }

@@ -5,7 +5,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -27,6 +26,7 @@ RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStruct
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -125,8 +125,8 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
                                                                           const Int32AbstractDataStore* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
                                                                           Error& errorReturn)
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  messageHelper.sendMessage(fmt::format("Removing small features...."));
+  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  messageHelper.sendInfoMessage(fmt::format("Removing small features...."));
 
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
@@ -212,4 +212,10 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
     }
   }
   return {std::move(activeObjects)};
+}
+
+void RequireMinimumSizeFeatures::sendThreadSafeProgressMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.trySendMessage(message);
 }

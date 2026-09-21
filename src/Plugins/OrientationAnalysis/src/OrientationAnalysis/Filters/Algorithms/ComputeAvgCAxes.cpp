@@ -89,7 +89,7 @@ Result<> ComputeAvgCAxes::operator()()
   auto cellPhasesChunk = std::make_unique<int32[]>(k_ChunkSize);
   auto quatsChunk = std::make_unique<float32[]>(k_ChunkSize * 4);
 
-  m_MessageHandler({IFilter::Message::Type::Info, "Computing cell contributions"});
+  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing cell contributions"});
 
   usize tupleIdx = 0;
   while(tupleIdx < totalPoints)
@@ -168,7 +168,7 @@ Result<> ComputeAvgCAxes::operator()()
     tupleIdx += chunkTuples;
   }
 
-  m_MessageHandler({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
+  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
 
   for(usize featureIdx = 0; featureIdx < totalFeatures; featureIdx++)
   {

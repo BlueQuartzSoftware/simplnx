@@ -8,7 +8,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -763,7 +762,7 @@ Result<> ComputeArrayHistogram::operator()()
     maskArray = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskPath.value());
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
 
   for(usize index = 0; index < m_InputValues->SelectedArrayPaths.size(); index++)
   {
@@ -791,7 +790,7 @@ Result<> ComputeArrayHistogram::operator()()
     }
     if(overflow > 0)
     {
-      messageHelper.sendMessage(fmt::format("{} values not categorized into bin for array {}", overflow, inputData.getName()));
+      messageHelper.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow, inputData.getName()));
     }
   }
 

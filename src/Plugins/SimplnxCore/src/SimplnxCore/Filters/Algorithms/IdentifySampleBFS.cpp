@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -42,8 +42,8 @@ struct IdentifySampleFunctor
   {
     constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimsStateT>::k_FaceNeighborCount;
 
-    MessageHelper messageHelper(messageHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    const IFilter::MessageHandler& messageHelper = messageHandler;
+    ThrottledMessageHandler throttledMessenger(messageHelper);
 
     ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -74,7 +74,7 @@ struct IdentifySampleFunctor
       for(int64 yLoopIdx = 0; yLoopIdx < dims[1]; yLoopIdx++)
       {
         const int64 yStride = dims[0] * yLoopIdx;
-        throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+        throttledMessenger.queueMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
         if(shouldCancel)
         {
           return;
@@ -137,14 +137,14 @@ struct IdentifySampleFunctor
     // Fill false components that do not touch the image boundary.
     if(fillHoles)
     {
-      messageHelper.sendMessage("Filling holes in sample...");
+      messageHelper.sendInfoMessage("Filling holes in sample...");
       for(int64 zLoopIdx = 0; zLoopIdx < dims[2]; zLoopIdx++)
       {
         const int64 zStride = dims[0] * dims[1] * zLoopIdx;
         for(int64 yLoopIdx = 0; yLoopIdx < dims[1]; yLoopIdx++)
         {
           const int64 yStride = dims[0] * yLoopIdx;
-          throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+          throttledMessenger.queueMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
           if(shouldCancel)
           {
             return;

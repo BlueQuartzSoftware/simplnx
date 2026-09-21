@@ -3,7 +3,7 @@
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <chrono>
 #include <iomanip>
@@ -64,7 +64,7 @@ struct PrintNeighborList
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(100 * static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
+          mesgHandler.sendMessage(IFilter::Message::Type::Info, string);
           start = now;
           if(shouldCancel)
           {
@@ -103,7 +103,7 @@ struct PrintNeighborList
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
+          mesgHandler.sendMessage(IFilter::Message::Type::Info, string);
           start = now;
           if(shouldCancel)
           {
@@ -176,8 +176,8 @@ struct PrintDataArray
       tuplesPerLine = 1;
     }
 
-    MessageHelper messageHelper(mesgHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    const IFilter::MessageHandler& messageHelper = mesgHandler;
+    ThrottledMessageHandler throttledMessenger(messageHelper);
 
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
@@ -197,7 +197,7 @@ struct PrintDataArray
       for(usize localTuple = 0; localTuple < tupleCount; localTuple++)
       {
         const usize tuple = tupleOffset + localTuple;
-        throttledMessenger.sendThrottledMessage(
+        throttledMessenger.queueMessage(
             [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
         if(shouldCancel)
         {
@@ -321,7 +321,7 @@ Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStri
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       auto string = fmt::format("Processing {}: {}% completed", inputStringArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
+      mesgHandler.sendMessage(IFilter::Message::Type::Info, string);
       start = now;
       if(shouldCancel)
       {
@@ -580,7 +580,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputFilePath = atomicFile.tempFilePath().string();
-    mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
+    mesgHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
     // Close the stream before AtomicFile renames its temporary file. Windows does
     // not permit that rename while this stream still owns the file handle.
@@ -640,7 +640,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                            const std::string& delimiter, bool includeIndex, bool includeHeaders, size_t componentsPerLine)
 {
-  mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
+  mesgHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
 
   auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
   if(dataArray != nullptr)
@@ -737,7 +737,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       auto string = fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(tupleIndex) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
+      mesgHandler.sendMessage(IFilter::Message::Type::Info, string);
       start = now;
       if(shouldCancel)
       {

@@ -53,9 +53,9 @@ public:
    */
   void operator()() const
   {
-    MessageHelper& messageHelper = m_Filter->getMessageHelper();
+    const IFilter::MessageHandler& messageHelper = m_Filter->getMessageHelper();
 
-    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+    ThrottledMessageHandler progressMessenger(messageHelper);
 
     T var = static_cast<T>(0);
 
@@ -63,7 +63,7 @@ public:
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      progressMessenger.queueMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
       if(m_Filter->getCancel())
       {
         return;
@@ -155,8 +155,8 @@ public:
    */
   Result<> operator()() const
   {
-    MessageHelper& messageHelper = m_Filter->getMessageHelper();
-    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+    const IFilter::MessageHandler& messageHelper = m_Filter->getMessageHelper();
+    ThrottledMessageHandler progressMessenger(messageHelper);
 
     auto& dataStore = m_DataArray.getDataStoreRef();
     const usize numComp = m_DataArray.getNumberOfComponents();
@@ -172,7 +172,7 @@ public:
 
     for(usize i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      progressMessenger.queueMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
       if(m_Filter->getCancel())
       {
         return {};
@@ -256,7 +256,10 @@ AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_boo
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(mesgHandler)
+, m_MessageHelper{[this](const IFilter::Message& message) {
+  std::lock_guard<std::mutex> guard(m_MessageMutex);
+  m_MessageHandler.sendMessage(message);
+}}
 {
 }
 
@@ -267,7 +270,7 @@ const std::atomic_bool& AlignSections::getCancel()
   return m_ShouldCancel;
 }
 
-MessageHelper& AlignSections::getMessageHelper()
+const IFilter::MessageHandler& AlignSections::getMessageHelper()
 {
   return m_MessageHelper;
 }
@@ -320,7 +323,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       return {};
     }
 
-    m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
+    m_MessageHelper.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
     if(cellArray == nullptr)
     {

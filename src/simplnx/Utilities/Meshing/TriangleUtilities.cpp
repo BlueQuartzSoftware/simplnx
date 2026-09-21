@@ -1481,7 +1481,8 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - progressStart).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", seed.Feature, maxFeature, 100.0f * static_cast<float>(seed.Feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler.sendInfoMessage(
+            fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", seed.Feature, maxFeature, 100.0f * static_cast<float>(seed.Feature) / static_cast<float>(maxFeature + 1)));
         progressStart = std::chrono::steady_clock::now();
       }
 

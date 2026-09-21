@@ -781,7 +781,7 @@ Result<> WriteStlFile::operator()()
       }
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
+      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds, featureId,
                                                featureTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
@@ -826,7 +826,7 @@ Result<> WriteStlFile::operator()()
       }
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
+      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)},
                                                triangles, vertices, featureIds, featureId, trianglesByFeature.at(featureId), m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
@@ -860,7 +860,7 @@ Result<> WriteStlFile::operator()()
       }
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
+      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices, partNumbers,
                                                currentPartNumber, partTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;

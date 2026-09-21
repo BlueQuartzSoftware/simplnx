@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <vector>
 
@@ -85,7 +85,7 @@ public:
    * @param message Message to send.
    * @pre Call only from a worker while operator() is active.
    *
-   * A mutex serializes access because the throttle is not thread-safe. The stored pointer refers to operator() stack state.
+   * A mutex serializes access to the owned throttle because it is not thread-safe.
    */
   void sendThreadSafeProgressMessage(const std::string& message);
 
@@ -98,8 +98,8 @@ private:
   // The mutex serializes worker access to the non-thread-safe throttle.
   mutable std::mutex m_ProgressMessage_Mutex;
 
-  // This pointer borrows operator() stack state and is valid only while that method is active.
-  ThrottledMessenger* m_ThrottledMessengerPtr = nullptr;
+  // Throttles progress updates from array workers.
+  ThrottledMessageHandler m_Throttle;
 };
 
 /**

@@ -336,7 +336,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       }
       curFeatureCount = floodFillResult.value();
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
+      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       int32 featureCount1 = curFeatureCount;
       int32 featureCount2 = refFeatureCount;
@@ -479,7 +479,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       }
       curFeatureCount = floodFillResult.value();
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
+      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       int32 featureCount1 = curFeatureCount;
       int32 featureCount2 = refFeatureCount;
