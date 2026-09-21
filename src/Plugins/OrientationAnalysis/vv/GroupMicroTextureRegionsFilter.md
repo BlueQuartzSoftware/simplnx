@@ -7,7 +7,7 @@
 | DREAM3D 6.5.171 equivalent | `GroupMicroTextureRegions` (private filter; not registered for pipeline use) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-08-27 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-08-27 Second engineer: Joey Kleingers, 2026-09-20 |
 
 ## At a glance
 
