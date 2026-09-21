@@ -64,7 +64,7 @@ DataStructure CreateImageDataStructure(const SizeVec3& dimensions, const std::ve
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_FeatureIdsPath, cellShape, {1});
   auto* featureIdsArray = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
   REQUIRE(featureIdsArray != nullptr);
   REQUIRE(featureIds.size() == featureIdsArray->getNumberOfTuples());
@@ -102,7 +102,7 @@ DataStructure CreateRectGridDataStructure(const SizeVec3& dimensions, const std:
   REQUIRE(cellData != nullptr);
   rectGrid->setCellData(*cellData);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_FeatureIdsPath, cellShape, {1});
   auto* featureIdsArray = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
   REQUIRE(featureIdsArray != nullptr);
   REQUIRE(featureIds.size() == featureIdsArray->getNumberOfTuples());
@@ -575,7 +575,7 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Tuple Count Mismatch", "[Si
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
-  auto wrongFeatureIdsStore = DataStoreUtilities::CreateDataStore<int32>({3}, {1}, IDataAction::Mode::Execute);
+  auto wrongFeatureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_WrongFeatureIdsPath, {3}, {1});
   REQUIRE(Int32Array::Create(dataStructure, k_WrongFeatureIdsPath.getTargetName(), wrongFeatureIdsStore) != nullptr);
   const WriteOnScaleTableFileFilter filter;
   Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Tuple_Mismatch");

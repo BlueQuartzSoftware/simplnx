@@ -226,7 +226,8 @@ struct CopyFeatureIds
   FeatureIdStats operator()(const IDataArray& sourceArray, DataStructure& destinationDataStructure, const DataObject::IdType& destinationParentId, const ShapeType& destinationTupleShape) const
   {
     const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
-    auto destinationStore = DataStoreUtilities::CreateDataStore<T>(destinationTupleShape, typedSource.getComponentShape(), IDataAction::Mode::Execute);
+    auto destinationStore =
+        DataStoreUtilities::CreateDataStore<T>(destinationDataStructure, k_ScratchCellDataPath.createChildPath(sourceArray.getName()), destinationTupleShape, typedSource.getComponentShape());
     auto* destinationArray = DataArray<T>::Create(destinationDataStructure, sourceArray.getName(), destinationStore, destinationParentId);
     if(destinationArray == nullptr)
     {
