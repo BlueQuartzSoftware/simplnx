@@ -48,7 +48,7 @@ const DataPath k_OutputPhaseNamesPath = k_OutputEnsembleDataPath.createChildPath
 template <typename T>
 DataArray<T>& CreateArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape, const std::vector<T>& values, DataObject::IdType parentId)
 {
-  auto store = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
   auto* array = DataArray<T>::Create(dataStructure, path.getTargetName(), store, parentId);
   REQUIRE(array != nullptr);
   REQUIRE(values.size() == array->getSize());
@@ -218,7 +218,9 @@ TEST_CASE("SimplnxCore::WriteDAMASKDREAM3DFileFilter: Preflight Errors", "[Simpl
   SECTION("Feature Tuple Count")
   {
     DataStructure dataStructure = CreateDataStructure();
-    dataStructure.getDataRefAs<Int32Array>(k_SourceFeaturePhasesPath).resizeTuples({2});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SourceFeaturePhasesPath));
+    auto resizeResult = dataStructure.getDataRefAs<Int32Array>(k_SourceFeaturePhasesPath).resizeTuples({2});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     Arguments args = CreateArguments(outputFile, 1, false);
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
