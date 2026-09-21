@@ -18,6 +18,8 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -785,9 +787,14 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
   REQUIRE(rectGridGeomPtr != nullptr);
   rectGridGeomPtr->setDimensions({2, 2, 2});
 
-  auto* xBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "X Bounds", {3}, {1});
-  auto* yBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Y Bounds", {3}, {1});
-  auto* zBoundsPtr = DataArray<float32>::CreateWithStore<EmptyDataStore<float32>>(dataStructure, "Z Bounds", {3}, {1});
+  const auto createBounds = [&dataStructure](const std::string& name) {
+    auto result = Float32Array::CreatePlanned(dataStructure, name, {3}, {1}, "");
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    return result.value();
+  };
+  auto* xBoundsPtr = createBounds("X Bounds");
+  auto* yBoundsPtr = createBounds("Y Bounds");
+  auto* zBoundsPtr = createBounds("Z Bounds");
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
@@ -802,16 +809,37 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
   REQUIRE_FALSE(geom.contains("origin"));
 }
 
-TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridEmptyOutOfCoreBounds")
+TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPlannedOutOfCoreBounds")
 {
   DataStructure dataStructure;
   auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, "Rect Grid");
   REQUIRE(rectGridGeomPtr != nullptr);
   rectGridGeomPtr->setDimensions({2, 2, 2});
 
-  const auto createBounds = [&dataStructure](const std::string& name) {
-    auto store = std::make_shared<EmptyDataStore<float32>>(ShapeType{3}, ShapeType{1}, "out_of_core");
-    return DataArray<float32>::Create(dataStructure, name, std::move(store));
+  class PlaceholderIOManager : public IDataIOManager
+  {
+  public:
+    PlaceholderIOManager()
+    {
+      addDataStoreCreationFnc(formatName(), [](DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
+        throw std::runtime_error("Hierarchy export must not allocate a value store");
+      });
+    }
+
+    std::string formatName() const override
+    {
+      return "hierarchy-placeholder-test";
+    }
+  };
+  auto manager = std::make_shared<PlaceholderIOManager>();
+  auto registrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
+  SIMPLNX_RESULT_REQUIRE_VALID(registrationResult);
+
+  const auto createBounds = [&dataStructure, &manager](const std::string& name) {
+    auto result = Float32Array::CreatePlanned(dataStructure, name, {3}, {1}, manager->formatName());
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(result.value()->getIDataStoreRef().getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
+    return result.value();
   };
   auto* xBoundsPtr = createBounds("X Bounds");
   auto* yBoundsPtr = createBounds("Y Bounds");
@@ -824,7 +852,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridEmptyOutOfCoreBounds")
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
   const auto& rectGridNode = findNode(json.at("objects"), "Rect Grid");
   REQUIRE_FALSE(rectGridNode.at("geometry").contains("origin"));
-  REQUIRE(findNode(json.at("objects"), "X Bounds").at("store_type").get<std::string>() == "EmptyOutOfCore");
+  REQUIRE(findNode(json.at("objects"), "X Bounds").at("store_type").get<std::string>() == "Empty");
 }
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
@@ -897,10 +925,12 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometryPaths")
   REQUIRE(hexGeometry.at("polyhedron_data_path").get<std::string>() == "Hex Geometry/Polyhedron Data");
 }
 
-TEST_CASE("DataStructure::exportHierarchyAsJson::NullStoreRequestUsesEmptyStore")
+TEST_CASE("DataStructure::exportHierarchyAsJson::PlannedScalarStore")
 {
   DataStructure dataStructure;
-  auto* dataArrayPtr = DataArray<int32>::Create(dataStructure, "Array", std::shared_ptr<DataArray<int32>::store_type>{});
+  auto arrayResult = Int32Array::CreatePlanned(dataStructure, "Array", {}, {}, "");
+  SIMPLNX_RESULT_REQUIRE_VALID(arrayResult);
+  auto* dataArrayPtr = arrayResult.value();
   REQUIRE(dataArrayPtr != nullptr);
   REQUIRE(dataArrayPtr->getIDataStore() != nullptr);
 
@@ -909,8 +939,8 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NullStoreRequestUsesEmptyStore"
   REQUIRE(arrayNode.at("store_type").get<std::string>() == "Empty");
   REQUIRE(arrayNode.at("tuple_shape") == nlohmann::json::array());
   REQUIRE(arrayNode.at("component_shape") == nlohmann::json::array());
-  REQUIRE(arrayNode.at("num_tuples").get<uint64>() == 0);
-  REQUIRE(arrayNode.at("num_components").get<uint64>() == 0);
+  REQUIRE(arrayNode.at("num_tuples").get<uint64>() == 1);
+  REQUIRE(arrayNode.at("num_components").get<uint64>() == 1);
 }
 
 namespace
