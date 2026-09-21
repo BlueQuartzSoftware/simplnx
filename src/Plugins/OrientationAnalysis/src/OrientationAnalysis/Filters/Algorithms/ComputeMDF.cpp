@@ -114,7 +114,10 @@ Result<> ComputeMDF::operator()()
     kde.finalize();
 
     const usize mdfSize = orientationOps[crystalStructuresRef[ensembleIndex]]->getMDFSize();
-    mdfArrayRef.getIDataStoreRef().resizeTuples({mdfSize});
+    if(auto resizeResult = mdfArrayRef.getIDataStoreRef().resizeTuples({mdfSize}); resizeResult.invalid())
+    {
+      return resizeResult;
+    }
 
     DataPath angleAMPath = phaseGroupPath.createChildPath(k_AngleDistributionAMName);
     auto& anglesRef = m_DataStructure.getDataRefAs<Float64Array>(angleAMPath.createChildPath(k_AnglesArrayName)).getDataStoreRef();

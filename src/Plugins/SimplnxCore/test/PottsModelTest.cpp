@@ -62,7 +62,7 @@ TestData CreateTestData(const SizeVec3& dimensions, const std::vector<int32>& fe
   auto* cellData = AttributeMatrix::Create(testData.dataStructure, k_CellDataPath.getTargetName(), cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(testData.dataStructure, k_FeatureIdsPath, cellShape, {1});
   auto* featureIdsArray = Int32Array::Create(testData.dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
   REQUIRE(featureIdsArray != nullptr);
   REQUIRE(featureIds.size() == featureIdsArray->getNumberOfTuples());
@@ -76,11 +76,11 @@ void AddGrainConstantCellData(DataStructure& dataStructure, const ShapeType& tup
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
   const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath);
 
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(tupleShape, {1}, IDataAction::Mode::Execute);
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, tupleShape, {1});
   auto* phases = Int32Array::Create(dataStructure, k_PhasesPath.getTargetName(), phasesStore, cellData.getId());
   REQUIRE(phases != nullptr);
 
-  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_EulerAnglesPath, tupleShape, {3});
   auto* eulerAngles = Float32Array::Create(dataStructure, k_EulerAnglesPath.getTargetName(), eulerAnglesStore, cellData.getId());
   REQUIRE(eulerAngles != nullptr);
 
@@ -176,7 +176,7 @@ void RequireCellDataMatchesFeatureIds(const DataStructure& dataStructure, bool c
 template <typename T>
 void AddMask(DataStructure& dataStructure, const ShapeType& tupleShape, const std::vector<uint8>& maskValues)
 {
-  auto maskStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, {1}, IDataAction::Mode::Execute);
+  auto maskStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_MaskPath, tupleShape, {1});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
   auto* mask = DataArray<T>::Create(dataStructure, k_MaskPath.getTargetName(), maskStore, dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath).getId());
   REQUIRE(mask != nullptr);
@@ -219,7 +219,7 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Preflight Errors", "[SimplnxCore][Pott
   SECTION("Feature IDs must be in image cell data")
   {
     DataStructure dataStructure;
-    auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>({4, 4, 1}, {1}, IDataAction::Mode::Execute);
+    auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FeatureIds"}), {4, 4, 1}, {1});
     REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore) != nullptr);
     auto args = CreateArguments();
     args.insertOrAssign(PottsModelFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"FeatureIds"})));
@@ -229,7 +229,7 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Preflight Errors", "[SimplnxCore][Pott
   SECTION("Mask must be in image cell data")
   {
     auto testData = CreateTestData({4, 4, 1}, std::vector<int32>(16, 1));
-    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>({4, 4, 1}, {1}, IDataAction::Mode::Execute);
+    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(testData.dataStructure, DataPath({"Mask"}), {4, 4, 1}, {1});
     REQUIRE(UInt8Array::Create(testData.dataStructure, "Mask", maskStore) != nullptr);
     auto args = CreateArguments();
     args.insertOrAssign(PottsModelFilter::k_UseMask_Key, std::make_any<bool>(true));
@@ -244,7 +244,7 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Preflight Errors", "[SimplnxCore][Pott
     maskImageGeom->setDimensions({2, 2, 1});
     auto* maskCellData = AttributeMatrix::Create(testData.dataStructure, "CellData", {1, 2, 2}, maskImageGeom->getId());
     maskImageGeom->setCellData(*maskCellData);
-    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>({1, 2, 2}, {1}, IDataAction::Mode::Execute);
+    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(testData.dataStructure, DataPath({"MaskGeometry", "CellData", "Mask"}), {1, 2, 2}, {1});
     REQUIRE(UInt8Array::Create(testData.dataStructure, "Mask", maskStore, maskCellData->getId()) != nullptr);
     auto args = CreateArguments();
     args.insertOrAssign(PottsModelFilter::k_UseMask_Key, std::make_any<bool>(true));
@@ -262,7 +262,7 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Preflight Errors", "[SimplnxCore][Pott
   {
     auto testData = CreateTestData({4, 4, 1}, std::vector<int32>(16, 1));
     const DataPath outsideArrayPath({"OutsideArray"});
-    auto outsideArrayStore = DataStoreUtilities::CreateDataStore<float32>({16}, {1}, IDataAction::Mode::Execute);
+    auto outsideArrayStore = DataStoreUtilities::CreateDataStore<float32>(testData.dataStructure, outsideArrayPath, {16}, {1});
     REQUIRE(Float32Array::Create(testData.dataStructure, outsideArrayPath.getTargetName(), outsideArrayStore) != nullptr);
     auto args = CreateArguments();
     args.insertOrAssign(PottsModelFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{outsideArrayPath}));
