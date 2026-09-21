@@ -38,9 +38,10 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
   const usize totalPoints = featureIds.getNumberOfTuples();
   if(totalPoints != totalCells)
   {
-    return MakeErrorResult(k_TupleCountMismatchError,
-                           fmt::format("The Feature IDs array '{}' has {} tuple(s), but the selected Image Geometry has {} cell(s). The array must hold exactly one value per cell. No data was modified.",
-                                       featureIdsPath.toString(), totalPoints, totalCells));
+    return MakeErrorResult(
+        k_TupleCountMismatchError,
+        fmt::format("The Feature IDs array '{}' has {} tuple(s), but the selected Image Geometry has {} cell(s). The array must hold exactly one value per cell. No data was modified.",
+                    featureIdsPath.toString(), totalPoints, totalCells));
   }
   for(usize cellIndex = 0; cellIndex < totalPoints; cellIndex++)
   {
@@ -51,9 +52,10 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
     const int32 featureId = featureIds[cellIndex];
     if(featureId < 0 || static_cast<usize>(featureId) >= totalFeatures)
     {
-      return MakeErrorResult(k_FeatureIdOutOfRangeError,
-                             fmt::format("Cell {} of the Feature IDs array '{}' has value {}, but the flagged-features array '{}' has {} tuple(s). Valid Feature IDs are in [0, {}). No data was modified.",
-                                         cellIndex, featureIdsPath.toString(), featureId, flaggedFeaturesPath.toString(), totalFeatures, totalFeatures));
+      return MakeErrorResult(
+          k_FeatureIdOutOfRangeError,
+          fmt::format("Cell {} of the Feature IDs array '{}' has value {}, but the flagged-features array '{}' has {} tuple(s). Valid Feature IDs are in [0, {}). No data was modified.", cellIndex,
+                      featureIdsPath.toString(), featureId, flaggedFeaturesPath.toString(), totalFeatures, totalFeatures));
     }
   }
   return {};
@@ -324,7 +326,8 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
                                                  "was modified.",
                                                  m_InputValues->FlaggedFeaturesArrayPath.getParent().toString(), totalFeatures));
     }
-    Result<> validationResult = ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->FeatureIdsArrayPath, m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
+    Result<> validationResult =
+        ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->FeatureIdsArrayPath, m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
     if(validationResult.invalid())
     {
       return validationResult;
@@ -443,8 +446,8 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         listed += ", ...";
       }
       result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
-                                                                                  "them. Feature ID(s): {}",
-                                                                                  emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+                                                                                    "them. Feature ID(s): {}",
+                                                                                    emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
     }
 
     Result<> cropResult = cropTaskResult.takeResult();
@@ -472,7 +475,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     {
       const usize removableFeatureCount = flaggedFeatures->getNumberOfTuples() > 0 ? flaggedFeatures->getNumberOfTuples() - 1 : 0;
       Result<> allFlaggedResult = MakeErrorResult(-45433, fmt::format("All {} feature(s) in '{}' were flagged and would be removed. At least one feature that owns cells must remain.",
-                                                                   removableFeatureCount, m_InputValues->FlaggedFeaturesArrayPath.getParent().toString()));
+                                                                      removableFeatureCount, m_InputValues->FlaggedFeaturesArrayPath.getParent().toString()));
       return MergeResults(std::move(result), std::move(allFlaggedResult));
     }
 
@@ -490,8 +493,8 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         if(path == m_InputValues->FeatureIdsArrayPath)
         {
           result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
-                                                                                           "cannot be ignored, so it was removed from the ignore list.",
-                                                                                           path.toString())});
+                                                                                              "cannot be ignored, so it was removed from the ignore list.",
+                                                                                              path.toString())});
           continue;
         }
         ignoredPaths.push_back(path);

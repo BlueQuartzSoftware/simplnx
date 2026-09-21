@@ -83,14 +83,14 @@ public:
     args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
     args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
 
-    const std::string boundsText = fmt::format("voxels [{}, {}, {}] to [{}, {}, {}]", m_MinVoxelVector[0], m_MinVoxelVector[1], m_MinVoxelVector[2], m_MaxVoxelVector[0],
-                                                m_MaxVoxelVector[1], m_MaxVoxelVector[2]);
+    const std::string boundsText =
+        fmt::format("voxels [{}, {}, {}] to [{}, {}, {}]", m_MinVoxelVector[0], m_MinVoxelVector[1], m_MinVoxelVector[2], m_MaxVoxelVector[0], m_MaxVoxelVector[1], m_MaxVoxelVector[2]);
 
     auto preflightResult = filter.preflight(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())
     {
       m_TaskResult.store(MakeErrorResult(-53903, fmt::format("Preflight of the crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
-                                                         m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors()))));
+                                                             m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors()))));
       return;
     }
 
@@ -103,7 +103,7 @@ public:
     if(executeResult.result.invalid())
     {
       m_TaskResult.store(MakeErrorResult(-53904, fmt::format("The crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
-                                                         m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors()))));
+                                                             m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors()))));
     }
   }
 
