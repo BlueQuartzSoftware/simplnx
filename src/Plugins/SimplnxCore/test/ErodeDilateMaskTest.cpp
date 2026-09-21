@@ -781,7 +781,6 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations", "[
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateMaskFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
