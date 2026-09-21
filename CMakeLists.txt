@@ -194,7 +194,6 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 
 #------------------------------------------------------------------------------
 # Find the Image IO libraries
@@ -292,7 +291,6 @@ target_link_libraries(simplnx
     ZLIB::ZLIB
     Boost::mp11
     nod::nod
-    spdlog::spdlog
     TIFF::TIFF
 )
 
