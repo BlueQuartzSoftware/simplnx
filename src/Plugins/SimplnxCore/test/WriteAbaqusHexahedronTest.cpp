@@ -40,7 +40,7 @@ DataStructure CreateIntegrationTypeTestDataStructure()
   auto* cellData = AttributeMatrix::Create(dataStructure, k_TestCellDataPath.getTargetName(), cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_TestFeatureIdsPath, cellShape, {1});
   auto* featureIds = DataArray<int32>::Create(dataStructure, k_TestFeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
   featureIds->getDataStoreRef()[0] = 1;
 
