@@ -113,8 +113,8 @@ Every node:
 AttributeMatrix adds `tuple_shape`.
 
 DataArray adds `data_type`, `tuple_shape`, `component_shape`, `num_tuples`,
-`num_components`, and `store_type` (`InMemory`, `OutOfCore`, `Empty`,
-`EmptyOutOfCore`; a preflight read reports `Empty`).
+`num_components`, and `store_type` (`InMemory`, `OutOfCore`, or `Empty`;
+a preflight read reports `Empty`).
 
 StringArray adds `data_type` (`"string"`) and `num_tuples`.
 

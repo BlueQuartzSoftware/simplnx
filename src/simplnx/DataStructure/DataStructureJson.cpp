@@ -72,8 +72,6 @@ std::string_view storeTypeToString(IDataStore::StoreType storeType)
     return "OutOfCore";
   case IDataStore::StoreType::Empty:
     return "Empty";
-  case IDataStore::StoreType::EmptyOutOfCore:
-    return "EmptyOutOfCore";
   }
   return "Unknown";
 }
@@ -157,7 +155,7 @@ bool hasReadableBounds(const RectGridGeom& rectGridGeom)
     }
 
     const IDataStore::StoreType storeType = boundsPtr->getIDataStoreRef().getStoreType();
-    return storeType != IDataStore::StoreType::Empty && storeType != IDataStore::StoreType::EmptyOutOfCore;
+    return storeType != IDataStore::StoreType::Empty;
   };
 
   return hasReadableStore(xBoundsPtr) && hasReadableStore(yBoundsPtr) && hasReadableStore(zBoundsPtr);
