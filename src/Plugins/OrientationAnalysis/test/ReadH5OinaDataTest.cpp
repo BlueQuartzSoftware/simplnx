@@ -65,6 +65,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -1281,6 +1282,93 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[Orienta
   CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::BandContrast), expectedBandContrast);
   CompareArrayValues<int32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), expectedPhase);
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail and slab oracle", "[OrientationAnalysis][ReadH5OinaDataFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BatchTuples = 65536;
+  constexpr usize k_ScanTuples = k_BatchTuples + 1;
+
+  std::vector<ScanSpec> scans(2);
+  for(usize scanIdx = 0; scanIdx < scans.size(); scanIdx++)
+  {
+    auto& scan = scans[scanIdx];
+    scan.name = std::to_string(scanIdx + 1);
+    scan.xCells = static_cast<int32>(k_ScanTuples);
+    scan.yCells = 1;
+    scan.phases = {k_HexPhase, k_CubicPhase};
+    scan.phase.assign(k_ScanTuples, 1);
+    scan.bandContrast.assign(k_ScanTuples, scanIdx == 0 ? 10 : 110);
+    scan.bandSlope.assign(k_ScanTuples, scanIdx == 0 ? 20 : 120);
+    scan.bands.assign(k_ScanTuples, scanIdx == 0 ? 3 : 5);
+    scan.error.assign(k_ScanTuples, scanIdx == 0 ? 0 : 2);
+    scan.mad.assign(k_ScanTuples, scanIdx == 0 ? 0.125F : 1.125F);
+    scan.x.assign(k_ScanTuples, scanIdx == 0 ? 0.5F : 1.5F);
+    scan.y.assign(k_ScanTuples, scanIdx == 0 ? 0.25F : 1.25F);
+    scan.euler.resize(k_ScanTuples * 3);
+    for(usize cellIdx = 0; cellIdx < k_ScanTuples; cellIdx++)
+    {
+      scan.euler[cellIdx * 3] = scanIdx == 0 ? 0.25F : 0.75F;
+      scan.euler[cellIdx * 3 + 1] = scanIdx == 0 ? 0.5F : 1.0F;
+      scan.euler[cellIdx * 3 + 2] = scanIdx == 0 ? 0.1F : 0.22F;
+    }
+    scan.phase.back() = scanIdx == 0 ? 2 : 0;
+    scan.bandContrast.back() = scanIdx == 0 ? 31 : 131;
+    scan.bandSlope.back() = scanIdx == 0 ? 32 : 132;
+    scan.bands.back() = scanIdx == 0 ? 4 : 6;
+    scan.error.back() = scanIdx == 0 ? 1 : 3;
+    scan.mad.back() = scanIdx == 0 ? 0.25F : 1.25F;
+    scan.x.back() = scanIdx == 0 ? 0.75F : 1.75F;
+    scan.y.back() = scanIdx == 0 ? 0.5F : 1.5F;
+    scan.euler.back() = scanIdx == 0 ? 0.34F : 0.35F;
+  }
+  const auto inputFile = WriteH5OinaFixture("read_h5oina_vv_ooc_batch_tail.h5oina", scans);
+  DataStructure dataStructure;
+  ReadH5OinaDataFilter filter;
+  const auto args = MakeArgs(inputFile, {"1", "2"});
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const std::array<usize, 4> witnessIndices = {k_BatchTuples - 1, k_BatchTuples, k_ScanTuples, 2 * k_ScanTuples - 1};
+
+  auto checkScalar = [&]<typename T>(const std::string& name, const std::array<T, 4>& expected) {
+    const auto path = k_CellAMPath.createChildPath(name);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(path));
+    const auto& array = dataStructure.getDataRefAs<DataArray<T>>(path);
+    REQUIRE(array.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(array.getNumberOfTuples() == 2 * k_ScanTuples);
+    for(usize witnessIdx = 0; witnessIdx < witnessIndices.size(); witnessIdx++)
+    {
+      INFO(name << " at tuple " << witnessIndices[witnessIdx]);
+      REQUIRE(array[witnessIndices[witnessIdx]] == expected[witnessIdx]);
+    }
+  };
+  checkScalar(ebsdlib::H5OINA::Phase, std::array<int32, 4>{1, 2, 1, 0});
+  checkScalar(ebsdlib::H5OINA::BandContrast, std::array<uint8, 4>{10, 31, 110, 131});
+  checkScalar(ebsdlib::H5OINA::BandSlope, std::array<uint8, 4>{20, 32, 120, 132});
+  checkScalar(ebsdlib::H5OINA::Bands, std::array<uint8, 4>{3, 4, 5, 6});
+  checkScalar(ebsdlib::H5OINA::Error, std::array<uint8, 4>{0, 1, 2, 3});
+  checkScalar(ebsdlib::H5OINA::MeanAngularDeviation, std::array<float32, 4>{0.125F, 0.25F, 1.125F, 1.25F});
+  checkScalar(ebsdlib::H5OINA::X, std::array<float32, 4>{0.5F, 0.75F, 1.5F, 1.75F});
+  checkScalar(ebsdlib::H5OINA::Y, std::array<float32, 4>{0.25F, 0.5F, 1.25F, 1.5F});
+
+  const auto eulerPath = k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulerPath);
+  REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const std::array<std::array<float32, 3>, 4> expectedEulers = {{{0.25F, 0.5F, 0.6235987544059753F}, {0.25F, 0.5F, 0.34F}, {0.75F, 1.0F, 0.7435987591743469F}, {0.75F, 1.0F, 0.35F}}};
+  for(usize witnessIdx = 0; witnessIdx < witnessIndices.size(); witnessIdx++)
+  {
+    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    {
+      REQUIRE(eulers[witnessIndices[witnessIdx] * 3 + compIdx] == expectedEulers[witnessIdx][compIdx]);
+    }
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(k_ScanTuples, 1, 2));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

@@ -13,6 +13,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -278,6 +279,35 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fi
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: real HDF5 65536-block rotation oracle", "[OrientationAnalysis][RotateEulerRefFrameFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  DataStructure dataStructure;
+  auto* eulersPtr = AnalyticalFixtures::CreateEulerArray(dataStructure, k_BlockTuples + 1);
+  REQUIRE(eulersPtr != nullptr);
+  eulersPtr->fill(0);
+  (*eulersPtr)[k_BlockTuples * 3] = 0.1F;
+  (*eulersPtr)[k_BlockTuples * 3 + 1] = 0.5F;
+  (*eulersPtr)[k_BlockTuples * 3 + 2] = 0.3F;
+  auto store = DataStoreUtilities::ConvertDataStore<float32>(eulersPtr->getDataStoreRef(), "HDF5-OOC");
+  REQUIRE(store != nullptr);
+  auto replaceResult = eulersPtr->setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
+  REQUIRE(store->getDataFormat() == "HDF5-OOC");
+  const DataPath path({"CellData", "EulerAngles"});
+  AnalyticalFixtures::RunRotateFilter(dataStructure, path, {0.0F, 0.0F, 1.0F, 90.0F});
+  REQUIRE(eulersPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const std::array<float64, 6> expected = {4.712388980384709, 0.0, 0.0, 4.812388980384732, 0.5, 0.3};
+  for(usize compIdx = 0; compIdx < expected.size(); compIdx++)
+  {
+    REQUIRE(std::abs(static_cast<float64>((*eulersPtr)[(k_BlockTuples - 1) * 3 + compIdx]) - expected[compIdx]) < 1.0E-5);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight", "[OrientationAnalysis][RotateEulerRefFrameFilter]")

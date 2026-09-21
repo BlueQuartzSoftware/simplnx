@@ -15,17 +15,17 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — output 1-component angle (was 3-component axis·angle); Laue classes 2→11; NaN explicit on invalid (was implicit 0); modernized EbsdLib API; raw TBB → `ParallelDataAlgorithm` (parallelization disabled per thread-safety policy). EbsdLib `CubicOps` precision fix surfaced during this cycle (non-observable on V&V fixtures). 6 deltas total — see Algorithm Relationship.       |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 37-fixture hand-built dataset: 30 normal cases (10 Laue classes × 3 pure-φ1 boundaries at 0°↔45°, 0°↔90°, 0°↔180°) + 4 edge cases (background-front, background-back, mixed-phase fwd, mixed-phase rev) + 3 Trigonal_High cases. All 11 EbsdLib Laue classes (indices 0–10) exercised. Expected misorientations derived in closed form per Laue-class symmetry group. |
-| Code paths enumerated  | 7 (from line-by-line scan of the parallel-loop body in `ComputeFeatureFaceMisorientation.cpp`)             |
-| Tests today            | 2: 1 valid-execution Class 1 (positive), 1 SIMPL 6.4+6.5 backwards-compat (DYNAMIC_SECTION). The old "Invalid filter execution" test from the pre-rewrite branch was retired during Nathan's algorithm rewrite (NaN-on-invalid-face semantics make most preflight-failure paths unreachable for the cell-feature data).                |
+| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 37 hand-built fixtures exercise all 11 EbsdLib Laue classes. A second analytical fixture uses real HDF5-OOC inputs and output and checks 15° and 30° at a 65,536-face block boundary and partial tail. |
+| Code paths enumerated  | 8 of 10 exercised. Cancel injection and a corrupt Laue-class guard are not directly tested. |
+| Tests today            | 3 registered test cases plus 1 hidden OOC contract test — analytical output, phase bounds, SIMPL conversion, and a real-HDF5 65,536-block tail witness. |
 | Exemplar archive       | **None — data inlined in test source** (`test/ComputeFeatureFaceMisorientationTest.cpp` namespace `curated`). 102 vertices, 34+3 triangles, 41+4 features, 12+1 ensembles all encoded as `std::unique_ptr<…[]>` literals. No tar.gz archive, no download_test_data() entry needed.   |
 | Legacy comparison      | **Not run.** Output structure differs by design (3-component axis·angle vs 1-component angle), so direct array comparison with DREAM3D 6.5.171's `GenerateFaceMisorientationColoring` output is not meaningful. The deviations are documented per-design rather than verified per-feature against the legacy output.   |
 | Bug flags              | One root-caused precision issue **in EbsdLib** (not in this filter): `CubicOps::calculateMisorientationInternal` lost precision via `(qco.z()+qco.w())/sqrt(2)` followed by `acos(w)` near 1. Patched in EbsdLib to use `2·atan2(|v|, w)` with `|v|` from explicit reduced-quaternion components. Eliminated a ~0.02° residual on cubic boundaries that lie on a 4-fold sym op.         |
-| V&V phase              | **Phases 1, 2 (N/A — new test set, no legacy exemplar to retro-promote), 3, 4, 5, 6, 7, 8, 11 — complete.** Class 1 oracle verifies all 11 Laue classes with hand-derived expected values; all 54 assertions pass. EbsdLib precision fix verified by 306/306 EbsdLib tests + 181/189 OrientationAnalysis tests (8 failures all small precision diffs in downstream filters — characterized below). **Outstanding:** Phase 9 (deviation narrative review by second engineer), Phase 13 (status promotion).        |
+| V&V phase | The original COMPLETE status and sign-off are retained. OOC recertification adds the HDF5 boundary oracle and paired CTest checks; it does not perform a new legacy binary comparison. |
 
 ## Summary
 
-`ComputeFeatureFaceMisorientationFilter` computes a single per-triangle misorientation angle (in degrees) between the two grains on either side of each surface-mesh face. The algorithm reads each face's two `FaceLabels` features, looks up their average orientations (`AvgQuats`) and shared phase, and dispatches to the appropriate `LaueOps::calculateMisorientation` for the symmetry-reduced minimum angle; faces with mixed phases, background voxels (`featureId ≤ 0`), or unsupported Laue classes receive an explicit `NaN`. Verification used a **Class 1 (Analytical) hand-built 37-fixture dataset** that sweeps all 11 EbsdLib Laue classes via pure φ1-rotations (0°, 45°, 90°, 180° about the c-axis), allowing closed-form symmetry-group calculation of every expected value — all 54 test assertions pass. A precision issue uncovered during this V&V cycle (the `acos(w)`-near-1 catastrophic cancellation in `CubicOps::calculateMisorientationInternal` when the misorientation lies on a cubic symmetry op) was patched in EbsdLib by computing the reduced quaternion's `|v|` from explicit components, eliminating a ~0.02° residual.
+`ComputeFeatureFaceMisorientationFilter` computes the symmetry-reduced misorientation angle between the two grains on each surface-mesh face. A Class 1 analytical dataset covers all 11 EbsdLib Laue classes, and a real-HDF5 tail fixture checks exact 15° and 30° outputs. The tests pass, and the documented DREAM3D 6.5.171 deviations remain reconciled.
 
 ## Algorithm Relationship
 
@@ -91,35 +91,51 @@ And three boundary faces are constructed: A↔B, A↔C, A↔D. The symmetry-redu
 ### Encoded
 
 - **Class 1 (Analytical)**: `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data"` — 30 + 4 + 3 = 37 fixture assertions, 54 total assertions (including geometry setup REQUIRE-VALID checks).
+- **Class 1 (Analytical), real-HDF5 boundary**: `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: genuine HDF5 65536-block tail oracle"` — exact 15° at tuple 65,535 and 30° at the one-face partial tail, tuple 65,536. All inputs and the output use `HDF5-OOC`. The test passes with 25 assertions.
 - *(kept)* `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Backwards Compatibility"` — SIMPL 6.4 + 6.5 conversion paths via `DYNAMIC_SECTION`.
 
 ### Second-engineer review
 
 **Signed off by Michael Jackson (technical authority), 2026-05-28.** Review focus: the symmetry-group hand calculations for Trigonal_High and the EbsdLib precision-fix rationale. Note that the Trigonal_Low and Trigonal_High closed-form values are identical (mirror planes containing the c-axis do not reduce pure c-axis rotations further).
 
+## Bugs found and fixed
+
+This branch includes the EbsdLib correction in this table. The correction will be in the DREAM3D-NX release after v7.4.1.
+
+| Deviation | Defect | Affected released versions | Resolution in this branch |
+|-----------|--------|----------------------------|---------------------------|
+| `ComputeFeatureFaceMisorientations-D4` | Cubic symmetry boundaries could contain a false residual of about 0.02° because angle extraction lost precision near zero. | DREAM3D-NX v7.0.0 through v7.4.1. | EbsdLib now uses stable reduced-quaternion components and `2*atan2` angle extraction. |
+
 ## Code path coverage
 
-*7 of 7 paths exercised. Cancel-check paths and "valid Laue class" type-dispatch are aggregate-tested via the Class 1 dataset; per-Laue-class paths are confirmed individually by the per-class assertions.*
+*8 of 10 paths exercised. Cancel injection and the corrupt Laue-class guard are not directly tested. Bulk-I/O error-return sites are outside the requested scope.*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp` (146 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp` (205 lines).
 
 | # | Phase           | Path             | Test case            |
 |---|-----------------|-------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| 1 | Cancel check    | `m_ShouldCancel` checked at top of per-triangle loop → early return| *Not directly tested.* Loop-guard only; cancel-signal injection requires test infrastructure not present. Low-value gap. |
-| 2 | Per-face        | `frontFeature == 0` (background) → `frontPhase = 0` → falls through to "different phases" path → NaN written           | `Curated Data` — face 30 `(0, 1)` covers this path     |
-| 3 | Per-face        | `backFeature == 0` (background) → `backPhase = 0` → falls through to "different phases" path → NaN written             | `Curated Data` — face 31 `(1, 0)` covers this path     |
-| 4 | Per-face        | `frontPhase > 0 && frontPhase != backPhase` → falls through to "different phases" path → NaN written  | `Curated Data` — faces 32 `(1, 5)` and 33 `(5, 1)` cover this path      |
-| 5 | Per-face        | `frontPhase > 0 && frontPhase == backPhase && laueIndex >= m_LaueOrientationOps.size()` → NaN written (unsupported Laue class)          | *Not directly tested.* All 11 Laue classes in the curated dataset are within EbsdLib's supported range. Low-value gap. |
-| 6 | Per-face        | `frontPhase > 0 && frontPhase == backPhase && laueIndex < m_LaueOrientationOps.size()` → call `m_LaueOrientationOps[laueIndex]->calculateMisorientation(q1, q2)` → write `axisAngle[3] * k_180OverPiD` (angle in degrees) | `Curated Data` — all 30 normal-case asserts + 3 Trigonal_High asserts exercise this path |
-| 7 | Per-face (math) | Inside `calculateMisorientation`: cubic-class sym-op enumeration via type-1/2/3 reduced quaternion (in `CubicOps::calculateMisorientationInternal`), with the precision-fixed `2·atan2(|v|, w)` angle extraction               | `Curated Data` — F5↔F6 (type 1), F5↔F7 (type 2, EbsdLib precision-fix-critical path), F5↔F8 (type 2 or 3 depending on which sym op wins) |
+| 1 | Validation      | Scan face labels in 65,536-tuple blocks, including a partial tail | `genuine HDF5 65536-block tail oracle` — exact outputs at tuples 65,535 and 65,536 |
+| 2 | Validation      | A participating shared phase is outside the Crystal Structures range → error `-98412` | `Phase Index Bounds` — "Participating Phase returns an error" |
+| 3 | Validation      | Mismatched phases do not participate in the bounds check | `Phase Index Bounds` — "Mismatched Phase is ignored" |
+| 4 | Cancel check    | `m_ShouldCancel` checked at top of per-triangle loop → early return| *Not directly tested. Cancel-signal injection requires test infrastructure not present.* |
+| 5 | Per-face        | `frontFeature == 0` → NaN | `Curated Data` — face 30 `(0, 1)` |
+| 6 | Per-face        | `backFeature == 0` → NaN | `Curated Data` — face 31 `(1, 0)` |
+| 7 | Per-face        | Positive features have different phases → NaN | `Curated Data` — faces 32 and 33 |
+| 8 | Per-face        | Shared phase has an unsupported Laue index → NaN | *Not directly tested. This is a low-value corrupt-metadata guard.* |
+| 9 | Per-face        | Shared phase has a supported Laue index → calculate and write degrees | `Curated Data` — 33 normal cases; `genuine HDF5 65536-block tail oracle` — 15° and 30° |
+| 10 | Per-face math  | Cubic symmetry reduction uses the precision-corrected angle extraction | `Curated Data` — F5↔F6, F5↔F7, and F5↔F8 |
 
 ## Test inventory
 
 | Test case        | Status      | Notes           |
 |--------------------------------------------------------------------------------------|-------------|----------------------------------------------|
 | `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data`          | new-for-V&V | Class 1 hand-built dataset; 30 normal + 4 edge + 3 Trigonal_High asserts. Replaces the legacy `Valid filter execution` test (which used the `6_6_Small_IN100_GBCD.tar.gz` exemplar) — the legacy test was a regression-against-exemplar test, not a closed-form correctness test, and was incompatible with the rewritten 1-component output. |
+| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase Index Bounds` | kept | HDF5-backed bounds fixture. Checks error `-98412` and the mismatched-phase NaN case. |
+| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: genuine HDF5 65536-block tail oracle` | new-for-V&V | Hidden OOC contract test. Checks exact 15° and 30° values across a 65,536-face block and one-face tail. Passes with 25 assertions. |
 | `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Backwards Compatibility` | kept        | Unchanged. `DYNAMIC_SECTION` over SIMPL 6.4 and 6.5 conversion fixtures (`test/simpl_conversion/6_*/ComputeFeatureFaceMisorientationFilter.json`); validates UUID, argument keys, and parameter conversion only.             |
 | *(retired)* `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Invalid filter execution` | retired     | Removed during Nathan's rewrite. The Class 1 dataset's faces 30–33 cover the same paths via the NaN-on-invalid-face semantics; the explicit-preflight-failure tests are no longer reachable for the new code structure.     |
+
+OOC recertification, 2026-09-18: serial CTest passed 3/3 in `NX-Com-Qt69-Vtk96-Rel` and 3/3 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 25 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 
@@ -149,7 +165,9 @@ Four documented deviation classes. All are deliberate design changes from the le
 
 — Precision improvement on cubic boundaries that lie on a 4-fold symmetry op. Root-caused to EbsdLib `CubicOps::calculateMisorientationInternal`; patched at the EbsdLib level (replaces `acos(w)` with `2·atan2(|v|, w)` using explicit reduced-quaternion components). See `vv/deviations/ComputeFeatureFaceMisorientations.md`.
 
-### Downstream impact note (not a deviation, characterized for transparency):
+### Historical downstream impact note
+
+The following paragraph records the original V&V run. It is not a claim that these tests still fail on the current branch:
  
 The EbsdLib precision fix in D4 propagates through any filter that consumes cubic misorientations. Eight OrientationAnalysis unit tests now fail against their pre-fix exemplars with diffs in the range `1.4× to 10× epsilon` (epsilons of `1e-4`, observed diffs `1.4e-4` to `1e-3`): 
 - `BadDataNeighborOrientationCheckFilter: Case 1.{3,4,5,6}.3`

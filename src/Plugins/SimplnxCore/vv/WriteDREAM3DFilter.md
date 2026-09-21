@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same UUID/role as legacy `DataContainerWriter`, but the on-disk format is entirely new (v8 `DataStructure` HDF5 layout + `AtomicFile` atomic-write + optional gzip compression), not a translation of the legacy writer's code. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** — expected content is the hand-built in-memory `DataStructure`/`Pipeline` the test itself constructed; expected HDF5 physical layout (contiguous vs. chunked+deflate) is a closed-form function of array byte-size and the two compression parameters. 20 Write-related fixtures across `DREAM3DFileTest.cpp`, all pass. |
-| Code paths enumerated  | **15 of 19** exercised; the 4 remaining gaps are defensive/unreachable-via-public-API guards (see table). |
-| Tests today            | **20 Write-related `TEST_CASE`s of the 23 in `DREAM3DFileTest.cpp` / 30 ctest entries**, all passing (some with `GENERATE`/`DYNAMIC_SECTION` multiplying cases) — preflight validation, full round-trip content fidelity across every geometry/DataObject type, SIMPL args backward-compat, and a 6-test compression sub-suite (layout, bypass threshold, level monotonicity). |
+| Code paths enumerated  | **16 of 20** exercised; the 4 remaining gaps are defensive/unreachable-via-public-API guards (see table). |
+| Tests today | 22 registered entries in the focused selection, plus one hidden HDF5 boundary case. Paired selections pass 22/22. |
 | Exemplar archive       | **None.** Every test builds its `DataStructure` inline in C++ and round-trips it through `WriteFile`/`ReadFile` in the same run — no cached `.tar.gz` golden file is used or needed for a Class 1 oracle. |
 | Legacy comparison      | **Not run — and not applicable.** The two writers target deliberately different on-disk contracts, so a byte/dataset-level A/B against 6.5.171 `DataContainerWriter` output would be 100% noise by design, not signal. `ReadDREAM3DFilter` is the only tool in either codebase that understands both formats; fidelity is instead verified independently via round-trip Class 1 tests. |
 | Bug flags              | One, since resolved: `WriteXdmfNodeGeometry1D/2D/3D` (`Dream3dIO.cpp`) forwarded to the next-lower writer with `geomName` and `hdf5FilePath` transposed (both `std::string_view`, so it compiled silently), producing `.xdmf` node-attribute references that ParaView/VisIt could not resolve. Fixed alongside a content-level `.xdmf` oracle (`CheckXdmfFile`) that would have caught it. |
-| V&V phase              | Discovery, algorithm relationship, oracle design, code-path enumeration, test inventory, deviations, and the bug fixes found along the way — **complete**. Second-engineer review of the oracle design, the 4 uncovered defensive paths, and the `DynamicListArray`/`GridMontage` serialization boundaries **signed off by Michael A. Jackson, 2026-08-20** (PR #1683). No legacy A/B is applicable (see Legacy comparison). Montage support remains an open design question, explicitly out of scope for this cycle and recorded as a capability boundary rather than a defect. **Nothing outstanding.** |
+| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds independent HDF5 boundary evidence and paired CTest checks. |
 
 ## Summary
 
@@ -64,11 +64,15 @@
 - **The 4 uncovered defensive paths.** Each was independently confirmed unreachable through the public API, and each appears as its own row in the code-path table rather than being omitted.
 - **Bugs found during review.** Three transposed `std::string_view` arguments in `WriteXdmfNodeGeometry1D/2D/3D` and a wrong-`Result` test in `DREAM3D::ReadFile` are resolved; both are recorded under Bug flags with the tests that now pin them.
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+
 ## Code path coverage
 
 **14 of 19** paths exercised. The 5 gaps are all defensive guards that require conditions unreachable through the public filter/pipeline API (invalid destination mid-write after preflight already validated it, or a detached `PipelineFilter`) rather than genuine untested behavior.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D.cpp` (82 lines). Preflight guards below live in the sibling `Filters/WriteDREAM3DFilter.cpp` (`preflightImpl`), which the policy still treats as in-scope algorithm surface (parameter validation gates that the Algorithm class depends on).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D.cpp` (86 lines). Preflight guards below live in the sibling `Filters/WriteDREAM3DFilter.cpp` (`preflightImpl`), which the policy still treats as in-scope algorithm surface (parameter validation gates that the Algorithm class depends on).
 
 | #  | Phase              | Path                                   | Test case |
 |----|--------------------|----------------------------------------------------------------------------------------------|-----------|
@@ -91,6 +95,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D
 | 17 | Execute — xdmf     | `write_xdmf_file=true` → rename temp `.xdmf` into place, succeeds                              | `"DREAM3DFileTest:DREAM3D File IO Test"` (writeXdmf=true), `CreateExportPipeline()`/`CreateMultiExportFiles()` (`write_xdmf_file=true`) |
 | 18 | Execute — xdmf     | `write_xdmf_file=true`, rename fails → `MakeErrorResult` with system error message             | *Not directly tested.* Would require the `.xdmf` destination to become unwritable between the HDF5 write succeeding and the rename — not portably reproducible in the current suite. |
 | 19 | Execute — xdmf     | `write_xdmf_file=false` → skip rename, return `WriteFile`'s result directly                   | Most `Compression_*` tests, `"DREAM3DFileTest::StringArray"`, `"WriteDREAM3DFilter:Valid Parameters"` |
+| 20 | OOC storage | chunk-tail raw-read oracle | `real HDF5 chunk-tail raw-read oracle` — independent exact values across the boundary |
 
 
 **Capability boundary behind Path 13 — `DataObject` types the shared HDF5 IO layer cannot write.**
@@ -129,10 +134,13 @@ Both are gaps in the shared HDF5 IO layer, not in `WriteDREAM3DFilter`'s own alg
 | `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` | kept | Three sequential preflight-only checks: level=0 (invalid), level=10 (invalid), level=0 with compression off (valid — ignored). Covers Paths 2, 3, 4. |
 | `DREAM3DFileTest: PreflightCache avoids re-reading unchanged files` | kept | Uses `DREAM3D::WriteFile` only to create read-side fixture files; does not exercise `WriteDREAM3DFilter`'s own behavior. Listed for completeness since it shares source-file/tag space. |
 | `DREAM3DFileTest: Geometry Nested In DataGroup Round Trip` | kept | Executes `WriteDREAM3DFilter` directly across all 8 geometry types, each at top level and nested inside a `DataGroup` (issue #1642 regression coverage), `write_xdmf_file=false`. Covers Paths 7, 10, 14, 16, 19 with per-geometry fixtures. |
+| `real HDF5 chunk-tail raw-read oracle` | new-for-V&V | 27 assertions; The numeric source is HDF5-OOC with 65,536 four-component uint32 tuples per 1 MiB chunk and one extra tuple. WriteDREAM3DFilter runs with compression disabled/enabled. Direct HDF5 dataset reads, without a DataStructure round trip, match all 262,148 independently constructed integer values. The physical deflate flag also matches the requested compression option. The 22-entry CTest selection includes shared DREAM3D file-I/O cases. |
 
 **Deliberately out of scope (3 of the file's 23 `TEST_CASE`s).** `DREAM3DFileTest.cpp` is shared between the read and write sides of DREAM3D file IO. These three exercise `ReadDREAM3DFilter` only and belong to its V&V, not this one: `DREAM3DFileTest: Existing Data Objects Test` (importing into a populated `DataStructure`), `DREAM3DFileTest: Path Import Policy Tests` (read-side path-collision policy), and `SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility` (read-side SIMPL argument conversion). They are named here rather than silently omitted so the exclusion can be audited.
 
 **Dual-build verification at sign-off:** the DREAM3D file IO tests pass **32/32 in both** the in-core (`NX-Com-Qt69-Vtk96-Rel`) and out-of-core (`NX-OOC-Qt69-Vtk95-Rel`) Release builds, at the rebased head. The full `SimplnxCore::` suite also passes 979/979 in-core.
+
+OOC recertification (2026-09-21): 22/22 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 chunk-tail raw-read oracle` passes 27 assertions. The numeric source is HDF5-OOC with 65,536 four-component uint32 tuples per 1 MiB chunk and one extra tuple. WriteDREAM3DFilter runs with compression disabled/enabled. Direct HDF5 dataset reads, without a DataStructure round trip, match all 262,148 independently constructed integer values. The physical deflate flag also matches the requested compression option. The 22-entry CTest selection includes shared DREAM3D file-I/O cases. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
 
 ## Exemplar archive
 

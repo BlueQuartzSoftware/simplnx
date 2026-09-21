@@ -1,6 +1,8 @@
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
@@ -399,6 +401,91 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Phase Index Bounds"
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -3524);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 65536-page tail oracle", "[OrientationAnalysis][ComputeCAxisLocationsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+
+  constexpr usize k_PageTuples = 65536;
+  constexpr usize k_CellTuples = k_PageTuples + 1;
+  constexpr usize k_LastFullPageTuple = k_PageTuples - 1;
+  constexpr usize k_TailTuple = k_PageTuples;
+  constexpr float32 k_Tolerance = 1.0E-6F;
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  const DataPath quatsPath({"Quats"});
+  const DataPath phasesPath({"Phases"});
+  const DataPath crystalStructuresPath({"CrystalStructures"});
+  const DataPath cAxisLocationsPath({"CAxisLocations"});
+
+  DataStructure dataStructure;
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, {k_CellTuples}, {4});
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {k_CellTuples}, {1});
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto* quats = Float32Array::Create(dataStructure, quatsPath.getTargetName(), quatsStore);
+  auto* phases = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore);
+  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore);
+  REQUIRE(quats != nullptr);
+  REQUIRE(phases != nullptr);
+  REQUIRE(crystalStructures != nullptr);
+
+  std::vector<float32> quaternionValues(k_CellTuples * 4, 0.0F);
+  std::vector<int32> phaseValues(k_CellTuples, 1);
+  for(usize tupleIdx = 0; tupleIdx < k_CellTuples; tupleIdx++)
+  {
+    quaternionValues[tupleIdx * 4 + 3] = 1.0F;
+  }
+
+  quaternionValues[k_LastFullPageTuple * 4 + 1] = k_Sin_OneEighthPiF;
+  quaternionValues[k_LastFullPageTuple * 4 + 3] = k_Cos_OneEighthPiF;
+  quaternionValues[k_TailTuple * 4] = k_HalfSqrt2F;
+  quaternionValues[k_TailTuple * 4 + 3] = k_HalfSqrt2F;
+  const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
+
+  auto quatsWriteResult = quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
+  auto phasesWriteResult = phases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
+  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
+
+  REQUIRE(quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  ComputeCAxisLocationsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(quatsPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key, std::make_any<std::string>(cAxisLocationsPath.getTargetName()));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(ContainsCode(executeResult.result.warnings(), -3521));
+  REQUIRE_FALSE(ContainsCode(executeResult.result.warnings(), -3523));
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath));
+  const auto& cAxisLocations = dataStructure.getDataRefAs<Float32Array>(cAxisLocationsPath);
+  REQUIRE(cAxisLocations.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(cAxisLocations.getTupleShape() == ShapeType{k_CellTuples});
+  REQUIRE(cAxisLocations.getComponentShape() == ShapeType{3});
+
+  const usize lastFullPageOffset = k_LastFullPageTuple * 3;
+  REQUIRE(cAxisLocations[lastFullPageOffset] == Approx(-k_HalfSqrt2F).margin(k_Tolerance));
+  REQUIRE(cAxisLocations[lastFullPageOffset + 1] == Approx(0.0F).margin(k_Tolerance));
+  REQUIRE(cAxisLocations[lastFullPageOffset + 2] == Approx(k_HalfSqrt2F).margin(k_Tolerance));
+
+  const usize tailOffset = k_TailTuple * 3;
+  REQUIRE(cAxisLocations[tailOffset] == Approx(0.0F).margin(k_Tolerance));
+  REQUIRE(cAxisLocations[tailOffset + 1] == Approx(1.0F).margin(k_Tolerance));
+  REQUIRE(cAxisLocations[tailOffset + 2] == Approx(0.0F).margin(k_Tolerance));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

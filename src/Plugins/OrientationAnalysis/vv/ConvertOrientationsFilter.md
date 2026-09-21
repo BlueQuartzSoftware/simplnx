@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** (plumbing) under the retained SIMPL UUID. Legacy built a vector of 7 `OrientationConverter<T>` subclasses dispatching each pair to its **direct** pairwise transform (e.g. `eu2om`, `eu2cu`); SIMPLNX uses an 8×8 `switch` dispatching to macro-generated convertors that call EbsdLib `input.toX()` directly. Three scope deltas: SIMPLNX **adds Stereographic** (8th type), **restricts input to float32** (legacy accepted float and double, D2), and **drops legacy's in-place Euler sanitization** (D5). |
 | Oracle (confirmed)     | **Class 3 (Rowenhorst 2015, DOI 10.1088/0965-0393/23/8/083501)** primary + **Class 1 (Analytical)** for Stereographic closed form + **Class 4 (Invariant)** round-trip. *Transform math is owned/tested by EbsdLib itself (`EbsdLib/Source/Test/Orientation*Test.cpp`); this filter test verifies only the filter's value-add — dispatch routing, component striding, preflight.* Encoded in `test/ConvertOrientationsTest.cpp` — 56-pair 8×8 matrix + stereographic closed form; **1032 assertions pass** (in-core, via `ctest`). OOC: single-algorithm filter made OOC-safe via `requireArraysInMemory`; dedicated OOC run skipped (no in-core/OOC dispatch variants — see V&V phase). |
-| Code paths enumerated  | 11 enumerated; 2 are unreachable dead arms (same-type + `Unknown` dispatch), leaving **9 reachable, of which 7 are exercised**. Remaining gaps: `-67003` multi-dim guard and the per-tuple cancel branch (both low value). |
-| Tests today            | 5 test cases: Invalid preflight (negative), **Dispatch and striding 8×8** (new-for-V&V, 56 DYNAMIC_SECTIONs, 3 distinct multi-tuple orientations), **Stereographic closed form** (new-for-V&V, Class 1), Equal Representations (same-type rejection), SIMPL backwards-compat (6.4 + 6.5 DYNAMIC_SECTION). |
+| Code paths enumerated | 7 of 12 exercised; 2 unreachable arms and 3 unasserted guard/cancellation/progress paths remain outside this regression. |
+| Tests today | 5 registered target cases plus one hidden HDF5 boundary test. Paired target selections pass 5/5. |
 | Exemplar archive       | None — values are inline dispatch landmarks in the test source. Unknown-provenance `k_InitValues` **retired** and replaced by EbsdLib-3.0.0-derived values. These are a consistency check against EbsdLib's reference implementation for the transform math (not EbsdLib-independent); genuinely independent pins are the stereographic closed form and seed-0's Rowenhorst-2015 worked-example orientation. |
 | Legacy comparison      | **Run** (toy fixture, 6 shared eu→X conversions via 6.5.171 PipelineRunner vs nxrunner on byte-identical Euler input). Headline: 4 of 6 bit-identical; max \|Δ\| = **1.78e-6** (cubochoric), measured for eu→X only. 5 deviations: D1 library-generation precision (measured), D2 float64 scope, D3 Stereographic-added, D4 error-code surface, D5 dropped in-place Euler sanitization. See `comparisons/ConvertOrientationsFilter/results/comparison.md`. |
 | Bug flags              | **None.** Filter matches the independent oracle on all 56 dispatch pairs + stereographic; all 4 deviations are precision/scope/API, not bugs. |
-| V&V phase              | **Steps 1, 3, 4, 5, 6 (oracle pass), 7 (algorithm review + refactor), 8 (legacy A/B run + deviations) complete.** Algorithm review applied: dead code removed, cancel + thread-safe progress + `requireArraysInMemory` added (1032 assertions still pass). **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** **Outstanding:** Step 10 doc review. OOC run intentionally skipped (single-algorithm filter, `requireArraysInMemory` applied). |
+| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds real-HDF5 analytical boundary evidence and paired runtime checks. |
 
 For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrientationCheckFilter.md` and `src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md`.
 
@@ -64,11 +64,15 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+
 ## Code path coverage
 
-*11 paths enumerated. Rows 7–8 (the 8 same-type dispatch arms and 8 `Type::Unknown` arms) are unreachable through the filter — blocked at preflight / range-validated by the `ChoicesParameter` — and are excluded from the coverage ratio. Of the 9 reachable paths, **7 are exercised**; the 2 gaps are the `-67003` multi-dimensional-component-shape guard and the per-tuple cancel branch (requires cancel-signal injection). Path 3 (`-67004` component-count mismatch) is now covered by the `Invalid preflight` test.*
+7 of 12 paths exercised. Two paths are unreachable through the filter; the component-shape guard, cancellation, and progress messages are not directly asserted.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ConvertOrientations.cpp` (~370 lines) + `Filters/ConvertOrientationsFilter.cpp` preflight. Logical phases: (a) filter `preflightImpl` validation, (b) execute dispatch (8×8 output/input `switch`), (c) per-tuple parallel convertor.
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ConvertOrientations.cpp` (448 lines) + `Filters/ConvertOrientationsFilter.cpp` preflight. Logical phases: (a) filter `preflightImpl` validation, (b) execute dispatch (8×8 output/input `switch`), (c) per-tuple parallel convertor.
 
 | #  | Phase          | Path   | Test case                                                                 |
 |----|----------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
@@ -82,7 +86,8 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | 8  | (b) Dispatch   | 8 `case Type::Unknown: break;` arms                                                               | *Unreachable — `ChoicesParameter` range-validates the index (path 4).*    |
 | 9  | (c) Convertor  | per-tuple read `inNumComps` → `input.toX()` → write `outNumComps` (striding)                      | `Dispatch and striding` — 3 distinct multi-tuple orientations + output component/tuple-count assertions |
 | 10 | (c) Convertor  | `m_Filter->shouldCancel()` → early return                                                         | *Not directly tested. Requires injecting a cancel signal mid-execution; low-value coverage gap.* |
-| 11 | (c) Convertor  | `sendThreadSafeProgressMessage()` per chunk (mutex + 1s throttle)                                 | Exercised by every dispatch run (message emitted, not asserted).          |
+| 11 | Progress | Per-chunk progress message | *Not directly tested. Progress messages are outside this numerical verification scope.* |
+| 12 | Bulk conversion | A 4,096-tuple block and one-tuple tail use different component directions | `real HDF5 4096-block stereographic oracle` — [0,0,1/3] followed by [1/3,0,0] |
 
 ## Test inventory
 
@@ -94,6 +99,9 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | `OrientationAnalysis::ConvertOrientations: Equal Representations` | kept | Negative: same input/output type → `-67005`. `GENERATE` over all 8 types. |
 | `OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + argument-key conversion. |
 | *(retired)* `OrientationAnalysis::ConvertOrientations: Valid filter execution` | retired | Removed: compared against `k_InitValues` of **unknown provenance** (7×7 only, single tuple, no Stereographic) — a circular-oracle risk. Superseded by the 8×8 dispatch test with EbsdLib-derived, cross-validated landmarks. |
+| `real HDF5 4096-block stereographic oracle` | new-for-V&V | Independent HDF5 boundary outputs; 16 assertions across the configured options. |
+
+OOC recertification (2026-09-21): 5/5 target CTest entries pass in both DREAM3DNX builds. The hidden `real HDF5 4096-block stereographic oracle` passes 16 assertions in the OOC binary. The quaternion-to-stereographic oracle is (qx,qy,qz)/(1+qw). The two boundary inputs (0,0,0.6,0.8) and (0.6,0,0,0.8) therefore yield [0,0,1/3] and [1/3,0,0]. Both input and output stores are HDF5-OOC. The five target CTest entries passed in each build; the selection also ran two unrelated ConvertOrientationsToVertexGeometry entries successfully. Existing upstream/develop oracles and tolerances are preserved. No production algorithm or historical sign-off is changed, and no fresh legacy binary run is claimed.
 
 ## Exemplar archive
 

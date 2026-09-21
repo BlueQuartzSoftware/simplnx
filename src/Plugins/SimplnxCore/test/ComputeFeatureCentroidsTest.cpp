@@ -12,6 +12,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -142,6 +143,34 @@ inline void RequireCentroid(const std::vector<float32>& c, usize featureId, floa
   REQUIRE(c[featureId * 3 + 2] == Approx(z).margin(margin));
 }
 } // namespace CentroidToy
+
+TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tail oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool periodic = GENERATE(false, true);
+  CAPTURE(periodic);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  std::vector<int32> featureIds(k_BlockTuples + 1, 0);
+  featureIds[k_BlockTuples - 1] = 1;
+  featureIds[k_BlockTuples] = 1;
+  auto fixture = CentroidToy::Build(k_BlockTuples + 1, 1, 1, {2.0F, 3.0F, 4.0F}, {10.0F, -2.0F, 7.0F}, 3, featureIds);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath));
+  auto& idsArray = fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath);
+  auto store = DataStoreUtilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
+  REQUIRE(store != nullptr);
+  auto replaceResult = idsArray.setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
+  REQUIRE(idsArray.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const auto centroids = CentroidToy::Run(fixture, periodic);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath));
+  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // The two feature-one centers are x=131081 and x=131083. Neither feature wraps.
+  const std::vector<float32> expected = {65545.0F, -0.5F, 9.0F, 131082.0F, -0.5F, 9.0F, 0.0F, 0.0F, 0.0F};
+  REQUIRE(centroids == expected);
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Centroids", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {

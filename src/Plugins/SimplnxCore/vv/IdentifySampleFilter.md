@@ -13,14 +13,14 @@
 
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
-| Algorithm relationship | **Port** (3D mode + connectivity) + **1 deviation** (hole-fill on 2D/1D, A/B-proven) + 1 SIMPLNX bug fixed to match legacy (single-voxel hole-fill) + new features (`SliceBySlice`, cancel checks) |
-| Oracle | **Class 1 (Analytical)** for 3 non-square 2D tests; **Validated-circular** for 12 archive tests (not legacy-equivalent) |
-| Code paths | **14 of 17** exercised; 3 gaps (1D dispatch, single-voxel, cancel-check) |
-| Tests | **5 TEST_CASEs** (16 functional scenarios) — all pass |
-| External archive | `identify_sample_v2.tar.gz` (active) + `identify_sample.tar.gz` (v1, orphaned) |
-| Deviations | **1 active** (`IdentifySample-D1`), **A/B-proven 2026-06-29**: legacy never fills holes on 2D/1D geometry (hole-fill boundary test counts the flat dimension); SIMPLNX is correct |
-| Confirmed parity | Connectivity / largest-component (Phase 1) **byte-identical** to legacy on 2D/1D/3D + tie-break (A/B 2026-06-29); `checked`-reset between BFS phases verified identical in both versions |
-| Open bugs | None (no legacy deviation; SIMPLNX matches legacy — see deviations file) |
+| Algorithm Relationship | Port for BFS; the OOC CCL implementation uses external equivalences and deterministic slice replay. Both implement largest-component selection and optional hole filling. |
+| Oracle (confirmed) | Class 1 analytical masks for the non-square fixtures and the new HDF5 equivalence-page fixture. The historical archive retains its validated-circular classification. |
+| Code paths enumerated | 16 of 19 exercised; 1D, single-voxel, and cancellation paths are not directly tested by this suite. |
+| Tests today | 5 local registered test cases, 1 additional OOC parity case, and 1 hidden HDF5 equivalence-page and slice oracle, with hole filling off and on. |
+| Exemplar archive | `identify_sample_v2.tar.gz` remains active. The new oracle is constructed in the test source. |
+| Legacy comparison | Run — largest-component connectivity matches DREAM3D 6.5.171. Existing `IdentifySample-D1` documents the 2D/1D hole-fill difference. |
+| Bug flags | The existing single-voxel SIMPLNX defect is corrected; the legacy hole-fill deviation remains documented. |
+| V&V phase | The original COMPLETE status and sign-off are retained. OOC recertification adds a Class 1 page/slice-boundary fixture and paired CTest runs. |
 
 ## Summary
 
@@ -43,9 +43,13 @@
 
 Full provenance detail, including the feature-layout table and the resolved "checked-reset" question, in `vv/provenance/IdentifySampleFilter.md`.
 
+## Bugs found and fixed
+
+The existing single-voxel hole-fill correction is retained. Released DREAM3D-NX versions through v7.4.1 could fill a lone bad voxel; DREAM.3D 6.5.171 correctly left it unchanged. The deviation sidecar documents this historical fix but does not assign it a stable deviation ID. This recertification does not create a new defect or change that disposition.
+
 ## Code path coverage
 
-14 of 17 paths exercised. Source: `Algorithms/IdentifySample.cpp`.
+16 of 19 paths exercised. Source: `Algorithms/IdentifySample.cpp` (28 lines), `IdentifySampleBFS.cpp` (296 lines), and `IdentifySampleCCL.cpp` (1,052 lines).
 
 | # | Path | Exercised by |
 |---|---|---|
@@ -62,16 +66,24 @@ Full provenance detail, including the feature-layout table and the resolved "che
 | 15 | `FillHoles=true`, touches boundary → stays bad | `*_fill` |
 | 16 | Cancel mid-scan → early return | *Not tested. Cancel disregard would hang any test; low-value gap.* |
 | 17 | Slice plane selection (XY/XZ/YZ) | `sliced_xy/xz/yz_*` |
+| 18 | External equivalences cross the 4,096-record page boundary | `genuine HDF5 equivalence-page and slice oracle` — over 8,000 provisional labels merge into the largest component |
+| 19 | CCL rolling-slice labeling and replay, with optional hole fill | `genuine HDF5 equivalence-page and slice oracle` — every output mask value is checked, and runtime counters prove CCL runs on HDF5 storage |
+
 
 ## Test inventory
 
-| Test case | Notes |
-|---|---|
-| `IdentifySampleFilter` (12 sections) | Validated-circular; all SliceBySlice × plane × FillHoles combos |
-| `SIMPL Backwards Compatibility` | 6.4 + 6.5 fixtures; UUID + arg-key + param decoding |
-| `2D Empty Z/Y/X Non-Square` (×3) | Class 1; one per dimensionality dispatch path |
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `IdentifySampleFilter` | kept | Twelve archive sections cover whole/sliced, XY/XZ/YZ, and hole filling. Runtime witnesses exercise BFS and CCL on resident stores. |
+| `SIMPL Backwards Compatibility` | kept | SIMPL 6.4 and 6.5 conversion. |
+| `2D Empty Z Non-Square {3,4,1}` | kept | Twelve-cell analytical largest-component mask. |
+| `2D Empty Y Non-Square {3,1,4}` | kept | The same independent mask in the XZ plane. |
+| `2D Empty X Non-Square {1,3,4}` | kept | The same independent mask in the YZ plane. |
+| `genuine HDF5 equivalence-page and slice oracle` | new-for-V&V | A 129×129×3 mask creates over 8,000 labels before the second slice merges them. The test checks every mask byte, disconnected removal, and an enclosed hole with filling off/on. |
 
-5 TEST_CASEs, all pass (16 functional scenarios total).
+The new fixture requires HDF5-OOC and observes the OOC-on-OOC dispatch counter. The first slice contains isolated checkerboard voxels; the next slice joins the component at x<127. Components at x=128 stay disconnected and must be removed. A small bridge above the interior hole keeps its upper voxel in the main component. Expected masks come from this geometry, independently of the CCL implementation. The existing upstream/develop analytical assertions and archive comparisons are retained.
+
+OOC recertification, 2026-09-18: serial CTest passed 5/5 in `NX-Com-Qt69-Vtk96-Rel` and 6/6 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 99,875 assertions in the OOC binary and is included in the OOC-only `SimplnxCoreOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 

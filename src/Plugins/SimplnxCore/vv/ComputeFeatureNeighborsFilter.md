@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** of legacy `FindNeighbors::execute()`. Same core adjacency-scan algorithm; SIMPLNX adds explicit 2D/1D/single-voxel dimensionality dispatch via `NeighborUtilities`, template-specializes on the four `(StoreSurface, StoreBoundary)` combinations, and fixes two legacy bugs (D1 — SSA formula wrong for non-Z-normal faces; D2 — SurfaceFeatures incorrectly marks all features as surface for 1D and 2D EmptyY/EmptyX images). |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — 37 structured TEST_CASEs with inline hand-derived expected outputs for all five output arrays across all 8 image dimensionalities and all 4 optional-output combinations. All pass.                           |
-| Code paths enumerated  | 19 of 20 paths exercised; 1 uncovered (cancel-signal injection in the 3D internal loop — requires signal injection infrastructure).     |
-| Tests today            | **37 TEST_CASEs** — parameter sweep across 8 dimensionalities × 4 optional-output combinations (32 cases) + 3 non-square 2D regression cases (stride-bug guard) + 1 legacy SmallIn100 comparison + 1 SIMPL backwards-compat (2 DYNAMIC_SECTIONs). |
+| Code paths enumerated | 19 of 21 listed paths exercised. The feature-range guard and cancellation remain explicitly untested. |
+| Tests today | 37 registered cases plus one hidden real-HDF5 five-slice analytical case; both CTest selections pass 37/37. |
 | Exemplar archive       | `6_6_stats_test_v2.tar.gz` — shared SmallIn100 input used for legacy comparison only; no oracle outputs (inline expected values used for all structured tests). SSA arrays in the archive reflect the buggy 6.5.171 output and are explicitly skipped in the legacy comparison test. |
 | Legacy comparison      | **Run** on the SmallIn100 fixture (`6_6_stats_test_v2.tar.gz`): NumNeighbors, NeighborList, SurfaceFeatures bit-identical (3D dataset). **Plus a targeted A/B (2026-06-29)** on degenerate/anisotropic inputs through stock 6.5.171 and SIMPLNX that **proves both D1 and D2** via a surgically patched local build of the legacy source: D1 SSA `[8,8]`→`[24,24]`==NX (anisotropic), D2 SurfaceFeatures `[0,1,1]`→`[0,1,0]`==NX (EmptyY). The legacy-source patches reproduce SIMPLNX exactly; NumNeighbors/NeighborList/BoundaryCells byte-identical across all three. See deviations file. |
 | Bug flags              | **D1** — SharedSurfaceAreaList uses wrong area formula for non-Z-normal faces in 6.5.171. **D2** — SurfaceFeatures incorrectly marks all features as surface for 1D images and 2D EmptyY/EmptyX images in 6.5.171.                               |
-| V&V phase              | Structured tests (Class 1 oracle) complete and passing. Legacy source reviewed (`FindNeighbors.cpp`); D1 and D2 documented with source line references. **V&V complete and signed off by Nathan Young, 2026-06-23.**                                                  |
+| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds a real-HDF5 oracle for Scanline slice reads and all five outputs. |
 
 ## Summary
 
@@ -57,11 +57,15 @@
 
 *Second-engineer review:* **Signed off by Nathan Young, 2026-06-23.** Review focus: the 3D 5×5×5 fixture (125-voxel, 6-feature, 7-neighbor-pair) and the non-square 2D stride regression fixtures as the highest-complexity cases.
 
+## Bugs found and fixed
+
+Existing D1 and D2 corrections remain in the branch and are described in the deviation sidecar. This OOC recertification changes no production algorithm and found no new defect.
+
 ## Code path coverage
 
-*19 of 20 paths exercised.*
+19 of 21 listed paths exercised.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.cpp` (394 lines).
+Source: `Algorithms/ComputeFeatureNeighbors.cpp` (26 lines), `ComputeFeatureNeighborsDirect.cpp` (394 lines), and `ComputeFeatureNeighborsScanline.cpp` (250 lines).
 
 The algorithm has four logical stages: **(a) Guard** — validates maxFeatureId and sets up geometry; **(b) Dispatch** — selects dimensionality template and optional-output template; **(c) Stage 1** — processes boundary voxels (corners, then edges, then face-interior boundary cells); **(d) Stage 2** — processes interior voxels (3D only); **(e) Finalize** — builds NumNeighbors + NeighborList + SharedSurfaceAreaList from the per-feature map.
 
@@ -87,6 +91,7 @@ The algorithm has four logical stages: **(a) Guard** — validates maxFeatureId 
 | 18 | (c) Stage 1  | Edge cell processing path (ProcessEdges — skipped for SingleVoxelImage)                          | `Case 1.0.*` through `Case 3.0.*`                |
 | 19 | (c) Stage 1  | Face cell processing path (ProcessFaces — 2D and 3D only, no validity check needed)              | `Case 2.*.*` and `Case 3.0.*`                    |
 | 20 | (d) Stage 2  | `shouldCancel` → early return from 3D internal loop                                               | *Not directly tested. Requires cancel-signal injection infrastructure not present in this test suite.* |
+| 21 | Scanline | Contacts span five rolling 25-cell slices with HDF5 inputs and outputs | `real HDF5 five-slice analytical oracle` — original hand-derived counts, adjacency, areas, boundary flags, and surface flags |
 
 ## Test inventory
 
@@ -105,8 +110,9 @@ The algorithm has four logical stages: **(a) Guard** — validates maxFeatureId 
 | `Case 3.0.0` through `Case 3.0.3`: 3D 5×5×5 (4 cases)                                         | kept        | 125-voxel, 6-feature, fully 3D geometry with anisotropic spacing; 7 feature-pair SSA values hand-derived |
 | `Legacy: SmallIn100`                       | kept        | Legacy comparison on `6_6_stats_test_v2.tar.gz`; compares NumNeighbors, NeighborList, SurfaceFeatures; SSA skipped (D1) |
 | `SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs: "SIMPL 6.5 (UUID)", "SIMPL 6.4 (Filter_Name)") | kept   | Validates UUID + argument-key + parameter-value decoding from SIMPL JSON; does not execute the filter    |
+| `real HDF5 five-slice analytical oracle` | new-for-V&V | Reuses Create3DDataStructure and ExecuteFilter; all five analytical outputs match while target-only counters prove OOC-on-OOC dispatch. |
 
-All 37 TEST_CASEs pass at the verified commit.
+On 2026-09-21, the registered selections pass 37/37 in both DREAM3DNX builds. The hidden HDF5 case passes 73 assertions. FeatureIds and the three fixed-size output arrays are asserted HDF5-OOC; both output NeighborLists are asserted out-of-core. The existing 125-cell fixture spans five algorithm slices, so a missing Z neighbor or incorrect rolling buffer changes independently specified outputs. Existing upstream assertions and tolerances are preserved. Historical D1/D2 dispositions remain valid; no new legacy binary run is claimed.
 
 ## Exemplar archive
 

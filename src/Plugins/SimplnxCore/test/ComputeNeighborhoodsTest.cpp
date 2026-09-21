@@ -8,6 +8,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -370,6 +371,64 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_SearchRadiusPreflightInfo", "[Simpl
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == -5735);
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeNeighborhoods: real HDF5 list-chunk oracle", "[SimplnxCore][ComputeNeighborhoods][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const ChoicesParameter::ValueType radiusMode = GENERATE(0ULL, 1ULL);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const std::vector<std::array<float32, 3>> centroids = {{0, 0, 0}, {20, 0, 0}, {0, 0, 0}, {3, 0, 0}, {6, 0, 0}, {40, 0, 0}, {60, 0, 0}, {80, 0, 0}, {100, 0, 0}};
+  const std::vector<float32> diameters = {0, 3.5F, 3.5F, 1.0F, 3.5F, 3.5F, 3.5F, 3.5F, 3.5F};
+  auto fixture = BuildSyntheticFeatures(9, centroids, diameters, {200, 1, 1}, {1.0F, 1.0F, 1.0F});
+  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<AttributeMatrix>(fixture.featureAMPath));
+  auto reshapeResult = fixture.dataStructure.getDataRefAs<AttributeMatrix>(fixture.featureAMPath).resizeTuples({3, 1, 3});
+  SIMPLNX_RESULT_REQUIRE_VALID(reshapeResult);
+  for(const auto& path : {fixture.centroidsPath, fixture.eqDiamPath})
+  {
+    auto array = fixture.dataStructure.getSharedDataAs<IDataArray>(path);
+    REQUIRE(array != nullptr);
+    REQUIRE(ConvertIDataArray(array, "HDF5-OOC"));
+    REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  ComputeNeighborhoodsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(radiusMode));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(3.5F));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_MultiplesOfAverage_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(fixture.imageGeomPath));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(fixture.centroidsPath));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(fixture.eqDiamPath));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_NeighborhoodsArrayName_Key, std::make_any<std::string>("Counts"));
+  args.insertOrAssign(ComputeNeighborhoodsFilter::k_NeighborhoodListArrayName_Key, std::make_any<std::string>("Neighbors"));
+  auto result = filter.execute(fixture.dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto countsPath = fixture.featureAMPath.createChildPath("Counts");
+  const auto listPath = fixture.featureAMPath.createChildPath("Neighbors");
+  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(countsPath));
+  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32NeighborList>(listPath));
+  const auto& counts = fixture.dataStructure.getDataRefAs<Int32Array>(countsPath);
+  const auto& neighbors = fixture.dataStructure.getDataRefAs<Int32NeighborList>(listPath);
+  REQUIRE(counts.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(neighbors.getStore()->isOutOfCore());
+  REQUIRE(neighbors.getTupleShape() == ShapeType{3, 1, 3});
+  // The output list crosses its three-tuple HDF5 chunk boundary at features 2/3.
+  std::vector<std::vector<int32>> expected(9);
+  expected[2] = {3};
+  expected[4] = {3};
+  if(radiusMode == 1)
+  {
+    expected[3] = {2, 4};
+  }
+  for(usize featureIdx = 0; featureIdx < 9; featureIdx++)
+  {
+    auto actual = neighbors.at(featureIdx);
+    std::sort(actual.begin(), actual.end());
+    REQUIRE(actual == expected[featureIdx]);
+    REQUIRE(counts[featureIdx] == static_cast<int32>(expected[featureIdx].size()));
+  }
+  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeNeighborhoodsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeNeighborhoodsFilter][BackwardsCompatibility]")

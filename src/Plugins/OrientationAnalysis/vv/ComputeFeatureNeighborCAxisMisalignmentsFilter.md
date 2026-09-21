@@ -15,13 +15,13 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port with one inherited bug corrected** — same outer/inner loop structure + hex-hex phase gate. `QuatF`→`QuatD`; hand-rolled 3×3 matrix math → Eigen; direct `arccos(c1·c2)` (scalar projection, not full crystal miso → not affected by EbsdLib 2.4.1 precision fix). D1 (divisor-loop bug) corrected during this V&V cycle. UUID reassigned; `Find`→`Compute` rename.       |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 3 hand-derived data fixtures: a 2-feature sanity pair, a 10×10×1 6-feature realistic microstructure with mixed hex/non-hex phases that exercises 3 distinct bug-exposing per-feature configurations, and a 4-feature control case where the buggy code happens to produce the right answer. **Class 4 (Invariant) companion** — range bound `[0°, 90°]`, per-feature averaging formula `sum-of-non-NaN-entries / count-of-non-NaN-entries`, all-NaN-on-non-hex-focal invariant. Class 1 oracle uses pure Bunge ZXZ Euler rotations `(0, Φ, 0)` about x so that the crystal c-axis tilts by Φ degrees from world z. For two cells with tilts Φ_A and Φ_B, the c-axis misalignment is exactly `|Φ_A - Φ_B|` (folded to `[0°, 90°]`). |
-| Code paths enumerated  | 6 of 6 algorithmic paths exercised: (1) all-non-hex preflight early-exit returns error -1562 — *not exercised by V&V fixtures* (all fixtures contain at least one hex phase) but covered by the existing parameter-validation tests upstream; (2) mixed-phase warning -1563 emitted — exercised by the realistic-microstructure and mismatch-last-order fixtures; (3) per-feature outer loop with hex-hex same-phase neighbor → list-write + accumulate; (4) phase-mismatch branch → write `NaN` + decrement divisor; (5) `FindAvgMisals=true` finalize with `hexNeighborListSize > 0` → `avg = sum/divisor`; (6) `FindAvgMisals=true` finalize with `hexNeighborListSize == 0` → `avg = NaN` (entire neighbor list non-hex, exercised by F3 in the realistic-microstructure fixture). |
-| Tests today            | **5 TEST_CASEs / 5 ctest entries**, 100% pass (~0.3s on EbsdLib 2.4.1+). 3 Class 1 fixtures (`Simple Hex Pair`, `Realistic Microstructure (exposes divisor bug)`, `Mismatch Last Order`) + 1 Class 4 invariants test (with 3 SECTIONs) + 1 SIMPL backwards-compatibility test. **No exemplar archive consumed.**                                                                                                                                                                                                                                  |
+| Oracle (confirmed) | Class 1 analytical and Class 4 invariants. Three small fixtures retain the independent expected values. The hidden `genuine HDF5 1MiB-chunk tail oracle` checks 15° and 30° across the quaternion chunk boundary. |
+| Code paths enumerated | 9 of 12 exercised. No-hex rejection, average-disabled output, and cancellation remain outside the boundary regression. |
+| Tests today | 7 registered tests plus 1 hidden OOC contract test. Both serial CTest selections pass 7/7. |
 | Exemplar archive       | **None — inline-constructed in test source.** The pre-existing main exemplar TEST_CASE (consumed `compute_feature_neighbor_caxis_misalignments.tar.gz`) was **retired 2026-06-04** because the exemplar dataset was hex-phase-only, which means the per-mismatch decrement branch in the algorithm is never exercised — the exemplar would have happily passed even on the buggy code. The 4 hand-derived data fixtures cover all 6 algorithmic paths AND include 3 distinct bug-exposing per-feature configurations. The retired archive was unique to this filter, so its `download_test_data` line in `test/CMakeLists.txt` was removed entirely. |
 | Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171, 2026-06-04.** Each root cause was proven by applying the corresponding surgical fixes (D1 divisor fix; D4+D6 Eigen + double + Hex_Low) to a local build of the legacy source, after which the legacy output became **bit-identical to SIMPLNX** — 18 per-pair entries + 6 per-feature avgs byte-compared. 5 deviations: **D1** (divisor bug fires on 6.5.171; SIMPLNX and the patched legacy build produce analytical-correct values), **D2** (avg-array fillValue — DORMANT on current backend), **D4** (EbsdLib quat→matrix swap, ~1e-6° drift, closed by the Eigen+double patch to the legacy build), **D5** (PR #1438 — re-classified as preflight-banner UX downgrade, not warning-channel regression), **D6** (Hex_Low support gap surfaced 2026-06-04, patched together with D4). See deviations doc for per-feature numbers and root-cause detail. |
-| Bug flags              | **One legacy bug, resolved in SIMPLNX** — D1, divisor reassigned inside inner j-loop (sibling of F#2 ComputeFeatureNeighborMisorientations D1). Confirmed in `bug_triage.md` as Bug #3 (production-relevant: the shipping `EBSD_File_Processing/EBSD_Hexagonal_Data_Analysis.d3dpipeline` runs this filter with `find_avg_misals=true`). Fixed 2026-06-04 at `Algorithms/ComputeFeatureNeighborCAxisMisalignments.cpp:111`; verified via the `Realistic Microstructure (exposes divisor bug)` test which FAILED on pre-fix code (F2, F5, F6 per-feature averages wrong) and PASSES on the post-fix code. **One latent suspect** — D2, avg-array fillValue uncertainty. Surfaced by the retroactive report; not exercised by the V&V fixtures (which happen to land on hex-hex first for every feature that has `find_avg_misals=true` and a non-zero average). Worth a follow-up confirmation against `DataStoreUtilities::CreateDataStore` default-init behavior. |
-| V&V phase              | **All V&V work complete per V2 policy.** Class 1 + Class 4 oracle confirmed against 5-test suite; divisor bug fixed; circular-oracle archive retired; legacy A/B by source inspection; user-facing doc updated. Three source-tree deliverables (this report + `vv/deviations/...` + `vv/provenance/...`) are in place. **Outstanding:** Status promotion DRAFT → READY FOR REVIEW pending second-engineer oracle review (recommend Joey Kleingers, especially the realistic-microstructure F2/F5/F6 hand-derived expected averages and the c-axis pure-Φ-rotation closed-form derivation). |
+| Bug flags | Existing D1 divisor defect remains fixed. The current implementation explicitly initializes the average buffer to zero, removing the D2 output-initialization dependency. |
+| V&V phase | The historical COMPLETE status and sign-off are retained. OOC boundary recertification adds the chunk-tail oracle and dual-build checks; the recorded second-engineer review recommendation remains below. |
 
 ## Summary
 
@@ -60,7 +60,7 @@ The shipping pipeline `pipelines/EBSD_File_Processing/EBSD_Hexagonal_Data_Analys
 
 ### Class 1 (Analytical)
 
-Class 1 oracle derived by hand. Closed-form argument: a Bunge ZXZ Euler `(0, Φ, 0)` is a pure rotation about x, yielding `c = R^T · [0,0,1] = [0, sin(Φ), cos(Φ)]`. For two features with tilts Φ_A and Φ_B, `arccos(c_A · c_B) = |Φ_A − Φ_B|`, folded to `[0°, 90°]` via `if(w > π/2) w = π − w`. All V&V fixtures use tilts in `[0°, 25°]` so the fold is a no-op.
+Class 1 oracle derived by hand. Closed-form argument: a Bunge ZXZ Euler `(0, Φ, 0)` is a pure rotation about x, yielding `c = R^T · [0,0,1] = [0, sin(Φ), cos(Φ)]`. For two features with tilts Φ_A and Φ_B, `arccos(c_A · c_B) = |Φ_A − Φ_B|`, folded to `[0°, 90°]` via `if(w > π/2) w = π − w`. The small fixtures use tilts in `[0°, 25°]`; the chunk-tail fixture extends this to 30°. The fold is a no-op for these fixtures.
 
 **Per-fixture expected outputs:**
 
@@ -102,27 +102,51 @@ Recommended pending Joey Kleingers or another OA-domain engineer review. Two are
 1. The realistic-microstructure F2/F5/F6 hand-derived expected averages — these are the load-bearing values for the bug-exposing assertion. The neighbor lists and phase assignments are tightly coupled.
 2. The closed-form derivation of "pure Bunge ZXZ `(0, Φ, 0)` tilts c-axis by Φ" — straightforward but worth confirming the Bunge convention matches the algorithm's quat-to-orientation-matrix expectation.
 
+## Bugs found and fixed
+
+The current branch retains the divisor correction.
+
+| Deviation | Defect | Affected released versions | Resolution in this branch |
+|-----------|--------|----------------------------|---------------------------|
+| `ComputeFeatureNeighborCAxisMisalignmentsFilter-D1` | Resetting the divisor inside the neighbor loop counted excluded neighbors in the average. | DREAM.3D 6.5.171; DREAM3D-NX v7.0.0 through v7.4.1. | The divisor is initialized once per feature and decremented for each excluded neighbor. |
+
 ## Code path coverage
+
+9 of 12 paths exercised. Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborCAxisMisalignments.cpp` (190 lines).
 
 | Path | Description                                                                                                                                                     | Exercised by |
 |------|-------------------------------|--------------|
-| 1    | All-non-hex preflight → error -1562 (no hex phases)                                                                                                             | *Not exercised by V&V fixtures*. Existing parameter-validation upstream tests cover this. |
+| 1    | All-non-hex preflight → error -1562 (no hex phases)                                                                                                             | *Not directly tested. No named current test proves this rejection; it is outside this boundary regression.* |
 | 2    | Mixed-phase warning -1563 emitted                                                                                                                               | `Class 1 - Realistic Microstructure` (F3 is Cubic), `Class 1 - Mismatch Last Order` (F4 is Cubic) |
-| 3    | Per-feature outer loop with hex-hex same-phase neighbor → write angle to misoList + accumulate to avg                                                           | All 4 Class 1 fixtures |
+| 3    | Per-feature outer loop with hex-hex same-phase neighbor → write angle to misoList + accumulate to avg                                                           | The three small Class 1 fixtures and the chunk-tail fixture |
 | 4    | Phase-mismatch branch → write NaN to misoList + decrement divisor                                                                                               | `Class 1 - Realistic Microstructure` (F2, F5, F6) and `Class 1 - Mismatch Last Order` (F1's F4-neighbor) |
-| 5    | `find_avg_misals=true` finalize with `hexNeighborListSize > 0` → `avg = sum/divisor`                                                                            | All 4 Class 1 fixtures |
+| 5    | `find_avg_misals=true` finalize with `hexNeighborListSize > 0` → `avg = sum/divisor`                                                                            | The three small Class 1 fixtures and the chunk-tail fixture |
 | 6    | `find_avg_misals=true` finalize with `hexNeighborListSize == 0` → `avg = NaN`                                                                                   | `Class 1 - Realistic Microstructure` F3 (non-hex focal, all neighbors NaN) |
+| 7 | Whole-array cache reads cross the quaternion chunk boundary | `genuine HDF5 1MiB-chunk tail oracle` — 15° and 30° pair values and averages |
+| 8 | Invalid current feature phase → error -1564 | `Phase Index Bounds / Current Feature Phase returns an error` |
+| 9 | Invalid neighbor phase → error -1564 | `Phase Index Bounds / Neighbor Feature Phase returns an error` |
+| 10 | Unequal feature tuple counts → error -1560 | `Preflight Error - Feature array tuple count mismatch (-1560)` |
+| 11 | Average output disabled | *Not directly tested by the current analytical fixtures. A minimal follow-up can run Simple Hex Pair with the option off and check the list and absent average.* |
+| 12 | Cancellation | *Not directly tested. Requires cancel-signal injection.* |
+
 
 ## Test inventory
 
-| TEST_CASE                                                                                | Category | Lines | ctest entry  |
-|------------------------------------------------------------------------------------------|----------|-------|--------------|
-| `: SIMPL Backwards Compatibility`                                                        | Compat   | ~45   | Yes (2 dynamic sections: 6.4 + 6.5) |
-| `: Class 1 - Simple Hex Pair`                                                            | Class 1  | ~30   | Yes          |
-| `: Class 1 - Realistic Microstructure (exposes divisor bug)`                             | Class 1  | ~80   | Yes          |
-| `: Class 1 - Mismatch Last Order`                                                        | Class 1  | ~35   | Yes          |
-| `: Class 4 - Invariants` (3 SECTIONs)                                                    | Class 4  | ~50   | Yes (3 SECTIONs) |
-| ~~`: Valid Filter Execution` (legacy exemplar test)~~                                    | RETIRED  | ~55   | Retired 2026-06-04 (hex-only exemplar cannot trigger the divisor bug) |
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `SIMPL Backwards Compatibility` | kept | SIMPL 6.4 and 6.5 conversion sections. |
+| `Class 1 - Simple Hex Pair` | kept | Literal 10° pair and average values. |
+| `Class 1 - Realistic Microstructure (exposes divisor bug)` | kept | Mixed-phase values and independent divisor-sensitive averages. |
+| `Class 1 - Mismatch Last Order` | kept | Literal [5°, 10°, NaN] and 7.5° average. |
+| `Class 4 - Invariants` | kept | Range, average formula, and non-hex NaN sections. |
+| `Preflight Error - Feature array tuple count mismatch (-1560)` | kept | Rejects unequal feature tuple counts. |
+| `Phase Index Bounds` | kept | Current/neighbor invalid phases and ignored feature zero; uses HDF5 stores when available. |
+| `genuine HDF5 1MiB-chunk tail oracle` | new-for-V&V | 65,537 feature quaternions; asserts the store chunk shape is 65,536 and checks 15°/30° pair and average outputs at the boundary and tail. |
+| `Valid Filter Execution` | retired | Original hex-only exemplar could not expose the divisor bug; replaced upstream by independent analytical tests. |
+
+OOC recertification (2026-09-18): the upstream/develop analytical assertions remain unchanged. Serial CTest passes 7/7 in both DREAM3DNX builds. The hidden boundary test runs separately in the OOC build because it requires the HDF5-OOC manager. D1 remains corrected. D2 no longer depends on output-store initialization: the current algorithm explicitly initializes its average buffer to zero.
+
+OOC recertification, 2026-09-18: serial CTest passed 7/7 in `NX-Com-Qt69-Vtk96-Rel` and 7/7 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 37 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 
@@ -139,11 +163,10 @@ The retired archive was unique to this filter (no other filter test consumed it)
 See `vv/deviations/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the canonical, ID-stable list:
 
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D1`** — Divisor bug (resolved on the SIMPLNX side; root cause proven by applying the same fix to a local build of the legacy source). Production-relevant via shipping `EBSD_Hexagonal_Data_Analysis.d3dpipeline`.
-- **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D2`** — Output `AvgCAxisMisalignments` array allocated without explicit fillValue; algorithm assumes zero-initialization. Latent — needs DataStore default-init semantics confirmation.
+- **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D2`** — Output `AvgCAxisMisalignments` array allocated without explicit fillValue; algorithm assumes zero-initialization. The current OOC implementation explicitly zero-initializes its average buffer, so this dependency is removed.
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D4`** — PR #1472 EbsdLib quat-to-orientation-matrix swap. Likely benign precision-only difference (~`0.0001°` per the existing doc note).
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D5`** — PR #1438 moved the filter-level preflight banner from `resultOutputActions.warnings()` to `preflightUpdatedValues`. Empirically: the algorithm-level execute-time warning still surfaces to CLI users via `Result<>::warnings()` — D5 is a UX-only downgrade (preflight banner gone from GUI parameter panel), not a warning-channel regression.
 - **`ComputeFeatureNeighborCAxisMisalignmentsFilter-D6`** — Hexagonal_Low support gap (surfaced 2026-06-04). Legacy 6.5.171 restricts the hex-hex phase gate to Hex_High only; SIMPLNX correctly handles both Hex_High AND Hex_Low. Not observable on the F#6 fixture (no Hex_Low features), but a real behavior gap on wurtzite-class data.
 
 D3 (default output array name change from PR #1438) is documented as a non-deviation in the same file (user-facing migration noise, not a behavioral deviation).
 **SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `ComputeFeatureNeighborCAxisMisalignmentsFilter-D1`.
-

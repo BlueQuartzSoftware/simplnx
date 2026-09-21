@@ -14,6 +14,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <Eigen/Dense>
 #include <catch2/catch.hpp>
@@ -654,6 +655,49 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slic
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().at(0).code == -6851);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: real HDF5 1MiB-page permutation oracle", "[SimplnxCore][RotateSampleRefFrameFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool sliceBySlice = GENERATE(false, true);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_PlaneTuples = 257 * 257;
+  constexpr usize k_CellTuples = 4 * k_PlaneTuples;
+  static_assert(k_CellTuples > (1024 * 1024) / sizeof(int32));
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {257, 257, 4});
+  const auto inputValuesPath = k_InputPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName);
+  auto inputArray = dataStructure.getSharedDataAs<IDataArray>(inputValuesPath);
+  REQUIRE(inputArray != nullptr);
+  REQUIRE(ConvertIDataArray(inputArray, "HDF5-OOC"));
+  REQUIRE(inputArray->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  RotateSampleRefFrameFilter filter;
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0.0F, 0.0F, 1.0F, 180.0F}, sliceBySlice);
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  const auto outputValuesPath = k_OutputPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputValuesPath));
+  const auto& output = dataStructure.getDataRefAs<Int32Array>(outputValuesPath);
+  REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(output.getNumberOfTuples() == k_CellTuples);
+  std::vector<int32> values(k_CellTuples);
+  auto readResult = output.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  // A half turn about Z reverses each XY plane without changing the Z order.
+  // Source values 1..N cross a full 1 MiB cache page and a partial second page.
+  for(usize voxelIdx = 0; voxelIdx < k_CellTuples; voxelIdx++)
+  {
+    const usize plane = voxelIdx / k_PlaneTuples;
+    const usize inPlane = voxelIdx % k_PlaneTuples;
+    REQUIRE(values[voxelIdx] == static_cast<int32>(plane * k_PlaneTuples + k_PlaneTuples - inPlane));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RotateSampleRefFrameFilter][BackwardsCompatibility]")

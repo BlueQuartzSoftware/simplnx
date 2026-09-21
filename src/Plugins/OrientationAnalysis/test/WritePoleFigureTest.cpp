@@ -1,6 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -10,9 +13,12 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <array>
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 namespace fs = std::filesystem;
 
 #include "OrientationAnalysis/Filters/WritePoleFigureFilter.hpp"
@@ -306,6 +312,94 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
   const usize modeDiff = countDiffBytes(discreteSmall, color);
   INFO(fmt::format("Bytes that differ between Discrete and Color modes: {} / {}", modeDiff, discreteSmall.size()));
   REQUIRE(modeDiff > discreteSmall.size() / 100);
+}
+
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block discrete-count oracle", "[OrientationAnalysis][WritePoleFigureFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  DataStructure dataStructure;
+  const DataPath eulerPath({"Eulers"});
+  const DataPath phasePath({"Phases"});
+  const DataPath maskPath({"Mask"});
+  const DataPath crystalPath({"CrystalStructures"});
+  const DataPath namesPath({"Materials"});
+  auto eulerStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerPath, {k_BlockTuples + 1}, {3});
+  auto phaseStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasePath, {k_BlockTuples + 1}, {1});
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_BlockTuples + 1}, {1});
+  auto crystalStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalPath, {2}, {1});
+  auto* eulersPtr = Float32Array::Create(dataStructure, "Eulers", eulerStore);
+  auto* phasesPtr = Int32Array::Create(dataStructure, "Phases", phaseStore);
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", maskStore);
+  auto* crystalsPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStore);
+  REQUIRE(eulersPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  REQUIRE(crystalsPtr != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Materials", {2}, std::vector<std::string>{"Invalid", "Cubic"}) != nullptr);
+  eulersPtr->fill(0);
+  phasesPtr->fill(0);
+  maskPtr->fill(0);
+  (*phasesPtr)[1] = 1; // A masked-out orientation must not contribute a pole.
+  (*phasesPtr)[k_BlockTuples - 1] = 1;
+  (*phasesPtr)[k_BlockTuples] = 1;
+  (*maskPtr)[k_BlockTuples - 1] = 1;
+  (*maskPtr)[k_BlockTuples] = 1;
+  (*eulersPtr)[k_BlockTuples * 3] = numbers::pi_v<float32> / 4.0F;
+  (*crystalsPtr)[0] = 999;
+  (*crystalsPtr)[1] = 1;
+  REQUIRE(eulerStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(phaseStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(maskStore->getDataFormat() == "HDF5-OOC");
+  WritePoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(32));
+  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
+  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Counts"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot1Name, std::make_any<std::string>("001"));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot2Name, std::make_any<std::string>("011"));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot3Name, std::make_any<std::string>("111"));
+  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasePath));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(namesPath));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const std::array<std::string, 3> families = {"001", "011", "111"};
+  const std::array<float64, 3> expectedSums = {12.0, 24.0, 16.0};
+  for(usize familyIdx = 0; familyIdx < families.size(); familyIdx++)
+  {
+    const DataPath outputPath({"Counts", "Cell Data", "Phase_1_" + families[familyIdx]});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    std::vector<float64> values(32 * 32);
+    auto readResult = output.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(values.data(), values.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    REQUIRE(std::accumulate(values.begin(), values.end(), 0.0) == expectedSums[familyIdx]);
+    if(familyIdx == 0)
+    {
+      // Two cubic <001> families give four poles at the center. Identity gives
+      // four cardinal equatorial poles; the 45-degree tail gives four diagonals.
+      // The stored image reverses row order, so the center is at (16,15).
+      std::vector<float64> expected(32 * 32, 0.0);
+      expected[15 * 32 + 16] = 4.0;
+      for(usize index : {15 * 32 + 1, 15 * 32 + 31, 16, 30 * 32 + 16, 5 * 32 + 6, 5 * 32 + 26, 25 * 32 + 6, 25 * 32 + 26})
+      {
+        expected[index] = 1.0;
+      }
+      REQUIRE(values == expected);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

@@ -1,7 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <cmath>
 #include <filesystem>
+#include <vector>
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
@@ -160,6 +162,112 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
       REQUIRE(magnitude == Approx(1.0f).margin(k_Tol));
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block tail oracle", "[OrientationAnalysis][ComputeAvgCAxesFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+
+  constexpr usize k_BlockTuples = 4096;
+  constexpr usize k_CellTuples = k_BlockTuples + 1;
+  constexpr usize k_FeatureTuples = 2;
+  constexpr usize k_LastFullBlockTuple = k_BlockTuples - 1;
+  constexpr usize k_TailTuple = k_BlockTuples;
+  constexpr float32 k_SqrtThreeOverTwo = 0.8660254F;
+  constexpr float32 k_Tolerance = 1.0E-5F;
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  const DataPath cellDataPath({"CellData"});
+  const DataPath featureDataPath({"CellFeatureData"});
+  const DataPath ensembleDataPath({"CellEnsembleData"});
+  const DataPath featureIdsPath = cellDataPath.createChildPath("FeatureIds");
+  const DataPath quatsPath = cellDataPath.createChildPath("Quats");
+  const DataPath phasesPath = cellDataPath.createChildPath("Phases");
+  const DataPath crystalStructuresPath = ensembleDataPath.createChildPath("CrystalStructures");
+  const DataPath avgCAxesPath = featureDataPath.createChildPath("AvgCAxes");
+
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {k_CellTuples});
+  auto* featureData = AttributeMatrix::Create(dataStructure, featureDataPath.getTargetName(), {k_FeatureTuples});
+  auto* ensembleData = AttributeMatrix::Create(dataStructure, ensembleDataPath.getTargetName(), {2});
+  REQUIRE(cellData != nullptr);
+  REQUIRE(featureData != nullptr);
+  REQUIRE(ensembleData != nullptr);
+
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {k_CellTuples}, {1});
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, {k_CellTuples}, {4});
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {k_CellTuples}, {1});
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+
+  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
+  auto* quats = Float32Array::Create(dataStructure, quatsPath.getTargetName(), quatsStore, cellData->getId());
+  auto* phases = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore, cellData->getId());
+  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleData->getId());
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(quats != nullptr);
+  REQUIRE(phases != nullptr);
+  REQUIRE(crystalStructures != nullptr);
+
+  std::vector<int32> featureIdsValues(k_CellTuples, 0);
+  std::vector<int32> phaseValues(k_CellTuples, 1);
+  std::vector<float32> quaternionValues(k_CellTuples * 4, 0.0F);
+  for(usize tupleIdx = 0; tupleIdx < k_CellTuples; tupleIdx++)
+  {
+    quaternionValues[tupleIdx * 4 + 3] = 1.0F;
+  }
+
+  featureIdsValues[k_LastFullBlockTuple] = 1;
+  featureIdsValues[k_TailTuple] = 1;
+  quaternionValues[k_TailTuple * 4] = 0.5F;
+  quaternionValues[k_TailTuple * 4 + 3] = k_SqrtThreeOverTwo;
+  const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
+
+  auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
+  auto phasesWriteResult = phases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
+  auto quatsWriteResult = quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
+  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
+
+  REQUIRE(featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  ComputeAvgCAxesFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(quatsPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureDataPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(avgCAxesPath.getTargetName()));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(executeResult.result.warnings().empty());
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgCAxesPath));
+  const auto& avgCAxes = dataStructure.getDataRefAs<Float32Array>(avgCAxesPath);
+  REQUIRE(avgCAxes.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(avgCAxes.getTupleShape() == ShapeType{k_FeatureTuples});
+  REQUIRE(avgCAxes.getComponentShape() == ShapeType{3});
+
+  REQUIRE(std::isnan(avgCAxes[0]));
+  REQUIRE(std::isnan(avgCAxes[1]));
+  REQUIRE(std::isnan(avgCAxes[2]));
+
+  // The identity and +60-degree inputs have a normalized average at +30 degrees about X.
+  REQUIRE(avgCAxes[3] == Approx(0.0F).margin(k_Tolerance));
+  REQUIRE(avgCAxes[4] == Approx(0.5F).margin(k_Tolerance));
+  REQUIRE(avgCAxes[5] == Approx(k_SqrtThreeOverTwo).margin(k_Tolerance));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

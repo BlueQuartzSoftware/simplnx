@@ -22,6 +22,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -402,6 +403,62 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - T
 // SIMPL Backwards Compatibility — validates UUID + parameter conversion from
 // the legacy ReadAngData (SIMPL UUID b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40).
 //------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadAngDataFilter: real HDF5 65536-block import oracle", "[OrientationAnalysis][ReadAngDataFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  std::string contents = k_HeaderPrefix + k_PhaseBlock + "# GRID: SqrGrid\n# XSTEP: 0.25\n# YSTEP: 0.5\n# NCOLS_ODD: 65537\n# NCOLS_EVEN: 65537\n# NROWS: 1\n#\n";
+  for(usize tupleIdx = 0; tupleIdx <= k_BlockTuples; tupleIdx++)
+  {
+    const float32 x = static_cast<float32>(tupleIdx) * 0.25F;
+    if(tupleIdx == k_BlockTuples - 1)
+    {
+      contents += fmt::format("0.5 0.625 0.75 {} 0 20.25 0.25 2 200 1.5\n", x);
+    }
+    else if(tupleIdx == k_BlockTuples)
+    {
+      contents += fmt::format("0.875 1 1.125 {} 0 30.75 0.125 0 300 2.25\n", x);
+    }
+    else
+    {
+      contents += fmt::format("0.125 0.25 0.375 {} 0 10.5 0.5 1 100 0.75\n", x);
+    }
+  }
+  const auto inputFile = WriteAngFile("read_ang_ooc_boundary.ang", contents);
+  DataStructure dataStructure;
+  ReadAngDataFilter filter;
+  auto args = MakeDefaultArgs(inputFile);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto cellsPath = k_DataContainerPath.createChildPath(k_CellData);
+  const auto eulersPath = cellsPath.createChildPath("EulerAngles");
+  const auto phasesPath = cellsPath.createChildPath("Phases");
+  const auto qualityPath = cellsPath.createChildPath("Image Quality");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(qualityPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulersPath);
+  const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  const auto& quality = dataStructure.getDataRefAs<Float32Array>(qualityPath);
+  REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(quality.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const std::array<float32, 6> expectedEuler = {0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F};
+  for(usize compIdx = 0; compIdx < expectedEuler.size(); compIdx++)
+  {
+    REQUIRE(eulers[(k_BlockTuples - 1) * 3 + compIdx] == expectedEuler[compIdx]);
+  }
+  REQUIRE(phases[k_BlockTuples - 1] == 2);
+  REQUIRE(phases[k_BlockTuples] == 1);
+  REQUIRE(quality[k_BlockTuples - 1] == 20.25F);
+  REQUIRE(quality[k_BlockTuples] == 30.75F);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath).getDimensions() == SizeVec3(k_BlockTuples + 1, 1, 1));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadAngDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

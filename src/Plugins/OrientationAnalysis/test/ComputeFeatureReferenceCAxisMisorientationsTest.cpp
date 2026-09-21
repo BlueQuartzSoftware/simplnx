@@ -638,6 +638,55 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   }
 }
 
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: genuine HDF5 slice-boundary oracle",
+          "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  constexpr usize k_SliceTuples = 17 * 19;
+  constexpr usize k_CellTuples = k_SliceTuples * 4;
+  auto fixture = AnalyticalFixtures::CreateScaffold(17, 19, 4, 2, 2);
+  fixture.featureIds->fill(0);
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  const std::array<usize, 3> cellIndices = {k_SliceTuples - 1, k_SliceTuples, k_CellTuples - 1};
+  const std::array<float32, 3> expectedAngles = {10.0F, 20.0F, 30.0F};
+  for(usize witnessIdx = 0; witnessIdx < cellIndices.size(); witnessIdx++)
+  {
+    (*fixture.featureIds)[cellIndices[witnessIdx]] = 1;
+    AnalyticalFixtures::SetCellQuat(fixture, cellIndices[witnessIdx], AnalyticalFixtures::QuatFromPhiDeg(expectedAngles[witnessIdx]));
+  }
+
+  REQUIRE(fixture.featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.avgCAxes->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  auto args = AnalyticalFixtures::BuildArgs();
+  auto executeResult = filter.execute(fixture.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(executeResult.result.warnings().size() == 1);
+  REQUIRE(executeResult.result.warnings()[0].code == -9801);
+
+  const auto& cellMisorientations = AnalyticalFixtures::GetOutputCellMisos(fixture.ds);
+  const auto& featureMeans = AnalyticalFixtures::GetOutputFeatureAvg(fixture.ds);
+  const auto& featureStdevs = AnalyticalFixtures::GetOutputFeatureStdev(fixture.ds);
+  REQUIRE(cellMisorientations.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(featureMeans.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(featureStdevs.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  for(usize witnessIdx = 0; witnessIdx < cellIndices.size(); witnessIdx++)
+  {
+    REQUIRE(cellMisorientations[cellIndices[witnessIdx]] == Approx(expectedAngles[witnessIdx]).margin(1.0E-3F));
+  }
+  REQUIRE(cellMisorientations[k_SliceTuples + 1] == 0.0F);
+  REQUIRE(cellMisorientations[k_SliceTuples * 2] == 0.0F);
+  REQUIRE(featureMeans[1] == Approx(20.0F).margin(1.0E-3F));
+  REQUIRE(featureStdevs[1] == Approx(std::sqrt(200.0F / 3.0F)).margin(1.0E-3F));
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
+
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();

@@ -12,6 +12,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "SimplnxCore/Filters/RegularizeZSpacingFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -337,6 +338,55 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors()[0].code == -5561);
   }
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", "[SimplnxCore][RegularizeZSpacingFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool inPlace = GENERATE(false, true);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  auto dataStructure = createTestDataStructure();
+  for(const auto& path : {k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName), k_InputGeometryPath.createChildPath(k_LooseArrayName)})
+  {
+    auto array = dataStructure.getSharedDataAs<IDataArray>(path);
+    REQUIRE(array != nullptr);
+    REQUIRE(ConvertIDataArray(array, "HDF5-OOC"));
+    REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  const auto boundsFile = writeZBoundsFile("regularize_z_ooc_bounds.txt", {0, 1, 3, 6, 10});
+  RegularizeZSpacingFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(boundsFile));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(inPlace));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto resultPath = inPlace ? k_InputGeometryPath : k_OutputGeometryPath;
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(resultPath));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(resultPath).getDimensions() == SizeVec3(2, 1, 5));
+  const auto outputPath = resultPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Int32Array>(outputPath);
+  REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // The independently derived source-plane map is [0,1,2,2,3].
+  const std::array<int32, 10> expected = {0, 1, 2, 3, 4, 5, 4, 5, 6, 7};
+  REQUIRE(output.getSize() == expected.size());
+  for(usize tupleIdx = 0; tupleIdx < expected.size(); tupleIdx++)
+  {
+    REQUIRE(output[tupleIdx] == expected[tupleIdx]);
+  }
+  const auto loosePath = resultPath.createChildPath(k_LooseArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(loosePath));
+  const auto& loose = dataStructure.getDataRefAs<Int32Array>(loosePath);
+  REQUIRE(loose.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  for(usize tupleIdx = 0; tupleIdx < 4; tupleIdx++)
+  {
+    REQUIRE(loose[tupleIdx] == static_cast<int32>(100 + tupleIdx));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RegularizeZSpacingFilter][BackwardsCompatibility]")

@@ -14,7 +14,9 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 
@@ -458,6 +460,55 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Analytical Oracle 
     }
   }
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: genuine HDF5 65536-block tail oracle", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  DataStructure dataStructure;
+  const DataPath featureIdsPath({"Boundary FeatureIds"});
+  const DataPath sourcePath({"Boundary RGB"});
+  const DataPath outputPath({"Boundary RGB_Cell"});
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {k_BlockTuples + 1}, {1});
+  auto sourceStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, sourcePath, {3}, {3});
+  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore);
+  auto* source = Int32Array::Create(dataStructure, sourcePath.getTargetName(), sourceStore);
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(source != nullptr);
+  featureIds->fill(0);
+  (*featureIds)[k_BlockTuples - 1] = 1;
+  (*featureIds)[k_BlockTuples] = 2;
+  const std::array<int32, 9> sourceValues = {1, 2, 3, 40, 50, 60, -7, 8, -9};
+  auto writeResult = sourceStore->copyFromBuffer(0, nonstd::span<const int32>(sourceValues.data(), sourceValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(featureIdsStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(sourceStore->getDataFormat() == "HDF5-OOC");
+
+  CopyFeatureArrayToElementArrayFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{sourcePath}));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<std::string>("_Cell"));
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Int32Array>(outputPath);
+  REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(output.getTupleShape() == ShapeType{k_BlockTuples + 1});
+  REQUIRE(output.getComponentShape() == ShapeType{3});
+  const std::array<usize, 3> witnessIndices = {0, k_BlockTuples - 1, k_BlockTuples};
+  const std::array<std::array<int32, 3>, 3> expected = {{{1, 2, 3}, {40, 50, 60}, {-7, 8, -9}}};
+  for(usize witnessIdx = 0; witnessIdx < witnessIndices.size(); witnessIdx++)
+  {
+    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    {
+      REQUIRE(output[witnessIndices[witnessIdx] * 3 + compIdx] == expected[witnessIdx][compIdx]);
+    }
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

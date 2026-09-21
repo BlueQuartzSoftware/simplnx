@@ -188,6 +188,83 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
   }
 }
 
+TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and slice oracle", "[SimplnxCore][IdentifySampleFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool fillHoles = GENERATE(false, true);
+  CAPTURE(fillHoles);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  constexpr usize k_Width = 129;
+  constexpr usize k_Height = 129;
+  constexpr usize k_SliceTuples = k_Width * k_Height;
+  constexpr usize k_CellTuples = 3 * k_SliceTuples;
+  constexpr usize k_Hole = k_SliceTuples + 10 * k_Width + 10;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({k_Width, k_Height, 3});
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  geometry->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {3, k_Height, k_Width}, geometry->getId());
+  REQUIRE(cellData != nullptr);
+  geometry->setCellData(*cellData);
+  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, k_NonSquareMaskPath, {3, k_Height, k_Width}, {1});
+  auto* mask = UInt8Array::Create(dataStructure, "Mask", store, cellData->getId());
+  REQUIRE(mask != nullptr);
+
+  // Slice zero creates over 8,000 isolated provisional labels. Slice one joins
+  // the labels at x<127, across the 4,096-record equivalence-page boundary.
+  std::vector<uint8> values(k_CellTuples, 0);
+  for(usize y = 0; y < k_Height; y++)
+  {
+    for(usize x = 0; x < k_Width; x++)
+    {
+      const usize offset = y * k_Width + x;
+      values[offset] = static_cast<uint8>(x != 127 && (x + y) % 2 == 0);
+      values[k_SliceTuples + offset] = static_cast<uint8>(x < 127);
+      values[2 * k_SliceTuples + offset] = static_cast<uint8>(x < 127);
+    }
+  }
+  values[k_Hole] = 0;
+  // Keep the voxel above the hole connected through its right-hand neighbor.
+  values[10 * k_Width + 11] = 1;
+  auto writeResult = store->copyFromBuffer(0, nonstd::span<const uint8>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(store->getDataFormat() == "HDF5-OOC");
+
+  IdentifySampleFilter filter;
+  auto args = CreateNonSquareArguments();
+  args.insertOrAssign(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(fillHoles));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(mask->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  std::vector<uint8> actual(k_CellTuples);
+  auto readResult = mask->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  for(usize z = 0; z < 3; z++)
+  {
+    for(usize y = 0; y < k_Height; y++)
+    {
+      for(usize x = 0; x < k_Width; x++)
+      {
+        const usize voxelIdx = z * k_SliceTuples + y * k_Width + x;
+        const bool isMainComponent = x < 127 && (z != 0 || (x + y) % 2 == 0 || (x == 11 && y == 10));
+        const bool expected = isMainComponent && (voxelIdx != k_Hole || fillHoles);
+        INFO("voxel " << voxelIdx);
+        REQUIRE(actual[voxelIdx] == static_cast<uint8>(expected));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[SimplnxCore][IdentifySampleFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

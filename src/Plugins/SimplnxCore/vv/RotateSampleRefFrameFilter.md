@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — generalized Eigen 4×4-affine reimplementation (via shared `ImageRotationUtilities`) of the legacy hand-rolled `RotateSampleRefFrame`; different UUID (SIMPL→NX mapped), different NN rule (cell-center `computeCellIndex` vs truncation), new-geometry vs in-place, plus new `KeepInputGeometryOrigin` + Rotation-Matrix representation. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** — exact voxel permutations: an explicit 180@Z slice reversal, **hand-derived 90-degree permutations about X/Y/Z that pin the rotation chirality** (a +90 and a -90 give different arrays, so an inverse-transform regression is caught), non-zero-origin placement, and anisotropic-spacing permutation. **Class 4 (Invariant)** — value-multiset conservation, zero background, full-circle composition = identity, and acceptance of the full octahedral group (120@(111)). Encoded in `test/RotateSampleRefFrameTest.cpp` (11 cases, all pass). |
-| Code paths enumerated  | 11 (filter preflight guard + geometry setup, and the NN-resample execute). 9 of 11 exercised.          |
-| Tests today            | 11 test cases: 10 new-for-V&V (inline Class 1/4 oracle + 2 guard error paths) + 1 kept SIMPL backward-compat. Parameter coverage spans 9 principal-90 rotations × 2 representations, exact chirality-pinning 90s, non-zero origin, anisotropic spacing, 120@(111) acceptance, slice-by-slice, origin handling, and the error paths. Every case calls `CheckArraysInheritTupleDims`. |
+| Code paths enumerated  | 11 (filter preflight guard + geometry setup, and the NN-resample execute). 10 of 12 exercised.          |
+| Tests today | 12 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 12/12. |
 | Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                               |
 | Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. 1 deviation, on the *unsupported* arbitrary-rotation domain only.    |
 | Bug flags              | None. The single deviation (D1) is an intentional guard, not a bug.                                    |
-| V&V phase              | Discovery, oracle design + reconciliation, algorithm review (2 fixed, 1 deferred = shared-utility `std::cout` cleanup), test rework, full-build validation (52/52 affected tests inc. ReadH5Ebsd/ITK), legacy A/B, docs — **complete**. **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** Outstanding: OOC dual-build run. |
+| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
 
@@ -45,11 +45,15 @@
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+
 ## Code path coverage
 
-*9 of 11 paths exercised. The 2 gaps are a defensive out-of-bounds branch (unreachable on the guarded lossless-rotation domain, where every output cell maps in-bounds by construction) and the cancel-signal branches (require mid-execution cancel injection). Neither is algorithmic logic.*
+*10 of 12 paths exercised. The 2 gaps are a defensive out-of-bounds branch (unreachable on the guarded lossless-rotation domain, where every output cell maps in-bounds by construction) and the cancel-signal branches (require mid-execution cancel injection). Neither is algorithmic logic.*
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFilter.cpp` (preflight guard + geometry setup) and `src/SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.cpp` (108 lines) delegating to `src/simplnx/Utilities/ImageRotationUtilities.{hpp,cpp}` (nearest-neighbor path). Logical phases: (a) preflight — validate rotation + build output geometry/actions; (b) execute — per-array nearest-neighbor resample.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFilter.cpp` (preflight guard + geometry setup) and `src/SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.cpp` (112 lines) delegating to `src/simplnx/Utilities/ImageRotationUtilities.{hpp,cpp}` (nearest-neighbor path). Logical phases: (a) preflight — validate rotation + build output geometry/actions; (b) execute — per-array nearest-neighbor resample.
 
 | #  | Phase        | Path                                                   | Test case                   |
 |----|--------------|-------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
@@ -64,6 +68,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | 9  | (a) Preflight| `RemoveOriginalGeometry = true` → rename/delete/rename in-place                                             | legacy A/B pipelines (nxrunner, `remove_original_geometry=true`) + shipping pipelines |
 | 10 | (b) Execute  | `KeepInputGeometryOrigin` true (keep src origin) vs false (transform-derived origin)                        | `KeepInputGeometryOrigin controls output origin` (both branches, exact values)   |
 | 11 | (b) Execute  | Cancel checks (`m_ShouldCancel` in the array loop; `getCancel()` per output slice)                          | *Not tested. Requires cancel-signal injection; low-value.*                       |
+| 12 | OOC boundary | 1MiB-page permutation oracle | `real HDF5 1MiB-page permutation oracle` — independent expected outputs on actual HDF5 stores |
 
 ## Test inventory
 
@@ -81,8 +86,12 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | `SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations` | new-for-V&V | 45@Z, 90@(1,1,1), and an arbitrary 45° Rotation Matrix each return preflight error `-6850`. |
 | `SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slice-reordering rotation` | new-for-V&V | 90@X + slice-by-slice returns preflight error `-6851`. |
 | `SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility` | kept | Unchanged. DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + argument keys. |
+| `real HDF5 1MiB-page permutation oracle` | new-for-V&V | 528,425 assertions; The existing sequential-image builder creates 257×257×4 values. A half turn about Z must reverse each XY plane without changing Z order; every output value is checked. The 264,196 int32 values cross a full 262,144-element source-cache page and a partial second page. Both whole-volume and slice modes use HDF5 input/output and target-only OOC dispatch witnesses. |
+| `slice-by-slice 180 about Y is a lossless per-slice flip` | kept | Existing per-slice versus whole-volume permutation and bijection regression. |
 
 All non-retired tests pass in-core. Full `NX-Com-Qt69-Vtk96-Rel` build: affected tests pass, including `ReadH5Ebsd`, all EBSD readers, `ITKImportImageStack`, and this filter's SIMPL compat test. OOC dual-build run outstanding (guard is preflight-only; negligible OOC risk).
+
+OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in each DREAM3DNX build. The hidden `real HDF5 1MiB-page permutation oracle` passed 528,425 assertions in the OOC binary. The existing sequential-image builder creates 257×257×4 values. A half turn about Z must reverse each XY plane without changing Z order; every output value is checked. The 264,196 int32 values cross a full 262,144-element source-cache page and a partial second page. Both whole-volume and slice modes use HDF5 input/output and target-only OOC dispatch witnesses. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
 
 ## Exemplar archive
 
