@@ -14,7 +14,7 @@ echo "#-------------------------------------------------------------------------
 mkdir -p "$PREFIX/share/simplnx/pipelines/"
 cp -r "simplnx/src/Plugins/SimplnxCore/pipelines" "$PREFIX/share/simplnx/pipelines/SimplnxCore/"
 cp -r "simplnx/src/Plugins/OrientationAnalysis/pipelines" "$PREFIX/share/simplnx/pipelines/OrientationAnalysis/"
-cp -r "simplnx/src/Plugins/ITKImageProcessing/pipelines" "$PREFIX/share/simplnx/pipelines/ITKImageProcessing/"
+cp -r "simplnx/src/Plugins/ImageProcessing/pipelines" "$PREFIX/share/simplnx/pipelines/ImageProcessing/"
 
 # *****************************************************************************
 echo "#-------------------------------------------------------------------------------"
@@ -152,79 +152,6 @@ cmake -S "../nod" -B . -G "Ninja" $CMAKE_ARGS \
 cmake --build . --target all
 
 cmake --build . --target install
-
-cd ..
-
-# *****************************************************************************
-echo "#-------------------------------------------------------------------------------"
-echo " BUILDING ITK"
-echo "#-------------------------------------------------------------------------------"
-mkdir itk_build
-cd itk_build
-
-cmake -S "../itk" -B . -G "Ninja" $CMAKE_ARGS \
-  -D CMAKE_BUILD_TYPE:STRING=Release \
-  -D CMAKE_INSTALL_PREFIX:PATH="$PREFIX" \
-  -D CMAKE_SYSTEM_PREFIX_PATH:PATH="$PREFIX" \
-  -D Eigen3_DIR=${PREFIX}/share/eigen3/cmake \
-  -D BUILD_SHARED_LIBS:STRING=ON \
-  -D CMAKE_OSX_DEPLOYMENT_TARGET:STRING=11.0 \
-  -D CMAKE_SKIP_INSTALL_RPATH:BOOL=OFF \
-  -D CMAKE_SKIP_RPATH:BOOL=OFF \
-  -D CMAKE_CXX_STANDARD:STRING=17 \
-  -D CMAKE_CXX_STANDARD_REQUIRED:BOOL=ON \
-  -D BUILD_DOCUMENTATION:BOOL=OFF \
-  -D BUILD_EXAMPLES:BOOL=OFF \
-  -D BUILD_TESTING:BOOL=OFF \
-  -D KWSYS_USE_MD5:BOOL=ON \
-  -D ITK_LEGACY_REMOVE:BOOL=ON \
-  -D ITK_FUTURE_LEGACY_REMOVE:BOOL=ON \
-  -D ITK_LEGACY_SILENT:BOOL=OFF \
-  -D ITKV4_COMPATIBILITY:BOOL=OFF \
-  -D ITK_USE_SYSTEM_EIGEN:BOOL=ON \
-  -D ITK_USE_SYSTEM_HDF5:BOOL=ON \
-  -D ITKGroup_Core:BOOL=ON \
-  -D ITKGroup_Filtering:BOOL=ON \
-  -D ITKGroup_Registration:BOOL=ON \
-  -D ITKGroup_Segmentation:BOOL=ON \
-  -D ITK_BUILD_DEFAULT_MODULES:BOOL=OFF \
-  -D Module_ITKTestKernel:BOOL=OFF \
-  -D Module_ITKReview:BOOL=OFF \
-  -D Module_SCIFIO=OFF \
-  -D Module_ITKMetricsv4:BOOL=OFF \
-  -D Module_ITKOptimizersv4:BOOL=OFF \
-  -D Module_ITKRegistrationMethodsv4:BOOL=OFF \
-  -D Module_ITKConvolution:BOOL=ON \
-  -D Module_ITKDenoising:BOOL=ON \
-  -D Module_ITKImageNoise:BOOL=ON \
-  -D ITKGroup_IO:BOOL=OFF \
-  -D ITKGroup_Core:BOOL=OFF \
-  -D Module_ITKGDCM:BOOL=OFF \
-  -D Module_ITKIOBioRad:BOOL=ON \
-  -D Module_ITKIOBMP:BOOL=ON \
-  -D Module_ITKIOGE:BOOL=ON \
-  -D Module_ITKIOGIPL:BOOL=ON \
-  -D Module_ITKIOImageBase:BOOL=ON \
-  -D Module_ITKIOIPL:BOOL=ON \
-  -D Module_ITKIOJPEG:BOOL=ON \
-  -D Module_ITKIOMeta:BOOL=ON \
-  -D Module_ITKIOMRC:BOOL=ON \
-  -D Module_ITKIONIFTI:BOOL=ON \
-  -D Module_ITKIONRRD:BOOL=ON \
-  -D Module_ITKIOPNG:BOOL=ON \
-  -D Module_ITKIOStimulate:BOOL=ON \
-  -D Module_ITKIOTIFF:BOOL=ON \
-  -D Module_ITKIOVTK:BOOL=ON \
-  -D Module_ITKIOTransformBase:BOOL=ON \
-  -DITK_CUSTOM_LIBRARY_SUFFIX:STRING="-NX-$ITK_VERSION"
-
-#if errorlevel 1 exit 1
-
-cmake --build . --target all
-#if errorlevel 1 exit 1
-
-cmake --build . --target install
-#if errorlevel 1 exit 1
 
 cd ..
 

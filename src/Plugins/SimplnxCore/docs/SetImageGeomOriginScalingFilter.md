@@ -34,7 +34,7 @@ If *Put Input Origin at the Center of Geometry* is enabled, the user-supplied or
 
 ### Required Input Sources
 
-- **Input Image Geometry** -- the geometry to modify in place. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
+- **Input Image Geometry** -- the geometry to modify in place. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

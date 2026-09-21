@@ -1,0 +1,461 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+  "markdown_file": "(06) AM Powder-Bed Layer Inspection.md",
+  "title": "AM Powder-Bed Layer Inspection",
+  "summary": "Enhances a short stack of powder-bed images and detects small bright layer anomalies such as streaks, clusters, and disturbed powder.",
+  "primary_industries": [
+    "Metal additive manufacturing",
+    "In-situ process monitoring"
+  ],
+  "secondary_industries": [
+    "Powder-bed fusion research",
+    "Manufacturing quality control"
+  ],
+  "use_cases": [
+    "Find recoater streaks and powder clusters",
+    "Normalize local contrast across uneven lighting",
+    "Create layer-wise anomaly masks for downstream classification"
+  ],
+  "keywords": [
+    "AM",
+    "powder bed",
+    "layer monitoring",
+    "top-hat",
+    "anomaly detection"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/am/powder_bed_layers",
+      "role": "Numbered input series for ReadImageStackFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/anomaly_mask.tif",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/powder_bed_inspection.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageStackFilter",
+      "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8",
+      "role": "Import five consecutive layer images as a physically spaced volume.",
+      "inputs": [
+        {
+          "parameter": "input_file_list_object",
+          "value": {
+            "end_index": 4,
+            "file_extension": ".tif",
+            "file_prefix": "layer_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/ImageProcessing_Examples/am/powder_bed_layers",
+            "ordering": 0,
+            "padding_digits": 3,
+            "start_index": 0
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": true,
+        "color_weights": [
+          0.21250000596046448,
+          0.715399980545044,
+          0.07209999859333038
+        ],
+        "convert_to_gray_scale": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "exact_xy_dimensions": [
+          100,
+          100
+        ],
+        "image_data_array_name": "Layer Intensity",
+        "image_data_type_index": 0,
+        "image_transform_index": 0,
+        "input_file_list_object": {
+          "end_index": 4,
+          "file_extension": ".tif",
+          "file_prefix": "layer_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/ImageProcessing_Examples/am/powder_bed_layers",
+          "ordering": 0,
+          "padding_digits": 3,
+          "start_index": 0
+        },
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_image_geometry_path": "Powder Bed Layers",
+        "resample_images_index": 0,
+        "scaling": 100.0,
+        "spacing": [
+          0.05000000074505806,
+          0.05000000074505806,
+          0.05000000074505806
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "AdaptiveHistogramEqualizationImageFilter",
+      "uuid": "303249e9-4623-427a-af90-c837d38133d7",
+      "role": "Enhance local layer contrast under nonuniform illumination.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Bed Layers/Cell Data/Layer Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Local Contrast"
+        }
+      ],
+      "key_parameters": {
+        "alpha": 0.5,
+        "beta": 0.5,
+        "input_image_data_path": "Powder Bed Layers/Cell Data/Layer Intensity",
+        "input_image_geometry_path": "Powder Bed Layers",
+        "output_array_name": "Local Contrast",
+        "radius": [
+          5,
+          5,
+          1
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "filter": "MedianImageFilter",
+      "uuid": "bf4671ab-ebdf-4c4c-a4b1-0cdcaa005d9d",
+      "role": "Remove isolated camera noise without averaging anomaly edges.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Bed Layers/Cell Data/Local Contrast"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Median Denoised"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Powder Bed Layers/Cell Data/Local Contrast",
+        "input_image_geometry_path": "Powder Bed Layers",
+        "output_array_name": "Median Denoised",
+        "radius": [
+          1,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "filter": "WhiteTopHatImageFilter",
+      "uuid": "c33fdeac-8313-4dcf-a3d2-e97fff859c54",
+      "role": "Extract bright powder clusters and streaks that are smaller than the structuring element.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Bed Layers/Cell Data/Median Denoised"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Bright Anomalies"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Powder Bed Layers/Cell Data/Median Denoised",
+        "input_image_geometry_path": "Powder Bed Layers",
+        "kernel_radius": [
+          7,
+          7,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Bright Anomalies",
+        "safe_border": true
+      }
+    },
+    {
+      "index": 4,
+      "filter": "ThresholdMaximumConnectedComponentsImageFilter",
+      "uuid": "1d103fda-8d59-49a6-b586-316ec06bf581",
+      "role": "Select an automatic threshold that retains many meaningful layer anomalies.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Bed Layers/Cell Data/Bright Anomalies"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Automatic Anomaly Mask"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Powder Bed Layers/Cell Data/Bright Anomalies",
+        "input_image_geometry_path": "Powder Bed Layers",
+        "inside_value": 1,
+        "minimum_object_size_in_pixels": 16,
+        "output_array_name": "Automatic Anomaly Mask",
+        "outside_value": 0,
+        "upper_boundary": 255.0
+      }
+    },
+    {
+      "index": 5,
+      "filter": "BinaryMorphologicalOpeningImageFilter",
+      "uuid": "31536589-71e4-4a0c-82c6-371c1ef89a98",
+      "role": "Remove single-pixel detections from the anomaly mask.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Powder Bed Layers/Cell Data/Automatic Anomaly Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Cleaned Anomaly Mask"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "foreground_value": 1.0,
+        "input_image_data_path": "Powder Bed Layers/Cell Data/Automatic Anomaly Mask",
+        "input_image_geometry_path": "Powder Bed Layers",
+        "kernel_radius": [
+          1,
+          1,
+          0
+        ],
+        "kernel_type_index": 1,
+        "output_array_name": "Cleaned Anomaly Mask"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the cleaned anomaly masks as a TIFF stack.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Powder Bed Layers"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/anomaly_mask.tif"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": false,
+        "file_name": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/anomaly_mask.tif",
+        "flip_mode_index": 0,
+        "image_array_path": "Powder Bed Layers/Cell Data/Cleaned Anomaly Mask",
+        "index_offset": 0,
+        "input_image_geometry_path": "Powder Bed Layers",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 7,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the layer inspection results.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/powder_bed_inspection.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/powder_bed_inspection.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Anomaly detection and classification in a laser powder bed additive manufacturing process using a trained computer vision algorithm",
+      "authors": [
+        "Luke Scime",
+        "Jack Beuth"
+      ],
+      "year": 2018,
+      "journal": "Additive Manufacturing",
+      "doi": "10.1016/j.addma.2017.11.009",
+      "url": "https://doi.org/10.1016/j.addma.2017.11.009",
+      "role": "Primary industrial basis for finding layer-wise powder-bed anomalies from optical images.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "The production images and trained classifier are unavailable. The five generated layers reproduce visual anomaly classes but not the paper's machine, material, or classifier accuracy."
+      }
+    },
+    {
+      "title": "Morphological grayscale reconstruction in image analysis: Applications and efficient algorithms",
+      "authors": [
+        "Luc Vincent"
+      ],
+      "year": 1993,
+      "journal": "IEEE Transactions on Image Processing",
+      "doi": "10.1109/83.217222",
+      "url": "https://doi.org/10.1109/83.217222",
+      "role": "Foundational reference for reconstruction, extrema suppression, and top-hat morphology.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Find recoater streaks and powder clusters",
+      "Normalize local contrast across uneven lighting",
+      "Create layer-wise anomaly masks for downstream classification"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Anomalies of interest are bright at the selected lighting angle.",
+      "All layer images have the same dimensions and acquisition geometry.",
+      "The structuring element is larger than isolated defects but smaller than broad illumination trends.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(07) AM Melt-Pool and Track Inspection.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "am/powder_bed_layers"
+    ],
+    "paper_doi": "10.1016/j.addma.2017.11.009",
+    "paper_url": "",
+    "reference_visual": "Post-recoat powder-bed images with streaks, bare regions, and powder agglomerates under nonuniform illumination.",
+    "target_traits": [
+      "directional illumination",
+      "recoater streaks",
+      "bare patches",
+      "bright agglomerates",
+      "layer-to-layer variation"
+    ],
+    "known_differences": "The production images and trained classifier are unavailable. The five generated layers reproduce visual anomaly classes but not the paper's machine, material, or classifier accuracy.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

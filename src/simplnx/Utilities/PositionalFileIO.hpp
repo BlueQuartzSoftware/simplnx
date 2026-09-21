@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 
+#include <cerrno>
 #include <cstddef>
 #include <limits>
 #include <string>
@@ -47,16 +48,24 @@ inline FileHandle openFileForRead(const std::string& path)
 }
 
 /**
+ * @brief Opens a Windows file for positional reads and writes.
+ * @param path Native file path.
+ * @return Read-write handle, or `invalidFileHandle()` on failure.
+ */
+inline FileHandle openFileForReadWrite(const std::string& path)
+{
+  return CreateFileA(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+/**
  * @brief Reads bytes after a synchronous absolute seek on Windows.
- * @param h Supplies a valid private read handle.
- * @param buf Receives up to bytes bytes.
- * @param bytes Specifies the requested byte count.
- * @param offset Specifies the absolute file offset.
+ * @param h Valid private read handle.
+ * @param buf Receives up to `bytes` bytes.
+ * @param bytes Requested byte count.
+ * @param offset Absolute file offset.
  * @return Number of bytes read, or -1 on validation or system-call failure.
- * @pre buf points to at least bytes writable bytes.
- *
- * A short read can occur at end of file. The function changes h's file pointer.
- * Do not share h between concurrent calls.
+ * @pre `buf` points to at least `bytes` writable bytes.
+ * @note The function changes the handle position. Concurrent calls require separate handles.
  */
 inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes, uint64_t offset)
 {
@@ -81,8 +90,40 @@ inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes,
 }
 
 /**
+ * @brief Writes bytes after a synchronous absolute seek on Windows.
+ * @param h Valid private read-write handle.
+ * @param buf Supplies `bytes` bytes.
+ * @param bytes Requested byte count.
+ * @param offset Absolute file offset.
+ * @return Number of bytes written, or -1 on validation or system-call failure.
+ * @pre `buf` points to at least `bytes` readable bytes.
+ * @note The function changes the handle position. Concurrent calls require separate handles.
+ */
+inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t bytes, uint64_t offset)
+{
+  if(bytes > static_cast<std::size_t>(std::numeric_limits<DWORD>::max()) || offset > static_cast<uint64_t>(std::numeric_limits<LONGLONG>::max()))
+  {
+    return -1;
+  }
+
+  LARGE_INTEGER fileOffset{};
+  fileOffset.QuadPart = static_cast<LONGLONG>(offset);
+  if(!SetFilePointerEx(h, fileOffset, nullptr, FILE_BEGIN))
+  {
+    return -1;
+  }
+
+  DWORD bytesWritten = 0;
+  if(!WriteFile(h, buf, static_cast<DWORD>(bytes), &bytesWritten, nullptr))
+  {
+    return -1;
+  }
+  return static_cast<std::ptrdiff_t>(bytesWritten);
+}
+
+/**
  * @brief Closes a valid Windows file handle.
- * @param h Supplies the handle to close.
+ * @param h Handle to close.
  */
 inline void closeFileHandle(FileHandle h)
 {
@@ -110,20 +151,51 @@ inline FileHandle openFileForRead(const std::string& path)
 }
 
 /**
- * @brief Reads bytes from an absolute offset with POSIX pread().
- * @param h Supplies a valid read descriptor.
- * @param buf Receives up to bytes bytes.
- * @param bytes Specifies the requested byte count.
- * @param offset Specifies the absolute file offset.
+ * @brief Opens a POSIX file descriptor for positional reads and writes.
+ * @param path Native file path.
+ * @return Read-write descriptor, or `invalidFileHandle()` on failure.
+ */
+inline FileHandle openFileForReadWrite(const std::string& path)
+{
+  return ::open(path.c_str(), O_RDWR);
+}
+
+/**
+ * @brief Reads bytes from an absolute offset with `pread()`.
+ * @param h Valid read descriptor.
+ * @param buf Receives up to `bytes` bytes.
+ * @param bytes Requested byte count.
+ * @param offset Absolute file offset.
  * @return Number of bytes read, or -1 on failure.
- * @pre buf points to at least bytes writable bytes. offset fits off_t.
- *
- * A short read can occur at end of file. pread() does not change the descriptor's
- * file position, so concurrent calls can share h.
+ * @pre `buf` points to at least `bytes` writable bytes. `offset` fits in `off_t`.
  */
 inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes, uint64_t offset)
 {
-  return ::pread(h, buf, bytes, static_cast<off_t>(offset));
+  std::ptrdiff_t result = 0;
+  do
+  {
+    result = ::pread(h, buf, bytes, static_cast<off_t>(offset));
+  } while(result < 0 && errno == EINTR);
+  return result;
+}
+
+/**
+ * @brief Writes bytes at an absolute offset with `pwrite()`.
+ * @param h Valid read-write descriptor.
+ * @param buf Supplies `bytes` bytes.
+ * @param bytes Requested byte count.
+ * @param offset Absolute file offset.
+ * @return Number of bytes written, or -1 on failure.
+ * @pre `buf` points to at least `bytes` readable bytes. `offset` fits in `off_t`.
+ */
+inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t bytes, uint64_t offset)
+{
+  std::ptrdiff_t result = 0;
+  do
+  {
+    result = ::pwrite(h, buf, bytes, static_cast<off_t>(offset));
+  } while(result < 0 && errno == EINTR);
+  return result;
 }
 
 /**

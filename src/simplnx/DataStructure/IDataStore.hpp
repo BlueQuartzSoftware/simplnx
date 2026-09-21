@@ -9,6 +9,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -115,7 +116,18 @@ public:
   }
 
   /**
-   * @brief Returns metadata that reconnects a store after recovery.
+   * @brief Returns the physical chunk shape when the backing store exposes one.
+   *
+   * Algorithms may use this optional capability to align bounded bulk transfers without depending on a concrete
+   * out-of-core implementation. Resident and unchunked stores return std::nullopt by default.
+   */
+  virtual std::optional<ShapeType> getChunkShape() const
+  {
+    return std::nullopt;
+  }
+
+  /**
+   * @brief Returns store-specific metadata needed for crash recovery.
    *
    * In-memory stores return no metadata because recovery stores their values.
    * Out-of-core stores return the information needed to reopen backing data.

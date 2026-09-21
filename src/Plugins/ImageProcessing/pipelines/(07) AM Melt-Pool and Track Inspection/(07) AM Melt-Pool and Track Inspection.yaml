@@ -1,0 +1,462 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+  "markdown_file": "(07) AM Melt-Pool and Track Inspection.md",
+  "title": "AM Melt-Pool and Track Inspection",
+  "summary": "Enhances a thermal image, creates automatic intensity classes and a connected double-threshold mask, then labels and outlines melt-pool and spatter regions.",
+  "primary_industries": [
+    "Metal additive manufacturing",
+    "Thermal process monitoring"
+  ],
+  "secondary_industries": [
+    "Laser welding",
+    "Directed energy deposition"
+  ],
+  "use_cases": [
+    "Measure melt-pool extent from a thermal frame",
+    "Separate the primary track from spatter regions",
+    "Compare Otsu classes with a connected hysteresis-style threshold"
+  ],
+  "keywords": [
+    "AM",
+    "melt pool",
+    "thermography",
+    "Otsu",
+    "connected threshold"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/am/melt_pool_track.tif",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/track_contours.tif",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/melt_pool_inspection.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/am/melt_pool_track.tif"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": true,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/am/melt_pool_track.tif",
+        "image_data_array_name": "Thermal Intensity",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Melt Pool Image",
+        "spacing": [
+          0.0333,
+          0.0472,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "NormalizeImageFilter",
+      "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1",
+      "role": "Normalize the thermal response before nonlinear contrast enhancement.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Thermal Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Normalized Intensity"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Melt Pool Image/Cell Data/Thermal Intensity",
+        "input_image_geometry_path": "Melt Pool Image",
+        "output_array_name": "Normalized Intensity"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "SigmoidImageFilter",
+      "uuid": "1804f5e4-1c76-48f5-b1a0-111963b0a507",
+      "role": "Increase contrast around the melt-pool response range.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Sigmoid Contrast"
+        }
+      ],
+      "key_parameters": {
+        "alpha": -0.5,
+        "beta": 0.0,
+        "input_image_data_path": "Melt Pool Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Melt Pool Image",
+        "output_array_name": "Sigmoid Contrast",
+        "output_maximum": 255.0,
+        "output_minimum": 0.0
+      }
+    },
+    {
+      "index": 3,
+      "filter": "OtsuMultipleThresholdsImageFilter",
+      "uuid": "1aaedd47-62aa-4310-a353-af1a40f6ee82",
+      "role": "Partition background, track, and hot-core intensity classes automatically.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Sigmoid Contrast"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Otsu Regions"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Melt Pool Image/Cell Data/Sigmoid Contrast",
+        "input_image_geometry_path": "Melt Pool Image",
+        "label_offset": 0,
+        "number_of_histogram_bins": 128,
+        "number_of_thresholds": 2,
+        "output_array_name": "Otsu Regions",
+        "return_bin_midpoint": false,
+        "valley_emphasis": true
+      }
+    },
+    {
+      "index": 4,
+      "filter": "DoubleThresholdImageFilter",
+      "uuid": "8350bea5-7958-4a45-9cd6-b996e56b3749",
+      "role": "Create a connected melt-pool mask with a high-confidence core and a lower support threshold.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Thermal Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Track Mask"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Melt Pool Image/Cell Data/Thermal Intensity",
+        "input_image_geometry_path": "Melt Pool Image",
+        "inside_value": 1,
+        "output_array_name": "Track Mask",
+        "outside_value": 0,
+        "threshold1": 40.0,
+        "threshold2": 90.0,
+        "threshold3": 150.0,
+        "threshold4": 255.0
+      }
+    },
+    {
+      "index": 5,
+      "filter": "ConnectedComponentImageFilter",
+      "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41",
+      "role": "Label the melt pool and separated spatter regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Track Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Track Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Melt Pool Image/Cell Data/Track Mask",
+        "input_image_geometry_path": "Melt Pool Image",
+        "output_array_name": "Track Labels"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "RelabelComponentImageFilter",
+      "uuid": "de830a9e-1fc0-47fa-9c2d-895366af832a",
+      "role": "Sort the melt pool and spatter regions by area.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Track Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Sorted Track Labels"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Melt Pool Image/Cell Data/Track Labels",
+        "input_image_geometry_path": "Melt Pool Image",
+        "minimum_object_size": 8,
+        "output_array_name": "Sorted Track Labels",
+        "sort_by_object_size": true
+      }
+    },
+    {
+      "index": 7,
+      "filter": "LabelContourImageFilter",
+      "uuid": "060339d1-56c9-4253-9b52-d4be6a58eafb",
+      "role": "Extract the boundaries of the labeled melt-pool regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Melt Pool Image/Cell Data/Sorted Track Labels"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Track Contours"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "fully_connected": true,
+        "input_image_data_path": "Melt Pool Image/Cell Data/Sorted Track Labels",
+        "input_image_geometry_path": "Melt Pool Image",
+        "output_array_name": "Track Contours"
+      }
+    },
+    {
+      "index": 8,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the labeled track contours for review.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Melt Pool Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/track_contours.tif"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": true,
+        "file_name": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/track_contours.tif",
+        "flip_mode_index": 0,
+        "image_array_path": "Melt Pool Image/Cell Data/Track Contours",
+        "index_offset": 0,
+        "input_image_geometry_path": "Melt Pool Image",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 9,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete melt-pool analysis.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/melt_pool_inspection.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/melt_pool_inspection.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Thermographic Measurements of the Commercial Laser Powder Bed Fusion Process at NIST",
+      "authors": [
+        "Brandon M. Lane",
+        "Shawn P. Moylan",
+        "Eric P. Whitenton",
+        "Li Ma"
+      ],
+      "year": 2016,
+      "journal": "Rapid Prototyping Journal",
+      "doi": "10.1108/RPJ-11-2015-0161",
+      "url": "https://doi.org/10.1108/RPJ-11-2015-0161",
+      "role": "Primary industrial basis for thermal-image analysis of laser powder-bed fusion melt pools.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "Original paper-linked input data is publicly available and a measured-derived input is included in this archive.",
+        "url": "https://doi.org/10.18434/M31931",
+        "doi": "10.18434/M31931",
+        "license": "NIST public data terms; review the dataset record for third-party restrictions.",
+        "included": true,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "The archive stores one percentile-scaled peak frame rather than the complete 56-frame camera-signal sequence or calibrated radiant temperature."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Measure melt-pool extent from a thermal frame",
+      "Separate the primary track from spatter regions",
+      "Compare Otsu classes with a connected hysteresis-style threshold"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Higher intensity represents hotter or more emissive material.",
+      "The input is a calibrated or stable relative-intensity image.",
+      "Thresholds do not convert intensity directly to temperature.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "(13) Denoising and Edge Detection.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "original-paper-linked",
+    "asset_keys": [
+      "am/melt_pool_track.tif"
+    ],
+    "paper_doi": "10.1108/RPJ-11-2015-0161",
+    "paper_url": "",
+    "reference_visual": "NIST single-track thermography on an IN625 powder layer, showing a saturated hot core, trailing thermal wake, and ejected hot particles.",
+    "target_traits": [
+      "measured camera signal",
+      "single scan track",
+      "hot core",
+      "thermal wake",
+      "spatter"
+    ],
+    "known_differences": "The archive stores one percentile-scaled peak frame rather than the complete 56-frame camera-signal sequence or calibrated radiant temperature.",
+    "archive_provenance_file": "Provenance.json",
+    "dataset_doi": "10.18434/M31931",
+    "source_url": "https://s3.amazonaws.com/nist-midas/1858/20170213_PowderPlate1_SingleLine.zip",
+    "source_sha512": "096d3a5c1d2a25225394cdf3125e563232d51411cf20a1619d219e22b46d256ec4d76aaadff5ea1d7e3b134be0a89505ee3c08f71126c828d251695b5fb0e18b"
+  }
+}

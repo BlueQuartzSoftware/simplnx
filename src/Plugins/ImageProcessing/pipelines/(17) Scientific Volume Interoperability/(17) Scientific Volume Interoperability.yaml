@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(17) Scientific Volume Interoperability.d3dpipeline",
+  "markdown_file": "(17) Scientific Volume Interoperability.md",
+  "title": "Scientific Volume Interoperability",
+  "summary": "Imports MHA and NIfTI volumes into separate geometries, preserves key spatial metadata, and writes stable image and DREAM3D outputs.",
+  "primary_industries": [
+    "Biomedical research",
+    "Scientific computing"
+  ],
+  "secondary_industries": [
+    "Materials imaging",
+    "Data exchange"
+  ],
+  "use_cases": [
+    "Exchange volume data with ITK-based MHA workflows",
+    "Import NIfTI data with affine and scaling metadata",
+    "Round-trip selected arrays to common image formats"
+  ],
+  "keywords": [
+    "NIfTI",
+    "MHA",
+    "interoperability",
+    "affine",
+    "scientific volumes"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/io/scientific/sample.mha",
+      "role": "Source for ReadMhaFileFilter."
+    },
+    {
+      "path": "Data/ImageProcessing_Examples/io/scientific/sample.nii.gz",
+      "role": "Source for ReadNIfTIFileFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/mha_round_trip.mha",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/nifti_slice.tif",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/scientific_volumes.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "role": "Import the volume with its physical spacing and scalar type.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/io/scientific/sample.mha"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "MHA Volume"
+        },
+        {
+          "parameter": "output_transformation_matrix_path",
+          "value": "MHA Image/TransformationMatrix"
+        }
+      ],
+      "key_parameters": {
+        "apply_image_transformation": false,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/io/scientific/sample.mha",
+        "image_data_array_name": "MHA Data",
+        "interpolation_type_index": 0,
+        "output_geometry_path": "MHA Volume",
+        "output_transformation_matrix_path": "MHA Image/TransformationMatrix",
+        "save_image_transformation": false,
+        "transpose_transform_matrix": false
+      }
+    },
+    {
+      "index": 1,
+      "filter": "ReadNIfTIFileFilter",
+      "uuid": "e69e51e5-2a9f-40ca-8038-1d2be7925c62",
+      "role": "Import a compressed NIfTI volume with its affine metadata and scaling.",
+      "inputs": [
+        {
+          "parameter": "input_file_path",
+          "value": "Data/ImageProcessing_Examples/io/scientific/sample.nii.gz"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_image_geometry_path",
+          "value": "NIfTI Volume"
+        }
+      ],
+      "key_parameters": {
+        "apply_scaling_transform": true,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "image_data_array_name": "NIfTI Data",
+        "input_file_path": "Data/ImageProcessing_Examples/io/scientific/sample.nii.gz",
+        "output_image_geometry_path": "NIfTI Volume",
+        "use_affine_if_present": true
+      }
+    },
+    {
+      "index": 2,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the imported MHA volume as a new MHA file.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "MHA Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/mha_round_trip.mha"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": false,
+        "file_name": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/mha_round_trip.mha",
+        "flip_mode_index": 0,
+        "image_array_path": "MHA Volume/Cell Data/MHA Data",
+        "index_offset": 0,
+        "input_image_geometry_path": "MHA Volume",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 3,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the imported NIfTI volume as a TIFF slice series.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "NIfTI Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/nifti_slice.tif"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": false,
+        "file_name": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/nifti_slice.tif",
+        "flip_mode_index": 0,
+        "image_array_path": "NIfTI Volume/Cell Data/NIfTI Data",
+        "index_offset": 0,
+        "input_image_geometry_path": "NIfTI Volume",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 4,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/scientific_volumes.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/13_Scientific_IO/scientific_volumes.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "A (Sort of) New Image Data Format Standard: NIfTI-1",
+      "authors": [
+        "Robert W. Cox",
+        "John Ashburner",
+        "Hester Breman",
+        "Kate Fissell",
+        "Christian Haselgrove",
+        "Colin J. Holmes",
+        "Jack L. Lancaster",
+        "David E. Rex",
+        "Stephen M. Smith",
+        "Jeffrey B. Woodward",
+        "Stephen C. Strother"
+      ],
+      "year": 2004,
+      "journal": "Human Brain Mapping annual meeting",
+      "url": "https://www.nitrc.org/docman/view.php/26/204/TheNIfTI1Format2004.pdf",
+      "verification_sha256": "ef582a346178ad3f76d4efb7cefce9f80f2bc57dc658eb40e89c09498467cf5b",
+      "role": "Authoritative scientific description of NIfTI-1 interoperability and affine metadata.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "NIfTI-1 is a format standard rather than a paper-specific experimental dataset.",
+        "url": "https://nifti.nimh.nih.gov/nifti-1/data",
+        "doi": "",
+        "license": "Dataset-specific terms apply to each NIfTI sample.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The example reproduces MHA and NIfTI import and export behavior with repository fixtures rather than a paper result."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Exchange volume data with ITK-based MHA workflows",
+      "Import NIfTI data with affine and scaling metadata",
+      "Round-trip selected arrays to common image formats"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Coordinate conventions are reviewed before combining the two geometries.",
+      "NIfTI affine and scaling fields are valid.",
+      "File conversion does not prove semantic equivalence of array names or units.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(18) Industrial XCT Format Import.d3dpipeline",
+      "(19) Serial-Section Stack Reconstruction.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "tested-format-fixture",
+    "asset_keys": [
+      "io/scientific/sample.mha",
+      "io/scientific/sample.nii.gz"
+    ],
+    "paper_doi": "",
+    "paper_url": "https://www.nitrc.org/docman/view.php/26/204/TheNIfTI1Format2004.pdf",
+    "reference_visual": "NIfTI-1 format fields, affine orientation, scaling, and single-file versus dual-file interoperability rather than a canonical specimen image.",
+    "target_traits": [
+      "valid MHA",
+      "valid compressed NIfTI",
+      "affine metadata",
+      "scaling metadata"
+    ],
+    "known_differences": "The workflow paper defines a file format, not an input specimen. Small conformance fixtures are retained because visual similarity is not scientifically applicable.",
+    "archive_provenance_file": "Provenance.json"
+  }
+}

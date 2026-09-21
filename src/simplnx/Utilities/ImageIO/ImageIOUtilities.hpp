@@ -3,16 +3,36 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 
 namespace nx::core
 {
+
+/**
+ * @brief Chooses the ReadImage backend from a file path's (case-insensitive) extension.
+ * `.nrrd`/`.nhdr` map to the NRRD backend; everything else falls through to the raster
+ * backend. (`.mha` is intentionally NOT handled here -- it is read by ReadMhaFile.)
+ */
+inline ReadImageBackend DetermineReadImageBackend(const std::filesystem::path& filePath)
+{
+  std::string ext = filePath.extension().string();
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  if(ext == ".nrrd" || ext == ".nhdr")
+  {
+    return ReadImageBackend::Nrrd;
+  }
+  return ReadImageBackend::Raster;
+}
 
 /**
  * @brief Compares the total number of cells of the image geometry and the total number of tuples from the data store

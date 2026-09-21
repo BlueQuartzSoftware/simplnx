@@ -1,5 +1,0 @@
-#pragma once
-
-#cmakedefine ITKIMAGEPROCESSING_LEAN_AND_MEAN
-
-#cmakedefine SIMPLNX_CONDA_BUILD

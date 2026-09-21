@@ -136,8 +136,8 @@
       },
       "comments": "This pipeline shows how to import a stack of binarized images, segment them and perform surface meshing on those pores using the Multi-Material Marching Cubes ('M3C') Algorithm.\n\nIf you want to visualize the pores you will need to threshold out (with a visualization program) those triangle faces that have a FaceLabel > 0 (for the 2nd component of the FaceLabels array).",
       "filter": {
-        "name": "nx::core::ITKImportImageStackFilter",
-        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+        "name": "nx::core::ReadImageStackFilter",
+        "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8"
       },
       "isDisabled": false
     },

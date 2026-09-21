@@ -1,0 +1,510 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(13) Denoising and Edge Detection.d3dpipeline",
+  "markdown_file": "(13) Denoising and Edge Detection.md",
+  "title": "Denoising and Edge Detection",
+  "summary": "Compares curvature flow, min-max curvature flow, Gaussian smoothing, gradient magnitude, recursive Gaussian gradient, Laplacian-of-Gaussian, and zero-crossing edge detection.",
+  "primary_industries": [
+    "Machine vision",
+    "Scientific imaging"
+  ],
+  "secondary_industries": [
+    "Non-destructive evaluation",
+    "Materials microscopy"
+  ],
+  "use_cases": [
+    "Select a denoising method for a noisy scientific image",
+    "Compare first- and second-derivative edge responses",
+    "Create zero-crossing edges from a Laplacian-of-Gaussian response"
+  ],
+  "keywords": [
+    "denoising",
+    "edge detection",
+    "Gaussian",
+    "curvature flow",
+    "zero crossing"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/materials/edge_input.png",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/09_Denoising_Edges/denoising_edges.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/materials/edge_input.png"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/materials/edge_input.png",
+        "image_data_array_name": "Input Intensity",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Edge Image",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "NormalizeImageFilter",
+      "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1",
+      "role": "Convert the image to a normalized floating-point field.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Input Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Normalized Intensity"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Input Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "output_array_name": "Normalized Intensity"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "CurvatureFlowImageFilter",
+      "uuid": "63668df1-f887-4d39-9b82-e8a0963fbf52",
+      "role": "Smooth noise along curved intensity structures.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Curvature Flow"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "number_of_iterations": 3,
+        "output_array_name": "Curvature Flow",
+        "time_step": 0.05
+      }
+    },
+    {
+      "index": 3,
+      "filter": "MinMaxCurvatureFlowImageFilter",
+      "uuid": "142e4792-1174-4290-bac4-c8034ccf29d2",
+      "role": "Smooth noise while limiting curvature motion across local extrema.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Min-Max Curvature Flow"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "number_of_iterations": 3,
+        "output_array_name": "Min-Max Curvature Flow",
+        "stencil_radius": 2,
+        "time_step": 0.05
+      }
+    },
+    {
+      "index": 4,
+      "filter": "SmoothingRecursiveGaussianImageFilter",
+      "uuid": "435d2425-066a-4a0d-a069-2d40d6a6349e",
+      "role": "Create a recursive Gaussian denoising reference.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Recursive Gaussian"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "normalize_across_scale": false,
+        "output_array_name": "Recursive Gaussian",
+        "sigma": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "filter": "DiscreteGaussianImageFilter",
+      "uuid": "2ddd8df9-a4d8-44e0-94b3-0776c1cdf096",
+      "role": "Create a discrete Gaussian denoising reference.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Discrete Gaussian"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "maximum_error": [
+          0.01,
+          0.01,
+          0.01
+        ],
+        "maximum_kernel_width": 16,
+        "output_array_name": "Discrete Gaussian",
+        "use_image_spacing": false,
+        "variance": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "filter": "GradientMagnitudeImageFilter",
+      "uuid": "e9bc5ba0-a6db-4537-aff3-86d8b535327e",
+      "role": "Measure edge strength with finite differences.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Finite-Difference Gradient"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "output_array_name": "Finite-Difference Gradient",
+        "use_image_spacing": true
+      }
+    },
+    {
+      "index": 7,
+      "filter": "GradientMagnitudeRecursiveGaussianImageFilter",
+      "uuid": "d9b71e00-6c15-4cb5-92bd-a8c2d9be57f2",
+      "role": "Measure edge strength after Gaussian derivative smoothing.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Gaussian Gradient"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "normalize_across_scale": false,
+        "output_array_name": "Gaussian Gradient",
+        "sigma": 1.0
+      }
+    },
+    {
+      "index": 8,
+      "filter": "LaplacianRecursiveGaussianImageFilter",
+      "uuid": "4caeacc2-51c8-49e4-a77f-18d3779e70fa",
+      "role": "Create a signed second-derivative response for zero-crossing edges.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Normalized Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Laplacian Response"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Edge Image/Cell Data/Normalized Intensity",
+        "input_image_geometry_path": "Edge Image",
+        "normalize_across_scale": false,
+        "output_array_name": "Laplacian Response",
+        "sigma": 1.0
+      }
+    },
+    {
+      "index": 9,
+      "filter": "ZeroCrossingImageFilter",
+      "uuid": "8a22a748-efcc-4982-82ef-0e8e89c92f5b",
+      "role": "Extract edge locations from Laplacian sign changes.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Edge Image/Cell Data/Laplacian Response"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Edge Image"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Laplacian Zero Crossings"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0,
+        "foreground_value": 1,
+        "input_image_data_path": "Edge Image/Cell Data/Laplacian Response",
+        "input_image_geometry_path": "Edge Image",
+        "output_array_name": "Laplacian Zero Crossings"
+      }
+    },
+    {
+      "index": 10,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/09_Denoising_Edges/denoising_and_edges.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/09_Denoising_Edges/denoising_and_edges.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Comparison of Different Edge Detections and Noise Reduction on Ultrasound Images of Carotid and Brachial Arteries Using a Speckle Reducing Anisotropic Diffusion Filter",
+      "authors": [
+        "Mehravar Rafati",
+        "Masoud Arabfard",
+        "Mehrdad Rafati"
+      ],
+      "year": 2014,
+      "journal": "Iranian Red Crescent Medical Journal",
+      "doi": "10.5812/ircmj.14658",
+      "url": "https://doi.org/10.5812/ircmj.14658",
+      "scope": "pipeline_workflow",
+      "role": "Workflow reference for comparing diffusion-based denoising with gradient, Laplacian-of-Gaussian, and other edge-detection outputs on the same scientific images.",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "Clinical source images are not licensed for redistribution in the paper.",
+        "included": false,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "Clinical ultrasound frames cannot be redistributed. The generated image models visual statistics but not patient anatomy, transducer response, or diagnostic content."
+      }
+    },
+    {
+      "title": "Scale-space and edge detection using anisotropic diffusion",
+      "authors": [
+        "Pietro Perona",
+        "Jitendra Malik"
+      ],
+      "year": 1990,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/34.56205",
+      "url": "https://doi.org/10.1109/34.56205",
+      "role": "Foundational edge-preserving diffusion method used before segmentation or edge detection.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "Theory of edge detection",
+      "authors": [
+        "David Marr",
+        "Ellen Hildreth"
+      ],
+      "year": 1980,
+      "journal": "Proceedings of the Royal Society of London B",
+      "doi": "10.1098/rspb.1980.0020",
+      "url": "https://doi.org/10.1098/rspb.1980.0020",
+      "role": "Scientific basis for Laplacian-of-Gaussian response and zero-crossing edge detection.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Select a denoising method for a noisy scientific image",
+      "Compare first- and second-derivative edge responses",
+      "Create zero-crossing edges from a Laplacian-of-Gaussian response"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "The source contains boundaries at several spatial scales.",
+      "Alternative outputs are diagnostic branches, not sequential recommendations.",
+      "Sigma, variance, and iteration count must match the acquisition resolution and noise.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(09) Microstructure Watershed Segmentation.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "materials/edge_input.png"
+    ],
+    "paper_doi": "10.5812/ircmj.14658",
+    "paper_url": "",
+    "reference_visual": "Long-axis carotid or brachial ultrasound with speckled tissue, dark lumen, bright arterial walls, depth gain, and acoustic shadow.",
+    "target_traits": [
+      "multiplicative speckle",
+      "dark vessel lumen",
+      "bright paired walls",
+      "depth-dependent gain",
+      "acoustic shadow"
+    ],
+    "known_differences": "Clinical ultrasound frames cannot be redistributed. The generated image models visual statistics but not patient anatomy, transducer response, or diagnostic content.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

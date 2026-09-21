@@ -10,11 +10,11 @@ This filter is *automatic* because it computes the threshold value itself, and *
 
 The threshold is computed as a gradient-magnitude-weighted average of the input array. Each value of the input array is weighted by its corresponding gradient magnitude, so **Cells** that sit on strong boundaries (high gradient magnitude) contribute most to the chosen threshold, while flat interior regions (low gradient magnitude) contribute little. The result is a single threshold value `T` that generally partitions the input array where its gradient is highest.
 
-The *gradient magnitude* measures how quickly the input field changes from one location to the next: it is large at edges or boundaries and near zero in smooth regions. It is obtained by computing the *2-norm* (the square root of the sum of the squares of the per-axis derivative components) of the gradient vector at each **Cell**, which collapses the multi-component gradient into a single non-negative scalar value per **Cell**. The required gradient magnitude array can be produced with the [ITK Gradient Magnitude Image Filter](../ITKImageProcessing/ITKGradientMagnitudeImageFilter.md).
+The *gradient magnitude* measures how quickly the input field changes from one location to the next: it is large at edges or boundaries and near zero in smooth regions. It is obtained by computing the *2-norm* (the square root of the sum of the squares of the per-axis derivative components) of the gradient vector at each **Cell**, which collapses the multi-component gradient into a single non-negative scalar value per **Cell**. The required gradient magnitude array can be produced with the [ITK Gradient Magnitude Image Filter](../ImageProcessing/GradientMagnitudeImageFilter.md).
 
 ### Required Input Sources
 
-- **Gradient Magnitude Data** -- a single-component 32-bit float array giving the gradient magnitude of the input array, produced by [ITK Gradient Magnitude Image Filter](../ITKImageProcessing/ITKGradientMagnitudeImageFilter.md).
+- **Gradient Magnitude Data** -- a single-component 32-bit float array giving the gradient magnitude of the input array, produced by [ITK Gradient Magnitude Image Filter](../ImageProcessing/GradientMagnitudeImageFilter.md).
 
 ## Algorithm
 

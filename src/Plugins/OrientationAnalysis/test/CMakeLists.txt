@@ -410,9 +410,9 @@ set(PREBUILT_PIPELINE_NAMES
 )
 
 # -----------------------------------------------------------------------------
-# These pipelines need the ITKImageProcessing Plugin to write out Images
+# These pipelines need the ImageProcessing Plugin to write out Images
 # -----------------------------------------------------------------------------
-if(TARGET ITKImageProcessing)
+if(TARGET ImageProcessing)
   set(PREBUILT_PIPELINE_NAMES
     ${PREBUILT_PIPELINE_NAMES}
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Edax_IPF_Colors.d3dpipeline"

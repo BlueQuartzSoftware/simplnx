@@ -1,11 +1,11 @@
 
 
-set(ItkDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ITKImageProcessing")
+set(ImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ImageProcessing")
 set(OrientationDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/OrientationAnalysis")
 set(SimplnxDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/Simplnx")
 
-AddPythonTest(NAME "PY::ITKImageProcessing::02_Image_Segmentation" FILE "${ItkDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-AddPythonTest(NAME "PY::ITKImageProcessing::03_Porosity_Mesh_Export" FILE "${ItkDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+AddPythonTest(NAME "PY::ImageProcessing::02_Image_Segmentation" FILE "${ImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+AddPythonTest(NAME "PY::ImageProcessing::03_Porosity_Mesh_Export" FILE "${ImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 
 #------------------------------------------------------------------------------
 # These pipelines do not have any outside file dependencies other than what is

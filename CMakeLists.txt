@@ -67,10 +67,9 @@ set(SIMPLNX_TEST_ALGORITHM_PATH "0" CACHE STRING "Algorithm paths to test: 0=Bot
 option(SIMPLNX_ENABLE_SimplnxCore "Enable the SimplnxCore Plugin" ON)
 
 # ------------------------------------------------------------------------------
-# Is the ITKImageProcessing Plugin enabled [DEFAULT=ON]
+# Is the ImageProcessing (ITK-free) Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(SIMPLNX_ENABLE_ITKImageProcessing "Enable the ITKImageProcessing Plugin" ON)
-enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_ITKImageProcessing FEATURE "itk")
+option(SIMPLNX_ENABLE_ImageProcessing "Enable the ImageProcessing (ITK-free) plugin" ON)
 
 # ------------------------------------------------------------------------------
 # Is the OrientationAnalysis Plugin enabled [DEFAULT=ON]
@@ -592,10 +591,15 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Geometry/GeometryTransformation.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ColorToGrayScale.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
@@ -629,6 +633,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageMetadata.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/MhaImageIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/StbImageIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/TiffImageIO.hpp
 
@@ -821,6 +826,15 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ColorToGrayScale.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/MorphologicalReconstructionSweepSerial.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/MorphologicalReconstructionSweepStreamed.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/MorphologicalReconstructionVincent.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/RegionalExtremaFlood.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/RegionalExtremaSweep.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
@@ -833,6 +847,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Geometry/GeometryTransformation.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ScaleBarRenderer.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
@@ -864,6 +879,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/MhaImageIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/StbImageIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/TiffImageIO.cpp
 )
@@ -984,11 +1000,9 @@ set(SIMPLNX_PLUGIN_LIST "")
 if(SIMPLNX_ENABLE_SimplnxCore)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} SimplnxCore)
 endif()
-if(SIMPLNX_ENABLE_ITKImageProcessing)
-  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ITKImageProcessing)
+if(SIMPLNX_ENABLE_ImageProcessing)
+  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ImageProcessing)
 endif()
-# Ensure ITKImageProcessing comes before OrientationAnalysis as there is currently
-# a dependency of ITKImageWriter inside some of the example OrientationAnalysis pipelines
 if(SIMPLNX_ENABLE_OrientationAnalysis)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} OrientationAnalysis)
 endif()
@@ -1030,7 +1044,7 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines")
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
-if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
+if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET OrientationAnalysis)
 
   set(PREBUILT_PIPELINE_NAMES
     )

@@ -1,0 +1,573 @@
+{
+  "isDisabled": false,
+  "name": "(04) Porosity Analysis.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Optical Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "color_weights": {
+          "value": [
+            0.21250000596046448,
+            0.715399980545044,
+            0.07209999859333038
+          ],
+          "version": 1
+        },
+        "convert_to_gray_scale": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
+          "version": 1
+        },
+        "exact_xy_dimensions": {
+          "value": [
+            100,
+            100
+          ],
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_transform_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file_list_object": {
+          "value": {
+            "end_index": 174,
+            "file_extension": ".tif",
+            "file_prefix": "slice_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/Porosity_Image",
+            "ordering": 0,
+            "padding_digits": 2,
+            "start_index": 11
+          },
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "resample_images_index": {
+          "value": 0,
+          "version": 1
+        },
+        "scaling": {
+          "value": 1.0,
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadImageStackFilter",
+        "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds_object": {
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+                "comparison": 2,
+                "component_index": 0,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.0
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 2
+        },
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MultiThresholdObjectsFilter",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_name": {
+          "value": "Active",
+          "version": 1
+        },
+        "cell_feature_group_name": {
+          "value": "Pore Data",
+          "version": 1
+        },
+        "feature_ids_name": {
+          "value": "FeatureIds",
+          "version": 1
+        },
+        "input_array_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
+          "version": 1
+        },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
+        "mask_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/Mask",
+          "version": 1
+        },
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
+        "randomize_features": {
+          "value": true,
+          "version": 1
+        },
+        "scalar_tolerance": {
+          "value": 0,
+          "version": 1
+        },
+        "use_mask": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ScalarSegmentFeaturesFilter",
+        "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "equivalent_diameters_name": {
+          "value": "EquivalentDiameters",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "RoboMet.3D Image Stack/Pore Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
+          "version": 1
+        },
+        "num_elements_name": {
+          "value": "NumElements",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "save_element_sizes": {
+          "value": false,
+          "version": 1
+        },
+        "volumes_name": {
+          "value": "Volumes",
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFeatureSizesFilter",
+        "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_array_suffix": {
+          "value": "",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "selected_feature_array_paths": {
+          "value": [
+            "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CopyFeatureArrayToElementArrayFilter",
+        "uuid": "4c8c976a-993d-438b-bd8e-99f71114b9a1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "1",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/Phases",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": false,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateDataArrayFilter",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conditional_array_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/Mask",
+          "version": 1
+        },
+        "invert_mask": {
+          "value": false,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_value": {
+          "value": "0",
+          "version": 1
+        },
+        "replace_value": {
+          "value": "2",
+          "version": 1
+        },
+        "selected_array_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/Phases",
+          "version": 1
+        },
+        "use_conditional": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ConditionalSetValueFilter",
+        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_features_attribute_matrix_path": {
+          "value": "RoboMet.3D Image Stack/Pore Data",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/Phases",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+          "version": 1
+        },
+        "feature_phases_array_name": {
+          "value": "Phases",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFeaturePhasesFilter",
+        "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_name": {
+          "value": "Centroids",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "RoboMet.3D Image Stack/Pore Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
+          "version": 1
+        },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFeatureCentroidsFilter",
+        "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "data_object_path": {
+          "value": "RoboMet.3D Image Stack/Ensemble Data",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "tuple_dimensions": {
+          "value": [
+            [
+              3.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateAttributeMatrixFilter",
+        "uuid": "a6a28355-ee69-4874-bcac-76ed427423ed"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "biased_features_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "cell_ensemble_attribute_matrix_path": {
+          "value": "RoboMet.3D Image Stack/Ensemble Data",
+          "version": 1
+        },
+        "centroids_array_path": {
+          "value": "RoboMet.3D Image Stack/Pore Data/Centroids",
+          "version": 1
+        },
+        "clustering_list_array_name": {
+          "value": "ClusteringList",
+          "version": 1
+        },
+        "feature_phases_array_path": {
+          "value": "RoboMet.3D Image Stack/Pore Data/Phases",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "RoboMet.3D Image Stack",
+          "version": 1
+        },
+        "max_min_array_name": {
+          "value": "RDFMaxMinDistances",
+          "version": 1
+        },
+        "number_of_bins": {
+          "value": 10,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "phase_number": {
+          "value": 2,
+          "version": 1
+        },
+        "rdf_array_name": {
+          "value": "RDF",
+          "version": 1
+        },
+        "remove_biased_features": {
+          "value": false,
+          "version": 1
+        },
+        "seed_array_name": {
+          "value": "ComputeFeatureClustering SeedValue",
+          "version": 1
+        },
+        "seed_value": {
+          "value": 5489,
+          "version": 1
+        },
+        "set_random_seed": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFeatureClusteringFilter",
+        "uuid": "d6e01678-3a03-433f-89ad-4e9adf1f9a45"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImagesStack/Images.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

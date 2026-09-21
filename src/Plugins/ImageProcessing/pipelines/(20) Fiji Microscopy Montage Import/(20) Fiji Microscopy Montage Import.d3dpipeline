@@ -1,0 +1,105 @@
+{
+  "isDisabled": false,
+  "name": "(20) Fiji Microscopy Montage Import.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "color_weights": {
+          "value": [
+            0.21250000596046448,
+            0.715399980545044,
+            0.07209999859333038
+          ],
+          "version": 1
+        },
+        "convert_to_gray_scale": {
+          "value": false,
+          "version": 1
+        },
+        "data_container_path": {
+          "value": "Tile",
+          "version": 1
+        },
+        "data_group_name": {
+          "value": "Fiji Montage",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "Image",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file": {
+          "value": "Data/ImageProcessing_Examples/io/fiji/TileConfiguration.registered.txt",
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "parameters_version": 1,
+        "parent_data_group": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Import the registered microscopy tiles and preserve their positions and metadata.",
+      "filter": {
+        "name": "nx::core::ImportFijiMontageFilter",
+        "uuid": "b9c66c77-5c7f-4951-bb02-981db3c297ae"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/16_Fiji_Montage/fiji_montage.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the complete workflow result.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

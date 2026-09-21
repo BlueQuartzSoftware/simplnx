@@ -86,7 +86,7 @@ If the input data represents a **periodic** structure (i.e., features are allowe
 
 ### Required Input Sources
 
-- **Input Scalar Array** -- any single-component cell-level scalar array suitable for thresholding. Common sources include image readers such as [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), phase or quality arrays from EBSD readers such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), or any computed per-cell scalar from an earlier filter in the pipeline.
+- **Input Scalar Array** -- any single-component cell-level scalar array suitable for thresholding. Common sources include image readers such as [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), phase or quality arrays from EBSD readers such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), or any computed per-cell scalar from an earlier filter in the pipeline.
 - **Mask Array** (optional) -- a boolean array marking valid cells, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
 % Auto generated parameter table will be inserted here

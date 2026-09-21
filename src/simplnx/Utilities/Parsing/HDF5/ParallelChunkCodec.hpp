@@ -59,6 +59,9 @@ public:
  * chunks in each batch. The 64 MiB target applies when one nominal chunk is no
  * larger than 64 MiB. A larger nominal chunk forms a one-chunk batch.
  * Batch commits stay serial because non-thread-safe HDF5 serializes writes.
+ * When more than one batch is needed, preparation of one batch overlaps the
+ * serial commit of the batch before it; both per-batch caps are halved in that
+ * case so at most two batches' prepared bytes are resident at once.
  *
  * The caller must keep the HDF5 dataset handle valid and structurally unchanged
  * for the codec lifetime and each operation. The codec does not make generic
@@ -193,9 +196,16 @@ public:
    * @return True when every requested chunk commits successfully.
    *
    * Worker tasks gather and deflate off the HDF5 lock. Each batch retains at
-   * most 64 chunks. The 64 MiB target applies when one nominal chunk is no
-   * larger than 64 MiB. A larger nominal chunk is prepared alone. The calling
-   * thread commits prepared chunks in input order under leaf H5Dwrite_chunk locks.
+   * most 64 chunks, halved to 32 when more than one batch is needed. The 64 MiB
+   * target applies the same halving rule; a nominal chunk at or above that size
+   * is prepared alone. The calling thread commits prepared chunks in input
+   * order under leaf H5Dwrite_chunk locks. When more than one batch is needed,
+   * this call pipelines the two stages: the batch after the one committing
+   * prepares in parallel while the commit runs, so at most two batches' worth
+   * of prepared bytes are resident at once (the halved caps keep that peak at
+   * the single-batch peak). Observing a failure from either stage stops new
+   * preparation and further commits, while any preparation already running is
+   * still joined before this call returns.
    *
    * source remains caller-owned and must stay valid until this call returns.
    * Duplicate indices perform repeated serial commits in input order. The method

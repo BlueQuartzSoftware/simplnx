@@ -1,5 +1,5 @@
 import simplnx as nx
-import itkimageprocessing as itknx
+import imageprocessing as nximgproc
 import simplnx_test_dirs as nxtest
 
 def main():
@@ -22,6 +22,7 @@ def main():
     image_data_name   = "ImageData"
 
     # --- Origin & spacing for the imported stack ---
+    # The filter applies these values only when change_origin and change_spacing are True.
     origin  = [0.0, 0.0, 0.0]
     spacing = [1.0, 1.0, 1.0]
 
@@ -54,10 +55,12 @@ def main():
     exact_xy_dimensions    = [0, 0]     # used if resample_images_choice is 2
 
     # --- Execute the filter ---
-    result = itknx.ITKImportImageStackFilter.execute(
+    result = nximgproc.ReadImageStackFilter.execute(
         data_structure=ds,
         input_file_list_object=gfl,
+        change_origin=True,
         origin=origin,
+        change_spacing=True,
         spacing=spacing,
         output_image_geometry_path=image_geom_path,
         image_data_array_name=image_data_name,
@@ -70,7 +73,7 @@ def main():
         cropping_options=cv
     )
 
-    nxtest.check_filter_result(itknx.ITKImportImageStackFilter, result)
+    nxtest.check_filter_result(nximgproc.ReadImageStackFilter, result)
 
 if __name__ == "__main__":
     main()

@@ -28,8 +28,11 @@ void CoreDataIOManager::addCoreFactories()
 
 void CoreDataIOManager::addDataStoreFnc()
 {
-  // Resident stores ignore chunk shape but retain the common storage-factory signature.
-  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<ShapeType>& chunkShape) {
+  // Resident stores ignore chunk shape and initialization policy but retain the common factory signature.
+  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<ShapeType>& chunkShape,
+                                       DataStoreInitializationMode initializationMode) {
+    static_cast<void>(chunkShape);
+    static_cast<void>(initializationMode);
     std::unique_ptr<IDataStore> dataStore = nullptr;
     switch(numericType)
     {

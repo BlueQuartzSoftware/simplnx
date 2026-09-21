@@ -136,8 +136,8 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ITKImportImageStackFilter",
-        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+        "name": "nx::core::ReadImageStackFilter",
+        "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8"
       },
       "isDisabled": false
     },
