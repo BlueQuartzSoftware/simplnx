@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <cstddef>
+#include <filesystem>
 #include <limits>
 #include <string>
 
@@ -52,9 +53,9 @@ inline FileHandle openFileForRead(const std::string& path)
  * @param path Native file path.
  * @return Read-write handle, or `invalidFileHandle()` on failure.
  */
-inline FileHandle openFileForReadWrite(const std::string& path)
+inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
 {
-  return CreateFileA(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  return CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 /**
@@ -155,7 +156,7 @@ inline FileHandle openFileForRead(const std::string& path)
  * @param path Native file path.
  * @return Read-write descriptor, or `invalidFileHandle()` on failure.
  */
-inline FileHandle openFileForReadWrite(const std::string& path)
+inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
 {
   return ::open(path.c_str(), O_RDWR);
 }
