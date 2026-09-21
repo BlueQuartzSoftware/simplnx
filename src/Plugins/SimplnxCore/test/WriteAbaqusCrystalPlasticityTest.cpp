@@ -51,16 +51,16 @@ DataStructure CreateDataStructure(const SizeVec3& dimensions, const std::vector<
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellShape, {1});
   auto* featureIdsArray = DataArray<int32>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
   REQUIRE(featureIdsArray != nullptr);
 
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, cellShape, {1});
   auto* phasesArray = DataArray<int32>::Create(dataStructure, k_PhasesPath.getTargetName(), phasesStore, cellData->getId());
   REQUIRE(phasesArray != nullptr);
 
   const ShapeType eulerShape = eulerTupleCount == 0 ? cellShape : ShapeType{eulerTupleCount};
-  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(eulerShape, {3}, IDataAction::Mode::Execute);
+  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerTupleCount == 0 ? k_EulerAnglesPath : k_WrongEulerAnglesPath, eulerShape, {3});
   auto* eulerAnglesArray = eulerTupleCount == 0 ? DataArray<float32>::Create(dataStructure, k_EulerAnglesPath.getTargetName(), eulerAnglesStore, cellData->getId()) :
                                                   DataArray<float32>::Create(dataStructure, k_WrongEulerAnglesPath.getTargetName(), eulerAnglesStore);
   REQUIRE(eulerAnglesArray != nullptr);
