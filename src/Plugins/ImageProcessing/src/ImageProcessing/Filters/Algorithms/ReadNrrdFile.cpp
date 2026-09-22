@@ -209,7 +209,7 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
     if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
     {
       const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
-      messageHandler({IFilter::Message::Type::Info, fmt::format("{}% Complete", pct)});
+      messageHandler.sendInfoMessage(fmt::format("{}% Complete", pct));
       lastProgressTuples = destTupleOffset;
     }
   }

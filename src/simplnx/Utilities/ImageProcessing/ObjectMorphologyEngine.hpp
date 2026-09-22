@@ -10,9 +10,9 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -864,11 +864,8 @@ public:
     const int64 dimZi = static_cast<int64>(dimZ);
     const T paintValue = (m_Op == ObjectMorphOp::Dilate) ? m_ObjectValue : m_BackgroundValue;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying object morphology filter: {:.1f}%");
-    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying object morphology filter");
 
     // Whole-volume resident read (in-core path only). Output starts as a copy of the input.
     auto inBuf = std::make_unique<T[]>(vol);
@@ -909,7 +906,7 @@ public:
           }
         }
       }
-      progressMessenger.sendProgressMessage(1);
+      progressThrottle.incrementPercent(1, 1);
     }
     return m_Out.copyFromBuffer(0, nonstd::span<const T>(outBuf.get(), vol));
   }
@@ -977,18 +974,15 @@ public:
     // offset list is empty in that degenerate case anyway).
     const usize rz = (m_SE.radius[2] > 0) ? static_cast<usize>(m_SE.radius[2]) : 0;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying object morphology filter: {:.1f}%");
-    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying object morphology filter");
 
     if(dimZ == 1)
     {
       Result<> result = run2D();
       if(result.valid() && !m_ShouldCancel)
       {
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
       }
       return result;
     }
@@ -1005,11 +999,11 @@ public:
     }
     const detail::ObjectMorphology3DPlan plan = planResult.value();
 
-    return run3DRollingScatter(sliceValues, rz, plan, progressMessenger);
+    return run3DRollingScatter(sliceValues, rz, plan, progressThrottle);
   }
 
 private:
-  Result<> run3DRollingScatter(usize sliceValues, usize radiusZ, const detail::ObjectMorphology3DPlan& plan, ProgressMessenger& progressMessenger)
+  Result<> run3DRollingScatter(usize sliceValues, usize radiusZ, const detail::ObjectMorphology3DPlan& plan, ThrottledMessageHandler& progressThrottle)
   {
     if(plan.computeBatchDepth == 0 || plan.inputSlabDepth == 0 || plan.outputWindowDepth == 0)
     {
@@ -1083,7 +1077,7 @@ private:
       {
         return {};
       }
-      progressMessenger.sendProgressMessage(batchEnd - batchBegin);
+      progressThrottle.incrementPercent(batchEnd - batchBegin, 1);
       batchBegin = batchEnd;
     }
     if(outputRange.origin != outputRange.end)

@@ -9,9 +9,9 @@
 #include "simplnx/Utilities/ImageProcessing/RadiusOneStencil2D.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -452,12 +452,9 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     return MakeErrorResult(-8590, "Contour engine received more neighbor offsets than a radius-1 box allows (center excluded); the caller's neighbor-offset builder is incorrect.");
   }
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dimZ);
-  progressHelper.setProgressMessageTemplate("Applying contour filter: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
-  const auto reportCompletedPlane = [&progressMessenger]() { progressMessenger.sendProgressMessage(1); };
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(dimZ, "Applying contour filter");
+  const auto reportCompletedPlane = [&progressThrottle]() { progressThrottle.incrementPercent(1, 1); };
 
   auto runResident = [&](nonstd::span<const T> input, nonstd::span<T> output) -> Result<> {
     for(usize z = 0; z < dimZ; ++z)

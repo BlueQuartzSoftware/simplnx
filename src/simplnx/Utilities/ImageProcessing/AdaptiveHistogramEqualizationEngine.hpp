@@ -8,9 +8,9 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -1037,11 +1037,8 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     }
   }
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dimZ);
-  progressHelper.setProgressMessageTemplate("Applying adaptive histogram equalization: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(dimZ, "Applying adaptive histogram equalization");
 
   const bool useBounded2D = dimZ == 1 && (in.getStoreType() == IDataStore::StoreType::OutOfCore || out.getStoreType() == IDataStore::StoreType::OutOfCore);
   std::unique_ptr<T[]> outPlane;
@@ -1438,7 +1435,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
             return r;
           }
         }
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
 
         if(z + 1 == dimZ)
         {
@@ -1612,7 +1609,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     {
       return r;
     }
-    progressMessenger.sendProgressMessage(1);
+    progressThrottle.incrementPercent(1, 1);
   }
   return {};
 }

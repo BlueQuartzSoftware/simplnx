@@ -9,9 +9,9 @@
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/core.h>
 
@@ -1061,11 +1061,8 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
   std::vector<detail::RecursiveGaussian2DCheckpoint> causalStates;
   std::vector<std::array<double, 4>> antiCausalStates;
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss((plan.blockCount * 2) * (1 + (dims[0] - 1) / plan.coreCols));
-  progressHelper.setProgressMessageTemplate("Recursive Gaussian: bounded 2D Y pass ({:.1f}%)");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset((plan.blockCount * 2) * (1 + (dims[0] - 1) / plan.coreCols), "Recursive Gaussian: bounded 2D Y pass");
 
   for(usize xBegin = 0; xBegin < dims[0]; xBegin += plan.coreCols)
   {
@@ -1120,7 +1117,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, columnBatchCount);
       parallelAlgorithm.execute(computeForward);
-      progressMessenger.sendProgressMessage(1);
+      progressThrottle.incrementPercent(1, 1);
     }
 
     antiCausalStates.assign(columnCount, {});
@@ -1200,7 +1197,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       {
         return result;
       }
-      progressMessenger.sendProgressMessage(1);
+      progressThrottle.incrementPercent(1, 1);
     }
   }
   return {};
@@ -1337,11 +1334,8 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
   std::vector<float32> filtered;
   const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalizeAcrossScale);
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(1 + (dims[1] - 1) / rowsPerBlock);
-  progressHelper.setProgressMessageTemplate("Recursive Gaussian: bounded 2D X pass ({:.1f}%)");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(1 + (dims[1] - 1) / rowsPerBlock, "Recursive Gaussian: bounded 2D X pass");
 
   for(usize yBegin = 0; yBegin < dims[1]; yBegin += rowsPerBlock)
   {
@@ -1367,7 +1361,7 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
     {
       return result;
     }
-    progressMessenger.sendProgressMessage(1);
+    progressThrottle.incrementPercent(1, 1);
   }
   return {};
 }
@@ -1482,11 +1476,8 @@ Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeV
   const detail::RecursiveGaussianCoefficients secondCoefficients =
       detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalizeAcrossScale);
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dims[2]);
-  progressHelper.setProgressMessageTemplate("Recursive Gaussian: filtering XY planes ({:.1f}%)");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(dims[2], "Recursive Gaussian: filtering XY planes");
 
   for(usize z = 0; z < dims[2]; ++z)
   {
@@ -1516,7 +1507,7 @@ Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeV
     {
       return result;
     }
-    progressMessenger.sendProgressMessage(1);
+    progressThrottle.incrementPercent(1, 1);
   }
   return {};
 }
@@ -1652,7 +1643,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     if(tenth != lastReportedTenth)
     {
       lastReportedTenth = tenth;
-      messageHandler(fmt::format("Recursive Gaussian: filtering along axis {} ({}%)", axis, tenth * 10));
+      messageHandler.sendInfoMessage(fmt::format("Recursive Gaussian: filtering along axis {} ({}%)", axis, tenth * 10));
     }
   };
 

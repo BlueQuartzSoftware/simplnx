@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -522,11 +522,8 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
     return {};
   }
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dimZ);
-  progressHelper.setProgressMessageTemplate("Applying neighborhood filter: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(dimZ, "Applying neighborhood filter");
 
   std::unique_ptr<T[]> outPlane;
   if(dimZ > 1)
@@ -581,7 +578,7 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
         return r;
       }
     }
-    progressMessenger.sendProgressMessage(1);
+    progressThrottle.incrementPercent(1, 1);
   }
   return {};
 }

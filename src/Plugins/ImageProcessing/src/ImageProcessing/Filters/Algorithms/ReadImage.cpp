@@ -302,7 +302,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   const bool convertData = inputValues.changeDataType && srcType != destType;
   if(convertData)
   {
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Converting pixel data from {} to {}", DataTypeToString(srcType), DataTypeToString(destType)));
+    messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Converting pixel data from {} to {}", DataTypeToString(srcType), DataTypeToString(destType)));
   }
 
   const usize bytesPerComponent = GetDataTypeSize(srcType);
@@ -404,7 +404,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   if(readResult.valid() && inputValues.readSinglePageOnly && metadata.numPages > 1)
   {
     std::string warningMessage = fmt::format("Image file '{}' has {} pages; reading only the first page (page 0).", inputFilePath.string(), metadata.numPages);
-    messageHandler(IFilter::Message::Type::Warning, warningMessage);
+    messageHandler.sendMessage(IFilter::Message::Type::Warning, warningMessage);
     readResult.warnings().push_back(Warning{-2005, std::move(warningMessage)});
   }
 
@@ -426,7 +426,7 @@ Result<> ReadImage::operator()()
 {
   const auto& inputFilePath = m_InputValues.inputFilePath;
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading image file: {}", inputFilePath.string()));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Reading image file: {}", inputFilePath.string()));
 
   if(DetermineReadImageBackend(inputFilePath) == ReadImageBackend::Nrrd)
   {

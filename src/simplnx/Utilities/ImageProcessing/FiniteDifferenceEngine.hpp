@@ -1109,7 +1109,7 @@ inline void throttleProgress(const IFilter::MessageHandler& messageHandler, uint
   const uint32 tenth = (iter * 10) / numberOfIterations;
   if(iter == 0 || tenth != ((iter - 1) * 10) / numberOfIterations)
   {
-    messageHandler(fmt::format("Finite Difference: iteration {}/{} ({}%)", iter + 1, numberOfIterations, tenth * 10));
+    messageHandler.sendInfoMessage(fmt::format("Finite Difference: iteration {}/{} ({}%)", iter + 1, numberOfIterations, tenth * 10));
   }
 }
 

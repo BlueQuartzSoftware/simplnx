@@ -9,9 +9,9 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -1454,18 +1454,14 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
   const usize volume = shape.volume;
   const usize numSlots = shape.outputSlots;
 
-  MessageHelper messageHelper(messageHandler);
-
   // copyIntoBuffer/copyFromBuffer are intentionally outside every parallel region because DataStore and
   // AbstractDataStore implementations are not thread-safe. Workers touch only staged vectors and write disjoint
   // output-vector elements. One scratch pencil is allocated per worker range for strided axes.
   constexpr usize k_TargetSlabBytes = 16 * 1024 * 1024;
   const usize targetSlabValues = std::max<usize>(1, k_TargetSlabBytes / sizeof(TIn));
 
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(numSlots);
-  progressHelper.setProgressMessageTemplate("Projecting along axis (slab): {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(numSlots, "Projecting along axis (slab)");
 
   const auto reduceStagedPencil = [&](nonstd::span<TIn> pencil) -> TOut {
     if constexpr(ReduceFn::k_IsAssociative)
@@ -1536,9 +1532,9 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
       {
         return {nonstd::make_unexpected(std::move(r.errors()))};
       }
-      progressMessenger.sendProgressMessage(slotCount);
+      progressThrottle.incrementPercent(slotCount, 1);
     }
-    messageHelper.trySendMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
+    messageHandler.sendInfoMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
     return {};
   }
 
@@ -1594,9 +1590,9 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
       {
         return {nonstd::make_unexpected(std::move(r.errors()))};
       }
-      progressMessenger.sendProgressMessage(outputCount);
+      progressThrottle.incrementPercent(outputCount, 1);
     }
-    messageHelper.trySendMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
+    messageHandler.sendInfoMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
     return {};
   }
 
@@ -1655,10 +1651,10 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
     {
       return {nonstd::make_unexpected(std::move(r.errors()))};
     }
-    progressMessenger.sendProgressMessage(outputCount);
+    progressThrottle.incrementPercent(outputCount, 1);
   }
 
-  messageHelper.trySendMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
+  messageHandler.sendInfoMessage(fmt::format("Axis projection: processed {} output columns.", numSlots));
   return {};
 }
 } // namespace detail

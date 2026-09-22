@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -258,11 +258,8 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
   }
   const PointwiseBatchPlan& plan = planResult.value();
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(plan.totalBatches);
-  progressHelper.setProgressMessageTemplate("Applying pointwise operation: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(plan.totalBatches, "Applying pointwise operation");
 
   auto inputBuffer = std::make_unique_for_overwrite<T[]>(plan.batchValues);
   std::unique_ptr<U[]> outputBuffer;
@@ -298,7 +295,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     {
       return writeResult;
     }
-    progressMessenger.sendProgressMessage(1);
+    progressThrottle.incrementPercent(1, 1);
     start += count;
   }
 
