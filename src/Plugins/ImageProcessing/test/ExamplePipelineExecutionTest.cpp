@@ -62,8 +62,7 @@ TEST_CASE("ImageProcessing::Real-world examples execute with the selected storag
 
   const fs::path pluginSourceDir(unit_test::k_SourceDir.str());
   const fs::path pipelineDir = pluginSourceDir / "pipelines";
-  const fs::path pluginBinaryDir(unit_test::k_BinaryDir.str());
-  const fs::path runtimeDir = pluginBinaryDir.parent_path().parent_path().parent_path() / "Bin";
+  const fs::path runtimeDir(unit_test::k_BuildDir.str());
 
   const fs::path originalWorkingDirectory = fs::current_path();
   auto workingDirectoryGuard = MakeScopeGuard([&originalWorkingDirectory]() noexcept {
