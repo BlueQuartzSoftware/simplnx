@@ -164,6 +164,9 @@ list(APPEND PREBUILT_PIPELINE_NAMES
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
+find_package(PythonInterp 3.6 REQUIRED)
+set(Python3_EXECUTABLE "${PYTHON_EXECUTABLE}")
+
 if(SIMPLNX_BUILD_PYTHON)
   AddPythonTest(
     NAME "PYTHON::${PLUGIN_NAME}::GenerateAndRunExamples"
