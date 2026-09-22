@@ -49,7 +49,7 @@ TiffPage MakeConstantPage(uint32_t width, uint32_t height, uint16_t spp, uint8_t
 }
 
 // Builds a single-component page whose pixel (row, col) holds value (row*width + col) truncated to
-// uint8, so the decoded buffer must equal {0, 1, 2, ...} when read row-major top-to-bottom.
+// uint8_t, so the decoded buffer must equal {0, 1, 2, ...} when read row-major top-to-bottom.
 TiffPage MakeRampPage(uint32_t width, uint32_t height, std::optional<uint32_t> subfileType = std::nullopt)
 {
   TiffPage page;
@@ -65,7 +65,7 @@ TiffPage MakeRampPage(uint32_t width, uint32_t height, std::optional<uint32_t> s
   return page;
 }
 
-// Synthesizes a (possibly multi-directory) uint8 TIFF at @p path using libtiff directly.
+// Synthesizes a (possibly multi-directory) uint8_t TIFF at @p path using libtiff directly.
 void WriteTiff(const fs::path& path, const std::vector<TiffPage>& pages)
 {
   TIFF* tif = TIFFOpen(path.string().c_str(), "w");
@@ -98,7 +98,7 @@ void WriteTiff(const fs::path& path, const std::vector<TiffPage>& pages)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8", "[SimplnxCore][ImageIO]")
+TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8_t", "[SimplnxCore][ImageIO]")
 {
   constexpr uint32_t width = 4;
   constexpr uint32_t height = 3;
@@ -116,17 +116,17 @@ TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8", "[SimplnxCore][Image
   REQUIRE(meta.numComponents == 1);
   REQUIRE(meta.dataType == DataType::uint8);
 
-  std::vector<uint8> buffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == page.pixels);
 
   // Default page argument reads page 0.
-  std::vector<uint8> defaultBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> defaultBuffer(static_cast<size_t>(width) * height);
   REQUIRE(io.readPixelData(path, defaultBuffer).valid());
   REQUIRE(defaultBuffer == page.pixels);
 }
 
-TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8 Z-stack", "[SimplnxCore][ImageIO]")
+TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore][ImageIO]")
 {
   constexpr uint32_t width = 3;
   constexpr uint32_t height = 2;
@@ -148,14 +148,14 @@ TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8 Z-stack", "[SimplnxCore][I
 
   for(usize p = 0; p < planeValues.size(); ++p)
   {
-    std::vector<uint8> buffer(static_cast<size_t>(width) * height);
+    std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
     REQUIRE(io.readPixelData(path, buffer, p).valid());
-    const std::vector<uint8> expected(static_cast<size_t>(width) * height, planeValues[p]);
+    const std::vector<uint8_t> expected(static_cast<size_t>(width) * height, planeValues[p]);
     REQUIRE(buffer == expected);
   }
 
   // Requesting a page past the end fails cleanly rather than reading garbage.
-  std::vector<uint8> overflowBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> overflowBuffer(static_cast<size_t>(width) * height);
   REQUIRE(io.readPixelData(path, overflowBuffer, 3).invalid());
 }
 
@@ -178,12 +178,12 @@ TEST_CASE("SimplnxCore::TiffImageIO: reduced-resolution subfile excluded from pa
   REQUIRE(metaResult.value().width == fullWidth);
   REQUIRE(metaResult.value().height == fullHeight);
 
-  std::vector<uint8> buffer(static_cast<size_t>(fullWidth) * fullHeight);
+  std::vector<uint8_t> buffer(static_cast<size_t>(fullWidth) * fullHeight);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == fullPage.pixels);
 
   // Only the full-resolution page is addressable; the pyramid level is not page 1.
-  std::vector<uint8> reducedBuffer(2 * 2);
+  std::vector<uint8_t> reducedBuffer(2 * 2);
   REQUIRE(io.readPixelData(path, reducedBuffer, 1).invalid());
 }
 
@@ -191,10 +191,10 @@ TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page in
 {
   constexpr int width = 4;
   constexpr int height = 3;
-  std::vector<uint8> pixels(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> pixels(static_cast<size_t>(width) * height);
   for(size_t i = 0; i < pixels.size(); ++i)
   {
-    pixels[i] = static_cast<uint8>(i);
+    pixels[i] = static_cast<uint8_t>(i);
   }
 
   ImageMetadata writeMeta;
@@ -212,11 +212,11 @@ TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page in
   REQUIRE(metaResult.value().numPages == 1);
 
   // Page 0 round-trips the pixel data.
-  std::vector<uint8> buffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == pixels);
 
   // Any page beyond 0 is an error for a single-image format.
-  std::vector<uint8> pageOneBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> pageOneBuffer(static_cast<size_t>(width) * height);
   REQUIRE(io.readPixelData(path, pageOneBuffer, 1).invalid());
 }

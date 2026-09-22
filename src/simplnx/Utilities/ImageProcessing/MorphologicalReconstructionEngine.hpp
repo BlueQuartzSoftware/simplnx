@@ -987,37 +987,37 @@ private:
 // MorphologicalReconstructionSweepStreamed.cpp respectively; these declarations tell every other translation unit
 // that includes this header not to implicitly instantiate those specializations locally, matching the explicit
 // instantiation definitions provided by the two .cpp files.
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<int8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<uint8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<int16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<uint16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<int32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<uint32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<int64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<uint64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<float32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructVincent<float64>;
+extern template class ReconstructVincent<int8>;
+extern template class ReconstructVincent<uint8>;
+extern template class ReconstructVincent<int16>;
+extern template class ReconstructVincent<uint16>;
+extern template class ReconstructVincent<int32>;
+extern template class ReconstructVincent<uint32>;
+extern template class ReconstructVincent<int64>;
+extern template class ReconstructVincent<uint64>;
+extern template class ReconstructVincent<float32>;
+extern template class ReconstructVincent<float64>;
 
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int8, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int8, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint8, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint8, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int16, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int16, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint16, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint16, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int32, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int32, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint32, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint32, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int64, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<int64, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint64, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<uint64, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<float32, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<float32, true>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<float64, false>;
-extern template class SIMPLNX_TEMPLATE_EXPORT ReconstructSweep<float64, true>;
+extern template class ReconstructSweep<int8, false>;
+extern template class ReconstructSweep<int8, true>;
+extern template class ReconstructSweep<uint8, false>;
+extern template class ReconstructSweep<uint8, true>;
+extern template class ReconstructSweep<int16, false>;
+extern template class ReconstructSweep<int16, true>;
+extern template class ReconstructSweep<uint16, false>;
+extern template class ReconstructSweep<uint16, true>;
+extern template class ReconstructSweep<int32, false>;
+extern template class ReconstructSweep<int32, true>;
+extern template class ReconstructSweep<uint32, false>;
+extern template class ReconstructSweep<uint32, true>;
+extern template class ReconstructSweep<int64, false>;
+extern template class ReconstructSweep<int64, true>;
+extern template class ReconstructSweep<uint64, false>;
+extern template class ReconstructSweep<uint64, true>;
+extern template class ReconstructSweep<float32, false>;
+extern template class ReconstructSweep<float32, true>;
+extern template class ReconstructSweep<float64, false>;
+extern template class ReconstructSweep<float64, true>;
 
 /**
  * @brief Public entry: morphological reconstruction of @p markerStore under @p maskStore (dilation or erosion),

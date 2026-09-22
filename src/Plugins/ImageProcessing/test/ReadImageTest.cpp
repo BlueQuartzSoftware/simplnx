@@ -48,8 +48,8 @@ const std::string k_ImageDataName = "ImageData";
 
 // Values for ReadImageFilter::k_OriginSpacingProcessing_Key
 // 0 = Preprocessed, 1 = Postprocessed
-constexpr uint64 k_Preprocessed = 0;
-constexpr uint64 k_Postprocessed = 1;
+constexpr uint64_t k_Preprocessed = 0;
+constexpr uint64_t k_Postprocessed = 1;
 
 class TemporaryTiledFilterFixture
 {
@@ -75,12 +75,12 @@ public:
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
 
-    std::vector<uint8> tile(static_cast<usize>(k_TileWidth) * k_TileHeight, 0);
+    std::vector<uint8_t> tile(static_cast<usize>(k_TileWidth) * k_TileHeight, 0);
     for(uint32_t tileY = 0; tileY < k_Height; tileY += k_TileHeight)
     {
       for(uint32_t tileX = 0; tileX < k_Width; tileX += k_TileWidth)
       {
-        std::fill(tile.begin(), tile.end(), uint8{0});
+        std::fill(tile.begin(), tile.end(), uint8_t{0});
         for(uint32_t localY = 0; localY < k_TileHeight; ++localY)
         {
           for(uint32_t localX = 0; localX < k_TileWidth; ++localX)
@@ -89,7 +89,7 @@ public:
             const uint32_t sourceY = tileY + localY;
             if(sourceX < k_Width && sourceY < k_Height)
             {
-              tile[static_cast<usize>(localY) * k_TileWidth + localX] = static_cast<uint8>((sourceX + 3 * sourceY) % 251);
+              tile[static_cast<usize>(localY) * k_TileWidth + localX] = static_cast<uint8_t>((sourceX + 3 * sourceY) % 251);
             }
           }
         }
@@ -154,8 +154,8 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientation"
     {
       const usize sourceX = TemporaryTiledFilterFixture::k_Width - 1 - outputX;
       const usize sourceY = TemporaryTiledFilterFixture::k_Height - 1 - outputY;
-      const uint8 raw = static_cast<uint8>((sourceX + 3 * sourceY) % 251);
-      REQUIRE(pixels[outputY * TemporaryTiledFilterFixture::k_Width + outputX] == static_cast<uint8>(255 - raw));
+      const uint8_t raw = static_cast<uint8_t>((sourceX + 3 * sourceY) % 251);
+      REQUIRE(pixels[outputY * TemporaryTiledFilterFixture::k_Width + outputX] == static_cast<uint8_t>(255 - raw));
     }
   }
 }
@@ -198,7 +198,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Read_Basic", "[ImageProcessing][Rea
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -244,7 +244,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Override_Origin", "[ImageProcessing
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -288,7 +288,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Centering_Origin", "[ImageProcessin
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -334,7 +334,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Override_Spacing", "[ImageProcessin
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -392,7 +392,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[Imag
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -450,7 +450,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[Ima
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -466,7 +466,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: DataType_Conversion", "[ImageProces
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
-  const uint64 k_DataTypeUInt16 = 1;
+  const uint64_t k_DataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -497,7 +497,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: DataType_Conversion", "[ImageProces
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -521,7 +521,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[Image
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64 k_DataTypeUInt32 = 2;
+  const uint64_t k_DataTypeUInt32 = 2;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -553,7 +553,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[Image
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint32>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint32_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -579,7 +579,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_All", "[ImageProcessing
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64 k_DataTypeUInt16 = 1;
+  const uint64_t k_DataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -614,7 +614,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_All", "[ImageProcessing
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -632,7 +632,7 @@ fs::path ReadImageOutputDir()
   return dir;
 }
 
-// Writes an N-page uint8 TIFF where every page has the same width/height/1-component layout.
+// Writes an N-page uint8_t TIFF where every page has the same width/height/1-component layout.
 // pagePixels[p] is row-major (top-to-bottom), size == width*height.
 void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels)
 {
@@ -723,7 +723,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[ImageProc
   REQUIRE(geom.getDimensions()[2] == numPages);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  const auto& store = dataStructure.getDataRefAs<DataArray<uint8>>(arrayPath).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<uint8_t>>(arrayPath).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == static_cast<usize>(width) * height * numPages);
   for(usize z = 0; z < numPages; ++z)
   {
@@ -775,7 +775,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[ImageProcessing][
   REQUIRE(geom.getDimensions()[2] == Z);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(arrayPath).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16_t>>(arrayPath).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == X * Y * Z);
   // No cropping => destination tuple order equals file order, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); ++i)
@@ -897,13 +897,13 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + gz
       REQUIRE(geom.getDimensions()[2] == 2);
       REQUIRE(geom.getSpacing()[0] == Approx(0.5f));
       REQUIRE(geom.getOrigin()[2] == Approx(3.5f));
-      RequireNrrdArrayEquals<int16>(ds, arrPath, voxels);
+      RequireNrrdArrayEquals<int16_t>(ds, arrPath, voxels);
       UnitTest::CheckArraysInheritTupleDims(ds);
     }
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD big-endian uint16 round trip", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("ImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round trip", "[ImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const std::array<usize, 3> dims = {3, 3, 2};
@@ -934,10 +934,10 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD big-endian uint16 round trip",
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  RequireNrrdArrayEquals<uint16>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD RGB (uint8 x3) round trip", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("ImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[ImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const usize X = 4, Y = 3; // 2D image, 3 components
@@ -961,13 +961,13 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD RGB (uint8 x3) round trip", "[
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto& arr = ds.getDataRefAs<DataArray<uint8>>(arrPath);
+  const auto& arr = ds.getDataRefAs<DataArray<uint8_t>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 3);
   const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 4);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 1);
-  RequireNrrdArrayEquals<uint8>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint8_t>(ds, arrPath, voxels);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
@@ -1040,7 +1040,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[ImageP
       }
     }
   }
-  RequireNrrdArrayEquals<uint16>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
 }
 
 // PhysicalSubvolume crop path. This is the one place preflight (delegating to
@@ -1105,7 +1105,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[Ima
       }
     }
   }
-  RequireNrrdArrayEquals<uint16>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
 }
 
 // Regression for the physical-crop preflight/execute divergence: an out-of-range physical
@@ -1150,7 +1150,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps 
   REQUIRE(geom.getDimensions()[0] == X);
   REQUIRE(geom.getDimensions()[1] == Y);
   REQUIRE(geom.getDimensions()[2] == Z);
-  RequireNrrdArrayEquals<uint16>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
 }
 
 TEST_CASE("ImageProcessing::ReadImageFilter: NRRD rejects missing file and bad encoding", "[ImageProcessing][ReadImageFilter]")
@@ -1222,28 +1222,28 @@ void RequireArraysIdentical(const IDataArray& ours, const IDataArray& itk)
   switch(ours.getDataType())
   {
   case DataType::int8:
-    RequireStoresEqual<int8>(ours, itk);
+    RequireStoresEqual<int8_t>(ours, itk);
     break;
   case DataType::uint8:
-    RequireStoresEqual<uint8>(ours, itk);
+    RequireStoresEqual<uint8_t>(ours, itk);
     break;
   case DataType::int16:
-    RequireStoresEqual<int16>(ours, itk);
+    RequireStoresEqual<int16_t>(ours, itk);
     break;
   case DataType::uint16:
-    RequireStoresEqual<uint16>(ours, itk);
+    RequireStoresEqual<uint16_t>(ours, itk);
     break;
   case DataType::int32:
-    RequireStoresEqual<int32>(ours, itk);
+    RequireStoresEqual<int32_t>(ours, itk);
     break;
   case DataType::uint32:
-    RequireStoresEqual<uint32>(ours, itk);
+    RequireStoresEqual<uint32_t>(ours, itk);
     break;
   case DataType::int64:
-    RequireStoresEqual<int64>(ours, itk);
+    RequireStoresEqual<int64_t>(ours, itk);
     break;
   case DataType::uint64:
-    RequireStoresEqual<uint64>(ours, itk);
+    RequireStoresEqual<uint64_t>(ours, itk);
     break;
   case DataType::float32:
     RequireStoresEqual<float32>(ours, itk);
@@ -1269,7 +1269,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refi
 {
   UnitTest::LoadPlugins();
 
-  // 128^3 int32 == 8 MiB decompressed. A splitmix64-mixed fill is effectively
+  // 128^3 int32_t == 8 MiB decompressed. A splitmix64-mixed fill is effectively
   // incompressible, so the gzip stream stays above the 4 MiB compressed buffer.
   const usize X = 128, Y = 128, Z = 128;
   std::vector<int32_t> voxels(X * Y * Z);
@@ -1306,7 +1306,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refi
   const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  RequireNrrdArrayEquals<int32>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<int32_t>(ds, arrPath, voxels);
 }
 
 // =============================================================================
@@ -1324,14 +1324,14 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refi
 namespace
 {
 // Writes an N-page TIFF of element type T with `numComponents` samples per pixel (contiguous /
-// interleaved). Generalizes WriteMultiPageTiff (which is uint8, 1-component) to uint16 and
+// interleaved). Generalizes WriteMultiPageTiff (which is uint8_t, 1-component) to uint16_t and
 // multi-component (RGB) stacks so the 3D parity + OOC tests can exercise those layouts.
 // pagePixels[p] is row-major (top-to-bottom), X-fastest, component-interleaved;
 // size == width*height*numComponents.
 template <typename T>
 void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t height, uint16_t numComponents, const std::vector<std::vector<T>>& pagePixels)
 {
-  static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "WriteMultiPageTiffTyped supports only uint8/uint16 sample types");
+  static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "WriteMultiPageTiffTyped supports only uint8_t/uint16_t sample types");
   const uint16_t bitsPerSample = static_cast<uint16_t>(sizeof(T) * 8);
   const uint16_t photometric = (numComponents == 1) ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB;
   TIFF* tif = TIFFOpen(path.string().c_str(), "w");

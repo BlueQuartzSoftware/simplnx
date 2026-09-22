@@ -409,27 +409,27 @@ private:
 // defined out-of-line in RegionalExtremaFlood.cpp and RegionalExtremaSweep.cpp respectively; these declarations
 // tell every other translation unit that includes this header not to implicitly instantiate those specializations
 // locally, matching the explicit instantiation definitions provided by the two .cpp files.
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<int8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<uint8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<int16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<uint16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<int32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<uint32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<int64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<uint64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<float32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaFlood<float64>;
+extern template class RegionalExtremaFlood<int8>;
+extern template class RegionalExtremaFlood<uint8>;
+extern template class RegionalExtremaFlood<int16>;
+extern template class RegionalExtremaFlood<uint16>;
+extern template class RegionalExtremaFlood<int32>;
+extern template class RegionalExtremaFlood<uint32>;
+extern template class RegionalExtremaFlood<int64>;
+extern template class RegionalExtremaFlood<uint64>;
+extern template class RegionalExtremaFlood<float32>;
+extern template class RegionalExtremaFlood<float64>;
 
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<int8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<uint8>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<int16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<uint16>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<int32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<uint32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<int64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<uint64>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<float32>;
-extern template class SIMPLNX_TEMPLATE_EXPORT RegionalExtremaSweep<float64>;
+extern template class RegionalExtremaSweep<int8>;
+extern template class RegionalExtremaSweep<uint8>;
+extern template class RegionalExtremaSweep<int16>;
+extern template class RegionalExtremaSweep<uint16>;
+extern template class RegionalExtremaSweep<int32>;
+extern template class RegionalExtremaSweep<uint32>;
+extern template class RegionalExtremaSweep<int64>;
+extern template class RegionalExtremaSweep<uint64>;
+extern template class RegionalExtremaSweep<float32>;
+extern template class RegionalExtremaSweep<float64>;
 
 template <class T>
 class RegionalExtremaSweepWithWorkingMemory

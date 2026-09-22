@@ -299,24 +299,24 @@ TEST_CASE("TiffImageIO:: tiled uint8_t preserves RGB and RGBA components", "[Tif
   }
 }
 
-TEST_CASE("TiffImageIO:: tiled uint16 and float32 remain lossless", "[TiffImageIO]")
+TEST_CASE("TiffImageIO:: tiled uint16_t and float32 remain lossless", "[TiffImageIO]")
 {
-  SECTION("uint16")
+  SECTION("uint16_t")
   {
     TemporaryTiffFile file("TiffImageIO_tiled_uint16.tif");
-    WriteTiledScalar<uint16>(file.path(), SAMPLEFORMAT_UINT, [](uint32_t x, uint32_t y) -> uint16 { return static_cast<uint16>(1000 + x * 17 + y * 31); });
-    const std::vector<uint8_t> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(uint16));
+    WriteTiledScalar<uint16_t>(file.path(), SAMPLEFORMAT_UINT, [](uint32_t x, uint32_t y) -> uint16_t { return static_cast<uint16_t>(1000 + x * 17 + y * 31); });
+    const std::vector<uint8_t> bytes = ReadDirect(file.path(), static_cast<usize>(k_Width) * k_Height * sizeof(uint16_t));
     std::vector<uint8_t> coverage;
-    const std::vector<uint8_t> rowBytes = ReadRows(file.path(), 1, sizeof(uint16), coverage);
+    const std::vector<uint8_t> rowBytes = ReadRows(file.path(), 1, sizeof(uint16_t), coverage);
     REQUIRE(coverage == std::vector<uint8_t>(static_cast<usize>(k_Width) * k_Height, 1));
     REQUIRE(rowBytes == bytes);
-    std::vector<uint16> actual(static_cast<usize>(k_Width) * k_Height);
+    std::vector<uint16_t> actual(static_cast<usize>(k_Width) * k_Height);
     std::memcpy(actual.data(), rowBytes.data(), rowBytes.size());
     for(usize y = 0; y < k_Height; ++y)
     {
       for(usize x = 0; x < k_Width; ++x)
       {
-        REQUIRE(actual[y * k_Width + x] == static_cast<uint16>(1000 + x * 17 + y * 31));
+        REQUIRE(actual[y * k_Width + x] == static_cast<uint16_t>(1000 + x * 17 + y * 31));
       }
     }
   }
@@ -371,7 +371,7 @@ TEST_CASE("TiffImageIO:: tiled uint8_t row callback returns the first error", "[
 TEST_CASE("TiffImageIO:: raw tiled callback returns the first error", "[TiffImageIO]")
 {
   TemporaryTiffFile file("TiffImageIO_raw_tiled_callback_error.tif");
-  WriteTiledScalar<uint16>(file.path(), SAMPLEFORMAT_UINT, [](uint32_t x, uint32_t y) -> uint16 { return static_cast<uint16>(1000 + x * 17 + y * 31); });
+  WriteTiledScalar<uint16_t>(file.path(), SAMPLEFORMAT_UINT, [](uint32_t x, uint32_t y) -> uint16_t { return static_cast<uint16_t>(1000 + x * 17 + y * 31); });
 
   constexpr int32_t k_CallbackError = -98766;
   constexpr usize k_FailingCallback = 3;

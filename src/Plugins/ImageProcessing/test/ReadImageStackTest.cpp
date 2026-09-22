@@ -156,8 +156,8 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XFlippedImageDataPath);
   const auto& yFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YFlippedImageDataPath);
 
-  UnitTest::CompareDataArrays<uint8>(xGeneratedImageData, xFlippedImageData);
-  UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
+  UnitTest::CompareDataArrays<uint8_t>(xGeneratedImageData, xFlippedImageData);
+  UnitTest::CompareDataArrays<uint8_t>(yGeneratedImageData, yFlippedImageData);
 }
 
 // Test data paths
@@ -571,7 +571,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[Imag
   DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -602,7 +602,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[ImageProc
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -629,7 +629,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[ImageProc
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -656,7 +656,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[ImageProc
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -683,7 +683,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[ImageProcess
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -710,7 +710,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[ImageProces
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -737,7 +737,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[ImageProc
   DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[ImageProcessing][ReadImageStackFilter][Cropping]")
@@ -764,7 +764,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[ImageProce
   DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -795,7 +795,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[Ima
   DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[ImageProcessing][ReadImageStackFilter][Resampling]")
@@ -822,7 +822,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[I
   DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -856,7 +856,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[Image
   DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -887,7 +887,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::FlipY", "[ImageProcessing][Rea
   DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -919,7 +919,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed", "
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
@@ -947,7 +947,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", 
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_WithZCrop", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
@@ -975,7 +975,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_Wit
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_WithZCrop", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
@@ -1003,7 +1003,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_Wi
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -1034,7 +1034,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", "[
   DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1061,7 +1061,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[Imag
   DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1088,7 +1088,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[
   DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1118,7 +1118,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "
   DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1148,7 +1148,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale
   DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1178,7 +1178,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "
   DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "[ImageProcessing][ReadImageStackFilter][Interaction]")
@@ -1208,7 +1208,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "[I
   DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_Cell_Data, k_ImageDataName});
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -1225,7 +1225,7 @@ fs::path MultiPageStackOutputDir()
   return dir;
 }
 
-// Writes an N-page uint8 (single-component) TIFF. pagePixels[p] is row-major (top-to-bottom),
+// Writes an N-page uint8_t (single-component) TIFF. pagePixels[p] is row-major (top-to-bottom),
 // size == width*height. Mirrors the libtiff synthesis idiom used in ReadImageTest.cpp/ImageIOTest.cpp.
 void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels)
 {
