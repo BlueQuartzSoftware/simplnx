@@ -164,25 +164,7 @@ list(APPEND PREBUILT_PIPELINE_NAMES
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-if(SIMPLNX_BUILD_PYTHON)
-  AddPythonTest(
-    NAME "PYTHON::${PLUGIN_NAME}::GenerateAndRunExamples"
-    FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/GenerateAndRunExamplePipelines.py"
-    PYTHONPATH "$<TARGET_FILE_DIR:simplnx>"
-  )
-  set_tests_properties("PYTHON::${PLUGIN_NAME}::GenerateAndRunExamples" PROPERTIES
-    WORKING_DIRECTORY "$<TARGET_FILE_DIR:simplnx>"
-    RUN_SERIAL TRUE
-    LABELS "${PLUGIN_NAME};ExamplePipelines;Python"
-  )
-endif()
-
-AddPythonTest(
-  NAME "PYTHON::${PLUGIN_NAME}::VerifyExampleCitations"
-  FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py"
-  PYTHONPATH "$<TARGET_FILE_DIR:simplnx>"
-)
-set_tests_properties("PYTHON::${PLUGIN_NAME}::VerifyExampleCitations" PROPERTIES
-  RUN_SERIAL TRUE
-  LABELS "${PLUGIN_NAME};ExamplePipelines;Citations;Network"
-)
+# Set the PYTHON_EXECUTABLE variable as that will get used when the stub shell script or batch file is created.
+# The `Python3_EXECUTABLE` is usually set in the CMakePresets.json file
+set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")

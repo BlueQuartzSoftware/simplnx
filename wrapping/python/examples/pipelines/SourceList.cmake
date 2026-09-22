@@ -1,17 +1,16 @@
-
-
-set(ImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ImageProcessing")
-set(OrientationDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/OrientationAnalysis")
-set(SimplnxDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/Simplnx")
-
-AddPythonTest(NAME "PY::ImageProcessing::02_Image_Segmentation" FILE "${ImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-AddPythonTest(NAME "PY::ImageProcessing::03_Porosity_Mesh_Export" FILE "${ImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-
 #------------------------------------------------------------------------------
 # These pipelines do not have any outside file dependencies other than what is
 # already decompressed at this point on the CI or local machine. Each test will
 # clean up its output file(s)
+#
+# !!! Group each plugin into its own little section as we re-use variables !!!
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Add the SIMPLNX Python Pipelines
+#------------------------------------------------------------------------------
+set(SimplnxDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/Simplnx")
+
 set(SIMPLNX_PYTHON_TESTS  
   AppendImageGeometry
   ApplyTransformation_Demo
@@ -34,6 +33,11 @@ foreach(test ${SIMPLNX_PYTHON_TESTS})
   AddPythonTest(NAME "PY::Simplnx::${test}" FILE "${SimplnxDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 endforeach(test ${})
 
+#------------------------------------------------------------------------------
+# Add the OrientationAnalysis Python Pipelines
+#------------------------------------------------------------------------------
+set(OrientationDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/OrientationAnalysis")
+
 set(SIMPLNX_PYTHON_TESTS
   APTR12_Analysis
   AVTR12_Analysis
@@ -47,7 +51,6 @@ set(SIMPLNX_PYTHON_TESTS
 foreach(test ${SIMPLNX_PYTHON_TESTS})
   AddPythonTest(NAME "PY::OrientationAnalysis::${test}" FILE "${OrientationDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 endforeach(test ${})
-
 
 #------------------------------------------------------------------------------
 # Add the examples/pipelines/OrientationAnalysis folder
@@ -83,4 +86,35 @@ CreatePythonTests(
   INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
   TEST_NAMES ${SIMPLNX_PYTHON_TESTS}
 )
+
+
+#------------------------------------------------------------------------------
+# Add the ImageProcessing Python Pipelines
+#------------------------------------------------------------------------------
+set(ImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ImageProcessing")
+
+AddPythonTest(NAME "PY::ImageProcessing::02_Image_Segmentation" FILE "${ImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+AddPythonTest(NAME "PY::ImageProcessing::03_Porosity_Mesh_Export" FILE "${ImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+
+set(SIMPLNX_PYTHON_TESTS
+  "(05) AM XCT Porosity Segmentation"
+  "(06) AM Powder-Bed Layer Inspection" 
+  "(07) AM Melt-Pool and Track Inspection" 
+  "(08) Powder Particle Watershed Segmentation"
+  "(09) Microstructure Watershed Segmentation" 
+  "(10) Binary Mask Repair and Skeletonization" 
+  "(11) Grayscale Surface-Defect Morphology" 
+  "(12) Pore Distance and Wall-Thickness Metrology" 
+  "(13) Denoising and Edge Detection" 
+  "(14) Projection-Based Quality Summaries" 
+  "(15) Radiography Intensity Calibration" 
+  "(16) Phase and Angle Field Transforms" 
+  "(17) Scientific Volume Interoperability" 
+  "(18) Industrial XCT Format Import" 
+  "(19) Serial-Section Stack Reconstruction" 
+  "(20) Fiji Microscopy Montage Import"
+)
+foreach(test ${SIMPLNX_PYTHON_TESTS})
+  AddPythonTest(NAME "PY::ImageProcessing::${test}" FILE "${ImageProcessingDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+endforeach(test ${})
 
