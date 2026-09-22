@@ -165,7 +165,7 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "$env{pythonLocation}/bin/python3"
         },
         "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
