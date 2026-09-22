@@ -292,7 +292,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
       return MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", scalingValue));
     }
 
-    ResampleImageGeomInputValues resampleInputValues;
+    ResampleImageGeomInputValues resampleInputValues{};
     resampleInputValues.SelectedImageGeometryPath = currentImageGeomPath;
     resampleInputValues.RemoveOriginalImageGeom = false;
     resampleInputValues.CreatedImageGeometryPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});

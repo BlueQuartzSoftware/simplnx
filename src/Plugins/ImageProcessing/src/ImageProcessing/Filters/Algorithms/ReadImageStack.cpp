@@ -327,7 +327,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
         // A 100 percent scale preserves the decoded slice and needs no resampling.
         if(scalingFactor != 100.0f)
         {
-          ResampleImageGeomInputValues resampleInputValues;
+          ResampleImageGeomInputValues resampleInputValues{};
           resampleInputValues.SelectedImageGeometryPath = imageGeomPath;
           resampleInputValues.RemoveOriginalImageGeom = true;
           resampleInputValues.ResamplingMode = 1;
@@ -342,7 +342,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       }
       else
       {
-        ResampleImageGeomInputValues resampleInputValues;
+        ResampleImageGeomInputValues resampleInputValues{};
         resampleInputValues.SelectedImageGeometryPath = imageGeomPath;
         resampleInputValues.RemoveOriginalImageGeom = true;
         resampleInputValues.ResamplingMode = 2;
