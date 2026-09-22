@@ -7,7 +7,6 @@
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <array>
 #include <bit>
 #include <fstream>
 #include <iomanip>
@@ -15,6 +14,7 @@
 #include <optional>
 #include <sstream>
 #include <string_view>
+#include <vector>
 
 using namespace nx::core;
 
@@ -105,7 +105,8 @@ Result<uint64> WriteCompressedPayload(std::ofstream& output, std::span<const uin
   }
 
   z_stream& stream = deflateStream.stream();
-  std::array<uint8, k_CompressionBufferSize> compressedBuffer{};
+  // The 1 MiB buffer must use heap storage to fit within the default Windows stack limit.
+  std::vector<uint8> compressedBuffer(k_CompressionBufferSize);
   usize inputOffset = 0;
   uint64 compressedSize = 0;
   int deflateResult = Z_OK;
