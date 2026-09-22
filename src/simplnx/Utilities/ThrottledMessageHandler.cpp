@@ -23,6 +23,8 @@ ThrottledMessageHandler::ThrottledMessageHandler(const IFilter::MessageHandler& 
 
 ThrottledMessageHandler::~ThrottledMessageHandler() noexcept
 {
+  // The final value of the last phase is almost always one the gate discarded.
+  flush();
   {
     std::lock_guard<std::mutex> guard(m_Mutex);
     m_Stop = true;
@@ -36,6 +38,9 @@ ThrottledMessageHandler::~ThrottledMessageHandler() noexcept
 
 void ThrottledMessageHandler::reset(usize maxProgress, std::string label)
 {
+  // Complete the phase that is ending before its label and denominator are replaced.
+  flush();
+  m_Estimator.restart();
   m_MaxProgress = maxProgress;
   m_Label = std::move(label);
   m_CurrentProgress = 0;
@@ -43,60 +48,70 @@ void ThrottledMessageHandler::reset(usize maxProgress, std::string label)
   m_Ready.exchange(true, std::memory_order_acq_rel);
 }
 
-void ThrottledMessageHandler::updateCount(usize currentProgress)
+void ThrottledMessageHandler::report(PendingKind kind, std::string_view label, usize current, usize max, int32 decimals)
 {
+  m_PendingKind = kind;
+  m_PendingLabel = label;
+  m_PendingProgress = current;
+  m_PendingMax = max;
+  m_PendingDecimals = decimals;
   if(!isReady())
   {
     return;
   }
-  m_MessageHandler.sendProgressCount(m_Label, currentProgress, m_MaxProgress);
+  flush();
+}
+
+void ThrottledMessageHandler::flush()
+{
+  if(m_PendingKind == PendingKind::None)
+  {
+    return;
+  }
+  // The estimate is computed only here, where a message is actually sent, so a throttled loop pays
+  // nothing for it on the iterations the gate discards.
+  const std::string remaining = m_Estimator.estimate(m_PendingProgress, m_PendingMax);
+  if(m_PendingKind == PendingKind::Count)
+  {
+    m_MessageHandler.sendProgressCount(m_PendingLabel, m_PendingProgress, m_PendingMax, remaining);
+  }
+  else
+  {
+    m_MessageHandler.sendProgressPercent(m_PendingLabel, m_PendingProgress, m_PendingMax, m_PendingDecimals, remaining);
+  }
+  m_PendingKind = PendingKind::None;
+}
+
+void ThrottledMessageHandler::updateCount(usize currentProgress)
+{
+  report(PendingKind::Count, m_Label, currentProgress, m_MaxProgress, 2);
 }
 
 void ThrottledMessageHandler::updateCount(std::string_view label, usize currentProgress, usize maxProgress)
 {
-  if(!isReady())
-  {
-    return;
-  }
-  m_MessageHandler.sendProgressCount(std::string(label), currentProgress, maxProgress);
+  report(PendingKind::Count, label, currentProgress, maxProgress, 2);
 }
 
 void ThrottledMessageHandler::updatePercent(usize currentProgress, int32 decimals)
 {
-  if(!isReady())
-  {
-    return;
-  }
-  m_MessageHandler.sendProgressPercent(m_Label, currentProgress, m_MaxProgress, decimals);
+  report(PendingKind::Percent, m_Label, currentProgress, m_MaxProgress, decimals);
 }
 
 void ThrottledMessageHandler::updatePercent(std::string_view label, usize currentProgress, usize maxProgress, int32 decimals)
 {
-  if(!isReady())
-  {
-    return;
-  }
-  m_MessageHandler.sendProgressPercent(std::string(label), currentProgress, maxProgress, decimals);
+  report(PendingKind::Percent, label, currentProgress, maxProgress, decimals);
 }
 
 void ThrottledMessageHandler::incrementCount(usize delta)
 {
   m_CurrentProgress += delta;
-  if(!isReady())
-  {
-    return;
-  }
-  m_MessageHandler.sendProgressCount(m_Label, m_CurrentProgress, m_MaxProgress);
+  report(PendingKind::Count, m_Label, m_CurrentProgress, m_MaxProgress, 2);
 }
 
 void ThrottledMessageHandler::incrementPercent(usize delta, int32 decimals)
 {
   m_CurrentProgress += delta;
-  if(!isReady())
-  {
-    return;
-  }
-  m_MessageHandler.sendProgressPercent(m_Label, m_CurrentProgress, m_MaxProgress, decimals);
+  report(PendingKind::Percent, m_Label, m_CurrentProgress, m_MaxProgress, decimals);
 }
 
 void ThrottledMessageHandler::trySendMessage(std::string message)

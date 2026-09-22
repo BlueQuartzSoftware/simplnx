@@ -33,6 +33,20 @@ int32 CalculateProgressBarValue(usize current, usize max)
   auto percent = static_cast<int32>(static_cast<float64>(current) / static_cast<float64>(max) * 100.0);
   return std::clamp(percent, 0, 100);
 }
+/**
+ * @brief Appends an optional parenthesised note to rendered progress text.
+ * @param text Rendered progress text
+ * @param detail Note to append, or empty for none
+ * @return The text, with the note appended when one was supplied.
+ */
+std::string AppendDetail(std::string text, std::string_view detail)
+{
+  if(detail.empty())
+  {
+    return text;
+  }
+  return fmt::format("{} ({})", text, detail);
+}
 } // namespace
 
 void IFilter::MessageHandler::sendProgressMessage(std::string message, int32 percent) const
@@ -40,15 +54,15 @@ void IFilter::MessageHandler::sendProgressMessage(std::string message, int32 per
   sendMessage(Message{Message::Type::Progress, std::move(message), std::clamp(percent, 0, 100)});
 }
 
-void IFilter::MessageHandler::sendProgressCount(std::string label, usize current, usize max) const
+void IFilter::MessageHandler::sendProgressCount(std::string label, usize current, usize max, std::string_view detail) const
 {
-  sendMessage(Message{Message::Type::Progress, fmt::format("{}: {}/{}", label, current, max), CalculateProgressBarValue(current, max)});
+  sendMessage(Message{Message::Type::Progress, AppendDetail(fmt::format("{}: {}/{}", label, current, max), detail), CalculateProgressBarValue(current, max)});
 }
 
-void IFilter::MessageHandler::sendProgressPercent(std::string label, usize current, usize max, int32 decimals) const
+void IFilter::MessageHandler::sendProgressPercent(std::string label, usize current, usize max, int32 decimals, std::string_view detail) const
 {
   const float64 percent = (max == 0) ? 0.0 : (static_cast<float64>(current) / static_cast<float64>(max) * 100.0);
-  sendMessage(Message{Message::Type::Progress, fmt::format("{}: {:.{}f}%", label, percent, decimals), CalculateProgressBarValue(current, max)});
+  sendMessage(Message{Message::Type::Progress, AppendDetail(fmt::format("{}: {:.{}f}%", label, percent, decimals), detail), CalculateProgressBarValue(current, max)});
 }
 
 namespace

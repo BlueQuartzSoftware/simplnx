@@ -362,3 +362,60 @@ TEST_CASE("Simplnx::ThrottledMessageHandler::The ticker thread opens the gate", 
   REQUIRE(recorder.size() == 2);
   REQUIRE(recorder.at(1).progress == 30);
 }
+
+TEST_CASE("Simplnx::ThrottledMessageHandler::reset flushes the phase that is ending", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  ThrottledMessageHandler throttle(handler, k_NeverFires);
+  throttle.reset(200, "First phase");
+
+  throttle.updateCount(10);
+  REQUIRE(recorder.size() == 1);
+
+  // The gate is closed, so the value that completes the phase is dropped by the throttle.
+  throttle.updateCount(200);
+  REQUIRE(recorder.size() == 1);
+
+  // Starting the next phase must report the value the first phase ended on.
+  throttle.reset(50, "Second phase");
+  REQUIRE(recorder.size() == 2);
+  REQUIRE(recorder.at(1).message == "First phase: 200/200");
+  REQUIRE(recorder.at(1).progress == 100);
+}
+
+TEST_CASE("Simplnx::ThrottledMessageHandler::Destruction flushes the final value", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  {
+    ThrottledMessageHandler throttle(handler, k_NeverFires);
+    throttle.reset(8, "Finishing");
+
+    // A phase shorter than one interval consumes the gate once and drops the rest, so without a
+    // flush the last thing a user sees is a partial figure.
+    throttle.incrementPercent(4);
+    REQUIRE(recorder.size() == 1);
+    throttle.incrementPercent(4);
+    REQUIRE(recorder.size() == 1);
+  }
+
+  REQUIRE(recorder.size() == 2);
+  REQUIRE(recorder.at(1).message == "Finishing: 100.00%");
+  REQUIRE(recorder.at(1).progress == 100);
+}
+
+TEST_CASE("Simplnx::ThrottledMessageHandler::Flush sends nothing when every value was reported", "[Simplnx][ThrottledMessageHandler]")
+{
+  MessageRecorder recorder;
+  IFilter::MessageHandler handler = recorder.createHandler();
+  {
+    ThrottledMessageHandler throttle(handler, k_NeverFires);
+    throttle.reset(10, "Exact");
+    throttle.updateCount(10);
+    REQUIRE(recorder.size() == 1);
+  }
+
+  // The pending value was already sent, so destruction must not duplicate it.
+  REQUIRE(recorder.size() == 1);
+}

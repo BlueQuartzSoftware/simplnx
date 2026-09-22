@@ -150,8 +150,10 @@ public:
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far
      * @param max Total items
+     * @param detail Optional note appended in parentheses, such as an estimate of the time
+     * remaining. nx::core::ProgressEstimator produces one. An empty string appends nothing.
      */
-    void sendProgressCount(std::string label, usize current, usize max) const;
+    void sendProgressCount(std::string label, usize current, usize max, std::string_view detail = {}) const;
 
     /**
      * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this when the
@@ -162,7 +164,7 @@ public:
      * @param max Total items
      * @param decimals Number of decimal places to display
      */
-    void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2) const;
+    void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2, std::string_view detail = {}) const;
 
     Callback m_Callback;
   };

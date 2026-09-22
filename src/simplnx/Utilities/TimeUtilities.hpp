@@ -27,19 +27,28 @@ inline std::string timestamp()
 }
 
 /**
- * @brief Converts a millisecond count to Hours:Minutes:Seconds type of display. This assumes
- * that the time would not be longer than 99 hours, 99 minutes, 99 seconds.
+ * @brief Converts a millisecond count to a short human-readable duration, such as "45 s",
+ * "2 m 30 s" or "1 h 12 m". Seconds are dropped beyond an hour, where they carry no useful
+ * precision.
  * @param millis Input millisecond count
- * @return std::string in the form of HH:MM:SS
+ * @return The rendered duration
  */
-inline std::string ConvertMillisToHrsMinSecs(unsigned long long int millis)
+inline std::string ConvertMillisToFriendlyDuration(unsigned long long int millis)
 {
-  constexpr unsigned long long int k_HoursConversion = 3600000;
-  constexpr unsigned long long int k_MinutesConversion = 60000;
-  unsigned long long int hours = millis / k_HoursConversion;
-  unsigned long long minutes = (millis % k_HoursConversion) / k_MinutesConversion;
-  unsigned long long seconds = ((millis % k_HoursConversion) % k_MinutesConversion) / 1000;
-  return fmt::format("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds);
+  const unsigned long long int totalSeconds = millis / 1000;
+  if(totalSeconds < 60)
+  {
+    return fmt::format("{} s", totalSeconds);
+  }
+  const unsigned long long int totalMinutes = totalSeconds / 60;
+  if(totalMinutes < 60)
+  {
+    const unsigned long long int seconds = totalSeconds % 60;
+    return seconds == 0 ? fmt::format("{} m", totalMinutes) : fmt::format("{} m {} s", totalMinutes, seconds);
+  }
+  const unsigned long long int hours = totalMinutes / 60;
+  const unsigned long long int minutes = totalMinutes % 60;
+  return minutes == 0 ? fmt::format("{} h", hours) : fmt::format("{} h {} m", hours, minutes);
 }
 
 /**

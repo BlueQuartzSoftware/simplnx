@@ -1800,12 +1800,15 @@ PYBIND11_MODULE(simplnx, mod)
   messageHandler.def(
       "send_progress_message", [](const IFilter::MessageHandler& self, std::string message, int32 percent) { self.sendProgressMessage(std::move(message), percent); }, "message"_a, "percent"_a);
   messageHandler.def(
-      "send_progress_count", [](const IFilter::MessageHandler& self, std::string label, usize current, usize max) { self.sendProgressCount(std::move(label), current, max); }, "label"_a, "current"_a,
-      "max"_a);
+      "send_progress_count",
+      [](const IFilter::MessageHandler& self, std::string label, usize current, usize max, const std::string& detail) { self.sendProgressCount(std::move(label), current, max, detail); }, "label"_a,
+      "current"_a, "max"_a, "detail"_a = std::string{});
   messageHandler.def(
       "send_progress_percent",
-      [](const IFilter::MessageHandler& self, std::string label, usize current, usize max, int32 decimals) { self.sendProgressPercent(std::move(label), current, max, decimals); }, "label"_a,
-      "current"_a, "max"_a, "decimals"_a = 2);
+      [](const IFilter::MessageHandler& self, std::string label, usize current, usize max, int32 decimals, const std::string& detail) {
+        self.sendProgressPercent(std::move(label), current, max, decimals, detail);
+      },
+      "label"_a, "current"_a, "max"_a, "decimals"_a = 2, "detail"_a = std::string{});
   messageHandler.def("__call__", [](const IFilter::MessageHandler& self, const IFilter::Message& message) { self.sendMessage(message); });
 
   py::class_<IFilter::PreflightValue> preflightValue(filter, "PreflightValue");

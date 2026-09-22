@@ -597,6 +597,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
@@ -831,6 +832,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/RegionalExtremaFlood.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/RegionalExtremaSweep.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp

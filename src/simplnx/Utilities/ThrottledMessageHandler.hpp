@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ProgressEstimator.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/format.h>
@@ -186,6 +187,16 @@ public:
    */
   void setReadyForTesting();
 
+  /**
+   * @brief Sends the most recent progress value the gate discarded, if any.
+   *
+   * The gate drops every update but one per interval, so the value that completes a phase is
+   * usually a dropped one. Without this the last thing a user sees is whatever partial figure
+   * happened to win the final interval, and a phase shorter than one interval never reports at
+   * all. reset() and the destructor call this, so a phase always ends on its true final value.
+   */
+  void flush();
+
 private:
   /**
    * @brief Returns true at most once per interval. Written as a relaxed load followed by an
@@ -194,11 +205,37 @@ private:
    */
   bool isReady();
 
+  /**
+   * @brief Which rendering the pending value needs, or None when nothing is pending.
+   */
+  enum class PendingKind
+  {
+    None,
+    Count,
+    Percent
+  };
+
+  /**
+   * @brief Records the value this call would have sent, then reports it when the gate allows.
+   * @param kind Selects the count or percent rendering
+   * @param label Label for this value
+   * @param current Progress value
+   * @param max Denominator
+   * @param decimals Decimal places for the percent rendering
+   */
+  void report(PendingKind kind, std::string_view label, usize current, usize max, int32 decimals);
+
   const IFilter::MessageHandler& m_MessageHandler;
   std::chrono::milliseconds m_Interval;
   std::string m_Label;
   usize m_MaxProgress = 0;
   usize m_CurrentProgress = 0;
+  PendingKind m_PendingKind = PendingKind::None;
+  std::string m_PendingLabel;
+  usize m_PendingProgress = 0;
+  usize m_PendingMax = 0;
+  int32 m_PendingDecimals = 2;
+  ProgressEstimator m_Estimator;
   std::atomic<bool> m_Ready = true;
   bool m_Stop = false;
   std::mutex m_Mutex;
