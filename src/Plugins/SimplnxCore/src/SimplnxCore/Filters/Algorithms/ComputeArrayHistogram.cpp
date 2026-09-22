@@ -762,7 +762,7 @@ Result<> ComputeArrayHistogram::operator()()
     maskArray = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskPath.value());
   }
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   for(usize index = 0; index < m_InputValues->SelectedArrayPaths.size(); index++)
   {
@@ -790,7 +790,7 @@ Result<> ComputeArrayHistogram::operator()()
     }
     if(overflow > 0)
     {
-      messageHelper.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow, inputData.getName()));
+      messageHandler.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow, inputData.getName()));
     }
   }
 

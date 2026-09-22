@@ -187,7 +187,7 @@ public:
    * @brief Builds grid membership and axis incidence tables from accepted 3D points.
    * @tparam T Coordinate value type.
    * @param shouldCancel Cancellation flag.
-   * @param messageHelper Sends progress messages.
+   * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
@@ -196,14 +196,14 @@ public:
    * storage. It stops construction when shouldCancel is set.
    */
   template <typename T>
-  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
     const usize numComps = inputArray.getNumberOfComponents();
 
-    messageHelper.sendInfoMessage(" - Determining bounds...");
+    messageHandler.sendInfoMessage(" - Determining bounds...");
     // Resident tuple reads find the coordinate bounds without a bulk buffer.
     std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
@@ -234,7 +234,7 @@ public:
 
     if(std::isnan(bounds[0]))
     {
-      messageHelper.sendInfoMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
+      messageHandler.sendInfoMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
       return;
     }
 
@@ -253,7 +253,7 @@ public:
     dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 2;
     dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 2;
 
-    messageHelper.sendInfoMessage(" - Binning values into a regular grid...");
+    messageHandler.sendInfoMessage(" - Binning values into a regular grid...");
     {
       std::vector<std::array<usize, 3>> positions = {};
       {
@@ -279,7 +279,7 @@ public:
           grids[bin] = true;
         }
 
-        messageHelper.sendInfoMessage(" - Compressing regular grid...");
+        messageHandler.sendInfoMessage(" - Compressing regular grid...");
         usize zSize = dims[1] * dims[0];
         usize ySize = dims[0];
         usize activeGridCount = 0;
@@ -328,7 +328,7 @@ public:
         grid.shrink_to_fit();
       }
 
-      messageHelper.sendInfoMessage(" - Generating adjacency matrix for search...");
+      messageHandler.sendInfoMessage(" - Generating adjacency matrix for search...");
       std::set<usize> xSet = {};
       std::set<usize> ySet = {};
       std::set<usize> zSet = {};
@@ -400,7 +400,7 @@ public:
    * @brief Builds grid membership and axis incidence tables from accepted 2D points.
    * @tparam T Coordinate value type.
    * @param shouldCancel Cancellation flag.
-   * @param messageHelper Sends progress messages.
+   * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
@@ -409,14 +409,14 @@ public:
    * storage. It stops construction when shouldCancel is set.
    */
   template <typename T>
-  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
     const usize numComps = inputArray.getNumberOfComponents();
 
-    messageHelper.sendInfoMessage(" - Determining bounds...");
+    messageHandler.sendInfoMessage(" - Determining bounds...");
     // Load array bounds using direct per-element access
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
@@ -444,7 +444,7 @@ public:
 
     if(std::isnan(bounds[0]))
     {
-      messageHelper.sendInfoMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
+      messageHandler.sendInfoMessage(" - No active (unmasked) points were found in the input array; there is nothing to cluster.");
       return;
     }
 
@@ -461,7 +461,7 @@ public:
     dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
     dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
 
-    messageHelper.sendInfoMessage(" - Binning values into a regular grid...");
+    messageHandler.sendInfoMessage(" - Binning values into a regular grid...");
     {
       std::vector<std::array<usize, 2>> positions = {};
       {
@@ -486,7 +486,7 @@ public:
           grids[bin] = true;
         }
 
-        messageHelper.sendInfoMessage(" - Compressing regular grid...");
+        messageHandler.sendInfoMessage(" - Compressing regular grid...");
 
         usize ySize = dims[0];
         usize activeGridCount = 0;
@@ -532,7 +532,7 @@ public:
         grid.shrink_to_fit();
       }
 
-      messageHelper.sendInfoMessage(" - Generating adjacency matrix for search...");
+      messageHandler.sendInfoMessage(" - Generating adjacency matrix for search...");
       std::set<usize> xSet = {};
       std::set<usize> ySet = {};
 
@@ -804,20 +804,20 @@ public:
   /**
    * @brief Creates a resident GDCF clustering operation.
    * @param shouldCancel Cancellation flag.
-   * @param messageHelper Sends progress messages.
+   * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    * @param distMetric Distance metric for pairwise tests.
    */
-  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
        const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, messageHelper, inputArray, epsilon, mask))
+  : hyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
   , m_ShouldCancel(shouldCancel)
-  , m_MessageHelper(messageHelper)
+  , m_MessageHandler(messageHandler)
   {
   }
 
@@ -833,7 +833,7 @@ public:
    */
   Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
-    m_MessageHelper.sendInfoMessage(" - Identifying core grids...");
+    m_MessageHandler.sendInfoMessage(" - Identifying core grids...");
     std::vector<usize> coreGridIds = {};
     for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
     {
@@ -853,7 +853,7 @@ public:
       return {};
     }
 
-    m_MessageHelper.sendInfoMessage(" - Sorting grids according to supplied parse order...");
+    m_MessageHandler.sendInfoMessage(" - Sorting grids according to supplied parse order...");
     switch(parseOrder)
     {
     case DBSCAN::ParseOrder::LowDensityFirst: {
@@ -875,7 +875,7 @@ public:
       return {};
     }
 
-    m_MessageHelper.sendInfoMessage("Identifying Qualifying Independent Clusters:");
+    m_MessageHandler.sendInfoMessage("Identifying Qualifying Independent Clusters:");
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     for(usize i = 0; i < coreGridIds.size(); i++)
     {
@@ -912,12 +912,12 @@ public:
     }
 
     // Non-core grids attach to connected clusters or remain labeled as noise.
-    m_MessageHelper.sendInfoMessage("Expanding and Merging Applicable Clusters:");
+    m_MessageHandler.sendInfoMessage("Expanding and Merging Applicable Clusters:");
     usize loop = 1;
     usize operations = 0;
     do
     {
-      m_MessageHelper.sendInfoMessage(fmt::format(" - Beginning cluster expansion pass: {}...", loop++));
+      m_MessageHandler.sendInfoMessage(fmt::format(" - Beginning cluster expansion pass: {}...", loop++));
       operations = 0;
       for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
@@ -974,7 +974,7 @@ public:
       }
     } while(operations > 0);
 
-    m_MessageHelper.sendInfoMessage(" - Cleaning up cluster identifiers...");
+    m_MessageHandler.sendInfoMessage(" - Cleaning up cluster identifiers...");
     std::vector<usize> clusters = {};
     for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
     {
@@ -1041,7 +1041,7 @@ private:
   const AbstractDataStore<T>& m_InputDataStore;
   ClusterUtilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHelper;
+  const IFilter::MessageHandler& m_MessageHandler;
 
   /**
    * @brief Partitions one density-sort range with Hoare's method.
@@ -1141,23 +1141,23 @@ private:
  * @param inputArray Resident coordinate store.
  * @param mask Selects coordinate tuples.
  * @param featureIds Receives final feature identifiers.
- * @param messageHelper Sends progress messages.
+ * @param messageHandler Sends progress messages.
  * @param shouldCancel Cancellation flag.
  * @return Warning, error, or success from clustering and labeling.
  */
 template <class AlgorithmT, typename T>
 Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
-                      const IFilter::MessageHandler& messageHelper, const std::atomic_bool& shouldCancel)
+                      const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  messageHelper.sendInfoMessage("Partitioning Input Data:");
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHelper, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  messageHandler.sendInfoMessage("Partitioning Input Data:");
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
 
   if(shouldCancel)
   {
     return {};
   }
 
-  messageHelper.sendInfoMessage("Clustering:");
+  messageHandler.sendInfoMessage("Clustering:");
   Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
   if(result.invalid())
   {
@@ -1173,7 +1173,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
     return {};
   }
 
-  messageHelper.sendInfoMessage("Labeling:");
+  messageHandler.sendInfoMessage("Labeling:");
   return algorithm.label(featureIds.getDataStoreRef());
 }
 
@@ -1190,22 +1190,22 @@ struct DBSCANDirectFunctor
    * @param clusterArray Coordinate array.
    * @param mask Selects coordinate tuples.
    * @param featureIds Receives final feature identifiers.
-   * @param messageHelper Sends progress messages.
+   * @param messageHandler Sends progress messages.
    * @param shouldCancel Cancellation flag.
    * @return Result from the selected specialization, or an error for another component count.
    */
   template <typename T>
   Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
-                      const IFilter::MessageHandler& messageHelper, const std::atomic_bool& shouldCancel)
+                      const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
     if(inputArray.getNumberOfComponents() == 2)
     {
-      return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
+      return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }
     else if(inputArray.getNumberOfComponents() == 3)
     {
-      return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
+      return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }
     else
     {
@@ -1227,7 +1227,7 @@ DBSCANDirect::~DBSCANDirect() noexcept = default;
 
 Result<> DBSCANDirect::operator()()
 {
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -1249,7 +1249,7 @@ Result<> DBSCANDirect::operator()()
     maskCompare = std::make_unique<AllTrueMaskCompare>();
   }
 
-  Result<> result = ExecuteDataFunction(DBSCANDirectFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
+  Result<> result = ExecuteDataFunction(DBSCANDirectFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHandler, m_ShouldCancel);
   if(result.invalid())
   {
     return result;
@@ -1260,7 +1260,7 @@ Result<> DBSCANDirect::operator()()
     return {};
   }
 
-  messageHelper.sendInfoMessage("Resizing clustering Attribute Matrix:");
+  messageHandler.sendInfoMessage("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});

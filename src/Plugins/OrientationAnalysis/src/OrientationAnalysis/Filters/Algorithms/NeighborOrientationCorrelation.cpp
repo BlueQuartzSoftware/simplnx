@@ -120,7 +120,7 @@ Result<> NeighborOrientationCorrelation::operator()()
   std::array<int32, k_NumFaceNeighbors> neighborSimCount = {};
   const int32 startLevel = 6;
 
-  auto& throttledMessenger = m_Throttle;
+  auto& progressThrottle = m_Throttle;
 
   // Z-slice buffering: read 3 adjacent Z-slices of the most-accessed arrays
   // into local memory to eliminate OOC chunk thrashing. The algorithm accesses
@@ -224,10 +224,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
           if(processedVoxels % 10000 == 0)
           {
-            throttledMessenger.queueMessage([&]() {
-              return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
-                                 CalculatePercentComplete(processedVoxels, totalVoxels));
-            });
+            progressThrottle.updatePercent(fmt::format("Level '{}' of '{}'", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level), processedVoxels, totalVoxels);
           }
 
           if(ciSlice[inSlice] < m_InputValues->MinConfidence)

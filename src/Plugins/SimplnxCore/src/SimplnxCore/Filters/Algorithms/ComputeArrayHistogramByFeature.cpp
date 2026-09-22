@@ -1407,7 +1407,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
   }
   const usize numFeatures = featureCountResult.value();
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
@@ -1510,11 +1510,11 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       return executeResult;
     }
 
-    messageHelper.sendInfoMessage(fmt::format("Calculated {} feature histograms!", numFeatures));
+    messageHandler.sendInfoMessage(fmt::format("Calculated {} feature histograms!", numFeatures));
 
     if(overflow > 0)
     {
-      messageHelper.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
+      messageHandler.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
     }
   }
 

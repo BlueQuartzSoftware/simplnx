@@ -79,7 +79,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
   std::vector<float32> xCentroid(dims[2], 0.0f);
   std::vector<float32> yCentroid(dims[2], 0.0f);
 
-  ThrottledMessageHandler throttledMessenger(getMessageHelper());
+  ThrottledMessageHandler progressThrottle(getThreadSafeMessageHandler());
   // Traverse source slices from highest Z to lowest Z.
   for(usize iter = 0; iter < dims[2]; iter++)
   {
@@ -87,7 +87,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
     {
       return {};
     }
-    throttledMessenger.queueMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+    progressThrottle.updatePercent("Determining Shifts", iter, dims[2]);
 
     usize count = 0;
     xCentroid[iter] = 0;

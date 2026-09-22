@@ -600,12 +600,12 @@ Result<> ComputeAvgOrientations::executeDirect()
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
-    messageHelper.sendInfoMessage("Computing Rodrigues Average Orientations");
+    messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
 
     Result<> result = computeRodriguesAverage();
     if(result.invalid() || m_ShouldCancel)
@@ -618,15 +618,15 @@ Result<> ComputeAvgOrientations::executeDirect()
   {
     if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
     if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendInfoMessage("Computing Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
     if(m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
 
     Result<> result = computeVmfWatsonAverage();
@@ -770,11 +770,11 @@ Result<> ComputeAvgOrientations::executeScanline()
                                               maximumFeatureId, m_NumberOfFeatures, featureCountPath->toString()));
   }
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
-    messageHelper.sendInfoMessage("Computing Rodrigues Average Orientations");
+    messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
     Result<> result = computeRodriguesAverageScanline();
     if(result.invalid() || m_ShouldCancel)
     {
@@ -786,15 +786,15 @@ Result<> ComputeAvgOrientations::executeScanline()
   {
     if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
     else if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendInfoMessage("Computing Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
     else
     {
-      messageHelper.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
     Result<> result = computeVmfWatsonAverageScanline();
     if(result.invalid() || m_ShouldCancel)
@@ -1365,7 +1365,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       return {};
     }
-    messenger.queueMessage([offset, totalPoints]() { return fmt::format("Computing Rodrigues Average: Cell {}/{}", offset, totalPoints); });
+    messenger.updateCount("Computing Rodrigues Average", offset, totalPoints);
 
     const usize count = std::min(k_ChunkTuples, totalPoints - offset);
     Result<> readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));

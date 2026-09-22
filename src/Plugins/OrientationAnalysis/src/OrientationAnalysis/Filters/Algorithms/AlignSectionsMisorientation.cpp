@@ -100,7 +100,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
   const auto halfDim1 = static_cast<int64>(dims[1] * 0.5f);
 
   float64 deg2Rad = (nx::core::numbers::pi / 180.0);
-  ThrottledMessageHandler throttledMessenger(getMessageHelper());
+  ThrottledMessageHandler progressThrottle(getThreadSafeMessageHandler());
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
@@ -108,7 +108,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
     auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+      progressThrottle.updatePercent("Determining Shifts", iter, dims[2]);
       if(getCancel())
       {
         return {};
@@ -232,7 +232,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
   {
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+      progressThrottle.updatePercent("Determining Shifts", iter, dims[2]);
       if(getCancel())
       {
         return {};

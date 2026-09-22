@@ -127,7 +127,7 @@ Result<> WriteLAMMPSFile::operator()()
   file << "\n";
 
   m_MessageHandler.sendInfoMessage("Exporting Data...");
-  ThrottledMessageHandler throttledMessenger(m_MessageHandler);
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
   usize increment = numVerts / 1000;
@@ -139,7 +139,7 @@ Result<> WriteLAMMPSFile::operator()()
     }
     if(i % increment == 0)
     {
-      throttledMessenger.updatePercent("Exporting Data", i, numVerts);
+      progressThrottle.updatePercent("Exporting Data", i, numVerts);
     }
     // Write the positions to the output file
     file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", i + 1LL, atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2), dummy, dummy,

@@ -667,7 +667,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
   int boundaryCount = 1;
   int totalBoundaries = static_cast<int>(vs.boundaryDict.size());
 
-  ThrottledMessageHandler throttledMessenger(messageHandler, std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressThrottle(messageHandler, std::chrono::milliseconds(1000));
 
   for(auto it = vs.boundaryDict.begin(); it != vs.boundaryDict.end(); ++it)
   {
@@ -676,7 +676,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
       return {};
     }
 
-    throttledMessenger.updateCount("Processing boundary", boundaryCount, totalBoundaries);
+    progressThrottle.updateCount("Processing boundary", boundaryCount, totalBoundaries);
 
     trimesh triSub = sliceMesh(vs, it->second);
     Triangulation tri(triSub);

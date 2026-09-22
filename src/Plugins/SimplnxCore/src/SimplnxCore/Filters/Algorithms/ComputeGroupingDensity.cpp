@@ -77,12 +77,12 @@ public:
       // Default value-initialized to zeroes: https://en.cppreference.com/w/cpp/named_req/DefaultInsertable
       checkedFeatureVolumes.resize(numFeatures);
     }
-    ThrottledMessageHandler throttledMessenger(m_MessageHandler);
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
 
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.updateCount("Computing grouping density", currentParentId, numParents);
+      progressThrottle.updateCount("Computing grouping density", currentParentId, numParents);
 
       if(m_ShouldCancel)
       {

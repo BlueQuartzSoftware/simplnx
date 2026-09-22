@@ -527,7 +527,7 @@ public:
     // NOLINTNEXTLINE(modernize-avoid-c-arrays) -- The outer extent is runtime-sized; each fixed-size inner sequence is a std::array.
     auto rawMoments = std::make_unique<std::array<double, k_MatrixDimension * k_MatrixDimension>[]>(numFeatures);
     auto featureIdsBuffer = std::make_unique<std::array<int32, k_CellChunkSize>>();
-    ThrottledMessageHandler messageHelper(m_MessageHandler);
+    ThrottledMessageHandler messageHandler(m_MessageHandler);
 
     for(usize cellOffset = 0; cellOffset < numCells; cellOffset += k_CellChunkSize)
     {
@@ -604,7 +604,7 @@ public:
       const auto* rect = featureRects.get() + featureId * numRectComponents;
       if(rect[5] - rect[2] + 1 != 1)
       {
-        messageHelper.trySendMessage(fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        messageHandler.trySendMessage(fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
         continue;
       }
 

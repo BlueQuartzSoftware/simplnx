@@ -195,8 +195,8 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   }
 
   // Explicit NaN keeps no-contribution features independent of FP settings.
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
   std::vector<float32> featureAverages(totalFeatures, 0.0f);
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
@@ -204,7 +204,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     {
       return {};
     }
-    throttledMessenger.queueMessage([&] { return fmt::format("Computing per-feature average {:.2f}% completed", CalculatePercentComplete(featureId, totalFeatures)); });
+    progressThrottle.updatePercent("Computing per-feature average", featureId, totalFeatures);
 
     if(counts[featureId] == 0)
     {

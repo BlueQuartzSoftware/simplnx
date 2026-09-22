@@ -82,8 +82,8 @@ Result<> ReadStlFile::operator()()
   std::array<float, StlConstants::k_StlElementCount> fileVert = {0.0F};
   uint16_t attrByteCount = 0;
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   // Track the read offset arithmetically rather than asking the C library for it every triangle.
   // fpos_t is an opaque type that is only portably usable with fsetpos(): glibc makes it a struct
@@ -100,7 +100,7 @@ Result<> ReadStlFile::operator()()
   {
     if(t % k_ProgressStride == 0)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
+      progressThrottle.updatePercent("Reading", t, triCount);
     }
     if(m_ShouldCancel)
     {

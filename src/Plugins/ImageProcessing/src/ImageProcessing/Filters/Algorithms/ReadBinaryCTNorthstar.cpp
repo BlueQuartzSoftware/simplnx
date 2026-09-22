@@ -99,8 +99,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
   usize zShift = 0;
   // int32 fileIndex = 1;
 
-  const IFilter::MessageHandler& messageHelper = messageHandler;
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   for(const auto& dataFileInput : inputValues->DataFilePaths)
   {
@@ -141,7 +140,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         fileZSlice++;
         continue;
       }
-      throttledMessenger.queueMessage([&]() { return fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z); });
+      progressThrottle.queueMessage([&]() { return fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z); });
       for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
       {
         if(inputValues->ImportSubvolume && (y < inputValues->StartVoxelCoord[1] || y > inputValues->EndVoxelCoord[1]))

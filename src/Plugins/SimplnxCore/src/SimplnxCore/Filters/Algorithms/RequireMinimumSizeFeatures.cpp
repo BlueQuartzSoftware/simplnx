@@ -125,8 +125,8 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
                                                                           const Int32AbstractDataStore* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
                                                                           Error& errorReturn)
 {
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  messageHelper.sendInfoMessage(fmt::format("Removing small features...."));
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  messageHandler.sendInfoMessage(fmt::format("Removing small features...."));
 
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 

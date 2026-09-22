@@ -42,13 +42,13 @@ constexpr usize k_CancelPollStride = 1ULL << 20;
  * @param storageArray Receives, for each vacated cell, the index of the neighbor cell to copy from.
  * Entries for cells that get no source are left unchanged.
  * @param shouldCancel Polled once per Z slice. When set the scan returns early.
- * @param messageHelper Throttled progress messages.
+ * @param messageHandler Throttled progress messages.
  * @return The number of vacated cells seen in this pass. Zero means the fill is complete.
  */
 usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel,
-                        const IFilter::MessageHandler& messageHelper)
+                        const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -75,7 +75,7 @@ usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      progressThrottle.updatePercent("Processing Image", zIdx, dims[2]);
       progressCounter = 0;
     }
     progressCounter++;
@@ -285,7 +285,6 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.ImageGeometryPath);
   auto& featureIds = dataStructure.getDataAs<Int32Array>(args.FeatureIdsArrayPath)->getDataStoreRef();
 
-  const IFilter::MessageHandler& messageHelper = messageHandler;
   Result<> result;
 
   messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
@@ -352,7 +351,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
       count++;
       messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
       std::fill(neighbors.begin(), neighbors.end(), -1);
-      const usize unresolvedCellCount = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHelper);
+      const usize unresolvedCellCount = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHandler);
 
       if(shouldCancel)
       {

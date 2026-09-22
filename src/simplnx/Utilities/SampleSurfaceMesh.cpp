@@ -124,12 +124,12 @@ struct SampleSlicesFunctor
    * @param featureBounds Supplies one precomputed bounding volume per feature.
    * @param polyIds Receives output feature IDs.
    * @param shouldCancel Supplies the cancellation flag.
-   * @param messageHelper Reports progress.
+   * @param messageHandler Reports progress.
    * @return Valid result, bulk-write error, or feature-ID overflow error.
    */
   template <typename OutputT, typename FaceLabelsT>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
-                      const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper)
+                      const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const usize numFeatures = faceLists.size();
 
@@ -149,7 +149,7 @@ struct SampleSlicesFunctor
     const usize cellsPerSlice = gridDims.getX() * gridDims.getY();
     const usize numSlices = gridDims.getZ();
 
-    messageHelper.sendInfoMessage("Sampling triangle geometry ...");
+    messageHandler.sendInfoMessage("Sampling triangle geometry ...");
     algorithm->resetProgress(numSlices, "Sampling triangle geometry");
 
     // Reuse point and output buffers whose size is proportional to one XY slice.
@@ -193,7 +193,7 @@ struct SampleSlicesFunctor
                                DataTypeToHumanString(GetDataType<FaceLabelsT>()), DataTypeToHumanString(polyIds.getDataType()), numFeatures - 1, DataTypeToHumanString(polyIds.getDataType())));
     }
 
-    messageHelper.sendInfoMessage("Complete");
+    messageHandler.sendInfoMessage("Complete");
 
     return {};
   }
@@ -213,17 +213,17 @@ struct SampleSurfaceMeshFunctor
    * @param iFaceLabels Supplies two feature labels per triangle.
    * @param polyIds Receives cell feature IDs.
    * @param shouldCancel Supplies the cancellation flag.
-   * @param messageHelper Reports progress.
+   * @param messageHandler Reports progress.
    * @return Valid result, bulk-write error, or feature-ID overflow error.
    */
   template <typename T>
   Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const IDataArray& iFaceLabels, IDataArray& polyIds, const std::atomic_bool& shouldCancel,
-                      const IFilter::MessageHandler& messageHelper)
+                      const IFilter::MessageHandler& messageHandler)
   {
     const AbstractDataStore<T>& faceLabelsSM = dynamic_cast<const DataArray<T>&>(iFaceLabels).getDataStoreRef();
     const usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-    messageHelper.sendInfoMessage("Counting number of Features...");
+    messageHandler.sendInfoMessage("Counting number of Features...");
 
     // The largest positive face label determines the feature-list count.
     T g1 = 0, g2 = 0;
@@ -251,7 +251,7 @@ struct SampleSurfaceMeshFunctor
     usize numFeatures = maxFeatureId + 1;
 
     std::vector<std::vector<T>> faceLists(numFeatures);
-    messageHelper.sendInfoMessage("Counting number of triangle faces per feature ...");
+    messageHandler.sendInfoMessage("Counting number of triangle faces per feature ...");
 
     // Size each feature list from its positive label occurrences.
     for(usize i = 0; i < numFaces; i++)
@@ -273,7 +273,7 @@ struct SampleSurfaceMeshFunctor
       return {};
     }
 
-    messageHelper.sendInfoMessage("Allocating triangle faces per feature ...");
+    messageHandler.sendInfoMessage("Allocating triangle faces per feature ...");
 
     // Track the next insertion position for each pre-sized face list.
     std::vector<int32> linkLoc(numFaces, 0);
@@ -325,7 +325,7 @@ struct SampleSurfaceMeshFunctor
     }
 
     // Dispatch output type after mesh-scale lookup data is complete.
-    return ExecuteDataFunctionIntType(SampleSlicesFunctor{}, polyIds.getDataType(), algorithm, triangleGeom, faceLists, faceBBs, featureBounds, polyIds, shouldCancel, messageHelper);
+    return ExecuteDataFunctionIntType(SampleSlicesFunctor{}, polyIds.getDataType(), algorithm, triangleGeom, faceLists, faceBBs, featureBounds, polyIds, shouldCancel, messageHandler);
   }
 };
 } // namespace

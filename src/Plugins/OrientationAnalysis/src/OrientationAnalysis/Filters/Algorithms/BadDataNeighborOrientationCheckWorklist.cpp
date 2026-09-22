@@ -82,8 +82,8 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   // The count array uses four bytes per voxel and retains cascade state separately from the mask.
   std::vector<int32> neighborCount(totalPoints, 0);
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   // Initialize matching-neighbor counts before worklist propagation.
   for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -92,7 +92,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
     {
       return {};
     }
-    throttledMessenger.queueMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    progressThrottle.updatePercent("Processing Data", voxelIndex, totalPoints);
     if(!maskCompare->isTrue(voxelIndex))
     {
       ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);

@@ -176,8 +176,8 @@ struct PrintDataArray
       tuplesPerLine = 1;
     }
 
-    const IFilter::MessageHandler& messageHelper = mesgHandler;
-    ThrottledMessageHandler throttledMessenger(messageHelper);
+    ThrottledMessageHandler progressThrottle(mesgHandler);
+    progressThrottle.reset(numTuples, fmt::format("Processing {}", inputDataArray.getName()));
 
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
@@ -197,8 +197,7 @@ struct PrintDataArray
       for(usize localTuple = 0; localTuple < tupleCount; localTuple++)
       {
         const usize tuple = tupleOffset + localTuple;
-        throttledMessenger.queueMessage(
-            [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
+        progressThrottle.updatePercent(tuple);
         if(shouldCancel)
         {
           return {};

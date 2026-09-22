@@ -192,7 +192,7 @@ Result<> TransferMarkedSliceForArray(IDataArray& dataArray, const std::vector<in
  * @param replacementCount Receives the number of negative voxels that have a non-negative source.
  * @param unresolvedCount Receives the number of negative voxels without a non-negative source.
  * @param shouldCancel Stops before later Z slices when true.
- * @param messageHelper Creates a throttled progress messenger.
+ * @param messageHandler Creates a throttled progress messenger.
  * @return First bulk-I/O error, or whether any negative Feature ID remains unresolved.
  *
  * Three input slices preserve the Feature-ID state at iteration start. Two mark
@@ -203,9 +203,9 @@ Result<> TransferMarkedSliceForArray(IDataArray& dataArray, const std::vector<in
  * the current vote count wins. A later tie does not replace that feature.
  */
 Result<bool> IdentifyAndFillNeighborsScanline(const ImageGeom& imageGeom, Int32AbstractDataStore& featureIdsStore, const std::vector<std::shared_ptr<IDataArray>>& voxelArrays, usize& replacementCount,
-                                              usize& unresolvedCount, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper)
+                                              usize& unresolvedCount, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  ThrottledMessageHandler progressThrottle(messageHandler);
   replacementCount = 0;
   unresolvedCount = 0;
 
@@ -272,7 +272,7 @@ Result<bool> IdentifyAndFillNeighborsScanline(const ImageGeom& imageGeom, Int32A
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dimZ)); });
+      progressThrottle.updatePercent("Processing Image", zIdx, dimZ);
       progressCounter = 0;
     }
     progressCounter++;
@@ -575,7 +575,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
     return {};
   }
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> result;
 
   if(function != Functionality::Extract)
@@ -775,7 +775,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
         usize replacementCount = 0;
         usize unresolvedCount = 0;
-        auto fillResult = IdentifyAndFillNeighborsScanline(imageGeom, featureIds, voxelArrays, replacementCount, unresolvedCount, m_ShouldCancel, messageHelper);
+        auto fillResult = IdentifyAndFillNeighborsScanline(imageGeom, featureIds, voxelArrays, replacementCount, unresolvedCount, m_ShouldCancel, messageHandler);
         if(fillResult.invalid())
         {
           return ConvertResult(std::move(fillResult));

@@ -33,15 +33,15 @@ class FindKernelAvgMisorientationsImpl
 public:
   /**
    * @brief Initializes a direct KAM range worker.
-   * @param progressMessenger Reports completed items through the synchronized callback.
+   * @param reportProgress Reports completed items through the synchronized callback.
    * @param dataStructure Provides the selected arrays and Image Geometry.
    * @param inputValues Identifies the selected arrays and KAM settings.
    * @param shouldCancel Signals cancellation.
    * @pre Each argument remains valid while the parallel algorithm executes.
    */
-  FindKernelAvgMisorientationsImpl(const std::function<void(usize)>& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
+  FindKernelAvgMisorientationsImpl(const std::function<void(usize)>& reportProgress, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
                                    const std::atomic_bool& shouldCancel)
-  : m_ReportProgress(progressMessenger)
+  : m_ReportProgress(reportProgress)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
@@ -225,8 +225,8 @@ Result<> ComputeKernelAvgMisorientationsDirect::operator()()
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = imageGeom.getDimensions();
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  ThrottledMessageHandler progressThrottle(messageHelper);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
   std::mutex progressMutex;
   const std::function<void(usize)> reportProgress = [&](usize count) {
     std::lock_guard<std::mutex> guard(progressMutex);

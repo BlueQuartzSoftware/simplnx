@@ -69,14 +69,14 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
  * @param replacementCount Receives the number of negative voxels that have a non-negative source.
  * @param unresolvedCount Receives the number of negative voxels without a non-negative source.
  * @param shouldCancel Stops before later Z slices when true.
- * @param messageHelper Creates a throttled progress messenger.
+ * @param messageHandler Creates a throttled progress messenger.
  * @return True if any negative Feature ID remains unresolved; false after cancellation or none.
  * @pre Flat voxel indexes fit in int32.
  */
 bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, usize& replacementCount, usize& unresolvedCount,
-                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHelper)
+                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -107,7 +107,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.queueMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      progressThrottle.updatePercent("Processing Image", zIdx, dims[2]);
       progressCounter = 0;
     }
     progressCounter++;
@@ -314,7 +314,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     return {};
   }
 
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> result;
 
   if(function != Functionality::Extract)
@@ -510,7 +510,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         std::fill(neighbors.begin(), neighbors.end(), -1);
         usize replacementCount = 0;
         usize unresolvedCount = 0;
-        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, replacementCount, unresolvedCount, m_ShouldCancel, messageHelper);
+        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, replacementCount, unresolvedCount, m_ShouldCancel, messageHandler);
 
         if(m_ShouldCancel)
         {

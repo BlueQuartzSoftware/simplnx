@@ -53,17 +53,11 @@ public:
    */
   void operator()() const
   {
-    const IFilter::MessageHandler& messageHelper = m_Filter->getMessageHelper();
-
-    ThrottledMessageHandler progressMessenger(messageHelper);
-
     T var = static_cast<T>(0);
-
-    std::string arrayName = m_DataArray.getName();
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.queueMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      m_Filter->sendThreadSafeProgressMessage(1);
       if(m_Filter->getCancel())
       {
         return;
@@ -155,9 +149,6 @@ public:
    */
   Result<> operator()() const
   {
-    const IFilter::MessageHandler& messageHelper = m_Filter->getMessageHelper();
-    ThrottledMessageHandler progressMessenger(messageHelper);
-
     auto& dataStore = m_DataArray.getDataStoreRef();
     const usize numComp = m_DataArray.getNumberOfComponents();
     const usize dimX = m_Dims[0];
@@ -165,14 +156,12 @@ public:
     const usize sliceVoxels = dimX * dimY;
     const usize sliceElements = sliceVoxels * numComp;
 
-    std::string arrayName = m_DataArray.getName();
-
     auto sliceBuffer = std::make_unique<T[]>(sliceElements);
     auto outBuffer = std::make_unique<T[]>(sliceElements);
 
     for(usize i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.queueMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      m_Filter->sendThreadSafeProgressMessage(1);
       if(m_Filter->getCancel())
       {
         return {};
@@ -256,10 +245,11 @@ AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_boo
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper{[this](const IFilter::Message& message) {
+, m_ThreadSafeMessageHandler{[this](const IFilter::Message& message) {
   std::lock_guard<std::mutex> guard(m_MessageMutex);
   m_MessageHandler.sendMessage(message);
 }}
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -270,9 +260,15 @@ const std::atomic_bool& AlignSections::getCancel()
   return m_ShouldCancel;
 }
 
-const IFilter::MessageHandler& AlignSections::getMessageHelper()
+const IFilter::MessageHandler& AlignSections::getThreadSafeMessageHandler()
 {
-  return m_MessageHelper;
+  return m_ThreadSafeMessageHandler;
+}
+
+void AlignSections::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }
 
 Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeometryPath)
@@ -314,6 +310,20 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     RecordAlgorithmPathExecution(useOoc ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   }
 
+  // Every transfer reports through one shared throttle, so the denominator is aggregate: each array
+  // contributes the slices its loop visits, which is every slice after the first. Arrays that are not
+  // IDataArray objects are skipped below, so count only the ones that will actually run.
+  usize transferArrayCount = 0;
+  for(const auto& cellArrayPath : selectedCellArrays)
+  {
+    if(m_DataStructure.getDataAs<IDataArray>(cellArrayPath) != nullptr)
+    {
+      transferArrayCount++;
+    }
+  }
+  const usize slicesPerArray = (udims[2] > 1) ? (udims[2] - 1) : 0;
+  m_Throttle.reset(transferArrayCount * slicesPerArray, "Updating cell data");
+
   ParallelTaskAlgorithm taskRunner;
 
   for(const auto& cellArrayPath : selectedCellArrays)
@@ -323,7 +333,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       return {};
     }
 
-    m_MessageHelper.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
+    m_ThreadSafeMessageHandler.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
     if(cellArray == nullptr)
     {

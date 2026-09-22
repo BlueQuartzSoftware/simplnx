@@ -139,8 +139,8 @@ Result<> GroupMicroTextureRegions::remapCellParentIds()
 // -----------------------------------------------------------------------------
 Result<> GroupMicroTextureRegions::execute()
 {
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
-  ThrottledMessageHandler throttledMessenger(messageHelper);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   NeighborList<int32>& featureNeighborListRef = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
   NeighborList<int32>* nonContigNeighListPtr = nullptr;
@@ -216,7 +216,7 @@ Result<> GroupMicroTextureRegions::execute()
       }
     }
 
-    throttledMessenger.queueMessage([&]() { return fmt::format("Parent Count: {}", parentCount); });
+    progressThrottle.queueMessage([&]() { return fmt::format("Parent Count: {}", parentCount); });
   }
   return {};
 }
@@ -224,7 +224,7 @@ Result<> GroupMicroTextureRegions::execute()
 // -----------------------------------------------------------------------------
 Result<> GroupMicroTextureRegions::operator()()
 {
-  const IFilter::MessageHandler& messageHelper = m_MessageHandler;
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   m_Generator = std::mt19937_64(m_InputValues->SeedValue);
   m_Distribution = std::uniform_real_distribution<float32>(0.0f, 1.0f);
@@ -240,7 +240,7 @@ Result<> GroupMicroTextureRegions::operator()()
   }
 
   // Execute the main grouping algorithm
-  messageHelper.sendInfoMessage(fmt::format("Start Grouping....."));
+  messageHandler.sendInfoMessage(fmt::format("Start Grouping....."));
 
   // Execute the grouping algorithm
   Result<> result = execute();
@@ -265,7 +265,7 @@ Result<> GroupMicroTextureRegions::operator()()
 
   if(m_InputValues->RandomizeParentIds)
   {
-    messageHelper.sendInfoMessage(fmt::format("Randomizing Parent Ids"));
+    messageHandler.sendInfoMessage(fmt::format("Randomizing Parent Ids"));
     randomizeParentIds(m_NumTuples);
   }
 
