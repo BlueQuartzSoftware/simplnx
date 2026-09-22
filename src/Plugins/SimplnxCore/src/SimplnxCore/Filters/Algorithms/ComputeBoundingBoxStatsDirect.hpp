@@ -24,8 +24,8 @@ public:
   /**
    * @brief Initializes direct bounding-box statistics.
    * @param dataStructure Contains the geometry, arrays, and outputs.
-   * @param mesgHandler Supplies the common interface. This path emits no messages.
-   * @param shouldCancel Supplies the common algorithm interface.
+   * @param mesgHandler Receives phase announcements and throttled progress.
+   * @param shouldCancel Signals cancellation between bounded scan operations.
    * @param inputValues Selects statistics and identifies required paths.
    * @pre All arguments outlive this executor.
    */
@@ -40,7 +40,10 @@ public:
   /**
    * @brief Computes the selected statistics with direct element access.
    * @return Success, or an input or output-store error.
-   * @warning This implementation does not inspect the cancellation flag.
+   *
+   * Cancellation returns success. Workers check the flag between bounded scan
+   * blocks. Staged results are not published after a cancelled worker pass;
+   * outputs from an earlier completed pass can remain.
    */
   Result<> operator()();
 

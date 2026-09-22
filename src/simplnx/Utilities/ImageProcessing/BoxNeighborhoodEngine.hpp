@@ -17,8 +17,10 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -292,7 +294,7 @@ struct Box2DBlockBody
 
 template <class T, class ReduceFnT>
 Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const std::array<usize, 3>& radius, usize neighborhoodSize,
-                                  const BoxNeighborhood2DPlan& plan, ReduceFnT& reduceFn, const std::atomic_bool& shouldCancel, usize maximumWorkers)
+                                  const BoxNeighborhood2DPlan& plan, ReduceFnT& reduceFn, const std::atomic_bool& shouldCancel, usize maximumWorkers, ThrottledMessageHandler& progressThrottle)
 {
   auto inputBuffer = std::make_unique<T[]>(plan.inputBufferValues);
   auto outputBuffer = std::make_unique<T[]>(plan.outputBufferValues);
@@ -300,6 +302,7 @@ Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, Abstra
   const usize dimY = dims[1];
   const usize yStep = plan.fullWidth ? plan.coreRows : 1;
   const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
+  progressThrottle.reset(dimX * dimY, "Applying 2D neighborhood filter");
   for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
   {
     const usize outputRows = std::min(yStep, dimY - outputYBegin);
@@ -380,6 +383,7 @@ Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, Abstra
       {
         return result;
       }
+      progressThrottle.incrementPercent(outputValues);
     }
   }
   return {};
@@ -399,6 +403,7 @@ struct BoxVolumeBody
   usize neighborhoodSize;
   const ReduceFnT& reduceFn;
   const std::atomic_bool& shouldCancel;
+  const std::function<void(usize)>& reportProgress;
 
   void operator()(const Range& range) const
   {
@@ -406,9 +411,16 @@ struct BoxVolumeBody
     std::vector<T> scratch(neighborhoodSize);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+      if(((tuple - range.min()) & 4095ULL) == 0)
       {
-        return;
+        if(shouldCancel)
+        {
+          return;
+        }
+        if(tuple != range.min())
+        {
+          reportProgress(4096);
+        }
       }
       const usize z = tuple / sliceValues;
       const usize planeIndex = tuple - z * sliceValues;
@@ -431,6 +443,10 @@ struct BoxVolumeBody
         }
       }
       output[tuple] = reduceFn(nonstd::span<T>(scratch.data(), scratch.size()));
+    }
+    if(!shouldCancel && !range.empty())
+    {
+      reportProgress((range.size() - 1) % 4096 + 1);
     }
   }
 };
@@ -509,6 +525,9 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
     return {};
   }
 
+  messageHandler.sendInfoMessage("Applying neighborhood filter");
+  ThrottledMessageHandler progressThrottle(messageHandler);
+
   const auto* inMemoryInputStore = dynamic_cast<const DataStore<T>*>(&inputStore);
   auto* inMemoryOutputStore = dynamic_cast<DataStore<T>*>(&outputStore);
   const bool usesOutOfCoreStore = inputStore.getStoreType() == IDataStore::StoreType::OutOfCore || outputStore.getStoreType() == IDataStore::StoreType::OutOfCore;
@@ -518,11 +537,17 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
     nonstd::span<T> outputValues = inMemoryOutputStore->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, volumeValues);
-    parallelAlgorithm.execute(detail::BoxVolumeBody<T, ReduceFnT>{inputValues.data(), outputValues.data(), dimX, dimY, dimZ, rx, ry, rz, neighborhoodSize, reduceFn, shouldCancel});
+    progressThrottle.reset(volumeValues, "Computing resident neighborhoods");
+    std::mutex progressMutex;
+    const std::function<void(usize)> sendThreadSafeProgress = [&](usize delta) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(delta);
+    };
+    parallelAlgorithm.execute(
+        detail::BoxVolumeBody<T, ReduceFnT>{inputValues.data(), outputValues.data(), dimX, dimY, dimZ, rx, ry, rz, neighborhoodSize, reduceFn, shouldCancel, sendThreadSafeProgress});
     return {};
   }
 
-  ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(dimZ, "Applying neighborhood filter");
 
   std::unique_ptr<T[]> outPlane;
@@ -552,7 +577,7 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
       {
         return ConvertInvalidResult<void>(std::move(planResult));
       }
-      Result<> result = detail::ExecuteBoxNeighborhood2D(inputStore, outputStore, dims, radius, neighborhoodSize, planResult.value(), reduceFn, shouldCancel, workerCount);
+      Result<> result = detail::ExecuteBoxNeighborhood2D(inputStore, outputStore, dims, radius, neighborhoodSize, planResult.value(), reduceFn, shouldCancel, workerCount, progressThrottle);
       if(result.invalid())
       {
         return result;
@@ -578,7 +603,10 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
         return r;
       }
     }
-    progressThrottle.incrementPercent(1, 1);
+    if(dimZ > 1 && !shouldCancel)
+    {
+      progressThrottle.incrementPercent(1, 1);
+    }
   }
   return {};
 }

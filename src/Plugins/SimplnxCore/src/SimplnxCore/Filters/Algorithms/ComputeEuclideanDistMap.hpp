@@ -92,7 +92,7 @@ public:
    * @return Success.
    *
    * Both implementations return success when a cancellation checkpoint observes the signal. Direct
-   * tasks run to completion after they start. Scanline execution preserves completed map ranges.
+   * tasks check cancellation between chunks and slices. Scanline execution preserves completed map ranges.
    *
    * Current bulk-I/O Result values are not inspected. A storage failure can leave partial maps and
    * still return success.

@@ -476,6 +476,7 @@ ComputeShapesTriangleGeom::ComputeShapesTriangleGeom(DataStructure& dataStructur
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -485,7 +486,6 @@ ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
 void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValues>& results)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  m_FeatureUpdateCount = m_FeatureUpdateCount + results.size();
   auto& omega3sRef = *m_Omega3s;                 // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
   auto& axisEulerAnglesRef = *m_AxisEulerAngles; // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
   auto& axisLengthsRef = *m_AxisLengths;         // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
@@ -506,17 +506,7 @@ void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValue
     aspectRatiosRef.setValue(2 * result.featureId, result.aspectRatios[0]);
     aspectRatiosRef.setValue((2 * result.featureId) + 1, result.aspectRatios[1]);
   }
-  // Send at most 100 messages.
-  if(m_FeatureUpdateCount % m_NumFeatureInc == 0)
-  {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-    {
-      return;
-    }
-    m_MessageHandler.sendInfoMessage(fmt::format("Computing Feature {}/{}", m_FeatureUpdateCount, m_NumFeatures));
-    m_InitialPoint = std::chrono::steady_clock::now();
-  }
+  m_Throttle.incrementCount(results.size());
 }
 
 // -----------------------------------------------------------------------------
@@ -542,12 +532,8 @@ Result<> ComputeShapesTriangleGeom::operator()()
   m_AspectRatios = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
 
   m_NumFeatures = centroids.getNumberOfTuples();
-  m_NumFeatureInc = m_NumFeatures / 100;
-  if(m_NumFeatureInc == 0)
-  {
-    m_NumFeatureInc = 1;
-  }
-  m_FeatureUpdateCount = 0;
+  m_MessageHandler.sendInfoMessage("Computing Feature Shapes");
+  m_Throttle.reset(m_NumFeatures > 0 ? m_NumFeatures - 1 : 0, "Computing Feature Shapes");
 
   // One face pass prevents repeated full-mesh scans in the feature loop.
   const std::vector<std::vector<usize>> facesByFeature = ::BuildFacesByFeature(faceLabels, m_NumFeatures);

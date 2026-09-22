@@ -10,14 +10,18 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -32,6 +36,10 @@ constexpr usize k_MaxXIndex = 3;
 constexpr usize k_MaxYIndex = 4;
 constexpr usize k_MaxZIndex = 5;
 constexpr usize k_FrequencyTableCapacity = 32;
+constexpr usize k_ProgressBlockSize = 65536;
+
+using ScanProgress = std::function<void(std::string_view, usize, usize)>;
+using BoundsProgress = std::function<void()>;
 
 /* clang-format off */
 template <class T>
@@ -320,25 +328,61 @@ private:
  * @param imageGeom Supplies the image dimensions.
  * @param inputValues Reads input values.
  * @param voxelIndices Contains half-open voxel bounds.
+ * @param shouldCancel Signals cancellation between bounded blocks.
+ * @param reportProgress Reports completed values through the owning mutex seam.
+ * @param progressLabel Identifies the current scan.
  * @param function Receives each value in Z-Y-X order.
+ * @return True when the complete traversal finishes without cancellation.
  */
 template <class InputAccessorT, class FunctionT>
-void ForEachBoxValue(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, FunctionT&& function)
+bool ForEachBoxValue(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress,
+                     std::string_view progressLabel, FunctionT&& function)
 {
+  if(voxelIndices[k_MinXIndex] >= voxelIndices[k_MaxXIndex] || voxelIndices[k_MinYIndex] >= voxelIndices[k_MaxYIndex] || voxelIndices[k_MinZIndex] >= voxelIndices[k_MaxZIndex])
+  {
+    return !shouldCancel;
+  }
   const usize xPoints = imageGeom.getNumXCells();
   const usize yPoints = imageGeom.getNumYCells();
+  const usize rowLength = voxelIndices[k_MaxXIndex] - voxelIndices[k_MinXIndex];
+  const usize totalValues = rowLength * (voxelIndices[k_MaxYIndex] - voxelIndices[k_MinYIndex]) * (voxelIndices[k_MaxZIndex] - voxelIndices[k_MinZIndex]);
+  usize completedValues = 0;
+  // The block loop restarts for every row, so a narrow box would report once per row however small
+  // that row is. Report on completed values instead, so the seam is entered once per block of work.
+  usize nextReportAt = k_ProgressBlockSize;
   for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
   {
+    if(shouldCancel)
+    {
+      return false;
+    }
     const usize zStride = zIndex * xPoints * yPoints;
     for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
     {
       const usize yStride = yIndex * xPoints;
-      for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
+      for(usize rowOffset = 0; rowOffset < rowLength;)
       {
-        function(inputValues.value(zStride + yStride + xIndex));
+        if(shouldCancel)
+        {
+          return false;
+        }
+        const usize blockSize = std::min(k_ProgressBlockSize, rowLength - rowOffset);
+        const usize blockStart = voxelIndices[k_MinXIndex] + rowOffset;
+        for(usize xIndex = blockStart; xIndex < blockStart + blockSize; xIndex++)
+        {
+          function(inputValues.value(zStride + yStride + xIndex));
+        }
+        completedValues += blockSize;
+        if(totalValues >= k_ProgressBlockSize && completedValues >= nextReportAt)
+        {
+          reportProgress(progressLabel, completedValues, totalValues);
+          nextReportAt = completedValues + k_ProgressBlockSize;
+        }
+        rowOffset += blockSize;
       }
     }
   }
+  return !shouldCancel;
 }
 
 /**
@@ -452,31 +496,41 @@ void CalculateFrequencyStats(FixedFrequencyTable<T>& frequencies, CompleteStatsC
  * @param voxelIndices Contains half-open voxel bounds.
  * @param stats Receives median and unique-value statistics.
  * @param modes Receives sorted tied modes, or is null when mode is not needed.
+ * @param shouldCancel Signals cancellation between scan blocks.
+ * @param reportProgress Reports completed values through the owning mutex seam.
  *
  * The function selects and counts distinct values in ordered fixed-size
  * batches. It trades additional direct scans for constant frequency scratch.
  */
 template <typename T, class InputAccessorT>
-void CalculateFrequencyStatsBounded(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, CompleteStatsCache<T>& stats, std::vector<T>* modes)
+void CalculateFrequencyStatsBounded(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, CompleteStatsCache<T>& stats, std::vector<T>* modes,
+                                    const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress)
 {
   FrequencySummaryState<T> state;
   std::optional<T> lowerExclusive;
   while(true)
   {
     FixedFrequencyTable<T> frequencies;
-    ForEachBoxValue(imageGeom, inputValues, voxelIndices, [&](const T& value) {
-      if(!lowerExclusive.has_value() || lowerExclusive.value() < value)
-      {
-        frequencies.insertCandidate(value);
-      }
-    });
+    if(!ForEachBoxValue(imageGeom, inputValues, voxelIndices, shouldCancel, reportProgress, "Sorting Bounding Box Values: Selecting Candidates", [&](const T& value) {
+         if(!lowerExclusive.has_value() || lowerExclusive.value() < value)
+         {
+           frequencies.insertCandidate(value);
+         }
+       }))
+    {
+      return;
+    }
     if(frequencies.size() == 0)
     {
       break;
     }
 
     frequencies.sort();
-    ForEachBoxValue(imageGeom, inputValues, voxelIndices, [&](const T& value) { frequencies.incrementIfPresent(value); });
+    if(!ForEachBoxValue(imageGeom, inputValues, voxelIndices, shouldCancel, reportProgress, "Sorting Bounding Box Values: Counting Candidates",
+                        [&](const T& value) { frequencies.incrementIfPresent(value); }))
+    {
+      return;
+    }
     AccumulateFrequencyBatch(frequencies, stats, state, modes);
     lowerExclusive = frequencies[frequencies.size() - 1].value;
   }
@@ -497,11 +551,15 @@ template <typename T, class InputAccessorT>
 class ComputeBaseStatsImpl
 {
 public:
-  ComputeBaseStatsImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, std::vector<StatsCache<T>>& statsVector)
+  ComputeBaseStatsImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, std::vector<StatsCache<T>>& statsVector, const std::atomic_bool& shouldCancel,
+                       const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
   : m_Geom(geom)
   , m_InputValues(inputValues)
   , m_UnifiedBounds(unifiedBounds)
   , m_StatsVector(statsVector)
+  , m_ShouldCancel(shouldCancel)
+  , m_ReportProgress(reportProgress)
+  , m_ReportCompleted(reportCompleted)
   {
   }
   ~ComputeBaseStatsImpl() = default;
@@ -509,11 +567,12 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    usize xPoints = m_Geom.getNumXCells();
-    usize yPoints = m_Geom.getNumYCells();
-
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // Local primitives reduce writes to the shared cache vector.
@@ -522,23 +581,14 @@ public:
       T maxValue = std::numeric_limits<T>::lowest();
       T summationValue = static_cast<T>(0);
 
-      usize zStride = 0, yStride = 0;
-      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
+      if(!ForEachBoxValue(m_Geom, m_InputValues, voxelIndices, m_ShouldCancel, m_ReportProgress, "Computing Bounding Box Statistics", [&](T value) {
+           count++;
+           minValue = std::min(minValue, value);
+           maxValue = std::max(maxValue, value);
+           summationValue += value;
+         }))
       {
-        zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
-        {
-          yStride = yIndex * xPoints;
-          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
-          {
-            usize tup = zStride + yStride + xIndex;
-            T value = m_InputValues.value(tup);
-            count++;
-            minValue = std::min(minValue, value);
-            maxValue = std::max(maxValue, value);
-            summationValue += value;
-          }
-        }
+        return;
       }
 
       if(count == 0)
@@ -552,6 +602,11 @@ public:
       m_StatsVector[targetBoundsIndex].minValue = minValue;
       m_StatsVector[targetBoundsIndex].maxValue = maxValue;
       m_StatsVector[targetBoundsIndex].summationValue = summationValue;
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      m_ReportCompleted();
     }
   }
 
@@ -566,6 +621,9 @@ private:
   InputAccessorT m_InputValues;
   nonstd::span<const float32> m_UnifiedBounds;
   std::vector<StatsCache<T>>& m_StatsVector;
+  const std::atomic_bool& m_ShouldCancel;
+  const ScanProgress& m_ReportProgress;
+  const BoundsProgress& m_ReportCompleted;
 };
 
 /**
@@ -585,12 +643,15 @@ class ComputeAllStatsImpl
 {
 public:
   ComputeAllStatsImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, std::vector<CompleteStatsCache<T>>& statsVector,
-                      std::vector<std::shared_ptr<std::vector<T>>>& modes)
+                      std::vector<std::shared_ptr<std::vector<T>>>& modes, const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
   : m_Geom(geom)
   , m_InputValues(inputValues)
   , m_UnifiedBounds(unifiedBounds)
   , m_StatsVector(statsVector)
   , m_Modes(modes)
+  , m_ShouldCancel(shouldCancel)
+  , m_ReportProgress(reportProgress)
+  , m_ReportCompleted(reportCompleted)
   {
   }
   ~ComputeAllStatsImpl() = default;
@@ -598,11 +659,12 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    usize xPoints = m_Geom.getNumXCells();
-    usize yPoints = m_Geom.getNumYCells();
-
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // Local primitives reduce writes to the shared cache vector.
@@ -614,31 +676,22 @@ public:
       FixedFrequencyTable<T> frequencies;
       bool frequencyOverflow = false;
 
-      usize zStride = 0, yStride = 0;
-      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
-      {
-        zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
-        {
-          yStride = yIndex * xPoints;
-          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
-          {
-            usize tup = zStride + yStride + xIndex;
-            T value = m_InputValues.value(tup);
-            count++;
-            if constexpr(CollectBaseStatsV)
-            {
-              minValue = std::min(minValue, value);
-              maxValue = std::max(maxValue, value);
-              summationValue += value;
-            }
+      if(!ForEachBoxValue(m_Geom, m_InputValues, voxelIndices, m_ShouldCancel, m_ReportProgress, "Computing Bounding Box Statistics", [&](T value) {
+           count++;
+           if constexpr(CollectBaseStatsV)
+           {
+             minValue = std::min(minValue, value);
+             maxValue = std::max(maxValue, value);
+             summationValue += value;
+           }
 
-            if(!frequencyOverflow && !frequencies.add(value))
-            {
-              frequencyOverflow = true;
-            }
-          }
-        }
+           if(!frequencyOverflow && !frequencies.add(value))
+           {
+             frequencyOverflow = true;
+           }
+         }))
+      {
+        return;
       }
 
       if constexpr(CollectBaseStatsV)
@@ -658,17 +711,23 @@ public:
 
       if(count == 0)
       {
+        m_ReportCompleted();
         continue;
       }
 
       if(frequencyOverflow)
       {
-        CalculateFrequencyStatsBounded<T>(m_Geom, m_InputValues, voxelIndices, m_StatsVector[targetBoundsIndex], m_Modes[targetBoundsIndex].get());
+        CalculateFrequencyStatsBounded<T>(m_Geom, m_InputValues, voxelIndices, m_StatsVector[targetBoundsIndex], m_Modes[targetBoundsIndex].get(), m_ShouldCancel, m_ReportProgress);
       }
       else
       {
         CalculateFrequencyStats<T>(frequencies, m_StatsVector[targetBoundsIndex], m_Modes[targetBoundsIndex].get());
       }
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      m_ReportCompleted();
     }
   }
 
@@ -684,6 +743,9 @@ private:
   nonstd::span<const float32> m_UnifiedBounds;
   std::vector<CompleteStatsCache<T>>& m_StatsVector;
   std::vector<std::shared_ptr<std::vector<T>>>& m_Modes;
+  const std::atomic_bool& m_ShouldCancel;
+  const ScanProgress& m_ReportProgress;
+  const BoundsProgress& m_ReportCompleted;
 };
 
 /**
@@ -698,11 +760,15 @@ template <typename T, class InputAccessorT, bool CollectBaseStatsV>
 class ComputeBasicAndFrequencyStatsImpl
 {
 public:
-  ComputeBasicAndFrequencyStatsImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, std::vector<CompleteStatsCache<T>>& statsVector)
+  ComputeBasicAndFrequencyStatsImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, std::vector<CompleteStatsCache<T>>& statsVector,
+                                    const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
   : m_Geom(geom)
   , m_InputValues(inputValues)
   , m_UnifiedBounds(unifiedBounds)
   , m_StatsVector(statsVector)
+  , m_ShouldCancel(shouldCancel)
+  , m_ReportProgress(reportProgress)
+  , m_ReportCompleted(reportCompleted)
   {
   }
   ~ComputeBasicAndFrequencyStatsImpl() = default;
@@ -710,11 +776,12 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    usize xPoints = m_Geom.getNumXCells();
-    usize yPoints = m_Geom.getNumYCells();
-
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // Local primitives reduce writes to the shared cache vector.
@@ -726,30 +793,21 @@ public:
       FixedFrequencyTable<T> frequencies;
       bool frequencyOverflow = false;
 
-      usize zStride = 0, yStride = 0;
-      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
+      if(!ForEachBoxValue(m_Geom, m_InputValues, voxelIndices, m_ShouldCancel, m_ReportProgress, "Computing Bounding Box Statistics", [&](T value) {
+           count++;
+           if constexpr(CollectBaseStatsV)
+           {
+             minValue = std::min(minValue, value);
+             maxValue = std::max(maxValue, value);
+             summationValue += value;
+           }
+           if(!frequencyOverflow && !frequencies.add(value))
+           {
+             frequencyOverflow = true;
+           }
+         }))
       {
-        zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
-        {
-          yStride = yIndex * xPoints;
-          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
-          {
-            usize tup = zStride + yStride + xIndex;
-            T value = m_InputValues.value(tup);
-            count++;
-            if constexpr(CollectBaseStatsV)
-            {
-              minValue = std::min(minValue, value);
-              maxValue = std::max(maxValue, value);
-              summationValue += value;
-            }
-            if(!frequencyOverflow && !frequencies.add(value))
-            {
-              frequencyOverflow = true;
-            }
-          }
-        }
+        return;
       }
 
       if constexpr(CollectBaseStatsV)
@@ -769,17 +827,23 @@ public:
 
       if(count == 0)
       {
+        m_ReportCompleted();
         continue;
       }
 
       if(frequencyOverflow)
       {
-        CalculateFrequencyStatsBounded<T>(m_Geom, m_InputValues, voxelIndices, m_StatsVector[targetBoundsIndex], nullptr);
+        CalculateFrequencyStatsBounded<T>(m_Geom, m_InputValues, voxelIndices, m_StatsVector[targetBoundsIndex], nullptr, m_ShouldCancel, m_ReportProgress);
       }
       else
       {
         CalculateFrequencyStats<T>(frequencies, m_StatsVector[targetBoundsIndex], nullptr);
       }
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      m_ReportCompleted();
     }
   }
 
@@ -794,6 +858,9 @@ private:
   InputAccessorT m_InputValues;
   nonstd::span<const float32> m_UnifiedBounds;
   std::vector<CompleteStatsCache<T>>& m_StatsVector;
+  const std::atomic_bool& m_ShouldCancel;
+  const ScanProgress& m_ReportProgress;
+  const BoundsProgress& m_ReportCompleted;
 };
 
 template <class Cache>
@@ -814,12 +881,16 @@ template <typename T, CacheType CacheT, class InputAccessorT>
 class ComputeStdDevImpl
 {
 public:
-  ComputeStdDevImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, const std::vector<CacheT>& statsVector, std::vector<float32>& stdDevValues)
+  ComputeStdDevImpl(const ImageGeom& geom, InputAccessorT inputValues, nonstd::span<const float32> unifiedBounds, const std::vector<CacheT>& statsVector, std::vector<float32>& stdDevValues,
+                    const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
   : m_Geom(geom)
   , m_InputValues(inputValues)
   , m_UnifiedBounds(unifiedBounds)
   , m_StatsVector(statsVector)
   , m_StdDevValues(stdDevValues)
+  , m_ShouldCancel(shouldCancel)
+  , m_ReportProgress(reportProgress)
+  , m_ReportCompleted(reportCompleted)
   {
   }
   ~ComputeStdDevImpl() = default;
@@ -827,14 +898,16 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    usize xPoints = m_Geom.getNumXCells();
-    usize yPoints = m_Geom.getNumYCells();
-
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       // Skip empty bounds to prevent division by zero.
       if(m_StatsVector[targetBoundsIndex].count == 0)
       {
+        m_ReportCompleted();
         continue;
       }
 
@@ -845,23 +918,18 @@ public:
       float32 meanValue = 0.0f;
       meanValue = m_StatsVector[targetBoundsIndex].summationValue / static_cast<float32>(m_StatsVector[targetBoundsIndex].count);
 
-      usize zStride = 0, yStride = 0;
-      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
+      if(!ForEachBoxValue(m_Geom, m_InputValues, voxelIndices, m_ShouldCancel, m_ReportProgress, "Computing Bounding Box Standard Deviation",
+                          [&](T value) { sumOfDiffs += static_cast<float64>((value - meanValue) * (value - meanValue)); }))
       {
-        zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
-        {
-          yStride = yIndex * xPoints;
-          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
-          {
-            usize tup = zStride + yStride + xIndex;
-            T value = m_InputValues.value(tup);
-            sumOfDiffs += static_cast<float64>((value - meanValue) * (value - meanValue));
-          }
-        }
+        return;
       }
 
       m_StdDevValues[targetBoundsIndex] = static_cast<float32>(std::sqrt(sumOfDiffs / static_cast<float64>(m_StatsVector[targetBoundsIndex].count)));
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      m_ReportCompleted();
     }
   }
 
@@ -877,6 +945,9 @@ private:
   nonstd::span<const float32> m_UnifiedBounds;
   const std::vector<CacheT>& m_StatsVector;
   std::vector<float32>& m_StdDevValues;
+  const std::atomic_bool& m_ShouldCancel;
+  const ScanProgress& m_ReportProgress;
+  const BoundsProgress& m_ReportCompleted;
 };
 
 /**
@@ -891,16 +962,24 @@ private:
  * @param statsVector Supplies counts and sums.
  * @param dataStructure Contains the standard-deviation output.
  * @param filterValues Identifies the output path.
+ * @param shouldCancel Signals cancellation before staged values are published.
+ * @param reportProgress Reports scan progress through the owning mutex seam.
+ * @param reportCompleted Reports one fully processed bound through the same seam.
  *
  * Workers write a temporary vector. Serial DataStore writes occur after they
  * join because the generic output interface does not guarantee thread safety.
  */
 template <typename T, CacheType StatsCacheT, class InputAccessorT>
 void ComputeAndStoreStdDeviation(ParallelDataAlgorithm& dataAlg, const ImageGeom& imageGeom, InputAccessorT inputAccessor, nonstd::span<const float32> unifiedBounds,
-                                 const std::vector<StatsCacheT>& statsVector, DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* filterValues)
+                                 const std::vector<StatsCacheT>& statsVector, DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* filterValues,
+                                 const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
 {
   std::vector<float32> stdDevValues(statsVector.size(), 0.0f);
-  dataAlg.execute(ComputeStdDevImpl<T, StatsCacheT, InputAccessorT>(imageGeom, inputAccessor, unifiedBounds, statsVector, stdDevValues));
+  dataAlg.execute(ComputeStdDevImpl<T, StatsCacheT, InputAccessorT>(imageGeom, inputAccessor, unifiedBounds, statsVector, stdDevValues, shouldCancel, reportProgress, reportCompleted));
+  if(shouldCancel)
+  {
+    return;
+  }
 
   auto& stdDevArray = dataStructure.getDataRefAs<Float32Array>(filterValues->StdDevPath).getDataStoreRef();
   for(usize index = 0; index < statsVector.size(); index++)
@@ -1055,6 +1134,8 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
  * @param unifiedBounds Contains six values for each bounding box.
  * @param inputAccessor Reads input values.
  * @param parallelize Enables parallel bound processing.
+ * @param shouldCancel Signals cancellation between scan blocks.
+ * @param messageHandler Receives phase announcements and serialized progress.
  * @return Success, or an output-store error.
  *
  * Contiguous input enables parallel direct reads. Framework output stores are
@@ -1063,9 +1144,31 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
  */
 template <bool UseModeV, typename T, class InputAccessorT>
 Result<> ComputeBoundsStats(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, nonstd::span<const float32> unifiedBounds,
-                            InputAccessorT inputAccessor, bool parallelize)
+                            InputAccessorT inputAccessor, bool parallelize, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   const usize numBounds = unifiedBounds.size() / 6;
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  std::mutex progressMutex;
+  usize completedBounds = 0;
+  const ScanProgress reportProgress = [&](std::string_view label, usize current, usize total) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.updatePercent(label, current, total);
+  };
+  const BoundsProgress reportCompleted = [&] {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.updateCount(++completedBounds);
+  };
+  // Phase changes occur only before dispatch or after all workers have joined.
+  const auto startPhase = [&](const std::string& label) {
+    messageHandler.sendInfoMessage(label);
+    completedBounds = 0;
+    progressThrottle.reset(numBounds, label);
+  };
+  startPhase("Computing Bounding Box Statistics");
+  if(inputValues->CalculateMode || inputValues->CalculateMedian || inputValues->CalculateNumUniqueValues)
+  {
+    messageHandler.sendInfoMessage("Sorting Bounding Box Values for Frequency Statistics");
+  }
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numBounds);
@@ -1084,11 +1187,16 @@ Result<> ComputeBoundsStats(DataStructure& dataStructure, const ComputeBoundingB
 
     if(collectBaseStats)
     {
-      dataAlg.execute(ComputeAllStatsImpl<T, InputAccessorT, true>(imageGeom, inputAccessor, unifiedBounds, statsVector, modes));
+      dataAlg.execute(ComputeAllStatsImpl<T, InputAccessorT, true>(imageGeom, inputAccessor, unifiedBounds, statsVector, modes, shouldCancel, reportProgress, reportCompleted));
     }
     else
     {
-      dataAlg.execute(ComputeAllStatsImpl<T, InputAccessorT, false>(imageGeom, inputAccessor, unifiedBounds, statsVector, modes));
+      dataAlg.execute(ComputeAllStatsImpl<T, InputAccessorT, false>(imageGeom, inputAccessor, unifiedBounds, statsVector, modes, shouldCancel, reportProgress, reportCompleted));
+    }
+
+    if(shouldCancel)
+    {
+      return {};
     }
 
     auto& modeList = dataStructure.getDataRefAs<NeighborList<T>>(inputValues->ModePath);
@@ -1097,9 +1205,18 @@ Result<> ComputeBoundsStats(DataStructure& dataStructure, const ComputeBoundingB
       modeList.setList(static_cast<int32>(index), modes[index]);
     }
 
+    if(shouldCancel)
+    {
+      return {};
+    }
     if(inputValues->CalculateStdDev)
     {
-      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues);
+      startPhase("Computing Bounding Box Standard Deviation");
+      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues, shouldCancel, reportProgress, reportCompleted);
+      if(shouldCancel)
+      {
+        return {};
+      }
     }
 
     return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
@@ -1109,16 +1226,25 @@ Result<> ComputeBoundsStats(DataStructure& dataStructure, const ComputeBoundingB
     std::vector<CompleteStatsCache<T>> statsVector(numBounds);
     if(collectBaseStats)
     {
-      dataAlg.execute(ComputeBasicAndFrequencyStatsImpl<T, InputAccessorT, true>(imageGeom, inputAccessor, unifiedBounds, statsVector));
+      dataAlg.execute(ComputeBasicAndFrequencyStatsImpl<T, InputAccessorT, true>(imageGeom, inputAccessor, unifiedBounds, statsVector, shouldCancel, reportProgress, reportCompleted));
     }
     else
     {
-      dataAlg.execute(ComputeBasicAndFrequencyStatsImpl<T, InputAccessorT, false>(imageGeom, inputAccessor, unifiedBounds, statsVector));
+      dataAlg.execute(ComputeBasicAndFrequencyStatsImpl<T, InputAccessorT, false>(imageGeom, inputAccessor, unifiedBounds, statsVector, shouldCancel, reportProgress, reportCompleted));
     }
 
+    if(shouldCancel)
+    {
+      return {};
+    }
     if(inputValues->CalculateStdDev)
     {
-      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues);
+      startPhase("Computing Bounding Box Standard Deviation");
+      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues, shouldCancel, reportProgress, reportCompleted);
+      if(shouldCancel)
+      {
+        return {};
+      }
     }
 
     return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
@@ -1126,11 +1252,20 @@ Result<> ComputeBoundsStats(DataStructure& dataStructure, const ComputeBoundingB
   else
   {
     std::vector<StatsCache<T>> statsVector(numBounds);
-    dataAlg.execute(ComputeBaseStatsImpl<T, InputAccessorT>(imageGeom, inputAccessor, unifiedBounds, statsVector));
+    dataAlg.execute(ComputeBaseStatsImpl<T, InputAccessorT>(imageGeom, inputAccessor, unifiedBounds, statsVector, shouldCancel, reportProgress, reportCompleted));
 
+    if(shouldCancel)
+    {
+      return {};
+    }
     if(inputValues->CalculateStdDev)
     {
-      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues);
+      startPhase("Computing Bounding Box Standard Deviation");
+      ComputeAndStoreStdDeviation<T>(dataAlg, imageGeom, inputAccessor, unifiedBounds, statsVector, dataStructure, inputValues, shouldCancel, reportProgress, reportCompleted);
+      if(shouldCancel)
+      {
+        return {};
+      }
     }
 
     return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
@@ -1147,7 +1282,7 @@ struct ExecuteBoundsStatsCalculations
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, const Float32AbstractDataStore& unifiedBounds,
-                      const IDataArray& inputIDataArray)
+                      const IDataArray& inputIDataArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     std::vector<float32> unifiedBoundsValues(unifiedBounds.getSize());
     Result<> boundsResult = unifiedBounds.copyIntoBuffer(0, nonstd::span<float32>(unifiedBoundsValues.data(), unifiedBoundsValues.size()));
@@ -1161,10 +1296,10 @@ struct ExecuteBoundsStatsCalculations
     const auto* inMemoryStore = dynamic_cast<const DataStore<T>*>(&inputStore);
     if(inMemoryStore != nullptr)
     {
-      return ComputeBoundsStats<UseModeV, T>(dataStructure, inputValues, imageGeom, unifiedBoundsSpan, ContiguousInputAccessor<T>(inMemoryStore->data()), true);
+      return ComputeBoundsStats<UseModeV, T>(dataStructure, inputValues, imageGeom, unifiedBoundsSpan, ContiguousInputAccessor<T>(inMemoryStore->data()), true, shouldCancel, messageHandler);
     }
 
-    return ComputeBoundsStats<UseModeV, T>(dataStructure, inputValues, imageGeom, unifiedBoundsSpan, AbstractInputAccessor<T>(inputStore), false);
+    return ComputeBoundsStats<UseModeV, T>(dataStructure, inputValues, imageGeom, unifiedBoundsSpan, AbstractInputAccessor<T>(inputStore), false, shouldCancel, messageHandler);
   }
 };
 } // namespace
@@ -1194,8 +1329,8 @@ Result<> ComputeBoundingBoxStatsDirect::operator()()
   }
   if(m_InputValues->CalculateMode)
   {
-    return ExecuteNeighborFunction(ExecuteBoundsStatsCalculations<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray);
+    return ExecuteNeighborFunction(ExecuteBoundsStatsCalculations<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel, m_MessageHandler);
   }
 
-  return ExecuteDataFunctionNoBool(ExecuteBoundsStatsCalculations<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray);
+  return ExecuteDataFunctionNoBool(ExecuteBoundsStatsCalculations<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel, m_MessageHandler);
 }

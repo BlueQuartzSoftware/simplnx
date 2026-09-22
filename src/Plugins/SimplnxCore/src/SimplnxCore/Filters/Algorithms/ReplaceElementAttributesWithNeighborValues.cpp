@@ -10,6 +10,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/SliceBufferedTransfer.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -219,6 +220,7 @@ struct ExecuteTemplate
     // Map each face direction to its comparison-buffer slot.
     constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
 
+    ThrottledMessageHandler progressThrottle(messageHandler);
     while(keepGoing)
     {
       keepGoing = false;
@@ -243,9 +245,7 @@ struct ExecuteTemplate
         }
       }
 
-      auto progIncrement = static_cast<int64>(totalPoints / 50);
-      int64 prog = 1;
-      int64 progressInt = 0;
+      progressThrottle.reset(totalPoints, "Replacing Element Attributes");
 
       for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
       {
@@ -301,13 +301,6 @@ struct ExecuteTemplate
                 CompareValues<T>(comparator, neighborValue, ThresholdValue, best, sliceBestNeighbor, inSlice, neighborPoint);
               }
             }
-            if(voxelIndex > prog)
-            {
-              progressInt = static_cast<int64>((static_cast<float32>(voxelIndex) / totalPoints) * 100.0f);
-              const std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
-              messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32>(progressInt)});
-              prog += progIncrement;
-            }
           }
         }
 
@@ -329,6 +322,7 @@ struct ExecuteTemplate
 
         // Reuse the mark buffer for the next destination slice.
         std::fill(sliceBestNeighbor.begin(), sliceBestNeighbor.end(), -1);
+        progressThrottle.updatePercent((zIdx + 1) * sliceSize);
       }
 
       if(shouldCancel)

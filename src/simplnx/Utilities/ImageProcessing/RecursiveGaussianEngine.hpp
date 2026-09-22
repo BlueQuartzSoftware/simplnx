@@ -13,6 +13,9 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
+#include <functional>
+#include <mutex>
+
 #include <fmt/core.h>
 
 #include <nonstd/span.hpp>
@@ -54,6 +57,10 @@ struct RecursiveGaussianPlaneAxis
 
 namespace detail
 {
+// Four-line batches are the computational unit, not the reporting unit. Group them so a worker
+// enters the shared progress seam once per this many batches.
+constexpr usize k_ProgressBatchGroup = 64;
+
 template <class T, class StoreT>
 const DataStore<T>* GetRecursiveGaussianDataStore(const StoreT&)
 {
@@ -963,10 +970,11 @@ void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::s
 
 template <class SrcT>
 void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::span<float32> destination, usize dimX, usize dimY, const RecursiveGaussianCoefficients& coefficients,
-                                      const std::atomic_bool& shouldCancel)
+                                      const std::atomic_bool& shouldCancel, const std::function<void(usize)>& reportProgress = {})
 {
   const usize batchCount = (dimY + 3) / 4;
   auto filterBatches = [&](const Range& batchRange) {
+    usize pendingBatches = 0;
     static thread_local std::vector<double> batchData;
     static thread_local std::vector<double> batchOutput;
     static thread_local std::vector<double> tailData;
@@ -1017,6 +1025,16 @@ void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::s
           }
         }
       }
+      pendingBatches++;
+      if(reportProgress && pendingBatches >= k_ProgressBatchGroup)
+      {
+        reportProgress(pendingBatches);
+        pendingBatches = 0;
+      }
+    }
+    if(reportProgress && pendingBatches > 0)
+    {
+      reportProgress(pendingBatches);
     }
   };
   ParallelDataAlgorithm parallelAlgorithm;
@@ -1530,6 +1548,16 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   const int64 ln = (axis == 0) ? nX : ((axis == 1) ? nY : nZ);
   assert(ln >= 4); // the >= 4 contract is enforced by preflight ValidateSeparableImageDims; assert guards the engine boundary
 
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  const std::string progressLabel = fmt::format("Recursive Gaussian: Filtering Axis {}", axis);
+  messageHandler.sendInfoMessage(progressLabel);
+  progressThrottle.reset(axis == 2 ? static_cast<usize>(nY) : static_cast<usize>(nZ), progressLabel);
+
+  std::mutex progressMutex;
+  const auto sendThreadSafeProgress = [&](usize completed) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.incrementPercent(completed);
+  };
   const auto* inMemorySrc = detail::GetRecursiveGaussianDataStore<SrcT>(src);
   auto* inMemoryDst = detail::GetRecursiveGaussianDataStore<float32>(dst);
   if(options.useInMemoryFastPath && inMemorySrc != nullptr && inMemoryDst != nullptr && axis == 0)
@@ -1540,7 +1568,8 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     }
     const nonstd::span<const SrcT> srcValues = inMemorySrc->createSpan();
     nonstd::span<float32> dstValues = inMemoryDst->createSpan();
-    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(nY * nZ), coeffs, shouldCancel);
+    progressThrottle.reset((static_cast<usize>(nY * nZ) + 3) / 4, progressLabel);
+    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(nY * nZ), coeffs, shouldCancel, sendThreadSafeProgress);
     return {};
   }
   if(options.useInMemoryFastPath && inMemorySrc != nullptr && inMemoryDst != nullptr && axis != 0)
@@ -1558,6 +1587,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     const usize planeCount = axis == 1 ? static_cast<usize>(nZ) : 1;
     const usize stride = axis == 1 ? static_cast<usize>(nX) : slice;
 
+    progressThrottle.reset(batchesPerPlane * planeCount, progressLabel);
     auto filterLineBatches = [&](const Range& batchRange) {
       static thread_local std::vector<double> batchData;
       static thread_local std::vector<double> batchOuts;
@@ -1614,6 +1644,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
             }
           }
         }
+        sendThreadSafeProgress(1);
       }
     };
 
@@ -1630,20 +1661,14 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   // store -- so it is byte-exact and safe for BOTH in-core and OOC with no store-thread-safety concern (each
   // output line depends only on its own input line + read-only coeffs, so reordering lines changes nothing).
 
-  // Throttled progress over the pass's OUTER loop (per-z for the X/Y passes, per-y for the Z pass). Emits ONLY when a
-  // new ~10% boundary is crossed -- never per iteration, which would spam thousands of messages on a large volume.
-  // Progress is messages ONLY; it never touches store contents, so numerical output is unchanged.
-  int lastReportedTenth = -1;
-  auto reportProgress = [&](int64 done, int64 outerTotal) {
-    if(outerTotal <= 0)
+  const usize outerTotal = axis == 2 ? static_cast<usize>(nY) : static_cast<usize>(nZ);
+  const usize reportStride = std::min<usize>(16, std::max<usize>(1, outerTotal / 100));
+  usize lastReported = 0;
+  const auto reportProgress = [&](usize completed) {
+    if(completed == outerTotal || completed - lastReported >= reportStride)
     {
-      return;
-    }
-    const int tenth = static_cast<int>((done * 10) / outerTotal); // 0..9 as `done` runs 0..outerTotal-1
-    if(tenth != lastReportedTenth)
-    {
-      lastReportedTenth = tenth;
-      messageHandler.sendInfoMessage(fmt::format("Recursive Gaussian: filtering along axis {} ({}%)", axis, tenth * 10));
+      lastReported = completed;
+      progressThrottle.updatePercent(completed);
     }
   };
 
@@ -1661,7 +1686,6 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       {
         return {};
       }
-      reportProgress(z, nZ);
       const usize planeOff = static_cast<usize>(z) * slice;
       if(Result<> r = src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)); r.invalid())
       {
@@ -1696,6 +1720,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       {
         return r;
       }
+      reportProgress(static_cast<usize>(z + 1));
     }
     return {};
   }
@@ -1711,7 +1736,6 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       {
         return {};
       }
-      reportProgress(z, nZ);
       const usize planeOff = static_cast<usize>(z) * slice;
       if(Result<> r = src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)); r.invalid())
       {
@@ -1745,6 +1769,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       {
         return r;
       }
+      reportProgress(static_cast<usize>(z + 1));
     }
     return {};
   }
@@ -1785,7 +1810,6 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     {
       return {};
     }
-    reportProgress(static_cast<int64>(yBegin), nY);
     const usize yCount = std::min(maxYRows, dims[1] - yBegin);
     const usize valuesPerPlaneBlock = yCount * dims[0];
     const usize batchValues = valuesPerPlaneBlock * dims[2];
@@ -1880,6 +1904,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
         return r;
       }
     }
+    reportProgress(yBegin + yCount);
   }
   return {};
 }

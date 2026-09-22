@@ -81,13 +81,13 @@ public:
   const std::atomic_bool& getCancel();
 
   /**
-   * @brief Sends one worker progress message through the shared throttle.
-   * @param message Message to send.
+   * @brief Reports completed rows through the shared throttle.
+   * @param completedRows Number of rows completed since the previous call.
    * @pre Call only from a worker while operator() is active.
    *
    * A mutex serializes access to the owned throttle because it is not thread-safe.
    */
-  void sendThreadSafeProgressMessage(const std::string& message);
+  void sendThreadSafeProgressMessage(usize completedRows);
 
 private:
   DataStructure& m_DataStructure;

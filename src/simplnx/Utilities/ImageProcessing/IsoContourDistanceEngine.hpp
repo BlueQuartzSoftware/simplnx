@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -21,6 +22,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <type_traits>
@@ -452,6 +454,14 @@ private:
     const usize xCount = static_cast<usize>(nX);
     const usize yCount = static_cast<usize>(nY);
     const usize zCount = static_cast<usize>(nZ);
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
+    progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&](usize completed) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(completed);
+    };
     usize windowLo = 0;
     usize windowHi = 0;
     for(usize z0 = 0; z0 < zCount; z0 += plan.corePlanes)
@@ -533,6 +543,14 @@ private:
             return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
           };
           detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
+          {
+            sendThreadSafeProgress(16);
+          }
+        }
+        if(zCount == 1)
+        {
+          sendThreadSafeProgress((range.max() - range.min()) & 15ULL);
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -547,6 +565,10 @@ private:
       if(Result<> result = m_Out.copyFromBuffer(z0 * slice, nonstd::span<const float32>(output.get(), outputValues)); result.invalid())
       {
         return result;
+      }
+      if(zCount != 1)
+      {
+        progressThrottle.updateCount(zEnd);
       }
     }
     return {};
@@ -581,6 +603,14 @@ private:
     const usize xCount = static_cast<usize>(nX);
     const usize yCount = static_cast<usize>(nY);
     const usize zCount = static_cast<usize>(nZ);
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
+    progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&](usize completed) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(completed);
+    };
     const usize planesPerGroup = std::max<usize>(1, detail::k_IsoContourDirectGroupValues / slice);
     for(usize zBegin = 0; zBegin < zCount; zBegin += planesPerGroup)
     {
@@ -620,6 +650,14 @@ private:
             return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
           };
           detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
+          {
+            sendThreadSafeProgress(16);
+          }
+        }
+        if(zCount == 1)
+        {
+          sendThreadSafeProgress((range.max() - range.min()) & 15ULL);
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -628,6 +666,10 @@ private:
       if(m_ShouldCancel)
       {
         return {};
+      }
+      if(zCount != 1)
+      {
+        progressThrottle.updateCount(zEnd);
       }
     }
     return {};
@@ -812,6 +854,10 @@ private:
 
   Result<> RunBounded2DFullWidth(usize nx, usize ny, usize coreRows, const double spacing[3], float32 negativeFar)
   {
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
+    progressThrottle.reset(nx * ny, "Computing Iso-Contour Rows");
+
     std::vector<T> inputBlock((coreRows + 4) * nx);
     std::vector<float32> outputBlock(coreRows * nx);
 
@@ -859,12 +905,17 @@ private:
       {
         return result;
       }
+      progressThrottle.updatePercent((yBegin + rowCount) * nx);
     }
     return {};
   }
 
   Result<> RunBounded2DTiled(usize nx, usize ny, usize coreCols, const double spacing[3], float32 negativeFar)
   {
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
+    progressThrottle.reset(nx * ny, "Computing Iso-Contour Tiles");
+
     const usize inputStride = coreCols + 4;
     std::vector<T> inputWindow(5 * inputStride);
     std::vector<float32> output(coreCols);
@@ -915,6 +966,7 @@ private:
         {
           return result;
         }
+        progressThrottle.updatePercent(y * nx + xBegin + columnCount);
       }
     }
     return {};

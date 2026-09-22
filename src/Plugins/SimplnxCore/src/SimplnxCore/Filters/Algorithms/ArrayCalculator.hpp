@@ -261,6 +261,7 @@ public:
    * @param outputPath Identifies the output array.
    * @param scalarType Selects the output element type.
    * @param units Selects trigonometric angle units.
+   * @param messageHandler Receives progress after completed output chunks.
    * @return Success, or a parsing or evaluation error.
    *
    * Literal tuple and component extraction uses expression-sized state. Array-valued expressions use
@@ -272,7 +273,7 @@ public:
    * The current type-dispatched bulk-I/O calls do not inspect Result values. A storage failure can
    * leave partial output without an error result.
    */
-  Result<> evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units);
+  Result<> evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units, const IFilter::MessageHandler& messageHandler = {});
 
   /**
    * @brief Splits an equation into lexical tokens.

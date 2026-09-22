@@ -85,14 +85,21 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   ThrottledMessageHandler progressThrottle(messageHandler);
 
+  constexpr usize k_ProgressStride = 4096;
+  m_MessageHandler.sendInfoMessage("Initializing Matching Neighbor Counts");
+  progressThrottle.reset(totalPoints, "Initializing Matching Neighbor Counts");
+
   // Initialize matching-neighbor counts before worklist propagation.
   for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    if(m_ShouldCancel)
+    if(voxelIndex % k_ProgressStride == 0)
     {
-      return {};
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      progressThrottle.updatePercent(voxelIndex);
     }
-    progressThrottle.updatePercent("Processing Data", voxelIndex, totalPoints);
     if(!maskCompare->isTrue(voxelIndex))
     {
       ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
@@ -156,18 +163,24 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       return {};
     }
 
+    m_MessageHandler.sendInfoMessage(fmt::format("Propagating Level {} of {}", (startLevel - currentLevel) + 1, totalLevels));
     std::deque<usize> worklist;
     for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
+      if(voxelIndex % k_ProgressStride == 0 && m_ShouldCancel)
+      {
+        return {};
+      }
       if(neighborCount[voxelIndex] >= currentLevel && !maskCompare->isTrue(voxelIndex))
       {
         worklist.push_back(voxelIndex);
       }
     }
 
+    usize processedEntries = 0;
     while(!worklist.empty())
     {
-      if(m_ShouldCancel)
+      if(processedEntries++ % k_ProgressStride == 0 && m_ShouldCancel)
       {
         return {};
       }

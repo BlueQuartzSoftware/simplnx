@@ -37,6 +37,7 @@
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -82,9 +83,8 @@ Result<> PointSampleTriangleGeometry::operator()()
   // really is a massively idiotic oversight; hack the equivalent using the unary_op constructor
   std::discrete_distribution<size_t> triangle_distribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
 
-  int64_t progIncrement = m_Inputs->pNumberOfSamples / 100;
-  int64_t prog = 1;
-  int64_t progressInt = 0;
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(m_Inputs->pNumberOfSamples, "Sampling Triangles");
   int64_t counter = 0;
 
   std::vector<Point3Df> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
@@ -169,14 +169,11 @@ Result<> PointSampleTriangleGeometry::operator()()
       tupleTransferFunctions[dataVectorIndex]->pointSampleTransfer(randomTri, curVertex);
     }
 
-    if(counter > prog)
-    {
-      progressInt = static_cast<int64_t>((static_cast<float>(counter) / static_cast<float>(m_Inputs->pNumberOfSamples)) * 100.0f);
-      std::string ss = fmt::format("Sampling Triangles || {}% Completed", progressInt);
-      m_MessageHandler.sendInfoMessage(ss);
-      prog = prog + progIncrement;
-    }
     counter++;
+    if(counter % 1024 == 0 || counter == m_Inputs->pNumberOfSamples)
+    {
+      progressThrottle.updatePercent(counter);
+    }
   }
 
   return {};

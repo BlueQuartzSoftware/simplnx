@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <zlib.h>
@@ -20,9 +21,6 @@ using namespace nx::core;
 
 namespace
 {
-/// How many destination tuples to process between progress messages.
-constexpr usize k_ProgressTupleStride = 1u << 18; // ~256k tuples
-
 /**
  * @brief Inclusive voxel-index range that the streamer will retain on
  *        each axis.
@@ -174,7 +172,7 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
  * @param applyScaling    True when the output array is a floating-point
  *                        type and the filter wants
  *                        `y = slope * x + inter` applied on read.
- * @param shouldCancel    Cancel flag polled once per source z-slice.
+ * @param shouldCancel    Cancel flag polled once per source row or z-slice.
  * @param messageHandler  Sink for progress messages.
  *
  * @return `Result<>` carrying `-34730` for a short read, or an error
@@ -200,15 +198,13 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
   std::vector<NativeT> srcScanline(srcScanlineElements);
 
   const usize destNx = b.xEnd - b.xStart + 1;
-  const usize destNy = b.yEnd - b.yStart + 1;
-  const usize destNz = b.zEnd - b.zStart + 1;
   const usize destScanlineElements = destNx * componentCount;
   std::vector<OutputT> destScanline(destScanlineElements);
 
-  const usize totalDestTuples = destNx * destNy * destNz;
-
   usize destTupleOffset = 0;
-  usize lastProgressTuples = 0;
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(srcNz * srcNy, "Reading source rows");
+  messageHandler.sendInfoMessage("Reading source rows and copying the selected volume; rows outside the crop are read and discarded");
 
   for(usize srcZ = 0; srcZ < srcNz; srcZ++)
   {
@@ -220,6 +216,10 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
 
     for(usize srcY = 0; srcY < srcNy; srcY++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       const int actuallyRead = gzread(gz, srcScanline.data(), static_cast<unsigned int>(srcScanlineBytes));
       if(actuallyRead != static_cast<int>(srcScanlineBytes))
       {
@@ -228,11 +228,13 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
 
       if(!zInRange)
       {
+        progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
         continue;
       }
       const bool yInRange = (srcY >= b.yStart && srcY <= b.yEnd);
       if(!yInRange)
       {
+        progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
         continue;
       }
 
@@ -274,15 +276,10 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
         return copyResult;
       }
       destTupleOffset += destNx;
-    }
-    // Only update progress on z-slices.
-    if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
-    {
-      const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
-      messageHandler.sendInfoMessage(fmt::format("{}% Complete", pct));
-      lastProgressTuples = destTupleOffset;
+      progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
     }
   }
+  messageHandler.sendProgressPercent("Reading source rows", srcNz * srcNy, srcNz * srcNy);
   return {};
 }
 

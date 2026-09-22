@@ -12,6 +12,7 @@
 #include "simplnx/Utilities/ImageIO/IImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -312,6 +313,10 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   // Stream each selected page directly into the destination store. Every write offset folds in the Z
   // slice base (dz * sliceElements) so a multi-page volume lands each page at its correct depth, and the
   // XY crop is applied per row segment so only the requested window is written.
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  const bool singlePage = stream.dstDepth == 1;
+  progressThrottle.reset(singlePage ? stream.srcWidth * stream.srcHeight : stream.dstDepth, singlePage ? "Reading source image rows" : "Reading image pages");
+  usize decodedPixels = 0;
   bool cancelled = false;
   Result<> readResult;
   for(usize dz = 0; dz < stream.dstDepth; dz++)
@@ -341,6 +346,16 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
             return MakeErrorResult(-2006, "Image read cancelled.");
           }
 
+          // Decoder segments are synchronous and may arrive in tile order. Count
+          // decoded pixels so cropped-out rows also advance single-image progress.
+          const auto reportDecodedSegment = [&] {
+            if(singlePage)
+            {
+              decodedPixels += pixelCount;
+              progressThrottle.updatePercent(decodedPixels);
+            }
+          };
+
           // Track the page's true extent (before cropping) so it can be validated against page 0.
           observedRows = std::max(observedRows, sourceRow + 1);
           observedColumns = std::max(observedColumns, sourceColumn + pixelCount);
@@ -352,6 +367,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           // Y crop: skip rows outside the destination window.
           if(sourceRow < stream.yStart || sourceRow >= stream.yStart + stream.dstHeight)
           {
+            reportDecodedSegment();
             return {};
           }
 
@@ -362,6 +378,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           const usize copyEnd = std::min(segmentEnd, cropEnd);
           if(copyStart >= copyEnd)
           {
+            reportDecodedSegment();
             return {};
           }
 
@@ -371,11 +388,13 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           const std::span<const uint8> copiedSpan = pixels.subspan(sourceByteOffset, copiedBytes);
           const usize destinationOffset = destSliceBase + (((sourceRow - stream.yStart) * stream.dstWidth) + (copyStart - stream.xStart)) * stream.numComponents;
 
-          if(convertData)
+          auto copyResult = convertData ? ExecuteDataFunction(DispatchConversionFunctor{}, srcType, destType, imageArray, copiedSpan, destinationOffset) :
+                                          ExecuteDataFunction(CopyPixelDataFunctor{}, srcType, imageArray, copiedSpan, destinationOffset);
+          if(copyResult.valid())
           {
-            return ExecuteDataFunction(DispatchConversionFunctor{}, srcType, destType, imageArray, copiedSpan, destinationOffset);
+            reportDecodedSegment();
           }
-          return ExecuteDataFunction(CopyPixelDataFunctor{}, srcType, imageArray, copiedSpan, destinationOffset);
+          return copyResult;
         },
         sourcePage);
 
@@ -393,6 +412,18 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} (or a differing component count / scalar type) that do not match page 0 ({}x{}). Every page of a "
                                                 "multi-page volume must share identical dimensions, component count, and scalar type.",
                                                 sourcePage, inputFilePath.string(), observedColumns, observedRows, stream.srcWidth, stream.srcHeight));
+    }
+    if(singlePage)
+    {
+      messageHandler.sendProgressPercent("Reading source image rows", decodedPixels, stream.srcWidth * stream.srcHeight);
+    }
+    else
+    {
+      progressThrottle.updateCount(dz + 1);
+      if(dz + 1 == stream.dstDepth)
+      {
+        messageHandler.sendProgressCount("Reading image pages", stream.dstDepth, stream.dstDepth);
+      }
     }
   }
 

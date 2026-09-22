@@ -6,6 +6,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ParallelData2DAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -322,6 +323,9 @@ Result<> ComputeGBCDPoleFigureScanline::operator()()
   const usize rowsPerPage = std::max<usize>(1, k_TargetPagePixels / xPointCount);
   auto poleFigurePage = std::make_unique<float64[]>(rowsPerPage * xPointCount);
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  m_MessageHandler.sendInfoMessage("Computing GBCD Pole Figure Rows");
+  progressThrottle.reset(yPointCount, "Computing GBCD Pole Figure Rows");
   for(usize yOffset = 0; yOffset < yPointCount; yOffset += rowsPerPage)
   {
     if(m_ShouldCancel)
@@ -343,6 +347,7 @@ Result<> ComputeGBCDPoleFigureScanline::operator()()
     {
       return result;
     }
+    progressThrottle.updateCount(yOffset + rowCount);
   }
 
   return {};

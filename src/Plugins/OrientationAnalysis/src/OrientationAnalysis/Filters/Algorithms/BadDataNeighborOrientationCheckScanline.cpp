@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -248,6 +249,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   constexpr int32 startLevel = 6;
   const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
   for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
   {
     bool changed = true;
@@ -257,6 +259,9 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     {
       changed = false;
       passCount++;
+      const std::string progressLabel = fmt::format("Processing Level {} of {} Pass {}", startLevel - currentLevel + 1, totalLevels, passCount);
+      m_MessageHandler.sendInfoMessage(progressLabel);
+      progressThrottle.reset(static_cast<usize>(dimZ), progressLabel);
 
       if(Result<> ioResult = loadSlice(0, curQuats, curPhases, curMask); ioResult.invalid())
       {
@@ -355,6 +360,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
           }
         }
 
+        progressThrottle.updateCount(static_cast<usize>(zIdx + 1));
         std::swap(prevQuats, curQuats);
         std::swap(curQuats, nextQuats);
         std::swap(prevPhases, curPhases);

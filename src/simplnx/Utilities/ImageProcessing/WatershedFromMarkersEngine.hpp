@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -158,8 +160,10 @@ template <class TInput, bool SplitBucketState, bool PackedCombinedState, bool Pa
 Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
                                                bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel,
                                                std::unique_ptr<ITemporaryRecordStore> voxelRecordStore, std::unique_ptr<ITemporaryRecordStore> queueRecordStore,
-                                               const detail::WatershedExternalMemoryPlan<TInput>& plan)
+                                               const detail::WatershedExternalMemoryPlan<TInput>& plan, const IFilter::MessageHandler& messageHandler = {})
 {
+  messageHandler.sendInfoMessage("Computing Watershed From Markers");
+  ThrottledMessageHandler progressThrottle(messageHandler);
   using VoxelRecord = detail::WatershedVoxelRecord<TInput>;
   using PhysicalVoxelRecord = std::conditional_t<SplitBucketState, detail::WatershedBucketVoxelRecord,
                                                  std::conditional_t<PackedResidentStatusState, detail::WatershedPackedResidentStatusVoxelRecord<TInput>,
@@ -281,6 +285,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     }
   };
 
+  messageHandler.sendInfoMessage("Initializing Watershed Regions");
+  progressThrottle.reset(valueCount, "Initializing Watershed Values");
   if(plan.useTiledVoxelLayout)
   {
     std::vector<TInput> inputBuffer(plan.transferRecords);
@@ -365,6 +371,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
               return MakeErrorResult(-79057, fmt::format("External watershed tiled voxel initialization write for tile {} failed: {}", tileIndex, describeStoreError(writeResult)));
             }
           }
+
+          progressThrottle.incrementCount(validZ * validY * groupWidth);
         }
       }
     }
@@ -408,6 +416,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         return MakeErrorResult(-79057, fmt::format("External watershed voxel initialization write at offset {} failed: {}", start, describeStoreError(writeResult)));
       }
+
+      progressThrottle.updateCount(start + count);
     }
   }
 
@@ -505,13 +515,19 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
 
   constexpr uint32 k_BackgroundLabel = 0u;
   constexpr uint32 k_WatershedLabel = 0u;
+  messageHandler.sendInfoMessage("Seeding Watershed Regions");
   if(markWatershedLine)
   {
+    progressThrottle.reset(valueCount, "Seeding Watershed Values");
     for(int64 flatIndex = 0; flatIndex < static_cast<int64>(valueCount); ++flatIndex)
     {
       if((static_cast<uint64>(flatIndex) & 0xFFFFu) == 0 && shouldCancel)
       {
         return {};
+      }
+      if(flatIndex != 0 && (static_cast<uint64>(flatIndex) & 0xFFFFu) == 0)
+      {
+        progressThrottle.updateCount(static_cast<usize>(flatIndex));
       }
       auto recordResult = readVoxel(flatIndex);
       if(recordResult.invalid())
@@ -565,6 +581,9 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       }
     }
 
+    progressThrottle.updateCount(valueCount);
+    messageHandler.sendInfoMessage("Flooding Watershed Regions");
+    progressThrottle.reset(0, "Flooding Watershed Regions");
     uint64 popCount = 0;
     std::array<uint64, 26> cachedNeighborIndices = {};
     std::array<uint64, 26> cachedPhysicalNeighborIndices = {};
@@ -575,6 +594,10 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       if(((++popCount & 0xFFFFu) == 0) && shouldCancel)
       {
         return {};
+      }
+      if((popCount & 0xFFFFu) == 0)
+      {
+        progressThrottle.queueMessage("Flooding Watershed Regions: {} queue entries processed", popCount - 1);
       }
       auto queuedVoxelResult = queue->pop();
       if(queuedVoxelResult.invalid())
@@ -668,11 +691,16 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   }
   else
   {
+    progressThrottle.reset(valueCount, "Seeding Watershed Values");
     for(int64 flatIndex = 0; flatIndex < static_cast<int64>(valueCount); ++flatIndex)
     {
       if((static_cast<uint64>(flatIndex) & 0xFFFFu) == 0 && shouldCancel)
       {
         return {};
+      }
+      if(flatIndex != 0 && (static_cast<uint64>(flatIndex) & 0xFFFFu) == 0)
+      {
+        progressThrottle.updateCount(static_cast<usize>(flatIndex));
       }
       auto recordResult = readVoxel(flatIndex);
       if(recordResult.invalid())
@@ -723,12 +751,19 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       }
     }
 
+    progressThrottle.updateCount(valueCount);
+    messageHandler.sendInfoMessage("Flooding Watershed Regions");
+    progressThrottle.reset(0, "Flooding Watershed Regions");
     uint64 popCount = 0;
     while(!queue->empty())
     {
       if(((++popCount & 0xFFFFu) == 0) && shouldCancel)
       {
         return {};
+      }
+      if((popCount & 0xFFFFu) == 0)
+      {
+        progressThrottle.queueMessage("Flooding Watershed Regions: {} queue entries processed", popCount - 1);
       }
       auto queuedVoxelResult = queue->pop();
       if(queuedVoxelResult.invalid())
@@ -788,6 +823,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   {
     return result;
   }
+  messageHandler.sendInfoMessage("Writing Watershed Labels");
+  progressThrottle.reset(valueCount, "Writing Watershed Labels");
   if(Result<> result = voxels.flush(shouldCancel); result.invalid())
   {
     return MakeErrorResult(-79060, fmt::format("External watershed voxel-cache flush failed: {}", describeStoreError(result)));
@@ -863,6 +900,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
               }
             }
           }
+
+          progressThrottle.incrementCount(validZ * validY * groupWidth);
         }
       }
     }
@@ -897,6 +936,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         return result;
       }
+
+      progressThrottle.updateCount(start + count);
     }
   }
   return {};
@@ -906,33 +947,33 @@ template <class TInput>
 Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
                                            bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel,
                                            std::unique_ptr<ITemporaryRecordStore> voxelRecordStore, std::unique_ptr<ITemporaryRecordStore> queueRecordStore,
-                                           const detail::WatershedExternalMemoryPlan<TInput>& plan)
+                                           const detail::WatershedExternalMemoryPlan<TInput>& plan, const IFilter::MessageHandler& messageHandler = {})
 {
   if constexpr(detail::k_UseWatershedBucketQueue<TInput>)
   {
     if(plan.useSplitBucketState)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, true, false, false>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
-                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan);
+                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
     }
     if(plan.usePackedResidentStatusState)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, false, false, true>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
-                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan);
+                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
     }
     if(plan.usePackedCombinedState)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, false, true, false>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
-                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan);
+                                                                               std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
     }
   }
   return ApplyWatershedFromMarkersExternalImpl<TInput, false, false, false>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
-                                                                            std::move(voxelRecordStore), std::move(queueRecordStore), plan);
+                                                                            std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
 }
 
 template <class TInput>
 Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
-                                           bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel)
+                                           bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {})
 {
   auto allocationResult = detail::ReserveWatershedExternalMemoryPlan<TInput>(inStore.getSize(), detail::k_WatershedPreferredUsefulNumerator, detail::k_WatershedPreferredUsefulDenominator,
                                                                              detail::k_WatershedExternalTargetBytes, markWatershedLine);
@@ -973,7 +1014,7 @@ Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inSt
                                                  queueConfig.initialRecordCount, queueConfig.recordSize, detail::DescribeWatershedStoreError(queueStoreResult)));
     }
     return ApplyWatershedFromMarkersExternal<TInput>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, std::move(voxelStoreResult.value()),
-                                                     std::move(queueStoreResult.value()), plan);
+                                                     std::move(queueStoreResult.value()), plan, messageHandler);
   } catch(const std::exception& exception)
   {
     return MakeErrorResult(-79062, fmt::format("External watershed temporary-record setup failed: {}", exception.what()));
@@ -996,7 +1037,8 @@ template <class TInput>
 Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
                                            bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  (void)messageHandler; // reserved for future progress reporting; not yet wired up (matches other OOC engine templates)
+  messageHandler.sendInfoMessage("Computing Watershed From Markers");
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   // the label used to find background in the marker image, and to mark the watershed line in the output image
   static constexpr uint32 bgLabel = 0u;
@@ -1066,6 +1108,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
   // coalesced chunk reads OOC). Honor cancellation per chunk and propagate any read error.
   {
     constexpr usize k_Chunk = 65536;
+    progressThrottle.reset(N, "Loading Watershed Inputs");
     for(usize s = 0; s < N; s += k_Chunk)
     {
       if(shouldCancel)
@@ -1081,6 +1124,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
       {
         return r;
       }
+      progressThrottle.updateCount(s + n);
     }
   }
 
@@ -1097,12 +1141,14 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
   using MapType = std::map<TInput, QueueType>;
   MapType fah;
 
+  messageHandler.sendInfoMessage("Initializing Watershed Regions");
   if(markWatershedLine)
   {
     //-------------------------------------------------------------------------
     // Meyer's algorithm (with watershed lines)
     //-------------------------------------------------------------------------
     // ---- init stage: mark markers processed, copy markers to output, seed the FAH with background neighbors ----
+    progressThrottle.reset(static_cast<usize>(nZ * nY), "Initializing Watershed Rows");
     for(int64 z = 0; z < nZ; ++z)
     {
       if(shouldCancel)
@@ -1145,6 +1191,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
             outBuf[static_cast<usize>(flat)] = wsLabel;
           }
         }
+        progressThrottle.updateCount(static_cast<usize>(z * nY + y + 1));
       }
     }
 
@@ -1153,6 +1200,8 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
     std::vector<uint32>().swap(markerBuf);
 
     // ---- flooding stage ----
+    messageHandler.sendInfoMessage("Flooding Watershed Regions");
+    progressThrottle.reset(0, "Flooding Watershed Regions");
     uint64 popCount = 0;
     while(!fah.empty())
     {
@@ -1171,6 +1220,10 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
         if(((++popCount & 0xFFFFu) == 0) && shouldCancel)
         {
           return {};
+        }
+        if((popCount & 0xFFFFu) == 0)
+        {
+          progressThrottle.queueMessage("Flooding Watershed Regions: {} queue entries processed", popCount - 1);
         }
         const int64 flat = currentQueue.front();
         currentQueue.pop();
@@ -1239,6 +1292,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
     // Beucher's algorithm (no watershed lines). No status image: output==wsLabel is the "not yet processed" test.
     //-------------------------------------------------------------------------
     // ---- init stage: copy markers to output, seed the FAH with marker pixels that have a background neighbor ----
+    progressThrottle.reset(static_cast<usize>(nZ * nY), "Initializing Watershed Rows");
     for(int64 z = 0; z < nZ; ++z)
     {
       if(shouldCancel)
@@ -1280,6 +1334,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
             outBuf[static_cast<usize>(flat)] = wsLabel;
           }
         }
+        progressThrottle.updateCount(static_cast<usize>(z * nY + y + 1));
       }
     }
 
@@ -1288,6 +1343,8 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
     std::vector<uint32>().swap(markerBuf);
 
     // ---- flooding stage ----
+    messageHandler.sendInfoMessage("Flooding Watershed Regions");
+    progressThrottle.reset(0, "Flooding Watershed Regions");
     uint64 popCount = 0;
     while(!fah.empty())
     {
@@ -1306,6 +1363,10 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
         if(((++popCount & 0xFFFFu) == 0) && shouldCancel)
         {
           return {};
+        }
+        if((popCount & 0xFFFFu) == 0)
+        {
+          progressThrottle.queueMessage("Flooding Watershed Regions: {} queue entries processed", popCount - 1);
         }
         const int64 flat = currentQueue.front();
         currentQueue.pop();
@@ -1347,6 +1408,8 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
   // in-core; coalesced chunk writes OOC).
   {
     constexpr usize k_Chunk = 65536;
+    messageHandler.sendInfoMessage("Writing Watershed Labels");
+    progressThrottle.reset(N, "Writing Watershed Labels");
     for(usize s = 0; s < N; s += k_Chunk)
     {
       const usize n = std::min(k_Chunk, N - s);
@@ -1354,6 +1417,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
       {
         return r;
       }
+      progressThrottle.updateCount(s + n);
     }
   }
 
@@ -1399,6 +1463,6 @@ Result<> ApplyWatershedFromMarkers(const AbstractDataStore<TInput>& inStore, con
       }
     }
   }
-  return ApplyWatershedFromMarkersExternal(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel);
+  return ApplyWatershedFromMarkersExternal(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler);
 }
 } // namespace nx::core::ImageProcessing

@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -26,26 +26,6 @@ using namespace nx::core;
 
 namespace
 {
-/**
- * @brief Formats a nonnegative duration for progress messages.
- * @param ms Duration in milliseconds.
- * @return Hours, minutes, seconds, and milliseconds text.
- */
-std::string format_duration(std::chrono::milliseconds ms)
-{
-  using namespace std::chrono;
-  auto secs = duration_cast<seconds>(ms);
-  ms -= duration_cast<milliseconds>(secs);
-  auto mins = duration_cast<minutes>(secs);
-  secs -= duration_cast<seconds>(mins);
-  auto hour = duration_cast<hours>(mins);
-  mins -= duration_cast<minutes>(hour);
-
-  std::stringstream ss;
-  ss << hour.count() << " Hours : " << mins.count() << " Minutes : " << secs.count() << " Seconds : " << ms.count() << " Milliseconds";
-  return ss.str();
-}
-
 /**
  * @brief Gets the eight one-based node IDs for one hexahedral cell.
  * @param x Cell X index.
@@ -87,30 +67,23 @@ std::array<int64, 8> getNodeIds(usize x, usize y, usize z, const usize* pDims)
 
 /**
  * @brief Writes all ImageGeom nodes and an optional dummy node.
- * @param filter Receives progress messages.
+ * @param progressThrottle Receives progress messages.
  * @param fileName Temporary node-file path.
  * @param cDims Cell dimensions in X, Y, and Z order.
  * @param origin ImageGeom origin.
  * @param spacing ImageGeom spacing.
- * @param shouldCancel Signals cancellation at throttled progress checkpoints.
+ * @param shouldCancel Signals cancellation between Z planes.
  * @param writeDummyNode True to append a zero-coordinate node.
  * @return Zero on completion, one on cancellation, or -1 when fopen fails.
- * @pre filter is not null.
  * @pre Pointers contain three values and dimension products fit usize.
  *
- * C stdio return values are not inspected. Cancellation is evaluated only when
- * a progress checkpoint runs more than one second after the prior message.
+ * C stdio return values are not inspected. Cancellation is checked per Z plane.
  */
-int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel, bool writeDummyNode)
+int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel,
+                 bool writeDummyNode)
 {
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   usize nodeIndex = 1;
-  usize totalPoints = pDims[0] * pDims[1] * pDims[2];
-  auto increment = static_cast<usize>(totalPoints * 0.01f);
-  if(increment == 0)
-  {
-    increment = 1;
-  }
 
   int32 err = 0;
   FILE* f = fopen(fileName.c_str(), "wb");
@@ -119,10 +92,15 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
     return -1;
   }
 
-  auto initialTime = std::chrono::steady_clock::now();
+  progressThrottle.reset(pDims[2], "Writing Nodes (File 1/5)");
   fprintf(f, "** ----------------------------------------------------------------\n**\n*Node\n");
   for(usize z = 0; z < pDims[2]; z++)
   {
+    if(shouldCancel)
+    {
+      fclose(f);
+      return 1;
+    }
     for(usize y = 0; y < pDims[1]; y++)
     {
       for(usize x = 0; x < pDims[0]; x++)
@@ -131,29 +109,11 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
         float32 yCoord = origin[1] + (y * spacing[1]);
         float32 zCoord = origin[2] + (z * spacing[2]);
         fprintf(f, "%llu, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), xCoord, yCoord, zCoord);
-        if(nodeIndex % increment == 0)
-        {
-          auto now = std::chrono::steady_clock::now();
-          int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
-          if(milliDiff > 1000)
-          {
-            std::string percentage =
-                "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(nodeIndex) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
-            float32 timeDiff = ((float32)nodeIndex / (float32)(milliDiff));
-            int64 estimatedTime = (float32)(totalPoints - nodeIndex) / timeDiff;
-            std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-            filter->sendMessage(percentage + timeRemaining);
-            initialTime = std::chrono::steady_clock::now();
-            if(shouldCancel)
-            {
-              fclose(f);
-              return 1;
-            }
-          }
-        }
+
         ++nodeIndex;
       }
     }
+    progressThrottle.updateCount(z + 1);
   }
 
   if(writeDummyNode)
@@ -169,26 +129,18 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
 
 /**
  * @brief Writes one C3D8 element for every ImageGeom cell.
- * @param filter Receives progress messages.
+ * @param progressThrottle Receives progress messages.
  * @param fileName Temporary element-file path.
  * @param cDims Cell dimensions in X, Y, and Z order.
  * @param pDims Node-grid dimensions in X, Y, and Z order.
- * @param shouldCancel Signals cancellation at throttled progress checkpoints.
+ * @param shouldCancel Signals cancellation between Z planes.
  * @return Zero on completion, one on cancellation, or -1 when fopen fails.
- * @pre filter is not null.
  * @pre Dimension products and generated IDs fit the output integer types.
  *
- * C stdio return values are not inspected. Cancellation is evaluated only when
- * a progress checkpoint runs more than one second after the prior message.
+ * C stdio return values are not inspected. Cancellation is checked per Z plane.
  */
-int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
 {
-  usize totalPoints = cDims[0] * cDims[1] * cDims[2];
-  auto increment = static_cast<usize>(totalPoints * 0.01f);
-  if(increment == 0)
-  {
-    increment = 1;
-  }
 
   int32 err = 0;
   FILE* f = fopen(fileName.c_str(), "wb");
@@ -200,11 +152,16 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
   // Keep the format casts consistent across platforms.
   using _lli_t_ = long long int;
 
-  auto initialTime = std::chrono::steady_clock::now();
+  progressThrottle.reset(cDims[2], "Writing Elements (File 2/5)");
   usize index = 1;
   fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=C3D8\n");
   for(usize z = 0; z < cDims[2]; z++)
   {
+    if(shouldCancel)
+    {
+      fclose(f);
+      return 1;
+    }
     for(usize y = 0; y < cDims[1]; y++)
     {
       for(usize x = 0; x < cDims[0]; x++)
@@ -212,29 +169,11 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
         const std::array<int64, 8> nodeId = getNodeIds(x, y, z, pDims);
         fprintf(f, "%llu, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", (_lli_t_)index, (_lli_t_)nodeId[5], (_lli_t_)nodeId[1], (_lli_t_)nodeId[0], (_lli_t_)nodeId[4], (_lli_t_)nodeId[7],
                 (_lli_t_)nodeId[3], (_lli_t_)nodeId[2], (_lli_t_)nodeId[6]);
-        if(index % increment == 0)
-        {
-          auto now = std::chrono::steady_clock::now();
-          int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
-          if(milliDiff > 1000)
-          {
-            std::string percentage =
-                "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(index) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
-            float32 timeDiff = ((float32)index / (float32)(milliDiff));
-            int64 estimatedTime = (float32)(totalPoints - index) / timeDiff;
-            std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-            filter->sendMessage(percentage + timeRemaining);
-            initialTime = std::chrono::steady_clock::now();
-            if(shouldCancel)
-            {
-              fclose(f);
-              return 1;
-            }
-          }
-        }
+
         ++index;
       }
     }
+    progressThrottle.updateCount(z + 1);
   }
 
   fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
@@ -278,18 +217,18 @@ Result<int32> findMaximumGrainId(const Int32AbstractDataStore& featureIds, const
 
 /**
  * @brief Groups resident element indexes by positive grain ID.
- * @param filter Receives progress messages.
+ * @param progressThrottle Receives progress messages.
  * @param featureIds Supplies cell Feature IDs.
  * @param maxGrainId Largest Feature ID and final bucket index.
  * @param shouldCancel Signals cancellation between chunks.
  * @return One ascending element-index list per ID, or empty after cancellation.
- * @pre filter is not null.
  *
  * Abaqus requires each grain's element IDs in one contiguous ELSET. One source
  * pass avoids a grain-by-cell rescan. The tradeoff is O(maximum ID plus positive
  * cell count) resident bucket memory.
  */
-Result<std::vector<std::vector<usize>>> groupElementsByGrain(WriteAbaqusHexahedron* filter, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
+Result<std::vector<std::vector<usize>>> groupElementsByGrain(ThrottledMessageHandler& progressThrottle, const Int32AbstractDataStore& featureIds, int32 maxGrainId,
+                                                             const std::atomic_bool& shouldCancel)
 {
   const usize elsetCount = maxGrainId > 0 ? static_cast<usize>(maxGrainId) + 1 : 0;
   std::vector<std::vector<usize>> elementsByGrain(elsetCount);
@@ -302,7 +241,7 @@ Result<std::vector<std::vector<usize>>> groupElementsByGrain(WriteAbaqusHexahedr
   const usize totalElements = featureIds.getSize();
   auto chunkBuffer = std::make_unique<int32[]>(k_ChunkSize);
 
-  auto initialTime = std::chrono::steady_clock::now();
+  progressThrottle.reset(totalElements, "Grouping Element Sets (File 4/5)");
   for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
   {
     if(shouldCancel)
@@ -324,19 +263,7 @@ Result<std::vector<std::vector<usize>>> groupElementsByGrain(WriteAbaqusHexahedr
       }
     }
 
-    const usize elementsProcessed = offset + count;
-    auto now = std::chrono::steady_clock::now();
-    int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
-    if(milliDiff > 1000)
-    {
-      std::string percentage =
-          "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(elementsProcessed) / static_cast<float32>(totalElements) * 100.0f)) + "% Grouped ";
-      float32 timeDiff = (float32)elementsProcessed / (float32)(milliDiff);
-      auto estimatedTime = static_cast<int64>((float32)(totalElements - elementsProcessed) / timeDiff);
-      std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
-      filter->sendMessage(percentage + timeRemaining);
-      initialTime = std::chrono::steady_clock::now();
-    }
+    progressThrottle.updatePercent(offset + count);
   }
 
   return {std::move(elementsByGrain)};
@@ -361,17 +288,17 @@ void writeElementId(FILE* file, uint64 elementId, usize& elementsOnSet)
 
 /**
  * @brief Writes resident grain ELSETs from one grouped source pass.
- * @param filter Receives progress messages.
+ * @param progressThrottle Receives progress messages.
  * @param file Open ELSET stream.
  * @param featureIds Supplies cell Feature IDs.
  * @param maxGrainId Largest grain ID to emit.
  * @param shouldCancel Signals cancellation between grouping chunks.
  * @return Grouping source-read result, or success after cancellation.
- * @pre filter and file are not null.
+ * @pre file is not null.
  */
-Result<> writeDirectElsets(WriteAbaqusHexahedron* filter, FILE* file, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
+Result<> writeDirectElsets(ThrottledMessageHandler& progressThrottle, FILE* file, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
 {
-  auto groupedResult = groupElementsByGrain(filter, featureIds, maxGrainId, shouldCancel);
+  auto groupedResult = groupElementsByGrain(progressThrottle, featureIds, maxGrainId, shouldCancel);
   if(groupedResult.invalid())
   {
     return ConvertResult(std::move(groupedResult));
@@ -574,7 +501,7 @@ Result<> writeExternalSortedElsets(FILE* file, const Int32AbstractDataStore& fea
 
 /**
  * @brief Opens and writes the element-set file with the selected grouping path.
- * @param filter Receives grouping progress messages.
+ * @param progressThrottle Receives grouping progress messages.
  * @param fileName Temporary ELSET path.
  * @param totalPoints Number of ImageGeom cells for the generated cube set.
  * @param featureIds Supplies cell Feature IDs.
@@ -583,12 +510,11 @@ Result<> writeExternalSortedElsets(FILE* file, const Int32AbstractDataStore& fea
  * @param requireExternalSort True to reject repeated scans for actual OOC input.
  * @param shouldCancel Signals cancellation during grouping and sorting.
  * @return File-open, source-I/O, sorter, or provider-capability result.
- * @pre filter is not null.
  *
  * The function always closes an opened stream. C stdio write failures are not
  * inspected. A valid cancellation result leaves a partial temporary file.
  */
-Result<> writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIds, int32 maxGrainId, bool useOocAlgorithm,
+Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIds, int32 maxGrainId, bool useOocAlgorithm,
                     bool requireExternalSort, const std::atomic_bool& shouldCancel)
 {
   FILE* file = fopen(fileName.c_str(), "wb");
@@ -605,7 +531,7 @@ Result<> writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, 
   Result<> result;
   if(!useOocAlgorithm)
   {
-    result = writeDirectElsets(filter, file, featureIds, maxGrainId, shouldCancel);
+    result = writeDirectElsets(progressThrottle, file, featureIds, maxGrainId, shouldCancel);
   }
   else if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
   {
@@ -775,7 +701,8 @@ Result<> WriteAbaqusHexahedron::operator()()
     }
   }
 
-  int32 err = writeNodes(this, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode);
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  int32 err = writeNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode);
   if(err < 0)
   {
     return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
@@ -787,7 +714,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Writing Sections (File 1/5) Complete");
 
-  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel());
+  err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel());
   if(err < 0)
   {
     return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
@@ -811,7 +738,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Writing Sections (File 3/5) Complete");
 
-  Result<> elsetResult = writeElset(this, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, maxGrainId, useOocAlgorithm, usesOutOfCoreStore, getCancel());
+  Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, maxGrainId, useOocAlgorithm, usesOutOfCoreStore, getCancel());
   if(elsetResult.invalid())
   {
     DeleteFiles(fileList);

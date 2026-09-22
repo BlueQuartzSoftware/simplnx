@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -17,8 +18,10 @@
 #include <atomic>
 #include <bit>
 #include <cstdlib>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <string>
@@ -294,11 +297,13 @@ namespace detail
 // step's testC/D; then set them to 0} until a full 4-step pass deletes nothing. ITK's 8 neighbor offsets are 2D
 // (z-offset 0), so a 3D image thins each z-slice independently -> we thin one slice in a RAM buffer to convergence and
 // write it (byte-identical to ITK's global loop; slices are decoupled). ZeroFluxNeumann (edge-clamp) 8-neighbor reads.
-// Output values are 0/1 in T. `messageHandler` currently unused (progress deferred); kept for signature parity.
+// Output values are 0/1 in T.
 template <class T>
 Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
                                      const IFilter::MessageHandler& messageHandler)
 {
+  messageHandler.sendInfoMessage("Thinning Binary Image");
+  ThrottledMessageHandler progressThrottle(messageHandler);
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
   const int64 nZ = static_cast<int64>(dims[2]);
@@ -329,6 +334,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
     // ZeroFluxNeumann-clamped neighbor read (default NeighborhoodIterator boundary).
     auto at = [&](int64 xx, int64 yy) -> int { return static_cast<int>(work[static_cast<usize>(clampi(yy, nY - 1) * nX + clampi(xx, nX - 1))]); };
 
+    usize completedIterations = 0;
     bool noChange = false;
     while(!noChange)
     {
@@ -339,6 +345,8 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
         {
           return {};
         }
+        const std::string passLabel = fmt::format("Binary Thinning Slice {} Iteration {} Pass {} Rows", z + 1, completedIterations + 1, step);
+        progressThrottle.reset(dims[1], passLabel);
         toDelete.clear();
         for(int64 y = 0; y < nY; ++y)
         {
@@ -388,12 +396,16 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
               noChange = false;
             }
           }
+
+          progressThrottle.updateCount(static_cast<usize>(y + 1));
         }
         for(usize idx : toDelete) // apply deletions after the full step scan
         {
           work[idx] = 0;
         }
       }
+
+      progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed for slice {}", ++completedIterations, z + 1);
     }
 
     for(usize i = 0; i < slice; ++i)
@@ -404,6 +416,8 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
     {
       return r;
     }
+
+    progressThrottle.updateCount("Thinning Binary Slices", static_cast<usize>(z + 1), dims[2]);
   }
   return {};
 }
@@ -444,9 +458,10 @@ inline bool BinaryThinningShouldDelete(int step, int p2, int p3, int p4, int p5,
  * @param dimX Slice width.
  * @param dimY Slice height.
  * @param shouldCancel Shared cancellation flag.
+ * @param reportProgress Optional thread-safe callback for completed thinning passes.
  */
 template <class T>
-void ThinBinarySliceInPlace(T* typedValues, uint8* workValues, uint64* deletionMarkers, usize dimX, usize dimY, const std::atomic_bool& shouldCancel)
+void ThinBinarySliceInPlace(T* typedValues, uint8* workValues, uint64* deletionMarkers, usize dimX, usize dimY, const std::atomic_bool& shouldCancel, const std::function<void()>& reportProgress = {})
 {
   const usize sliceValues = dimX * dimY;
   const usize markerWords = sliceValues / 64 + (sliceValues % 64 != 0 ? 1 : 0);
@@ -519,6 +534,10 @@ void ThinBinarySliceInPlace(T* typedValues, uint8* workValues, uint64* deletionM
         }
       }
       changed = changed || stepChanged;
+      if(reportProgress)
+      {
+        reportProgress();
+      }
     }
   }
 
@@ -543,12 +562,15 @@ void ThinBinarySliceInPlace(T* typedValues, uint8* workValues, uint64* deletionM
  * @param dims Image dimensions in X, Y, Z order.
  * @param shouldCancel Shared cancellation flag.
  * @param plan Checked batch plan.
+ * @param messageHandler Receives progress and status messages.
  * @return A valid result or a contextual plan, allocation, or store-transfer error.
  */
 template <class T>
 Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
-                                         const BinaryThinningSliceBatchPlan& plan)
+                                         const BinaryThinningSliceBatchPlan& plan, const IFilter::MessageHandler& messageHandler = {})
 {
+  messageHandler.sendInfoMessage("Thinning Binary Image");
+  ThrottledMessageHandler progressThrottle(messageHandler);
   usize volumeValues = 0;
   auto expectedPlanResult = CreateBinaryThinningSliceBatchPlan<T>(dims, plan.residentBytes, plan.workerCount);
   const bool planMatches = expectedPlanResult.valid() && expectedPlanResult.value().sliceValues == plan.sliceValues && expectedPlanResult.value().markerWordsPerSlice == plan.markerWordsPerSlice &&
@@ -584,6 +606,13 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
                                               plan.sliceValues, plan.markerWordsPerSlice));
   }
 
+  progressThrottle.reset(dims[2], "Thinning Binary Slices");
+  std::mutex progressMutex;
+  usize completedPasses = 0;
+  const std::function<void()> sendThreadSafeProgress = [&] {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.queueMessage("Thinning Binary Image: {} slice passes completed", ++completedPasses);
+  };
 #ifdef SIMPLNX_ENABLE_MULTICORE
   const usize boundedWorkers = std::min(plan.workerCount, static_cast<usize>(std::numeric_limits<int>::max()));
   tbb::task_arena arena(static_cast<int>(boundedWorkers));
@@ -613,7 +642,7 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
           return;
         }
         ThinBinarySliceInPlace(typedValues.get() + slot * plan.sliceValues, workValues.get() + slot * plan.sliceValues, deletionMarkers.get() + slot * plan.markerWordsPerSlice, dims[0], dims[1],
-                               shouldCancel);
+                               shouldCancel, sendThreadSafeProgress);
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
@@ -631,14 +660,18 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
     {
       return result;
     }
+
+    progressThrottle.updateCount(zBegin + batchSlices);
   }
   return {};
 }
 
 template <class T>
 Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
-                                    const BinaryThinningFixed2DPlan& plan)
+                                    const BinaryThinningFixed2DPlan& plan, const IFilter::MessageHandler& messageHandler = {})
 {
+  messageHandler.sendInfoMessage("Thinning Binary Image");
+  ThrottledMessageHandler progressThrottle(messageHandler);
   if(shouldCancel)
   {
     return {};
@@ -671,6 +704,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
   auto deletionMarkers = std::make_unique<uint64[]>(plan.markerCapacityWords);
   auto transfer = std::make_unique<T[]>(plan.transferValues);
 
+  progressThrottle.reset(volumeValues, "Loading Binary Thinning Input");
   for(usize start = 0; start < volumeValues;)
   {
     if(shouldCancel)
@@ -687,6 +721,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       work[start + index] = transfer[index] != T{} ? uint8{1} : uint8{0};
     }
     start += count;
+    progressThrottle.updateCount(start);
   }
 
   const int64 nX = static_cast<int64>(dims[0]);
@@ -697,6 +732,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
     return static_cast<int>(work[static_cast<usize>(flatIndex)]);
   };
 
+  usize completedIterations = 0;
   bool changed = true;
   while(changed)
   {
@@ -709,6 +745,8 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       }
       std::fill_n(deletionMarkers.get(), logicalMarkerWords, uint64{0});
       bool stepChanged = false;
+      const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Rows", completedIterations + 1, step);
+      progressThrottle.reset(dims[1], passLabel);
       for(int64 y = 0; y < nY; ++y)
       {
         if(shouldCancel)
@@ -736,6 +774,8 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
             stepChanged = true;
           }
         }
+
+        progressThrottle.updateCount(static_cast<usize>(y + 1));
       }
 
       if(shouldCancel)
@@ -758,8 +798,11 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       }
       changed = changed || stepChanged;
     }
+
+    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
   }
 
+  progressThrottle.reset(volumeValues, "Writing Binary Thinning Output");
   for(usize start = 0; start < volumeValues;)
   {
     if(shouldCancel)
@@ -780,12 +823,13 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       return result;
     }
     start += count;
+    progressThrottle.updateCount(start);
   }
   return {};
 }
 
 inline Result<bool> ApplyBinaryThinningExternalSubstepBlocks(BinaryThinningWorkStore& source, BinaryThinningWorkStore& destination, usize dimX, usize dimY, int step,
-                                                             const std::atomic_bool& shouldCancel, const BinaryThinningExternal2DPlan& plan)
+                                                             const std::atomic_bool& shouldCancel, const BinaryThinningExternal2DPlan& plan, ThrottledMessageHandler* progressThrottle = nullptr)
 {
   usize volumeValues = 0;
   usize maximumInputValues = 0;
@@ -866,12 +910,16 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepBlocks(BinaryThinningWorkS
       return ConvertResultTo<bool>(std::move(result), false);
     }
     rowBegin += rowCount;
+    if(progressThrottle != nullptr)
+    {
+      progressThrottle->updateCount(rowBegin * dimX);
+    }
   }
   return {changed};
 }
 
 inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkStore& source, BinaryThinningWorkStore& destination, usize dimX, usize dimY, int step,
-                                                            const std::atomic_bool& shouldCancel, const BinaryThinningExternal2DPlan& plan)
+                                                            const std::atomic_bool& shouldCancel, const BinaryThinningExternal2DPlan& plan, ThrottledMessageHandler* progressThrottle = nullptr)
 {
   usize volumeValues = 0;
   usize tileStride = 0;
@@ -957,6 +1005,10 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
         return ConvertResultTo<bool>(std::move(result), false);
       }
       xBegin += columnCount;
+      if(progressThrottle != nullptr)
+      {
+        progressThrottle->updateCount(y * dimX + xBegin);
+      }
     }
   }
   return {changed};
@@ -964,8 +1016,10 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
 
 template <class T>
 Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel, usize target2DBytes,
-                                       usize inputValueOffset = 0, usize outputValueOffset = 0)
+                                       usize inputValueOffset = 0, usize outputValueOffset = 0, const IFilter::MessageHandler& messageHandler = {})
 {
+  messageHandler.sendInfoMessage("Thinning Binary Image");
+  ThrottledMessageHandler progressThrottle(messageHandler);
   if(shouldCancel)
   {
     return {};
@@ -1050,6 +1104,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
   {
     auto typedValues = std::make_unique<T[]>(transferValues);
     auto binaryValues = std::make_unique<uint8[]>(transferValues);
+    progressThrottle.reset(volumeValues, "Loading Binary Thinning Input");
     for(usize start = 0; start < volumeValues;)
     {
       if(shouldCancel)
@@ -1074,11 +1129,13 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
         return result;
       }
       start += count;
+      progressThrottle.updateCount(start);
     }
   }
 
   BinaryThinningWorkStore* source = firstWork.get();
   BinaryThinningWorkStore* destination = secondWork.get();
+  usize completedIterations = 0;
   bool changed = true;
   while(changed)
   {
@@ -1089,8 +1146,10 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       {
         return {};
       }
-      auto stepResult = plan.useTiles ? ApplyBinaryThinningExternalSubstepTiles(*source, *destination, dims[0], dims[1], step, shouldCancel, plan) :
-                                        ApplyBinaryThinningExternalSubstepBlocks(*source, *destination, dims[0], dims[1], step, shouldCancel, plan);
+      const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Values", completedIterations + 1, step);
+      progressThrottle.reset(volumeValues, passLabel);
+      auto stepResult = plan.useTiles ? ApplyBinaryThinningExternalSubstepTiles(*source, *destination, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
+                                        ApplyBinaryThinningExternalSubstepBlocks(*source, *destination, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
       if(stepResult.invalid())
       {
         return ConvertResult(std::move(stepResult));
@@ -1102,11 +1161,14 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       changed = changed || stepResult.value();
       std::swap(source, destination);
     }
+
+    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
   }
 
   {
     auto typedValues = std::make_unique<T[]>(transferValues);
     auto binaryValues = std::make_unique<uint8[]>(transferValues);
+    progressThrottle.reset(volumeValues, "Writing Binary Thinning Output");
     for(usize start = 0; start < volumeValues;)
     {
       if(shouldCancel)
@@ -1131,6 +1193,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
         return result;
       }
       start += count;
+      progressThrottle.updateCount(start);
     }
   }
   return {};
@@ -1170,7 +1233,7 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
       }
       const auto& plan = planResult.value();
       reservation.shrinkTo(plan.residentBytes);
-      return detail::ApplyBinaryThinningSliceBatches(inStore, outStore, dims, shouldCancel, plan);
+      return detail::ApplyBinaryThinningSliceBatches(inStore, outStore, dims, shouldCancel, plan, messageHandler);
     }
 
     if(usesOutOfCoreEndpoint)
@@ -1192,7 +1255,7 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
           return {};
         }
         const usize valueOffset = z * usefulPlan.sliceValues;
-        if(Result<> result = detail::ApplyBinaryThinningExternal2D(inStore, outStore, sliceDims, shouldCancel, grantedBytes, valueOffset, valueOffset); result.invalid())
+        if(Result<> result = detail::ApplyBinaryThinningExternal2D(inStore, outStore, sliceDims, shouldCancel, grantedBytes, valueOffset, valueOffset, messageHandler); result.invalid())
         {
           return result;
         }
@@ -1237,8 +1300,8 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
   if(fixedPlan.useFixedCapacity)
   {
     reservation.shrinkTo(fixedPlan.residentBytes);
-    return detail::ApplyBinaryThinningFixed2D(inStore, outStore, dims, shouldCancel, fixedPlan);
+    return detail::ApplyBinaryThinningFixed2D(inStore, outStore, dims, shouldCancel, fixedPlan, messageHandler);
   }
-  return detail::ApplyBinaryThinningExternal2D(inStore, outStore, dims, shouldCancel, grantedBytes);
+  return detail::ApplyBinaryThinningExternal2D(inStore, outStore, dims, shouldCancel, grantedBytes, 0, 0, messageHandler);
 }
 } // namespace nx::core::ImageProcessing

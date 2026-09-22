@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -596,13 +597,15 @@ Result<> ComputeGBPDMetricBased::operator()()
     triChunkSize = numMeshTriangles;
   }
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  m_MessageHandler.sendInfoMessage("Selecting Triangles for the Phase of Interest");
+  progressThrottle.reset(numMeshTriangles, "Selecting Triangles for the Phase of Interest");
   for(usize i = 0; i < numMeshTriangles; i += triChunkSize)
   {
     if(getCancel())
     {
       return {};
     }
-    m_MessageHandler.sendInfoMessage("Selecting triangles corresponding to Phase Of Interest");
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -612,6 +615,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     dataAlg.setRange(i, i + triChunkSize);
     dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest,
                                                          crystalStructuresCache[m_InputValues->PhaseOfInterest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
+    progressThrottle.updatePercent(i + triChunkSize);
   }
 
   // ------------------------  find the number of distinct boundaries ------------------------------
@@ -660,13 +664,14 @@ Result<> ComputeGBPDMetricBased::operator()()
     pointsChunkSize = samplePtsX.size();
   }
 
+  m_MessageHandler.sendInfoMessage("Determining GBPD Values");
+  progressThrottle.reset(samplePtsX.size(), "Determining GBPD Values");
   for(usize i = 0; i < samplePtsX.size(); i = i + pointsChunkSize)
   {
     if(getCancel())
     {
       return {};
     }
-    m_MessageHandler.sendInfoMessage(fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;
@@ -676,6 +681,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     dataAlg.setRange(i, i + pointsChunkSize);
     dataAlg.execute(
         gbpd_metric_based::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, limitDist, totalFaceArea, numDistinctGBs, ballVolume, crystal));
+    progressThrottle.updateCount(i + pointsChunkSize);
   }
 
   // ------------------------------------------- writing the output --------------------------------

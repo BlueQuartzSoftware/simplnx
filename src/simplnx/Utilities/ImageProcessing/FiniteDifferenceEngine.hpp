@@ -10,6 +10,9 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp" // CreateDataStoreWithFormat (update buffer)
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp" // CalculateChange in-plane parallelization
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
+#include <mutex>
 
 #include <fmt/core.h>
 
@@ -1095,21 +1098,17 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
 }
 } // namespace detail
 
-// Decile progress over the outer iteration loop, mirroring RecursiveGaussianEngine's throttled messageHandler
-// pattern: emit only when a new ~10% boundary is crossed (never per-iteration, which would spam thousands of
-// messages on a long run). Progress is message emission ONLY -- it never touches store contents, so numerical
-// output is unaffected. Stateless (derived purely from iter/numberOfIterations) so repeated engine invocations in
-// the same process never observe stale throttle state from a previous call.
-inline void throttleProgress(const IFilter::MessageHandler& messageHandler, uint32 iter, uint32 numberOfIterations)
+// Keep a cheap count gate for short iterations; the shared throttle controls message frequency.
+inline void throttleProgress(ThrottledMessageHandler& progressThrottle, uint32 iter, uint32 numberOfIterations)
 {
   if(numberOfIterations == 0)
   {
     return;
   }
-  const uint32 tenth = (iter * 10) / numberOfIterations;
-  if(iter == 0 || tenth != ((iter - 1) * 10) / numberOfIterations)
+  const usize completed = static_cast<usize>(iter) + 1;
+  if(completed == numberOfIterations || iter == 0 || (completed * 10) / numberOfIterations != (static_cast<usize>(iter) * 10) / numberOfIterations)
   {
-    messageHandler.sendInfoMessage(fmt::format("Finite Difference: iteration {}/{} ({}%)", iter + 1, numberOfIterations, tenth * 10));
+    progressThrottle.updateCount("Finite Difference: Completed Iterations", completed, numberOfIterations);
   }
 }
 
@@ -1334,6 +1333,9 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
                                         const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                         const IFilter::MessageHandler& messageHandler, usize residentLimit)
 {
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
+
   const usize radius = static_cast<usize>(fn.radius());
   const usize planRadius = std::max(radius, static_cast<usize>(F::k_NeedsGlobalGradient));
   const detail::FiniteDifference2DBufferPlan plan = detail::BuildFiniteDifference2DBufferPlan(nx, ny, planRadius, sizeof(Real), residentLimit);
@@ -1416,6 +1418,8 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         }
       }
 
+      progressThrottle.reset(nx * ny, fmt::format("Finite Difference: Updating Tiles for Iteration {} of {}", iter + 1, numberOfIterations));
+      usize completedValues = 0;
       for(usize yBegin = 0; yBegin < ny; yBegin += plan.coreRows)
       {
         const usize yEnd = yBegin + std::min(plan.coreRows, ny - yBegin);
@@ -1471,10 +1475,15 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           {
             return result;
           }
+          completedValues += valueCount;
+          progressThrottle.updatePercent(completedValues);
         }
       }
       std::swap(currentStore, nextStore);
-      throttleProgress(messageHandler, iter, numberOfIterations);
+      if(!shouldCancel)
+      {
+        throttleProgress(progressThrottle, iter, numberOfIterations);
+      }
     }
   }
 
@@ -1515,6 +1524,9 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
                                          const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                          const IFilter::MessageHandler& messageHandler)
 {
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
+
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
   const int64 nZ = static_cast<int64>(dims[2]);
@@ -1690,6 +1702,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       {
         return result;
       }
+      progressThrottle.updateCount(static_cast<usize>(z + 1));
       if(z + 1 < nZ)
       {
         for(usize slot = 0; slot + 1 < windowPlanes; ++slot)
@@ -1724,6 +1737,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       }
     }
 
+    progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
     const bool finalIteration = iter + 1 == numberOfIterations;
     if constexpr(!F::k_NeedsGlobalGradient)
     {
@@ -1752,12 +1766,18 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         }
         if(finalIteration)
         {
-          throttleProgress(messageHandler, iter, numberOfIterations);
+          if(!shouldCancel)
+          {
+            throttleProgress(progressThrottle, iter, numberOfIterations);
+          }
           return {};
         }
         currentStore = &firstStore;
         nextStore = &secondStore;
-        throttleProgress(messageHandler, iter, numberOfIterations);
+        if(!shouldCancel)
+        {
+          throttleProgress(progressThrottle, iter, numberOfIterations);
+        }
         continue;
       }
     }
@@ -1772,11 +1792,17 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     }
     if(finalIteration)
     {
-      throttleProgress(messageHandler, iter, numberOfIterations);
+      if(!shouldCancel)
+      {
+        throttleProgress(progressThrottle, iter, numberOfIterations);
+      }
       return {};
     }
     std::swap(currentStore, nextStore);
-    throttleProgress(messageHandler, iter, numberOfIterations);
+    if(!shouldCancel)
+    {
+      throttleProgress(progressThrottle, iter, numberOfIterations);
+    }
   }
   return {};
 }
@@ -1979,6 +2005,8 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   auto accumPtr = DataStoreUtilities::CreateDataStoreWithFormat<Real>(workingDataFormat, shape, std::vector<usize>{1});
   AbstractDataStore<Real>& accum = *accumPtr;
 
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
   // Resident/fallback update buffer: a second full-volume Real store (ITK's UpdateBufferType == the IntermediateType
   // image, or T itself for the native-precision functor).
   auto updatePtr = DataStoreUtilities::CreateDataStoreWithFormat<Real>(workingDataFormat, shape, std::vector<usize>{1});
@@ -2017,6 +2045,11 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     nonstd::span<Real> updateValues = inMemoryUpdateStore->createSpan();
     nonstd::span<T> outputValues = inMemoryOutputStore->createSpan();
 
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&](usize completed) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(completed);
+    };
     for(uint32 iter = 0; iter < numberOfIterations; ++iter)
     {
       if(shouldCancel)
@@ -2031,12 +2064,20 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         }
       }
 
+      progressThrottle.reset(volume, fmt::format("Finite Difference: Calculating Changes for Iteration {} of {}", iter + 1, numberOfIterations));
       auto calculateChange = [&](const Range& range) {
         for(usize tuple = range.min(); tuple < range.max(); ++tuple)
         {
-          if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+          if(((tuple - range.min()) & 4095ULL) == 0)
           {
-            return;
+            if(shouldCancel)
+            {
+              return;
+            }
+            if(tuple != range.min())
+            {
+              sendThreadSafeProgress(4096);
+            }
           }
           const int64 z = static_cast<int64>(tuple / slice);
           const usize planeIndex = tuple - static_cast<usize>(z) * slice;
@@ -2065,6 +2106,10 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
             updateValues[tuple] = static_cast<Real>(fn.computeUpdate(get, sc, effDim));
           }
         }
+        if(range.max() > range.min())
+        {
+          sendThreadSafeProgress(1 + ((range.max() - range.min() - 1) & 4095ULL));
+        }
       };
       ParallelDataAlgorithm calculateAlgorithm;
       calculateAlgorithm.setRange(0, volume);
@@ -2074,15 +2119,27 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         return {};
       }
 
+      progressThrottle.reset(volume, fmt::format("Finite Difference: Applying Changes for Iteration {} of {}", iter + 1, numberOfIterations));
       auto applyUpdate = [&](const Range& range) {
         for(usize tuple = range.min(); tuple < range.max(); ++tuple)
         {
-          if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+          if(((tuple - range.min()) & 4095ULL) == 0)
           {
-            return;
+            if(shouldCancel)
+            {
+              return;
+            }
+            if(tuple != range.min())
+            {
+              sendThreadSafeProgress(4096);
+            }
           }
           const Real delta = static_cast<Real>(static_cast<double>(updateValues[tuple]) * timeStep);
           accumValues[tuple] = static_cast<Real>(accumValues[tuple] + delta);
+        }
+        if(range.max() > range.min())
+        {
+          sendThreadSafeProgress(1 + ((range.max() - range.min() - 1) & 4095ULL));
         }
       };
       ParallelDataAlgorithm applyAlgorithm;
@@ -2092,7 +2149,10 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       {
         return {};
       }
-      throttleProgress(messageHandler, iter, numberOfIterations);
+      if(!shouldCancel)
+      {
+        throttleProgress(progressThrottle, iter, numberOfIterations);
+      }
     }
 
     auto castOutput = [&](const Range& range) {
@@ -2150,6 +2210,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         return rr;
       }
     }
+    progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
     for(int64 z = 0; z < nZ; ++z)
     {
       if(shouldCancel)
@@ -2206,6 +2267,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       {
         return rr;
       }
+      progressThrottle.updateCount(static_cast<usize>(z + 1));
       // advance the rolling window by one z (drop the oldest plane, load clamp(z+1+r))
       if(z + 1 < nZ)
       {
@@ -2220,7 +2282,10 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       }
     }
     std::swap(currentStore, nextStore);
-    throttleProgress(messageHandler, iter, numberOfIterations); // decile progress like RecursiveGaussianEngine
+    if(!shouldCancel)
+    {
+      throttleProgress(progressThrottle, iter, numberOfIterations);
+    }
   }
 
   // 3) outStore = cast<T>(currentStore), streamed -- the ONE-TIME final narrowing (a no-op cast when Real==T).

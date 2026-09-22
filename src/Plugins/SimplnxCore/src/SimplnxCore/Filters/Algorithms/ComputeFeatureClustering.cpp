@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <random>
 
@@ -212,6 +213,9 @@ Result<> ComputeFeatureClustering::operator()()
 
   clusters.resize(totalFeatures);
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(totalPptFeatures, "Computing Feature Clustering");
+  usize completedFeatures = 0;
   for(usize i = 1; i < totalFeatures; i++)
   {
     if(m_ShouldCancel)
@@ -220,11 +224,6 @@ Result<> ComputeFeatureClustering::operator()()
     }
     if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
     {
-      if(i % 1000 == 0)
-      {
-        m_MessageHandler.sendInfoMessage(fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
-      }
-
       x = centroidsCache[3 * i];
       y = centroidsCache[3 * i + 1];
       z = centroidsCache[3 * i + 2];
@@ -243,6 +242,7 @@ Result<> ComputeFeatureClustering::operator()()
           clusters[j].push_back(r);
         }
       }
+      progressThrottle.updateCount(++completedFeatures);
     }
   }
 

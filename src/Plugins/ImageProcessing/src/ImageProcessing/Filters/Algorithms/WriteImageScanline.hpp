@@ -14,7 +14,7 @@ public:
   /**
    * @brief Creates a bounded image writer.
    * @param dataStructure Contains the source Image Geometry and Data Array.
-   * @param messageHandler Accepted for dispatch compatibility. This writer does not send messages.
+   * @param messageHandler Receives status and progress messages.
    * @param shouldCancel Stops output between slices when set.
    * @param inputValues Contains the output settings and source paths.
    */
@@ -38,5 +38,6 @@ private:
   DataStructure& m_DataStructure;
   const WriteImageInputValues& m_InputValues;
   const std::atomic_bool& m_ShouldCancel;
+  const IFilter::MessageHandler& m_MessageHandler;
 };
 } // namespace nx::core

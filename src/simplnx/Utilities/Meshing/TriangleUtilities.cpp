@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -11,7 +12,6 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <cstring>
 #include <limits>
 #include <list>
@@ -651,7 +651,8 @@ Result<> ProcessWindingsWithLabels(IGeometry::MeshIndexType* triangles, usize nu
 {
   // Process each label separately because three-feature junction edges are not manifold.
   usize count = 0;
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(mesgHandler);
+  progressThrottle.reset(static_cast<usize>(std::max(maxFeature, int32{0})), "Repairing Feature Windings");
   std::vector<bool> visited(numTris, false);
   std::vector<bool> unmodified(numTris, false);
 
@@ -710,12 +711,6 @@ Result<> ProcessWindingsWithLabels(IGeometry::MeshIndexType* triangles, usize nu
       if(visited[triangle])
       {
         continue;
-      }
-
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
-      {
-        mesgHandler.sendInfoMessage(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
-        start = std::chrono::steady_clock::now();
       }
 
       auto numElem = neighbors.getNumberOfElements(triangle);
@@ -783,6 +778,7 @@ Result<> ProcessWindingsWithLabels(IGeometry::MeshIndexType* triangles, usize nu
         }
       }
     }
+    progressThrottle.updateCount(feature);
   }
 
   if(count > 0)
@@ -809,7 +805,8 @@ Result<> ProcessWindingsWithRegions(IGeometry::MeshIndexType* triangles, usize n
                                     const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
 {
   // Process each region separately because multi-region junction edges are not manifold.
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(mesgHandler);
+  progressThrottle.reset(static_cast<usize>(std::max(maxFeature, int32{0})), "Repairing Feature Windings");
   std::vector<bool> visited(numTris, false);
 
   // Find each region's first triangle in one ascending pass. This preserves
@@ -864,12 +861,6 @@ Result<> ProcessWindingsWithRegions(IGeometry::MeshIndexType* triangles, usize n
         continue;
       }
 
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
-      {
-        mesgHandler.sendInfoMessage(fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", feature, maxFeature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
-        start = std::chrono::steady_clock::now();
-      }
-
       auto numElem = neighbors.getNumberOfElements(triangle);
       const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
 
@@ -913,6 +904,7 @@ Result<> ProcessWindingsWithRegions(IGeometry::MeshIndexType* triangles, usize n
         triangles[(triangle * 3) + 2] = tempValue;
       }
     }
+    progressThrottle.updateCount(feature);
   }
 
   return {};
@@ -1359,7 +1351,8 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
 
   uint64 unrepairedCount = 0;
   uint64 seedOffset = 0;
-  auto progressStart = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(mesgHandler);
+  progressThrottle.reset(static_cast<usize>(std::max(maxFeature, int32{0})), "Repairing Feature Windings");
   while(seedOffset < seeds->recordCount())
   {
     if(shouldCancel)
@@ -1479,13 +1472,6 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
         continue;
       }
 
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - progressStart).count() > 1000)
-      {
-        mesgHandler.sendInfoMessage(
-            fmt::format("Current Feature: {}/{} | Progress : {:2.2f}%", seed.Feature, maxFeature, 100.0f * static_cast<float>(seed.Feature) / static_cast<float>(maxFeature + 1)));
-        progressStart = std::chrono::steady_clock::now();
-      }
-
       auto enqueueResult = enqueueCompatibleNeighbors(triangle);
       if(enqueueResult.invalid())
       {
@@ -1582,6 +1568,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
         }
       }
     }
+    progressThrottle.updateCount(seed.Feature);
     seedOffset = nextFeatureOffset;
   }
 

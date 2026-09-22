@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -12,7 +13,9 @@
 
 #include <algorithm>
 #include <atomic>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 using namespace nx::core;
@@ -20,6 +23,7 @@ using namespace nx::core;
 namespace
 {
 constexpr usize k_QuaternionComponents = 4;
+constexpr usize k_ProgressChunkTuples = 4096;
 
 /**
  * @brief Number of tuples held by the OOC streaming path at one time.
@@ -61,7 +65,7 @@ class GenerateFZQuatsAbstractImpl
 {
 public:
   GenerateFZQuatsAbstractImpl(Float32Array& quats, Int32Array& phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, MaskArrayType* goodVoxels, Float32Array& fzQuats,
-                              const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
+                              const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount, const std::function<void(usize)>& reportProgress)
   : m_Quats(quats)
   , m_CellPhases(phases)
   , m_PhaseOps(phaseOps)
@@ -70,6 +74,7 @@ public:
   , m_FZQuats(fzQuats)
   , m_ShouldCancel(shouldCancel)
   , m_WarningCount(warningCount)
+  , m_ReportProgress(reportProgress)
   {
   }
 
@@ -77,40 +82,45 @@ public:
 
   void convert(usize start, usize end) const
   {
-    for(usize tupleIndex = start; tupleIndex < end; tupleIndex++)
+    for(usize chunkStart = start; chunkStart < end;)
     {
       if(m_ShouldCancel)
       {
-        break;
+        return;
       }
-
-      const int32 phase = m_CellPhases[tupleIndex];
-      bool generateFZQuat = true;
-      if(m_GoodVoxels != nullptr)
+      const usize chunkEnd = chunkStart + std::min(k_ProgressChunkTuples, end - chunkStart);
+      for(usize tupleIndex = chunkStart; tupleIndex < chunkEnd; tupleIndex++)
       {
-        generateFZQuat = static_cast<bool>((*m_GoodVoxels)[tupleIndex]);
-      }
+        const int32 phase = m_CellPhases[tupleIndex];
+        bool generateFZQuat = true;
+        if(m_GoodVoxels != nullptr)
+        {
+          generateFZQuat = static_cast<bool>((*m_GoodVoxels)[tupleIndex]);
+        }
 
-      if(phase >= m_NumPhases)
-      {
-        m_WarningCount++;
-      }
+        if(phase >= m_NumPhases)
+        {
+          m_WarningCount++;
+        }
 
-      const usize quaternionIndex = tupleIndex * k_QuaternionComponents;
-      m_FZQuats[quaternionIndex] = 0.0F;
-      m_FZQuats[quaternionIndex + 1] = 0.0F;
-      m_FZQuats[quaternionIndex + 2] = 0.0F;
-      m_FZQuats[quaternionIndex + 3] = 0.0F;
+        const usize quaternionIndex = tupleIndex * k_QuaternionComponents;
+        m_FZQuats[quaternionIndex] = 0.0F;
+        m_FZQuats[quaternionIndex + 1] = 0.0F;
+        m_FZQuats[quaternionIndex + 2] = 0.0F;
+        m_FZQuats[quaternionIndex + 3] = 0.0F;
 
-      if(phase < m_NumPhases && generateFZQuat && m_PhaseOps[phase] != nullptr)
-      {
-        ebsdlib::QuatD quat(m_Quats[quaternionIndex], m_Quats[quaternionIndex + 1], m_Quats[quaternionIndex + 2], m_Quats[quaternionIndex + 3]);
-        quat = m_PhaseOps[phase]->getFZQuat(quat);
-        m_FZQuats[quaternionIndex] = quat.x();
-        m_FZQuats[quaternionIndex + 1] = quat.y();
-        m_FZQuats[quaternionIndex + 2] = quat.z();
-        m_FZQuats[quaternionIndex + 3] = quat.w();
+        if(phase < m_NumPhases && generateFZQuat && m_PhaseOps[phase] != nullptr)
+        {
+          ebsdlib::QuatD quat(m_Quats[quaternionIndex], m_Quats[quaternionIndex + 1], m_Quats[quaternionIndex + 2], m_Quats[quaternionIndex + 3]);
+          quat = m_PhaseOps[phase]->getFZQuat(quat);
+          m_FZQuats[quaternionIndex] = quat.x();
+          m_FZQuats[quaternionIndex + 1] = quat.y();
+          m_FZQuats[quaternionIndex + 2] = quat.z();
+          m_FZQuats[quaternionIndex + 3] = quat.w();
+        }
       }
+      m_ReportProgress(chunkEnd - chunkStart);
+      chunkStart = chunkEnd;
     }
   }
 
@@ -128,6 +138,7 @@ private:
   Float32Array& m_FZQuats;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_int32_t& m_WarningCount;
+  std::function<void(usize)> m_ReportProgress;
 };
 
 /**
@@ -143,7 +154,7 @@ class GenerateFZQuatsContiguousImpl
 {
 public:
   GenerateFZQuatsContiguousImpl(const float32* quats, const int32* phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, const MaskType* goodVoxels, float32* fzQuats,
-                                const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
+                                const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount, const std::function<void(usize)>& reportProgress)
   : m_Quats(quats)
   , m_CellPhases(phases)
   , m_PhaseOps(phaseOps)
@@ -152,40 +163,46 @@ public:
   , m_FZQuats(fzQuats)
   , m_ShouldCancel(shouldCancel)
   , m_WarningCount(warningCount)
+  , m_ReportProgress(reportProgress)
   {
   }
 
   void operator()(const Range& range) const
   {
-    for(usize tupleIndex = range.min(); tupleIndex < range.max(); tupleIndex++)
+    for(usize chunkStart = range.min(); chunkStart < range.max();)
     {
       if(m_ShouldCancel)
       {
-        break;
+        return;
       }
-
-      const int32 phase = m_CellPhases[tupleIndex];
-      const bool generateFZQuat = m_GoodVoxels == nullptr || static_cast<bool>(m_GoodVoxels[tupleIndex]);
-      if(phase >= m_NumPhases)
+      const usize chunkEnd = chunkStart + std::min(k_ProgressChunkTuples, range.max() - chunkStart);
+      for(usize tupleIndex = chunkStart; tupleIndex < chunkEnd; tupleIndex++)
       {
-        m_WarningCount++;
-      }
+        const int32 phase = m_CellPhases[tupleIndex];
+        const bool generateFZQuat = m_GoodVoxels == nullptr || static_cast<bool>(m_GoodVoxels[tupleIndex]);
+        if(phase >= m_NumPhases)
+        {
+          m_WarningCount++;
+        }
 
-      const usize quaternionIndex = tupleIndex * k_QuaternionComponents;
-      m_FZQuats[quaternionIndex] = 0.0F;
-      m_FZQuats[quaternionIndex + 1] = 0.0F;
-      m_FZQuats[quaternionIndex + 2] = 0.0F;
-      m_FZQuats[quaternionIndex + 3] = 0.0F;
+        const usize quaternionIndex = tupleIndex * k_QuaternionComponents;
+        m_FZQuats[quaternionIndex] = 0.0F;
+        m_FZQuats[quaternionIndex + 1] = 0.0F;
+        m_FZQuats[quaternionIndex + 2] = 0.0F;
+        m_FZQuats[quaternionIndex + 3] = 0.0F;
 
-      if(phase < m_NumPhases && generateFZQuat && m_PhaseOps[phase] != nullptr)
-      {
-        ebsdlib::QuatD quat(m_Quats[quaternionIndex], m_Quats[quaternionIndex + 1], m_Quats[quaternionIndex + 2], m_Quats[quaternionIndex + 3]);
-        quat = m_PhaseOps[phase]->getFZQuat(quat);
-        m_FZQuats[quaternionIndex] = quat.x();
-        m_FZQuats[quaternionIndex + 1] = quat.y();
-        m_FZQuats[quaternionIndex + 2] = quat.z();
-        m_FZQuats[quaternionIndex + 3] = quat.w();
+        if(phase < m_NumPhases && generateFZQuat && m_PhaseOps[phase] != nullptr)
+        {
+          ebsdlib::QuatD quat(m_Quats[quaternionIndex], m_Quats[quaternionIndex + 1], m_Quats[quaternionIndex + 2], m_Quats[quaternionIndex + 3]);
+          quat = m_PhaseOps[phase]->getFZQuat(quat);
+          m_FZQuats[quaternionIndex] = quat.x();
+          m_FZQuats[quaternionIndex + 1] = quat.y();
+          m_FZQuats[quaternionIndex + 2] = quat.z();
+          m_FZQuats[quaternionIndex + 3] = quat.w();
+        }
       }
+      m_ReportProgress(chunkEnd - chunkStart);
+      chunkStart = chunkEnd;
     }
   }
 
@@ -198,6 +215,7 @@ private:
   float32* m_FZQuats = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_int32_t& m_WarningCount;
+  std::function<void(usize)> m_ReportProgress;
 };
 
 /**
@@ -210,10 +228,11 @@ private:
 class ComputeFZQuaternionsDirect
 {
 public:
-  ComputeFZQuaternionsDirect(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel, const ComputeFZQuaternionsInputValues* inputValues)
+  ComputeFZQuaternionsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ComputeFZQuaternionsInputValues* inputValues)
   : m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
+  , m_MessageHandler(messageHandler)
   {
   }
 
@@ -293,8 +312,20 @@ private:
   {
     const auto& cellPhasesStoreRef = phaseArray.getDataStoreRef();
     const auto* maskStoreRef = maskArray == nullptr ? nullptr : &maskArray->getDataStoreRef();
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    const usize totalTuples = phaseArray.getNumberOfTuples();
+    m_MessageHandler.sendInfoMessage("Validating Quaternion Phases");
+    progressThrottle.reset(totalTuples, "Validating Quaternion Phases");
     for(usize tupleIdx = 0; tupleIdx < phaseArray.getNumberOfTuples(); tupleIdx++)
     {
+      if(tupleIdx % k_ProgressChunkTuples == 0)
+      {
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+        progressThrottle.updatePercent(tupleIdx);
+      }
       const bool generateFzQuat = maskStoreRef == nullptr || static_cast<bool>((*maskStoreRef)[tupleIdx]);
       const int32 currentPhaseIdx = cellPhasesStoreRef[tupleIdx];
       if(generateFzQuat && currentPhaseIdx < 0)
@@ -303,6 +334,14 @@ private:
                                                    currentPhaseIdx, tupleIdx, numPhases));
       }
     }
+
+    m_MessageHandler.sendInfoMessage("Computing Fundamental Zone Quaternions");
+    progressThrottle.reset(quatArray.getNumberOfTuples(), "Computing Fundamental Zone Quaternions");
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&progressThrottle, &progressMutex](usize count) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(count);
+    };
 
     const auto* quatStore = dynamic_cast<const DataStore<float32>*>(&quatArray.getDataStoreRef());
     const auto* phaseStore = dynamic_cast<const DataStore<int32>*>(&phaseArray.getDataStoreRef());
@@ -313,17 +352,19 @@ private:
     if(quatStore != nullptr && phaseStore != nullptr && fzQuatStore != nullptr && hasContiguousMask)
     {
       const MaskType* maskData = maskStore == nullptr ? nullptr : maskStore->data();
-      dataAlgorithm.execute(GenerateFZQuatsContiguousImpl<MaskType>(quatStore->data(), phaseStore->data(), phaseOps, numPhases, maskData, fzQuatStore->data(), m_ShouldCancel, warningCount));
+      dataAlgorithm.execute(
+          GenerateFZQuatsContiguousImpl<MaskType>(quatStore->data(), phaseStore->data(), phaseOps, numPhases, maskData, fzQuatStore->data(), m_ShouldCancel, warningCount, sendThreadSafeProgress));
       return {};
     }
 
-    dataAlgorithm.execute(GenerateFZQuatsAbstractImpl<DataArray<MaskType>>(quatArray, phaseArray, phaseOps, numPhases, maskArray, fzQuatArray, m_ShouldCancel, warningCount));
+    dataAlgorithm.execute(GenerateFZQuatsAbstractImpl<DataArray<MaskType>>(quatArray, phaseArray, phaseOps, numPhases, maskArray, fzQuatArray, m_ShouldCancel, warningCount, sendThreadSafeProgress));
     return {};
   }
 
   DataStructure& m_DataStructure;
   const ComputeFZQuaternionsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
+  const IFilter::MessageHandler& m_MessageHandler;
 };
 
 /**
@@ -408,6 +449,9 @@ private:
       maskBuffer = std::make_unique<MaskType[]>(k_ChunkTuples);
     }
 
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Computing Fundamental Zone Quaternions");
+    progressThrottle.reset(totalTuples, "Computing Fundamental Zone Quaternions");
     int32 warningCount = 0;
     for(usize offset = 0; offset < totalTuples; offset += k_ChunkTuples)
     {
@@ -469,6 +513,7 @@ private:
       {
         return result;
       }
+      progressThrottle.incrementPercent(count);
     }
 
     return CreatePhaseErrorResult(numPhases, warningCount);

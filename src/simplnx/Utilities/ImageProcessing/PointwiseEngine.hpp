@@ -18,6 +18,7 @@
 #include <initializer_list>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <string_view>
 #include <type_traits>
@@ -237,7 +238,29 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     nonstd::span<U> outputSpan = inMemoryOutputStore->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, totalValues);
-    parallelAlgorithm.execute(PointwiseMapBody<T, U, MapOpT>{inputSpan.data(), outputSpan.data(), mapOp, shouldCancel});
+    messageHandler.sendInfoMessage("Applying resident pointwise operation");
+    ThrottledMessageHandler progressThrottle(messageHandler);
+    progressThrottle.reset(totalValues, "Applying pointwise operation");
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&](usize delta) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(delta);
+    };
+    const PointwiseMapBody<T, U, MapOpT> body{inputSpan.data(), outputSpan.data(), mapOp, shouldCancel};
+    parallelAlgorithm.execute([&](const Range& range) {
+      constexpr usize k_ProgressBatchValues = 65536;
+      for(usize begin = range.min(); begin < range.max();)
+      {
+        const usize end = begin + std::min(k_ProgressBatchValues, range.max() - begin);
+        body(Range(begin, end));
+        if(shouldCancel)
+        {
+          return;
+        }
+        sendThreadSafeProgress(end - begin);
+        begin = end;
+      }
+    });
     return {};
   }
 
@@ -258,6 +281,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
   }
   const PointwiseBatchPlan& plan = planResult.value();
 
+  messageHandler.sendInfoMessage("Applying buffered pointwise operation");
   ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(plan.totalBatches, "Applying pointwise operation");
 

@@ -166,6 +166,9 @@ Result<> NeighborOrientationCorrelation::operator()()
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
     usize processedVoxels = 0;
+    const std::string progressLabel = fmt::format("Processing Level {} of {}", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level);
+    m_MessageHandler.sendInfoMessage(progressLabel);
+    progressThrottle.reset(totalVoxels, progressLabel);
 
     // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
     if(Result<> ioResult = readQuatSlice(0, 1); ioResult.invalid())
@@ -224,7 +227,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
           if(processedVoxels % 10000 == 0)
           {
-            progressThrottle.updatePercent(fmt::format("Level '{}' of '{}'", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level), processedVoxels, totalVoxels);
+            progressThrottle.updatePercent(processedVoxels);
           }
 
           if(ciSlice[inSlice] < m_InputValues->MinConfidence)

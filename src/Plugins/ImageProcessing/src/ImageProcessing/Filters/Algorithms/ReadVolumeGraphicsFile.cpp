@@ -46,6 +46,16 @@ Result<> ReadVolumeGraphicsFile::operator()()
     return MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes));
   }
 
-  m_MessageHandler.sendInfoMessage("Reading Data from .vol File.....");
-  return ImportFromBinaryFile(m_InputValues->VGDataFile, *densityArray);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+  m_MessageHandler.sendInfoMessage("Reading data from .vol file");
+  m_MessageHandler.sendProgressCount("Reading volume files", 0, 1);
+  auto importResult = ImportFromBinaryFile(m_InputValues->VGDataFile, *densityArray);
+  if(importResult.valid())
+  {
+    m_MessageHandler.sendProgressCount("Reading volume files", 1, 1);
+  }
+  return importResult;
 }

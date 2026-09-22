@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -515,14 +516,16 @@ Result<> ComputeGBCDMetricBased::operator()()
   // that would also need OOC-safe access patterns.
   float64 totalFaceArea = 0.0;
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  m_MessageHandler.sendInfoMessage("Selecting Triangles with the Specified Misorientation");
+  progressThrottle.reset(numMeshTriangles, "Selecting Triangles with the Specified Misorientation");
+
   for(usize i = 0; i < numMeshTriangles; i += triChunkSize)
   {
     if(getCancel())
     {
       return {};
     }
-    m_MessageHandler.sendInfoMessage(
-        fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
     usize currentChunkSize = triChunkSize;
     if(i + currentChunkSize >= numMeshTriangles)
     {
@@ -571,6 +574,7 @@ Result<> ComputeGBCDMetricBased::operator()()
         totalFaceArea += areasBuf[j];
       }
     }
+    progressThrottle.updatePercent(i + currentChunkSize);
   }
 
   // ------------------------  find the number of distinct boundaries ------------------------------
@@ -612,14 +616,14 @@ Result<> ComputeGBCDMetricBased::operator()()
     pointsChunkSize = samplePtsX.size();
   }
 
+  m_MessageHandler.sendInfoMessage("Computing Distribution Values at the Section of Interest");
+  progressThrottle.reset(samplePtsX.size(), "Computing Distribution Values at the Section of Interest");
   for(usize i = 0; i < samplePtsX.size(); i += pointsChunkSize)
   {
     if(getCancel())
     {
       return {};
     }
-    m_MessageHandler.sendInfoMessage(fmt::format("Step 2/2: Computing Distribution Values at the Section of Interest ({}% completed)",
-                                                 static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;
@@ -630,6 +634,7 @@ Result<> ComputeGBCDMetricBased::operator()()
     dataAlg.setParallelizationEnabled(true);
     dataAlg.execute(GBCDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
                                                        ballVolume, gFixedT));
+    progressThrottle.updateCount(i + pointsChunkSize);
   }
 
   // ------------------------------------------- writing the output --------------------------------

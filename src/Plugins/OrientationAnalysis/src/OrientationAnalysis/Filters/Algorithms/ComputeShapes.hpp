@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <vector>
 
@@ -47,6 +48,7 @@ private:
   const ComputeShapesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  ThrottledMessageHandler m_Throttle;
 
   double m_ScaleFactor = {1.0};
   std::vector<double> m_FeatureMoments;

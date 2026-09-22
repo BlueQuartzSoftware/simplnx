@@ -10,6 +10,7 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -315,6 +316,10 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     misorientations[i].assign(dims[1], 0.0f);
   }
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  m_MessageHandler.sendInfoMessage("Determining Slice Shifts");
+  progressThrottle.reset(dims[2] > 0 ? static_cast<usize>(dims[2] - 1) : 0, "Determining Slice Shifts");
+
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
@@ -335,8 +340,6 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
         return ConvertResult(std::move(floodFillResult));
       }
       curFeatureCount = floodFillResult.value();
-
-      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       int32 featureCount1 = curFeatureCount;
       int32 featureCount2 = refFeatureCount;
@@ -459,6 +462,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       // Reuse the current feature IDs for the next reference slice.
       std::swap(refFeatureIds, curFeatureIds);
       refFeatureCount = curFeatureCount;
+      progressThrottle.updateCount(static_cast<usize>(iter));
     }
   }
   else
@@ -478,8 +482,6 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
         return ConvertResult(std::move(floodFillResult));
       }
       curFeatureCount = floodFillResult.value();
-
-      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       int32 featureCount1 = curFeatureCount;
       int32 featureCount2 = refFeatureCount;
@@ -593,6 +595,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       // Reuse the current feature IDs for the next reference slice.
       std::swap(refFeatureIds, curFeatureIds);
       refFeatureCount = curFeatureCount;
+      progressThrottle.updateCount(static_cast<usize>(iter));
     }
   }
 

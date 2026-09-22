@@ -61,7 +61,7 @@ public:
   /**
    * @brief Initializes Feature ID morphology.
    * @param dataStructure Contains geometry and sibling cell arrays.
-   * @param mesgHandler Supplies the common interface. This algorithm emits no messages.
+   * @param mesgHandler Supplies phase and slice progress messages.
    * @param shouldCancel Supplies the common cancellation interface.
    * @param inputValues Selects operation, directions, iterations, and paths.
    * @pre All arguments and the inputValues object outlive this executor.
@@ -81,19 +81,19 @@ public:
    * @pre Image dimensions and Feature ID tuple count agree and are nonzero.
    * @pre Feature IDs are nonnegative and slice/component products fit usize.
    *
-   * The algorithm does not inspect the cancellation flag. It also discards all
-   * bulk-transfer Result values. A storage failure can therefore produce partial
-   * or invalid sibling output while this function returns success.
+   * Cancellation returns success during the Feature ID scan and before the first pass. After the first
+   * write, the passes run to completion, because the cell arrays are changed in place.
+   * Bulk-transfer failures return their error and can leave partial output.
    */
   Result<> operator()();
 
   const std::atomic_bool& getCancel() const;
 
   /**
-   * @brief Thread-safe progress update. Safe to call from the parallel per-array workers.
-   * @param message Fully rendered progress text for one array
+   * @brief Reports completed slices through the shared throttle.
+   * @param counter Number of completed slices.
    */
-  void sendThreadSafeProgressMessage(const std::string& message);
+  void sendThreadSafeProgressMessage(usize counter);
 
 private:
   DataStructure& m_DataStructure;

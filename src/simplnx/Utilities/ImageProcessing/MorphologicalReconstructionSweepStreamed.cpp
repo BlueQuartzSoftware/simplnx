@@ -1,6 +1,8 @@
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionWavefront.hpp"
 
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include <new>
 
 namespace nx::core::ImageProcessing
@@ -10,6 +12,7 @@ template <bool Dilation>
 Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
 {
   using Tr = detail::ReconTraits<T, Dilation>;
+  m_MessageHandler.sendInfoMessage("Reconstructing Morphology");
   const usize dimX = m_Dims[0];
   const usize dimY = m_Dims[1];
   const usize dimZ = m_Dims[2];
@@ -109,6 +112,9 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
   else
   {
     auto reconstruct = [&]<class WorkStore, class MaskStore>(WorkStore& workStore, const MaskStore& maskStore, bool initializeWork, usize sweepPairCount, bool& converged) -> Result<> {
+      ThrottledMessageHandler progressThrottle(m_MessageHandler);
+      std::string forwardProgressLabel;
+      std::string reverseProgressLabel;
       const int64 nX = static_cast<int64>(dimX);
       const int64 nY = static_cast<int64>(dimY);
       const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
@@ -125,6 +131,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
 
       if(initializeWork)
       {
+        progressThrottle.reset(vol, "Initializing Reconstruction");
         // Initialize the selected working store to the marker with the same bounded slab buffer.
         for(usize start = 0; start < vol; start += slabCapacity)
         {
@@ -141,6 +148,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
           {
             return r;
           }
+
+          progressThrottle.updateCount(start + count);
         }
       }
 
@@ -167,6 +176,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
       // visits them descending and uses LATER neighbors. Store I/O is serial and contiguous. All updates remain
       // sequential because later voxels read directly from the already-updated work slab.
       auto sweep = [&](bool forward, bool& changed) -> Result<> {
+        progressThrottle.reset(dimZ, forward ? forwardProgressLabel : reverseProgressLabel);
         const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
         std::vector<bool>& planeDirty = forward ? forwardPlaneDirty : reversePlaneDirty;
         bool haveAdjacent = false;
@@ -206,6 +216,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
               }
               haveAdjacent = true;
             }
+            progressThrottle.updateCount(slabIndex + currentSlabPlanes);
             continue;
           }
 
@@ -376,6 +387,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
               return r;
             }
           }
+
+          progressThrottle.updateCount(slabIndex + currentSlabPlanes);
         }
         return {};
       };
@@ -383,6 +396,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
       converged = false;
       for(usize sweepPair = 0; sweepPair < sweepPairCount; ++sweepPair)
       {
+        forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+        reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
         if(m_ShouldCancel)
         {
           return {};
@@ -400,6 +415,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
         {
           return r;
         }
+        progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
         if(!changed)
         {
           converged = true;
@@ -505,6 +521,9 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation>
 Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dimX, usize dimY, usize dimZ, usize sliceValues, usize vol)
 {
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  std::string forwardProgressLabel;
+  std::string reverseProgressLabel;
   using Tr = detail::ReconTraits<T, Dilation>;
 
   // Capacity comes from the active shared-budget reservation, identical to runResident3D.
@@ -562,6 +581,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
   const detail::ReconstructionPlaneWavefrontSchedule planeWavefrontSchedule = detail::BuildReconstructionPlaneWavefrontSchedule(dimX, dimY);
 
   auto sweep = [&](bool forward, bool& changed) {
+    progressThrottle.reset(dimZ, forward ? forwardProgressLabel : reverseProgressLabel);
     const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
     for(usize planeIndex = 0; planeIndex < dimZ; ++planeIndex)
     {
@@ -648,11 +668,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
       {
         changed = true;
       }
+
+      progressThrottle.updateCount(planeIndex + 1);
     }
   };
 
   for(usize sweepPair = 0; sweepPair < m_MaxSweepPairs; ++sweepPair)
   {
+    forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+    reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
     if(m_ShouldCancel)
     {
       return {};
@@ -664,6 +688,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
       return {};
     }
     sweep(false, changed);
+    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;
@@ -676,6 +701,9 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation>
 Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, usize dimY, usize dimZ, usize sliceValues, usize vol)
 {
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  std::string forwardProgressLabel;
+  std::string reverseProgressLabel;
   using Tr = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(dimX);
   const int64 nY = static_cast<int64>(dimY);
@@ -695,6 +723,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
   auto maskSlab = std::make_unique<T[]>(slabCapacity);
 
   // Step 1: initialize the working store (== m_Out) to the marker with the same bounded slab buffer.
+  progressThrottle.reset(vol, "Initializing Reconstruction");
   for(usize start = 0; start < vol; start += slabCapacity)
   {
     if(m_ShouldCancel)
@@ -710,6 +739,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
     {
       return r;
     }
+
+    progressThrottle.updateCount(start + count);
   }
 
   // One boundary plane carries the last processed plane between slabs.
@@ -723,6 +754,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
   // plane's voxels are processed through the wavefront block schedule instead of runDirect's single-threaded
   // nested loop.
   auto sweep = [&](bool forward, bool& changed) -> Result<> {
+    progressThrottle.reset(dimZ, forward ? forwardProgressLabel : reverseProgressLabel);
     const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
     bool haveAdjacent = false;
     for(usize slabIndex = 0; slabIndex < dimZ; slabIndex += slabPlanes)
@@ -879,12 +911,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
           return r;
         }
       }
+
+      progressThrottle.updateCount(slabIndex + currentSlabPlanes);
     }
     return {};
   };
 
   for(usize sweepPair = 0; sweepPair < m_MaxSweepPairs; ++sweepPair)
   {
+    forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+    reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
     if(m_ShouldCancel)
     {
       return {};
@@ -902,6 +938,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
     {
       return r;
     }
+    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break; // reached the fixpoint
@@ -915,6 +952,9 @@ template <bool Dilation, class WorkStore, class MaskStore>
 Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(WorkStore& workStore, const MaskStore& maskStore, usize dimX, usize dimY, usize dimZ, usize sliceValues, usize vol,
                                                                             const detail::ReconstructionPersistentPrefixPlan& plan, bool initializeWork)
 {
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  std::string forwardProgressLabel;
+  std::string reverseProgressLabel;
   using Tr = detail::ReconTraits<T, Dilation>;
   const usize residentPlanes = plan.residentPlanes;
   const usize residentValues = plan.residentValues;
@@ -1189,12 +1229,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
 
   for(usize sweepPair = 0; sweepPair < m_MaxSweepPairs; ++sweepPair)
   {
+    forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+    reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
     if(m_ShouldCancel)
     {
       return {};
     }
     bool changed = false;
 
+    progressThrottle.reset(dimZ, forwardProgressLabel);
     constexpr usize forwardMaskBatchPlanes = 3;
     for(usize batchBegin = 0; batchBegin < residentPlanes; batchBegin += forwardMaskBatchPlanes)
     {
@@ -1212,6 +1255,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       {
         // residentWork already holds the correct values for every plane in this batch; no mask read or
         // recompute is needed, and there is no store-backed carry to refresh (the "carry" is residentWork itself).
+        progressThrottle.updateCount(batchBegin + batchPlanes);
         continue;
       }
       if(Result<> result = maskStore.copyIntoBuffer(batchBegin * sliceValues, nonstd::span<T>(streamingBuffers.get(), batchPlanes * sliceValues)); result.invalid())
@@ -1233,6 +1277,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
           forwardPlaneDirty[z] = false;
         }
       }
+
+      progressThrottle.updateCount(batchBegin + batchPlanes);
     }
 
     std::copy_n(residentWork.get() + (residentPlanes - 1) * sliceValues, sliceValues, adjacentPlane);
@@ -1247,6 +1293,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
         {
           return result;
         }
+        progressThrottle.updateCount(z + 1);
         continue;
       }
       if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlane, sliceValues)); result.invalid())
@@ -1272,8 +1319,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
         forwardPlaneDirty[z] = false;
       }
       std::copy_n(workPlane, sliceValues, adjacentPlane);
+
+      progressThrottle.updateCount(z + 1);
     }
 
+    progressThrottle.reset(dimZ, reverseProgressLabel);
     bool haveAdjacent = false;
     for(usize planeIndex = 0; planeIndex < tailPlanes; ++planeIndex)
     {
@@ -1286,6 +1336,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
           return result;
         }
         haveAdjacent = true;
+        progressThrottle.updateCount(planeIndex + 1);
         continue;
       }
       if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlane, sliceValues)); result.invalid())
@@ -1312,6 +1363,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       }
       std::copy_n(workPlane, sliceValues, adjacentPlane);
       haveAdjacent = true;
+
+      progressThrottle.updateCount(planeIndex + 1);
     }
 
     constexpr usize reverseMaskBatchPlanes = 2;
@@ -1331,6 +1384,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       }
       if(batchClean)
       {
+        progressThrottle.updateCount(tailPlanes + processedPlanes + batchPlanes);
         continue;
       }
       if(Result<> result = maskStore.copyIntoBuffer(batchBegin * sliceValues, nonstd::span<T>(streamingBuffers.get(), batchPlanes * sliceValues)); result.invalid())
@@ -1353,8 +1407,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
           reversePlaneDirty[z] = false;
         }
       }
+
+      progressThrottle.updateCount(tailPlanes + processedPlanes + batchPlanes);
     }
 
+    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;
@@ -1376,6 +1433,9 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation, class WorkStore, class MaskStore>
 Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, const MaskStore& maskStore, usize dimX, usize dimY, usize vol, usize maxBufferValues)
 {
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  std::string forwardProgressLabel;
+  std::string reverseProgressLabel;
   using Tr = detail::ReconTraits<T, Dilation>;
   auto planResult = detail::CreateSweep2DPlan(dimX, dimY, maxBufferValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
   if(planResult.invalid())
@@ -1391,6 +1451,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       plan.coreRows = (plan.coreRows / (*chunkShape)[1]) * (*chunkShape)[1];
     }
   }
+  progressThrottle.reset(dimY, "Initializing Reconstruction Rows");
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
 
   if(plan.fullWidth)
@@ -1417,6 +1478,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       {
         return r;
       }
+
+      progressThrottle.updateCount(coreBegin + coreRows);
     }
 
     const usize blockCount = (dimY - 1) / plan.coreRows + 1;
@@ -1426,6 +1489,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
     usize cachedReadBegin = 0;
     usize cachedReadEnd = 0;
     auto sweep = [&](bool forward, bool& changed) -> Result<> {
+      progressThrottle.reset(blockCount, forward ? forwardProgressLabel : reverseProgressLabel);
       const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
       for(usize blockIteration = 0; blockIteration < blockCount; ++blockIteration)
       {
@@ -1533,12 +1597,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
         cachedCoreRows = coreRows;
         cachedReadBegin = readBegin;
         cachedReadEnd = readEnd;
+
+        progressThrottle.updateCount(blockIteration + 1);
       }
       return {};
     };
 
     for(usize sweepPair = 0; sweepPair < m_MaxSweepPairs; ++sweepPair)
     {
+      forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+      reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
       if(m_ShouldCancel)
       {
         return {};
@@ -1552,6 +1620,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       {
         return r;
       }
+      progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
       if(!changed)
       {
         break;
@@ -1582,9 +1651,12 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
         return r;
       }
     }
+
+    progressThrottle.updateCount(y + 1);
   }
 
   auto sweepTiled = [&](bool forward, bool& changed) -> Result<> {
+    progressThrottle.reset(vol, forward ? forwardProgressLabel : reverseProgressLabel);
     const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
     for(usize rowIndex = 0; rowIndex < dimY; ++rowIndex)
     {
@@ -1704,6 +1776,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
             return r;
           }
         }
+
+        progressThrottle.updateCount(rowIndex * dimX + processedColumns + coreColumns);
       }
     }
     return {};
@@ -1711,6 +1785,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
 
   for(usize sweepPair = 0; sweepPair < m_MaxSweepPairs; ++sweepPair)
   {
+    forwardProgressLabel = fmt::format("Reconstruction Sweep {} Forward", sweepPair + 1);
+    reverseProgressLabel = fmt::format("Reconstruction Sweep {} Reverse", sweepPair + 1);
     if(m_ShouldCancel)
     {
       return {};
@@ -1724,6 +1800,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
     {
       return r;
     }
+    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;

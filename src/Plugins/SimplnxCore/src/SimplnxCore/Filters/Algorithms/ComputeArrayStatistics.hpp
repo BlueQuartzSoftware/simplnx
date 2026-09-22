@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <chrono>
 #include <mutex>
 
 namespace nx::core
@@ -115,17 +114,16 @@ public:
   Result<> operator()();
 
   /**
-   * @brief Thread-safe throttled progress update. Takes a functor rather than a string because the
-   * callers reset a progress counter inside it, so the body must run only when a message is due.
-   * @param functor Callable of the form std::string func()
+   * @brief Resets aggregate feature-statistics progress before workers start.
+   * @param totalWork Total feature-tuple scans and feature finalizations.
    */
-  template <class CallableT>
-  requires std::is_invocable_r_v<std::string, CallableT>
-  void sendThreadSafeProgressMessage(CallableT&& functor)
-  {
-    std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-    m_Throttle.queueMessage(std::forward<CallableT>(functor));
-  }
+  void resetProgress(usize totalWork);
+
+  /**
+   * @brief Adds completed work under the progress mutex.
+   * @param completedWork Completed feature-tuple scans or feature finalizations.
+   */
+  void sendThreadSafeProgressMessage(usize completedWork);
 
   /**
    * @brief Thread-safe guaranteed status message. Safe to call from the parallel range workers.

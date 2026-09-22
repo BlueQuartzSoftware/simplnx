@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -45,9 +46,14 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
 
   // Execution
   usize numVerts = vertices.getNumberOfVertices();
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(numVerts, "Computing Point Cloud Voxel Indices");
   for(int64 i = 0; i < numVerts; i++)
   {
+    if(i > 0 && i % 4096 == 0)
+    {
+      progressThrottle.updatePercent(i);
+    }
     if constexpr(UseMask)
     {
       if(!maskCompare->isTrue(i))
@@ -79,14 +85,9 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
       voxelIndices[i] = outOfBoundsValue;
       count++;
     }
-
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      messageHandler.sendInfoMessage(fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", static_cast<int64>((static_cast<float32>(i) / numVerts) * 100.0f)));
-      start = now;
-    }
   }
+
+  progressThrottle.updatePercent(numVerts);
 
   if constexpr(OutOfBoundsType::UsingWarning)
   {

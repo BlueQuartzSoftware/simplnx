@@ -472,14 +472,14 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
     if(m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
     {
-      m_MessageHandler.sendInfoMessage(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
+      filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
                                                                                               m_TransformationMatrix, false, &filterProgressCallback);
     }
     else if(m_InputValues->InterpolationSelection == detail::k_LinearInterpolationIdx)
     {
-      m_MessageHandler.sendInfoMessage(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
+      filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
                                                                                                                     rotateArgs, m_TransformationMatrix, &filterProgressCallback);
@@ -505,6 +505,7 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
   IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+  filterProgressCallback.resetProgress(vertexList.getNumberOfTuples(), "Transforming nodes");
 
   // Node geometry uses direct disjoint vertex ranges. Generic DataArray and DataStore concurrent access is not guaranteed.
   ParallelDataAlgorithm dataAlg;

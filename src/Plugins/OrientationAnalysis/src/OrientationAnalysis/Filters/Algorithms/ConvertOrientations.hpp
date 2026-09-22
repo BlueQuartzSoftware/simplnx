@@ -9,10 +9,10 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 
-#include <chrono>
 #include <concepts>
 #include <mutex>
 
@@ -122,11 +122,9 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  ThrottledMessageHandler m_Throttle;
   mutable std::mutex m_ProgressMessage_Mutex;
   CopyFromArray::ParallelTaskResult m_ParallelResult;
-  usize m_TotalPoints = 0;
-  usize m_ProgressCounter = 0;
 };
 
 } // namespace nx::core

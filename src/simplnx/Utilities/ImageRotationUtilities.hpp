@@ -11,11 +11,11 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <Eigen/Dense>
 
-#include <chrono>
 #include <concepts>
 #include <cstring>
 #include <fstream>
@@ -334,41 +334,53 @@ public:
   FilterProgressCallback(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel)
   : m_MessageHandler(mesgHandler)
   , m_ShouldCancel(shouldCancel)
+  , m_Throttle(mesgHandler)
   {
   }
 
   /**
    * @brief Adds completed nodes and emits throttled aggregate progress.
    * @param counter Specifies newly completed nodes.
-   * @warning The counter update occurs outside the throttle mutex.
    */
-  void sendThreadSafeProgressMessage(int64 counter)
+  void sendThreadSafeProgressMessage(usize counter)
   {
-    static std::mutex mutex;
-    m_Progcounter += static_cast<int32>(counter);
-    const std::lock_guard<std::mutex> lock(mutex);
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
-    {
-      m_MessageHandler.sendInfoMessage(fmt::format("Nodes Completed: {}", m_Progcounter));
-      m_InitialTime = std::chrono::steady_clock::now();
-    }
+    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    m_Throttle.incrementPercent(counter);
   }
 
   /**
-   * @brief Emits one caller-formatted throttled progress message.
-   * @param progressMessage Specifies message text.
+   * @brief Formats and sends status text only when the throttle permits a message.
+   * @tparam Args Specifies the format argument types.
+   * @param format Specifies the message format.
+   * @param args Supplies the format arguments.
    */
-  void sendThreadSafeProgressMessage(const std::string& progressMessage)
+  template <class... Args>
+  void sendThreadSafeProgressMessage(fmt::format_string<Args...> format, Args&&... args)
   {
-    static std::mutex mutex;
-    const std::lock_guard<std::mutex> lock(mutex);
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
-    {
-      m_MessageHandler.sendInfoMessage(progressMessage);
-      m_InitialTime = std::chrono::steady_clock::now();
-    }
+    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    m_Throttle.queueMessage(format, std::forward<Args>(args)...);
+  }
+
+  /**
+   * @brief Starts aggregate progress before workers launch.
+   * @param total Specifies the total number of work units.
+   * @param label Describes the phase without trailing punctuation.
+   * @pre No workers are running.
+   */
+  void resetProgress(usize total, std::string label)
+  {
+    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    m_Throttle.reset(total, std::move(label));
+  }
+
+  /**
+   * @brief Sends status text without throttling and serializes callback access.
+   * @param message Specifies the phase or diagnostic text.
+   */
+  void sendThreadSafeStatusMessage(const std::string& message)
+  {
+    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    m_MessageHandler.sendInfoMessage(message);
   }
 
   /**
@@ -422,8 +434,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool m_ShouldAbort = false;
   mutable std::mutex m_ProgressMessage_Mutex;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
-  int32 m_Progcounter = 0;
+  ThrottledMessageHandler m_Throttle;
   std::mutex m_ResultMutex;
   Result<> m_Result;
 };
@@ -755,11 +766,11 @@ public:
     const usize numComps = sourceArray.getNumberOfComponents();
     if(numComps == 0)
     {
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
+      m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
       return;
     }
 
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
+    m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -805,7 +816,7 @@ public:
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      m_FilterCallback->sendThreadSafeProgressMessage("{}: Interpolating values for slice '{}'", m_SourceArray->getName(), k);
 
       // Source Z is linear across one output slice. Its four XY corners bound
       // the required source range before trilinear padding.
@@ -985,7 +996,7 @@ public:
         return;
       }
     }
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
+    m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
 
 private:
@@ -1094,7 +1105,7 @@ public:
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      m_FilterCallback->sendThreadSafeProgressMessage("{}: Interpolating values for slice '{}'", m_SourceArray->getName(), k);
 
       // Source Z is linear across one output slice. Its four XY corners bound
       // the required source range.
@@ -1236,7 +1247,7 @@ public:
         return;
       }
     }
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
+    m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
   }
 
   /**
@@ -1291,10 +1302,6 @@ public:
     auto& vertexStore = m_Vertices.getDataStoreRef();
     auto chunkBuf = std::make_unique<float32[]>(k_ChunkVertices * 3);
 
-    int64 progCounter = 0;
-    const usize totalElements = (end - start);
-    const usize progIncrement = std::max(totalElements / 100, static_cast<usize>(1));
-
     for(usize chunkStart = start; chunkStart < end; chunkStart += k_ChunkVertices)
     {
       if(m_FilterCallback->shouldAbort())
@@ -1328,12 +1335,7 @@ public:
         return;
       }
 
-      progCounter += chunkCount;
-      if(progCounter > static_cast<int64>(progIncrement))
-      {
-        m_FilterCallback->sendThreadSafeProgressMessage(progCounter);
-        progCounter = 0;
-      }
+      m_FilterCallback->sendThreadSafeProgressMessage(chunkCount);
     }
   }
 

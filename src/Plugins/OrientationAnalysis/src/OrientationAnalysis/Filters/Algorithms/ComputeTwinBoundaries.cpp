@@ -12,6 +12,7 @@
 
 #include <Eigen/Dense>
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 #include <numbers>
 
@@ -160,10 +161,11 @@ class CalculateTwinBoundaryWithIncoherenceImpl
   using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
 
 public:
-  CalculateTwinBoundaryWithIncoherenceImpl(float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float64>& faceNormals, const std::vector<float32>& avgQuats,
-                                           const std::vector<int32>& featurePhases, const std::vector<uint32>& crystalStructures, std::vector<uint8>& twinBoundariesOut,
-                                           std::vector<float32>& twinBoundaryIncoherenceOut, const std::atomic_bool& shouldCancel, std::atomic_bool& hasNaN)
-  : m_AxisTol(axistol)
+  CalculateTwinBoundaryWithIncoherenceImpl(ComputeTwinBoundaries* algorithm, float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float64>& faceNormals,
+                                           const std::vector<float32>& avgQuats, const std::vector<int32>& featurePhases, const std::vector<uint32>& crystalStructures,
+                                           std::vector<uint8>& twinBoundariesOut, std::vector<float32>& twinBoundaryIncoherenceOut, const std::atomic_bool& shouldCancel, std::atomic_bool& hasNaN)
+  : m_Algorithm(algorithm)
+  , m_AxisTol(axistol)
   , m_AngTol(angtol)
   , m_FaceLabels(faceLabels)
   , m_FaceNormals(faceNormals)
@@ -180,44 +182,50 @@ public:
 
   void generate(usize start, usize end) const
   {
-    for(usize i = start; i < end; i++)
+    constexpr usize k_FaceChunkSize = 256;
+    for(usize chunkStart = start; chunkStart < end;)
     {
       if(m_ShouldCancel)
       {
         return;
       }
-
-      const int32 feature1 = m_FaceLabels[2 * i];
-      const int32 feature2 = m_FaceLabels[2 * i + 1];
-      if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
+      const usize chunkEnd = chunkStart + std::min(k_FaceChunkSize, end - chunkStart);
+      for(usize i = chunkStart; i < chunkEnd; i++)
       {
-        const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]];
-        if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
+        const int32 feature1 = m_FaceLabels[2 * i];
+        const int32 feature2 = m_FaceLabels[2 * i + 1];
+        if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
         {
-          continue;
-        }
+          const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]];
+          if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
+          {
+            continue;
+          }
 
-        const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
-        const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
+          const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
+          const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
 
-        const Matrix3x3 orientationMatrix = q1.matrix().transpose();
-        const Eigen::Vector3d normals{m_FaceNormals[3 * i], m_FaceNormals[3 * i + 1], m_FaceNormals[3 * i + 2]};
-        const Eigen::Vector3d xstl_norm = normals.transpose() * orientationMatrix;
+          const Matrix3x3 orientationMatrix = q1.matrix().transpose();
+          const Eigen::Vector3d normals{m_FaceNormals[3 * i], m_FaceNormals[3 * i + 1], m_FaceNormals[3 * i + 2]};
+          const Eigen::Vector3d xstl_norm = normals.transpose() * orientationMatrix;
 
-        if(normals.hasNaN())
-        {
-          m_HasNaN.store(true);
-          continue;
-        }
+          if(normals.hasNaN())
+          {
+            m_HasNaN.store(true);
+            continue;
+          }
 
-        std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
+          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
 
-        if(minIncoherence.has_value())
-        {
-          m_TwinBoundariesOut[i] = 1;
-          m_TwinBoundaryIncoherenceOut[i] = static_cast<float32>(minIncoherence.value());
+          if(minIncoherence.has_value())
+          {
+            m_TwinBoundariesOut[i] = 1;
+            m_TwinBoundaryIncoherenceOut[i] = static_cast<float32>(minIncoherence.value());
+          }
         }
       }
+      m_Algorithm->sendThreadSafeProgressMessage(chunkEnd - chunkStart);
+      chunkStart = chunkEnd;
     }
   }
 
@@ -227,6 +235,7 @@ public:
   }
 
 private:
+  ComputeTwinBoundaries* m_Algorithm = nullptr;
   float32 m_AxisTol;
   float32 m_AngTol;
   const std::vector<int32>& m_FaceLabels;
@@ -250,9 +259,10 @@ private:
 class CalculateTwinBoundaryImpl
 {
 public:
-  CalculateTwinBoundaryImpl(float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float32>& avgQuats, const std::vector<int32>& featurePhases,
-                            const std::vector<uint32>& crystalStructures, std::vector<uint8>& twinBoundariesOut, const std::atomic_bool& shouldCancel)
-  : m_AxisTol(axistol)
+  CalculateTwinBoundaryImpl(ComputeTwinBoundaries* algorithm, float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float32>& avgQuats,
+                            const std::vector<int32>& featurePhases, const std::vector<uint32>& crystalStructures, std::vector<uint8>& twinBoundariesOut, const std::atomic_bool& shouldCancel)
+  : m_Algorithm(algorithm)
+  , m_AxisTol(axistol)
   , m_AngTol(angtol)
   , m_FaceLabels(faceLabels)
   , m_AvgQuats(avgQuats)
@@ -266,31 +276,37 @@ public:
 
   void generate(usize start, usize end) const
   {
-    for(usize i = start; i < end; i++)
+    constexpr usize k_FaceChunkSize = 256;
+    for(usize chunkStart = start; chunkStart < end;)
     {
       if(m_ShouldCancel)
       {
         return;
       }
-
-      const int32 feature1 = m_FaceLabels[2 * i];
-      const int32 feature2 = m_FaceLabels[2 * i + 1];
-      if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
+      const usize chunkEnd = chunkStart + std::min(k_FaceChunkSize, end - chunkStart);
+      for(usize i = chunkStart; i < chunkEnd; i++)
       {
-        const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]];
-        if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
+        const int32 feature1 = m_FaceLabels[2 * i];
+        const int32 feature2 = m_FaceLabels[2 * i + 1];
+        if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
         {
-          continue;
-        }
+          const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]];
+          if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
+          {
+            continue;
+          }
 
-        const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
-        const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
+          const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
+          const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
 
-        if(IsTwinBoundary(q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol))
-        {
-          m_TwinBoundariesOut[i] = 1;
+          if(IsTwinBoundary(q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol))
+          {
+            m_TwinBoundariesOut[i] = 1;
+          }
         }
       }
+      m_Algorithm->sendThreadSafeProgressMessage(chunkEnd - chunkStart);
+      chunkStart = chunkEnd;
     }
   }
 
@@ -300,6 +316,7 @@ public:
   }
 
 private:
+  ComputeTwinBoundaries* m_Algorithm = nullptr;
   float32 m_AxisTol;
   float32 m_AngTol;
   const std::vector<int32>& m_FaceLabels;
@@ -318,6 +335,7 @@ ComputeTwinBoundaries::ComputeTwinBoundaries(DataStructure& dataStructure, const
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -326,6 +344,12 @@ ComputeTwinBoundaries::~ComputeTwinBoundaries() noexcept = default;
 const std::atomic_bool& ComputeTwinBoundaries::getCancel()
 {
   return m_ShouldCancel;
+}
+
+void ComputeTwinBoundaries::sendThreadSafeProgressMessage(usize counter)
+{
+  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }
 
 Result<> ComputeTwinBoundaries::operator()()
@@ -431,18 +455,20 @@ Result<> ComputeTwinBoundaries::operator()()
   const float32 angtol = m_InputValues->AngleTolerance;
   const float32 axistol = m_InputValues->AxisTolerance * Constants::k_PiF / 180.0f;
 
+  m_MessageHandler.sendInfoMessage("Computing Twin Boundaries");
+  m_Throttle.reset(numFaces, "Computing Twin Boundaries");
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numFaces);
 
   std::atomic_bool hasNaN = false;
   if(m_InputValues->FindCoherence)
   {
-    dataAlg.execute(CalculateTwinBoundaryWithIncoherenceImpl(angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundariesOut, twinBoundaryIncoherenceOut,
+    dataAlg.execute(CalculateTwinBoundaryWithIncoherenceImpl(this, angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundariesOut, twinBoundaryIncoherenceOut,
                                                              m_ShouldCancel, hasNaN));
   }
   else
   {
-    dataAlg.execute(CalculateTwinBoundaryImpl(angtol, axistol, faceLabels, avgQuats, featurePhases, crystalStructures, twinBoundariesOut, m_ShouldCancel));
+    dataAlg.execute(CalculateTwinBoundaryImpl(this, angtol, axistol, faceLabels, avgQuats, featurePhases, crystalStructures, twinBoundariesOut, m_ShouldCancel));
   }
 
   // MaskCompare has no bulk write API for twin-boundary flags.

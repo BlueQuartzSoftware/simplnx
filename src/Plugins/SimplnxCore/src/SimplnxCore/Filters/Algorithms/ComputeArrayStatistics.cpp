@@ -135,15 +135,15 @@ public:
     const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    auto msgHandler = [this](const std::string& msg) { m_Algorithm.sendThreadSafeProgressMessage([&] { return "Preparing features/ensembles for stats calculation " + msg; }); };
-    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, m_ShouldCancel);
+    const auto reportProgress = [this, numCurrentFeatures](usize completedTuples) { m_Algorithm.sendThreadSafeProgressMessage(completedTuples * numCurrentFeatures); };
+    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, reportProgress, m_ShouldCancel);
     if(m_ShouldCancel)
     {
       return;
     }
 
     usize progressCount = 0;
-    usize progressIncrement = numCurrentFeatures / 100;
+    constexpr usize k_ProgressChunkSize = 4096;
 
     m_Algorithm.sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature range [{}-{}]", start, end));
 
@@ -218,12 +218,10 @@ public:
       }
 
       progressCount++;
-      if(progressCount > progressIncrement)
+      if(progressCount == k_ProgressChunkSize || j + 1 == end)
       {
-        m_Algorithm.sendThreadSafeProgressMessage([&]() {
-          progressCount = 0;
-          return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end);
-        });
+        m_Algorithm.sendThreadSafeProgressMessage(progressCount);
+        progressCount = 0;
       }
     }
 
@@ -232,35 +230,29 @@ public:
       m_Algorithm.sendThreadSafeInfoMessage(fmt::format("Computing StdDev Feature/Ensemble [{}-{}]", start, end));
       // Float64 accumulators reduce rounding loss before Float32 standard-deviation output.
       std::vector<float64> sumOfDiffs(numCurrentFeatures, 0.0f);
-      progressCount = 0;
-
-      for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+      for(usize chunkStart = 0; chunkStart < numTuples; chunkStart += k_ProgressChunkSize)
       {
         if(m_ShouldCancel)
         {
           return;
         }
-        if(m_Mask != nullptr && !m_Mask->isTrue(tupleIndex))
+        const usize chunkEnd = std::min(chunkStart + k_ProgressChunkSize, numTuples);
+        for(usize tupleIndex = chunkStart; tupleIndex < chunkEnd; tupleIndex++)
         {
-          continue;
-        }
-        const int32 featureId = m_FeatureIds[tupleIndex];
-        if(featureId < start || featureId >= end)
-        {
-          continue;
-        }
+          if(m_Mask != nullptr && !m_Mask->isTrue(tupleIndex))
+          {
+            continue;
+          }
+          const int32 featureId = m_FeatureIds[tupleIndex];
+          if(featureId < start || featureId >= end)
+          {
+            continue;
+          }
 
-        const float32 meanVal = m_Mean ? m_MeanArray->operator[](featureId) : meanArray[featureId - start];
-        sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - meanVal) * (m_Source[tupleIndex] - meanVal));
-
-        progressCount++;
-        if(progressCount > progressIncrement)
-        {
-          m_Algorithm.sendThreadSafeProgressMessage([&]() {
-            progressCount = 0;
-            return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float32>(tupleIndex) / static_cast<float32>(numTuples));
-          });
+          const float32 meanVal = m_Mean ? m_MeanArray->operator[](featureId) : meanArray[featureId - start];
+          sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - meanVal) * (m_Source[tupleIndex] - meanVal));
         }
+        reportProgress(chunkEnd - chunkStart);
       }
 
       for(usize j = 0; j < numCurrentFeatures; j++)
@@ -1236,6 +1228,9 @@ struct ComputeArrayStatisticsByFeatureFunctor
     StatisticsByFeatureImpl<T> classToExecute = StatisticsByFeatureImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
                                                                            inputValues->FindStdDeviation, inputValues->FindSummation, maskCompare, featureIds, data, featureHasDataPtr, lengthArrayPtr,
                                                                            minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, shouldCancel, algorithm);
+    // Weight tuple scans by the feature range so progress does not depend on TBB partitioning.
+    const usize tuplePasses = inputValues->FindStdDeviation ? 2 : 1;
+    algorithm.resetProgress(numFeatures * (data.getNumberOfTuples() * tuplePasses + 1));
     if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
@@ -2966,4 +2961,16 @@ void ComputeArrayStatistics::sendThreadSafeInfoMessage(const std::string& messag
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   m_MessageHandler.sendInfoMessage(message);
+}
+
+void ComputeArrayStatistics::resetProgress(usize totalWork)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.reset(totalWork, "Computing Feature Statistics");
+}
+
+void ComputeArrayStatistics::sendThreadSafeProgressMessage(usize completedWork)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(completedWork);
 }

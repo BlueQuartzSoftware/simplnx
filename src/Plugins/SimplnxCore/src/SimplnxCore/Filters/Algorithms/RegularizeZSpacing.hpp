@@ -41,7 +41,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void sendThreadSafeProgressMessage(const std::string& message);
+  void sendThreadSafeProgressMessage(usize completedPlanes);
 
 private:
   DataStructure& m_DataStructure;

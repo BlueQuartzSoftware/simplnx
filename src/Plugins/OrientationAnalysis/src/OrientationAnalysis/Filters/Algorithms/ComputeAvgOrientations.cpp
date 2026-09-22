@@ -1357,7 +1357,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   auto phasesBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto quatsBuf = std::make_unique<float32[]>(k_ChunkTuples * 4);
 
-  auto& messenger = m_Throttle;
+  auto& progressThrottle = m_Throttle;
 
   for(usize offset = 0; offset < totalPoints;)
   {
@@ -1365,7 +1365,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       return {};
     }
-    messenger.updateCount("Computing Rodrigues Average", offset, totalPoints);
+    progressThrottle.updateCount("Computing Rodrigues Average", offset, totalPoints);
 
     const usize count = std::min(k_ChunkTuples, totalPoints - offset);
     Result<> readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));

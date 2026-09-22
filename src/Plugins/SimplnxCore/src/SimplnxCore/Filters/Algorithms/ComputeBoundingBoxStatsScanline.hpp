@@ -24,7 +24,7 @@ public:
   /**
    * @brief Initializes scanline bounding-box statistics.
    * @param dataStructure Contains the geometry, arrays, and outputs.
-   * @param mesgHandler Supplies the common interface. This path emits no messages.
+   * @param mesgHandler Receives phase announcements and throttled progress.
    * @param shouldCancel Signals cancellation between bounded operations.
    * @param inputValues Selects statistics and identifies required paths.
    * @pre All arguments outlive this executor.

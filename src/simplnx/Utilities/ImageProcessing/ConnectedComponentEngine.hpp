@@ -10,17 +10,22 @@
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <atomic>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <numeric>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -28,6 +33,11 @@ namespace nx::core::ImageProcessing
 {
 namespace detail
 {
+using ProgressCallback = std::function<void(usize)>;
+using BeginProgressPhaseCallback = std::function<void(std::string_view, usize)>;
+
+inline constexpr usize k_ConnectedComponentResolutionBlockSize = 65'536;
+
 template <class T>
 Result<> ValidateConnectedComponentVolume(const AbstractDataStore<T>& inStore, const SizeVec3& dims, usize& sliceValues, usize& volumeValues)
 {
@@ -464,21 +474,33 @@ struct CcUnionFind
       parent[e1] = e2;
     }
   }
-  // CreateConsecutive (verbatim ITK): roots (parent[i]==i) get consecutive labels 1,2,... in ascending-i order; bg=0.
+  // CreateConsecutive follows ITK's ascending root traversal: roots (parent[i]==i) get consecutive labels 1,2,...; bg=0.
   // Returns {consecutive[], numberOfObjects}.
-  std::pair<std::vector<uint32>, uint32> createConsecutive() const
+  std::pair<std::vector<uint32>, uint32> createConsecutive(const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress) const
   {
     const usize n = parent.size();
     std::vector<uint32> consecutive(n, 0u);
     uint32 consecutiveLabel = 0;
     uint32 count = 0;
-    for(usize i = 1; i < n; ++i)
+    for(usize blockBegin = 1; blockBegin < n; blockBegin += k_ConnectedComponentResolutionBlockSize)
     {
-      if(parent[i] == i)
+      if(shouldCancel)
       {
-        ++consecutiveLabel; // skips 0 (background)
-        consecutive[i] = consecutiveLabel;
-        ++count;
+        return {std::move(consecutive), count};
+      }
+      const usize blockEnd = std::min(n, blockBegin + k_ConnectedComponentResolutionBlockSize);
+      for(usize i = blockBegin; i < blockEnd; ++i)
+      {
+        if(parent[i] == i)
+        {
+          ++consecutiveLabel; // skips 0 (background)
+          consecutive[i] = consecutiveLabel;
+          ++count;
+        }
+      }
+      if(reportProgress)
+      {
+        reportProgress(blockEnd - 1);
       }
     }
     return {consecutive, count};
@@ -584,11 +606,12 @@ inline void CompareLines(const CcLine& current, const CcLine& neighbor, int64 of
  * @param shouldCancel Shared cancellation flag.
  * @param uf Union-find state that receives provisional-label links.
  * @param sizeByLabel Optional per-provisional-label size totals.
+ * @param reportProgress Reports completed Z slices.
  * @return A valid result or an input or provisional-store transfer error.
  */
 template <class T, class Pred>
 Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                               const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel)
+                               const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ProgressCallback& reportProgress)
 {
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
@@ -751,6 +774,10 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
       }
     }
     prevPlane.swap(curPlane);
+    if(reportProgress)
+    {
+      reportProgress(zu + 1);
+    }
   }
   return {};
 }
@@ -765,11 +792,12 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
  * @param pred Predicate that identifies foreground values.
  * @param finalLabel Final label for each raster-order provisional label.
  * @param shouldCancel Shared cancellation flag.
+ * @param reportProgress Reports completed Z slices.
  * @return A valid result or an input or output transfer error.
  */
 template <class T, class Pred>
 Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
-                                      const std::atomic_bool& shouldCancel)
+                                      const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress = {})
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -891,6 +919,10 @@ Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, Abstr
     {
       return result;
     }
+    if(reportProgress)
+    {
+      reportProgress(firstPlane + groupPlaneCount);
+    }
   }
   return {};
 }
@@ -906,11 +938,12 @@ Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, Abstr
  * @param finalLabel Final label for each raster-order provisional label.
  * @param shouldCancel Shared cancellation flag.
  * @param targetBytes Maximum requested bytes for block or tile staging.
+ * @param reportProgress Reports completed bounded blocks or tiles.
  * @return A valid result or a planning, input, or output transfer error.
  */
 template <class T, class Pred>
 Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
-                                    const std::atomic_bool& shouldCancel, usize targetBytes)
+                                    const std::atomic_bool& shouldCancel, usize targetBytes, const ProgressCallback& reportProgress)
 {
   auto planResult = CreateConnectedComponent2DPlan<T>(dims[0], dims[1], /*writesProvisional=*/true, targetBytes);
   if(planResult.invalid())
@@ -966,6 +999,10 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
       {
         return result;
       }
+      if(reportProgress)
+      {
+        reportProgress((rowBegin + rowCount) * dimX);
+      }
     }
     return {};
   }
@@ -1007,6 +1044,7 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
       {
         return result;
       }
+      reportProgress(tileOffset + columnCount);
     }
   }
   return {};
@@ -1014,7 +1052,8 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
 
 template <class T, class Pred>
 Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                   const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan)
+                                   const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan,
+                                   const ProgressCallback& reportProgress)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -1091,13 +1130,17 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
       }
     }
     rowBegin += rowCount;
+    if(reportProgress)
+    {
+      reportProgress(rowBegin * dimX);
+    }
   }
   return {};
 }
 
 template <class T, class Pred>
 Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore& provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan)
+                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan, const ProgressCallback& reportProgress)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -1184,6 +1227,10 @@ Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, Connected
         return result;
       }
       xBegin += columnCount;
+      if(reportProgress)
+      {
+        reportProgress(y * dimX + xBegin);
+      }
     }
   }
   return {};
@@ -1191,7 +1238,7 @@ Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, Connected
 
 template <class T, class Pred>
 Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                             const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, usize target2DBytes)
+                             const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, usize target2DBytes, const ProgressCallback& reportProgress)
 {
   auto planResult = CreateConnectedComponent2DPlan<T>(dims[0], dims[1], provisional != nullptr, target2DBytes);
   if(planResult.invalid())
@@ -1231,20 +1278,22 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
     {
       return MakeErrorResult(-8375, fmt::format("Connected-component true-2-D tiled count failed to create its {}-value provisional-label scratch store.", dims[0] * dims[1]));
     }
-    return Pass1TwoDimensionalTiles(inStore, *tileProvisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan);
+    return Pass1TwoDimensionalTiles(inStore, *tileProvisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan, reportProgress);
   }
-  return Pass1TwoDimensionalBlocks(inStore, provisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan);
+  return Pass1TwoDimensionalBlocks(inStore, provisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan, reportProgress);
 }
 } // namespace detail
 
+namespace detail
+{
 // Full labeling writes consecutive uint32 labels and reserves zero for the background. Bounded OOC routes replay the
 // input after union resolution, so they do not store a complete provisional-label volume. An extreme 2D tile route can
 // use temporary records for previous-row labels. Raster-order label creation and union operations remain byte-exact.
 template <class T, class Pred>
-Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
+Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
+                                      const std::atomic_bool& shouldCancel, usize target2DBytes, const BeginProgressPhaseCallback& beginProgressPhase, const ProgressCallback& reportCount,
+                                      const ProgressCallback& reportPercent)
 {
-  (void)messageHandler;
   usize sliceValues = 0;
   usize vol = 0;
   if(Result<> validation = detail::ValidateConnectedComponentVolume(inStore, dims, sliceValues, vol); validation.invalid())
@@ -1280,7 +1329,8 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
         {
           return result;
         }
-        if(Result<> result = LabelConnectedComponents(residentInput, residentOutput, dims, pred, fullyConnected, shouldCancel, messageHandler, target2DBytes); result.invalid())
+        if(Result<> result = LabelConnectedComponentsImpl(residentInput, residentOutput, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent);
+           result.invalid())
         {
           return result;
         }
@@ -1326,8 +1376,9 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
   }
 
   detail::CcUnionFind uf;
-  Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes) :
-                                   detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr);
+  beginProgressPhase("Labeling Connected Components", nZ == 1 ? vol : static_cast<usize>(nZ));
+  Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes, reportPercent) :
+                                   detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, reportCount);
   if(pass1Result.invalid())
   {
     return pass1Result;
@@ -1338,18 +1389,35 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
   }
 
   // ---- Resolve: CreateConsecutive, then a direct per-provisional-label lookup so pass 2 is O(1) per voxel. ----
-  const std::pair<std::vector<uint32>, uint32> resolved = uf.createConsecutive();
+  const usize provisionalLabelCount = uf.parent.size() - 1;
+  beginProgressPhase("Resolving Connected Component Equivalences", 2 * provisionalLabelCount);
+  const std::pair<std::vector<uint32>, uint32> resolved = uf.createConsecutive(shouldCancel, reportPercent);
+  if(shouldCancel)
+  {
+    return {};
+  }
   const std::vector<uint32>& consecutive = resolved.first;
   std::vector<uint32> finalLabel(uf.parent.size(), 0u);
-  for(usize i = 1; i < uf.parent.size(); ++i)
+  for(usize blockBegin = 1; blockBegin < uf.parent.size(); blockBegin += k_ConnectedComponentResolutionBlockSize)
   {
-    finalLabel[i] = consecutive[uf.find(static_cast<uint32>(i))];
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const usize blockEnd = std::min(uf.parent.size(), blockBegin + k_ConnectedComponentResolutionBlockSize);
+    for(usize i = blockBegin; i < blockEnd; ++i)
+    {
+      finalLabel[i] = consecutive[uf.find(static_cast<uint32>(i))];
+    }
+    reportPercent(provisionalLabelCount + blockEnd - 1);
   }
+
+  beginProgressPhase("Assigning Final Connected Component Labels", nZ == 1 ? vol : static_cast<usize>(nZ));
 
   if(provisional == nullptr)
   {
-    return nZ == 1 ? detail::ReplayTwoDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, target2DBytes) :
-                     detail::ReplayThreeDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel);
+    return nZ == 1 ? detail::ReplayTwoDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, target2DBytes, reportPercent) :
+                     detail::ReplayThreeDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, reportCount);
   }
 
   // ---- Pass 2: relabel the provisional scratch into consecutive output labels. ----
@@ -1386,6 +1454,7 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
         return result;
       }
       start += count;
+      reportPercent(start);
     }
     return {};
   }
@@ -1412,8 +1481,33 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
     {
       return r;
     }
+    reportCount(static_cast<usize>(z + 1));
   }
   return {};
+}
+
+} // namespace detail
+
+template <class T, class Pred>
+Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
+                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
+{
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  std::mutex progressMutex;
+  const auto beginProgressPhase = [&messageHandler, &progressMutex, &progressThrottle](std::string_view label, usize maximum) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    messageHandler.sendInfoMessage(std::string(label));
+    progressThrottle.reset(maximum, std::string(label));
+  };
+  const auto reportCount = [&progressMutex, &progressThrottle](usize completed) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.updateCount(completed);
+  };
+  const auto reportPercent = [&progressMutex, &progressThrottle](usize completed) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.updatePercent(completed);
+  };
+  return detail::LabelConnectedComponentsImpl(inStore, outStore, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent);
 }
 
 // Count-only: number of components with size >= minSize. Pass 1 + resolve + per-root size tally, no output written.
@@ -1435,8 +1529,8 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
   }
   detail::CcUnionFind uf;
   std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
-  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes) :
-                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel);
+  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
+                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallback{});
   if(pass1Result.invalid())
   {
     return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});
