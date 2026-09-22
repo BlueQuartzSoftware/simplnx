@@ -35,7 +35,6 @@ build:
     - SIMPLNX_CMAKE_PRESET=conda-linux # [linux]
     - SIMPLNX_CMAKE_PRESET=conda-osx # [osx]
     - CONDA_OVERRIDE_OSX=11.0 # [osx]
-    - ITK_VERSION=5.4.4
 
 requirements:
   build:
@@ -61,7 +60,6 @@ requirements:
     - myst-parser
     - sphinx-markdown-tables
     - sphinx_rtd_theme
-    - libitk-devel =5.4
     - spdlog =1.15
 
   run:
@@ -73,7 +71,6 @@ requirements:
     - tbb
     - zlib
     - spdlog =1.15
-    - libitk =5.4
 
 test:
   imports:

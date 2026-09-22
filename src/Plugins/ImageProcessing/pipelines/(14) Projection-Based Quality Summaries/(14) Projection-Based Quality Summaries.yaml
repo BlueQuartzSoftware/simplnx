@@ -1,0 +1,475 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(14) Projection-Based Quality Summaries.d3dpipeline",
+  "markdown_file": "(14) Projection-Based Quality Summaries.md",
+  "title": "Projection-Based Quality Summaries",
+  "summary": "Creates binary, maximum, mean, median, minimum, standard-deviation, and sum projections from one volume for rapid quality review.",
+  "primary_industries": [
+    "Industrial computed tomography",
+    "Medical and scientific visualization"
+  ],
+  "secondary_industries": [
+    "Additive manufacturing",
+    "High-throughput inspection"
+  ],
+  "use_cases": [
+    "Create rapid 2-D summaries of a 3-D scan",
+    "Compare projection statistics for defect visibility",
+    "Generate overview images for reports or triage"
+  ],
+  "keywords": [
+    "projection",
+    "MIP",
+    "volume summary",
+    "XCT",
+    "quality inspection"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/am/xct_porosity.mha",
+      "role": "Source for ReadMhaFileFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/10_Projections/projection_summaries.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "role": "Import the volume with its physical spacing and scalar type.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/am/xct_porosity.mha"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Projection Volume"
+        },
+        {
+          "parameter": "output_transformation_matrix_path",
+          "value": "MHA Image/TransformationMatrix"
+        }
+      ],
+      "key_parameters": {
+        "apply_image_transformation": false,
+        "cell_attribute_matrix_name": "Cell Data",
+        "cropping_options_index": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/am/xct_porosity.mha",
+        "image_data_array_name": "XCT Intensity",
+        "interpolation_type_index": 0,
+        "output_geometry_path": "Projection Volume",
+        "output_transformation_matrix_path": "MHA Image/TransformationMatrix",
+        "save_image_transformation": false,
+        "transpose_transform_matrix": false
+      }
+    },
+    {
+      "index": 1,
+      "filter": "BinaryThresholdImageFilter",
+      "uuid": "4bf09378-e159-4437-9ce2-3f4c3b5ad7ae",
+      "role": "Create a binary pore mask for occupancy projection.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Pore Mask"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "inside_value": 1,
+        "lower_threshold": 0.0,
+        "output_array_name": "Pore Mask",
+        "outside_value": 0,
+        "upper_threshold": 10000.0
+      }
+    },
+    {
+      "index": 2,
+      "filter": "BinaryProjectionImageFilter",
+      "uuid": "24044b7e-d9e3-4908-8f92-e7318d51c9c8",
+      "role": "Mark each column that contains at least one pore voxel.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/Pore Mask"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Pore Occupancy"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Binary Pore Projection"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "foreground_value": 1.0,
+        "input_image_data_path": "Projection Volume/Cell Data/Pore Mask",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Pore Occupancy",
+        "output_image_geometry_name": "Binary Pore Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 3,
+      "filter": "MaximumProjectionImageFilter",
+      "uuid": "3c540e40-b848-48c5-9af8-7941c5d6ee9e",
+      "role": "Show the maximum reconstructed intensity along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Maximum Intensity"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Maximum XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Maximum Intensity",
+        "output_image_geometry_name": "Maximum XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 4,
+      "filter": "MeanProjectionImageFilter",
+      "uuid": "d5f50ecb-c226-40d6-b611-e6efd7c90fb1",
+      "role": "Show the average reconstructed intensity along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Mean Intensity"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Mean XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Mean Intensity",
+        "output_image_geometry_name": "Mean XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 5,
+      "filter": "MedianProjectionImageFilter",
+      "uuid": "035e7b9d-4a8e-476e-be38-8f8276034e0c",
+      "role": "Show a robust median intensity summary along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Median Intensity"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Median XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Median Intensity",
+        "output_image_geometry_name": "Median XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 6,
+      "filter": "MinimumProjectionImageFilter",
+      "uuid": "4c7cdf9b-0cd6-40b0-b0f5-e30aa9983513",
+      "role": "Show the lowest reconstructed intensity along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Minimum Intensity"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Minimum XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Minimum Intensity",
+        "output_image_geometry_name": "Minimum XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 7,
+      "filter": "StandardDeviationProjectionImageFilter",
+      "uuid": "1926693e-693a-4775-a068-4c4faa6cd8a7",
+      "role": "Show through-thickness intensity variation along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Intensity Deviation"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Deviation XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Intensity Deviation",
+        "output_image_geometry_name": "Deviation XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 8,
+      "filter": "SumProjectionImageFilter",
+      "uuid": "dfdd5b68-7623-445d-8cb2-1775354df7ea",
+      "role": "Integrate reconstructed intensity along each column.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Projection Volume/Cell Data/XCT Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Projection Volume"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Integrated Intensity"
+        },
+        {
+          "parameter": "output_image_geometry_name",
+          "value": "Sum XCT Projection"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Projection Volume/Cell Data/XCT Intensity",
+        "input_image_geometry_path": "Projection Volume",
+        "output_array_name": "Integrated Intensity",
+        "output_image_geometry_name": "Sum XCT Projection",
+        "projection_dimension": 2,
+        "remove_original_geometry": false
+      }
+    },
+    {
+      "index": 9,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/10_Projection_QA/projection_summaries.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/10_Projection_QA/projection_summaries.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Three-Dimensional Display in Nuclear Medicine",
+      "authors": [
+        "Jerold W. Wallis",
+        "Tom R. Miller",
+        "Charles A. Lerner",
+        "Eric C. Kleerup"
+      ],
+      "year": 1989,
+      "journal": "IEEE Transactions on Medical Imaging",
+      "doi": "10.1109/42.41482",
+      "url": "https://doi.org/10.1109/42.41482",
+      "role": "Peer-reviewed basis for projection and volume-display summaries of three-dimensional image data.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "The generated AM coupon replaces the paper's nuclear-medicine data and demonstrates projection behavior rather than its clinical display results."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Create rapid 2-D summaries of a 3-D scan",
+      "Compare projection statistics for defect visibility",
+      "Generate overview images for reports or triage"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "The chosen projection axis matches the part orientation.",
+      "Projection collapses depth and cannot locate a feature along that axis.",
+      "Binary projection requires a mask threshold that has already been validated.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "(18) Industrial XCT Format Import.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired-shared",
+    "asset_keys": [
+      "am/xct_porosity.mha"
+    ],
+    "paper_doi": "10.1109/42.41482",
+    "paper_url": "",
+    "reference_visual": "Projection views of a 3-D volume in which extrema, average signal, accumulated signal, and variance reveal different structures.",
+    "target_traits": [
+      "3-D attenuation volume",
+      "multiple pore depths",
+      "dense coupon boundary",
+      "depth-dependent projection response"
+    ],
+    "known_differences": "The generated AM coupon replaces the paper's nuclear-medicine data and demonstrates projection behavior rather than its clinical display results.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

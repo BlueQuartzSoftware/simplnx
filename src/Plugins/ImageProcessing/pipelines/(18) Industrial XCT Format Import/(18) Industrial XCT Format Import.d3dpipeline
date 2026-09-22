@@ -1,0 +1,173 @@
+{
+  "isDisabled": false,
+  "name": "(18) Industrial XCT Format Import.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "density_array_name": {
+          "value": "Density",
+          "version": 1
+        },
+        "end_voxel_coord": {
+          "value": [
+            1,
+            1,
+            1
+          ],
+          "version": 1
+        },
+        "import_subvolume": {
+          "value": false,
+          "version": 1
+        },
+        "input_header_file": {
+          "value": "Data/ImageProcessing_Examples/io/northstar/sample.nsihdr",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "North Star XCT",
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "start_voxel_coord": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Import a compound North Star Imaging XCT volume from its header and binary data files.",
+      "filter": {
+        "name": "nx::core::ReadBinaryCTNorthstarFilter",
+        "uuid": "5469af5c-368a-465b-87b7-7c0dfdf73666"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "density_array_name": {
+          "value": "Density",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "Volume Graphics XCT",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "vg_header_file": {
+          "value": "Data/ImageProcessing_Examples/io/volume_graphics/VolumeGraphicsTest.vgi",
+          "version": 1
+        }
+      },
+      "comments": "Import a Volume Graphics header and its companion raw volume.",
+      "filter": {
+        "name": "nx::core::ReadVolumeGraphicsFileFilter",
+        "uuid": "dfd93665-b455-499a-abed-36ae7dbcdf57"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "cropping_options_index": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
+          "version": 1
+        },
+        "ct_data_array_name": {
+          "value": "CT Data",
+          "version": 1
+        },
+        "input_file_path": {
+          "value": "Data/ImageProcessing_Examples/io/zeiss/sample.txm",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "Zeiss XCT",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Import a Zeiss TXM XCT volume with its stored geometry metadata.",
+      "filter": {
+        "name": "nx::core::ReadZeissTxmFileFilter",
+        "uuid": "7e3ffc15-51a3-182c-97c2-a82f7af325bf"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/14_Industrial_XCT/industrial_xct_imports.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the complete workflow result.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

@@ -26,9 +26,6 @@ source:
     folder: span-lite
   - url: https://raw.githubusercontent.com/BlueQuartzSoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
-  - git_url: https://github.com/insightsoftwareconsortium/ITK
-    git_rev: v5.2.1
-    folder: itk
     
 build:
   number: 0

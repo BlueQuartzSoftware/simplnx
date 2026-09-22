@@ -114,20 +114,21 @@ bool DataIOCollection::hasDataStoreCreationFunction(const std::string& type) con
   }
   return false;
 }
-std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string& type, DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape)
+std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string& type, DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                                              const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
     if(ioManager->hasDataStoreCreationFnc(type))
     {
-      return ioManager->dataStoreCreationFnc(type)(dataType, tupleShape, componentShape, {});
+      return ioManager->dataStoreCreationFnc(type)(dataType, tupleShape, componentShape, chunkShapeHint, initializationMode);
     }
   }
 
   // Unknown formats use the built-in in-memory store. The constructor always
   // registers its reserved manager before callers can create stores.
   const auto& coreManager = m_ManagerMap.at(std::string(Preferences::k_InMemoryFormat));
-  return coreManager->dataStoreCreationFnc(coreManager->formatName())(dataType, tupleShape, componentShape, {});
+  return coreManager->dataStoreCreationFnc(coreManager->formatName())(dataType, tupleShape, componentShape, chunkShapeHint, initializationMode);
 }
 
 std::unique_ptr<IListStore> DataIOCollection::createListStore(const std::string& type, DataType dataType, const ShapeType& tupleShape) const

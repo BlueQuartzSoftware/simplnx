@@ -23,7 +23,7 @@ are three plugins, but only 2 of those you will need to explicitly import.
 
 + ComplexCode: This plugin is included into the *simplnx* module automatically
 + OrientationAnalysis: This plugin should be imported if any of the functionality is needed.
-+ ITKImageProcessing: This plugin should be imported if any of the functionality is needed.
++ ImageProcessing: This plugin should be imported if any of the functionality is needed.
 
 In your python file you will need the following
 
@@ -35,7 +35,7 @@ If you will need functionality from either of the other *simplnx* plugins then y
 
 .. code:: python
 
-    import itkimageprocessing as cxitk
+    import imageprocessing as cximgproc
     import orientationanalysis as cxor
 
 Creating the DataStructure

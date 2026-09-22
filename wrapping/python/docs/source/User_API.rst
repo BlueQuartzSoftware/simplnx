@@ -643,12 +643,12 @@ General Parameters
     generated_file_list_value.increment_index = 1
     generated_file_list_value.padding_digits = 2
 
-    result = cxitk.ITKImportImageStack.execute(data_structure=data_structure, 
-                                      cell_data_name="Cell Data", 
-                                      image_data_array_path="Image Data", 
+    result = cximgproc.ReadImageStackFilter.execute(data_structure=data_structure, 
+                                      cell_attribute_matrix_name="Cell Data", 
+                                      image_data_array_name="Image Data", 
                                       output_image_geometry_path=nx.DataPath(["Image Stack"]), 
-                                      image_transform_choice=0,
-                                      input_file_list_info=generated_file_list_value,
+                                      image_transform_index=0,
+                                      input_file_list_object=generated_file_list_value,
                                       origin=[0., 0., 0.], 
                                       spacing=[1., 1.,1.])
     if len(result.errors) != 0:

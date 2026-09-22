@@ -57,6 +57,22 @@ std::optional<AbstractPlugin::SIMPLData> FindComplexConversionFromSIMPL(const Uu
   }
   return {};
 }
+
+std::optional<Uuid> FindFilterReplacement(const Uuid& oldUuid, const FilterList& filterList)
+{
+  // First match wins; plugin replacement maps are assumed disjoint (no two plugins map the same old
+  // filter UUID). getLoadedPlugins() is unordered, so overlapping maps would resolve nondeterministically.
+  for(const auto* plugin : filterList.getLoadedPlugins())
+  {
+    const auto replacements = plugin->getFilterReplacementMap();
+    const auto it = replacements.find(oldUuid);
+    if(it != replacements.end())
+    {
+      return it->second;
+    }
+  }
+  return {};
+}
 } // namespace
 
 std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
@@ -557,6 +573,13 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("'{}' is not a valid UUID", uuidString));
   }
   IFilter::UniquePointer filter = filterList.createFilter(*uuid);
+  if(filter == nullptr)
+  {
+    if(std::optional<Uuid> replacement = FindFilterReplacement(*uuid, filterList); replacement.has_value())
+    {
+      filter = filterList.createFilter(*replacement);
+    }
+  }
   if(filter == nullptr)
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter '{}' from UUID '{}'", filterName, uuidString));

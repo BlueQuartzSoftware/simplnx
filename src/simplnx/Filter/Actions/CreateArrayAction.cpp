@@ -27,35 +27,42 @@ struct CreateArrayFunctor
    */
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat,
-                      std::string fillValue)
+                      std::string fillValue, const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode)
   {
-    return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, fillValue);
+    return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, fillValue, chunkShapeHint, initializationMode);
   }
 };
 } // namespace
 
 namespace nx::core
 {
-CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat, std::string fillValue)
+CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat, std::string fillValue,
+                                     std::optional<ShapeType> chunkShapeHint, DataStoreInitializationMode initializationMode)
 : IDataCreationAction(path)
 , m_Type(type)
 , m_Dims(tDims)
 , m_CDims(cDims)
 , m_DataFormat(std::move(dataFormat))
 , m_FillValue(std::move(fillValue))
+, m_ChunkShapeHint(std::move(chunkShapeHint))
+, m_InitializationMode(initializationMode)
 {
+  if(!m_FillValue.empty())
+  {
+    m_InitializationMode = DataStoreInitializationMode::Default;
+  }
 }
 
 CreateArrayAction::~CreateArrayAction() noexcept = default;
 
 Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  return ExecuteDataFunction(::CreateArrayFunctor{}, m_Type, dataStructure, m_Dims, m_CDims, getCreatedPath(), mode, m_DataFormat, m_FillValue);
+  return ExecuteDataFunction(::CreateArrayFunctor{}, m_Type, dataStructure, m_Dims, m_CDims, getCreatedPath(), mode, m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }
 
 IDataAction::UniquePointer CreateArrayAction::clone() const
 {
-  return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath(), m_DataFormat, m_FillValue);
+  return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath(), m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }
 
 DataType CreateArrayAction::type() const
@@ -91,5 +98,15 @@ std::string CreateArrayAction::fillValue() const
 std::string CreateArrayAction::dataFormat() const
 {
   return m_DataFormat;
+}
+
+const std::optional<ShapeType>& CreateArrayAction::chunkShapeHint() const
+{
+  return m_ChunkShapeHint;
+}
+
+DataStoreInitializationMode CreateArrayAction::initializationMode() const noexcept
+{
+  return m_InitializationMode;
 }
 } // namespace nx::core

@@ -127,7 +127,7 @@ class PlaceholderPlanManager : public IDataIOManager
 public:
   PlaceholderPlanManager()
   {
-    addDataStoreCreationFnc(k_SelectedFormat.str(), [](DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
+    addDataStoreCreationFnc(k_SelectedFormat.str(), [](DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
       throw std::runtime_error("The metadata-only import must not invoke the value-store factory");
     });
   }

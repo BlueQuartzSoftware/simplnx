@@ -142,20 +142,4 @@ Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructur
   }
   return result;
 }
-
-namespace
-{
-namespace SIMPL
-{
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-} // namespace SIMPL
-} // namespace
-
-Result<Arguments> WriteVtkStructuredPointsFilter::FromSIMPLJson(const nlohmann::json& json)
-{
-  Arguments args = WriteVtkStructuredPointsFilter().getDefaultArguments();
-  return ConvertResultTo<Arguments>({}, std::move(args));
-}
 } // namespace nx::core

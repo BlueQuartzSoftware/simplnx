@@ -5,8 +5,10 @@
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/Filter/Output.hpp"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,7 +28,19 @@ class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
+  /**
+   * @brief Creates a numeric-array action.
+   * @param type Array value type.
+   * @param tDims Tuple dimensions.
+   * @param cDims Component dimensions.
+   * @param path Destination DataPath.
+   * @param dataFormat Explicit store format, or an empty name for automatic selection.
+   * @param fillValue Optional initial value text.
+   * @param chunkShapeHint Optional tuple-space chunk dimensions for the selected store factory.
+   * @param initializationMode Initial physical-storage policy for the selected store factory.
+   */
+  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "",
+                    std::optional<ShapeType> chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default);
 
   ~CreateArrayAction() noexcept override;
 
@@ -66,11 +80,18 @@ public:
    */
   std::string dataFormat() const;
 
+  [[nodiscard]] const std::optional<ShapeType>& chunkShapeHint() const;
+
+  /** @brief Returns the initial physical-storage policy. */
+  [[nodiscard]] DataStoreInitializationMode initializationMode() const noexcept;
+
 private:
   DataType m_Type;
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
   std::string m_DataFormat = "";
   std::string m_FillValue = "";
+  std::optional<ShapeType> m_ChunkShapeHint;
+  DataStoreInitializationMode m_InitializationMode = DataStoreInitializationMode::Default;
 };
 } // namespace nx::core

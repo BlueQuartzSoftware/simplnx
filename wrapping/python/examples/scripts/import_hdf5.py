@@ -36,7 +36,7 @@ that.
 
 """
 import simplnx as nx
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 

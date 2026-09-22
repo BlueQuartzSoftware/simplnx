@@ -79,6 +79,19 @@ public:
 
   virtual SIMPLMapType getSimplToSimplnxMap() const = 0;
 
+  // Maps a retired/old simplnx filter Uuid to the new simplnx filter Uuid that replaces it.
+  using FilterReplacementMapType = std::unordered_map<Uuid, Uuid>;
+
+  /**
+   * @brief Returns a map of {old simplnx filter Uuid -> new simplnx filter Uuid}. Consulted by
+   *        pipeline loading when a stored filter Uuid no longer resolves (e.g. a plugin was removed).
+   *        Default is empty.
+   */
+  virtual FilterReplacementMapType getFilterReplacementMap() const
+  {
+    return {};
+  }
+
 protected:
   AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor);
 

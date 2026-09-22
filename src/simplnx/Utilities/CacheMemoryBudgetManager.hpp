@@ -29,16 +29,25 @@ namespace nx::core
  * A delegated subsystem receives a non-blocking byte request and releases its
  * own entries later. Accounting can temporarily exceed the budget until that release.
  *
- * @note The budget covers only registered cache entries. It does not limit process
- * memory, resident arrays, working buffers, rendering allocations, or allocator-retained pages.
+ * @note This budget covers only registered cache entries. It does not cap total
+ * application memory, loaded in-memory arrays, temporary working buffers,
+ * rendering allocations, or allocator-retained pages. Temporary algorithm
+ * buffers may reserve cache headroom through WorkingMemoryReservation without
+ * being reported as cache usage.
  *
- * All public methods are thread-safe.
+ * Thread-safe: allocate/touch/release/reserveWorkingMemory can be called from
+ * any thread.
  *
  * Eviction callbacks and delegated handlers run under the manager mutex. They
  * can only update an atomic or a leaf mark queue. They must not re-enter this manager.
  */
 class SIMPLNX_EXPORT CacheMemoryBudgetManager
 {
+private:
+  struct WorkingMemoryReservationKey
+  {
+  };
+
 public:
   /**
    * @brief Defines an opaque registration identifier.
@@ -63,6 +72,38 @@ public:
     Success,       ///< The manager added the pin.
     UnknownHandle, ///< The allocation is not registered.
     BudgetExceeded ///< Unique pinned bytes cannot fit within the current budget.
+  };
+
+  /**
+   * @brief Move-only reservation that returns algorithm working-memory
+   * headroom to the cache budget manager on destruction.
+   *
+   * The reserved bytes are not cache entries and are not included in
+   * usedBytes(). They reduce effectiveCacheBudgetBytes() while the token lives.
+   */
+  class SIMPLNX_EXPORT WorkingMemoryReservation
+  {
+  public:
+    WorkingMemoryReservation() = default;
+    WorkingMemoryReservation(WorkingMemoryReservationKey, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept;
+    ~WorkingMemoryReservation() noexcept;
+
+    WorkingMemoryReservation(const WorkingMemoryReservation&) = delete;
+    WorkingMemoryReservation& operator=(const WorkingMemoryReservation&) = delete;
+    WorkingMemoryReservation(WorkingMemoryReservation&& other) noexcept;
+    WorkingMemoryReservation& operator=(WorkingMemoryReservation&& other) noexcept;
+
+    /** @brief Returns the number of bytes granted to this reservation. */
+    [[nodiscard]] uint64 sizeBytes() const noexcept;
+
+    /** @brief Returns unused bytes to the cache budget while retaining @p sizeBytes in this reservation. */
+    void shrinkTo(uint64 sizeBytes) noexcept;
+
+  private:
+    void release() noexcept;
+
+    CacheMemoryBudgetManager* m_Manager = nullptr;
+    uint64 m_SizeBytes = 0;
   };
 
   /**
@@ -202,6 +243,17 @@ public:
   void release(AllocationHandle handle);
 
   /**
+   * @brief Reserves temporary algorithm working memory against cache headroom.
+   *
+   * All active working-memory reservations together are limited to one quarter
+   * of the configured cache budget. A request is partially granted when less
+   * than the requested amount remains, and an exhausted or zero request returns
+   * an empty reservation. Cache entries remain separately accounted by
+   * usedBytes().
+   */
+  [[nodiscard]] WorkingMemoryReservation reserveWorkingMemory(uint64 requestedBytes);
+
+  /**
    * @brief Sets the cache memory budget in bytes, clamped to maxBudgetBytes().
    *
    * Only the upper bound is clamped. Tests can set a value below the 1-GiB
@@ -223,6 +275,15 @@ public:
    */
   uint64 usedBytes() const;
 
+  /** @brief Returns one quarter of the configured cache budget. */
+  uint64 maximumWorkingMemoryBytes() const;
+
+  /** @brief Returns bytes held by active algorithm working-memory reservations. */
+  uint64 reservedWorkingMemoryBytes() const;
+
+  /** @brief Returns cache capacity after active working-memory reservations. */
+  uint64 effectiveCacheBudgetBytes() const;
+
   /**
    * @brief Returns bytes held by allocations with one or more pins.
    * @return Unique pinned allocation bytes. Nested pins do not duplicate the byte count.
@@ -230,7 +291,8 @@ public:
   uint64 pinnedBytes() const;
 
   /**
-   * @brief Clears all tracked entries and resets used bytes to zero.
+   * @brief Clears all tracked cache entries and resets cache used bytes to zero.
+   * Active working-memory reservations remain valid and keep their headroom.
    *
    * This test utility does not invoke eviction callbacks, clear subsystem
    * handlers, reset the budget, or reuse allocation handles.
@@ -271,6 +333,9 @@ private:
    */
   std::vector<AllocationHandle> makeRoom(uint64 needed);
 
+  /** @brief Releases bytes held by a WorkingMemoryReservation. */
+  void releaseWorkingMemory(uint64 sizeBytes) noexcept;
+
   /**
    * @brief Returns total physical system RAM in bytes (0 if it cannot be read).
    * @return Physical system RAM in bytes, or zero when detection fails.
@@ -286,6 +351,7 @@ private:
   uint64 m_BudgetBytes = 0;
   uint64 m_UsedBytes = 0;
   uint64 m_PinnedBytes = 0;
+  uint64 m_ReservedWorkingMemoryBytes = 0;
   AllocationHandle m_NextHandle = 1;
 };
 

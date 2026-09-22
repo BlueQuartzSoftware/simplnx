@@ -31,7 +31,7 @@ If you will be using filters from DREAM3D-NX's other plugins, then you may addit
 
 .. code:: python
 
-    import itkimageprocessing as nxitk
+    import imageprocessing as nximgproc
     import orientationanalysis as nxor
 
 Also use the following imports:
@@ -240,12 +240,12 @@ The Pipeline that we will modify is as follows:
     3. Rotate Sample Reference Frame
     4. Multi-Threshold Objects
     5. Generate IPF Colors
-    6. Write Image (ITK)
+    6. Write Image
     7. Write DREAM3D NX File
 
 Filter 1 is the ReadAngDataFilter which we will need to adjust the input file (https://www.dream3d.io/python_docs/OrientationAnalysis.html#OrientationAnalysis.ReadAngDataFilter).
 
-Filter 6 is the image writing filter where we need to adjust the output file (https://www.dream3d.io/python_docs/ITKImageProcessing.html#write-image-itk).
+Filter 6 is the image writing filter where we need to adjust the output file (https://www.dream3d.io/python_docs/ImageProcessing.html#write-image).
 
 Filter 7 is the write dream3d file filter where we need to adjust the output file (https://www.dream3d.io/python_docs/simplnx.html#write-dream3d-nx-file).
 

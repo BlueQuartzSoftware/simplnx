@@ -94,6 +94,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IdentifyDuplicateVerticesTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
+  ImageIOTest.cpp
   InitializeDataTest.cpp
   InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
@@ -115,19 +116,13 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RandomizeFeatureIdsTest.cpp
-  ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
   ReadHDF5DatasetTest.cpp
-  ReadImageStackTest.cpp
-  ReadImageTest.cpp
-  ReadNIfTIFileTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadStringDataArrayTest.cpp
   ReadTextDataArrayTest.cpp
-  ReadVolumeGraphicsFileTest.cpp
   ReadVtkStructuredPointsTest.cpp
-  ReadZeissTxmFileTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RegularizeZSpacingTest.cpp
   RemoveFlaggedEdgesTest.cpp
@@ -167,7 +162,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
   WriteFeatureDataCSVTest.cpp
-  WriteImageTest.cpp
   WriteLAMMPSFileTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
@@ -192,9 +186,6 @@ endif()
 # can use the target_link_libraries() cmake call
 # target_link_libraries(${PLUGIN_NAME}UnitTest PUBLIC [name of library])
 
-# The ReadNIfTIFileTest synthesizes .nii and .nii.gz files via zlib
-find_package(ZLIB REQUIRED)
-target_link_libraries(${PLUGIN_NAME}UnitTest PUBLIC ZLIB::ZLIB)
 
 # ------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
@@ -270,6 +261,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME extract_internal_surface.tar.gz SHA512 86d47a9850d03486a62707f2f0c48fe7bc5d88a0b71fc286f74ad13a1f3c982f36f55ac65dda43b67826b14b4fce0dc2d29dd5adbee6338a887a12f42e879ed7)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME extract_vertex_geometry.tar.gz SHA512 b34c877e6a150eb461aa21afc33529a8cde07e32d4c1e788cb2c98751ebf1d8f82ca9da010c8c3de6f15e53e9a8d030d62c93173815b101fe676edccac59ad0a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ExtractFeatureBoundaries2D.tar.gz SHA512 3e4ce48bc886cb8e5ecb9e8e7ceea23cb0aa18e5a2c3b47da337a9ea59ddc3eb110d941ef35a6e408482a9ad9292fcc2a52b072cc967e8542fa9f62d3311849b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME fiji_montage.tar.gz SHA512 70139babc838ce3ab1f5adddfddc86dcc51996e614c6c2d757bcb2e59e8ebdc744dac269233494b1ef8d09397aecb4ccca3384f0a91bb017f2cf6309c4ac40fa)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME FindSurfaceFeaturesTest.tar.gz SHA512 4a03393a60fedb1d932faef82bfca5d9da79e7adbfa61620b25ebac1a24ae554861700470d91b6f7958e8d07157ba9bedb1bdb625f0e84dfcb32df5ddb6e9911)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME fill_bad_data_exemplars.tar.gz SHA512 4a3504dd5173d5ef7c37dff68b6119f65aef24a8bb893ab9777d13dc993955c39bb39ff1771ec0dcc65db9cb9a0ee249b8eca4f15726a5db1743f41bcf20cab8)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME flying_edges_exemplar_v2.tar.gz SHA512 93cab3473ca16464a00866978477e3f56e8cbea15fc0d9b989c945a352ee8f67b5c253907b24fc23b20652976d6e2cb8872a302c37b4c89c1b21fca13c080f0f)
@@ -286,7 +278,6 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME QuickSurfaceMeshTest_v2.tar.gz SHA512 03c283cf3cc5d8c03ec75a18ffbf568f71ed3e690c8b746349dad3d59ee2d76fffcba9faa2fc859849c2ca7b1a8b11295c8fa4975246f6b9bc7eff1a15cb10c7)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadZeissTxmFileTest_v2.tar.gz SHA512 2d962655d919480fa7baf0c8720affbcbd1182e8482480f5413b53ead41787d35d0f15487219163ba0dcffad69be90e627730fc780107d80df3d97e14fb15cac)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME remove_flagged_elements_data.tar.gz SHA512 6bd5b1d93a100bcf8e6d9aa88243cadf51c9f0dee85fc3c054f5fe489b6720991b41390cf4682862483dfee11595a2e384d8698f68c0245cf0521d275db450ee)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ResampleImageGeom_Exemplar_2.tar.gz SHA512 0a5dc046410a9d93682a40581b169cf3ca5b516623d90eb081de8a8623c55de45a2b00427cd298d6f17fb84bb93dee061a96a4b4386392f925ecdc3fbfe6e5a6)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ResampleImageGeom_Exemplar.tar.gz SHA512 464029b7354b96a943d75c495ef02bac0f834032e5a86576dde9afee51febff3fd6ffd7d4f8f1e9f8315d8cda36971df26601c7212e1876151109ca5428b8659)

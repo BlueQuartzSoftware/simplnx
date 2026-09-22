@@ -13,6 +13,7 @@
 #include <cstdarg>
 #include <cstring>
 #include <limits>
+#include <vector>
 
 using namespace nx::core;
 
@@ -24,6 +25,7 @@ constexpr int32_t k_ErrorReadPixelFailed = -20102;
 constexpr int32_t k_ErrorWriteFailed = -20103;
 constexpr int32_t k_ErrorUnsupportedFormat = -20104;
 constexpr int32_t k_ErrorBufferSizeMismatch = -20105;
+constexpr int32_t k_ErrorInvalidPage = -20106;
 
 /**
  * @class TiffFile
@@ -244,6 +246,50 @@ Result<> ReadTiledUInt8Rows(const TiffFile& tiffFile, const std::string& pathStr
 
   return {};
 }
+
+/**
+ * @brief Builds the list of readable page (directory) indices in a multi-directory TIFF,
+ * mirroring ITK 5.4.4's directory classification (itkTIFFReaderInternal.cxx / itkTIFFImageIO.cxx):
+ * a directory whose SubfileType is 0 is a real page; a directory flagged FILETYPE_REDUCEDIMAGE
+ * or FILETYPE_MASK is an ignored subfile (reduced-resolution pyramid level or transparency mask).
+ *
+ * If any real (SubfileType == 0) pages exist, only those are returned; otherwise every non-ignored
+ * directory is returned. This makes the returned count identical to ITK's
+ * numPages = (realPages > 0) ? realPages : (totalDirs - ignored). Falls back to {0} so a
+ * single-image TIFF that omits the SubfileType tag still yields exactly one page.
+ *
+ * The returned vector's size is the page count; index i maps page i to its TIFF directory number.
+ * Restores the TIFF to directory 0 before returning.
+ */
+std::vector<uint16_t> CollectPageDirectories(TIFF* tiff)
+{
+  const uint16_t total = TIFFNumberOfDirectories(tiff);
+  std::vector<uint16_t> realPages;
+  std::vector<uint16_t> nonIgnored;
+  for(uint16_t d = 0; d < total; ++d)
+  {
+    uint32_t subfiletype = 0;
+    const bool hasTag = TIFFGetField(tiff, TIFFTAG_SUBFILETYPE, &subfiletype) != 0;
+    const bool ignored = hasTag && (((subfiletype & FILETYPE_REDUCEDIMAGE) != 0) || ((subfiletype & FILETYPE_MASK) != 0));
+    if(hasTag && subfiletype == 0)
+    {
+      realPages.push_back(d);
+    }
+    if(!ignored)
+    {
+      nonIgnored.push_back(d);
+    }
+    TIFFReadDirectory(tiff);
+  }
+  TIFFSetDirectory(tiff, 0);
+
+  std::vector<uint16_t>& pages = realPages.empty() ? nonIgnored : realPages;
+  if(pages.empty())
+  {
+    return {0};
+  }
+  return pages;
+}
 } // namespace
 
 Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& filePath) const
@@ -283,7 +329,10 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   metadata.height = static_cast<usize>(height);
   metadata.numComponents = static_cast<usize>(samplesPerPixel);
   metadata.dataType = dataTypeResult.value();
-  metadata.numPages = static_cast<usize>(TIFFNumberOfDirectories(tiff));
+  // Count only real pages, excluding reduced-resolution / mask subfiles, to match ITK.
+  // CollectPageDirectories() restores the TIFF to directory 0, so the origin/spacing reads
+  // below still come from directory 0.
+  metadata.numPages = CollectPageDirectories(tiff).size();
 
   // X and Y position tags supply optional origin metadata.
   float xPosition = 0.0f;
@@ -325,7 +374,8 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   return {std::move(metadata)};
 }
 
-Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8_t> buffer) const
+// -----------------------------------------------------------------------------
+Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8_t> buffer, usize pageIndex) const
 {
   Result<ImageMetadata> metadataResult = readMetadata(filePath);
   if(metadataResult.invalid())
@@ -341,15 +391,19 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
     return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for TIFF image '{}'", buffer.size(), expectedSize, filePath.string()));
   }
 
-  return readPixelDataRows(filePath, [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8_t> pixels) -> Result<> {
-    const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bytesPerElement;
-    const usize byteCount = pixelCount * metadata.numComponents * bytesPerElement;
-    std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
-    return {};
-  });
+  return readPixelDataRows(
+      filePath,
+      [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8_t> pixels) -> Result<> {
+        const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bytesPerElement;
+        const usize byteCount = pixelCount * metadata.numComponents * bytesPerElement;
+        std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
+        return {};
+      },
+      pageIndex);
 }
 
-Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const
+// -----------------------------------------------------------------------------
+Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex) const
 {
   const std::string pathStr = filePath.string();
   TiffFile tiffFile(pathStr, "r");
@@ -359,6 +413,22 @@ Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, c
   }
 
   TIFF* tiff = tiffFile.get();
+
+  // Map the requested page to its TIFF directory, skipping reduced-resolution / mask subfiles so
+  // pageIndex indexes the same set of pages that readMetadata() counts (0-based, [0, numPages)).
+  const std::vector<uint16_t> pageDirs = CollectPageDirectories(tiff);
+  if(pageIndex >= pageDirs.size())
+  {
+    return MakeErrorResult(k_ErrorInvalidPage, fmt::format("Page index {} is out of range for TIFF '{}', which has {} page(s)", pageIndex, pathStr, pageDirs.size()));
+  }
+  const uint16_t mappedDir = pageDirs[pageIndex];
+  if(TIFFSetDirectory(tiff, mappedDir) == 0)
+  {
+    return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to select directory {} in TIFF '{}': {}", mappedDir, pathStr, tiffFile.errorMessage()));
+  }
+
+  // Read this page's own geometry rather than assuming directory 0's dimensions, since pages in a
+  // multi-directory TIFF can differ in size / component count / data type.
   uint32_t width = 0;
   uint32_t height = 0;
   uint16_t samplesPerPixel = 0;
@@ -387,6 +457,7 @@ Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, c
     return MakeErrorResult(k_ErrorUnsupportedFormat, fmt::format("Planar-separate TIFF data is not supported for '{}'.", pathStr));
   }
 
+  // Check if the image is tiled
   if(TIFFIsTiled(tiff) != 0)
   {
     uint32_t tileWidth = 0;

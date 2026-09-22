@@ -97,7 +97,7 @@ And here is what the geometry looks like after appending the three pieces togeth
 
 ### Required Input Sources
 
-- **Destination Image Geometry** and **Input Image Geometries** -- all geometries to be appended. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader. All must share matching cell-level Attribute Array names if cell data is to be preserved during the append.
+- **Destination Image Geometry** and **Input Image Geometries** -- all geometries to be appended. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), or an EBSD reader. All must share matching cell-level Attribute Array names if cell data is to be preserved during the append.
 
 % Auto generated parameter table will be inserted here
 

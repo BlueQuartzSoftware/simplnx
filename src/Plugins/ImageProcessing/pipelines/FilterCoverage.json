@@ -1,0 +1,925 @@
+{
+  "version": 1,
+  "filters": [
+    {
+      "filter": "AbsImageFilter",
+      "uuid": "829632eb-484e-4af5-992c-99c6e344419a",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 3,
+      "purpose": "Use abs in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "AbsImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/AbsImageFilter.md"
+    },
+    {
+      "filter": "AcosImageFilter",
+      "uuid": "82473d89-6383-4897-8863-240ddd818138",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 6,
+      "purpose": "Use acos in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "AcosImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/AcosImageFilter.md"
+    },
+    {
+      "filter": "AdaptiveHistogramEqualizationImageFilter",
+      "uuid": "303249e9-4623-427a-af90-c837d38133d7",
+      "pipeline": "(06) AM Powder-Bed Layer Inspection/(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "step": 1,
+      "purpose": "Use adaptive histogram equalization in the (02) AM Powder-Bed Layer Inspection workflow.",
+      "unit_test": "AdaptiveHistogramEqualizationImageFilterTest.cpp",
+      "golden_input": "am/powder_bed_layers/layer_000.tif through layer_004.tif",
+      "reference": "docs/AdaptiveHistogramEqualizationImageFilter.md"
+    },
+    {
+      "filter": "ApproximateSignedDistanceMapImageFilter",
+      "uuid": "e0e0c1b1-909b-4be9-8187-c08472e4b4c3",
+      "pipeline": "(12) Pore Distance and Wall-Thickness Metrology/(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "step": 1,
+      "purpose": "Use approximate signed distance map in the (08) Pore Distance and Wall-Thickness Metrology workflow.",
+      "unit_test": "ApproximateSignedDistanceMapImageFilterTest.cpp",
+      "golden_input": "materials/distance_mask.nrrd",
+      "reference": "docs/ApproximateSignedDistanceMapImageFilter.md"
+    },
+    {
+      "filter": "AsinImageFilter",
+      "uuid": "3a196037-7f21-465b-9e26-dfa48d6c784f",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 5,
+      "purpose": "Use asin in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "AsinImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/AsinImageFilter.md"
+    },
+    {
+      "filter": "AtanImageFilter",
+      "uuid": "b7a2c2b9-a693-4e64-860e-d306c92417ae",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 7,
+      "purpose": "Use atan in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "AtanImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/AtanImageFilter.md"
+    },
+    {
+      "filter": "BinaryContourImageFilter",
+      "uuid": "da623f5e-1c20-4c7b-a750-2bf72a421a51",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 8,
+      "purpose": "Use binary contour in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "BinaryContourImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/BinaryContourImageFilter.md"
+    },
+    {
+      "filter": "BinaryDilateImageFilter",
+      "uuid": "d9e33b21-670e-4bab-bc42-f5bbf38891ab",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 1,
+      "purpose": "Use binary dilate in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "BinaryDilateImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/BinaryDilateImageFilter.md"
+    },
+    {
+      "filter": "BinaryErodeImageFilter",
+      "uuid": "cad4a094-2f2a-4ccf-8575-50f865251192",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 2,
+      "purpose": "Use binary erode in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "BinaryErodeImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/BinaryErodeImageFilter.md"
+    },
+    {
+      "filter": "BinaryMorphologicalClosingImageFilter",
+      "uuid": "73a22075-6760-44e8-b385-68aed4dd56c7",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 5,
+      "purpose": "Use binary morphological closing in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "BinaryMorphologicalClosingImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/BinaryMorphologicalClosingImageFilter.md"
+    },
+    {
+      "filter": "BinaryMorphologicalOpeningImageFilter",
+      "uuid": "31536589-71e4-4a0c-82c6-371c1ef89a98",
+      "pipeline": "(06) AM Powder-Bed Layer Inspection/(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "step": 5,
+      "purpose": "Use binary morphological opening in the (02) AM Powder-Bed Layer Inspection workflow.",
+      "unit_test": "BinaryMorphologicalOpeningImageFilterTest.cpp",
+      "golden_input": "am/powder_bed_layers/layer_000.tif through layer_004.tif",
+      "reference": "docs/BinaryMorphologicalOpeningImageFilter.md"
+    },
+    {
+      "filter": "BinaryOpeningByReconstructionImageFilter",
+      "uuid": "ebb01ba2-ec09-4eee-915f-2d51ba280a18",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 5,
+      "purpose": "Use binary opening by reconstruction in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "BinaryOpeningByReconstructionImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/BinaryOpeningByReconstructionImageFilter.md"
+    },
+    {
+      "filter": "BinaryProjectionImageFilter",
+      "uuid": "24044b7e-d9e3-4908-8f92-e7318d51c9c8",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 2,
+      "purpose": "Use binary projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "BinaryProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/BinaryProjectionImageFilter.md"
+    },
+    {
+      "filter": "BinaryThinningImageFilter",
+      "uuid": "863b660a-56dd-4edf-b6bc-d5af5c19c87c",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 6,
+      "purpose": "Use binary thinning in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "BinaryThinningImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/BinaryThinningImageFilter.md"
+    },
+    {
+      "filter": "BinaryThresholdImageFilter",
+      "uuid": "4bf09378-e159-4437-9ce2-3f4c3b5ad7ae",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 4,
+      "purpose": "Use binary threshold in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "BinaryThresholdImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/BinaryThresholdImageFilter.md"
+    },
+    {
+      "filter": "BlackTopHatImageFilter",
+      "uuid": "a2e561ae-4728-495a-84a3-84169553d86c",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 9,
+      "purpose": "Use black top hat in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "BlackTopHatImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/BlackTopHatImageFilter.md"
+    },
+    {
+      "filter": "BoundedReciprocalImageFilter",
+      "uuid": "b8057c82-b169-4de4-bd29-8d52e298dd68",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 4,
+      "purpose": "Use bounded reciprocal in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "BoundedReciprocalImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/BoundedReciprocalImageFilter.md"
+    },
+    {
+      "filter": "ClosingByReconstructionImageFilter",
+      "uuid": "85036c6c-402a-4c54-88cc-c62b0e35a785",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 8,
+      "purpose": "Use closing by reconstruction in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "ClosingByReconstructionImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/ClosingByReconstructionImageFilter.md"
+    },
+    {
+      "filter": "ConnectedComponentImageFilter",
+      "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 6,
+      "purpose": "Use connected component in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "ConnectedComponentImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/ConnectedComponentImageFilter.md"
+    },
+    {
+      "filter": "CosImageFilter",
+      "uuid": "aa53d925-b57a-4d3f-8d98-876ff196ea2d",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 3,
+      "purpose": "Use cos in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "CosImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/CosImageFilter.md"
+    },
+    {
+      "filter": "CurvatureAnisotropicDiffusionImageFilter",
+      "uuid": "9e29d66d-a3f7-47fd-9749-a7e2bea8e158",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 3,
+      "purpose": "Use curvature anisotropic diffusion in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "CurvatureAnisotropicDiffusionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/CurvatureAnisotropicDiffusionImageFilter.md"
+    },
+    {
+      "filter": "CurvatureFlowImageFilter",
+      "uuid": "63668df1-f887-4d39-9b82-e8a0963fbf52",
+      "pipeline": "(13) Denoising and Edge Detection/(13) Denoising and Edge Detection.d3dpipeline",
+      "step": 2,
+      "purpose": "Use curvature flow in the (09) Denoising and Edge Detection workflow.",
+      "unit_test": "CurvatureFlowImageFilterTest.cpp",
+      "golden_input": "materials/edge_input.png",
+      "reference": "docs/CurvatureFlowImageFilter.md"
+    },
+    {
+      "filter": "DanielssonDistanceMapImageFilter",
+      "uuid": "f044feae-968b-4212-8898-e26e305afa0b",
+      "pipeline": "(12) Pore Distance and Wall-Thickness Metrology/(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "step": 2,
+      "purpose": "Use danielsson distance map in the (08) Pore Distance and Wall-Thickness Metrology workflow.",
+      "unit_test": "DanielssonDistanceMapImageFilterTest.cpp",
+      "golden_input": "materials/distance_mask.nrrd",
+      "reference": "docs/DanielssonDistanceMapImageFilter.md"
+    },
+    {
+      "filter": "DilateObjectMorphologyImageFilter",
+      "uuid": "4e00bb78-e3cc-41ee-b6f6-86e49fd34b4c",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 9,
+      "purpose": "Use dilate object morphology in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "DilateObjectMorphologyImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/DilateObjectMorphologyImageFilter.md"
+    },
+    {
+      "filter": "DiscreteGaussianImageFilter",
+      "uuid": "2ddd8df9-a4d8-44e0-94b3-0776c1cdf096",
+      "pipeline": "(08) Powder Particle Watershed Segmentation/(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "step": 1,
+      "purpose": "Use discrete gaussian in the (04) Powder Particle Watershed Segmentation workflow.",
+      "unit_test": "DiscreteGaussianImageFilterTest.cpp",
+      "golden_input": "materials/powder_particles.png and materials/watershed_markers.png",
+      "reference": "docs/DiscreteGaussianImageFilter.md"
+    },
+    {
+      "filter": "DoubleThresholdImageFilter",
+      "uuid": "8350bea5-7958-4a45-9cd6-b996e56b3749",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 4,
+      "purpose": "Use double threshold in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "DoubleThresholdImageFilterTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/DoubleThresholdImageFilter.md"
+    },
+    {
+      "filter": "ErodeObjectMorphologyImageFilter",
+      "uuid": "a5459d96-bb89-4a17-a802-cc1fb17b2bed",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 10,
+      "purpose": "Use erode object morphology in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "ErodeObjectMorphologyImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/ErodeObjectMorphologyImageFilter.md"
+    },
+    {
+      "filter": "ExpImageFilter",
+      "uuid": "10f595b3-ef35-43fd-aaa1-687c3c48cc54",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 5,
+      "purpose": "Use exp in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "ExpImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/ExpImageFilter.md"
+    },
+    {
+      "filter": "ExpNegativeImageFilter",
+      "uuid": "21722f48-4380-4bef-bc1e-cec3e5b92327",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 6,
+      "purpose": "Use exp negative in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "ExpNegativeImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/ExpNegativeImageFilter.md"
+    },
+    {
+      "filter": "GradientAnisotropicDiffusionImageFilter",
+      "uuid": "17d499f1-b2dd-400d-a791-4ed9ea6903c0",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 2,
+      "purpose": "Use gradient anisotropic diffusion in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "GradientAnisotropicDiffusionImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/GradientAnisotropicDiffusionImageFilter.md"
+    },
+    {
+      "filter": "GradientMagnitudeImageFilter",
+      "uuid": "e9bc5ba0-a6db-4537-aff3-86d8b535327e",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 3,
+      "purpose": "Use gradient magnitude in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "GradientMagnitudeImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/GradientMagnitudeImageFilter.md"
+    },
+    {
+      "filter": "GradientMagnitudeRecursiveGaussianImageFilter",
+      "uuid": "d9b71e00-6c15-4cb5-92bd-a8c2d9be57f2",
+      "pipeline": "(08) Powder Particle Watershed Segmentation/(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "step": 2,
+      "purpose": "Use gradient magnitude recursive gaussian in the (04) Powder Particle Watershed Segmentation workflow.",
+      "unit_test": "GradientMagnitudeRecursiveGaussianImageFilterTest.cpp",
+      "golden_input": "materials/powder_particles.png and materials/watershed_markers.png",
+      "reference": "docs/GradientMagnitudeRecursiveGaussianImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleDilateImageFilter",
+      "uuid": "6c5fb0d3-3db5-49fe-b5d6-eddef082cd68",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 1,
+      "purpose": "Use grayscale dilate in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleDilateImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleDilateImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleErodeImageFilter",
+      "uuid": "b9ec6f58-64bc-4318-b30d-5aefe1eb7a97",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 2,
+      "purpose": "Use grayscale erode in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleErodeImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleErodeImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleFillholeImageFilter",
+      "uuid": "aa11f464-039e-4e7b-b748-18cc72b3f054",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 3,
+      "purpose": "Use grayscale fillhole in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleFillholeImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleFillholeImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleGrindPeakImageFilter",
+      "uuid": "49fc01b5-630f-4592-9b06-d04ff4a7e1d2",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 4,
+      "purpose": "Use grayscale grind peak in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleGrindPeakImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleGrindPeakImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleMorphologicalClosingImageFilter",
+      "uuid": "71b54df2-dec2-453e-b558-3cd4f7a81af8",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 5,
+      "purpose": "Use grayscale morphological closing in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleMorphologicalClosingImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleMorphologicalClosingImageFilter.md"
+    },
+    {
+      "filter": "GrayscaleMorphologicalOpeningImageFilter",
+      "uuid": "74ad4b11-a144-4986-9259-2daf6da22fc0",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 6,
+      "purpose": "Use grayscale morphological opening in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "GrayscaleMorphologicalOpeningImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/GrayscaleMorphologicalOpeningImageFilter.md"
+    },
+    {
+      "filter": "HConvexImageFilter",
+      "uuid": "a11f18b6-87df-41a4-9fd7-87050ecf147e",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 12,
+      "purpose": "Use hconvex in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "HConvexImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/HConvexImageFilter.md"
+    },
+    {
+      "filter": "HMaximaImageFilter",
+      "uuid": "c912774e-be4a-4bc0-b096-9469bf31b4b7",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 4,
+      "purpose": "Use hmaxima in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "HMaximaImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/HMaximaImageFilter.md"
+    },
+    {
+      "filter": "HMinimaImageFilter",
+      "uuid": "2fea5169-5fa2-495f-87d7-e1dc5a73b890",
+      "pipeline": "(08) Powder Particle Watershed Segmentation/(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "step": 3,
+      "purpose": "Use hminima in the (04) Powder Particle Watershed Segmentation workflow.",
+      "unit_test": "HMinimaImageFilterTest.cpp",
+      "golden_input": "materials/powder_particles.png and materials/watershed_markers.png",
+      "reference": "docs/HMinimaImageFilter.md"
+    },
+    {
+      "filter": "ImportFijiMontageFilter",
+      "uuid": "b9c66c77-5c7f-4951-bb02-981db3c297ae",
+      "pipeline": "(20) Fiji Microscopy Montage Import/(20) Fiji Microscopy Montage Import.d3dpipeline",
+      "step": 0,
+      "purpose": "Use import fiji montage in the (16) Fiji Microscopy Montage Import workflow.",
+      "unit_test": "ImportFijiMontageTest.cpp",
+      "golden_input": "io/fiji/TileConfiguration.registered.txt",
+      "reference": "docs/ImportFijiMontageFilter.md"
+    },
+    {
+      "filter": "IntensityWindowingImageFilter",
+      "uuid": "d053ffc3-007d-42ff-9ad5-d905ebe60c74",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 1,
+      "purpose": "Use intensity windowing in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "IntensityWindowingImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/IntensityWindowingImageFilter.md"
+    },
+    {
+      "filter": "InvertIntensityImageFilter",
+      "uuid": "5344f2fb-b486-45ba-92c1-d324bc8b5925",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 13,
+      "purpose": "Use invert intensity in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "InvertIntensityImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/InvertIntensityImageFilter.md"
+    },
+    {
+      "filter": "IsoContourDistanceImageFilter",
+      "uuid": "d0ea04e3-c514-477b-8166-a7998600fea5",
+      "pipeline": "(12) Pore Distance and Wall-Thickness Metrology/(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "step": 5,
+      "purpose": "Use iso contour distance in the (08) Pore Distance and Wall-Thickness Metrology workflow.",
+      "unit_test": "IsoContourDistanceImageFilterTest.cpp",
+      "golden_input": "materials/distance_mask.nrrd",
+      "reference": "docs/IsoContourDistanceImageFilter.md"
+    },
+    {
+      "filter": "LabelContourImageFilter",
+      "uuid": "060339d1-56c9-4253-9b52-d4be6a58eafb",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 7,
+      "purpose": "Use label contour in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "LabelContourImageFilterTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/LabelContourImageFilter.md"
+    },
+    {
+      "filter": "LaplacianRecursiveGaussianImageFilter",
+      "uuid": "4caeacc2-51c8-49e4-a77f-18d3779e70fa",
+      "pipeline": "(13) Denoising and Edge Detection/(13) Denoising and Edge Detection.d3dpipeline",
+      "step": 8,
+      "purpose": "Use laplacian recursive gaussian in the (09) Denoising and Edge Detection workflow.",
+      "unit_test": "LaplacianRecursiveGaussianImageFilterTest.cpp",
+      "golden_input": "materials/edge_input.png",
+      "reference": "docs/LaplacianRecursiveGaussianImageFilter.md"
+    },
+    {
+      "filter": "Log10ImageFilter",
+      "uuid": "c76e52d2-9c67-4741-93a6-e4f9a5707f3b",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 8,
+      "purpose": "Use log10 in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "Log10ImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/Log10ImageFilter.md"
+    },
+    {
+      "filter": "LogImageFilter",
+      "uuid": "ca3c8324-1e94-4057-b8a6-3fc275a84452",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 7,
+      "purpose": "Use log in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "LogImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/LogImageFilter.md"
+    },
+    {
+      "filter": "MaskImageFilter",
+      "uuid": "8957ba10-1543-4040-9438-d9a6e1d9ba2d",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 15,
+      "purpose": "Use mask in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "MaskImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/MaskImageFilter.md"
+    },
+    {
+      "filter": "MaximumProjectionImageFilter",
+      "uuid": "3c540e40-b848-48c5-9af8-7941c5d6ee9e",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 3,
+      "purpose": "Use maximum projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "MaximumProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/MaximumProjectionImageFilter.md"
+    },
+    {
+      "filter": "MeanProjectionImageFilter",
+      "uuid": "d5f50ecb-c226-40d6-b611-e6efd7c90fb1",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 4,
+      "purpose": "Use mean projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "MeanProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/MeanProjectionImageFilter.md"
+    },
+    {
+      "filter": "MedianImageFilter",
+      "uuid": "bf4671ab-ebdf-4c4c-a4b1-0cdcaa005d9d",
+      "pipeline": "(06) AM Powder-Bed Layer Inspection/(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "step": 2,
+      "purpose": "Use median in the (02) AM Powder-Bed Layer Inspection workflow.",
+      "unit_test": "MedianImageFilterTest.cpp",
+      "golden_input": "am/powder_bed_layers/layer_000.tif through layer_004.tif",
+      "reference": "docs/MedianImageFilter.md"
+    },
+    {
+      "filter": "MedianProjectionImageFilter",
+      "uuid": "035e7b9d-4a8e-476e-be38-8f8276034e0c",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 5,
+      "purpose": "Use median projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "MedianProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/MedianProjectionImageFilter.md"
+    },
+    {
+      "filter": "MinimumProjectionImageFilter",
+      "uuid": "4c7cdf9b-0cd6-40b0-b0f5-e30aa9983513",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 6,
+      "purpose": "Use minimum projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "MinimumProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/MinimumProjectionImageFilter.md"
+    },
+    {
+      "filter": "MinMaxCurvatureFlowImageFilter",
+      "uuid": "142e4792-1174-4290-bac4-c8034ccf29d2",
+      "pipeline": "(13) Denoising and Edge Detection/(13) Denoising and Edge Detection.d3dpipeline",
+      "step": 3,
+      "purpose": "Use min max curvature flow in the (09) Denoising and Edge Detection workflow.",
+      "unit_test": "MinMaxCurvatureFlowImageFilterTest.cpp",
+      "golden_input": "materials/edge_input.png",
+      "reference": "docs/MinMaxCurvatureFlowImageFilter.md"
+    },
+    {
+      "filter": "MorphologicalGradientImageFilter",
+      "uuid": "c199ce3f-501e-453d-92c9-145d7958a843",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 11,
+      "purpose": "Use morphological gradient in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "MorphologicalGradientImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/MorphologicalGradientImageFilter.md"
+    },
+    {
+      "filter": "MorphologicalWatershedFromMarkersImageFilter",
+      "uuid": "5a489229-9421-4191-a059-04943147f7ed",
+      "pipeline": "(08) Powder Particle Watershed Segmentation/(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "step": 6,
+      "purpose": "Use morphological watershed from markers in the (04) Powder Particle Watershed Segmentation workflow.",
+      "unit_test": "MorphologicalWatershedFromMarkersImageFilterTest.cpp",
+      "golden_input": "materials/powder_particles.png and materials/watershed_markers.png",
+      "reference": "docs/MorphologicalWatershedFromMarkersImageFilter.md"
+    },
+    {
+      "filter": "MorphologicalWatershedImageFilter",
+      "uuid": "d7526386-6ab5-4429-b51d-5e6540af5241",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 8,
+      "purpose": "Use morphological watershed in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "MorphologicalWatershedImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/MorphologicalWatershedImageFilter.md"
+    },
+    {
+      "filter": "NormalizeImageFilter",
+      "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 1,
+      "purpose": "Use normalize in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "NormalizeImageFilterTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/NormalizeImageFilter.md"
+    },
+    {
+      "filter": "NormalizeToConstantImageFilter",
+      "uuid": "800a65f2-8c88-41bc-8281-49b0ba07b185",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 11,
+      "purpose": "Use normalize to constant in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "NormalizeToConstantImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/NormalizeToConstantImageFilter.md"
+    },
+    {
+      "filter": "NotImageFilter",
+      "uuid": "43271832-5e1f-4f5b-9cbb-0c56a78aaae3",
+      "pipeline": "(10) Binary Mask Repair and Skeletonization/(10) Binary Mask Repair and Skeletonization.d3dpipeline",
+      "step": 7,
+      "purpose": "Use not in the (06) Binary Mask Repair and Skeletonization workflow.",
+      "unit_test": "NotImageFilterTest.cpp",
+      "golden_input": "materials/binary_mask.png",
+      "reference": "docs/NotImageFilter.md"
+    },
+    {
+      "filter": "OpeningByReconstructionImageFilter",
+      "uuid": "652094ae-9781-4164-a4eb-afceb343418f",
+      "pipeline": "(11) Grayscale Surface-Defect Morphology/(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+      "step": 7,
+      "purpose": "Use opening by reconstruction in the (07) Grayscale Surface-Defect Morphology workflow.",
+      "unit_test": "OpeningByReconstructionImageFilterTest.cpp",
+      "golden_input": "materials/grayscale_defects.png",
+      "reference": "docs/OpeningByReconstructionImageFilter.md"
+    },
+    {
+      "filter": "OtsuMultipleThresholdsImageFilter",
+      "uuid": "1aaedd47-62aa-4310-a353-af1a40f6ee82",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 3,
+      "purpose": "Use otsu multiple thresholds in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "OtsuMultipleThresholdsImageFilterTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/OtsuMultipleThresholdsImageFilter.md"
+    },
+    {
+      "filter": "RegionalMaximaImageFilter",
+      "uuid": "b1437d92-4400-435e-b7dc-d7b8e3e560ad",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 5,
+      "purpose": "Use regional maxima in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "RegionalMaximaImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/RegionalMaximaImageFilter.md"
+    },
+    {
+      "filter": "RegionalMinimaImageFilter",
+      "uuid": "38b0d575-d728-49e9-9611-42c7df83c96c",
+      "pipeline": "(08) Powder Particle Watershed Segmentation/(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "step": 4,
+      "purpose": "Use regional minima in the (04) Powder Particle Watershed Segmentation workflow.",
+      "unit_test": "RegionalMinimaImageFilterTest.cpp",
+      "golden_input": "materials/powder_particles.png and materials/watershed_markers.png",
+      "reference": "docs/RegionalMinimaImageFilter.md"
+    },
+    {
+      "filter": "ReadBinaryCTNorthstarFilter",
+      "uuid": "5469af5c-368a-465b-87b7-7c0dfdf73666",
+      "pipeline": "(18) Industrial XCT Format Import/(18) Industrial XCT Format Import.d3dpipeline",
+      "step": 0,
+      "purpose": "Use read binary ctnorthstar in the (14) Industrial XCT Format Import workflow.",
+      "unit_test": "ReadBinaryCTNorthstarTest.cpp",
+      "golden_input": "io/northstar, io/volume_graphics, and io/zeiss",
+      "reference": "docs/ReadBinaryCTNorthstarFilter.md"
+    },
+    {
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 0,
+      "purpose": "Use read in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "ReadImageTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/ReadImageFilter.md"
+    },
+    {
+      "filter": "ReadImageStackFilter",
+      "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8",
+      "pipeline": "(19) Serial-Section Stack Reconstruction/(19) Serial-Section Stack Reconstruction.d3dpipeline",
+      "step": 0,
+      "purpose": "Use read image stack in the (15) Serial-Section Stack Reconstruction workflow.",
+      "unit_test": "ReadImageStackTest.cpp",
+      "golden_input": "io/serial_stack/section_000.tif through section_002.tif",
+      "reference": "docs/ReadImageStackFilter.md"
+    },
+    {
+      "filter": "ReadMhaFileFilter",
+      "uuid": "a2da3e27-d5f9-437c-ad02-47d919e1b8a7",
+      "pipeline": "(17) Scientific Volume Interoperability/(17) Scientific Volume Interoperability.d3dpipeline",
+      "step": 0,
+      "purpose": "Use read mha file in the (13) Scientific Volume Interoperability workflow.",
+      "unit_test": "ReadMhaFileTest.cpp",
+      "golden_input": "io/scientific/sample.mha and sample.nii.gz",
+      "reference": "docs/ReadMhaFileFilter.md"
+    },
+    {
+      "filter": "ReadNIfTIFileFilter",
+      "uuid": "e69e51e5-2a9f-40ca-8038-1d2be7925c62",
+      "pipeline": "(17) Scientific Volume Interoperability/(17) Scientific Volume Interoperability.d3dpipeline",
+      "step": 1,
+      "purpose": "Use read nif tifile in the (13) Scientific Volume Interoperability workflow.",
+      "unit_test": "ReadNIfTIFileTest.cpp",
+      "golden_input": "io/scientific/sample.mha and sample.nii.gz",
+      "reference": "docs/ReadNIfTIFileFilter.md"
+    },
+    {
+      "filter": "ReadVolumeGraphicsFileFilter",
+      "uuid": "dfd93665-b455-499a-abed-36ae7dbcdf57",
+      "pipeline": "(18) Industrial XCT Format Import/(18) Industrial XCT Format Import.d3dpipeline",
+      "step": 1,
+      "purpose": "Use read volume graphics file in the (14) Industrial XCT Format Import workflow.",
+      "unit_test": "ReadVolumeGraphicsFileTest.cpp",
+      "golden_input": "io/northstar, io/volume_graphics, and io/zeiss",
+      "reference": "docs/ReadVolumeGraphicsFileFilter.md"
+    },
+    {
+      "filter": "ReadZeissTxmFileFilter",
+      "uuid": "7e3ffc15-51a3-182c-97c2-a82f7af325bf",
+      "pipeline": "(18) Industrial XCT Format Import/(18) Industrial XCT Format Import.d3dpipeline",
+      "step": 2,
+      "purpose": "Use read zeiss txm file in the (14) Industrial XCT Format Import workflow.",
+      "unit_test": "ReadZeissTxmFileTest.cpp",
+      "golden_input": "io/northstar, io/volume_graphics, and io/zeiss",
+      "reference": "docs/ReadZeissTxmFileFilter.md"
+    },
+    {
+      "filter": "RelabelComponentImageFilter",
+      "uuid": "de830a9e-1fc0-47fa-9c2d-895366af832a",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 7,
+      "purpose": "Use relabel component in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "RelabelComponentImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/RelabelComponentImageFilter.md"
+    },
+    {
+      "filter": "RescaleIntensityImageFilter",
+      "uuid": "30b7dbef-0d41-4feb-9e45-ed4def61eae2",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 12,
+      "purpose": "Use rescale intensity in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "RescaleIntensityImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/RescaleIntensityImageFilter.md"
+    },
+    {
+      "filter": "SigmoidImageFilter",
+      "uuid": "1804f5e4-1c76-48f5-b1a0-111963b0a507",
+      "pipeline": "(07) AM Melt-Pool and Track Inspection/(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+      "step": 2,
+      "purpose": "Use sigmoid in the (03) AM Melt-Pool and Track Inspection workflow.",
+      "unit_test": "SigmoidImageFilterTest.cpp",
+      "golden_input": "am/melt_pool_track.tif",
+      "reference": "docs/SigmoidImageFilter.md"
+    },
+    {
+      "filter": "SignedDanielssonDistanceMapImageFilter",
+      "uuid": "a46ca1c9-5be6-4ef8-ad9d-6afab04b4e62",
+      "pipeline": "(12) Pore Distance and Wall-Thickness Metrology/(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "step": 3,
+      "purpose": "Use signed danielsson distance map in the (08) Pore Distance and Wall-Thickness Metrology workflow.",
+      "unit_test": "SignedDanielssonDistanceMapImageFilterTest.cpp",
+      "golden_input": "materials/distance_mask.nrrd",
+      "reference": "docs/SignedDanielssonDistanceMapImageFilter.md"
+    },
+    {
+      "filter": "SignedMaurerDistanceMapImageFilter",
+      "uuid": "7958cf68-fb34-4616-aee7-35ddfc0e49f2",
+      "pipeline": "(05) AM XCT Porosity Segmentation/(05) AM XCT Porosity Segmentation.d3dpipeline",
+      "step": 9,
+      "purpose": "Use signed maurer distance map in the (01) AM XCT Porosity Segmentation workflow.",
+      "unit_test": "SignedMaurerDistanceMapImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/SignedMaurerDistanceMapImageFilter.md"
+    },
+    {
+      "filter": "SinImageFilter",
+      "uuid": "aed02f24-b85c-406f-b733-15e6379d0652",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 2,
+      "purpose": "Use sin in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "SinImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/SinImageFilter.md"
+    },
+    {
+      "filter": "SmoothingRecursiveGaussianImageFilter",
+      "uuid": "435d2425-066a-4a0d-a069-2d40d6a6349e",
+      "pipeline": "(13) Denoising and Edge Detection/(13) Denoising and Edge Detection.d3dpipeline",
+      "step": 4,
+      "purpose": "Use smoothing recursive gaussian in the (09) Denoising and Edge Detection workflow.",
+      "unit_test": "SmoothingRecursiveGaussianImageFilterTest.cpp",
+      "golden_input": "materials/edge_input.png",
+      "reference": "docs/SmoothingRecursiveGaussianImageFilter.md"
+    },
+    {
+      "filter": "SqrtImageFilter",
+      "uuid": "2e199fb5-ff12-460f-a082-31dda8e05ced",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 9,
+      "purpose": "Use sqrt in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "SqrtImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/SqrtImageFilter.md"
+    },
+    {
+      "filter": "SquareImageFilter",
+      "uuid": "1bd144ce-a897-4f5a-93b8-a631ab088d49",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 10,
+      "purpose": "Use square in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "SquareImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/SquareImageFilter.md"
+    },
+    {
+      "filter": "StandardDeviationProjectionImageFilter",
+      "uuid": "1926693e-693a-4775-a068-4c4faa6cd8a7",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 7,
+      "purpose": "Use standard deviation projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "StandardDeviationProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/StandardDeviationProjectionImageFilter.md"
+    },
+    {
+      "filter": "SumProjectionImageFilter",
+      "uuid": "dfdd5b68-7623-445d-8cb2-1775354df7ea",
+      "pipeline": "(14) Projection-Based Quality Summaries/(14) Projection-Based Quality Summaries.d3dpipeline",
+      "step": 8,
+      "purpose": "Use sum projection in the (10) Projection-Based Quality Summaries workflow.",
+      "unit_test": "SumProjectionImageFilterTest.cpp",
+      "golden_input": "am/xct_porosity.mha",
+      "reference": "docs/SumProjectionImageFilter.md"
+    },
+    {
+      "filter": "TanImageFilter",
+      "uuid": "fa76aaa5-77e3-4381-b86b-0b0d9eff73a4",
+      "pipeline": "(16) Phase and Angle Field Transforms/(16) Phase and Angle Field Transforms.d3dpipeline",
+      "step": 4,
+      "purpose": "Use tan in the (12) Phase and Angle Field Transforms workflow.",
+      "unit_test": "TanImageFilterTest.cpp",
+      "golden_input": "am/calibration/phase_radians.mha and normalized_response.mha",
+      "reference": "docs/TanImageFilter.md"
+    },
+    {
+      "filter": "ThresholdImageFilter",
+      "uuid": "9c8f6b2e-3a41-4e7d-b5c9-0f21a7d84e63",
+      "pipeline": "(15) Radiography Intensity Calibration/(15) Radiography Intensity Calibration.d3dpipeline",
+      "step": 14,
+      "purpose": "Use threshold in the (11) Radiography Intensity Calibration workflow.",
+      "unit_test": "ThresholdImageFilterTest.cpp",
+      "golden_input": "am/calibration/transmission.mha, residual.mha, and mask.mha",
+      "reference": "docs/ThresholdImageFilter.md"
+    },
+    {
+      "filter": "ThresholdMaximumConnectedComponentsImageFilter",
+      "uuid": "1d103fda-8d59-49a6-b586-316ec06bf581",
+      "pipeline": "(06) AM Powder-Bed Layer Inspection/(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "step": 4,
+      "purpose": "Use threshold maximum connected components in the (02) AM Powder-Bed Layer Inspection workflow.",
+      "unit_test": "ThresholdMaximumConnectedComponentsImageFilterTest.cpp",
+      "golden_input": "am/powder_bed_layers/layer_000.tif through layer_004.tif",
+      "reference": "docs/ThresholdMaximumConnectedComponentsImageFilter.md"
+    },
+    {
+      "filter": "ValuedRegionalMaximaImageFilter",
+      "uuid": "40f84912-15bc-45b5-926b-c9802dc45bea",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 6,
+      "purpose": "Use valued regional maxima in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "ValuedRegionalMaximaImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/ValuedRegionalMaximaImageFilter.md"
+    },
+    {
+      "filter": "ValuedRegionalMinimaImageFilter",
+      "uuid": "c5fe4d67-4171-4982-b35e-5a7411e73c1f",
+      "pipeline": "(09) Microstructure Watershed Segmentation/(09) Microstructure Watershed Segmentation.d3dpipeline",
+      "step": 7,
+      "purpose": "Use valued regional minima in the (05) Microstructure Watershed Segmentation workflow.",
+      "unit_test": "ValuedRegionalMinimaImageFilterTest.cpp",
+      "golden_input": "materials/microstructure_grayscale.png",
+      "reference": "docs/ValuedRegionalMinimaImageFilter.md"
+    },
+    {
+      "filter": "WhiteTopHatImageFilter",
+      "uuid": "c33fdeac-8313-4dcf-a3d2-e97fff859c54",
+      "pipeline": "(06) AM Powder-Bed Layer Inspection/(06) AM Powder-Bed Layer Inspection.d3dpipeline",
+      "step": 3,
+      "purpose": "Use white top hat in the (02) AM Powder-Bed Layer Inspection workflow.",
+      "unit_test": "WhiteTopHatImageFilterTest.cpp",
+      "golden_input": "am/powder_bed_layers/layer_000.tif through layer_004.tif",
+      "reference": "docs/WhiteTopHatImageFilter.md"
+    },
+    {
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "pipeline": "(17) Scientific Volume Interoperability/(17) Scientific Volume Interoperability.d3dpipeline",
+      "step": 2,
+      "purpose": "Use write in the (13) Scientific Volume Interoperability workflow.",
+      "unit_test": "WriteImageTest.cpp",
+      "golden_input": "io/scientific/sample.mha and sample.nii.gz",
+      "reference": "docs/WriteImageFilter.md"
+    },
+    {
+      "filter": "ZeroCrossingImageFilter",
+      "uuid": "8a22a748-efcc-4982-82ef-0e8e89c92f5b",
+      "pipeline": "(12) Pore Distance and Wall-Thickness Metrology/(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
+      "step": 6,
+      "purpose": "Use zero crossing in the (08) Pore Distance and Wall-Thickness Metrology workflow.",
+      "unit_test": "ZeroCrossingImageFilterTest.cpp",
+      "golden_input": "materials/distance_mask.nrrd",
+      "reference": "docs/ZeroCrossingImageFilter.md"
+    }
+  ]
+}
