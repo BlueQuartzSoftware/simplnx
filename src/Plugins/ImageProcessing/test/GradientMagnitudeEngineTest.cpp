@@ -385,7 +385,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: resident state requires a c
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
+  constexpr usize dimZ = 32;
   constexpr usize sliceValues = dimX * dimY;
   constexpr usize valueCount = sliceValues * dimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
@@ -394,26 +394,27 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: resident state requires a c
   auto requiredResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == valueCount * (sizeof(float32) + sizeof(float32)) + sliceValues * (3 * sizeof(float32) + sizeof(float32)));
-  REQUIRE(requiredResult.value() == 260 * k_MiB);
+  REQUIRE(requiredResult.value() == 68 * k_MiB);
   const auto overflowResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(gradient_detail::ShouldUseGradientMagnitudeResidentState(dims));
   REQUIRE_FALSE(gradient_detail::ShouldUseGradientMagnitudeResidentState(SizeVec3{dimX, dimY, 1}));
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(1024 * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(256 * k_MiB));
   {
     auto allocationResult = gradient_detail::ReserveGradientMagnitudeResidentWorkingMemory<float32>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 256 * k_MiB);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 64 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(2 * 1024 * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(512 * k_MiB));
   {
     auto allocationResult = gradient_detail::ReserveGradientMagnitudeResidentWorkingMemory<float32>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);

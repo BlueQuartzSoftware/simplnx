@@ -361,11 +361,11 @@ if(SIMPLNX_BUILD_TESTS)
             --z-slices 1
             --warmup 0
             --repeats 1
-            --cache-memory-budget-bytes 2147483648
+            --cache-memory-budget-bytes 1073741824
             --require-new-result
   )
   set_tests_properties(ImageProcessingBenchmark::CacheBudget::ValidConfig
-    PROPERTIES PASS_REGULAR_EXPRESSION "cache-memory-budget-bytes=2147483648 maximum-working-memory-bytes=536870912"
+    PROPERTIES PASS_REGULAR_EXPRESSION "cache-memory-budget-bytes=1073741824 maximum-working-memory-bytes=268435456"
   )
 
   set_tests_properties(

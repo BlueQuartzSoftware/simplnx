@@ -68,7 +68,7 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: resident stat
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
+  constexpr usize dimZ = 32;
   constexpr usize valueCount = dimX * dimY * dimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 dims{dimX, dimY, dimZ};
@@ -76,29 +76,30 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: resident stat
   auto float32Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float32Result);
   REQUIRE(float32Result.value() == valueCount * (sizeof(float32) + 2 * sizeof(float32)));
-  REQUIRE(float32Result.value() == 384 * k_MiB);
+  REQUIRE(float32Result.value() == 96 * k_MiB);
   auto float64Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64Result);
-  REQUIRE(float64Result.value() == 512 * k_MiB);
+  REQUIRE(float64Result.value() == 128 * k_MiB);
   auto overflowResult = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(dims));
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(SizeVec3{dimX, dimY, 1}));
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(1024 * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(256 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveLaplacianRecursiveGaussianResidentWorkingMemory<float32>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 256 * k_MiB);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 64 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(2 * 1024 * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(512 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveLaplacianRecursiveGaussianResidentWorkingMemory<float32>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);

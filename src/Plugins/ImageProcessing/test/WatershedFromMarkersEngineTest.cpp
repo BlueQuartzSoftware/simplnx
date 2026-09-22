@@ -657,15 +657,16 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: production request scales a
 {
   constexpr usize k_ValueCount = 33'554'432;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const std::array<uint64, 3> cacheBudgets = {512 * k_MiB, 1024 * k_MiB, 2048 * k_MiB};
+  const std::array<uint64, 3> cacheBudgets = {256 * k_MiB, 512 * k_MiB, 1024 * k_MiB};
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   uint64 previousGrant = 0;
   for(const uint64 cacheBudget : cacheBudgets)
   {
-    manager.setBudgetBytes(cacheBudget);
+    REQUIRE_FALSE(manager.setBudgetBytes(cacheBudget));
     {
       auto allocationResult = ImageProcessing::detail::ReserveWatershedExternalMemoryPlan<uint8>(k_ValueCount);
       SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
@@ -683,7 +684,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: production request scales a
 TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: resident bucket working state is dataset-scaled and requires a complete reservation",
           "[ImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
 {
-  constexpr usize k_ValueCount = 33'554'432;
+  constexpr usize k_ValueCount = 4'194'304;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   constexpr usize k_ExpectedBytesPerValue = sizeof(uint8) + 2 * sizeof(uint32) + sizeof(uint8) + ImageProcessing::detail::k_WatershedResidentQueueBytesPerValue;
   constexpr usize k_ExpectedBucketBytes = (usize{1} << 8) * ImageProcessing::detail::k_WatershedResidentBucketHeadroomBytes;
@@ -701,19 +702,20 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: resident bucket working 
   auto calculateWatershedResidentWorkingMemoryBytesResult = ImageProcessing::detail::CalculateWatershedResidentWorkingMemoryBytes<float32>(k_ValueCount, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_INVALID(calculateWatershedResidentWorkingMemoryBytesResult);
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(4ULL * 1024ULL * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(512 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveWatershedResidentWorkingMemory<uint8>(k_ValueCount, /*markWatershedLine=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 1024 * k_MiB);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 128 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(8ULL * 1024ULL * k_MiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(1024 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveWatershedResidentWorkingMemory<uint8>(k_ValueCount, /*markWatershedLine=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);

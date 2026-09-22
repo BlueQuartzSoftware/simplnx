@@ -98,17 +98,16 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: resident state requires a co
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
+  constexpr usize dimZ = 32;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  constexpr uint64 k_GiB = 1024ULL * k_MiB;
   const SizeVec3 dims{dimX, dimY, dimZ};
 
   auto float64WorkResult = ImageProcessing::detail::CalculateFiniteDifferenceResidentWorkingMemoryBytes<float32, float64>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64WorkResult);
-  REQUIRE(float64WorkResult.value() == 774 * k_MiB);
+  REQUIRE(float64WorkResult.value() == 198 * k_MiB);
   auto float32WorkResult = ImageProcessing::detail::CalculateFiniteDifferenceResidentWorkingMemoryBytes<float32, float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float32WorkResult);
-  REQUIRE(float32WorkResult.value() == 515 * k_MiB);
+  REQUIRE(float32WorkResult.value() == 131 * k_MiB);
   auto overflowResult = ImageProcessing::detail::CalculateFiniteDifferenceResidentWorkingMemoryBytes<float64, float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
@@ -116,19 +115,20 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: resident state requires a co
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(SizeVec3{dimX, dimY, 1}, 1));
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(dims, 0));
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(3 * k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(768 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveFiniteDifferenceResidentWorkingMemory<float32, float64>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 768 * k_MiB);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 192 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(4 * k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(1024 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveFiniteDifferenceResidentWorkingMemory<float32, float64>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);

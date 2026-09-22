@@ -292,30 +292,30 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: full resident state uses a
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
+  constexpr usize dimZ = 32;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  constexpr uint64 k_GiB = 1024ULL * k_MiB;
   const SizeVec3 dims{dimX, dimY, dimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateConnectedComponentResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
-  REQUIRE(requiredResult.value() == 814 * k_MiB + 32);
+  REQUIRE(requiredResult.value() == 214 * k_MiB + 32);
   const auto overflowResult = ImageProcessing::detail::CalculateConnectedComponentResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(3 * k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(768 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveConnectedComponentResidentWorkingMemory<uint8>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 768 * k_MiB);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 192 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(4 * k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(1024 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveConnectedComponentResidentWorkingMemory<uint8>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);

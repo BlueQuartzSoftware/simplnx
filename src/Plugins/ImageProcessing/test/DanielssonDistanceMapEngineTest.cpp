@@ -654,13 +654,13 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident state requires
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
+  constexpr usize dimZ = 32;
   constexpr usize sliceValues = dimX * dimY;
   constexpr usize valueCount = sliceValues * dimZ;
   constexpr usize visitCount = (2 * dimX - 2) + (2 * dimY - 2) + (2 * dimZ - 2);
   constexpr usize expectedBytes =
       valueCount * (3 * sizeof(int32) + sizeof(uint8)) + sliceValues * sizeof(uint8) + sliceValues * sizeof(float32) + visitCount * sizeof(ImageProcessing::detail::AxisVisit);
-  constexpr uint64 k_GiB = 1024ULL * 1024ULL * 1024ULL;
+  constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 dims{dimX, dimY, dimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateDanielssonResidentWorkingMemoryBytes<uint8>(dims);
@@ -672,19 +672,20 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident state requires
   REQUIRE(ImageProcessing::detail::ShouldUseDanielssonResidentState(dims));
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseDanielssonResidentState(SizeVec3{dimX, dimY, 1}));
 
+  // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
-  manager.setBudgetBytes(k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(256 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveDanielssonResidentWorkingMemory<uint8>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
     REQUIRE_FALSE(allocationResult.value().holdsCompleteState());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == 256ULL * 1024ULL * 1024ULL);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == 64 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
-  manager.setBudgetBytes(2 * k_GiB);
+  REQUIRE_FALSE(manager.setBudgetBytes(512 * k_MiB));
   {
     auto allocationResult = ImageProcessing::detail::ReserveDanielssonResidentWorkingMemory<uint8>(dims);
     SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
