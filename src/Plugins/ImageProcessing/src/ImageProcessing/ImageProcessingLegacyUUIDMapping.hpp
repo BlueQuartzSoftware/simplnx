@@ -2,24 +2,46 @@
 
 #include "ImageProcessing/ImageProcessingLegacyUuids.hpp"
 
+#include "ImageProcessing/Filters/BinaryContourImageFilter.hpp"
+#include "ImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
+#include "ImageProcessing/Filters/ClosingByReconstructionImageFilter.hpp"
+#include "ImageProcessing/Filters/GrayscaleFillholeImageFilter.hpp"
+#include "ImageProcessing/Filters/GrayscaleGrindPeakImageFilter.hpp"
+#include "ImageProcessing/Filters/HConvexImageFilter.hpp"
+#include "ImageProcessing/Filters/HMaximaImageFilter.hpp"
+#include "ImageProcessing/Filters/HMinimaImageFilter.hpp"
+#include "ImageProcessing/Filters/ImportFijiMontageFilter.hpp"
+#include "ImageProcessing/Filters/LabelContourImageFilter.hpp"
+#include "ImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
+#include "ImageProcessing/Filters/MorphologicalWatershedImageFilter.hpp"
+#include "ImageProcessing/Filters/OpeningByReconstructionImageFilter.hpp"
+#include "ImageProcessing/Filters/ReadBinaryCTNorthstarFilter.hpp"
+#include "ImageProcessing/Filters/ReadImageFilter.hpp"
+#include "ImageProcessing/Filters/ReadImageStackFilter.hpp"
+#include "ImageProcessing/Filters/ReadMhaFileFilter.hpp"
+#include "ImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
+#include "ImageProcessing/Filters/SignedMaurerDistanceMapImageFilter.hpp"
+#include "ImageProcessing/Filters/ValuedRegionalMaximaImageFilter.hpp"
+#include "ImageProcessing/Filters/ValuedRegionalMinimaImageFilter.hpp"
+#include "ImageProcessing/Filters/WriteImageFilter.hpp"
+
+#ifndef ImageProcessing_LEAN_AND_MEAN
+
 #include "ImageProcessing/Filters/AbsImageFilter.hpp"
 #include "ImageProcessing/Filters/AcosImageFilter.hpp"
 #include "ImageProcessing/Filters/AdaptiveHistogramEqualizationImageFilter.hpp"
 #include "ImageProcessing/Filters/ApproximateSignedDistanceMapImageFilter.hpp"
 #include "ImageProcessing/Filters/AsinImageFilter.hpp"
 #include "ImageProcessing/Filters/AtanImageFilter.hpp"
-#include "ImageProcessing/Filters/BinaryContourImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryDilateImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryErodeImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryMorphologicalClosingImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
-#include "ImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryProjectionImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryThinningImageFilter.hpp"
 #include "ImageProcessing/Filters/BinaryThresholdImageFilter.hpp"
 #include "ImageProcessing/Filters/BlackTopHatImageFilter.hpp"
 #include "ImageProcessing/Filters/BoundedReciprocalImageFilter.hpp"
-#include "ImageProcessing/Filters/ClosingByReconstructionImageFilter.hpp"
 #include "ImageProcessing/Filters/ConnectedComponentImageFilter.hpp"
 #include "ImageProcessing/Filters/CosImageFilter.hpp"
 #include "ImageProcessing/Filters/CurvatureAnisotropicDiffusionImageFilter.hpp"
@@ -36,18 +58,11 @@
 #include "ImageProcessing/Filters/GradientMagnitudeRecursiveGaussianImageFilter.hpp"
 #include "ImageProcessing/Filters/GrayscaleDilateImageFilter.hpp"
 #include "ImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleFillholeImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleGrindPeakImageFilter.hpp"
 #include "ImageProcessing/Filters/GrayscaleMorphologicalClosingImageFilter.hpp"
 #include "ImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
-#include "ImageProcessing/Filters/HConvexImageFilter.hpp"
-#include "ImageProcessing/Filters/HMaximaImageFilter.hpp"
-#include "ImageProcessing/Filters/HMinimaImageFilter.hpp"
-#include "ImageProcessing/Filters/ImportFijiMontageFilter.hpp"
 #include "ImageProcessing/Filters/IntensityWindowingImageFilter.hpp"
 #include "ImageProcessing/Filters/InvertIntensityImageFilter.hpp"
 #include "ImageProcessing/Filters/IsoContourDistanceImageFilter.hpp"
-#include "ImageProcessing/Filters/LabelContourImageFilter.hpp"
 #include "ImageProcessing/Filters/LaplacianRecursiveGaussianImageFilter.hpp"
 #include "ImageProcessing/Filters/Log10ImageFilter.hpp"
 #include "ImageProcessing/Filters/LogImageFilter.hpp"
@@ -58,26 +73,17 @@
 #include "ImageProcessing/Filters/MedianProjectionImageFilter.hpp"
 #include "ImageProcessing/Filters/MinMaxCurvatureFlowImageFilter.hpp"
 #include "ImageProcessing/Filters/MinimumProjectionImageFilter.hpp"
-#include "ImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
 #include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
-#include "ImageProcessing/Filters/MorphologicalWatershedImageFilter.hpp"
 #include "ImageProcessing/Filters/NormalizeImageFilter.hpp"
 #include "ImageProcessing/Filters/NormalizeToConstantImageFilter.hpp"
 #include "ImageProcessing/Filters/NotImageFilter.hpp"
-#include "ImageProcessing/Filters/OpeningByReconstructionImageFilter.hpp"
 #include "ImageProcessing/Filters/OtsuMultipleThresholdsImageFilter.hpp"
-#include "ImageProcessing/Filters/ReadBinaryCTNorthstarFilter.hpp"
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
-#include "ImageProcessing/Filters/ReadImageStackFilter.hpp"
-#include "ImageProcessing/Filters/ReadMhaFileFilter.hpp"
-#include "ImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "ImageProcessing/Filters/RegionalMaximaImageFilter.hpp"
 #include "ImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 #include "ImageProcessing/Filters/RelabelComponentImageFilter.hpp"
 #include "ImageProcessing/Filters/RescaleIntensityImageFilter.hpp"
 #include "ImageProcessing/Filters/SigmoidImageFilter.hpp"
 #include "ImageProcessing/Filters/SignedDanielssonDistanceMapImageFilter.hpp"
-#include "ImageProcessing/Filters/SignedMaurerDistanceMapImageFilter.hpp"
 #include "ImageProcessing/Filters/SinImageFilter.hpp"
 #include "ImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 #include "ImageProcessing/Filters/SqrtImageFilter.hpp"
@@ -87,11 +93,10 @@
 #include "ImageProcessing/Filters/TanImageFilter.hpp"
 #include "ImageProcessing/Filters/ThresholdImageFilter.hpp"
 #include "ImageProcessing/Filters/ThresholdMaximumConnectedComponentsImageFilter.hpp"
-#include "ImageProcessing/Filters/ValuedRegionalMaximaImageFilter.hpp"
-#include "ImageProcessing/Filters/ValuedRegionalMinimaImageFilter.hpp"
 #include "ImageProcessing/Filters/WhiteTopHatImageFilter.hpp"
-#include "ImageProcessing/Filters/WriteImageFilter.hpp"
 #include "ImageProcessing/Filters/ZeroCrossingImageFilter.hpp"
+
+#endif
 
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 
@@ -100,18 +105,14 @@ namespace nx::core
 {
 static const AbstractPlugin::SIMPLMapType k_SIMPL_to_ImageProcessing
 {
-  {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
-  {nx::core::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), {nx::core::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid, &ReadVolumeGraphicsFileFilter::FromSIMPLJson}}, // ImportVolumeGraphicsFileFilter
-
   // The entries below come from the retired ITKImageProcessing plugin. That plugin owned these SIMPL
   // Uuids, so this map could not claim them while both plugins loaded. ImageProcessing now owns them.
   // The comment on each line names the DREAM3D 6.x filter class the Uuid belongs to.
-  {nx::core::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), {nx::core::FilterTraits<DiscreteGaussianImageFilter>::uuid, &DiscreteGaussianImageFilter::FromSIMPLJson}}, // ITKDiscreteGaussianImage
+  {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
+  {nx::core::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), {nx::core::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid, &ReadVolumeGraphicsFileFilter::FromSIMPLJson}}, // ImportVolumeGraphicsFileFilter
   {nx::core::Uuid::FromString("653b7b5c-03cb-5b32-8c3e-3637745e5ff6").value(), {nx::core::FilterTraits<ReadImageFilter>::uuid, &ReadImageFilter::FromSIMPLJson}}, // ITKImageReaderFilter
   {nx::core::Uuid::FromString("11473711-f94d-5d96-b749-ec36a81ad338").value(), {nx::core::FilterTraits<WriteImageFilter>::uuid, &WriteImageFilter::FromSIMPLJson}}, // ITKImageWriter
   {nx::core::Uuid::FromString("cf7d7497-9573-5102-bedd-38f86a6cdfd4").value(), {nx::core::FilterTraits<ReadImageStackFilter>::uuid, &ReadImageStackFilter::FromSIMPLJson}}, // ITKImportImageStack
-  {nx::core::Uuid::FromString("cc27ee9a-9946-56ad-afd4-6e98b71f417d").value(), {nx::core::FilterTraits<MedianImageFilter>::uuid, &MedianImageFilter::FromSIMPLJson}}, // ITKMedianImage
-  {nx::core::Uuid::FromString("77bf2192-851d-5127-9add-634c1ef4f67f").value(), {nx::core::FilterTraits<RescaleIntensityImageFilter>::uuid, &RescaleIntensityImageFilter::FromSIMPLJson}}, // ITKRescaleIntensityImage
   {nx::core::Uuid::FromString("3c451ac9-bfef-5e41-bae9-3957a0fc26a1").value(), {nx::core::FilterTraits<BinaryContourImageFilter>::uuid, &BinaryContourImageFilter::FromSIMPLJson}}, // ITKBinaryContourImage
   {nx::core::Uuid::FromString("bd1c2353-0a39-52c0-902b-ee64721994c7").value(), {nx::core::FilterTraits<BinaryOpeningByReconstructionImageFilter>::uuid, &BinaryOpeningByReconstructionImageFilter::FromSIMPLJson}}, // ITKBinaryOpeningByReconstructionImage
   {nx::core::Uuid::FromString("99a7aa3c-f945-5e77-875a-23b5231ab3f4").value(), {nx::core::FilterTraits<ClosingByReconstructionImageFilter>::uuid, &ClosingByReconstructionImageFilter::FromSIMPLJson}}, // ITKClosingByReconstructionImage
@@ -127,6 +128,11 @@ static const AbstractPlugin::SIMPLMapType k_SIMPL_to_ImageProcessing
   {nx::core::Uuid::FromString("bb15d42a-3077-582a-be1a-76b2bae172e9").value(), {nx::core::FilterTraits<SignedMaurerDistanceMapImageFilter>::uuid, &SignedMaurerDistanceMapImageFilter::FromSIMPLJson}}, // ITKSignedMaurerDistanceMapImage
   {nx::core::Uuid::FromString("10aff542-81c5-5f09-9797-c7171c40b6a0").value(), {nx::core::FilterTraits<ValuedRegionalMaximaImageFilter>::uuid, &ValuedRegionalMaximaImageFilter::FromSIMPLJson}}, // ITKValuedRegionalMaximaImage
   {nx::core::Uuid::FromString("739a0908-cb60-50f7-a484-b2157d023093").value(), {nx::core::FilterTraits<ValuedRegionalMinimaImageFilter>::uuid, &ValuedRegionalMinimaImageFilter::FromSIMPLJson}}, // ITKValuedRegionalMinimaImage
+
+  #ifndef ImageProcessing_LEAN_AND_MEAN
+  {nx::core::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), {nx::core::FilterTraits<DiscreteGaussianImageFilter>::uuid, &DiscreteGaussianImageFilter::FromSIMPLJson}}, // ITKDiscreteGaussianImage
+  {nx::core::Uuid::FromString("cc27ee9a-9946-56ad-afd4-6e98b71f417d").value(), {nx::core::FilterTraits<MedianImageFilter>::uuid, &MedianImageFilter::FromSIMPLJson}}, // ITKMedianImage
+  {nx::core::Uuid::FromString("77bf2192-851d-5127-9add-634c1ef4f67f").value(), {nx::core::FilterTraits<RescaleIntensityImageFilter>::uuid, &RescaleIntensityImageFilter::FromSIMPLJson}}, // ITKRescaleIntensityImage
   {nx::core::Uuid::FromString("09f45c29-1cfb-566c-b3ae-d832b4f95905").value(), {nx::core::FilterTraits<AbsImageFilter>::uuid, &AbsImageFilter::FromSIMPLJson}}, // ITKAbsImage
   {nx::core::Uuid::FromString("b09ec654-87a5-5dfa-9949-aa69f1fbfdd1").value(), {nx::core::FilterTraits<AcosImageFilter>::uuid, &AcosImageFilter::FromSIMPLJson}}, // ITKAcosImage
   {nx::core::Uuid::FromString("2d5a7599-5e01-5489-a107-23b704d2b5eb").value(), {nx::core::FilterTraits<AdaptiveHistogramEqualizationImageFilter>::uuid, &AdaptiveHistogramEqualizationImageFilter::FromSIMPLJson}}, // ITKAdaptiveHistogramEqualizationImage
@@ -165,6 +171,9 @@ static const AbstractPlugin::SIMPLMapType k_SIMPL_to_ImageProcessing
   {nx::core::Uuid::FromString("f092420e-14a0-5dc0-91f8-de0082103aef").value(), {nx::core::FilterTraits<SquareImageFilter>::uuid, &SquareImageFilter::FromSIMPLJson}}, // ITKSquareImage
   {nx::core::Uuid::FromString("5845ee06-5c8a-5a74-80fb-c820bd8dfb75").value(), {nx::core::FilterTraits<ThresholdImageFilter>::uuid, &ThresholdImageFilter::FromSIMPLJson}}, // ITKThresholdImage
   {nx::core::Uuid::FromString("02e059f7-8055-52b4-9d48-915b67d1e39a").value(), {nx::core::FilterTraits<WhiteTopHatImageFilter>::uuid, &WhiteTopHatImageFilter::FromSIMPLJson}}, // ITKWhiteTopHatImage
+
+#endif
+
 };
 
 // Old ITKImageProcessing simplnx (NX) filter Uuid -> new ImageProcessing filter Uuid.
@@ -173,28 +182,44 @@ static const AbstractPlugin::SIMPLMapType k_SIMPL_to_ImageProcessing
 // loaded, the old Uuid resolves directly and this map is never consulted.
 static const AbstractPlugin::FilterReplacementMapType k_ITK_to_ImageProcessing_Replacements
 {
+
+  {ImageProcessingLegacyUuids::k_ITKBinaryContourImageFilter, nx::core::FilterTraits<BinaryContourImageFilter>::uuid}, // ITKBinaryContourImageFilter
+  {ImageProcessingLegacyUuids::k_ITKBinaryOpeningByReconstructionImageFilter, nx::core::FilterTraits<BinaryOpeningByReconstructionImageFilter>::uuid}, // ITKBinaryOpeningByReconstructionImageFilter
+  {ImageProcessingLegacyUuids::k_ITKClosingByReconstructionImageFilter, nx::core::FilterTraits<ClosingByReconstructionImageFilter>::uuid}, // ITKClosingByReconstructionImageFilter
+  {ImageProcessingLegacyUuids::k_ITKGrayscaleFillholeImageFilter, nx::core::FilterTraits<GrayscaleFillholeImageFilter>::uuid}, // ITKGrayscaleFillholeImageFilter
+  {ImageProcessingLegacyUuids::k_ITKGrayscaleGrindPeakImageFilter, nx::core::FilterTraits<GrayscaleGrindPeakImageFilter>::uuid}, // ITKGrayscaleGrindPeakImageFilter
+  {ImageProcessingLegacyUuids::k_ITKHConvexImageFilter, nx::core::FilterTraits<HConvexImageFilter>::uuid}, // ITKHConvexImageFilter
+  {ImageProcessingLegacyUuids::k_ITKHMaximaImageFilter, nx::core::FilterTraits<HMaximaImageFilter>::uuid}, // ITKHMaximaImageFilter
+  {ImageProcessingLegacyUuids::k_ITKHMinimaImageFilter, nx::core::FilterTraits<HMinimaImageFilter>::uuid}, // ITKHMinimaImageFilter
+  {ImageProcessingLegacyUuids::k_ITKLabelContourImageFilter, nx::core::FilterTraits<LabelContourImageFilter>::uuid}, // ITKLabelContourImageFilter
+  {ImageProcessingLegacyUuids::k_ITKMorphologicalGradientImageFilter, nx::core::FilterTraits<MorphologicalGradientImageFilter>::uuid}, // ITKMorphologicalGradientImageFilter
+  {ImageProcessingLegacyUuids::k_ITKMorphologicalWatershedImageFilter, nx::core::FilterTraits<MorphologicalWatershedImageFilter>::uuid}, // ITKMorphologicalWatershedImageFilter
+  {ImageProcessingLegacyUuids::k_ITKOpeningByReconstructionImageFilter, nx::core::FilterTraits<OpeningByReconstructionImageFilter>::uuid}, // ITKOpeningByReconstructionImageFilter
+  {ImageProcessingLegacyUuids::k_ITKSignedMaurerDistanceMapImageFilter, nx::core::FilterTraits<SignedMaurerDistanceMapImageFilter>::uuid}, // ITKSignedMaurerDistanceMapImageFilter
+  {ImageProcessingLegacyUuids::k_ITKValuedRegionalMaximaImageFilter, nx::core::FilterTraits<ValuedRegionalMaximaImageFilter>::uuid}, // ITKValuedRegionalMaximaImageFilter
+  {ImageProcessingLegacyUuids::k_ITKValuedRegionalMinimaImageFilter, nx::core::FilterTraits<ValuedRegionalMinimaImageFilter>::uuid}, // ITKValuedRegionalMinimaImageFilter
   {ImageProcessingLegacyUuids::k_ITKImageReader, nx::core::FilterTraits<ReadImageFilter>::uuid}, // ITKImageReader
   {ImageProcessingLegacyUuids::k_ITKMhaFileReader, nx::core::FilterTraits<ReadMhaFileFilter>::uuid}, // ITKMhaFileReader
   {ImageProcessingLegacyUuids::k_ITKImportImageStack, nx::core::FilterTraits<ReadImageStackFilter>::uuid}, // ITKImportImageStack
   {ImageProcessingLegacyUuids::k_ITKImportFijiMontage, nx::core::FilterTraits<ImportFijiMontageFilter>::uuid}, // ITKImportFijiMontage
+  {ImageProcessingLegacyUuids::k_ITKImageWriterFilter, nx::core::FilterTraits<WriteImageFilter>::uuid}, // ITKImageWriterFilter
+
+#ifndef ImageProcessing_LEAN_AND_MEAN
   {ImageProcessingLegacyUuids::k_ITKAbsImageFilter, nx::core::FilterTraits<AbsImageFilter>::uuid}, // ITKAbsImageFilter
   {ImageProcessingLegacyUuids::k_ITKAcosImageFilter, nx::core::FilterTraits<AcosImageFilter>::uuid}, // ITKAcosImageFilter
   {ImageProcessingLegacyUuids::k_ITKAdaptiveHistogramEqualizationImageFilter, nx::core::FilterTraits<AdaptiveHistogramEqualizationImageFilter>::uuid}, // ITKAdaptiveHistogramEqualizationImageFilter
   {ImageProcessingLegacyUuids::k_ITKApproximateSignedDistanceMapImageFilter, nx::core::FilterTraits<ApproximateSignedDistanceMapImageFilter>::uuid}, // ITKApproximateSignedDistanceMapImageFilter
   {ImageProcessingLegacyUuids::k_ITKAsinImageFilter, nx::core::FilterTraits<AsinImageFilter>::uuid}, // ITKAsinImageFilter
   {ImageProcessingLegacyUuids::k_ITKAtanImageFilter, nx::core::FilterTraits<AtanImageFilter>::uuid}, // ITKAtanImageFilter
-  {ImageProcessingLegacyUuids::k_ITKBinaryContourImageFilter, nx::core::FilterTraits<BinaryContourImageFilter>::uuid}, // ITKBinaryContourImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryDilateImageFilter, nx::core::FilterTraits<BinaryDilateImageFilter>::uuid}, // ITKBinaryDilateImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryErodeImageFilter, nx::core::FilterTraits<BinaryErodeImageFilter>::uuid}, // ITKBinaryErodeImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryMorphologicalClosingImageFilter, nx::core::FilterTraits<BinaryMorphologicalClosingImageFilter>::uuid}, // ITKBinaryMorphologicalClosingImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryMorphologicalOpeningImageFilter, nx::core::FilterTraits<BinaryMorphologicalOpeningImageFilter>::uuid}, // ITKBinaryMorphologicalOpeningImageFilter
-  {ImageProcessingLegacyUuids::k_ITKBinaryOpeningByReconstructionImageFilter, nx::core::FilterTraits<BinaryOpeningByReconstructionImageFilter>::uuid}, // ITKBinaryOpeningByReconstructionImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryProjectionImageFilter, nx::core::FilterTraits<BinaryProjectionImageFilter>::uuid}, // ITKBinaryProjectionImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryThinningImageFilter, nx::core::FilterTraits<BinaryThinningImageFilter>::uuid}, // ITKBinaryThinningImageFilter
   {ImageProcessingLegacyUuids::k_ITKBinaryThresholdImageFilter, nx::core::FilterTraits<BinaryThresholdImageFilter>::uuid}, // ITKBinaryThresholdImageFilter
   {ImageProcessingLegacyUuids::k_ITKBlackTopHatImageFilter, nx::core::FilterTraits<BlackTopHatImageFilter>::uuid}, // ITKBlackTopHatImageFilter
   {ImageProcessingLegacyUuids::k_ITKBoundedReciprocalImageFilter, nx::core::FilterTraits<BoundedReciprocalImageFilter>::uuid}, // ITKBoundedReciprocalImageFilter
-  {ImageProcessingLegacyUuids::k_ITKClosingByReconstructionImageFilter, nx::core::FilterTraits<ClosingByReconstructionImageFilter>::uuid}, // ITKClosingByReconstructionImageFilter
   {ImageProcessingLegacyUuids::k_ITKConnectedComponentImageFilter, nx::core::FilterTraits<ConnectedComponentImageFilter>::uuid}, // ITKConnectedComponentImageFilter
   {ImageProcessingLegacyUuids::k_ITKCosImageFilter, nx::core::FilterTraits<CosImageFilter>::uuid}, // ITKCosImageFilter
   {ImageProcessingLegacyUuids::k_ITKCurvatureAnisotropicDiffusionImageFilter, nx::core::FilterTraits<CurvatureAnisotropicDiffusionImageFilter>::uuid}, // ITKCurvatureAnisotropicDiffusionImageFilter
@@ -211,17 +236,11 @@ static const AbstractPlugin::FilterReplacementMapType k_ITK_to_ImageProcessing_R
   {ImageProcessingLegacyUuids::k_ITKGradientMagnitudeRecursiveGaussianImageFilter, nx::core::FilterTraits<GradientMagnitudeRecursiveGaussianImageFilter>::uuid}, // ITKGradientMagnitudeRecursiveGaussianImageFilter
   {ImageProcessingLegacyUuids::k_ITKGrayscaleDilateImageFilter, nx::core::FilterTraits<GrayscaleDilateImageFilter>::uuid}, // ITKGrayscaleDilateImageFilter
   {ImageProcessingLegacyUuids::k_ITKGrayscaleErodeImageFilter, nx::core::FilterTraits<GrayscaleErodeImageFilter>::uuid}, // ITKGrayscaleErodeImageFilter
-  {ImageProcessingLegacyUuids::k_ITKGrayscaleFillholeImageFilter, nx::core::FilterTraits<GrayscaleFillholeImageFilter>::uuid}, // ITKGrayscaleFillholeImageFilter
-  {ImageProcessingLegacyUuids::k_ITKGrayscaleGrindPeakImageFilter, nx::core::FilterTraits<GrayscaleGrindPeakImageFilter>::uuid}, // ITKGrayscaleGrindPeakImageFilter
   {ImageProcessingLegacyUuids::k_ITKGrayscaleMorphologicalClosingImageFilter, nx::core::FilterTraits<GrayscaleMorphologicalClosingImageFilter>::uuid}, // ITKGrayscaleMorphologicalClosingImageFilter
   {ImageProcessingLegacyUuids::k_ITKGrayscaleMorphologicalOpeningImageFilter, nx::core::FilterTraits<GrayscaleMorphologicalOpeningImageFilter>::uuid}, // ITKGrayscaleMorphologicalOpeningImageFilter
-  {ImageProcessingLegacyUuids::k_ITKHConvexImageFilter, nx::core::FilterTraits<HConvexImageFilter>::uuid}, // ITKHConvexImageFilter
-  {ImageProcessingLegacyUuids::k_ITKHMaximaImageFilter, nx::core::FilterTraits<HMaximaImageFilter>::uuid}, // ITKHMaximaImageFilter
-  {ImageProcessingLegacyUuids::k_ITKHMinimaImageFilter, nx::core::FilterTraits<HMinimaImageFilter>::uuid}, // ITKHMinimaImageFilter
   {ImageProcessingLegacyUuids::k_ITKIntensityWindowingImageFilter, nx::core::FilterTraits<IntensityWindowingImageFilter>::uuid}, // ITKIntensityWindowingImageFilter
   {ImageProcessingLegacyUuids::k_ITKInvertIntensityImageFilter, nx::core::FilterTraits<InvertIntensityImageFilter>::uuid}, // ITKInvertIntensityImageFilter
   {ImageProcessingLegacyUuids::k_ITKIsoContourDistanceImageFilter, nx::core::FilterTraits<IsoContourDistanceImageFilter>::uuid}, // ITKIsoContourDistanceImageFilter
-  {ImageProcessingLegacyUuids::k_ITKLabelContourImageFilter, nx::core::FilterTraits<LabelContourImageFilter>::uuid}, // ITKLabelContourImageFilter
   {ImageProcessingLegacyUuids::k_ITKLaplacianRecursiveGaussianImageFilter, nx::core::FilterTraits<LaplacianRecursiveGaussianImageFilter>::uuid}, // ITKLaplacianRecursiveGaussianImageFilter
   {ImageProcessingLegacyUuids::k_ITKLog10ImageFilter, nx::core::FilterTraits<Log10ImageFilter>::uuid}, // ITKLog10ImageFilter
   {ImageProcessingLegacyUuids::k_ITKLogImageFilter, nx::core::FilterTraits<LogImageFilter>::uuid}, // ITKLogImageFilter
@@ -232,13 +251,10 @@ static const AbstractPlugin::FilterReplacementMapType k_ITK_to_ImageProcessing_R
   {ImageProcessingLegacyUuids::k_ITKMedianProjectionImageFilter, nx::core::FilterTraits<MedianProjectionImageFilter>::uuid}, // ITKMedianProjectionImageFilter
   {ImageProcessingLegacyUuids::k_ITKMinimumProjectionImageFilter, nx::core::FilterTraits<MinimumProjectionImageFilter>::uuid}, // ITKMinimumProjectionImageFilter
   {ImageProcessingLegacyUuids::k_ITKMinMaxCurvatureFlowImageFilter, nx::core::FilterTraits<MinMaxCurvatureFlowImageFilter>::uuid}, // ITKMinMaxCurvatureFlowImageFilter
-  {ImageProcessingLegacyUuids::k_ITKMorphologicalGradientImageFilter, nx::core::FilterTraits<MorphologicalGradientImageFilter>::uuid}, // ITKMorphologicalGradientImageFilter
   {ImageProcessingLegacyUuids::k_ITKMorphologicalWatershedFromMarkersImageFilter, nx::core::FilterTraits<MorphologicalWatershedFromMarkersImageFilter>::uuid}, // ITKMorphologicalWatershedFromMarkersImageFilter
-  {ImageProcessingLegacyUuids::k_ITKMorphologicalWatershedImageFilter, nx::core::FilterTraits<MorphologicalWatershedImageFilter>::uuid}, // ITKMorphologicalWatershedImageFilter
   {ImageProcessingLegacyUuids::k_ITKNormalizeImageFilter, nx::core::FilterTraits<NormalizeImageFilter>::uuid}, // ITKNormalizeImageFilter
   {ImageProcessingLegacyUuids::k_ITKNormalizeToConstantImageFilter, nx::core::FilterTraits<NormalizeToConstantImageFilter>::uuid}, // ITKNormalizeToConstantImageFilter
   {ImageProcessingLegacyUuids::k_ITKNotImageFilter, nx::core::FilterTraits<NotImageFilter>::uuid}, // ITKNotImageFilter
-  {ImageProcessingLegacyUuids::k_ITKOpeningByReconstructionImageFilter, nx::core::FilterTraits<OpeningByReconstructionImageFilter>::uuid}, // ITKOpeningByReconstructionImageFilter
   {ImageProcessingLegacyUuids::k_ITKOtsuMultipleThresholdsImageFilter, nx::core::FilterTraits<OtsuMultipleThresholdsImageFilter>::uuid}, // ITKOtsuMultipleThresholdsImageFilter
   {ImageProcessingLegacyUuids::k_ITKRegionalMaximaImageFilter, nx::core::FilterTraits<RegionalMaximaImageFilter>::uuid}, // ITKRegionalMaximaImageFilter
   {ImageProcessingLegacyUuids::k_ITKRegionalMinimaImageFilter, nx::core::FilterTraits<RegionalMinimaImageFilter>::uuid}, // ITKRegionalMinimaImageFilter
@@ -246,7 +262,6 @@ static const AbstractPlugin::FilterReplacementMapType k_ITK_to_ImageProcessing_R
   {ImageProcessingLegacyUuids::k_ITKRescaleIntensityImageFilter, nx::core::FilterTraits<RescaleIntensityImageFilter>::uuid}, // ITKRescaleIntensityImageFilter
   {ImageProcessingLegacyUuids::k_ITKSigmoidImageFilter, nx::core::FilterTraits<SigmoidImageFilter>::uuid}, // ITKSigmoidImageFilter
   {ImageProcessingLegacyUuids::k_ITKSignedDanielssonDistanceMapImageFilter, nx::core::FilterTraits<SignedDanielssonDistanceMapImageFilter>::uuid}, // ITKSignedDanielssonDistanceMapImageFilter
-  {ImageProcessingLegacyUuids::k_ITKSignedMaurerDistanceMapImageFilter, nx::core::FilterTraits<SignedMaurerDistanceMapImageFilter>::uuid}, // ITKSignedMaurerDistanceMapImageFilter
   {ImageProcessingLegacyUuids::k_ITKSinImageFilter, nx::core::FilterTraits<SinImageFilter>::uuid}, // ITKSinImageFilter
   {ImageProcessingLegacyUuids::k_ITKSmoothingRecursiveGaussianImageFilter, nx::core::FilterTraits<SmoothingRecursiveGaussianImageFilter>::uuid}, // ITKSmoothingRecursiveGaussianImageFilter
   {ImageProcessingLegacyUuids::k_ITKSqrtImageFilter, nx::core::FilterTraits<SqrtImageFilter>::uuid}, // ITKSqrtImageFilter
@@ -256,11 +271,10 @@ static const AbstractPlugin::FilterReplacementMapType k_ITK_to_ImageProcessing_R
   {ImageProcessingLegacyUuids::k_ITKTanImageFilter, nx::core::FilterTraits<TanImageFilter>::uuid}, // ITKTanImageFilter
   {ImageProcessingLegacyUuids::k_ITKThresholdImageFilter, nx::core::FilterTraits<ThresholdImageFilter>::uuid}, // ITKThresholdImageFilter
   {ImageProcessingLegacyUuids::k_ITKThresholdMaximumConnectedComponentsImageFilter, nx::core::FilterTraits<ThresholdMaximumConnectedComponentsImageFilter>::uuid}, // ITKThresholdMaximumConnectedComponentsImageFilter
-  {ImageProcessingLegacyUuids::k_ITKValuedRegionalMaximaImageFilter, nx::core::FilterTraits<ValuedRegionalMaximaImageFilter>::uuid}, // ITKValuedRegionalMaximaImageFilter
-  {ImageProcessingLegacyUuids::k_ITKValuedRegionalMinimaImageFilter, nx::core::FilterTraits<ValuedRegionalMinimaImageFilter>::uuid}, // ITKValuedRegionalMinimaImageFilter
   {ImageProcessingLegacyUuids::k_ITKWhiteTopHatImageFilter, nx::core::FilterTraits<WhiteTopHatImageFilter>::uuid}, // ITKWhiteTopHatImageFilter
-  {ImageProcessingLegacyUuids::k_ITKImageWriterFilter, nx::core::FilterTraits<WriteImageFilter>::uuid}, // ITKImageWriterFilter
   {ImageProcessingLegacyUuids::k_ITKZeroCrossingImageFilter, nx::core::FilterTraits<ZeroCrossingImageFilter>::uuid}, // ITKZeroCrossingImageFilter
+
+#endif
 };
 
 // The SIMPL map claims every Uuid the retired ITKImageProcessing plugin owned. Two loaded plugins cannot

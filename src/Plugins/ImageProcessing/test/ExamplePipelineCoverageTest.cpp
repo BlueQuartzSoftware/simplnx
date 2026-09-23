@@ -243,7 +243,8 @@ TEST_CASE("ImageProcessing::Every registered filter has an enabled real-world ex
   const fs::path manifestPath = exampleDir / "FilterCoverage.json";
   const std::set<std::string> registeredFilters = ReadCMakeFilterList(pluginSourceDir / "CMakeLists.txt");
 
-  REQUIRE(registeredFilters.size() == 92);
+  REQUIRE(registeredFilters.size() == nx::core::unit_test::k_NumImageProcessingFilters);
+
   INFO("Missing example coverage manifest: " << manifestPath.string());
   REQUIRE(fs::exists(manifestPath));
   ValidatePythonGenerationSpec(exampleDir);

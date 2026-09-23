@@ -1,129 +1,145 @@
+
 set(${PLUGIN_NAME}UnitTest_SRCS
-  SmokeTest.cpp
-  ExamplePipelineCoverageTest.cpp
-  ExamplePipelineExecutionTest.cpp
-  ItkGoldenTestUtilsSelfTest.cpp
-  ApplyPointwiseTest.cpp
-  WorkingMemoryTest.cpp
-  StoreElementwiseUtilitiesTest.cpp
-  ThresholdImageFilterTest.cpp
-  PipelineUuidRedirectTest.cpp
-  SimplConversionCoverageTest.cpp
-  AbsImageFilterTest.cpp
-  AcosImageFilterTest.cpp
-  AdaptiveHistogramEqualizationImageFilterTest.cpp
-  AsinImageFilterTest.cpp
-  AtanImageFilterTest.cpp
-  CosImageFilterTest.cpp
-  SinImageFilterTest.cpp
-  TanImageFilterTest.cpp
-  ExpImageFilterTest.cpp
-  ExpNegativeImageFilterTest.cpp
-  LogImageFilterTest.cpp
-  Log10ImageFilterTest.cpp
-  SqrtImageFilterTest.cpp
-  SquareImageFilterTest.cpp
-  NotImageFilterTest.cpp
-  SigmoidImageFilterTest.cpp
-  InvertIntensityImageFilterTest.cpp
-  BoundedReciprocalImageFilterTest.cpp
-  BinaryThresholdImageFilterTest.cpp
-  IntensityWindowingImageFilterTest.cpp
-  RescaleIntensityImageFilterTest.cpp
-  NormalizeImageFilterTest.cpp
-  NormalizeToConstantImageFilterTest.cpp
-  MaskImageFilterTest.cpp
-  MaximumProjectionImageFilterTest.cpp
-  MeanProjectionImageFilterTest.cpp
-  MedianImageFilterTest.cpp
-  MedianProjectionImageFilterTest.cpp
-  MinimumProjectionImageFilterTest.cpp
-  BinaryProjectionImageFilterTest.cpp
   BinaryContourImageFilterTest.cpp
-  LabelContourImageFilterTest.cpp
-  ContourEngineTest.cpp
-  AdaptiveHistogramEqualizationEngineTest.cpp
-  BinaryDilateImageFilterTest.cpp
-  BinaryErodeImageFilterTest.cpp
-  BinaryMorphologicalOpeningImageFilterTest.cpp
-  BinaryMorphologicalClosingImageFilterTest.cpp
-  StandardDeviationProjectionImageFilterTest.cpp
-  SumProjectionImageFilterTest.cpp
-  HistogramEngineTest.cpp
-  StreamingStatisticsTest.cpp
-  OtsuMultipleThresholdsImageFilterTest.cpp
-  AxisProjectionEngineTest.cpp
-  StructuringElementTest.cpp
-  MorphologyEngineTest.cpp
-  GrayscaleDilateImageFilterTest.cpp
-  GrayscaleErodeImageFilterTest.cpp
-  MorphologicalGradientImageFilterTest.cpp
-  GrayscaleMorphologicalOpeningImageFilterTest.cpp
-  GrayscaleMorphologicalClosingImageFilterTest.cpp
-  WhiteTopHatImageFilterTest.cpp
-  BlackTopHatImageFilterTest.cpp
-  ObjectMorphologyEngineTest.cpp
-  DilateObjectMorphologyImageFilterTest.cpp
-  ErodeObjectMorphologyImageFilterTest.cpp
-  MorphologicalReconstructionEngineTest.cpp
-  RegionalExtremaEngineTest.cpp
-  MaurerDistanceMapEngineTest.cpp
-  ConnectedComponentEngineTest.cpp
-  ConnectedComponentImageFilterTest.cpp
-  DoubleThresholdImageFilterTest.cpp
-  RelabelComponentImageFilterTest.cpp
-  ThresholdMaximumConnectedComponentsImageFilterTest.cpp
-  DanielssonDistanceMapEngineTest.cpp
-  DanielssonDistanceMapImageFilterTest.cpp
-  SignedDanielssonDistanceMapImageFilterTest.cpp
-  IsoContourDistanceEngineTest.cpp
-  IsoContourDistanceImageFilterTest.cpp
-  FastChamferDistanceEngineTest.cpp
-  RecursiveGaussianEngineTest.cpp
-  GradientMagnitudeEngineTest.cpp
-  GradientMagnitudeImageFilterTest.cpp
-  GradientMagnitudeRecursiveGaussianImageFilterTest.cpp
-  DiscreteGaussianEngineTest.cpp
-  DiscreteGaussianImageFilterTest.cpp
-  FiniteDifferenceEngineTest.cpp
-  CurvatureFlowImageFilterTest.cpp
-  MinMaxCurvatureFlowImageFilterTest.cpp
-  GradientAnisotropicDiffusionImageFilterTest.cpp
-  CurvatureAnisotropicDiffusionImageFilterTest.cpp
-  LaplacianRecursiveGaussianImageFilterTest.cpp
-  SmoothingRecursiveGaussianImageFilterTest.cpp
-  ApproximateSignedDistanceMapImageFilterTest.cpp
-  ValuedRegionalMaximaImageFilterTest.cpp
-  ValuedRegionalMinimaImageFilterTest.cpp
-  RegionalMaximaImageFilterTest.cpp
-  RegionalMinimaImageFilterTest.cpp
-  SignedMaurerDistanceMapImageFilterTest.cpp
+  BinaryOpeningByReconstructionImageFilterTest.cpp
+  ClosingByReconstructionImageFilterTest.cpp
   GrayscaleFillholeImageFilterTest.cpp
   GrayscaleGrindPeakImageFilterTest.cpp
   HConvexImageFilterTest.cpp
-  OpeningByReconstructionImageFilterTest.cpp
-  ClosingByReconstructionImageFilterTest.cpp
-  BinaryOpeningByReconstructionImageFilterTest.cpp
   HMaximaImageFilterTest.cpp
   HMinimaImageFilterTest.cpp
-  ImportFijiMontageTest.cpp
-  ZeroCrossingEngineTest.cpp
-  ZeroCrossingImageFilterTest.cpp
-  BinaryThinningEngineTest.cpp
-  BinaryThinningImageFilterTest.cpp
-  WatershedFromMarkersEngineTest.cpp
-  MorphologicalWatershedFromMarkersImageFilterTest.cpp
+  LabelContourImageFilterTest.cpp
+  MorphologicalGradientImageFilterTest.cpp
   MorphologicalWatershedImageFilterTest.cpp
-  NrrdUtilitiesTest.cpp
+  OpeningByReconstructionImageFilterTest.cpp
+  SignedMaurerDistanceMapImageFilterTest.cpp
+  ValuedRegionalMaximaImageFilterTest.cpp
+  ValuedRegionalMinimaImageFilterTest.cpp
+
   ReadBinaryCTNorthstarTest.cpp
-  ReadImageTest.cpp
   ReadImageStackTest.cpp
+  ReadImageTest.cpp
   ReadMhaFileTest.cpp
   ReadNIfTIFileTest.cpp
   ReadVolumeGraphicsFileTest.cpp
   ReadZeissTxmFileTest.cpp
+  ImportFijiMontageTest.cpp
   WriteImageTest.cpp
 )
+
+
+
+
+if(NOT ImageProcessing_LEAN_AND_MEAN)
+    list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
+      AbsImageFilterTest.cpp
+      AcosImageFilterTest.cpp
+      AdaptiveHistogramEqualizationImageFilterTest.cpp
+      ApplyPointwiseTest.cpp
+      ApproximateSignedDistanceMapImageFilterTest.cpp
+      AsinImageFilterTest.cpp
+      AtanImageFilterTest.cpp
+      BinaryDilateImageFilterTest.cpp
+      BinaryErodeImageFilterTest.cpp
+      BinaryMorphologicalClosingImageFilterTest.cpp
+      BinaryMorphologicalOpeningImageFilterTest.cpp
+      BinaryProjectionImageFilterTest.cpp
+      BinaryThinningImageFilterTest.cpp
+      BinaryThresholdImageFilterTest.cpp
+      BlackTopHatImageFilterTest.cpp
+      BoundedReciprocalImageFilterTest.cpp
+      ConnectedComponentImageFilterTest.cpp
+      CosImageFilterTest.cpp
+      CurvatureAnisotropicDiffusionImageFilterTest.cpp
+      CurvatureFlowImageFilterTest.cpp
+      DanielssonDistanceMapImageFilterTest.cpp
+      DilateObjectMorphologyImageFilterTest.cpp
+      DiscreteGaussianImageFilterTest.cpp
+      DoubleThresholdImageFilterTest.cpp
+      ErodeObjectMorphologyImageFilterTest.cpp
+      ExamplePipelineCoverageTest.cpp
+      ExamplePipelineExecutionTest.cpp
+      ExpImageFilterTest.cpp
+      ExpNegativeImageFilterTest.cpp
+      GradientAnisotropicDiffusionImageFilterTest.cpp
+      GradientMagnitudeImageFilterTest.cpp
+      GradientMagnitudeRecursiveGaussianImageFilterTest.cpp
+      GrayscaleDilateImageFilterTest.cpp
+      GrayscaleErodeImageFilterTest.cpp
+      GrayscaleMorphologicalClosingImageFilterTest.cpp
+      GrayscaleMorphologicalOpeningImageFilterTest.cpp
+      IntensityWindowingImageFilterTest.cpp
+      InvertIntensityImageFilterTest.cpp
+      IsoContourDistanceImageFilterTest.cpp
+      ItkGoldenTestUtilsSelfTest.cpp
+      LaplacianRecursiveGaussianImageFilterTest.cpp
+      Log10ImageFilterTest.cpp
+      LogImageFilterTest.cpp
+      MaskImageFilterTest.cpp
+      MaximumProjectionImageFilterTest.cpp
+      MeanProjectionImageFilterTest.cpp
+      MedianImageFilterTest.cpp
+      MedianProjectionImageFilterTest.cpp
+      MinimumProjectionImageFilterTest.cpp
+      MinMaxCurvatureFlowImageFilterTest.cpp
+      MorphologicalWatershedFromMarkersImageFilterTest.cpp
+      NormalizeImageFilterTest.cpp
+      NormalizeToConstantImageFilterTest.cpp
+      NotImageFilterTest.cpp
+      NrrdUtilitiesTest.cpp
+      OtsuMultipleThresholdsImageFilterTest.cpp
+      PipelineUuidRedirectTest.cpp
+      RegionalMaximaImageFilterTest.cpp
+      RegionalMinimaImageFilterTest.cpp
+      RelabelComponentImageFilterTest.cpp
+      RescaleIntensityImageFilterTest.cpp
+      SigmoidImageFilterTest.cpp
+      SignedDanielssonDistanceMapImageFilterTest.cpp
+      SimplConversionCoverageTest.cpp
+      SinImageFilterTest.cpp
+      SmokeTest.cpp
+      SmoothingRecursiveGaussianImageFilterTest.cpp
+      SqrtImageFilterTest.cpp
+      SquareImageFilterTest.cpp
+      StandardDeviationProjectionImageFilterTest.cpp
+      StoreElementwiseUtilitiesTest.cpp
+      StreamingStatisticsTest.cpp
+      StructuringElementTest.cpp
+      SumProjectionImageFilterTest.cpp
+      TanImageFilterTest.cpp
+      ThresholdImageFilterTest.cpp
+      ThresholdMaximumConnectedComponentsImageFilterTest.cpp
+      WhiteTopHatImageFilterTest.cpp
+      WorkingMemoryTest.cpp
+      ZeroCrossingImageFilterTest.cpp
+
+
+      #---------------------------------------
+      # Test All the various Engines
+      AxisProjectionEngineTest.cpp
+      AdaptiveHistogramEqualizationEngineTest.cpp
+      BinaryThinningEngineTest.cpp
+      ConnectedComponentEngineTest.cpp
+      ContourEngineTest.cpp
+      DanielssonDistanceMapEngineTest.cpp
+      DiscreteGaussianEngineTest.cpp
+      FastChamferDistanceEngineTest.cpp
+      FiniteDifferenceEngineTest.cpp
+      GradientMagnitudeEngineTest.cpp
+      HistogramEngineTest.cpp
+      IsoContourDistanceEngineTest.cpp
+      MaurerDistanceMapEngineTest.cpp
+      MorphologicalReconstructionEngineTest.cpp
+      MorphologyEngineTest.cpp
+      ObjectMorphologyEngineTest.cpp
+      RecursiveGaussianEngineTest.cpp
+      RegionalExtremaEngineTest.cpp
+      WatershedFromMarkersEngineTest.cpp
+      ZeroCrossingEngineTest.cpp
+      
+  )
+
+endif()
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
                                 FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
@@ -151,9 +167,6 @@ endif()
 # Register each real-world pipeline as an independent nxrunner test.
 include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 set(PREBUILT_PIPELINE_NAMES)
-foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
-  list(APPEND PREBUILT_PIPELINE_NAMES "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.d3dpipeline")
-endforeach()
 # The plugin inherited these three pipelines from the removed ITKImageProcessing plugin. They are flat
 # files, so the loop above does not reach them.
 list(APPEND PREBUILT_PIPELINE_NAMES
@@ -162,7 +175,15 @@ list(APPEND PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(04) Porosity Analysis.d3dpipeline"
 )
 
+if(NOT ImageProcessing_LEAN_AND_MEAN)
+  foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
+    list(APPEND PREBUILT_PIPELINE_NAMES "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.d3dpipeline")
+  endforeach()
+endif()
+
+
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
 
 # Set the PYTHON_EXECUTABLE variable as that will get used when the stub shell script or batch file is created.
 # The `Python3_EXECUTABLE` is usually set in the CMakePresets.json file

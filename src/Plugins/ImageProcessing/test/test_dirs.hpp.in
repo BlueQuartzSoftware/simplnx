@@ -26,5 +26,7 @@ inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFil
 inline constexpr StringLiteral k_ItkDataDir = "@PLUGIN_SOURCE_DIR_NORM@/data/ItkGolden";
 inline constexpr StringLiteral k_ItkInputDir = "@PLUGIN_SOURCE_DIR_NORM@/data/ItkGolden/Input";
 inline constexpr StringLiteral k_ItkBaselineDir = "@PLUGIN_SOURCE_DIR_NORM@/data/ItkGolden/Baseline";
+
+constexpr int32_t k_NumImageProcessingFilters = @image_proc_filter_count@;
 } // namespace unit_test
 } // namespace nx::core
