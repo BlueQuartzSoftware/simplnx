@@ -430,6 +430,30 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
+  SECTION("Fill terminates when the input has background cells")
+  {
+    // Cell 0 becomes background (FeatureId 0). Background is never a fill target, so it must stay 0
+    // and the shared fill loop must still terminate. Before the shared utility skipped background
+    // cells this section ran forever.
+    DataStructure dataStructure = BuildTestData();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef()[0] = 0;
+    Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
+    args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(true));
+
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const std::vector<int32> featureIds = ReadFeatureIds(dataStructure);
+    REQUIRE(featureIds[0] == 0);
+    for(usize i = 1; i < featureIds.size(); i++)
+    {
+      REQUIRE(featureIds[i] > 0);
+    }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
   SECTION("Fill leaves no Cell at zero")
   {
     DataStructure dataStructure = BuildTestData();

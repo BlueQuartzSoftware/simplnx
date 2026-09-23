@@ -16,10 +16,51 @@
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
+#include <nonstd/span.hpp>
+
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_FeatureIdOutOfRangeError = -45435;
+constexpr int32 k_NoFillProgressError = -45436;
+constexpr int32 k_TupleCountMismatchError = -45437;
+constexpr int32 k_FeatureIdsCannotBeIgnoredWarning = -45438;
+constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
+constexpr usize k_MaxListedEmptyFeatures = 10;
+
+/**
+ * @brief Validates every Feature ID before the algorithm modifies data.
+ */
+Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& flaggedFeaturesPath,
+                            const std::atomic_bool& shouldCancel)
+{
+  const usize totalPoints = featureIds.getNumberOfTuples();
+  if(totalPoints != totalCells)
+  {
+    return MakeErrorResult(
+        k_TupleCountMismatchError,
+        fmt::format("The Feature IDs array '{}' has {} tuple(s), but the selected Image Geometry has {} cell(s). The array must hold exactly one value per cell. No data was modified.",
+                    featureIdsPath.toString(), totalPoints, totalCells));
+  }
+  for(usize cellIndex = 0; cellIndex < totalPoints; cellIndex++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const int32 featureId = featureIds[cellIndex];
+    if(featureId < 0 || static_cast<usize>(featureId) >= totalFeatures)
+    {
+      return MakeErrorResult(
+          k_FeatureIdOutOfRangeError,
+          fmt::format("Cell {} of the Feature IDs array '{}' has value {}, but the flagged-features array '{}' has {} tuple(s). Valid Feature IDs are in [0, {}). No data was modified.", cellIndex,
+                      featureIdsPath.toString(), featureId, flaggedFeaturesPath.toString(), totalFeatures, totalFeatures));
+    }
+  }
+  return {};
+}
+
 /**
  * @brief Selects one majority face-neighbor source for each negative voxel.
  * @param imageGeom Defines voxel dimensions.
@@ -200,16 +241,17 @@ std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_p
  * @param voxelArrays Receives source tuples for negative Feature IDs.
  * @param shouldCancel Stops before later destination cells when true.
  */
-void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
+usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
+  usize filledCellCount = 0;
 
   int32 featureName, neighbor;
   for(usize j = 0; j < totalPoints; j++)
   {
     if(shouldCancel)
     {
-      return;
+      return filledCellCount;
     }
 
     featureName = featureIds[j];
@@ -222,9 +264,11 @@ void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector
         {
           voxelArray->copyTuple(neighbor, j);
         }
+        filledCellCount++;
       }
     }
   }
+  return filledCellCount;
 }
 
 /**
@@ -271,6 +315,28 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
   }
 
   MessageHelper messageHelper(m_MessageHandler);
+  Result<> result;
+
+  if(function != Functionality::Extract)
+  {
+    const usize totalFeatures = flaggedFeatures->getNumberOfTuples();
+    if(totalFeatures < 2)
+    {
+      return MakeErrorResult(-45433, fmt::format("The feature Attribute Matrix '{}' has {} tuple(s). Tuple 0 is unused, so at least 2 tuples are required for a feature to survive removal. No data "
+                                                 "was modified.",
+                                                 m_InputValues->FlaggedFeaturesArrayPath.getParent().toString(), totalFeatures));
+    }
+    Result<> validationResult =
+        ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->FeatureIdsArrayPath, m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
+    if(validationResult.invalid())
+    {
+      return validationResult;
+    }
+    if(m_ShouldCancel)
+    {
+      return result;
+    }
+  }
 
   // Extract and ExtractThenRemove create one cropped geometry per flagged feature.
   if(function != Functionality::Remove)
@@ -288,56 +354,36 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       auto preflightResult = filter.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        // The delegated filter reports the real cause, so its own errors are kept and each one is
-        // prefixed with this call's context instead of being buried behind a second error object.
-        Result<> delegatedResult = ConvertResult(std::move(preflightResult.outputActions));
-        if(delegatedResult.valid() || delegatedResult.errors().empty())
-        {
-          // Defensive: the delegated preflight reported a failure without any error to explain it.
-          return MakeErrorResult(-45442, fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: the ComputeFeatureRect preflight reported a "
-                                                     "failure without a cause.",
-                                                     m_InputValues->TempBoundsPath.toString(), m_InputValues->FeatureIdsArrayPath.toString()));
-        }
-        for(Error& error : delegatedResult.errors())
-        {
-          error.message = fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                      m_InputValues->FeatureIdsArrayPath.toString(), error.message);
-        }
-        return delegatedResult;
+        return MakeErrorResult(-53901, fmt::format("Preflight of the feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
+                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors())));
       }
 
       if(m_ShouldCancel)
       {
-        return {};
+        return result;
       }
 
       auto executeResult = filter.execute(m_DataStructure, args);
       if(executeResult.result.invalid())
       {
-        // The delegated filter reports the real cause, so its own errors are kept and each one is
-        // prefixed with this call's context instead of being buried behind a second error object.
-        Result<> delegatedResult = std::move(executeResult.result);
-        if(delegatedResult.errors().empty())
-        {
-          // Defensive: the delegated execution reported a failure without any error to explain it.
-          return MakeErrorResult(-45443, fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: the ComputeFeatureRect execution reported a "
-                                                     "failure without a cause.",
-                                                     m_InputValues->TempBoundsPath.toString(), m_InputValues->FeatureIdsArrayPath.toString()));
-        }
-        for(Error& error : delegatedResult.errors())
-        {
-          error.message = fmt::format("RemoveFlaggedFeatures: computing the feature bounds at '{}' from Feature Ids '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                      m_InputValues->FeatureIdsArrayPath.toString(), error.message);
-        }
-        return delegatedResult;
+        m_DataStructure.removeData(m_InputValues->TempBoundsPath);
+        return MakeErrorResult(-53902, fmt::format("The feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
+                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors())));
       }
     }
 
-    auto bounds = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath);
+    const auto& boundsStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath).getDataStoreRef();
+    std::vector<uint32> bounds(boundsStore.getSize());
+    Result<> boundsReadResult = boundsStore.copyIntoBuffer(0, nonstd::span<uint32>(bounds.data(), bounds.size()));
+    m_DataStructure.removeData(m_InputValues->TempBoundsPath);
+    if(boundsReadResult.invalid())
+    {
+      return MergeResults(std::move(result), std::move(boundsReadResult));
+    }
 
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
     // Declared before the runner so the runner's destructor joins every task while the
@@ -351,11 +397,12 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
     usize maxTuple = flaggedFeatures->getNumberOfTuples();
     std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
-    for(usize i = 1; i < maxTuple; i++)
+    std::vector<usize> emptyFeatures;
+    for(usize i = 1; i < maxTuple && 6 * i + 5 < bounds.size(); i++)
     {
       if(m_ShouldCancel)
       {
-        return {};
+        return result;
       }
 
       if(!flaggedFeatures->isTrue(i))
@@ -366,6 +413,12 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       usize index = 6 * i;
       std::vector<uint64> minVoxels = {static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 2])};
       std::vector<uint64> maxVoxels = {static_cast<uint64>(bounds[index + 3]), static_cast<uint64>(bounds[index + 4]), static_cast<uint64>(bounds[index + 5])};
+
+      if(minVoxels[0] > maxVoxels[0] || minVoxels[1] > maxVoxels[1] || minVoxels[2] > maxVoxels[2])
+      {
+        emptyFeatures.push_back(i);
+        continue;
+      }
 
       DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
@@ -381,10 +434,26 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     }
     taskRunner.wait();
 
+    if(!emptyFeatures.empty())
+    {
+      std::string listed;
+      for(usize index = 0; index < std::min(emptyFeatures.size(), k_MaxListedEmptyFeatures); index++)
+      {
+        listed += fmt::format("{}{}", index == 0 ? "" : ", ", emptyFeatures[index]);
+      }
+      if(emptyFeatures.size() > k_MaxListedEmptyFeatures)
+      {
+        listed += ", ...";
+      }
+      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+                                                                                    "them. Feature ID(s): {}",
+                                                                                    emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+    }
+
     Result<> cropResult = cropTaskResult.takeResult();
     if(cropResult.invalid())
     {
-      return cropResult;
+      return MergeResults(std::move(result), std::move(cropResult));
     }
 
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
@@ -392,7 +461,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
   if(m_ShouldCancel)
   {
-    return {};
+    return result;
   }
 
   // Remove and ExtractThenRemove modify the source feature data.
@@ -404,16 +473,34 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
     if(activeObjects.empty())
     {
-      return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
+      const usize removableFeatureCount = flaggedFeatures->getNumberOfTuples() > 0 ? flaggedFeatures->getNumberOfTuples() - 1 : 0;
+      Result<> allFlaggedResult = MakeErrorResult(-45433, fmt::format("All {} feature(s) in '{}' were flagged and would be removed. At least one feature that owns cells must remain.",
+                                                                      removableFeatureCount, m_InputValues->FlaggedFeaturesArrayPath.getParent().toString()));
+      return MergeResults(std::move(result), std::move(allFlaggedResult));
     }
 
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
     if(m_InputValues->FillRemovedFeatures)
     {
+      std::vector<DataPath> ignoredPaths;
+      ignoredPaths.reserve(m_InputValues->IgnoredDataArrayPaths.size());
+      for(const DataPath& path : m_InputValues->IgnoredDataArrayPaths)
+      {
+        if(path == m_InputValues->FeatureIdsArrayPath)
+        {
+          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+                                                                                              "cannot be ignored, so it was removed from the ignore list.",
+                                                                                              path.toString())});
+          continue;
+        }
+        ignoredPaths.push_back(path);
+      }
+      std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, ignoredPaths);
+
       bool shouldLoop = false;
       usize count = 0;
       do
@@ -427,23 +514,27 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
         if(m_ShouldCancel)
         {
-          return {};
+          return result;
         }
 
-        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
-        std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
-        FindVoxelArrays(featureIds, neighbors, voxelArrays, m_ShouldCancel);
-        if(replacementCount == 0 && shouldLoop)
+        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCount)});
+        const usize filledCellCount = FindVoxelArrays(featureIds, neighbors, voxelArrays, m_ShouldCancel);
+        if(filledCellCount == 0 && shouldLoop)
         {
-          m_MessageHandler(IFilter::Message::Type::Warning, fmt::format("Fill removed features: no progress after iteration {}; {} voxels remain unresolved", count, unresolvedCount));
-          break;
+          Result<> noProgressResult = MakeErrorResult(
+              k_NoFillProgressError,
+              fmt::format("Fill iteration {} could not fill any of the {} remaining vacated cell(s) in the Feature IDs array '{}' because none has a non-negative face neighbor. Unflag a feature "
+                          "that owns cells, or disable 'Fill-in Removed Features'. The Feature IDs array was modified: removed cells are set to -1.",
+                          count, unresolvedCount, m_InputValues->FeatureIdsArrayPath.toString()));
+          return MergeResults(std::move(result), std::move(noProgressResult));
         }
+
       } while(shouldLoop);
     }
 
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
@@ -451,11 +542,11 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     Result<> removeResult = RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler, m_ShouldCancel);
     if(removeResult.invalid())
     {
-      return removeResult;
+      return MergeResults(std::move(result), std::move(removeResult));
     }
     // RemoveInactiveObjects reports a cancelled compaction as success. No work follows this
     // call, so a cancelled and a completed run both leave through the empty valid Result below.
   }
 
-  return {};
+  return result;
 }
