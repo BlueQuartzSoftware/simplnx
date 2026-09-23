@@ -22,4 +22,12 @@ public:
    * @return SIMPLMapType
    */
   SIMPLMapType getSimplToSimplnxMap() const override;
+
+  /**
+   * @brief Returns the {retired ITKImageProcessing (NX) reader Uuid -> new SimplnxCore reader Uuid}
+   * map. Consulted by pipeline loading only when a stored filter Uuid no longer resolves (i.e. after
+   * the ITKImageProcessing plugin has been removed); coexistence-safe otherwise.
+   * @return FilterReplacementMapType
+   */
+  FilterReplacementMapType getFilterReplacementMap() const override;
 };

@@ -36,8 +36,8 @@ The output is always the same data type and component shape as the source Featur
 
 ## Example Pipelines
 
-- (02) Image Segmentation (ITKImageProcessing)
-- (04) Porosity Analysis (ITKImageProcessing)
+- (02) Image Segmentation (ImageProcessing)
+- (04) Porosity Analysis (ImageProcessing)
 
 ## License & Copyright
 

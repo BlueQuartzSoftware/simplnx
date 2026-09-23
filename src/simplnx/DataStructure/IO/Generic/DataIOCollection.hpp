@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -33,7 +34,6 @@ class AbstractDataStore;
 class AbstractStringStore;
 class DataObject;
 class DataStructure;
-class IDataIOManager;
 
 /**
  * @namespace nx::core
@@ -165,12 +165,13 @@ public:
    * @param numericType Numeric value type.
    * @param tupleShape Tuple dimensions.
    * @param componentShape Component dimensions.
-   * @return Owned store from the first manager that handles type.
-   *
-   * If no manager handles type, the built-in in-memory manager provides the
-   * fallback store.
+   * @param chunkShapeHint Optional tuple-space chunk dimensions for the selected factory.
+   * @param initializationMode Initial physical-storage policy for the selected factory.
+   * @return Owned store from the first manager that handles `type`.
+   * @note The built-in in-memory manager supplies a fallback when no manager handles `type`.
    */
-  std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape);
+  std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                              const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default);
 
   /**
    * @brief Creates a typed numeric store for a requested format.
@@ -178,13 +179,17 @@ public:
    * @param type Requested format identifier.
    * @param tupleShape Tuple dimensions.
    * @param componentShape Component dimensions.
+   * @param chunkShapeHint Optional tuple-space chunk dimensions for the selected factory.
+   * @param initializationMode Initial physical-storage policy for the selected factory.
    * @return Shared typed store, or null when the selected factory returns an incompatible store.
    */
   template <typename T>
-  std::shared_ptr<AbstractDataStore<T>> createDataStoreWithType(const std::string& type, const ShapeType& tupleShape, const ShapeType& componentShape)
+  std::shared_ptr<AbstractDataStore<T>> createDataStoreWithType(const std::string& type, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                                                const std::optional<ShapeType>& chunkShapeHint = {},
+                                                                DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
   {
     DataType numericType = GetDataType<T>();
-    std::shared_ptr<IDataStore> dataStore = createDataStore(type, numericType, tupleShape, componentShape);
+    std::shared_ptr<IDataStore> dataStore = createDataStore(type, numericType, tupleShape, componentShape, chunkShapeHint, initializationMode);
     return std::dynamic_pointer_cast<AbstractDataStore<T>>(dataStore);
   }
 

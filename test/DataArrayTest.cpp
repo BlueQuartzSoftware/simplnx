@@ -1297,9 +1297,9 @@ public:
   CountingMemoryManager(std::shared_ptr<IDataIOManager> delegateManager, std::shared_ptr<usize> callCounter)
   {
     auto factory = [savedManager = std::move(delegateManager), sharedCounter = std::move(callCounter)](DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape,
-                                                                                                       const std::optional<ShapeType>& chunkShape) {
+                                                                                                       const std::optional<ShapeType>& chunkShape, DataStoreInitializationMode initializationMode) {
       ++(*sharedCounter);
-      return savedManager->dataStoreCreationFnc(Preferences::k_InMemoryFormat.str())(dataType, tupleShape, componentShape, chunkShape);
+      return savedManager->dataStoreCreationFnc(Preferences::k_InMemoryFormat.str())(dataType, tupleShape, componentShape, chunkShape, initializationMode);
     };
     addDataStoreCreationFnc("", factory);
     addDataStoreCreationFnc(Preferences::k_InMemoryFormat.str(), std::move(factory));
@@ -1475,9 +1475,8 @@ TEST_CASE("Numeric store transfer bounds and late failures retain ownership", "[
   constexpr usize k_PageValues = 1024 * 1024 / sizeof(int32);
   const std::string format = "store-copy-probed-backend";
   auto probe = std::make_shared<StoreCopyProbe>();
-  auto manager = std::make_shared<CopyTestManager>(format, [probe, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) {
-    return std::make_unique<ProbedCopyStore>(tuples, components, probe, format, true);
-  });
+  auto manager = std::make_shared<CopyTestManager>(format, [probe, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&,
+                                                                           DataStoreInitializationMode) { return std::make_unique<ProbedCopyStore>(tuples, components, probe, format, true); });
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
   ProbedCopyStore source({2 * k_PageValues + 7}, {1}, probe);
@@ -1520,23 +1519,24 @@ TEST_CASE("Store-copy factories cannot return incompatible stores or hide failur
 {
   const std::string format = "store-copy-invalid-factory";
   const auto failure = GENERATE(0, 1, 2, 3, 4, 5);
-  auto manager = std::make_shared<CopyTestManager>(format, [failure](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
-    switch(failure)
-    {
-    case 0:
-      return nullptr;
-    case 1:
-      return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
-    case 2:
-      return std::make_unique<DataStore<int32>>(ShapeType{99}, components, 0);
-    case 3:
-      throw std::runtime_error("injected factory failure -9873");
-    case 4:
-      throw std::bad_alloc();
-    default:
-      return std::make_unique<DataStore<int32>>(tuples, components, 0);
-    }
-  });
+  auto manager = std::make_shared<CopyTestManager>(
+      format, [failure](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
+        switch(failure)
+        {
+        case 0:
+          return nullptr;
+        case 1:
+          return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
+        case 2:
+          return std::make_unique<DataStore<int32>>(ShapeType{99}, components, 0);
+        case 3:
+          throw std::runtime_error("injected factory failure -9873");
+        case 4:
+          throw std::bad_alloc();
+        default:
+          return std::make_unique<DataStore<int32>>(tuples, components, 0);
+        }
+      });
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
   DataStore<int32> source({3}, {2}, 17);
@@ -1580,27 +1580,28 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
   auto restoreMemoryManager = MakeScopeGuard([memoryEntry, savedMemoryManager]() noexcept { memoryEntry->second = savedMemoryManager; });
   memoryEntry->second = std::make_shared<CountingMemoryManager>(savedMemoryManager, fallbackMemoryFactoryCalls);
 
-  auto manager = std::make_shared<CopyTestManager>(
-      format, [failure, selectedFactoryCalls, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
-        ++(*selectedFactoryCalls);
-        switch(failure)
-        {
-        case 0:
-          throw std::runtime_error("injected array creation factory failure -9880");
-        case 1:
-          return nullptr;
-        case 2:
-          return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
-        case 3:
-          return std::make_unique<DataStore<int32>>(ShapeType{99}, components, 0);
-        case 4:
-          return std::make_unique<DataStore<int32>>(tuples, components, 0);
-        case 5:
-          throw std::bad_alloc();
-        default:
-          return std::make_unique<ProbedCopyStore>(tuples, components, std::make_shared<StoreCopyProbe>(), format, true);
-        }
-      });
+  auto manager = std::make_shared<CopyTestManager>(format,
+                                                   [failure, selectedFactoryCalls, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&,
+                                                                                           DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
+                                                     ++(*selectedFactoryCalls);
+                                                     switch(failure)
+                                                     {
+                                                     case 0:
+                                                       throw std::runtime_error("injected array creation factory failure -9880");
+                                                     case 1:
+                                                       return nullptr;
+                                                     case 2:
+                                                       return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
+                                                     case 3:
+                                                       return std::make_unique<DataStore<int32>>(ShapeType{99}, components, 0);
+                                                     case 4:
+                                                       return std::make_unique<DataStore<int32>>(tuples, components, 0);
+                                                     case 5:
+                                                       throw std::bad_alloc();
+                                                     default:
+                                                       return std::make_unique<ProbedCopyStore>(tuples, components, std::make_shared<StoreCopyProbe>(), format, true);
+                                                     }
+                                                   });
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
@@ -1942,7 +1943,8 @@ TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without valu
   memoryEntry->second = std::make_shared<CountingMemoryManager>(savedMemoryManager, fallbackMemoryFactoryCalls);
 
   auto manager = std::make_shared<CopyTestManager>(
-      format, [selectedFactoryCalls, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
+      format,
+      [selectedFactoryCalls, format](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
         ++(*selectedFactoryCalls);
         return std::make_unique<ProbedCopyStore>(tuples, components, std::make_shared<StoreCopyProbe>(), format, true);
       });
@@ -1976,7 +1978,8 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
   const auto failure = GENERATE(0, 1);
   auto selectedFactoryCalls = std::make_shared<usize>(0);
   auto manager = std::make_shared<CopyTestManager>(
-      format, [failure, selectedFactoryCalls](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
+      format,
+      [failure, selectedFactoryCalls](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
         ++(*selectedFactoryCalls);
         if(failure == 0)
         {
@@ -2003,7 +2006,8 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
 {
   auto factoryCalls = std::make_shared<usize>(0);
   auto memoryManager = std::make_shared<CopyTestManager>(
-      Preferences::k_InMemoryFormat.str(), [factoryCalls](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&) -> std::unique_ptr<IDataStore> {
+      Preferences::k_InMemoryFormat.str(),
+      [factoryCalls](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
         ++(*factoryCalls);
         return std::make_unique<CanonicalMemoryStore>(tuples, components, 0);
       });

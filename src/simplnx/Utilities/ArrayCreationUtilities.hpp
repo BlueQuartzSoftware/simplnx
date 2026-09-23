@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iterator>
 #include <numeric>
+#include <optional>
 
 /**
  * @namespace nx::core::ArrayCreationUtilities
@@ -62,21 +63,23 @@ SIMPLNX_EXPORT std::string ResolveStorageFormat(const DataStructure& dataStructu
 
 /**
  * @brief Creates a DataArray with resolved backing storage.
- * @tparam T Specifies the element type.
+ * @tparam T Element type.
  * @param dataStructure Receives the DataArray.
- * @param tupleShape Specifies tuple dimensions.
- * @param compShape Specifies component dimensions.
- * @param path Identifies the new DataArray.
- * @param mode Selects metadata-only preflight or backing-store execution.
- * @param dataFormat Explicit format, or an empty name to use the resolver.
- * @param fillValue Optional value text validated for T.
- * @return Valid result with possible preflight warnings, or a validation, memory, format, conversion, or insertion error.
- * @throws std::runtime_error If mode is not valid.
- * @pre Shape products and the byte count fit in usize and uint64.
+ * @param tupleShape Tuple dimensions.
+ * @param compShape Component dimensions.
+ * @param path New DataArray path.
+ * @param mode Metadata-only preflight or backing-store execution.
+ * @param dataFormat Explicit format, or an empty name for automatic selection.
+ * @param fillValue Optional value text validated for `T`.
+ * @param chunkShapeHint Optional tuple-space chunk dimensions for the selected store factory.
+ * @param initializationMode Initial physical-storage policy for the selected store factory.
+ * @return Valid result with warnings, or a validation, memory, format, conversion, or insertion error.
+ * @throws std::runtime_error If `mode` is not valid.
+ * @pre Shape products and the byte count fit in `usize` and `uint64`.
  */
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "",
-                     std::string fillValue = "")
+                     std::string fillValue = "", const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
 {
   auto parentPath = path.getParent();
 
@@ -179,6 +182,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
 
   // Preflight creates metadata only. Execute passes the resolved format to its registered manager.
   std::shared_ptr<AbstractDataStore<T>> store;
+  const DataStoreInitializationMode effectiveInitializationMode = fillValue.empty() ? initializationMode : DataStoreInitializationMode::Default;
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
@@ -195,10 +199,12 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     break;
   }
   case IDataAction::Mode::Execute: {
+    // Route through the registered IO managers. The built-in core manager serves the
+    // in-memory default ("" / k_InMemoryFormat); any other registered format (e.g. the
+    // OOC manager's disk-backed format) is served by its manager when that plugin is loaded.
     try
     {
-      std::shared_ptr<IDataStore> baseStore = DataStoreUtilities::GetIOCollection().createDataStore(resolvedFormat, GetDataType<T>(), tupleShape, compShape);
-      store = std::dynamic_pointer_cast<AbstractDataStore<T>>(baseStore);
+      store = DataStoreUtilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape, chunkShapeHint, effectiveInitializationMode);
     } catch(const std::bad_alloc&)
     {
       throw;

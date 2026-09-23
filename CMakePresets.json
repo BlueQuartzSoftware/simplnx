@@ -103,6 +103,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-v142"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{pythonLocation}/python.exe"
         }
       }
     },
@@ -120,6 +124,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-v143"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{pythonLocation}/python.exe"
         }
       }
     },
@@ -140,7 +148,7 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "$env{pythonLocation}/bin/python3"
         },
         "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
@@ -165,7 +173,7 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "$env{pythonLocation}/bin/python3"
         },
         "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
@@ -190,7 +198,7 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/opt/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "$env{pythonLocation}/bin/python3"
         }
       }
     },
@@ -243,19 +251,7 @@
           "type": "BOOL",
           "value": "ON"
         },
-        "ITKImageProcessing_USE_JOB_POOL": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
-          "type": "BOOL",
-          "value": "OFF"
-        },
         "SimplnxCore_INSTALL_PIPELINES": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "ITKImageProcessing_INSTALL_PIPELINES": {
           "type": "BOOL",
           "value": "ON"
         },

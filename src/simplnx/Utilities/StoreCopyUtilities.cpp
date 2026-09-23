@@ -133,7 +133,7 @@ struct CopyNumericFunctor
       }
       return std::move(result.value());
     }
-    auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt);
+    auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt, DataStoreInitializationMode::Default);
     auto* typedDestination = dynamic_cast<AbstractDataStore<T>*>(destination.get());
     if(typedDestination == nullptr || destination->getDataType() != source.getDataType() || destination->getTupleShape() != source.getTupleShape() ||
        destination->getComponentShape() != source.getComponentShape() || destination->getNumberOfTuples() != source.getNumberOfTuples() ||

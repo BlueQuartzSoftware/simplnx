@@ -37,7 +37,7 @@ that.
 """
 import simplnx as nx
 
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
@@ -65,7 +65,7 @@ generated_file_list_value.end_index = 174
 generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
-result = nxitk.ITKImportImageStackFilter.execute(data_structure=data_structure, 
+result = nximgproc.ReadImageStackFilter.execute(data_structure=data_structure, 
                                    cell_attribute_matrix_name="Cell Data", 
                                    image_data_array_name="Image Data", 
                                    output_image_geometry_path=nx.DataPath(["Image Stack"]), 
@@ -73,5 +73,5 @@ result = nxitk.ITKImportImageStackFilter.execute(data_structure=data_structure,
                                    input_file_list_object=generated_file_list_value,
                                    origin=[0., 0., 0.], 
                                    spacing=[1., 1.,1.])
-nxtest.check_filter_result(nxitk.ITKImportImageStackFilter, result)
+nxtest.check_filter_result(nximgproc.ReadImageStackFilter, result)
 

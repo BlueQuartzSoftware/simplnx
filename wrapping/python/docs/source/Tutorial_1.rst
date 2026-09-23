@@ -54,7 +54,7 @@ If you will be using filters from DREAM3D-NX's other plugins, then you may addit
 
 .. code:: python
 
-    import itkimageprocessing as nxitk
+    import imageprocessing as nximgproc
     import orientationanalysis as nxor
 
 Also use these import statements:

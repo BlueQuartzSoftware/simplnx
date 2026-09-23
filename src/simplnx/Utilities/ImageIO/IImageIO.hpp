@@ -55,29 +55,40 @@ public:
   virtual Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const = 0;
 
   /**
-   * @brief Reads pixel data into a caller-owned byte buffer.
-   * @param filePath Identifies the image file.
-   * @param buffer Receives packed first-page pixel bytes.
-   * @return Valid result on success, or a backend diagnostic.
-   * @pre buffer size equals width times height times components times element size.
-   * @pre The byte-count product fits usize.
+   * @brief Reads pixel data for a single page/directory into a caller-owned byte buffer.
    *
-   * Call readMetadata() to determine the required buffer size.
+   * Reads the page/directory identified by @p pageIndex (0 for single-image formats such as
+   * PNG/JPEG/BMP). For multi-page TIFFs, pages are counted the same way readMetadata() reports
+   * numPages (reduced-resolution/mask subfiles are skipped), so pageIndex is in the range
+   * [0, numPages).
+   *
+   * The buffer must be pre-sized to THAT page's dimensions: width * height * numComponents *
+   * bytesPerPixel. Because individual pages may differ in size, callers should size the buffer
+   * from the selected page rather than assuming page 0's dimensions.
+   * Data is packed row-major, top-to-bottom.
+   *
+   * @param filePath Path to the image file
+   * @param buffer Pre-allocated output buffer for the selected page's pixel data
+   * @param pageIndex Zero-based page/directory index to read (default 0)
+   * @return Empty Result on success, or error Result with library-provided message
    */
-  virtual Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const = 0;
+  virtual Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex = 0) const = 0;
 
   /**
-   * @brief Decodes pixel data and delivers bounded row segments to a callback.
-   * @param filePath Identifies the image file.
-   * @param callback Receives each first-page row segment synchronously.
-   * @return Valid result on success, or a decoder or callback error.
-   * @pre callback contains a callable target and does not throw.
+   * @brief Decodes pixel data for a single page/directory and delivers bounded row segments to a callback.
    *
-   * This avoids a caller-owned full-image buffer. TIFF streams scanlines or tiles.
-   * A backend decoder can retain its required full-image allocation during the call.
-   * It does not create a second full-image staging buffer.
+   * This avoids requiring the caller to allocate an entire image buffer. TIFF
+   * implementations stream scanlines or tiles. Backends whose decoder owns a
+   * whole-image allocation may retain that decoder allocation for the duration
+   * of this call, but do not create a second full-image staging buffer.
+   *
+   * @p pageIndex selects the page/directory to stream and follows the same semantics as
+   * readPixelData(): 0 for single-image formats (PNG/JPEG/BMP), and for multi-page TIFFs the pages are
+   * counted the same way readMetadata() reports numPages (reduced-resolution/mask subfiles are skipped),
+   * so pageIndex is in the range [0, numPages). The delivered segments describe THAT page's geometry,
+   * which may differ from page 0.
    */
-  virtual Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const = 0;
+  virtual Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const = 0;
 
   /**
    * @brief Writes a 2D image from a raw byte buffer.

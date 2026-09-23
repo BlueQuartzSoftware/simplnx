@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(19) Serial-Section Stack Reconstruction.d3dpipeline",
+  "markdown_file": "(19) Serial-Section Stack Reconstruction.md",
+  "title": "Serial-Section Stack Reconstruction",
+  "summary": "Imports an ordered set of two-dimensional sections as a physically spaced three-dimensional grayscale image and writes preview and DREAM3D outputs.",
+  "primary_industries": [
+    "Materials characterization",
+    "Metallography"
+  ],
+  "secondary_industries": [
+    "Histology",
+    "Geology"
+  ],
+  "use_cases": [
+    "Assemble automated serial-section images",
+    "Set anisotropic physical spacing",
+    "Create a volume for later alignment and microstructure reconstruction"
+  ],
+  "keywords": [
+    "serial sectioning",
+    "metallography",
+    "image stack",
+    "3D reconstruction",
+    "spacing"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/io/serial_stack",
+      "role": "Numbered input series for ReadImageStackFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/section_preview.tif",
+      "role": "Documented workflow output."
+    },
+    {
+      "path": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/serial_sections.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageStackFilter",
+      "uuid": "15e7784e-6a9b-457c-9f5c-f5983246c8e8",
+      "role": "Import eight numbered serial sections as a physically spaced grayscale volume.",
+      "inputs": [
+        {
+          "parameter": "input_file_list_object",
+          "value": {
+            "end_index": 7,
+            "file_extension": ".tif",
+            "file_prefix": "section_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/ImageProcessing_Examples/io/serial_stack",
+            "ordering": 0,
+            "padding_digits": 3,
+            "start_index": 0
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_image_geometry_path",
+          "value": "Serial Sections"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": true,
+        "color_weights": [
+          0.21250000596046448,
+          0.715399980545044,
+          0.07209999859333038
+        ],
+        "convert_to_gray_scale": true,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": false,
+          "type": 0
+        },
+        "exact_xy_dimensions": [
+          256,
+          256
+        ],
+        "image_data_array_name": "Section Intensity",
+        "image_data_type_index": 0,
+        "image_transform_index": 0,
+        "input_file_list_object": {
+          "end_index": 7,
+          "file_extension": ".tif",
+          "file_prefix": "section_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/ImageProcessing_Examples/io/serial_stack",
+          "ordering": 0,
+          "padding_digits": 3,
+          "start_index": 0
+        },
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_image_geometry_path": "Serial Sections",
+        "resample_images_index": 0,
+        "scaling": 100.0,
+        "spacing": [
+          0.5,
+          0.5,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "WriteImageFilter",
+      "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587",
+      "role": "Write the reconstructed sections as a TIFF stack.",
+      "inputs": [
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Serial Sections"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/section_preview.tif"
+        }
+      ],
+      "key_parameters": {
+        "add_scale_bar": false,
+        "create_color_table": false,
+        "file_name": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/section_preview.tif",
+        "flip_mode_index": 0,
+        "image_array_path": "Serial Sections/Cell Data/Section Intensity",
+        "index_offset": 0,
+        "input_image_geometry_path": "Serial Sections",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "leading_digit_character": "0",
+        "mask_array_path": "",
+        "plane_index": 0,
+        "selected_preset": "Black-Body Radiation",
+        "total_index_digits": 3,
+        "use_mask": false
+      }
+    },
+    {
+      "index": 2,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the complete workflow result.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/serial_sections.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/15_Serial_Sections/serial_sections.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Automated serial sectioning for 3-D analysis of microstructures",
+      "authors": [
+        "Jonathan E. Spowart"
+      ],
+      "year": 2006,
+      "journal": "Scripta Materialia",
+      "doi": "10.1016/j.scriptamat.2006.01.019",
+      "url": "https://doi.org/10.1016/j.scriptamat.2006.01.019",
+      "role": "Primary materials-science workflow for constructing three-dimensional microstructures from serial sections.",
+      "scope": "pipeline_workflow",
+      "dataset": {
+        "availability": "The original paper input is unavailable or not redistributable. A deterministic paper-inspired synthetic input is included.",
+        "url": "",
+        "doi": "",
+        "license": "No separate dataset license is stated.",
+        "included": false,
+        "reproduction_status": "method_reproduction",
+        "reproduction_notes": "The paper's case-study stacks are unavailable. The generated stack models section continuity without polishing damage, missing material, or registration correction."
+      }
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Assemble automated serial-section images",
+      "Set anisotropic physical spacing",
+      "Create a volume for later alignment and microstructure reconstruction"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "File numbering matches physical section order.",
+      "Images have consistent dimensions, orientation, and exposure.",
+      "This example imports the stack but does not perform section-to-section registration.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(20) Fiji Microscopy Montage Import.d3dpipeline",
+      "(17) Scientific Volume Interoperability.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "synthetic-paper-inspired",
+    "asset_keys": [
+      "io/serial_stack"
+    ],
+    "paper_doi": "10.1016/j.scriptamat.2006.01.019",
+    "paper_url": "",
+    "reference_visual": "Registered serial metallography sections with persistent grains and boundaries that evolve gradually through depth.",
+    "target_traits": [
+      "eight ordered sections",
+      "persistent grains",
+      "bright grain boundaries",
+      "small section motion",
+      "acquisition noise"
+    ],
+    "known_differences": "The paper's case-study stacks are unavailable. The generated stack models section continuity without polishing damage, missing material, or registration correction.",
+    "archive_provenance_file": "Provenance.json",
+    "generator": {
+      "path": "Generators/GenerateImageProcessingExampleData.py",
+      "seed": 20260901,
+      "metrics_file": "PaperInputMetrics.json",
+      "target_contract": "Generators/PaperInputTargets.json"
+    }
+  }
+}

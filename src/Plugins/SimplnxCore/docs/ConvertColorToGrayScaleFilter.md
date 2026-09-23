@@ -33,7 +33,7 @@ Multiple input arrays can be processed in one filter pass; each produces its own
 
 ### Required Input Sources
 
-- **Input Image Arrays** -- 3- or 4-component uint8 arrays, typically produced by [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md) or another color-image reader.
+- **Input Image Arrays** -- 3- or 4-component uint8 arrays, typically produced by [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md) or another color-image reader.
 
 % Auto generated parameter table will be inserted here
 

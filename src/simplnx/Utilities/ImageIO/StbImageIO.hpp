@@ -18,7 +18,10 @@ public:
   ~StbImageIO() noexcept override = default;
 
   Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const override;
-  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const override;
+  /**
+   * @brief Decodes the requested page with stb's required whole-image allocation.
+   */
+  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex = 0) const override;
 
   /**
    * @brief Decodes with stb and supplies each row without a second full-image buffer.
@@ -28,7 +31,7 @@ public:
    *
    * stb owns one whole-image allocation until all synchronous callbacks finish.
    */
-  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const override;
+  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const override;
   Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const override;
   std::set<DataType> supportedWriteDataTypes() const override;
   std::set<usize> supportedWriteComponentCounts() const override;

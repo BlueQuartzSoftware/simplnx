@@ -35,9 +35,10 @@ public:
 
   ThresholdPlanManager()
   {
-    addDataStoreCreationFnc(k_Format.str(),
-                            []([[maybe_unused]] DataType type, [[maybe_unused]] const ShapeType& tuples, [[maybe_unused]] const ShapeType& components,
-                               [[maybe_unused]] const std::optional<ShapeType>& chunks) -> std::unique_ptr<IDataStore> { throw std::runtime_error("metadata routing must not allocate values"); });
+    addDataStoreCreationFnc(
+        k_Format.str(),
+        []([[maybe_unused]] DataType type, [[maybe_unused]] const ShapeType& tuples, [[maybe_unused]] const ShapeType& components, [[maybe_unused]] const std::optional<ShapeType>& chunks,
+           [[maybe_unused]] DataStoreInitializationMode initializationMode) -> std::unique_ptr<IDataStore> { throw std::runtime_error("metadata routing must not allocate values"); });
   }
 
   std::string formatName() const override

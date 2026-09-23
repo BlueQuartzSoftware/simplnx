@@ -73,14 +73,6 @@
         }
       ]
     },
-    "itk": {
-      "description": "ITK",
-      "dependencies": [
-        {
-          "name": "itk"
-        }
-      ]
-    },
     "ebsd": {
       "description": "Ebsd data processing",
       "dependencies": [

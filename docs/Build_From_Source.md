@@ -14,7 +14,6 @@
 | fmt | <https://github.com/fmtlib/fmt>  | 11.1.4 |
 | h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.13 |
 | hdf5 | <https://github.com/HDFGroup/hdf5/>  | 1.14.4.3 |
-| itk | <https://github.com/InsightSoftwareConsortium/ITK.git>  | 5.4.4 |
 | lz4 | <https://github.com/lz4/lz4> | 1.9.4 |
 | nlohmann-json | <https://github.com/nlohmann/json/>  | 3.11.2 |
 | nod | <https://github.com/fr00b0/nod.git>  | 0.5.4 |
@@ -140,8 +139,6 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 
 | Identifier | Type | Explanation |
 |------------|------|-------------|
-| `ITKImageProcessing_USE_JOB_POOL` | `BOOL` | When `ON` the amount of threads used to build `ITK` library plugin is capped (see `ITKImageProcessing_JOB_POOL`). Some of the `ITK` files more 2+ GB of memory to compile due to heavy templating. This is to prevent systems from running out of memory during compilation. |
-| `ITKImageProcessing_JOB_POOL` | `STRING` | If `ITKImageProcessing_USE_JOB_POOL` is `ON`, this variable is the maximum number of threads available to the `ITK` plugin during compilation. For example on a system with 32 threads and 64GB of RAM a value of `16` will prevent out-of-memory errors during compilation. |
 | `SIMPLNX_BUILD_TESTS` | `BOOL` | Turning this on will compile the filter/library tests and include them in the all ctests target |
 | `SIMPLNX_BUILD_DOCS` | `BOOL` | Turning this on will build the library/filters documentation, `SPHINX_BUILD_EXECUTABLE` must be defined |
 | `SPHINX_BUILD_EXECUTABLE` | `PATH` | The absolute path to to the sphinx executable; *required* for `SIMPLNX_BUILD_PYTHON_DOCS` and/or `SIMPLNX_BUILD_DOCS` |
@@ -150,7 +147,7 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 
 ### Python Binding CMake Arguments
 
-*NOTE: Be sure to **add** `python` **to** `VCPKG_MANIFEST_FEATURES` **list** if you are enabling python bindings*. Remember to separate each manifest feature with a `;`. Example: `tests;parallel;itk;ebsd;benchmark;python`
+*NOTE: Be sure to **add** `python` **to** `VCPKG_MANIFEST_FEATURES` **list** if you are enabling python bindings*. Remember to separate each manifest feature with a `;`. Example: `tests;parallel;ebsd;benchmark;python`
 
 | Identifier | Type | Explanation |
 |------------|------|-------------|
@@ -161,13 +158,10 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 | `SIMPLNX_BUILD_PYTHON_TESTS` | `BOOL` | Turning this on will also compile the python tests and include them in the all ctests target |
 | `SIMPLNX_BUILD_PYTHON_DOCS` | `BOOL` | Turning this on will build the python documentation, `SPHINX_BUILD_EXECUTABLE` must be defined |
 
-### ITKImageProcessing
+### ImageProcessing
 
-This plugin gives simplnx access to the ability to read/write images and use the **ITK** library to process images.
-
-There are 1 arguments that need to be added to the CMake configuration command
-
-+ `-DVCPKG_MANIFEST_FEATURES="tests;parallel;itk"`
+This plugin gives simplnx the ability to read and write images, and to process images. It uses its own
+image-processing code, so it needs no third-party image library and no extra CMake argument.
 
 ### OrientationAnalysis
 
@@ -242,7 +236,7 @@ If adapting for another platform, be sure to update `VCPKG_TARGET_TRIPLET` and `
         },
         "VCPKG_MANIFEST_FEATURES": {
           "type": "STRING",
-          "value": "tests;parallel;itk;ebsd;benchmark;python"
+          "value": "tests;parallel;ebsd;benchmark;python"
         },
         "VCPKG_INSTALLED_DIR": {
           "type": "STRING",
@@ -267,14 +261,6 @@ If adapting for another platform, be sure to update `VCPKG_TARGET_TRIPLET` and `
         "SIMPLNX_BUILD_DOCS": {
           "type": "BOOL",
           "value": "OFF"
-        },
-        "ITKImageProcessing_USE_JOB_POOL": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "ITKImageProcessing_JOB_POOL": {
-          "type": "STRING",
-          "value": "16"
         },
         "SIMPLNX_BUILD_PYTHON": {
           "type": "BOOL",

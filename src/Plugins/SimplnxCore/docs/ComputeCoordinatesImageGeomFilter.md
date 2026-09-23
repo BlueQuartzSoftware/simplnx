@@ -46,7 +46,7 @@ Image Indices_0,Image Indices_1,Image Indices_2,Image Physical Coordinates_0,Ima
 
 ### Required Input Sources
 
-- **Input Image Geometry** -- the geometry whose per-cell coordinates/indices will be made explicit. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [ITK Import Image Stack](../ITKImageProcessing/ITKImportImageStackFilter.md), or an EBSD reader.
+- **Input Image Geometry** -- the geometry whose per-cell coordinates/indices will be made explicit. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

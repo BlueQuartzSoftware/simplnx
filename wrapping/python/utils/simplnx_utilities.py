@@ -14,9 +14,9 @@ from typing import Any
 
 import simplnx as nx
 import orientationanalysis as nxor
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 # Ensure filters are loaded even though the modules aren't used directly
-assert nxitk
+assert nximgproc
 assert nxor
 
 # ---------------------------------------------------------------------------
@@ -26,11 +26,11 @@ assert nxor
 MODULE_ALIASES: dict[str, str] = {
     "simplnx" : "nx",
     "orientationanalysis" : "nxor",
-    "itkimageprocessing" : "nxitk",
+    "imageprocessing" : "nximgproc",
 }
 
 # Canonical import ordering for generated scripts
-_MODULE_ORDER: tuple[str, ...] = ("simplnx", "orientationanalysis", "itkimageprocessing")
+_MODULE_ORDER: tuple[str, ...] = ("simplnx", "orientationanalysis", "imageprocessing")
 
 
 # ---------------------------------------------------------------------------

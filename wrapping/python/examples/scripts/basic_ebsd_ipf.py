@@ -37,7 +37,7 @@ that.
 """
 import simplnx as nx
 
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
@@ -128,13 +128,13 @@ nxtest.check_filter_result(nxor.ComputeIPFColorsFilter, result)
 #------------------------------------------------------------------------------
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
-result = nxitk.ITKImageWriterFilter.execute(data_structure=data_structure, 
+result = nximgproc.WriteImageFilter.execute(data_structure=data_structure, 
                                       file_name=nxtest.get_test_temp_directory() / "Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       input_image_geometry_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
                                       plane_index=0)
-nxtest.check_filter_result(nxitk.ITKImageWriterFilter, result)
+nxtest.check_filter_result(nximgproc.WriteImageFilter, result)
 
 # #------------------------------------------------------------------------------
 # # Show the IPFColors using MatPlotLib

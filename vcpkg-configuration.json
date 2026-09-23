@@ -22,7 +22,6 @@
         "hdf5",
         "hwloc",
         "lz4",
-        "itk",
         "nlohmann-json",
         "nod",
         "pybind11",

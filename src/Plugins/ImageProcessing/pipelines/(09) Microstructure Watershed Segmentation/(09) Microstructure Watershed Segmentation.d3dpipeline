@@ -1,0 +1,383 @@
+{
+  "isDisabled": false,
+  "name": "(09) Microstructure Watershed Segmentation.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/ImageProcessing_Examples/materials/microstructure_grayscale.png",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "Microstructure Intensity",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Import the source image and preserve its original pixel values.",
+      "filter": {
+        "name": "nx::core::ReadImageFilter",
+        "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Microstructure Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Normalized Microstructure",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Convert the grayscale microstructure to a normalized floating-point field.",
+      "filter": {
+        "name": "nx::core::NormalizeImageFilter",
+        "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conductance_parameter": {
+          "value": 3.0,
+          "version": 1
+        },
+        "conductance_scaling_update_interval": {
+          "value": 1,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Normalized Microstructure",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "number_of_iterations": {
+          "value": 3,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Diffusion Smoothed",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "time_step": {
+          "value": 0.05,
+          "version": 1
+        }
+      },
+      "comments": "Reduce noise while preserving microstructure boundaries.",
+      "filter": {
+        "name": "nx::core::GradientAnisotropicDiffusionImageFilter",
+        "uuid": "17d499f1-b2dd-400d-a791-4ed9ea6903c0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Diffusion Smoothed",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Boundary Strength",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Measure local intensity changes at microstructure boundaries.",
+      "filter": {
+        "name": "nx::core::GradientMagnitudeImageFilter",
+        "uuid": "e9bc5ba0-a6db-4537-aff3-86d8b535327e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "height": {
+          "value": 0.5,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Diffusion Smoothed",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Prominent Peaks",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Suppress weak peaks and retain significant bright regions.",
+      "filter": {
+        "name": "nx::core::HMaximaImageFilter",
+        "uuid": "c912774e-be4a-4bc0-b096-9469bf31b4b7"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "flat_is_maxima": {
+          "value": true,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Diffusion Smoothed",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Regional Maxima",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Create a binary map of regional intensity maxima.",
+      "filter": {
+        "name": "nx::core::RegionalMaximaImageFilter",
+        "uuid": "b1437d92-4400-435e-b7dc-d7b8e3e560ad"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Diffusion Smoothed",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Valued Maxima",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Retain the original intensity at each regional maximum.",
+      "filter": {
+        "name": "nx::core::ValuedRegionalMaximaImageFilter",
+        "uuid": "40f84912-15bc-45b5-926b-c9802dc45bea"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Diffusion Smoothed",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Valued Minima",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Retain the original intensity at each regional minimum.",
+      "filter": {
+        "name": "nx::core::ValuedRegionalMinimaImageFilter",
+        "uuid": "c5fe4d67-4171-4982-b35e-5a7411e73c1f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Microstructure/Cell Data/Boundary Strength",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Microstructure",
+          "version": 1
+        },
+        "level": {
+          "value": 0.3,
+          "version": 1
+        },
+        "mark_watershed_line": {
+          "value": true,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Watershed Labels",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Segment the microstructure from the boundary-strength surface.",
+      "filter": {
+        "name": "nx::core::MorphologicalWatershedImageFilter",
+        "uuid": "d7526386-6ab5-4429-b51d-5e6540af5241"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/05_Microstructure_Watershed/microstructure_watershed.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the watershed labels and extrema analysis.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

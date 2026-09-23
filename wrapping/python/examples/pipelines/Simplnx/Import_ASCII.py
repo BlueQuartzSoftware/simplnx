@@ -1,6 +1,6 @@
 import simplnx as nx
 
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
@@ -135,7 +135,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = nxitk.ITKImageWriterFilter()
+nx_filter = nximgproc.WriteImageFilter()
 # Output file path for Filter 7
 output_file_path = nxtest.get_data_directory() / "Output/Import_ASCII/IPF.png"
 

@@ -1,0 +1,479 @@
+{
+  "schema_version": 1,
+  "pipeline_file": "(09) Microstructure Watershed Segmentation.d3dpipeline",
+  "markdown_file": "(09) Microstructure Watershed Segmentation.md",
+  "title": "Microstructure Watershed Segmentation",
+  "summary": "Builds an edge-preserving gradient surface, explores regional extrema, and performs unseeded morphological watershed segmentation of a grayscale microstructure.",
+  "primary_industries": [
+    "Metallography",
+    "Materials characterization"
+  ],
+  "secondary_industries": [
+    "Geology",
+    "Biological microscopy"
+  ],
+  "use_cases": [
+    "Explore watershed segmentation of a grayscale microstructure",
+    "Compare binary and valued regional extrema",
+    "Tune extrema suppression before basin segmentation"
+  ],
+  "keywords": [
+    "microstructure",
+    "watershed",
+    "extrema",
+    "anisotropic diffusion",
+    "metallography"
+  ],
+  "inputs": [
+    {
+      "path": "Data/ImageProcessing_Examples/materials/microstructure_grayscale.png",
+      "role": "Source for ReadImageFilter."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "Data/Output/ImageProcessing_Examples/05_Microstructure_Watershed/microstructure_watershed.dream3d",
+      "role": "Documented workflow output."
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "filter": "ReadImageFilter",
+      "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737",
+      "role": "Import the source image and preserve its original pixel values.",
+      "inputs": [
+        {
+          "parameter": "file_name",
+          "value": "Data/ImageProcessing_Examples/materials/microstructure_grayscale.png"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "key_parameters": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "center_origin": false,
+        "change_image_data_type": false,
+        "change_origin": false,
+        "change_spacing": false,
+        "cropping_options": {
+          "bounds_x_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_x_voxels": [
+            0,
+            0
+          ],
+          "bounds_y_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_y_voxels": [
+            0,
+            0
+          ],
+          "bounds_z_physical": [
+            0.0,
+            0.0
+          ],
+          "bounds_z_voxels": [
+            0,
+            0
+          ],
+          "crop_x": true,
+          "crop_y": true,
+          "crop_z": true,
+          "is_2d": true,
+          "type": 0
+        },
+        "file_name": "Data/ImageProcessing_Examples/materials/microstructure_grayscale.png",
+        "image_data_array_name": "Microstructure Intensity",
+        "image_data_type_index": 0,
+        "length_unit_index": 6,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "origin_spacing_processing_index": 1,
+        "output_geometry_path": "Microstructure",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "filter": "NormalizeImageFilter",
+      "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1",
+      "role": "Convert the grayscale microstructure to a normalized floating-point field.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Microstructure Intensity"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Normalized Microstructure"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Microstructure/Cell Data/Microstructure Intensity",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Normalized Microstructure"
+      }
+    },
+    {
+      "index": 2,
+      "filter": "GradientAnisotropicDiffusionImageFilter",
+      "uuid": "17d499f1-b2dd-400d-a791-4ed9ea6903c0",
+      "role": "Reduce noise while preserving microstructure boundaries.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Normalized Microstructure"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Diffusion Smoothed"
+        }
+      ],
+      "key_parameters": {
+        "conductance_parameter": 3.0,
+        "conductance_scaling_update_interval": 1,
+        "input_image_data_path": "Microstructure/Cell Data/Normalized Microstructure",
+        "input_image_geometry_path": "Microstructure",
+        "number_of_iterations": 3,
+        "output_array_name": "Diffusion Smoothed",
+        "time_step": 0.05
+      }
+    },
+    {
+      "index": 3,
+      "filter": "GradientMagnitudeImageFilter",
+      "uuid": "e9bc5ba0-a6db-4537-aff3-86d8b535327e",
+      "role": "Measure local intensity changes at microstructure boundaries.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Diffusion Smoothed"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Boundary Strength"
+        }
+      ],
+      "key_parameters": {
+        "input_image_data_path": "Microstructure/Cell Data/Diffusion Smoothed",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Boundary Strength",
+        "use_image_spacing": true
+      }
+    },
+    {
+      "index": 4,
+      "filter": "HMaximaImageFilter",
+      "uuid": "c912774e-be4a-4bc0-b096-9469bf31b4b7",
+      "role": "Suppress weak peaks and retain significant bright regions.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Diffusion Smoothed"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Prominent Peaks"
+        }
+      ],
+      "key_parameters": {
+        "height": 0.5,
+        "input_image_data_path": "Microstructure/Cell Data/Diffusion Smoothed",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Prominent Peaks"
+      }
+    },
+    {
+      "index": 5,
+      "filter": "RegionalMaximaImageFilter",
+      "uuid": "b1437d92-4400-435e-b7dc-d7b8e3e560ad",
+      "role": "Create a binary map of regional intensity maxima.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Diffusion Smoothed"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Regional Maxima"
+        }
+      ],
+      "key_parameters": {
+        "background_value": 0.0,
+        "flat_is_maxima": true,
+        "foreground_value": 1.0,
+        "fully_connected": true,
+        "input_image_data_path": "Microstructure/Cell Data/Diffusion Smoothed",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Regional Maxima"
+      }
+    },
+    {
+      "index": 6,
+      "filter": "ValuedRegionalMaximaImageFilter",
+      "uuid": "40f84912-15bc-45b5-926b-c9802dc45bea",
+      "role": "Retain the original intensity at each regional maximum.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Diffusion Smoothed"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Valued Maxima"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Microstructure/Cell Data/Diffusion Smoothed",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Valued Maxima"
+      }
+    },
+    {
+      "index": 7,
+      "filter": "ValuedRegionalMinimaImageFilter",
+      "uuid": "c5fe4d67-4171-4982-b35e-5a7411e73c1f",
+      "role": "Retain the original intensity at each regional minimum.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Diffusion Smoothed"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Valued Minima"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Microstructure/Cell Data/Diffusion Smoothed",
+        "input_image_geometry_path": "Microstructure",
+        "output_array_name": "Valued Minima"
+      }
+    },
+    {
+      "index": 8,
+      "filter": "MorphologicalWatershedImageFilter",
+      "uuid": "d7526386-6ab5-4429-b51d-5e6540af5241",
+      "role": "Segment the microstructure from the boundary-strength surface.",
+      "inputs": [
+        {
+          "parameter": "input_image_data_path",
+          "value": "Microstructure/Cell Data/Boundary Strength"
+        },
+        {
+          "parameter": "input_image_geometry_path",
+          "value": "Microstructure"
+        }
+      ],
+      "outputs": [
+        {
+          "parameter": "output_array_name",
+          "value": "Watershed Labels"
+        }
+      ],
+      "key_parameters": {
+        "fully_connected": true,
+        "input_image_data_path": "Microstructure/Cell Data/Boundary Strength",
+        "input_image_geometry_path": "Microstructure",
+        "level": 0.3,
+        "mark_watershed_line": true,
+        "output_array_name": "Watershed Labels"
+      }
+    },
+    {
+      "index": 9,
+      "filter": "WriteDREAM3DFilter",
+      "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003",
+      "role": "Save the watershed labels and extrema analysis.",
+      "inputs": [],
+      "outputs": [
+        {
+          "parameter": "export_file_path",
+          "value": "Data/Output/ImageProcessing_Examples/05_Microstructure_Watershed/microstructure_watershed.dream3d"
+        }
+      ],
+      "key_parameters": {
+        "compression_level": 5,
+        "export_file_path": "Data/Output/ImageProcessing_Examples/05_Microstructure_Watershed/microstructure_watershed.dream3d",
+        "use_compression": true,
+        "write_xdmf_file": false
+      }
+    }
+  ],
+  "citations": [
+    {
+      "title": "Deep learning enhanced Watershed for microstructural analysis using a boundary class semantic segmentation",
+      "authors": [
+        "G. Fotos",
+        "A. Campbell",
+        "P. Murray",
+        "E. Yakushina"
+      ],
+      "year": 2023,
+      "journal": "Journal of Materials Science",
+      "doi": "10.1007/s10853-023-08901-w",
+      "url": "https://doi.org/10.1007/s10853-023-08901-w",
+      "scope": "pipeline_workflow",
+      "role": "Workflow reference for automated metallic-microstructure segmentation that combines boundary preparation, distance-based markers, H-maxima suppression, and watershed separation.",
+      "dataset": {
+        "availability": "Original paper-linked input data is publicly available and a measured-derived input is included in this archive.",
+        "url": "https://doi.org/10.15129/46955351-408b-4dc3-840e-3bc6a9f3432a",
+        "doi": "10.15129/46955351-408b-4dc3-840e-3bc6a9f3432a",
+        "license": "MIT license in the paper-linked GitHub repository.",
+        "included": true,
+        "reproduction_status": "illustrative",
+        "reproduction_notes": "The input is original paper-linked data, but the pipeline omits the paper's boundary-class neural network and therefore cannot reproduce HADMA accuracy."
+      }
+    },
+    {
+      "title": "Watersheds in digital spaces: An efficient algorithm based on immersion simulations",
+      "authors": [
+        "Luc Vincent",
+        "Pierre Soille"
+      ],
+      "year": 1991,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/34.87344",
+      "url": "https://doi.org/10.1109/34.87344",
+      "role": "Foundational watershed segmentation method used to separate basins and touching objects.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "Scale-space and edge detection using anisotropic diffusion",
+      "authors": [
+        "Pietro Perona",
+        "Jitendra Malik"
+      ],
+      "year": 1990,
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "doi": "10.1109/34.56205",
+      "url": "https://doi.org/10.1109/34.56205",
+      "role": "Foundational edge-preserving diffusion method used before segmentation or edge detection.",
+      "scope": "filter_algorithm"
+    },
+    {
+      "title": "Morphological grayscale reconstruction in image analysis: Applications and efficient algorithms",
+      "authors": [
+        "Luc Vincent"
+      ],
+      "year": 1993,
+      "journal": "IEEE Transactions on Image Processing",
+      "doi": "10.1109/83.217222",
+      "url": "https://doi.org/10.1109/83.217222",
+      "role": "Foundational reference for reconstruction, extrema suppression, and top-hat morphology.",
+      "scope": "filter_algorithm"
+    }
+  ],
+  "mcp": {
+    "user_intents": [
+      "Explore watershed segmentation of a grayscale microstructure",
+      "Compare binary and valued regional extrema",
+      "Tune extrema suppression before basin segmentation"
+    ],
+    "questions_to_ask": [
+      "What imaging system, material, and acquisition mode produced the data?",
+      "What are the voxel or pixel spacing and physical units?",
+      "What is the smallest feature that must be retained or reported?",
+      "Which independent measurement or labeled dataset will validate the result?"
+    ],
+    "constraints": [
+      "Meaningful boundaries correspond to gradient ridges.",
+      "The image has enough contrast after edge-preserving denoise.",
+      "Unseeded watershed is exploratory and can over-segment noisy data.",
+      "Keep all file paths relative to the DREAM3D-NX application binary directory.",
+      "Run preflight and execute the complete pipeline after any parameter or DataPath change.",
+      "Treat example parameter values as starting points, not production acceptance limits."
+    ],
+    "related_pipelines": [
+      "(08) Powder Particle Watershed Segmentation.d3dpipeline",
+      "(13) Denoising and Edge Detection.d3dpipeline"
+    ]
+  },
+  "last_verified": "2026-09-01",
+  "python_generation": {
+    "specification_file": "PythonGeneration.yaml",
+    "resolve_from": "pipeline_suite_root",
+    "specification_id": "imageprocessing-python-generation-v1"
+  },
+  "input_data_strategy": {
+    "strategy": "original-paper-linked",
+    "asset_keys": [
+      "materials/microstructure_grayscale.png"
+    ],
+    "paper_doi": "10.1007/s10853-023-08901-w",
+    "paper_url": "",
+    "reference_visual": "Paper-linked bimodal Ti-6Al-4V micrograph with globular regions, lath colonies, and bright phase boundaries.",
+    "target_traits": [
+      "measured micrograph",
+      "bimodal Ti-6Al-4V",
+      "globular regions",
+      "lath colonies",
+      "bright boundaries"
+    ],
+    "known_differences": "The input is original paper-linked data, but the pipeline omits the paper's boundary-class neural network and therefore cannot reproduce HADMA accuracy.",
+    "archive_provenance_file": "Provenance.json",
+    "dataset_doi": "10.15129/46955351-408b-4dc3-840e-3bc6a9f3432a",
+    "source_url": "https://raw.githubusercontent.com/ArunBaskaran/Image-Driven-Machine-Learning-Approach-for-Microstructure-Classification-and-Segmentation-Ti-6Al-4V/master/Images1/image_500.png",
+    "source_sha512": "6739da11d8d4098ef0f7086b521e9a75a55936b53ce198ac4caf1c802ca1af8a23bb96461e28213a1b6574ad0ab6807775113aeffc90da2eccfc2f7498d7412c"
+  }
+}

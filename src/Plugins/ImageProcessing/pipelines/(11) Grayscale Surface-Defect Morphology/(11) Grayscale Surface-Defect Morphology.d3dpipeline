@@ -1,0 +1,571 @@
+{
+  "isDisabled": false,
+  "name": "(11) Grayscale Surface-Defect Morphology.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/ImageProcessing_Examples/materials/grayscale_defects.png",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "Defect Intensity",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Import the source image and preserve its original pixel values.",
+      "filter": {
+        "name": "nx::core::ReadImageFilter",
+        "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Local Maximum",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Expand local bright regions across the structuring element.",
+      "filter": {
+        "name": "nx::core::GrayscaleDilateImageFilter",
+        "uuid": "6c5fb0d3-3db5-49fe-b5d6-eddef082cd68"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Local Minimum",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Expand local dark regions across the structuring element.",
+      "filter": {
+        "name": "nx::core::GrayscaleErodeImageFilter",
+        "uuid": "b9ec6f58-64bc-4318-b30d-5aefe1eb7a97"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Filled Dark Holes",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Fill dark holes that do not connect to the image boundary.",
+      "filter": {
+        "name": "nx::core::GrayscaleFillholeImageFilter",
+        "uuid": "aa11f464-039e-4e7b-b748-18cc72b3f054"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Ground Peaks",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Remove bright peaks that do not connect to the image boundary.",
+      "filter": {
+        "name": "nx::core::GrayscaleGrindPeakImageFilter",
+        "uuid": "49fc01b5-630f-4592-9b06-d04ff4a7e1d2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Grayscale Closed",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Close small dark defects and narrow troughs.",
+      "filter": {
+        "name": "nx::core::GrayscaleMorphologicalClosingImageFilter",
+        "uuid": "71b54df2-dec2-453e-b558-3cd4f7a81af8"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Grayscale Opened",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Remove small bright defects and narrow peaks.",
+      "filter": {
+        "name": "nx::core::GrayscaleMorphologicalOpeningImageFilter",
+        "uuid": "74ad4b11-a144-4986-9259-2daf6da22fc0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Opening Reconstruction",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "preserve_intensities": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Remove small bright regions without distorting the surviving regions.",
+      "filter": {
+        "name": "nx::core::OpeningByReconstructionImageFilter",
+        "uuid": "652094ae-9781-4164-a4eb-afceb343418f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Closing Reconstruction",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "preserve_intensities": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Fill small dark regions without distorting the surviving regions.",
+      "filter": {
+        "name": "nx::core::ClosingByReconstructionImageFilter",
+        "uuid": "85036c6c-402a-4c54-88cc-c62b0e35a785"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Dark Defect Response",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Extract dark surface defects smaller than the structuring element.",
+      "filter": {
+        "name": "nx::core::BlackTopHatImageFilter",
+        "uuid": "a2e561ae-4728-495a-84a3-84169553d86c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Bright Defect Response",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Extract bright surface defects smaller than the structuring element.",
+      "filter": {
+        "name": "nx::core::WhiteTopHatImageFilter",
+        "uuid": "c33fdeac-8313-4dcf-a3d2-e97fff859c54"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Morphological Gradient",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Measure local grayscale contrast around defect boundaries.",
+      "filter": {
+        "name": "nx::core::MorphologicalGradientImageFilter",
+        "uuid": "c199ce3f-501e-453d-92c9-145d7958a843"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "height": {
+          "value": 20.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Grayscale Defects/Cell Data/Defect Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Grayscale Defects",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Prominent Bright Defects",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Retain bright peaks that rise at least 20 intensity units above their surroundings.",
+      "filter": {
+        "name": "nx::core::HConvexImageFilter",
+        "uuid": "a11f18b6-87df-41a4-9fd7-87050ecf147e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/07_Grayscale_Morphology/grayscale_defects.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the complete workflow result.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

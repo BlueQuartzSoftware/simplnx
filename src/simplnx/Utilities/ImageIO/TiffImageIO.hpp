@@ -27,7 +27,10 @@ public:
   ~TiffImageIO() noexcept override = default;
 
   Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const override;
-  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const override;
+  /**
+   * @brief Reads the requested TIFF page into the destination buffer.
+   */
+  Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex = 0) const override;
 
   /**
    * @brief Supplies TIFF scanlines or tile-row segments to a callback.
@@ -37,7 +40,7 @@ public:
    *
    * The bounded segments let callers crop or convert directly into destination pages.
    */
-  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback) const override;
+  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const override;
   Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const override;
   std::set<DataType> supportedWriteDataTypes() const override;
   std::set<usize> supportedWriteComponentCounts() const override;

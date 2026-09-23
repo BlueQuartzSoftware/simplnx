@@ -1,4 +1,3 @@
-#include "SimplnxCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
 #include "SimplnxCore/Filters/ConvertColorToGrayScaleFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -18,6 +17,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>

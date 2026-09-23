@@ -1,0 +1,455 @@
+{
+  "isDisabled": false,
+  "name": "(07) AM Melt-Pool and Track Inspection.d3dpipeline",
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": true,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/ImageProcessing_Examples/am/melt_pool_track.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "Thermal Intensity",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            0.0333,
+            0.0472,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Import the source image and preserve its original pixel values.",
+      "filter": {
+        "name": "nx::core::ReadImageFilter",
+        "uuid": "7391288d-3d0b-492e-93c9-e128e05c9737"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Thermal Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Normalized Intensity",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Normalize the thermal response before nonlinear contrast enhancement.",
+      "filter": {
+        "name": "nx::core::NormalizeImageFilter",
+        "uuid": "daacf274-e0d7-497b-a732-19fa1385f0a1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "alpha": {
+          "value": -0.5,
+          "version": 1
+        },
+        "beta": {
+          "value": 0.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Normalized Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Sigmoid Contrast",
+          "version": 1
+        },
+        "output_maximum": {
+          "value": 255.0,
+          "version": 1
+        },
+        "output_minimum": {
+          "value": 0.0,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Increase contrast around the melt-pool response range.",
+      "filter": {
+        "name": "nx::core::SigmoidImageFilter",
+        "uuid": "1804f5e4-1c76-48f5-b1a0-111963b0a507"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Sigmoid Contrast",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "label_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "number_of_histogram_bins": {
+          "value": 128,
+          "version": 1
+        },
+        "number_of_thresholds": {
+          "value": 2,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Otsu Regions",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "return_bin_midpoint": {
+          "value": false,
+          "version": 1
+        },
+        "valley_emphasis": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Partition background, track, and hot-core intensity classes automatically.",
+      "filter": {
+        "name": "nx::core::OtsuMultipleThresholdsImageFilter",
+        "uuid": "1aaedd47-62aa-4310-a353-af1a40f6ee82"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Thermal Intensity",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "inside_value": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Track Mask",
+          "version": 1
+        },
+        "outside_value": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "threshold1": {
+          "value": 40.0,
+          "version": 1
+        },
+        "threshold2": {
+          "value": 90.0,
+          "version": 1
+        },
+        "threshold3": {
+          "value": 150.0,
+          "version": 1
+        },
+        "threshold4": {
+          "value": 255.0,
+          "version": 1
+        }
+      },
+      "comments": "Create a connected melt-pool mask with a high-confidence core and a lower support threshold.",
+      "filter": {
+        "name": "nx::core::DoubleThresholdImageFilter",
+        "uuid": "8350bea5-7958-4a45-9cd6-b996e56b3749"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Track Mask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Track Labels",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Label the melt pool and separated spatter regions.",
+      "filter": {
+        "name": "nx::core::ConnectedComponentImageFilter",
+        "uuid": "288f782b-9b8f-4734-ae66-15ae4a43db41"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Track Labels",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "minimum_object_size": {
+          "value": 8,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Sorted Track Labels",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "sort_by_object_size": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Sort the melt pool and spatter regions by area.",
+      "filter": {
+        "name": "nx::core::RelabelComponentImageFilter",
+        "uuid": "de830a9e-1fc0-47fa-9c2d-895366af832a"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "Melt Pool Image/Cell Data/Sorted Track Labels",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Track Contours",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Extract the boundaries of the labeled melt-pool regions.",
+      "filter": {
+        "name": "nx::core::LabelContourImageFilter",
+        "uuid": "060339d1-56c9-4253-9b52-d4be6a58eafb"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "add_scale_bar": {
+          "value": false,
+          "version": 1
+        },
+    "create_color_table": {
+          "value": true,
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/track_contours.tif",
+          "version": 1
+        },
+        "flip_mode_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "Melt Pool Image/Cell Data/Track Contours",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Melt Pool Image",
+          "version": 1
+        },
+        "invalid_color_value": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "leading_digit_character": {
+          "value": "0",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 5,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        },
+        "selected_preset": {
+          "value": "Black-Body Radiation",
+          "version": 1
+        },
+        "total_index_digits": {
+          "value": 3,
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Write the labeled track contours for review.",
+      "filter": {
+        "name": "nx::core::WriteImageFilter",
+        "uuid": "a8b920c7-5445-4c8a-b7d7-6cabc578d587"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/melt_pool_inspection.dream3d",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Save the complete melt-pool analysis.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "generator": "src/Plugins/ImageProcessing/test/DataGeneration/GenerateImageProcessingExampleData.py",
+  "seed": 20260901,
+  "pipelines": {
+    "(05) AM XCT Porosity Segmentation": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["am/xct_porosity.mha"],
+      "paper_doi": "10.1016/j.mex.2018.09.005",
+      "reference_visual": "Paper XCT coupon-interior cross-sections and segmented 3-D gas-pore and lack-of-fusion renderings.",
+      "target_traits": ["cropped metal coupon interior", "rounded gas pores", "elongated lack-of-fusion voids", "reconstruction noise", "weak ring artifacts"],
+      "known_differences": "The paper's raw XCT volume is unavailable. The generated volume represents a cropped coupon interior, is smaller, uses a deterministic intensity model, and does not reproduce the paper's exact pore statistics."
+    },
+    "(06) AM Powder-Bed Layer Inspection": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["am/powder_bed_layers"],
+      "paper_doi": "10.1016/j.addma.2017.11.009",
+      "reference_visual": "Post-recoat powder-bed images with streaks, bare regions, and powder agglomerates under nonuniform illumination.",
+      "target_traits": ["directional illumination", "recoater streaks", "bare patches", "bright agglomerates", "layer-to-layer variation"],
+      "known_differences": "The production images and trained classifier are unavailable. The five generated layers reproduce visual anomaly classes but not the paper's machine, material, or classifier accuracy."
+    },
+    "(07) AM Melt-Pool and Track Inspection": {
+      "strategy": "original-paper-linked",
+      "asset_keys": ["am/melt_pool_track.tif"],
+      "paper_doi": "10.1108/RPJ-11-2015-0161",
+      "dataset_doi": "10.18434/M31931",
+      "source_url": "https://s3.amazonaws.com/nist-midas/1858/20170213_PowderPlate1_SingleLine.zip",
+      "source_sha512": "096d3a5c1d2a25225394cdf3125e563232d51411cf20a1619d219e22b46d256ec4d76aaadff5ea1d7e3b134be0a89505ee3c08f71126c828d251695b5fb0e18b",
+      "reference_visual": "NIST single-track thermography on an IN625 powder layer, showing a saturated hot core, trailing thermal wake, and ejected hot particles.",
+      "target_traits": ["measured camera signal", "single scan track", "hot core", "thermal wake", "spatter"],
+      "known_differences": "The archive stores one percentile-scaled peak frame rather than the complete 56-frame camera-signal sequence or calibrated radiant temperature."
+    },
+    "(08) Powder Particle Watershed Segmentation": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["materials/powder_particles.png"],
+      "paper_doi": "10.1016/j.mex.2018.10.021",
+      "reference_visual": "Metal-powder XCT or microscopy views with irregular particles, a broad size distribution, edge shading, and touching clusters.",
+      "target_traits": ["irregular elliptical particles", "broad diameter distribution", "touching particles", "bright rims", "dark background"],
+      "known_differences": "The paper's powder volume is unavailable. The generated image is a 2-D analogue and cannot reproduce 3-D sphericity or internal particle porosity."
+    },
+    "(09) Microstructure Watershed Segmentation": {
+      "strategy": "original-paper-linked",
+      "asset_keys": ["materials/microstructure_grayscale.png"],
+      "paper_doi": "10.1007/s10853-023-08901-w",
+      "dataset_doi": "10.15129/46955351-408b-4dc3-840e-3bc6a9f3432a",
+      "source_url": "https://raw.githubusercontent.com/ArunBaskaran/Image-Driven-Machine-Learning-Approach-for-Microstructure-Classification-and-Segmentation-Ti-6Al-4V/master/Images1/image_500.png",
+      "source_sha512": "6739da11d8d4098ef0f7086b521e9a75a55936b53ce198ac4caf1c802ca1af8a23bb96461e28213a1b6574ad0ab6807775113aeffc90da2eccfc2f7498d7412c",
+      "reference_visual": "Paper-linked bimodal Ti-6Al-4V micrograph with globular regions, lath colonies, and bright phase boundaries.",
+      "target_traits": ["measured micrograph", "bimodal Ti-6Al-4V", "globular regions", "lath colonies", "bright boundaries"],
+      "known_differences": "The input is original paper-linked data, but the pipeline omits the paper's boundary-class neural network and therefore cannot reproduce HADMA accuracy."
+    },
+    "(10) Binary Mask Repair and Skeletonization": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["materials/binary_mask.png"],
+      "paper_doi": "10.2136/sssaj2017.03.0088",
+      "reference_visual": "Thresholded desiccation-crack networks with branches, variable widths, gaps, and segmentation debris before skeletonization.",
+      "target_traits": ["connected crack network", "multiple branch nodes", "variable line width", "small gaps", "isolated specks"],
+      "known_differences": "The soil images are unavailable. The generated mask captures network topology but not wetting-drying evolution or measured soil texture."
+    },
+    "(11) Grayscale Surface-Defect Morphology": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["materials/grayscale_defects.png"],
+      "paper_doi": "10.3182/20091014-3-CL-4011.00038",
+      "reference_visual": "Scale-covered steel billet surface with nonuniform texture, long dark defects, pits, and bright inclusions.",
+      "target_traits": ["rolling texture", "nonuniform brightness", "long dark defects", "dark pits", "bright inclusions"],
+      "known_differences": "Production-line billet images are unavailable. The generated texture has analogous defect scales but no real oxide-scale physics."
+    },
+    "(12) Pore Distance and Wall-Thickness Metrology": {
+      "strategy": "synthetic-paper-inspired-shared",
+      "asset_keys": ["materials/binary_mask.png"],
+      "paper_doi": "10.3390/s21227534",
+      "reference_visual": "Binary crack mask, Euclidean distance map, top-hat response, and skeleton used for local crack-width measurement.",
+      "target_traits": ["variable-width cracks", "branching topology", "known foreground convention", "gaps and edge curvature"],
+      "known_differences": "The generated mask is shared with skeletonization and the pipeline compares distance implementations rather than reproducing the paper's complete curvature-aware width estimator."
+    },
+    "(13) Denoising and Edge Detection": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["materials/edge_input.png"],
+      "paper_doi": "10.5812/ircmj.14658",
+      "reference_visual": "Long-axis carotid or brachial ultrasound with speckled tissue, dark lumen, bright arterial walls, depth gain, and acoustic shadow.",
+      "target_traits": ["multiplicative speckle", "dark vessel lumen", "bright paired walls", "depth-dependent gain", "acoustic shadow"],
+      "known_differences": "Clinical ultrasound frames cannot be redistributed. The generated image models visual statistics but not patient anatomy, transducer response, or diagnostic content."
+    },
+    "(14) Projection-Based Quality Summaries": {
+      "strategy": "synthetic-paper-inspired-shared",
+      "asset_keys": ["am/xct_porosity.mha"],
+      "paper_doi": "10.1109/42.41482",
+      "reference_visual": "Projection views of a 3-D volume in which extrema, average signal, accumulated signal, and variance reveal different structures.",
+      "target_traits": ["3-D attenuation volume", "multiple pore depths", "dense coupon boundary", "depth-dependent projection response"],
+      "known_differences": "The generated AM coupon replaces the paper's nuclear-medicine data and demonstrates projection behavior rather than its clinical display results."
+    },
+    "(15) Radiography Intensity Calibration": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["am/calibration/transmission.mha"],
+      "paper_doi": "10.1364/OE.23.027975",
+      "reference_visual": "X-ray projection and flat-field examples with beam-profile variation, attenuating specimens, detector stripes, and invalid pixels.",
+      "target_traits": ["positive transmission", "beam profile", "step wedge", "multiple attenuation depths", "detector stripes", "valid-region mask"],
+      "known_differences": "The paper's synchrotron datasets are unavailable. The generated fields demonstrate calibration domains but not eigen-flat-field estimation or reported reconstruction errors."
+    },
+    "(16) Phase and Angle Field Transforms": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["am/calibration/phase_radians.mha"],
+      "paper_doi": "10.1364/AO.26.002504",
+      "reference_visual": "Smooth interferometric phase containing carrier tilt and a localized surface-height feature, with normalized sinusoidal response.",
+      "target_traits": ["radian phase", "carrier tilt", "localized phase bump", "valid inverse-function domain", "no tangent singularity"],
+      "known_differences": "The paper's interferograms are unavailable. The generated analytical field tests the phase mathematics but not phase-step nonlinearity or experimental noise."
+    },
+    "(17) Scientific Volume Interoperability": {
+      "strategy": "tested-format-fixture",
+      "asset_keys": ["io/scientific/sample.mha", "io/scientific/sample.nii.gz"],
+      "paper_url": "https://www.nitrc.org/docman/view.php/26/204/TheNIfTI1Format2004.pdf",
+      "reference_visual": "NIfTI-1 format fields, affine orientation, scaling, and single-file versus dual-file interoperability rather than a canonical specimen image.",
+      "target_traits": ["valid MHA", "valid compressed NIfTI", "affine metadata", "scaling metadata"],
+      "known_differences": "The workflow paper defines a file format, not an input specimen. Small conformance fixtures are retained because visual similarity is not scientifically applicable."
+    },
+    "(18) Industrial XCT Format Import": {
+      "strategy": "tested-format-fixture",
+      "asset_keys": ["io/northstar", "io/volume_graphics", "io/zeiss/sample.txm"],
+      "paper_doi": "10.1016/j.cirp.2011.05.006",
+      "reference_visual": "Industrial XCT volumes with calibrated dimensions and internal material structure across vendor formats.",
+      "target_traits": ["valid compound formats", "vendor metadata", "dimensions", "spacing", "scalar values"],
+      "known_differences": "The review has no common multi-vendor dataset. Tested format fixtures are retained because import correctness is more important than visual imitation."
+    },
+    "(19) Serial-Section Stack Reconstruction": {
+      "strategy": "synthetic-paper-inspired",
+      "asset_keys": ["io/serial_stack"],
+      "paper_doi": "10.1016/j.scriptamat.2006.01.019",
+      "reference_visual": "Registered serial metallography sections with persistent grains and boundaries that evolve gradually through depth.",
+      "target_traits": ["eight ordered sections", "persistent grains", "bright grain boundaries", "small section motion", "acquisition noise"],
+      "known_differences": "The paper's case-study stacks are unavailable. The generated stack models section continuity without polishing damage, missing material, or registration correction."
+    },
+    "(20) Fiji Microscopy Montage Import": {
+      "strategy": "measured-compatible-fixture",
+      "asset_keys": ["io/fiji"],
+      "paper_doi": "10.1093/bioinformatics/btp184",
+      "reference_visual": "Overlapping microscopy tiles with a registered Fiji tile configuration and preserved tile positions.",
+      "target_traits": ["measured microscopy tiles", "overlap", "registered translations", "tile metadata"],
+      "known_differences": "The paper's exact confocal acquisition is unavailable. Existing measured BlueQuartz tiles are retained because they exercise the same Fiji registration contract."
+    }
+  }
+}

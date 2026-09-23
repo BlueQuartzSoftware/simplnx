@@ -1,6 +1,6 @@
 import simplnx as nx
 
-import itkimageprocessing as nxitk
+import imageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
@@ -89,7 +89,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = nxitk.ITKImageWriterFilter()
+nx_filter = nximgproc.WriteImageFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

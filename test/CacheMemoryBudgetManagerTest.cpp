@@ -9,6 +9,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -628,4 +629,150 @@ TEST_CASE("CacheMemoryBudgetManager pin overhead benchmark", "[.CacheMemoryBudge
   CHECK(medianPinNanoseconds <= medianTouchNanoseconds * 4.0);
   mgr.release(handle);
   mgr.clear();
+}
+
+TEST_CASE("CacheMemoryBudgetManager working-memory reservations use at most one quarter of the cache budget", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  {
+    auto first = mgr.reserveWorkingMemory(100);
+    REQUIRE(first.sizeBytes() == 100);
+    REQUIRE(mgr.maximumWorkingMemoryBytes() == 250);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 100);
+    REQUIRE(mgr.effectiveCacheBudgetBytes() == 900);
+    REQUIRE(mgr.usedBytes() == 0);
+
+    auto second = mgr.reserveWorkingMemory(500);
+    REQUIRE(second.sizeBytes() == 150);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 250);
+    REQUIRE(mgr.effectiveCacheBudgetBytes() == 750);
+
+    auto exhausted = mgr.reserveWorkingMemory(1);
+    REQUIRE(exhausted.sizeBytes() == 0);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 250);
+  }
+
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  REQUIRE(mgr.effectiveCacheBudgetBytes() == 1000);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager working-memory reservations release exactly once across moves", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  {
+    auto original = mgr.reserveWorkingMemory(100);
+    auto moved = std::move(original);
+    REQUIRE(original.sizeBytes() == 0);
+    REQUIRE(moved.sizeBytes() == 100);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 100);
+
+    auto replacement = mgr.reserveWorkingMemory(50);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 150);
+    replacement = std::move(moved);
+    REQUIRE(moved.sizeBytes() == 0);
+    REQUIRE(replacement.sizeBytes() == 100);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 100);
+  }
+
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  auto empty = mgr.reserveWorkingMemory(0);
+  REQUIRE(empty.sizeBytes() == 0);
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager working-memory reservations can return unused bytes", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  {
+    auto reservation = mgr.reserveWorkingMemory(250);
+    REQUIRE(reservation.sizeBytes() == 250);
+    reservation.shrinkTo(100);
+    REQUIRE(reservation.sizeBytes() == 100);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 100);
+    REQUIRE(mgr.effectiveCacheBudgetBytes() == 900);
+
+    reservation.shrinkTo(200);
+    REQUIRE(reservation.sizeBytes() == 100);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 100);
+  }
+
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  REQUIRE(mgr.effectiveCacheBudgetBytes() == 1000);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager keeps live working reservations separate from clear and budget changes", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  {
+    auto reservation = mgr.reserveWorkingMemory(250);
+    REQUIRE(reservation.sizeBytes() == 250);
+
+    auto [handle, evicted] = mgr.allocate("reservation-clear", "entry", 300, []() {});
+    REQUIRE(evicted.empty());
+    REQUIRE(mgr.usedBytes() == 300);
+
+    mgr.clear();
+    REQUIRE(mgr.usedBytes() == 0);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 250);
+
+    mgr.setBudgetBytes(800);
+    REQUIRE(mgr.maximumWorkingMemoryBytes() == 200);
+    REQUIRE(mgr.reservedWorkingMemoryBytes() == 250);
+    REQUIRE(mgr.effectiveCacheBudgetBytes() == 550);
+    auto denied = mgr.reserveWorkingMemory(1);
+    REQUIRE(denied.sizeBytes() == 0);
+  }
+
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  REQUIRE(mgr.effectiveCacheBudgetBytes() == 800);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager cache eviction accounts for active working memory", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  bool firstEvicted = false;
+  auto [firstHandle, firstResult] = mgr.allocate("reservation-eviction", "first", 300, [&firstEvicted]() { firstEvicted = true; });
+  REQUIRE(firstResult.empty());
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  auto [secondHandle, secondResult] = mgr.allocate("reservation-eviction", "second", 300, []() {});
+  REQUIRE(secondResult.empty());
+
+  {
+    auto reservation = mgr.reserveWorkingMemory(250);
+    REQUIRE(reservation.sizeBytes() == 250);
+    REQUIRE(mgr.usedBytes() == 600);
+
+    auto [thirdHandle, thirdResult] = mgr.allocate("reservation-eviction", "third", 300, []() {});
+    REQUIRE(firstEvicted);
+    REQUIRE(thirdResult.size() == 1);
+    REQUIRE(thirdResult.front() == firstHandle);
+    REQUIRE(mgr.usedBytes() == 600);
+    REQUIRE(mgr.usedBytes() + mgr.reservedWorkingMemoryBytes() <= mgr.budgetBytes());
+
+    mgr.release(secondHandle);
+    mgr.release(thirdHandle);
+  }
+
+  REQUIRE(mgr.usedBytes() == 0);
+  REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
 }
