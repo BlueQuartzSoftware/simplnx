@@ -2951,9 +2951,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   SharpEdgeResult sharpEdges;
   if(inputValues->SharpBoundingBoxEdges)
   {
-    messageHandler("Sharpening bounding box edges...");
+    messageHandler.sendInfoMessage("Sharpening bounding box edges...");
     sharpEdges = sharpenBoundingBoxEdges(triangles, mCubeID, nodeType, 7 * numSites, nodeCoords, dims);
-    messageHandler(fmt::format("Sharpened bounding box edges: removed {} chamfer triangles", sharpEdges.NumFacesRemoved));
+    messageHandler.sendInfoMessage(fmt::format("Sharpened bounding box edges: removed {} chamfer triangles", sharpEdges.NumFacesRemoved));
   }
 
   const int64 nTriangleFinal = static_cast<int64>(triangles.size());

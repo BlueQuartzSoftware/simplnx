@@ -5,7 +5,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -43,11 +43,8 @@ Result<> ReadPayload(const std::filesystem::path& filePath, const EbsdPatternFil
   }
 
   const uint64 patternsPerChunk = std::max<uint64>(1, k_TargetChunkBytes / fileInfo.patternStride);
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(static_cast<usize>(fileInfo.numberOfPatterns));
-  progressHelper.setProgressMessageTemplate("Reading EBSD patterns: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(static_cast<usize>(fileInfo.numberOfPatterns), "Reading EBSD patterns");
 
   auto& dataStoreRef = outputArray.getDataStoreRef();
   uint64 completedPatterns = 0;
@@ -103,7 +100,7 @@ Result<> ReadPayload(const std::filesystem::path& filePath, const EbsdPatternFil
     }
 
     completedPatterns += chunkPatternCount;
-    progressMessenger.sendProgressMessage(static_cast<usize>(chunkPatternCount));
+    progressThrottle.incrementPercent(static_cast<usize>(chunkPatternCount), 1);
   }
 
   return {};
