@@ -1,9 +1,14 @@
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
+#include "SimplnxCore/Filters/M3CSurfaceMeshingFilter.hpp"
+#include "SimplnxCore/Filters/SurfaceNetsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -78,7 +83,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
       selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
     }
 
-    // args.insertOrAssign(QuickSurfaceMeshFilter::k_GenerateTripleLines_Key, std::make_any<bool>(false));
+    // Create default Parameters for the filter.
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
 
@@ -187,7 +192,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
       selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
     }
 
-    // args.insertOrAssign(QuickSurfaceMeshFilter::k_GenerateTripleLines_Key, std::make_any<bool>(false));
+    // Create default Parameters for the filter.
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
 
@@ -285,7 +290,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
       selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
     }
 
-    // args.insertOrAssign(QuickSurfaceMeshFilter::k_GenerateTripleLines_Key, std::make_any<bool>(false));
+    // Create default Parameters for the filter.
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(true));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
 
@@ -383,7 +388,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
       selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
     }
 
-    // args.insertOrAssign(QuickSurfaceMeshFilter::k_GenerateTripleLines_Key, std::make_any<bool>(false));
+    // Create default Parameters for the filter.
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(true));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
 
