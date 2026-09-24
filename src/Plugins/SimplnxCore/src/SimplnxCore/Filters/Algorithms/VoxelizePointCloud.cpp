@@ -188,7 +188,10 @@ Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* imageGeom
   auto* cellData = imageGeom->getCellData();
   try
   {
-    cellData->resizeTuples(ShapeType{dims[2], dims[1], dims[0]});
+    if(auto result = cellData->resizeTuples(ShapeType{dims[2], dims[1], dims[0]}); result.invalid())
+    {
+      return result;
+    }
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-45982, fmt::format("Failed to allocate voxel grid of {}x{}x{} voxels. "
