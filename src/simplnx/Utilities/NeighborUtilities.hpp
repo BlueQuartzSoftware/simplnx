@@ -313,6 +313,30 @@ std::array<bool, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> comp
 }
 
 /**
+ * @brief Masks out face neighbors whose axis has been disabled via the X/Y/Z Direction parameters.
+ *
+ * Indices follow the VoxelNeighbors<Image3D> ordering: [-Z,-Y,-X,+X,+Y,+Z]. The axis-to-face
+ * mapping is therefore:
+ * - zDir gates k_NegativeZNeighbor (index 0) and k_PositiveZNeighbor (index 5)
+ * - yDir gates k_NegativeYNeighbor (index 1) and k_PositiveYNeighbor (index 4)
+ * - xDir gates k_NegativeXNeighbor (index 2) and k_PositiveXNeighbor (index 3)
+ *
+ * @param isValidFaceNeighbor Per-voxel face-neighbor validity, already computed from geometry boundary.
+ * @param xDir Whether the X direction is enabled.
+ * @param yDir Whether the Y direction is enabled.
+ * @param zDir Whether the Z direction is enabled.
+ */
+inline void adjustValidNeighbors(std::array<bool, VoxelNeighbors<Image3D>::k_FaceNeighborCount>& isValidFaceNeighbor, bool xDir, bool yDir, bool zDir)
+{
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] && zDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] && zDir;
+}
+
+/**
  * @brief Returns the surface area of each face of the voxel corresponding to the
  * initializeFaceNeighborInternalIdx() ordering
  * @param spacing The spacing of each voxel

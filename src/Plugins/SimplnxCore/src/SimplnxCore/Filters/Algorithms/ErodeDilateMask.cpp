@@ -153,21 +153,7 @@ Result<> ErodeDilateMask::operator()()
           {
             // Determine valid face neighbors and mask off user-disabled directions
             std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-            if(!m_InputValues->XDirOn)
-            {
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = false;
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = false;
-            }
-            if(!m_InputValues->YDirOn)
-            {
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = false;
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = false;
-            }
-            if(!m_InputValues->ZDirOn)
-            {
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = false;
-              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = false;
-            }
+            adjustValidNeighbors(isValidFaceNeighbor, m_InputValues->XDirOn, m_InputValues->YDirOn, m_InputValues->ZDirOn);
 
             // Map each face neighbor to its in-slice offset within the
             // appropriate rolling-window slot.
