@@ -26,6 +26,8 @@
 #include <memory>
 #include <new>
 #include <string_view>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using namespace nx::core;
@@ -170,6 +172,7 @@ constexpr uint32 k_UnusedNodeId = std::numeric_limits<uint32>::max();
 
 constexpr int num_neigh = 26;
 
+// --- M3C working structs (mirror SIMPL/Geometry/MeshStructs.h SurfaceMesh::M3C) ---
 struct Node
 {
   float coord[3];
@@ -584,14 +587,16 @@ int get_square_index(const int tns[4])
 }
 
 /**
- * @brief Resolves the case-15 saddle from three-dimensional neighbors.
+ * @brief Resolves the case-15 saddle from eight in-plane neighbors.
  * @param tnst Provides four corner site indexes.
  * @param p1 Provides padded Feature Id values.
  * @param n1 Calculates padded-grid neighbors.
  * @param sqid Is unused by the legacy-compatible calculation.
  * @return Zero or one to select the case-15 topology.
  *
- * The algorithm connects the corner with the fewest positive same-label neighbors.
+ * The algorithm matches M3CSliceBySlice by connecting the corner with the fewest
+ * in-plane same-label neighbors. The 26-neighbor volume variant can create ties
+ * that are resolved arbitrarily and produce spurious handles.
  */
 int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const NeighborAccessor& n1, SiteId /*sqid*/)
 {
@@ -601,12 +606,12 @@ int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const Neig
   {
     SiteId csite = tnst[i];
     int cspin = p1[csite];
-    const Neighbor nb = n1[csite]; // cache: all 26 neighbors read below
-    for(int j = 1; j <= num_neigh; j++)
+    const Neighbor nb = n1[csite]; // Cache the 8 in-plane neighbors read below.
+    for(int j = 1; j <= 8; j++)
     {
       SiteId nsite = nb.neigh_id[j];
       int nspin = p1[nsite];
-      if(cspin == nspin && nspin > 0)
+      if(cspin == nspin)
       {
         numNeigh[i] = numNeigh[i] + 1;
       }
@@ -2396,6 +2401,262 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   *tout = ctid;
 }
 
+// -----------------------------------------------------------------------------
+// Fill the pre-sized triangle array cube-by-cube. Transcribed from
+// M3CEntireVolume::get_triangles.
+// -----------------------------------------------------------------------------
+// Sharp Bounding Box Edges support.
+//
+// M3C's candidate nodes sit on a half-cell lattice: an edge-midpoint node has cell-centre coordinates on
+// two axes and a cell-face coordinate on the third, a face-centre node has one cell-centre coordinate and
+// a body centre none. Along a bounding-box edge the marching square straddling it has one real corner and
+// three ghost corners, and the case table joins its two edge midpoints with a diagonal: a 45 degree
+// chamfer half a cell deep on both walls. The chamfer vertices are exactly the OUTERMOST row of wall
+// nodes, because on a wall the only nodes within half a cell of a neighbouring wall are those whose
+// cell-centre coordinate lies in the first or last cell along that axis. Snapping that row onto the
+// neighbouring wall plane extends both walls to the edge line, where the two rows coincide and are
+// merged; the chamfer triangles then reference a repeated node and are dropped.
+//
+// Everything is decided on the integer half-cell lattice, never on float coordinates, so the pass is
+// exact and independent of spacing and origin.
+struct HalfCellLattice
+{
+  const NodeCoords& nodeCoords;
+
+  // Position of candidate node `id` in half-cell units from the volume origin, i.e. the node's coordinate
+  // is origin + u * spacing / 2. The bounding planes are u == 0 and u == 2 * dims; the outermost rows of
+  // cell-centre nodes are u == 1 and u == 2 * dims - 1.
+  std::array<int64, 3> operator()(SiteId id) const
+  {
+    const SiteCoords& sites = nodeCoords.sites;
+    const usize linear = static_cast<usize>(id / 7);
+    const int kind = static_cast<int>(id % 7);
+    // Same padded-index decomposition as SiteCoords::operator[] (real cell (0,0,0) is padded (1,1,1)).
+    const int64 i = static_cast<int64>(linear % sites.fileDim0) - 1;
+    const int64 j = static_cast<int64>((linear / sites.fileDim0) % sites.fileDim1) - 1;
+    const int64 k = static_cast<int64>(linear / sites.fileNSP) - 1;
+    // Which axes carry the +half-spacing offset for this node kind (see NodeCoords::operator[]).
+    const bool offX = (kind == 0 || kind == 3 || kind == 4 || kind == 6);
+    const bool offY = (kind == 1 || kind == 3 || kind == 5 || kind == 6);
+    const bool offZ = (kind == 2 || kind == 4 || kind == 5 || kind == 6);
+    return {2 * i + 1 + (offX ? 1 : 0), 2 * j + 1 + (offY ? 1 : 0), 2 * k + 1 + (offZ ? 1 : 0)};
+  }
+};
+
+// Result of the sharp-edge pass: coordinate overrides for the nodes it moved (every other node keeps
+// nodeCoords[id]) and the number of chamfer triangles it removed.
+struct SharpEdgeResult
+{
+  std::unordered_map<SiteId, Node> SnappedCoords;
+  std::unordered_map<SiteId, SiteId> MergedInto;
+  std::unordered_set<SiteId> Touched;
+  int64 NumFacesRemoved = 0;
+};
+
+/**
+ * @brief Remaps one triangle and rejects faces collapsed by the sharp-edge pass.
+ * @param triangle Receives representative candidate IDs.
+ * @param result Supplies node merges and coordinate overrides.
+ * @param nodeCoords Supplies coordinates for unchanged candidates.
+ * @return True if the remapped triangle survives.
+ */
+bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, const NodeCoords& nodeCoords)
+{
+  const auto finalCoord = [&result, &nodeCoords](SiteId id) -> Node {
+    const auto it = result.SnappedCoords.find(id);
+    return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
+  };
+  int numTouched = 0;
+  for(int corner = 0; corner < 3; corner++)
+  {
+    const auto it = result.MergedInto.find(triangle.node_id[corner]);
+    if(it != result.MergedInto.end())
+    {
+      triangle.node_id[corner] = it->second;
+    }
+    if(result.Touched.count(triangle.node_id[corner]) != 0)
+    {
+      numTouched++;
+    }
+  }
+  if(triangle.node_id[0] == triangle.node_id[1] || triangle.node_id[1] == triangle.node_id[2] || triangle.node_id[0] == triangle.node_id[2])
+  {
+    return false;
+  }
+  if(numTouched == 3)
+  {
+    const Node a = finalCoord(triangle.node_id[0]);
+    const Node b = finalCoord(triangle.node_id[1]);
+    const Node c = finalCoord(triangle.node_id[2]);
+    const double abx = static_cast<double>(b.coord[0]) - a.coord[0];
+    const double aby = static_cast<double>(b.coord[1]) - a.coord[1];
+    const double abz = static_cast<double>(b.coord[2]) - a.coord[2];
+    const double acx = static_cast<double>(c.coord[0]) - a.coord[0];
+    const double acy = static_cast<double>(c.coord[1]) - a.coord[1];
+    const double acz = static_cast<double>(c.coord[2]) - a.coord[2];
+    const double crossX = aby * acz - abz * acy;
+    const double crossY = abz * acx - abx * acz;
+    const double crossZ = abx * acy - aby * acx;
+    if(crossX == 0.0 && crossY == 0.0 && crossZ == 0.0)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * @brief Snaps boundary nodes and removes triangles collapsed along box edges.
+ * @tparam NodeTypes Specifies dense or sparse mutable node-type storage.
+ * @param triangles Contains surviving triangles and receives the compacted faces.
+ * @param mCubeID Contains matching source cubes and receives the compacted cube IDs.
+ * @param nodeType Contains exterior-promoted types and receives retired-node markers.
+ * @param numCandidateNodes Specifies the dense candidate count when candidateIds is empty.
+ * @param nodeCoords Supplies the original node coordinates and half-cell lattice.
+ * @param dims Specifies the three image dimensions in cells.
+ * @param candidateIds Selects sparse candidates in ascending order, or leaves the dense range selected.
+ * @return Coordinate overrides and merge records for output generation.
+ * @pre Exterior node promotion is complete, and node compaction has not started.
+ */
+template <typename NodeTypes>
+SharpEdgeResult sharpenBoundingBoxEdges(std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, NodeTypes& nodeType, SiteId numCandidateNodes, const NodeCoords& nodeCoords,
+                                        const usize dims[3], nonstd::span<const SiteId> candidateIds = {})
+{
+  SharpEdgeResult result;
+  const HalfCellLattice lattice{nodeCoords};
+  const SiteCoords& sites = nodeCoords.sites;
+  const std::array<int64, 3> wallHi = {2 * static_cast<int64>(dims[0]), 2 * static_cast<int64>(dims[1]), 2 * static_cast<int64>(dims[2])};
+  // Lattice positions packed into one integer for hashing.
+  const auto packLattice = [&wallHi](const std::array<int64, 3>& u) -> uint64 { return static_cast<uint64>((u[2] * (wallHi[1] + 1) + u[1]) * (wallHi[0] + 1) + u[0]); };
+
+  // Pass 1: for every boundary node decide its snapped lattice position; nodes landing on the same
+  // position are merged into the first (lowest id) one to get there, which keeps the pass deterministic.
+  std::unordered_map<uint64, SiteId> representativeByPosition;
+  auto& mergedInto = result.MergedInto;
+  const SiteId count = candidateIds.empty() ? numCandidateNodes : static_cast<SiteId>(candidateIds.size());
+  for(SiteId index = 0; index < count; index++)
+  {
+    const SiteId id = candidateIds.empty() ? index : candidateIds[static_cast<usize>(index)];
+    if(nodeType[static_cast<usize>(id)] < 10)
+    {
+      continue; // interior node, or unused candidate
+    }
+    std::array<int64, 3> u = lattice(id);
+    bool onWall = false;
+    for(usize ax = 0; ax < 3; ax++)
+    {
+      onWall = onWall || u[ax] == 0 || u[ax] == wallHi[ax];
+    }
+    if(!onWall)
+    {
+      continue; // cannot happen for a promoted node; guards the lattice arithmetic
+    }
+    std::array<bool, 3> snappedAxis = {false, false, false};
+    for(usize ax = 0; ax < 3; ax++)
+    {
+      // A one-cell-thick axis has a single cell-centre row that is half a cell from BOTH of its bounding
+      // planes; there is no unambiguous edge to snap it to, so that axis is left chamfered.
+      if(dims[ax] < 2)
+      {
+        continue;
+      }
+      if(u[ax] == 1)
+      {
+        u[ax] = 0;
+        snappedAxis[ax] = true;
+      }
+      else if(u[ax] == wallHi[ax] - 1)
+      {
+        u[ax] = wallHi[ax];
+        snappedAxis[ax] = true;
+      }
+    }
+    const auto [it, inserted] = representativeByPosition.try_emplace(packLattice(u), id);
+    if(inserted)
+    {
+      if(snappedAxis[0] || snappedAxis[1] || snappedAxis[2])
+      {
+        // Keep the node's own float coordinates on the axes that did not move, and put it EXACTLY on the
+        // plane value the rest of simplnx derives for the volume bounds on the axes that did.
+        Node node = nodeCoords[id];
+        for(usize ax = 0; ax < 3; ax++)
+        {
+          if(snappedAxis[ax])
+          {
+            node.coord[ax] = (u[ax] == 0) ? sites.origin[ax] : sites.origin[ax] + static_cast<float>(dims[ax]) * sites.res[ax];
+          }
+        }
+        result.SnappedCoords.emplace(id, node);
+      }
+    }
+    else
+    {
+      const SiteId representative = it->second;
+      mergedInto.emplace(id, representative);
+      nodeType[static_cast<usize>(representative)] = std::max(nodeType[static_cast<usize>(representative)], nodeType[static_cast<usize>(id)]);
+      nodeType[static_cast<usize>(id)] = M3CNodeType::k_Unused;
+    }
+  }
+
+  if(mergedInto.empty())
+  {
+    return result;
+  }
+
+  // Every node the pass touched (moved or merged into). Used to find the degenerate triangles left on the
+  // edge lines, and afterwards to clear any of these nodes no surviving triangle references.
+  auto& touched = result.Touched;
+  for(const auto& [id, node] : result.SnappedCoords)
+  {
+    touched.insert(id);
+  }
+  for(const auto& [id, representative] : mergedInto)
+  {
+    touched.insert(representative);
+  }
+
+  // Pass 2: remap the triangles' node ids and drop the ones the merge collapsed. A chamfer triangle has
+  // two vertices on the same cell of the edge line, so after the merge it repeats a node id. The only
+  // other way a triangle can lose its area here is for all three vertices to end up on one edge line
+  // (exactly collinear, so the cross product is exactly zero); that is checked only for triangles made
+  // entirely of touched nodes, which is the sole place it can arise.
+  const int64 nTriangle = static_cast<int64>(triangles.size());
+  int64 survivingCount = 0;
+  for(int64 i = 0; i < nTriangle; i++)
+  {
+    Triangle triangle = triangles[static_cast<usize>(i)];
+    if(!RemapSharpEdgeTriangle(triangle, result, nodeCoords))
+    {
+      continue;
+    }
+    triangles[static_cast<usize>(survivingCount)] = triangle;
+    mCubeID[static_cast<usize>(survivingCount)] = mCubeID[static_cast<usize>(i)];
+    survivingCount++;
+  }
+  triangles.resize(static_cast<usize>(survivingCount));
+  mCubeID.resize(static_cast<usize>(survivingCount));
+  result.NumFacesRemoved = nTriangle - survivingCount;
+
+  // Pass 3: a touched node is normally still referenced by the wall triangles on either side of the
+  // edge, but if every triangle that used it was a chamfer (possible once the Bounding Box Skin prune
+  // has removed the walls around it) it is now an orphan and must not be emitted.
+  auto orphanCandidates = touched;
+  for(const Triangle& triangle : triangles)
+  {
+    for(const SiteId nodeId : triangle.node_id)
+    {
+      orphanCandidates.erase(nodeId);
+    }
+  }
+  for(const SiteId orphan : orphanCandidates)
+  {
+    nodeType[static_cast<usize>(orphan)] = M3CNodeType::k_Unused;
+    // Coordinate overrides also classify collapsed faces during streamed regeneration.
+  }
+  return result;
+}
+
+// -----------------------------------------------------------------------------
 /**
  * @brief Fills pre-sized triangle arrays in cube order.
  * @param p Calculates padded-site coordinates.
@@ -2663,15 +2924,13 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  const int64 nTriangleFinal = static_cast<int64>(triangles.size());
-
   // Promote surface nodes to their exterior variant (+10). A triangle that borders the outside of the
   // volume has exactly one negative feature label (nSpin[0]*nSpin[1] < 0), so each of its nodes lies on
   // the volume boundary. This is the only output-relevant effect of the legacy triangle-side/inner-edge
   // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
   // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
   // has been removed.
-  for(int64 j = 0; j < nTriangleFinal; j++)
+  for(usize j = 0; j < triangles.size(); j++)
   {
     if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
     {
@@ -2686,7 +2945,20 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  // Release face edges before memory-heavy output and winding stages.
+  // Sharp Bounding Box Edges: snap the outermost wall rows onto the box edges and drop the chamfer
+  // triangles (see sharpenBoundingBoxEdges). Runs on the scratch vectors, so the output TriangleGeom is
+  // sized from the surviving count exactly as for the skin prune above.
+  SharpEdgeResult sharpEdges;
+  if(inputValues->SharpBoundingBoxEdges)
+  {
+    messageHandler("Sharpening bounding box edges...");
+    sharpEdges = sharpenBoundingBoxEdges(triangles, mCubeID, nodeType, 7 * numSites, nodeCoords, dims);
+    messageHandler(fmt::format("Sharpened bounding box edges: removed {} chamfer triangles", sharpEdges.NumFacesRemoved));
+  }
+
+  const int64 nTriangleFinal = static_cast<int64>(triangles.size());
+
+  // The face-edge segments are no longer needed; release before the memory-heavy output + winding stages.
   std::vector<Segment>().swap(fedges);
 
   if(shouldCancel)
@@ -2695,8 +2967,11 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   }
 
   messageHandler("Writing surface mesh...");
-  // A block prefix compacts real nodes without a dense candidate-to-id map.
-  // Surface promotion never removes a node, so the sweep's node set is stable.
+  // Node-id compaction without a dense 7*numSites candidate->id map. A candidate's compacted id is simply
+  // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
+  // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
+  // valid because the prefix is built here, after the skin prune and the sharp-edge pass have cleared
+  // the nodes they retire and the surface-node promotion has added +10 to the rest.
   const SiteId numCandidateNodes = 7 * numSites;
   constexpr SiteId k_NodeBlock = 128;
   const SiteId numNodeBlocks = (numCandidateNodes + k_NodeBlock - 1) / k_NodeBlock;
@@ -2772,7 +3047,8 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   {
     if(nodeType[i] > 0)
     {
-      const Node nodeCoord = nodeCoords[i];
+      const auto snappedIt = sharpEdges.SnappedCoords.find(i);
+      const Node nodeCoord = (snappedIt != sharpEdges.SnappedCoords.end()) ? snappedIt->second : nodeCoords[i];
       vertexStore[static_cast<usize>(vtxRunning) * 3 + 0] = nodeCoord.coord[0];
       vertexStore[static_cast<usize>(vtxRunning) * 3 + 1] = nodeCoord.coord[1];
       vertexStore[static_cast<usize>(vtxRunning) * 3 + 2] = nodeCoord.coord[2];
@@ -2865,10 +3141,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
   {
     // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
-    // legitimately produces an empty mesh. Report it rather than returning silently. Unlike
-    // QuickSurfaceMesh/SurfaceNets, M3C's narrowed orphan-node clearing (see above) can leave
-    // pre-existing candidate nodes in the output even when every face is dropped, so nNodes here
-    // is not necessarily zero.
+    // legitimately produces an empty mesh. Report it rather than returning silently. nNodes is
+    // expected to be zero here as well (every node was orphaned by the prune and cleared); it is
+    // passed through so the warning stays honest if that ever changes.
     if(nTriangleFinal == 0)
     {
       return MeshingUtilities::MakeEmptyMeshWarning(inputValues->TriangleGeometryPath, dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples(),
@@ -3033,7 +3308,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return MakeErrorResult(-90551, "M3C out-of-core square or candidate-node count overflows its site index type.");
   }
 
-  // Four LRU Z slices cover the 26-neighbor anomaly lookup while keeping the
+  // Four LRU Z slices cover local cube and slice-plane anomaly lookups while keeping the
   // padded ghost shell implicit. The cache also handles the NeighborAccessor's
   // toroidal border indices without materializing a padded volume.
   const usize sourceSliceSize = dims[0] * dims[1];
@@ -3168,7 +3443,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       for(int corner = 0; corner < 4; corner++)
       {
         const Neighbor cornerNeighbors = neighbors[corners[corner]];
-        for(int neighborIndex = 1; neighborIndex <= num_neigh; neighborIndex++)
+        // Match the eight slice-plane neighbors used by treat_anomaly().
+        for(int neighborIndex = 1; neighborIndex <= 8; neighborIndex++)
         {
           auto neighborSpin = sourceValue(cornerNeighbors.neigh_id[neighborIndex]);
           if(neighborSpin.invalid())
@@ -3290,6 +3566,41 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     const int spinB = triangle.nSpin[1];
     return (spinA < 0 && spinB == maxGrainId) || (spinB < 0 && spinA == maxGrainId);
   };
+  std::vector<Triangle> edgeTriangles;
+  std::vector<SiteId> edgeCubes;
+  const HalfCellLattice lattice{nodeCoords};
+  const auto cubeTouchesBoxEdge = [&](SiteId cube) {
+    const usize linear = static_cast<usize>(cube - 1);
+    const std::array<usize, 3> position = {linear % fileDim[0], (linear / fileDim[0]) % fileDim[1], linear / (fileDim[0] * fileDim[1])};
+    int wallAxes = 0;
+    int nearWallAxes = 0;
+    for(usize axis = 0; axis < 3; axis++)
+    {
+      wallAxes += (position[axis] == 0 || position[axis] == dims[axis]) ? 1 : 0;
+      nearWallAxes += (position[axis] <= 1 || position[axis] >= dims[axis] - 1) ? 1 : 0;
+    }
+    return wallAxes > 0 && nearWallAxes >= 2;
+  };
+  const auto touchesBoxEdge = [&](const Triangle& triangle) {
+    for(const SiteId nodeId : triangle.node_id)
+    {
+      const auto position = lattice(nodeId);
+      int wallAxes = 0;
+      int nearWallAxes = 0;
+      for(usize axis = 0; axis < 3; axis++)
+      {
+        const int64 upper = 2 * static_cast<int64>(dims[axis]);
+        const bool onWall = position[axis] == 0 || position[axis] == upper;
+        wallAxes += onWall ? 1 : 0;
+        nearWallAxes += (onWall || (dims[axis] >= 2 && (position[axis] == 1 || position[axis] == upper - 1))) ? 1 : 0;
+      }
+      if(wallAxes > 0 && nearWallAxes >= 2)
+      {
+        return true;
+      }
+    }
+    return false;
+  };
   for(SiteId cube = 1; cube <= lastCube; cube++)
   {
     if(m_ShouldCancel)
@@ -3383,7 +3694,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       maximumTrianglesPerCube = std::max(maximumTrianglesPerCube, static_cast<uint64>(count));
 
-      if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && count > 0)
+      if((m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || (m_InputValues->SharpBoundingBoxEdges && cubeTouchesBoxEdge(cube))) && count > 0)
       {
         std::vector<Triangle> countTriangles(static_cast<usize>(count));
         std::vector<SiteId> countCubes(static_cast<usize>(count));
@@ -3416,7 +3727,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         int64 survivingCount = 0;
         for(const Triangle& triangle : countTriangles)
         {
-          const bool dropTriangle = skipBackgroundSkinFace(triangle);
+          const bool dropTriangle = m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
           const uint8 referenceFlag = dropTriangle ? uint8{1} : uint8{2};
           for(const SiteId nodeId : triangle.node_id)
           {
@@ -3440,6 +3751,11 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
           else
           {
             survivingCount++;
+            if(m_InputValues->SharpBoundingBoxEdges && touchesBoxEdge(triangle))
+            {
+              edgeTriangles.push_back(triangle);
+              edgeCubes.push_back(cube);
+            }
           }
         }
         count = survivingCount;
@@ -3451,6 +3767,78 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       return writeResult;
     }
   }
+  SharpEdgeResult sharpEdges;
+  if(m_InputValues->SharpBoundingBoxEdges && !edgeTriangles.empty())
+  {
+    // Only edge-adjacent triangles remain resident. Their count grows with the sum of the three dimensions, not the volume.
+    std::unordered_map<SiteId, int8> edgeNodeTypes;
+    std::unordered_map<SiteId, int64> cubeCountChanges;
+    for(usize face = 0; face < edgeTriangles.size(); face++)
+    {
+      const auto& triangle = edgeTriangles[face];
+      cubeCountChanges[edgeCubes[face]]--;
+      for(const SiteId nodeId : triangle.node_id)
+      {
+        auto [entry, inserted] = edgeNodeTypes.try_emplace(nodeId, 0);
+        if(inserted)
+        {
+          auto node = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+          if(node.invalid())
+          {
+            return ConvertResult(std::move(node));
+          }
+          entry->second = node.value().type;
+        }
+        if((triangle.nSpin[0] < 0) != (triangle.nSpin[1] < 0) && entry->second < 10)
+        {
+          entry->second = static_cast<int8>(entry->second + 10);
+        }
+      }
+    }
+    std::vector<SiteId> edgeNodeIds;
+    edgeNodeIds.reserve(edgeNodeTypes.size());
+    for(const auto& [nodeId, type] : edgeNodeTypes)
+    {
+      edgeNodeIds.push_back(nodeId);
+    }
+    // Ascending candidate order preserves the in-core representative and vertex ordering.
+    std::sort(edgeNodeIds.begin(), edgeNodeIds.end());
+    sharpEdges = sharpenBoundingBoxEdges(edgeTriangles, edgeCubes, edgeNodeTypes, 0, nodeCoords, dims, nonstd::span<const SiteId>(edgeNodeIds));
+    for(const SiteId cube : edgeCubes)
+    {
+      cubeCountChanges[cube]++;
+    }
+    for(const auto& [cube, change] : cubeCountChanges)
+    {
+      auto count = triangleCounts.cache().read(static_cast<uint64>(cube), m_ShouldCancel);
+      if(count.invalid())
+      {
+        return ConvertResult(std::move(count));
+      }
+      auto write = triangleCounts.cache().write(static_cast<uint64>(cube), count.value() + change, m_ShouldCancel);
+      if(write.invalid())
+      {
+        return write;
+      }
+    }
+    for(const auto& [nodeId, type] : edgeNodeTypes)
+    {
+      auto node = candidateNodes.cache().read(static_cast<uint64>(nodeId), m_ShouldCancel);
+      if(node.invalid())
+      {
+        return ConvertResult(std::move(node));
+      }
+      auto record = node.value();
+      record.type = type;
+      auto write = candidateNodes.cache().write(static_cast<uint64>(nodeId), record, m_ShouldCancel);
+      if(write.invalid())
+      {
+        return write;
+      }
+    }
+  }
+  std::vector<Triangle>().swap(edgeTriangles);
+  std::vector<SiteId>().swap(edgeCubes);
   auto flushNodesResult = candidateNodes.flush(m_ShouldCancel);
   if(flushNodesResult.invalid())
   {
@@ -3697,6 +4085,21 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       generated = survivingCount;
     }
+    if(m_InputValues->SharpBoundingBoxEdges)
+    {
+      usize survivingCount = 0;
+      for(usize index = 0; index < generated; index++)
+      {
+        Triangle triangle = localTriangles[index];
+        if(RemapSharpEdgeTriangle(triangle, sharpEdges, nodeCoords))
+        {
+          localTriangles[survivingCount] = triangle;
+          localCubes[survivingCount] = localCubes[index];
+          survivingCount++;
+        }
+      }
+      generated = survivingCount;
+    }
     uint64 expectedEnd = triangleTotal;
     if(cube != lastCube)
     {
@@ -3798,7 +4201,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         {
           firstCompact = node.compactId;
         }
-        const Node coordinate = nodeCoords[static_cast<SiteId>(current)];
+        const auto snapped = sharpEdges.SnappedCoords.find(static_cast<SiteId>(current));
+        const Node coordinate = snapped == sharpEdges.SnappedCoords.end() ? nodeCoords[static_cast<SiteId>(current)] : snapped->second;
         vertexValues[count * 3] = coordinate.coord[0];
         vertexValues[count * 3 + 1] = coordinate.coord[1];
         vertexValues[count * 3 + 2] = coordinate.coord[2];
