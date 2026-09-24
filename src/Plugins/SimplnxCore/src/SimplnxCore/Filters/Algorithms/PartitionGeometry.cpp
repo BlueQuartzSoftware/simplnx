@@ -26,8 +26,8 @@ Result<> PartitionGeometry::operator()()
   const auto* partitionIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath);
 
   const IDataArray* partitionGridFeatureIdsArray = nullptr;
-  const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
-  if(partitioningMode != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
+  const auto partitioningMode = static_cast<PartitionUtilities::PartitioningMode>(m_InputValues->PartitioningMode);
+  if(partitioningMode != PartitionUtilities::PartitioningMode::ExistingPartitionGrid)
   {
     const DataPath partitionGridFeatureIdsPath =
         m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);

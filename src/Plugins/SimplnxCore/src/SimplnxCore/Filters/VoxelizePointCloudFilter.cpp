@@ -226,7 +226,7 @@ IFilter::PreflightResult VoxelizePointCloudFilter::preflightImpl(const DataStruc
   }
 
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, maskDims, ShapeType{1}, maskParent.createChildPath(pMaskNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, maskDims, ShapeType{1}, maskParent.createChildPath(pMaskNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
