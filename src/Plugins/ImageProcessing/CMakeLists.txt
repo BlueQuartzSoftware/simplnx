@@ -3,74 +3,29 @@ include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 set(PLUGIN_NAME "ImageProcessing")
 set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
-# All filters in the plugin. Keep them in ImageProcessing/src/ImageProcessing/Filters/.
+# ------------------------------------------------------------------------------
+# These are all the filters in the plugin. All filters should be kept in the
+# ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
+option(ImageProcessing_LEAN_AND_MEAN "Only compile the Reader and Writers, All other filters are disabled" OFF)
 set(FilterList
-  AbsImageFilter
-  AcosImageFilter
-  AdaptiveHistogramEqualizationImageFilter
-  ApproximateSignedDistanceMapImageFilter
-  AsinImageFilter
-  AtanImageFilter
   BinaryContourImageFilter
-  BinaryDilateImageFilter
-  BinaryErodeImageFilter
-  BinaryMorphologicalClosingImageFilter
-  BinaryMorphologicalOpeningImageFilter
   BinaryOpeningByReconstructionImageFilter
-  BinaryProjectionImageFilter
-  BinaryThinningImageFilter
-  BinaryThresholdImageFilter
-  BlackTopHatImageFilter
-  BoundedReciprocalImageFilter
   ClosingByReconstructionImageFilter
-  ConnectedComponentImageFilter
-  CosImageFilter
-  CurvatureAnisotropicDiffusionImageFilter
-  CurvatureFlowImageFilter
-  DanielssonDistanceMapImageFilter
-  DilateObjectMorphologyImageFilter
-  DiscreteGaussianImageFilter
-  DoubleThresholdImageFilter
-  ErodeObjectMorphologyImageFilter
-  ExpImageFilter
-  ExpNegativeImageFilter
-  GradientAnisotropicDiffusionImageFilter
-  GradientMagnitudeImageFilter
-  GradientMagnitudeRecursiveGaussianImageFilter
-  GrayscaleDilateImageFilter
-  GrayscaleErodeImageFilter
   GrayscaleFillholeImageFilter
   GrayscaleGrindPeakImageFilter
-  GrayscaleMorphologicalClosingImageFilter
-  GrayscaleMorphologicalOpeningImageFilter
   HConvexImageFilter
   HMaximaImageFilter
   HMinimaImageFilter
-  ImportFijiMontageFilter
-  IntensityWindowingImageFilter
-  InvertIntensityImageFilter
-  IsoContourDistanceImageFilter
   LabelContourImageFilter
-  LaplacianRecursiveGaussianImageFilter
-  Log10ImageFilter
-  LogImageFilter
-  MaskImageFilter
-  MaximumProjectionImageFilter
-  MeanProjectionImageFilter
-  MedianImageFilter
-  MedianProjectionImageFilter
-  MinimumProjectionImageFilter
-  MinMaxCurvatureFlowImageFilter
   MorphologicalGradientImageFilter
-  MorphologicalWatershedFromMarkersImageFilter
   MorphologicalWatershedImageFilter
-  NormalizeImageFilter
-  NormalizeToConstantImageFilter
-  NotImageFilter
   OpeningByReconstructionImageFilter
-  OtsuMultipleThresholdsImageFilter
-  RegionalMaximaImageFilter
-  RegionalMinimaImageFilter
+  SignedMaurerDistanceMapImageFilter
+  ValuedRegionalMaximaImageFilter
+  ValuedRegionalMinimaImageFilter
+  # ------------------------------------
+  # Always have the readers and writers
+  ImportFijiMontageFilter
   ReadBinaryCTNorthstarFilter
   ReadImageFilter
   ReadImageStackFilter
@@ -78,26 +33,83 @@ set(FilterList
   ReadNIfTIFileFilter
   ReadVolumeGraphicsFileFilter
   ReadZeissTxmFileFilter
-  RelabelComponentImageFilter
-  RescaleIntensityImageFilter
-  SigmoidImageFilter
-  SignedDanielssonDistanceMapImageFilter
-  SignedMaurerDistanceMapImageFilter
-  SinImageFilter
-  SmoothingRecursiveGaussianImageFilter
-  SqrtImageFilter
-  SquareImageFilter
-  StandardDeviationProjectionImageFilter
-  SumProjectionImageFilter
-  TanImageFilter
-  ThresholdImageFilter
-  ThresholdMaximumConnectedComponentsImageFilter
-  ValuedRegionalMaximaImageFilter
-  ValuedRegionalMinimaImageFilter
-  WhiteTopHatImageFilter
   WriteImageFilter
-  ZeroCrossingImageFilter
 )
+
+if(NOT ImageProcessing_LEAN_AND_MEAN)
+  list(APPEND FilterList
+    AbsImageFilter
+    AcosImageFilter
+    AdaptiveHistogramEqualizationImageFilter
+    ApproximateSignedDistanceMapImageFilter
+    AsinImageFilter
+    AtanImageFilter
+    BinaryDilateImageFilter
+    BinaryErodeImageFilter
+    BinaryMorphologicalClosingImageFilter
+    BinaryMorphologicalOpeningImageFilter
+    BinaryProjectionImageFilter
+    BinaryThinningImageFilter
+    BinaryThresholdImageFilter
+    BlackTopHatImageFilter
+    BoundedReciprocalImageFilter
+    ConnectedComponentImageFilter
+    CosImageFilter
+    CurvatureAnisotropicDiffusionImageFilter
+    CurvatureFlowImageFilter
+    DanielssonDistanceMapImageFilter
+    DilateObjectMorphologyImageFilter
+    DiscreteGaussianImageFilter
+    DoubleThresholdImageFilter
+    ErodeObjectMorphologyImageFilter
+    ExpImageFilter
+    ExpNegativeImageFilter
+    GradientAnisotropicDiffusionImageFilter
+    GradientMagnitudeImageFilter
+    GradientMagnitudeRecursiveGaussianImageFilter
+    GrayscaleDilateImageFilter
+    GrayscaleErodeImageFilter
+    GrayscaleMorphologicalClosingImageFilter
+    GrayscaleMorphologicalOpeningImageFilter
+    IntensityWindowingImageFilter
+    InvertIntensityImageFilter
+    IsoContourDistanceImageFilter
+    LaplacianRecursiveGaussianImageFilter
+    Log10ImageFilter
+    LogImageFilter
+    MaskImageFilter
+    MaximumProjectionImageFilter
+    MeanProjectionImageFilter
+    MedianImageFilter
+    MedianProjectionImageFilter
+    MinimumProjectionImageFilter
+    MinMaxCurvatureFlowImageFilter
+    MorphologicalWatershedFromMarkersImageFilter
+    NormalizeImageFilter
+    NormalizeToConstantImageFilter
+    NotImageFilter
+    OtsuMultipleThresholdsImageFilter
+    RegionalMaximaImageFilter
+    RegionalMinimaImageFilter
+    RelabelComponentImageFilter
+    RescaleIntensityImageFilter
+    SigmoidImageFilter
+    SignedDanielssonDistanceMapImageFilter
+    SinImageFilter
+    SmoothingRecursiveGaussianImageFilter
+    SqrtImageFilter
+    SquareImageFilter
+    StandardDeviationProjectionImageFilter
+    SumProjectionImageFilter
+    TanImageFilter
+    ThresholdImageFilter
+    ThresholdMaximumConnectedComponentsImageFilter
+    WhiteTopHatImageFilter
+    ZeroCrossingImageFilter
+  )
+endif()
+
+list(LENGTH FilterList image_proc_filter_count)
 
 set(AlgorithmList
   ReadBinaryCTNorthstar
@@ -126,6 +138,10 @@ find_package(ZLIB REQUIRED)
 target_link_libraries(${PLUGIN_NAME} PRIVATE ZLIB::ZLIB)
 if(MSVC)
   target_compile_options(${PLUGIN_NAME} PRIVATE /bigobj)
+endif()
+
+if(ImageProcessing_LEAN_AND_MEAN)
+  target_compile_definitions(${PLUGIN_NAME} PRIVATE "-DImageProcessing_LEAN_AND_MEAN")
 endif()
 
 set(PLUGIN_EXTRA_SOURCES
@@ -181,7 +197,7 @@ foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
   )
 endforeach()
 
-# The plugin inherited these pipelines from the removed ITKImageProcessing plugin. They are flat
+# The plugin inherited these pipelines from the removed ImageProcessing plugin. They are flat
 # .d3dpipeline files, so they have no .yaml or .md companion yet. List them directly until someone
 # writes the companions and moves them into the directory layout above.
 list(APPEND ${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES
@@ -193,13 +209,14 @@ list(APPEND ${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES
 if(SIMPLNX_BUILD_TESTS)
   enable_testing()
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
-endif()
 
-# Standalone developer benchmark tool, plus tiny registered smoke tests for its custom input preparations. Default ON
-# locally. It reuses the golden-test harness and generated test-dirs header, so it is added after the test subdir.
-option(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool" ON)
-if(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK)
-  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
+  # Standalone developer benchmark tool, plus tiny registered smoke tests for its custom input preparations. Default ON
+  # locally. It reuses the golden-test harness and generated test-dirs header, so it is added after the test subdir.
+  option(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool" ON)
+  if(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK AND NOT ImageProcessing_LEAN_AND_MEAN)
+    add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
+  endif()
+
 endif()
 
 # -----------------------------------------------------------------------
@@ -275,5 +292,33 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
     "${DATA_DEST_DIR}/ImageProcessing_Examples"
     DESTINATION Data
     COMPONENT Applications
+  )
+endif()
+
+
+include(CMakeDependentOption)
+cmake_dependent_option(ImageProcessing_USE_JOB_POOL "Forces ImageProcessing to use a ninja job pool. For memory limited builds." OFF "USING_NINJA" OFF)
+
+if(ImageProcessing_USE_JOB_POOL)
+  if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
+    message(FATAL_ERROR "ImageProcessing_USE_JOB_POOL requires Ninja as the generator.")
+  endif()
+
+  include(ProcessorCount)
+  ProcessorCount(thread_count)
+
+  # Guess job count as half the number of threads
+  math(EXPR ip_job_count "${thread_count} / 2")
+
+  set(ImageProcessing_JOB_POOL ${ip_job_count} CACHE STRING "Number of threads for ImageProcessing job pools")
+  mark_as_advanced(FORCE ImageProcessing_JOB_POOL)
+
+  message(STATUS "ImageProcessing_JOB_POOL: ${ImageProcessing_JOB_POOL}")
+
+  set_property(GLOBAL APPEND PROPERTY JOB_POOLS ip_pool=${ImageProcessing_JOB_POOL})
+
+  set_target_properties(${PLUGIN_NAME}
+    PROPERTIES
+      JOB_POOL_COMPILE ip_pool
   )
 endif()
