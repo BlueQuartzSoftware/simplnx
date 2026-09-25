@@ -358,6 +358,8 @@ set(CoreParameters
   NumericTypeParameter
   ReadCSVFileParameter
   ReadHDF5DatasetParameter
+  ReadHDF5DataStackParameter
+  ReadHDF5FileListParameter
   StringParameter
   VectorParameter
 )
@@ -589,6 +591,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Geometry/GeometryTransformation.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Hdf5Utilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
@@ -854,6 +857,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Hdf5Utilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.cpp
