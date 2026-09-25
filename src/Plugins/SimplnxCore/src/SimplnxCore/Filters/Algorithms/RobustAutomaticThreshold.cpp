@@ -128,5 +128,5 @@ Result<> RobustAutomaticThreshold::operator()()
   const bool usesOutOfCoreStore = AnyOutOfCore({inputArray, gradientArray, maskArray});
   const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCorePath ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
-  return ExecuteDataFunction(FindThresholdFunctor{}, inputArray->getDataType(), inputArray, gradientStoreRef, maskStoreRef, m_ShouldCancel);
+  return ExecuteDataFunctionNoBool(FindThresholdFunctor{}, inputArray->getDataType(), inputArray, gradientStoreRef, maskStoreRef, m_ShouldCancel);
 }
