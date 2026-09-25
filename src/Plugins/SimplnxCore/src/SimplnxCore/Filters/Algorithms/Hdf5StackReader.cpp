@@ -226,7 +226,7 @@ Result<> Hdf5StackReader::operator()()
     }
 
     const Hdf5StackSliceSource& source = sliceSources[i];
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Reading slice {}/{}: '{}' :: '{}'", i + 1, sliceSources.size(), source.filePath, source.datasetPath));
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Reading slice {}/{}: '{}' :: '{}'", i + 1, sliceSources.size(), source.filePath, source.datasetPath));
 
     if(!currentFile.has_value() || source.filePath != currentFilePath)
     {
