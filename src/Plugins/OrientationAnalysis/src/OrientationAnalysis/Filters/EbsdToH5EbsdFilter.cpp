@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
 #include <sstream>
@@ -96,9 +97,11 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(generatedFileListInfo.fileExtension != ".ang" && generatedFileListInfo.fileExtension != ".ctf")
+  std::string lowerExtension = StringUtilities::toLower(generatedFileListInfo.fileExtension);
+
+  if(lowerExtension != ".ang" && lowerExtension != ".ctf")
   {
-    return {MakePreflightErrorResult(-60800, "Only .ang and .ctf files are supported")};
+    return {MakePreflightErrorResult(-60800, fmt::format("Only .ang and .ctf files are supported. Got '{}'", generatedFileListInfo.fileExtension))};
   }
 
   generatedFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
