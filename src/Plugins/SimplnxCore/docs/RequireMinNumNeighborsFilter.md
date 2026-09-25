@@ -85,9 +85,11 @@ If the feature **Attribute Matrix** contains any `NeighborList` arrays, those ar
 
 SIMPLNX safely handles three malformed or unresolved Feature ID conditions that can cause invalid memory access or non-termination in DREAM3D 6.5.171:
 
-- [D1: Negative Feature IDs with a valid face neighbor](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d1)
-- [D2: Non-negative Feature IDs outside the feature tuple range](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d2)
-- [D3: Coarsening cannot make progress](../vv/deviations/RequireMinNumNeighborsFilter.md#requireminnumneighborsfilter-d3)
+- **D1**: Negative Feature IDs with a valid face neighbor
+- **D2**: Non-negative Feature IDs outside the feature tuple range
+- **D3**: Coarsening cannot make progress
+
+The full analysis and migration guidance for each deviation (`RequireMinNumNeighborsFilter-D1` through `-D3`) is maintained in the source tree at `src/Plugins/SimplnxCore/vv/deviations/RequireMinNumNeighborsFilter.md`.
 
 For valid, non-negative, in-range Feature IDs that can be fully coarsened, the verified SIMPLNX and DREAM3D 6.5.171 outputs match.
 
