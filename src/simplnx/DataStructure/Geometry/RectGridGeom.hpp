@@ -95,11 +95,17 @@ public:
 
   /**
    * @brief Sets the coordinate bounds arrays for X, Y, and Z axes.
-   * @param xBounds Array of X coordinate bounds
-   * @param yBounds Array of Y coordinate bounds
-   * @param zBounds Array of Z coordinate bounds
+   *
+   * Validates that each non-null array has at least 2 elements and that the
+   * values are strictly monotonically increasing. Negative values are permitted.
+   * Returns an error if any axis fails either check; the geometry is not modified.
+   *
+   * @param xBounds Array of X coordinate bounds (nullptr clears the X bounds)
+   * @param yBounds Array of Y coordinate bounds (nullptr clears the Y bounds)
+   * @param zBounds Array of Z coordinate bounds (nullptr clears the Z bounds)
+   * @return Result<> Empty on success, or an error describing the first failing axis
    */
-  void setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
+  Result<> setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
 
   /**
    * @brief Returns a pointer to the X coordinate bounds array.

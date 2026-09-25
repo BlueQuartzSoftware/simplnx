@@ -1852,7 +1852,20 @@ Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const n
   }
   PrependWarnings(zBoundsArray, warnings);
 
-  geom->setBounds(xBoundsArray.value(), yBoundsArray.value(), zBoundsArray.value());
+  // Use ID setters directly: the function returns DataObject* so errors cannot be propagated,
+  // and legacy files may predate the monotonicity requirement.
+  if(xBoundsArray.value() != nullptr)
+  {
+    geom->setXBoundsId(xBoundsArray.value()->getId());
+  }
+  if(yBoundsArray.value() != nullptr)
+  {
+    geom->setYBoundsId(yBoundsArray.value()->getId());
+  }
+  if(zBoundsArray.value() != nullptr)
+  {
+    geom->setZBoundsId(zBoundsArray.value()->getId());
+  }
 
   Result<DataObject*> result{geom};
   result.warnings() = std::move(zBoundsArray.warnings());
