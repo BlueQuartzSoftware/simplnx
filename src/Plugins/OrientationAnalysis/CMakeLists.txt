@@ -45,7 +45,7 @@ set(FilterList
   ComputeFeatureNeighborCAxisMisalignmentsFilter
   ComputeFeatureReferenceCAxisMisorientationsFilter
   ComputeFeatureReferenceMisorientationsFilter
-  ComputeReferenceOrientationsCAxisFilter
+  ComputeCAxisMisorientationsFilter
   ComputeFZQuaternionsFilter
   ComputeGBCDFilter
   ComputeGBCDMetricBasedFilter
@@ -189,7 +189,7 @@ set(filter_algorithms
   ComputeFeatureNeighborMisorientations
   ComputeFeatureReferenceCAxisMisorientations
   ComputeFeatureReferenceMisorientations
-  ComputeReferenceOrientationsCAxis
+  ComputeCAxisMisorientations
   ComputeFZQuaternions
   ComputeGBCD
   ComputeGBCDMetricBased

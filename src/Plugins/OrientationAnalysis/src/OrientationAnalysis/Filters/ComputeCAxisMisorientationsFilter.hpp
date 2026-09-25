@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ComputeReferenceOrientationsCAxisFilter
+ * @class ComputeCAxisMisorientationsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeReferenceOrientationsCAxisFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeCAxisMisorientationsFilter : public IFilter
 {
 public:
-  ComputeReferenceOrientationsCAxisFilter() = default;
-  ~ComputeReferenceOrientationsCAxisFilter() noexcept override = default;
+  ComputeCAxisMisorientationsFilter() = default;
+  ~ComputeCAxisMisorientationsFilter() noexcept override = default;
 
-  ComputeReferenceOrientationsCAxisFilter(const ComputeReferenceOrientationsCAxisFilter&) = delete;
-  ComputeReferenceOrientationsCAxisFilter(ComputeReferenceOrientationsCAxisFilter&&) noexcept = delete;
+  ComputeCAxisMisorientationsFilter(const ComputeCAxisMisorientationsFilter&) = delete;
+  ComputeCAxisMisorientationsFilter(ComputeCAxisMisorientationsFilter&&) noexcept = delete;
 
-  ComputeReferenceOrientationsCAxisFilter& operator=(const ComputeReferenceOrientationsCAxisFilter&) = delete;
-  ComputeReferenceOrientationsCAxisFilter& operator=(ComputeReferenceOrientationsCAxisFilter&&) noexcept = delete;
+  ComputeCAxisMisorientationsFilter& operator=(const ComputeCAxisMisorientationsFilter&) = delete;
+  ComputeCAxisMisorientationsFilter& operator=(ComputeCAxisMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static constexpr StringLiteral k_ReferenceDir_Key = "reference_dir";
@@ -109,4 +109,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeReferenceOrientationsCAxisFilter, "0d5cf4a2-12cf-4d1e-b38e-33a464136fce");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeCAxisMisorientationsFilter, "0d5cf4a2-12cf-4d1e-b38e-33a464136fce");

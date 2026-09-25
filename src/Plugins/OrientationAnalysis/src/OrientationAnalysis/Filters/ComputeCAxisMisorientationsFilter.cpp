@@ -1,6 +1,6 @@
-#include "ComputeReferenceOrientationsCAxisFilter.hpp"
+#include "ComputeCAxisMisorientationsFilter.hpp"
 
-#include "OrientationAnalysis/Filters/Algorithms/ComputeReferenceOrientationsCAxis.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeCAxisMisorientations.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -10,43 +10,49 @@
 
 using namespace nx::core;
 
+namespace
+{
+// Squared-magnitude threshold below which the reference direction is treated as zero.
+constexpr float64 k_MinRefDirSquaredNorm = 1.0e-20;
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ComputeReferenceOrientationsCAxisFilter::name() const
+std::string ComputeCAxisMisorientationsFilter::name() const
 {
-  return FilterTraits<ComputeReferenceOrientationsCAxisFilter>::name.str();
+  return FilterTraits<ComputeCAxisMisorientationsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeReferenceOrientationsCAxisFilter::className() const
+std::string ComputeCAxisMisorientationsFilter::className() const
 {
-  return FilterTraits<ComputeReferenceOrientationsCAxisFilter>::className;
+  return FilterTraits<ComputeCAxisMisorientationsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ComputeReferenceOrientationsCAxisFilter::uuid() const
+Uuid ComputeCAxisMisorientationsFilter::uuid() const
 {
-  return FilterTraits<ComputeReferenceOrientationsCAxisFilter>::uuid;
+  return FilterTraits<ComputeCAxisMisorientationsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeReferenceOrientationsCAxisFilter::humanName() const
+std::string ComputeCAxisMisorientationsFilter::humanName() const
 {
-  return "Compute Reference Orientations (C-Axis)";
+  return "Compute C-Axis Misorientations";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ComputeReferenceOrientationsCAxisFilter::defaultTags() const
+std::vector<std::string> ComputeCAxisMisorientationsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ComputeReferenceOrientationsCAxisFilter::parameters() const
+Parameters ComputeCAxisMisorientationsFilter::parameters() const
 {
   Parameters params;
- 
+
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceDir_Key, "Reference Direction", "The reference axis with respect to which the C-axis misorientation is computed",
                                                          std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
@@ -56,34 +62,44 @@ Parameters ComputeReferenceOrientationsCAxisFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationArrayName_Key, "Misorientation Array Name",
-                                                          "Name of the output feature-level array storing the misorientation angle (in degrees) between each Feature's C-axis and the reference direction",
-                                                          "ReferenceOrientationMisorientation"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_MisorientationArrayName_Key, "Misorientation Array Name",
+      "Name of the output feature-level array storing the misorientation angle (in degrees) between each Feature's C-axis and the reference direction", "ReferenceOrientationMisorientation"));
 
   return params;
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType ComputeReferenceOrientationsCAxisFilter::parametersVersion() const
+IFilter::VersionType ComputeCAxisMisorientationsFilter::parametersVersion() const
 {
   return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeReferenceOrientationsCAxisFilter::clone() const
+IFilter::UniquePointer ComputeCAxisMisorientationsFilter::clone() const
 {
-  return std::make_unique<ComputeReferenceOrientationsCAxisFilter>();
+  return std::make_unique<ComputeCAxisMisorientationsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeReferenceOrientationsCAxisFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeCAxisMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pAvgCAxesArrayPathValue = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
   auto pMisorientationArrayNameValue = filterArgs.value<std::string>(k_MisorientationArrayName_Key);
 
+  auto pReferenceDirValue = filterArgs.value<std::vector<float32>>(k_ReferenceDir_Key);
+
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  const float64 rx = pReferenceDirValue[0];
+  const float64 ry = pReferenceDirValue[1];
+  const float64 rz = pReferenceDirValue[2];
+  if((rx * rx + ry * ry + rz * rz) < k_MinRefDirSquaredNorm)
+  {
+    return {MakeErrorResult<OutputActions>(-77000, "Reference direction has zero magnitude. Provide a non-zero reference direction.")};
+  }
 
   const ShapeType tupleShape = dataStructure.getDataRefAs<Float32Array>(pAvgCAxesArrayPathValue).getTupleShape();
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.replaceName(pMisorientationArrayNameValue));
@@ -93,15 +109,15 @@ IFilter::PreflightResult ComputeReferenceOrientationsCAxisFilter::preflightImpl(
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeReferenceOrientationsCAxisFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeCAxisMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  ComputeReferenceOrientationsCAxisInputValues inputValues;
+  ComputeCAxisMisorientationsInputValues inputValues;
 
   inputValues.ReferenceDir = filterArgs.value<std::vector<float32>>(k_ReferenceDir_Key);
   inputValues.AvgCAxesArrayPath = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
   inputValues.MisorientationArrayPath = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_MisorientationArrayName_Key));
 
-  return ComputeReferenceOrientationsCAxis(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeCAxisMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

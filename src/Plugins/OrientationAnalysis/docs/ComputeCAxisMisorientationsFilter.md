@@ -1,4 +1,4 @@
-# Compute Reference Orientations (C-Axis)
+# Compute C-Axis Misorientations
 
 ## Group (Subgroup)
 
