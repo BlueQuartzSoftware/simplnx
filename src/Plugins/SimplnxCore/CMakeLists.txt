@@ -87,6 +87,7 @@ set(FilterList
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FlyingEdges3DFilter
+  Hdf5StackReaderFilter
   HierarchicalSmoothFilter
   IdentifyDuplicateVerticesFilter
   IdentifySampleFilter
@@ -279,6 +280,7 @@ set(AlgorithmList
   FillBadVoxels
   FindNRingNeighbors
   FlyingEdges3D
+  Hdf5StackReader
   HierarchicalSmooth
   IdentifyDuplicateVertices
   IdentifySample
