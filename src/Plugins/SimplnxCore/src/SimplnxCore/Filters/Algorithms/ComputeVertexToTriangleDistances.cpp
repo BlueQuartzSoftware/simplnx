@@ -5,12 +5,14 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/RTree.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <array>
+#include <functional>
+#include <mutex>
 #include <numeric>
 
 using namespace nx::core;
@@ -232,11 +234,11 @@ public:
    * @param normals Provides triangle normals.
    * @param rtree Provides triangle bounds.
    * @param initialSearchHalfExtent Seeds candidate-box expansion.
-   * @param progressMessageHelper Creates range-local progress messengers.
+   * @param reportProgress Reports completed items through the synchronized callback.
    */
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
                                        Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
-                                       float32 initialSearchHalfExtent, ProgressMessageHelper& progressMessageHelper)
+                                       float32 initialSearchHalfExtent, const std::function<void(usize)>& reportProgress)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
@@ -246,7 +248,7 @@ public:
   , m_Normals(normals)
   , m_RTree(rtree)
   , m_InitialSearchHalfExtent(initialSearchHalfExtent)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ReportProgress(reportProgress)
   {
   }
   /**
@@ -270,7 +272,6 @@ public:
    */
   void compute(usize start, usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     int64 counter = 0;
     auto progIncrement = static_cast<int64>((end - start) / 100);
@@ -341,12 +342,12 @@ public:
 
       if(counter > progIncrement)
       {
-        progressMessenger.sendProgressMessage(counter);
+        m_ReportProgress(counter);
         counter = 0;
       }
       counter++;
     }
-    progressMessenger.sendProgressMessage(counter);
+    m_ReportProgress(counter);
   }
 
 private:
@@ -359,7 +360,7 @@ private:
   const Float64AbstractDataStore& m_Normals;
   const RTreeType m_RTree;
   const float32 m_InitialSearchHalfExtent;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  const std::function<void(usize)>& m_ReportProgress;
 };
 
 /**
@@ -393,6 +394,7 @@ ComputeVertexToTriangleDistances::ComputeVertexToTriangleDistances(DataStructure
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -441,17 +443,21 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath)->getDataStoreRef();
   closestTriangleIdsArray.fill(-1); // No closest triangle found.
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("Finding Distances || {:.2f}% Completed");
+  const std::function<void(usize)> reportProgress = [this](usize count) { sendThreadSafeProgressMessage(count); };
+  m_Throttle.reset(totalElements, "Finding Distances");
 
   // This remains direct parallel DataStore access. See the worker limitation.
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, totalElements);
   dataAlg.execute(
-      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, initialSearchHalfExtent, progressMessageHelper));
+      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, initialSearchHalfExtent, reportProgress));
 
   return {};
+}
+
+void ComputeVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementPercent(counter);
 }

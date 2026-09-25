@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fstream>
 #include <memory>
@@ -63,7 +64,8 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
 
   size_t totalpoints = featureIds.getNumberOfTuples();
 
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(totalpoints, "Writing Sites");
 
   constexpr usize k_TargetBufferBytes = 1024 * 1024;
   const usize bufferElements = std::max<usize>(1, std::min(totalpoints, k_TargetBufferBytes / sizeof(int32)));
@@ -71,6 +73,10 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
 
   for(usize offset = 0; offset < totalpoints; offset += bufferElements)
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
     const usize count = std::min(bufferElements, totalpoints - offset);
     Result<> readResult = featureIds.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuffer.get(), count));
     if(readResult.invalid())
@@ -81,20 +87,10 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
     for(usize localIndex = 0; localIndex < count; localIndex++)
     {
       const usize pointIndex = offset + localIndex;
-      auto now = std::chrono::steady_clock::now();
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        const int32 progInt = static_cast<int32>((static_cast<float32>(pointIndex) / totalpoints) * 100.0f);
-        std::string message = fmt::format("Writing File {}%", progInt);
-        messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-        start = std::chrono::steady_clock::now();
-      }
-      if(shouldCancel)
-      {
-        return {};
-      }
+
       outfile << pointIndex + 1 << " " << featureIdBuffer[localIndex] << "\n";
     }
+    progressThrottle.updatePercent(offset + count);
   }
 
   return {};

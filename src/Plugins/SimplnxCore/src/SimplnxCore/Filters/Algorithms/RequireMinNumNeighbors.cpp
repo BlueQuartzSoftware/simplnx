@@ -82,7 +82,7 @@ Result<> RequireMinNumNeighbors::operator()()
   }
 
   auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
-  m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
+  m_MessageHandler.sendMessage({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
 
   // Fill negative cells after compaction so filled cells inherit compact IDs.
   Result<> assignResult = assignBadVoxels(imageGeom.getDimensions(), totalFeatures);
@@ -103,7 +103,7 @@ Result<> RequireMinNumNeighbors::operator()()
       count++;
     }
   }
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
 
   DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
   // Cell IDs already use the shared compaction map. Skip another cell pass and

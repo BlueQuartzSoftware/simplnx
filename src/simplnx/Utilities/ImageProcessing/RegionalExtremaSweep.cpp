@@ -1,5 +1,7 @@
 #include "simplnx/Utilities/ImageProcessing/RegionalExtremaEngine.hpp"
 
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include <array>
 
 namespace nx::core::ImageProcessing
@@ -8,6 +10,8 @@ template <class T>
 template <bool Maxima, class WorkStore>
 Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize dimY, usize maxBufferValues)
 {
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(dimY, "Initializing Regional Extrema Rows");
   const T markerValue = Maxima ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
   auto beyond = [](T left, T right) {
     if constexpr(Maxima)
@@ -110,6 +114,8 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
       {
         return r;
       }
+
+      progressThrottle.updateCount(coreBegin + coreRows);
     }
 
     bool cacheValid = false;
@@ -118,12 +124,15 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
     usize cachedReadBegin = 0;
     usize cachedReadEnd = 0;
     bool changed = true;
+    usize completedSweepPairs = 0;
     while(changed)
     {
       changed = false;
       for(int direction = 0; direction < 2; ++direction)
       {
         const bool forward = direction == 0;
+        const std::string sweepLabel = fmt::format("Regional Extrema Sweep {} {}", completedSweepPairs + 1, forward ? "Forward" : "Reverse");
+        progressThrottle.reset(blockCount, sweepLabel);
         for(usize blockIteration = 0; blockIteration < blockCount; ++blockIteration)
         {
           if(m_ShouldCancel)
@@ -215,8 +224,12 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
           cachedCoreRows = coreRows;
           cachedReadBegin = readBegin;
           cachedReadEnd = readEnd;
+
+          progressThrottle.updateCount(blockIteration + 1);
         }
       }
+
+      progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
     }
     return {};
   }
@@ -298,15 +311,20 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
         return r;
       }
     }
+
+    progressThrottle.updateCount(y + 1);
   }
 
   bool changed = true;
+  usize completedSweepPairs = 0;
   while(changed)
   {
     changed = false;
     for(int direction = 0; direction < 2; ++direction)
     {
       const bool forward = direction == 0;
+      const std::string sweepLabel = fmt::format("Regional Extrema Sweep {} {}", completedSweepPairs + 1, forward ? "Forward" : "Reverse");
+      progressThrottle.reset(dimX * dimY, sweepLabel);
       for(usize rowIndex = 0; rowIndex < dimY; ++rowIndex)
       {
         const usize y = forward ? rowIndex : dimY - 1 - rowIndex;
@@ -388,9 +406,13 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
               return r;
             }
           }
+
+          progressThrottle.updateCount(rowIndex * dimX + processedColumns + coreColumns);
         }
       }
     }
+
+    progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
   }
   return {};
 }
@@ -405,6 +427,7 @@ template <class T>
 template <bool Maxima>
 Result<> RegionalExtremaSweep<T>::runImpl()
 {
+  m_MessageHandler.sendInfoMessage("Computing Regional Extrema");
   const usize dimX = m_Dims[0];
   const usize dimY = m_Dims[1];
   const usize dimZ = m_Dims[2];
@@ -453,6 +476,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
         return {};
       }
       const usize maxBatchValues = std::min(vol, m_MaxSlabValues);
+      ThrottledMessageHandler progressThrottle(m_MessageHandler);
+      progressThrottle.reset(vol, "Writing Regional Extrema");
       auto buffer = std::make_unique<T[]>(maxBatchValues);
       for(usize start = 0; start < vol; start += maxBatchValues)
       {
@@ -469,6 +494,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
         {
           return r;
         }
+
+        progressThrottle.updateCount(start + count);
       }
       return {};
     }
@@ -491,6 +518,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     {
       return {};
     }
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(vol, "Writing Regional Extrema");
     auto buffer = std::make_unique<T[]>(maxBatchValues);
     for(usize start = 0; start < vol; start += maxBatchValues)
     {
@@ -507,10 +536,14 @@ Result<> RegionalExtremaSweep<T>::runImpl()
       {
         return r;
       }
+
+      progressThrottle.updateCount(start + count);
     }
     return {};
   }
   auto runSweep = [&]<class WorkStore>(WorkStore& workStore) -> Result<> {
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Initializing Regional Extrema Slices");
     const int64 nX = static_cast<int64>(dimX);
     const int64 nY = static_cast<int64>(dimY);
     const int64 nZ = static_cast<int64>(dimZ);
@@ -610,6 +643,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
       {
         return r;
       }
+
+      progressThrottle.updateCount(processedPlanes + corePlanes);
     }
 
     // Propagation sweeps: mark a pixel if a same-input-value neighbor is already the marker value; alternate
@@ -629,12 +664,15 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     std::vector<bool> reversePlaneDirty(dimZ, true);
 
     bool changed = true;
+    usize completedSweepPairs = 0;
     while(changed)
     {
       changed = false;
       for(int direction = 0; direction < 2; ++direction) // 0 = forward, 1 = reverse
       {
         const bool forward = direction == 0;
+        const std::string sweepLabel = fmt::format("Regional Extrema Sweep {} {}", completedSweepPairs + 1, forward ? "Forward" : "Reverse");
+        progressThrottle.reset(dimZ, sweepLabel);
         std::vector<bool>& planeDirty = forward ? forwardPlaneDirty : reversePlaneDirty;
         // Reverse the in-plane (y, x) traversal too on the reverse sweep, not just z: a reverse pass must be a full
         // anti-raster so an equal-input-value zone winding AGAINST the forward raster still propagates a whole pass'
@@ -667,6 +705,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
           }
           if(slabClean)
           {
+            progressThrottle.updateCount(processedPlanes + corePlanes);
             continue;
           }
 
@@ -774,8 +813,12 @@ Result<> RegionalExtremaSweep<T>::runImpl()
               return r;
             }
           }
+
+          progressThrottle.updateCount(processedPlanes + corePlanes);
         }
       }
+
+      progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
     }
     return {};
   };
@@ -801,6 +844,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     return {};
   }
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(vol, "Writing Regional Extrema");
   auto buffer = std::make_unique<T[]>(maxBatchValues);
   for(usize start = 0; start < vol; start += maxBatchValues)
   {
@@ -817,6 +862,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     {
       return r;
     }
+
+    progressThrottle.updateCount(start + count);
   }
   return {};
 }

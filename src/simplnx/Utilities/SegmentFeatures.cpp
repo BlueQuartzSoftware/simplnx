@@ -8,12 +8,13 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ExternalEquivalence.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/UnionFind.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <nonstd/span.hpp>
 #include <vector>
 
@@ -23,6 +24,8 @@ namespace
 {
 constexpr uint64 k_RecordsPerPage = 4096;
 constexpr usize k_MaxCachedPages = 16;
+
+using ProgressCallback = std::function<void(usize)>;
 
 /**
  * @brief Creates fixed-record connected-component scratch.
@@ -383,6 +386,7 @@ Result<> unitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 index
  * @param useFaceOnly Selects three backward face neighbors instead of thirteen.
  * @param nextLabel Provides and receives the next unused provisional label.
  * @param shouldCancel Stops before the next slice when true.
+ * @param reportProgress Reports completed Z slices.
  * @return Subclass, capacity, or Feature-ID I/O error, or success.
  *
  * Backward neighbors live in the current and previous Z slices only, so a two-slice
@@ -390,7 +394,7 @@ Result<> unitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 index
  * success and leaves provisional labels in the written slices.
  */
 Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, bool useFaceOnly, int32& nextLabel,
-                        const std::atomic_bool& shouldCancel)
+                        const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -566,6 +570,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
     {
       return writeResult;
     }
+    reportProgress(static_cast<usize>(iz + 1));
   }
 
   return {};
@@ -581,6 +586,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
  * @param dimZ Specifies Z cells.
  * @param hasNonContiguousFeature Receives true when any pair joins.
  * @param shouldCancel Stops external cache work when true.
+ * @param reportProgress Reports completed boundary slices or rows.
  * @return Subclass or Feature-ID I/O error, or success.
  *
  * Face connectivity gives each axis one wrapped neighbor, so the three axis passes
@@ -588,17 +594,22 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
  * the first and last slices together.
  */
 Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
-                                     bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel)
+                                     bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
   std::vector<int32> featureIdsSliceCur(sliceSize, 0);
+  usize completedWorkUnits = 0;
 
   // X boundaries share one Z slice.
   if(dimX > 1)
   {
     for(int64 iz = 0; iz < dimZ; iz++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
       if(readResult.invalid())
       {
@@ -622,6 +633,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
           return uniteResult;
         }
       }
+      reportProgress(++completedWorkUnits);
     }
   }
 
@@ -630,6 +642,10 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
   {
     for(int64 iz = 0; iz < dimZ; iz++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       auto readResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(iz) * sliceSize, nonstd::span<int32>(featureIdsSliceCur.data(), sliceSize));
       if(readResult.invalid())
       {
@@ -653,6 +669,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
           return uniteResult;
         }
       }
+      reportProgress(++completedWorkUnits);
     }
   }
 
@@ -685,6 +702,10 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
 
     for(int64 iy = 0; iy < dimY; iy++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       for(int64 ix = 0; ix < dimX; ix++)
       {
         const usize inSlice = static_cast<usize>(iy * dimX + ix);
@@ -698,6 +719,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
           return uniteResult;
         }
       }
+      reportProgress(++completedWorkUnits);
     }
   }
 
@@ -714,6 +736,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
  * @param dimZ Specifies Z cells.
  * @param hasNonContiguousFeature Receives true when any pair joins.
  * @param shouldCancel Stops before the next Z slice when true.
+ * @param reportProgress Reports completed Z slices.
  * @return Subclass or Feature-ID I/O error, or success.
  *
  * Complete connectivity can wrap across one, two, or three axes at once, so the axes
@@ -721,7 +744,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
  * only the wrapped pairs the forward scan could not reach. Cancellation returns success.
  */
 Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
-                                         bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel)
+                                         bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -904,6 +927,7 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
         }
       }
     }
+    reportProgress(static_cast<usize>(iz + 1));
   }
 
   return {};
@@ -916,26 +940,21 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
  * @param dimX Specifies X cells.
  * @param dimY Specifies Y cells.
  * @param dimZ Specifies Z cells.
- * @param nextLabel Specifies one past the largest provisional label.
  * @param finalFeatureCount Receives the number of features found.
  * @param shouldCancel Stops before the next slice when true.
+ * @param reportProgress Reports completed Z slices.
  * @return Allocation, capacity, or Feature-ID I/O error, or success.
  *
  * One slice-sequential pass keeps resident memory proportional to slice area. First
  * voxel appearance determines final Feature-ID order. Cancellation returns success and
  * leaves a partially resolved Feature-ID array, so the caller discards the count.
  */
-Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, int32 nextLabel, int32& finalFeatureCount,
-                          const std::atomic_bool& shouldCancel)
+Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, int32& finalFeatureCount, const std::atomic_bool& shouldCancel,
+                          const ProgressCallback& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
 
-  auto prepareFinalLabelsResult = equivalences.prepareFinalLabels(static_cast<uint64>(nextLabel));
-  if(prepareFinalLabelsResult.invalid())
-  {
-    return prepareFinalLabelsResult;
-  }
   finalFeatureCount = 0;
 
   std::vector<int32> sliceData(sliceSize);
@@ -976,6 +995,7 @@ Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquiva
     {
       return writeResult;
     }
+    reportProgress(static_cast<usize>(iz + 1));
   }
 
   return {};
@@ -985,7 +1005,7 @@ Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquiva
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHelper(mesgHandler)
+, m_MessageHandler(mesgHandler)
 {
 }
 
@@ -1016,8 +1036,17 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   auto equivalences = std::move(equivalenceResult.value());
   int32 nextLabel = 1;
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  std::mutex progressMutex;
+  const auto reportCompletedCount = [&progressThrottle, &progressMutex](usize completed) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.updateCount(completed);
+  };
+
   // The forward scan creates provisional labels and the equivalences between them.
-  auto forwardScanResult = runForwardScan(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, useFaceOnly, nextLabel, m_ShouldCancel);
+  m_MessageHandler.sendInfoMessage("Labeling Features");
+  progressThrottle.reset(static_cast<usize>(dimZ), "Labeling Features");
+  auto forwardScanResult = runForwardScan(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, useFaceOnly, nextLabel, m_ShouldCancel, reportCompletedCount);
   if(forwardScanResult.invalid())
   {
     return forwardScanResult;
@@ -1032,9 +1061,12 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   // Periodic merging reads one or two label slices and joins opposite boundaries.
   if(m_IsPeriodic)
   {
+    m_MessageHandler.sendInfoMessage("Merging Periodic Feature Boundaries");
     if(useFaceOnly)
     {
-      auto mergeResult = mergePeriodicFaceBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel);
+      const usize periodicWorkUnits = (dimX > 1 ? static_cast<usize>(dimZ) : 0) + (dimY > 1 ? static_cast<usize>(dimZ) : 0) + (dimZ > 1 ? static_cast<usize>(dimY) : 0);
+      progressThrottle.reset(periodicWorkUnits, "Merging Periodic Feature Boundaries");
+      auto mergeResult = mergePeriodicFaceBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
       if(mergeResult.invalid())
       {
         return mergeResult;
@@ -1042,7 +1074,8 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     }
     else
     {
-      auto mergeResult = mergePeriodicCompleteBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel);
+      progressThrottle.reset(static_cast<usize>(dimZ), "Merging Periodic Feature Boundaries");
+      auto mergeResult = mergePeriodicCompleteBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
       if(mergeResult.invalid())
       {
         return mergeResult;
@@ -1056,7 +1089,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
   if(hasNonContiguousFeature)
   {
-    m_MessageHelper.sendMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
+    m_MessageHandler.sendInfoMessage("Non-contiguous Features were found: at least one Feature wraps across a periodic boundary.");
   }
 
   if(m_ShouldCancel)
@@ -1064,9 +1097,24 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     return {};
   }
 
-  // Resolve roots and write dense final IDs in one slice-sequential pass.
+  // Resolve roots before the final-label phase. UnionFind::flatten() is an opaque operation, so this phase has a
+  // distinct status but no progress callback or additional cancellation point.
+  m_MessageHandler.sendInfoMessage("Resolving Feature Label Equivalences");
+  auto prepareFinalLabelsResult = equivalences->prepareFinalLabels(static_cast<uint64>(nextLabel));
+  if(prepareFinalLabelsResult.invalid())
+  {
+    return prepareFinalLabelsResult;
+  }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // Write dense final IDs in one slice-sequential pass.
   int32 finalFeatureCount = 0;
-  auto finalLabelsResult = writeFinalLabels(featureIdsStore, *equivalences, dimX, dimY, dimZ, nextLabel, finalFeatureCount, m_ShouldCancel);
+  m_MessageHandler.sendInfoMessage("Assigning Final Feature Labels");
+  progressThrottle.reset(static_cast<usize>(dimZ), "Assigning Final Feature Labels");
+  auto finalLabelsResult = writeFinalLabels(featureIdsStore, *equivalences, dimX, dimY, dimZ, finalFeatureCount, m_ShouldCancel, reportCompletedCount);
   if(finalLabelsResult.invalid())
   {
     return finalLabelsResult;
@@ -1084,7 +1132,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   }
 
   m_FoundFeatures = finalFeatureCount;
-  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
+  m_MessageHandler.sendInfoMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
 
   return {};
 }
@@ -1106,6 +1154,6 @@ bool SegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
 
 Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
 {
-  m_MessageHelper.sendMessage("Randomizing Feature Ids");
+  m_MessageHandler.sendInfoMessage("Randomizing Feature Ids");
   return ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

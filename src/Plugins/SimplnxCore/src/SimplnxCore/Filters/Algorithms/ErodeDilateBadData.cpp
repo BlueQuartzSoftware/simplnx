@@ -19,6 +19,7 @@ ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilt
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -50,11 +51,17 @@ Result<> ErodeDilateBadData::operator()()
 
   // ---- Determine max FeatureId using sequential Z-slice reads ----
   // This avoids a full-volume random-access scan that would thrash OOC chunks.
+  m_MessageHandler.sendInfoMessage("Scanning Feature IDs");
+  m_Throttle.reset(udims[2], "Scanning Feature ID slices");
   usize numFeatures = 0;
   {
     std::vector<int32> sliceBuf(sliceSize);
     for(int64 z = 0; z < dims[2]; z++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       Result<> readResult = featureIds.copyIntoBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<int32>(sliceBuf.data(), sliceSize));
       if(readResult.invalid())
       {
@@ -67,6 +74,7 @@ Result<> ErodeDilateBadData::operator()()
           numFeatures = sliceBuf[i];
         }
       }
+      sendThreadSafeProgressMessage(1);
     }
   }
 
@@ -117,8 +125,20 @@ Result<> ErodeDilateBadData::operator()()
         return transferResult;
       }
     }
+    sendThreadSafeProgressMessage(1);
     return {};
   };
+
+  m_MessageHandler.sendInfoMessage("Applying morphology and transferring sibling arrays");
+  m_Throttle.reset(static_cast<usize>(m_InputValues->NumIterations) * dimZ, "Scanning and transferring morphology slices");
+
+  // The iterations write the selected FeatureIds and sibling cell arrays in place. A return
+  // part way leaves the input partly changed, and nothing restores it, so the iterations run
+  // to completion once started. Cancellation is honoured before the first write.
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   // ---- Main iteration loop ----
   // Each iteration performs one complete pass of the morphological operation.
@@ -281,4 +301,10 @@ Result<> ErodeDilateBadData::operator()()
   }
 
   return {};
+}
+
+void ErodeDilateBadData::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_Throttle.incrementCount(counter);
 }

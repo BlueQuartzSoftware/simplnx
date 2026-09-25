@@ -1,0 +1,245 @@
+#pragma once
+
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ProgressEstimator.hpp"
+#include "simplnx/simplnx_export.hpp"
+
+#include <fmt/format.h>
+
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <type_traits>
+
+namespace nx::core
+{
+/**
+ * @brief Calculates percent complete. Prefer ThrottledMessageHandler::updatePercent(), which also
+ * drives the progress bar; this remains for messages whose text is assembled from more than a label
+ * and a percentage.
+ * @tparam T
+ * @param currentProgress
+ * @param max
+ * @return
+ */
+template <class T = float32>
+inline constexpr T CalculatePercentComplete(usize currentProgress, usize max)
+{
+  return static_cast<T>(static_cast<float32>(currentProgress) / static_cast<float32>(max) * 100.0f);
+}
+
+/**
+ * @class ThrottledMessageHandler
+ * @brief Rate-limits progress and status messages so a tight loop can report without measurable
+ * cost. The instance owns a thread that opens a gate once per interval; the loop body only reads an
+ * atomic flag, which is roughly 60x cheaper than reading the clock on every iteration. Message
+ * formatting happens only when a message is actually due, so a throttled loop never allocates.
+ *
+ * This class is NOT internally thread-safe. Use it from a single thread, or serialize access with
+ * your own lock. The established pattern for a ParallelDataAlgorithm is a thread-safe seam on the
+ * owning algorithm that takes the lock and forwards to this class; workers call the seam and never
+ * touch an IFilter::MessageHandler directly.
+ *
+ * The gate is not a substitute for that lock, and it is worth being precise about why. The gate
+ * alone does guarantee that at most one thread sends per interval, because the winner is decided by
+ * an atomic exchange rather than by the preceding load. What it does not do:
+ *
+ * 1. incrementCount() and incrementPercent() accumulate into a plain usize, and they do so before
+ *    the gate, so every call from every thread races there regardless of who ends up sending.
+ * 2. reset() writes m_Label and m_MaxProgress while other threads read them.
+ *
+ * The third hazard, that two successive winners on different threads had no ordering between them
+ * and so a stateful MessageHandler callback could race with itself, is handled here rather than by
+ * the caller: the gate uses acquire-release so that winner N happens before winner N+1. See
+ * isReady(). The seam's mutex is still required for 1 and 2.
+ *
+ * The referenced IFilter::MessageHandler must outlive this instance.
+ */
+class SIMPLNX_EXPORT ThrottledMessageHandler
+{
+public:
+  static constexpr std::chrono::milliseconds k_DefaultInterval{1000};
+
+  ThrottledMessageHandler() = delete;
+
+  /**
+   * @brief Constructs a handler that emits at most one message per interval.
+   * @param messageHandler Must outlive this instance
+   * @param interval Minimum time between messages
+   */
+  ThrottledMessageHandler(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds interval = k_DefaultInterval);
+
+  ~ThrottledMessageHandler() noexcept;
+
+  // Owns a thread that captures `this`, so it is neither copyable nor movable.
+  ThrottledMessageHandler(const ThrottledMessageHandler&) = delete;
+  ThrottledMessageHandler(ThrottledMessageHandler&&) = delete;
+  ThrottledMessageHandler& operator=(const ThrottledMessageHandler&) = delete;
+  ThrottledMessageHandler& operator=(ThrottledMessageHandler&&) = delete;
+
+  /**
+   * @brief Sets the denominator and label used for percent-based reporting, restarts the
+   * accumulated counter, and reopens the gate so the new phase reports immediately. Call once per
+   * phase before the loop that reports it.
+   * @param maxProgress The denominator. A value of 0 reports 0%.
+   * @param label Message text; the percent is delivered as a separate field, not appended here.
+   */
+  void reset(usize maxProgress, std::string label);
+
+  /**
+   * @brief Reports absolute progress as a count, rendered as "<label>: <current>/<max>". Use this
+   * when the counts are meaningful to a user, e.g. tuples or slices. Nothing is stored, so this is
+   * safe to call with any value.
+   * @param currentProgress Items completed so far
+   */
+  void updateCount(usize currentProgress);
+
+  /**
+   * @brief Reports absolute progress as a count, supplying the label and denominator at the call
+   * site so a simple loop needs no reset(). The label is a view, so a string literal costs nothing
+   * on the iterations that are dropped.
+   * @param label Describes the work being done, with no trailing punctuation
+   * @param currentProgress Items completed so far
+   * @param maxProgress Total items
+   */
+  void updateCount(std::string_view label, usize currentProgress, usize maxProgress);
+
+  /**
+   * @brief Reports absolute progress as a percentage, rendered as "<label>: <percent>%". Use this
+   * when the counts are too large to be readable.
+   * @param currentProgress Items completed so far
+   * @param decimals Number of decimal places to display
+   */
+  void updatePercent(usize currentProgress, int32 decimals = 2);
+
+  /**
+   * @brief Reports absolute progress as a percentage, supplying the label and denominator at the
+   * call site so a simple loop needs no reset().
+   * @param label Describes the work being done, with no trailing punctuation
+   * @param currentProgress Items completed so far
+   * @param maxProgress Total items
+   * @param decimals Number of decimal places to display
+   */
+  void updatePercent(std::string_view label, usize currentProgress, usize maxProgress, int32 decimals = 2);
+
+  /**
+   * @brief Reports progress as a count, accumulating into a running counter.
+   * @param delta Items completed since the previous call
+   */
+  void incrementCount(usize delta = 1);
+
+  /**
+   * @brief Reports progress as a percentage, accumulating into a running counter.
+   * @param delta Items completed since the previous call
+   * @param decimals Number of decimal places to display
+   */
+  void incrementPercent(usize delta = 1, int32 decimals = 2);
+
+  /**
+   * @brief Sends free-form throttled status text. The format string is checked at compile time and
+   * the arguments are only formatted when a message is due.
+   * @param format A compile-time checked format string
+   * @param args Format arguments
+   */
+  template <class... Args>
+  void queueMessage(fmt::format_string<Args...> format, Args&&... args)
+  {
+    if(!isReady())
+    {
+      return;
+    }
+    m_MessageHandler.sendInfoMessage(fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  /**
+   * @brief Sends free-form throttled status text built by a functor. The overload above evaluates
+   * its arguments on every call and only defers the formatting; use this one when assembling the
+   * message is itself expensive or has a side effect, since the functor runs only when a message is
+   * due.
+   * @param functor Callable of the form std::string func()
+   */
+  template <class CallableT>
+  requires std::is_invocable_r_v<std::string, CallableT>
+  void queueMessage(CallableT&& functor)
+  {
+    if(!isReady())
+    {
+      return;
+    }
+    m_MessageHandler.sendInfoMessage(functor());
+  }
+
+  /**
+   * @brief Sends already-formatted throttled status text. Prefer queueMessage() where possible, so
+   * the string is not built on iterations that will be dropped.
+   * @param message The message text
+   */
+  void trySendMessage(std::string message);
+
+  /**
+   * @brief Opens the gate as though the interval had elapsed. Intended for unit tests, so they can
+   * observe a send without sleeping.
+   */
+  void setReadyForTesting();
+
+  /**
+   * @brief Sends the most recent progress value the gate discarded, if any.
+   *
+   * The gate drops every update but one per interval, so the value that completes a phase is
+   * usually a dropped one. Without this the last thing a user sees is whatever partial figure
+   * happened to win the final interval, and a phase shorter than one interval never reports at
+   * all. reset() and the destructor call this, so a phase always ends on its true final value.
+   */
+  void flush();
+
+private:
+  /**
+   * @brief Returns true at most once per interval. Written as a relaxed load followed by an
+   * exchange so the hot path stays read-only until a send actually occurs.
+   * @return
+   */
+  bool isReady();
+
+  /**
+   * @brief Which rendering the pending value needs, or None when nothing is pending.
+   */
+  enum class PendingKind
+  {
+    None,
+    Count,
+    Percent
+  };
+
+  /**
+   * @brief Records the value this call would have sent, then reports it when the gate allows.
+   * @param kind Selects the count or percent rendering
+   * @param label Label for this value
+   * @param current Progress value
+   * @param max Denominator
+   * @param decimals Decimal places for the percent rendering
+   */
+  void report(PendingKind kind, std::string_view label, usize current, usize max, int32 decimals);
+
+  const IFilter::MessageHandler& m_MessageHandler;
+  std::chrono::milliseconds m_Interval;
+  std::string m_Label;
+  usize m_MaxProgress = 0;
+  usize m_CurrentProgress = 0;
+  PendingKind m_PendingKind = PendingKind::None;
+  std::string m_PendingLabel;
+  usize m_PendingProgress = 0;
+  usize m_PendingMax = 0;
+  int32 m_PendingDecimals = 2;
+  ProgressEstimator m_Estimator;
+  std::atomic<bool> m_Ready = true;
+  bool m_Stop = false;
+  std::mutex m_Mutex;
+  std::condition_variable m_ConditionVariable;
+  std::thread m_Thread;
+};
+} // namespace nx::core

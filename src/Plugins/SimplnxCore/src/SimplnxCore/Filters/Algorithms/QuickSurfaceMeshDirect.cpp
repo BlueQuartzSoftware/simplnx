@@ -282,7 +282,7 @@ Result<> QuickSurfaceMeshDirect::operator()()
   {
     // Direct winding repair builds transient neighbor topology. The scanline path
     // can use external sorting when any dispatch target is out of core.
-    m_MessageHandler(IFilter::Message::Type::Info, "Generating Connectivity and Triangle Neighbors...");
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Generating Connectivity and Triangle Neighbors...");
     triangleGeom.findElementNeighbors(true);
     const auto optionalId = triangleGeom.getElementNeighborsId();
     if(!optionalId.has_value())
@@ -291,7 +291,7 @@ Result<> QuickSurfaceMeshDirect::operator()()
     }
     const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-    m_MessageHandler(IFilter::Message::Type::Info, "Repairing Windings...");
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Repairing Windings...");
     windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
                                                             m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
 
@@ -318,7 +318,7 @@ Result<> QuickSurfaceMeshDirect::operator()()
 
 void QuickSurfaceMeshDirect::correctProblemVoxels()
 {
-  m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
   auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -489,7 +489,7 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
     }
 
     std::string ss = fmt::format("Correcting Problem Voxels: Iteration - '{}'; Problem Voxels - '{}'", iter, count);
-    m_MessageHandler(IFilter::Message::Type::Info, ss);
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, ss);
   }
 }
 
@@ -513,7 +513,7 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
  */
 void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount, MeshIndexType& suppressedFaceCount)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Determining active Nodes");
 
   auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -837,7 +837,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
   {
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Creating mesh");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Creating mesh");
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 

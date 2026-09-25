@@ -134,7 +134,7 @@ Result<> CopyFeatureArrayToElementArrayScanline::operator()()
     DataPath createdArrayPath = m_InputValues->FeatureIdsPath.replaceName(selectedFeatureArrayPath.getTargetName() + m_InputValues->CreatedArraySuffix);
     const auto* selectedFeatureArray = m_DataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
 
     auto result = ExecuteDataFunction(CopyFeatureToElementScanlineFunctor{}, selectedFeatureArray->getDataType(), selectedFeatureArray, featureIds.getDataStoreRef(),
                                       m_DataStructure.getDataAs<IDataArray>(createdArrayPath), m_ShouldCancel);

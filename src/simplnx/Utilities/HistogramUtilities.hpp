@@ -10,6 +10,7 @@
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 namespace nx::core::HistogramUtilities
@@ -382,13 +383,9 @@ using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std:
 
 template <typename T>
 FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
-                                                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::function<void(const std::string&)>& msgHandler,
+                                                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::function<void(usize)>& reportProgress,
                                                     const std::atomic_bool& shouldCancel)
 {
-  std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
-  auto now = std::chrono::steady_clock::now();
-  const usize milliDelay = 1000;
-
   const usize numTuples = featureIdsStore.getNumberOfTuples();
   const usize numCurrentFeatures = endFeatureId - startFeatureId;
 
@@ -397,51 +394,48 @@ FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& 
   std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
   std::vector<float32> summation(numCurrentFeatures, 0);
   std::vector<std::map<T, uint64>> modalMaps(numCurrentFeatures);
-  usize progressCount = 0;
+  constexpr usize k_ProgressChunkSize = 4096;
 
-  usize progressIncrement = numTuples / 100;
-
-  for(usize i = 0; i < numTuples; ++i)
+  for(usize chunkStart = 0; chunkStart < numTuples; chunkStart += k_ProgressChunkSize)
   {
     if(shouldCancel)
     {
       return {};
     }
-    if(mask != nullptr && !mask->isTrue(i))
+    const usize chunkEnd = std::min(chunkStart + k_ProgressChunkSize, numTuples);
+    for(usize i = chunkStart; i < chunkEnd; ++i)
     {
-      continue;
-    }
-    for(usize j = 0; j < numCurrentFeatures; j++)
-    {
-      if(featureIdsStore[i] != static_cast<int32>(startFeatureId + j))
+      if(mask != nullptr && !mask->isTrue(i))
       {
         continue;
       }
-
-      ++length[j];
-
-      if(inputDataStore[i] < min[j])
+      for(usize j = 0; j < numCurrentFeatures; j++)
       {
-        min[j] = inputDataStore[i];
+        if(featureIdsStore[i] != static_cast<int32>(startFeatureId + j))
+        {
+          continue;
+        }
+
+        ++length[j];
+
+        if(inputDataStore[i] < min[j])
+        {
+          min[j] = inputDataStore[i];
+        }
+
+        if(inputDataStore[i] > max[j])
+        {
+          max[j] = inputDataStore[i];
+        }
+
+        summation[j] = summation[j] + inputDataStore[i];
+
+        modalMaps[j][inputDataStore[i]]++;
       }
-
-      if(inputDataStore[i] > max[j])
-      {
-        max[j] = inputDataStore[i];
-      }
-
-      summation[j] = summation[j] + inputDataStore[i];
-
-      modalMaps[j][inputDataStore[i]]++;
     }
-
-    progressCount++;
-    now = std::chrono::steady_clock::now();
-    if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay && msgHandler)
+    if(reportProgress)
     {
-      msgHandler(fmt::format("[{}-{}]: {:.2f}%", startFeatureId, endFeatureId, 100.0f * static_cast<float>(i) / static_cast<float>(numTuples)));
-      progressCount = 0;
-      initialTime = std::chrono::steady_clock::now();
+      reportProgress(chunkEnd - chunkStart);
     }
   }
 

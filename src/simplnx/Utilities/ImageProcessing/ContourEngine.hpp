@@ -9,9 +9,9 @@
 #include "simplnx/Utilities/ImageProcessing/RadiusOneStencil2D.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <thread>
 #include <vector>
@@ -452,12 +453,15 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     return MakeErrorResult(-8590, "Contour engine received more neighbor offsets than a radius-1 box allows (center excluded); the caller's neighbor-offset builder is incorrect.");
   }
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dimZ);
-  progressHelper.setProgressMessageTemplate("Applying contour filter: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
-  const auto reportCompletedPlane = [&progressMessenger]() { progressMessenger.sendProgressMessage(1); };
+  messageHandler.sendInfoMessage("Applying contour filter");
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(sliceValues * dimZ, "Computing contour filter");
+  std::mutex progressMutex;
+  const auto sendThreadSafeProgress = [&](usize delta) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.incrementPercent(delta);
+  };
+  const auto reportCompletedPlane = [&]() { sendThreadSafeProgress(sliceValues); };
 
   auto runResident = [&](nonstd::span<const T> input, nonstd::span<T> output) -> Result<> {
     for(usize z = 0; z < dimZ; ++z)
@@ -468,16 +472,29 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
       }
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, sliceValues);
-      parallelAlgorithm.execute(detail::ContourPlaneBody<T, PredicateT>{.slab = input.data(),
-                                                                        .outPlane = output.data() + z * sliceValues,
-                                                                        .offsets = neighborOffsets.data(),
-                                                                        .numOffsets = neighborOffsets.size(),
-                                                                        .dimX = dimX,
-                                                                        .dimY = dimY,
-                                                                        .dimZ = dimZ,
-                                                                        .zLo = 0,
-                                                                        .z = z,
-                                                                        .predicate = predicate});
+      const auto body = detail::ContourPlaneBody<T, PredicateT>{.slab = input.data(),
+                                                                .outPlane = output.data() + z * sliceValues,
+                                                                .offsets = neighborOffsets.data(),
+                                                                .numOffsets = neighborOffsets.size(),
+                                                                .dimX = dimX,
+                                                                .dimY = dimY,
+                                                                .dimZ = dimZ,
+                                                                .zLo = 0,
+                                                                .z = z,
+                                                                .predicate = predicate};
+      parallelAlgorithm.execute([&](const Range& range) {
+        constexpr usize k_ProgressBatchValues = 4096;
+        for(usize begin = range.min(); begin < range.max();)
+        {
+          const usize end = begin + std::min(k_ProgressBatchValues, range.max() - begin);
+          body(Range(begin, end));
+          if(!shouldCancel)
+          {
+            sendThreadSafeProgress(end - begin);
+          }
+          begin = end;
+        }
+      });
     }
     return {};
   };
@@ -518,6 +535,7 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     }
   }
 
+  progressThrottle.reset(sliceValues * dimZ, "Computing contour filter");
   if(dimZ == 0)
   {
     return {};
@@ -528,25 +546,37 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     Result<> result =
         detail::ExecuteRadiusOneStencil2D<T, T>(in, out, dims, shouldCancel, target2DBytes, detail::Contour2DWorkerScratchBytes<T>(workerCount), workerCount,
                                                 [&](const T* input, T* output, usize inputXBegin, usize inputYBegin, usize inputWidth, usize outputXBegin, usize outputYBegin, usize outputWidth) {
-                                                  return detail::Contour2DBlockBody<T, PredicateT>{.input = input,
-                                                                                                   .output = output,
-                                                                                                   .offsets = neighborOffsets.data(),
-                                                                                                   .numOffsets = neighborOffsets.size(),
-                                                                                                   .dimX = dimX,
-                                                                                                   .dimY = dimY,
-                                                                                                   .inputXBegin = inputXBegin,
-                                                                                                   .inputYBegin = inputYBegin,
-                                                                                                   .inputWidth = inputWidth,
-                                                                                                   .outputXBegin = outputXBegin,
-                                                                                                   .outputYBegin = outputYBegin,
-                                                                                                   .outputWidth = outputWidth,
-                                                                                                   .predicate = predicate};
+                                                  const auto body = detail::Contour2DBlockBody<T, PredicateT>{.input = input,
+                                                                                                              .output = output,
+                                                                                                              .offsets = neighborOffsets.data(),
+                                                                                                              .numOffsets = neighborOffsets.size(),
+                                                                                                              .dimX = dimX,
+                                                                                                              .dimY = dimY,
+                                                                                                              .inputXBegin = inputXBegin,
+                                                                                                              .inputYBegin = inputYBegin,
+                                                                                                              .inputWidth = inputWidth,
+                                                                                                              .outputXBegin = outputXBegin,
+                                                                                                              .outputYBegin = outputYBegin,
+                                                                                                              .outputWidth = outputWidth,
+                                                                                                              .predicate = predicate};
+                                                  return [body, &sendThreadSafeProgress, &shouldCancel](const Range& range) {
+                                                    constexpr usize k_ProgressBatchValues = 4096;
+                                                    for(usize begin = range.min(); begin < range.max();)
+                                                    {
+                                                      const usize end = begin + std::min(k_ProgressBatchValues, range.max() - begin);
+                                                      body(Range(begin, end));
+                                                      if(!shouldCancel)
+                                                      {
+                                                        sendThreadSafeProgress(end - begin);
+                                                      }
+                                                      begin = end;
+                                                    }
+                                                  };
                                                 });
     if(result.invalid())
     {
       return result;
     }
-    reportCompletedPlane();
     return {};
   }
 

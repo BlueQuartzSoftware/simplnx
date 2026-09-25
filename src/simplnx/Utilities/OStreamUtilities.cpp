@@ -3,9 +3,8 @@
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <chrono>
 #include <iomanip>
 #include <memory>
 #include <ostream>
@@ -18,6 +17,7 @@ namespace // for nonmember functions
 {
 // Delimiter underlying values index this table. Keep the enum and table order equal.
 const std::array<std::string, 5> k_DelimiterStrings = {" ", ";", ",", ":", "\t"};
+constexpr usize k_ProgressBatchSize = 1000;
 
 /**
  * @struct PrintNeighborList
@@ -38,15 +38,16 @@ struct PrintNeighborList
    * @return Valid result. This function does not report stream failures.
    * @pre inputNeighborList is non-null and has the dispatched ScalarType.
    *
-   * Cancellation is checked with throttled progress and can leave partial output.
+   * Cancellation is checked before each list and can leave partial output.
    */
   template <typename ScalarType>
   Result<> operator()(std::ostream& outputStrm, INeighborList* inputNeighborList, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
                       bool hasIndex = false, bool hasHeader = false)
   {
     auto& neighborList = *dynamic_cast<NeighborList<ScalarType>*>(inputNeighborList);
-    auto start = std::chrono::steady_clock::now();
     auto numLists = neighborList.getNumberOfLists();
+    ThrottledMessageHandler progressThrottle(mesgHandler);
+    progressThrottle.reset(numLists, fmt::format("Processing {}", neighborList.getName()));
 
     if(hasHeader)
     {
@@ -60,16 +61,9 @@ struct PrintNeighborList
     {
       for(size_t list = 0; list < numLists; list++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        if(shouldCancel)
         {
-          auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(100 * static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
-          start = now;
-          if(shouldCancel)
-          {
-            return {};
-          }
+          return {};
         }
         const auto grain = neighborList.at(list);
         outputStrm << list << delimiter << grain.size() << delimiter;
@@ -93,22 +87,16 @@ struct PrintNeighborList
           }
         }
         outputStrm << "\n";
+        progressThrottle.updatePercent(list + 1);
       }
     }
     else
     {
       for(size_t list = 0; list < neighborList.getNumberOfLists(); list++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        if(shouldCancel)
         {
-          auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
-          start = now;
-          if(shouldCancel)
-          {
-            return {};
-          }
+          return {};
         }
         const auto grain = neighborList.at(list);
         outputStrm << grain.size() << delimiter;
@@ -132,6 +120,7 @@ struct PrintNeighborList
           }
         }
         outputStrm << "\n";
+        progressThrottle.updatePercent(list + 1);
       }
     }
     return {};
@@ -169,15 +158,14 @@ struct PrintDataArray
                       int32 tuplesPerLine = 0)
   {
     const auto& dataStore = inputDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    auto start = std::chrono::steady_clock::now();
     auto numTuples = inputDataArray.getNumberOfTuples();
     if(tuplesPerLine == 0)
     {
       tuplesPerLine = 1;
     }
 
-    MessageHelper messageHelper(mesgHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    ThrottledMessageHandler progressThrottle(mesgHandler);
+    progressThrottle.reset(numTuples, fmt::format("Processing {}", inputDataArray.getName()));
 
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
@@ -187,6 +175,10 @@ struct PrintDataArray
     auto values = std::make_unique<ScalarType[]>(std::max<usize>(1, bufferElements));
     for(usize tupleOffset = 0; tupleOffset < numTuples; tupleOffset += tuplesPerBuffer)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       const usize tupleCount = std::min(tuplesPerBuffer, numTuples - tupleOffset);
       Result<> readResult = dataStore.copyIntoBuffer(tupleOffset * numComps, nonstd::span<ScalarType>(values.get(), tupleCount * numComps));
       if(readResult.invalid())
@@ -196,14 +188,6 @@ struct PrintDataArray
 
       for(usize localTuple = 0; localTuple < tupleCount; localTuple++)
       {
-        const usize tuple = tupleOffset + localTuple;
-        throttledMessenger.sendThrottledMessage(
-            [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
-        if(shouldCancel)
-        {
-          return {};
-        }
-
         for(size_t index = 0; index < numComps; index++)
         {
           const ScalarType value = values[localTuple * numComps + index];
@@ -236,6 +220,7 @@ struct PrintDataArray
           outputStrm << delimiter;
         }
       }
+      progressThrottle.updatePercent(tupleOffset + tupleCount);
     }
     return {};
   }
@@ -307,28 +292,26 @@ struct PrintBinaryDataArray
  * @param delimiter Reserved for API consistency. This function does not use it.
  * @return Valid result. This function does not report stream failures.
  *
- * Cancellation is checked with throttled progress and can leave partial output.
+ * Cancellation is checked before each batch and can leave partial output.
  */
 Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStringArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                           const std::string& delimiter = ",")
 {
-  auto start = std::chrono::steady_clock::now();
   auto numTuples = inputStringArray.getNumberOfTuples();
+  ThrottledMessageHandler progressThrottle(mesgHandler);
+  progressThrottle.reset(numTuples, fmt::format("Processing {}", inputStringArray.getName()));
 
   for(size_t tuple = 0; tuple < numTuples; tuple++)
   {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    if(tuple % k_ProgressBatchSize == 0 && shouldCancel)
     {
-      auto string = fmt::format("Processing {}: {}% completed", inputStringArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
-      start = now;
-      if(shouldCancel)
-      {
-        return {};
-      }
+      return {};
     }
     outputStrm << inputStringArray[tuple] << "\n";
+    if((tuple + 1) % k_ProgressBatchSize == 0 || tuple + 1 == numTuples)
+    {
+      progressThrottle.updatePercent(tuple + 1);
+    }
   }
 
   return {};
@@ -580,7 +563,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputFilePath = atomicFile.tempFilePath().string();
-    mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
+    mesgHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
     // Close the stream before AtomicFile renames its temporary file. Windows does
     // not permit that rename while this stream still owns the file handle.
@@ -640,7 +623,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                            const std::string& delimiter, bool includeIndex, bool includeHeaders, size_t componentsPerLine)
 {
-  mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
+  mesgHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
 
   auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
   if(dataArray != nullptr)
@@ -665,7 +648,6 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 {
   const auto& firstDataArray = dataStructure.getDataRefAs<IArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
-  auto start = std::chrono::steady_clock::now();
 
   // Type-erased writers let one tuple loop interleave different array types.
   std::vector<std::shared_ptr<ITupleWriter>> writers;
@@ -731,18 +713,13 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     writerIndexStart = 1;
   }
+  ThrottledMessageHandler progressThrottle(mesgHandler);
+  progressThrottle.reset(numTuples - std::min(numTuples, writerIndexStart), "Printing Tuples");
   for(usize tupleIndex = writerIndexStart; tupleIndex < numTuples; tupleIndex++)
   {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    if((tupleIndex - writerIndexStart) % k_ProgressBatchSize == 0 && shouldCancel)
     {
-      auto string = fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(tupleIndex) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
-      start = now;
-      if(shouldCancel)
-      {
-        return;
-      }
+      return;
     }
     if(includeIndex)
     {
@@ -757,6 +734,11 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
       }
     }
     outputStrm << '\n';
+    const usize completedTuples = tupleIndex - writerIndexStart + 1;
+    if(completedTuples % k_ProgressBatchSize == 0 || tupleIndex + 1 == numTuples)
+    {
+      progressThrottle.updatePercent(completedTuples);
+    }
   }
 
   if(!neighborLists.empty())

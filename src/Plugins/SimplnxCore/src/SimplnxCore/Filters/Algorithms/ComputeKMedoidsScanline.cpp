@@ -480,7 +480,7 @@ ComputeKMedoidsScanline::~ComputeKMedoidsScanline() noexcept = default;
 
 void ComputeKMedoidsScanline::updateProgress(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, message);
 }
 
 const std::atomic_bool& ComputeKMedoidsScanline::getCancel()

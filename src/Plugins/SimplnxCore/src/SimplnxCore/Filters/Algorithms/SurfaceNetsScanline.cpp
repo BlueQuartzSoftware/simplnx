@@ -1085,7 +1085,7 @@ Result<> SurfaceNetsScanline::operator()()
                                "SurfaceNets cannot repair triangle winding for an out-of-core target because the active I/O provider does not support external sorting and temporary record stores.");
       }
       // Resident forced-path tests can use temporary in-memory connectivity.
-      m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+      m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
       triangleGeom.findElementNeighbors(true);
       const auto optionalId = triangleGeom.getElementNeighborsId();
       if(!optionalId.has_value())
@@ -1093,7 +1093,7 @@ Result<> SurfaceNetsScanline::operator()()
         return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
       }
       const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
-      m_MessageHandler("Repairing Windings...");
+      m_MessageHandler.sendInfoMessage("Repairing Windings...");
       windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
                                                               m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
       m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());

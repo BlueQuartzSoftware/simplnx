@@ -132,10 +132,10 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
     return "char";
   }
 
-  messageHandler(IFilter::Message::Type::Info, fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
+  messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
   if(const char* name = typeid(T).name(); nullptr != name && name[0] == 'l')
   {
-    messageHandler(
+    messageHandler.sendMessage(
         IFilter::Message::Type::Info,
         fmt::format("You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32 or uint32.",
                     typeid(T).name()));
@@ -175,7 +175,7 @@ struct WriteVtkDataArrayFunctor
     auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
     auto& dataStore = dataArray->getDataStoreRef();
 
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
+    messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
 
     const usize totalElements = dataStore.getSize();
     const int numComps = static_cast<int>(dataStore.getNumberOfComponents());
@@ -410,7 +410,7 @@ struct WriteVtkDataFunctor
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           auto string = fmt::format("Processing {}: {}% completed", dataArrayRef.getName(), static_cast<int32>(100 * static_cast<float32>(idx) / static_cast<float32>(numTuples)));
-          messageHandler(IFilter::Message::Type::Info, string);
+          messageHandler.sendMessage(IFilter::Message::Type::Info, string);
           start = now;
           if(shouldCancel)
           {

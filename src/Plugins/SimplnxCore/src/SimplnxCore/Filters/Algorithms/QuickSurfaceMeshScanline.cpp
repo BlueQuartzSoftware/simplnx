@@ -545,7 +545,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
 
 Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
 {
-  m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
   auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -909,7 +909,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
     }
 
     std::string ss = fmt::format("Correcting Problem Voxels: Iteration - '{}'; Problem Voxels - '{}'", iter, count);
-    m_MessageHandler(IFilter::Message::Type::Info, ss);
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, ss);
   }
   return {};
 }
@@ -1111,7 +1111,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
   {
     return {};
   }
-  m_MessageHandler(IFilter::Message::Type::Info, "Creating mesh");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Creating mesh");
 
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 

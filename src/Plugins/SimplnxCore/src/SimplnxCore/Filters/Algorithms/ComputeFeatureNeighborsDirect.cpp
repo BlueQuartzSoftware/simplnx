@@ -5,8 +5,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
 
@@ -36,7 +36,7 @@ struct ComputeFeatureNeighborsFunctor
    * @param totalFeatures Identifies the feature output count.
    * @param dims Supplies image dimensions.
    * @param spacing Supplies image spacing.
-   * @param throttledMessenger Supplies interior progress messages.
+   * @param progressThrottle Supplies interior progress messages.
    * @param shouldCancel Signals cancellation in the 3D interior sweep.
    * @return Success, or an optional-output error.
    *
@@ -46,7 +46,7 @@ struct ComputeFeatureNeighborsFunctor
   template <detail::ImageDimensionality ImageDimensionStateT>
   Result<> operator()(BoolAbstractDataStore* surfaceFeatures, Int8AbstractDataStore* boundaryCells, Float32NeighborList& sharedSurfaceAreaList, Int32NeighborList& neighborsList,
                       Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
+                      ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel) const
   {
     constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount;
 
@@ -203,7 +203,7 @@ struct ComputeFeatureNeighborsFunctor
         for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
         {
           const int64 yStride = dims[0] * yIndex;
-          throttledMessenger.sendThrottledMessage([&] { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+          progressThrottle.updatePercent("Determining Neighbor Lists", zStride + yStride, totalPoints);
 
           if(shouldCancel)
           {
@@ -336,8 +336,8 @@ ComputeFeatureNeighborsDirect::~ComputeFeatureNeighborsDirect() noexcept = defau
 
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumberOfNeighborsPath)->getDataStoreRef();
@@ -373,22 +373,22 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, throttledMessenger, m_ShouldCancel);
+                         spacing64, progressThrottle, m_ShouldCancel);
   }
   if(m_InputValues->StoreSurfaceFeatures)
   {
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, throttledMessenger, m_ShouldCancel);
+                         spacing64, progressThrottle, m_ShouldCancel);
   }
   if(m_InputValues->StoreBoundaryCells)
   {
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, throttledMessenger, m_ShouldCancel);
+                         spacing64, progressThrottle, m_ShouldCancel);
   }
 
   return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims, spacing64,
-                       throttledMessenger, m_ShouldCancel);
+                       progressThrottle, m_ShouldCancel);
 }

@@ -53,17 +53,20 @@ set(SIMPLNX_TEST_SRCS
   IParallelAlgorithmTest.cpp
   CacheMemoryBudgetManagerTest.cpp
   MemorySafetyTest.cpp
+  MessageHandlerTest.cpp
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
   ParallelChunkCodecTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
+  PipelineFilterMessagingTest.cpp
   PipelineSaveTest.cpp
   UuidTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
   StbImageIOTest.cpp
   StoreResizeContractsTest.cpp
+  ThrottledMessageHandlerTest.cpp
   ScaleBarRendererTest.cpp
   SelectiveImportReferencesTest.cpp
   FilterValidationTest.cpp

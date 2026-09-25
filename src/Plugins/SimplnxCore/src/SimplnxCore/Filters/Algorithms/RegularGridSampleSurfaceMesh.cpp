@@ -385,7 +385,7 @@ struct ZSliceFunctor
     }
 
     // Precompute Z bounds so each worker rejects nonintersecting triangles quickly.
-    messageHandler({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
+    messageHandler.sendMessage({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
 
     std::vector<TriangleZRange> triZRanges(numTriangles);
     for(usize t = 0; t < numTriangles; t++)
@@ -408,7 +408,7 @@ struct ZSliceFunctor
     }
 
     // Schedule Z slices while the borrowed mesh buffers remain alive.
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+    messageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
 
     // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
     CopyFromArray::ParallelTaskResult taskResult;

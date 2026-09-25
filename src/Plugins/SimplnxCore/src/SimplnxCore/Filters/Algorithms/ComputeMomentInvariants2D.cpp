@@ -4,12 +4,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;
@@ -235,12 +237,13 @@ public:
    * @param centralMoments Receives optional central moments.
    * @param volDims Specifies image dimensions.
    * @param normalizeMomentInvariants Enables circle-based normalization.
-   * @param mesgHandler Receives feature progress messages.
+   * @param reportProgress Reports the number of newly completed features.
+   * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
   ComputeMomentInvariants2DImpl(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const IFilter::MessageHandler& mesgHandler,
-                                const std::atomic_bool& shouldCancel)
+                                Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
+                                const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)
@@ -249,7 +252,8 @@ public:
   , m_VolDims(volDims)
   , m_NormalizeMomentInvariants(normalizeMomentInvariants)
   , m_ShouldCancel(shouldCancel)
-  , m_MessageHandler(mesgHandler)
+  , m_ReportProgress(reportProgress)
+  , m_ReportSkipped(reportSkipped)
   {
   }
 
@@ -264,7 +268,6 @@ public:
   void convert(usize start, usize end, Float32AbstractDataStore& centralMoments) const
   {
     const usize numRectComponents = m_FeatureRect.getNumberOfComponents();
-    const usize numFeatures = m_FeatureRect.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {
       const auto featureIdRectIndex = featureId * numRectComponents;
@@ -281,7 +284,7 @@ public:
       {
         m_Omega1[featureId] = 0.0f;
         m_Omega2[featureId] = 0.0f;
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        m_ReportSkipped(featureId);
         return;
       }
 
@@ -330,7 +333,7 @@ public:
         centralMoments[static_cast<usize>(featureId) * 9UL + comp] = static_cast<float32>(m2DInternal[comp]);
       }
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Completed", featureId, numFeatures));
+      m_ReportProgress(1);
 
       if(m_ShouldCancel)
       {
@@ -349,7 +352,6 @@ public:
   void convert(usize start, usize end) const
   {
     const usize numRectComponents = m_FeatureRect.getNumberOfComponents();
-    const usize numFeatures = m_FeatureRect.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {
       const auto featureIdRectIndex = featureId * numRectComponents;
@@ -366,7 +368,7 @@ public:
       {
         m_Omega1[featureId] = 0.0f;
         m_Omega2[featureId] = 0.0f;
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        m_ReportSkipped(featureId);
         return;
       }
 
@@ -409,7 +411,7 @@ public:
       m_Omega1[featureId] = static_cast<float32>(omega1);
       m_Omega2[featureId] = static_cast<float32>(omega2);
 
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("[{}/{}] : Completed", featureId, numFeatures));
+      m_ReportProgress(1);
 
       if(m_ShouldCancel)
       {
@@ -457,7 +459,8 @@ private:
   const SizeVec3& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
   const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
+  const std::function<void(usize)>& m_ReportProgress;
+  const std::function<void(usize)>& m_ReportSkipped;
 };
 
 /**
@@ -479,12 +482,13 @@ public:
    * @param centralMoments Receives optional central moments.
    * @param volDims Specifies image dimensions.
    * @param normalizeMomentInvariants Enables circle-based normalization.
-   * @param mesgHandler Receives feature progress messages.
+   * @param reportProgress Reports the number of newly completed features.
+   * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
   ComputeMomentInvariants2DScanline(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                    Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const IFilter::MessageHandler& mesgHandler,
-                                    const std::atomic_bool& shouldCancel)
+                                    Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
+                                    const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)
@@ -492,7 +496,8 @@ public:
   , m_CentralMoments(centralMoments)
   , m_VolDims(volDims)
   , m_NormalizeMomentInvariants(normalizeMomentInvariants)
-  , m_MessageHandler(mesgHandler)
+  , m_ReportProgress(reportProgress)
+  , m_ReportSkipped(reportSkipped)
   , m_ShouldCancel(shouldCancel)
   {
   }
@@ -527,7 +532,6 @@ public:
     // NOLINTNEXTLINE(modernize-avoid-c-arrays) -- The outer extent is runtime-sized; each fixed-size inner sequence is a std::array.
     auto rawMoments = std::make_unique<std::array<double, k_MatrixDimension * k_MatrixDimension>[]>(numFeatures);
     auto featureIdsBuffer = std::make_unique<std::array<int32, k_CellChunkSize>>();
-    MessageHelper messageHelper(m_MessageHandler);
 
     for(usize cellOffset = 0; cellOffset < numCells; cellOffset += k_CellChunkSize)
     {
@@ -604,7 +608,7 @@ public:
       const auto* rect = featureRects.get() + featureId * numRectComponents;
       if(rect[5] - rect[2] + 1 != 1)
       {
-        messageHelper.trySendMessage(fmt::format("[{}/{}] : Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId, numFeatures, featureId));
+        m_ReportSkipped(featureId);
         continue;
       }
 
@@ -639,6 +643,8 @@ public:
           centralMomentValues[centralMomentsOffset + component] = static_cast<float32>(centralMomentsData[component]);
         }
       }
+
+      m_ReportProgress(1);
     }
 
     result = m_Omega1.copyFromBuffer(0, nonstd::span<const float32>(omega1Values.get(), numFeatures));
@@ -695,7 +701,8 @@ private:
   Float32Array* m_CentralMoments = nullptr;
   const SizeVec3& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
-  const IFilter::MessageHandler& m_MessageHandler;
+  const std::function<void(usize)>& m_ReportProgress;
+  const std::function<void(usize)>& m_ReportSkipped;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -734,7 +741,20 @@ Result<> ComputeMomentInvariants2D::operator()()
     centralMoments = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentralMomentsArrayPath);
   }
 
+  const usize numFeatures = featureRect.getNumberOfTuples();
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(numFeatures > 0 ? numFeatures - 1 : 0, "Computing moment invariants");
+  std::mutex progressMutex;
+  const std::function<void(usize)> reportProgress = [&progressThrottle, &progressMutex](usize counter) {
+    const std::lock_guard<std::mutex> lock(progressMutex);
+    progressThrottle.incrementCount(counter);
+  };
+  const std::function<void(usize)> reportSkipped = [&progressThrottle, &progressMutex](usize featureId) {
+    const std::lock_guard<std::mutex> lock(progressMutex);
+    progressThrottle.queueMessage("Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId);
+  };
+
   return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMoments}, featureIds, featureRect,
-                                                                                             omega1, omega2, centralMoments, volDims, m_InputValues->NormalizeMomentInvariants, m_MessageHandler,
-                                                                                             m_ShouldCancel);
+                                                                                             omega1, omega2, centralMoments, volDims, m_InputValues->NormalizeMomentInvariants, reportProgress,
+                                                                                             reportSkipped, m_ShouldCancel);
 }

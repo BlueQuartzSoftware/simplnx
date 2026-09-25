@@ -9,16 +9,35 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
+#include <functional>
+#include <mutex>
 #include <optional>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr usize k_DistanceMapChunkSize = 65536;
+
+enum class DistanceMapPhase : usize
+{
+  Seeding,
+  Initializing,
+  Propagating,
+  Updating,
+  Converting,
+  Publishing
+};
+
+// The execution owner serializes this callback and outlives all copied workers.
+using DistanceMapProgress = std::function<void(DistanceMapPhase, usize, usize, usize)>;
+
 /**
  * @brief Tests for non-positive Feature IDs with bounded reads.
  * @param featureIds Supplies cell Feature IDs.
@@ -106,11 +125,14 @@ public:
    * @param dims Supplies image dimensions.
    * @param spacing Supplies image spacing.
    * @param taskResult Stores the first output-store error.
+   * @param shouldCancel Signals cancellation between chunks and slices.
+   * @param reportProgress Reports completed work through the execution owner mutex.
    * @pre All pointers reference storage for totalVoxels values.
    * @pre All arguments outlive the worker execution.
    */
   ComputeDistanceMapImpl(const ComputeEuclideanDistMapInputValues& inputValues, std::vector<int64>& nearestNeighbors, const int32* featureIds, T* distBuf, AbstractDataStore<T>* outputStore,
-                         usize totalVoxels, SizeVec3 dims, FloatVec3 spacing, CopyFromArray::ParallelTaskResult& taskResult)
+                         usize totalVoxels, SizeVec3 dims, FloatVec3 spacing, CopyFromArray::ParallelTaskResult& taskResult, const std::atomic_bool& shouldCancel,
+                         const DistanceMapProgress& reportProgress)
   : m_InputValues(inputValues)
   , m_NearestNeighbors(nearestNeighbors)
   , m_FeatureIds(featureIds)
@@ -120,6 +142,8 @@ public:
   , m_Dims(dims)
   , m_Spacing(spacing)
   , m_TaskResult(taskResult)
+  , m_ShouldCancel(shouldCancel)
+  , m_ReportProgress(reportProgress)
   {
   }
 
@@ -131,13 +155,12 @@ public:
   /**
    * @brief Propagates one map and writes its final distances.
    *
-   * The worker tests the shared task result before it starts and at the top of every propagation
-   * round. It returns without publishing results when another task has already reported an error.
-   * The test stays at round granularity so the per-voxel inner loops carry no atomic load.
+   * The worker checks cancellation and shared task errors between chunks and slices.
+   * It does not publish local results after it observes cancellation or another task error.
    */
   void operator()() const
   {
-    if(m_TaskResult.shouldAbort())
+    if(m_ShouldCancel || m_TaskResult.shouldAbort())
     {
       return;
     }
@@ -163,17 +186,27 @@ public:
 
     Distance = 0;
     // Initialize each voxel with its nearest seed or blocked state.
-    for(usize voxelTupleIdx = 0; voxelTupleIdx < m_TotalVoxels; ++voxelTupleIdx)
+    m_ReportProgress(DistanceMapPhase::Initializing, 0, static_cast<usize>(MapType), 0);
+    for(usize chunkStart = 0; chunkStart < m_TotalVoxels; chunkStart += k_DistanceMapChunkSize)
     {
-      if(m_NearestNeighbors[voxelTupleIdx * 3 + static_cast<usize>(MapType)] >= 0)
+      if(m_ShouldCancel || m_TaskResult.shouldAbort())
       {
-        voxel_NearestNeighbor[voxelTupleIdx] = static_cast<int64>(voxelTupleIdx);
+        return;
       }
-      else
+      const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, m_TotalVoxels);
+      for(usize voxelTupleIdx = chunkStart; voxelTupleIdx < chunkEnd; ++voxelTupleIdx)
       {
-        voxel_NearestNeighbor[voxelTupleIdx] = -1;
+        if(m_NearestNeighbors[voxelTupleIdx * 3 + static_cast<usize>(MapType)] >= 0)
+        {
+          voxel_NearestNeighbor[voxelTupleIdx] = static_cast<int64>(voxelTupleIdx);
+        }
+        else
+        {
+          voxel_NearestNeighbor[voxelTupleIdx] = -1;
+        }
+        voxel_Distance[voxelTupleIdx] = static_cast<float64>(m_DistBuf[voxelTupleIdx]);
       }
-      voxel_Distance[voxelTupleIdx] = static_cast<float64>(m_DistBuf[voxelTupleIdx]);
+      m_ReportProgress(DistanceMapPhase::Initializing, 1, static_cast<usize>(MapType), 0);
     }
 
     // Propagate city-block distances until no voxel changes.
@@ -183,18 +216,25 @@ public:
     int64_t zBlock = xpoints * ypoints;
     int64_t zStride = 0, yStride = 0;
     char mask[6] = {0, 0, 0, 0, 0, 0};
+    usize iteration = 0;
+    m_ReportProgress(DistanceMapPhase::Propagating, 0, static_cast<usize>(MapType), 0);
     while(count > 0 && changed > 0)
     {
-      if(m_TaskResult.shouldAbort())
+      if(m_ShouldCancel || m_TaskResult.shouldAbort())
       {
         return;
       }
       count = 0;
       changed = 0;
       Distance++;
+      ++iteration;
 
       for(int64_t z = 0; z < zpoints; ++z)
       {
+        if(m_ShouldCancel || m_TaskResult.shouldAbort())
+        {
+          return;
+        }
         zStride = z * zBlock;
         mask[0] = mask[5] = 1;
         if(z == 0)
@@ -249,17 +289,33 @@ public:
             }
           }
         }
+        m_ReportProgress(DistanceMapPhase::Propagating, 1, static_cast<usize>(MapType), iteration);
       }
 
-      for(usize voxelIdx = 0; voxelIdx < m_TotalVoxels; ++voxelIdx)
+      for(usize chunkStart = 0; chunkStart < m_TotalVoxels; chunkStart += k_DistanceMapChunkSize)
       {
-        if(voxel_NearestNeighbor[voxelIdx] != -1 && voxel_Distance[voxelIdx] == -1.0 && m_FeatureIds[voxelIdx] > 0)
+        if(m_ShouldCancel || m_TaskResult.shouldAbort())
         {
-          changed++;
-          voxel_Distance[voxelIdx] = Distance;
+          return;
         }
+        const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, m_TotalVoxels);
+        for(usize voxelIdx = chunkStart; voxelIdx < chunkEnd; ++voxelIdx)
+        {
+          if(voxel_NearestNeighbor[voxelIdx] != -1 && voxel_Distance[voxelIdx] == -1.0 && m_FeatureIds[voxelIdx] > 0)
+          {
+            changed++;
+            voxel_Distance[voxelIdx] = Distance;
+          }
+        }
+        m_ReportProgress(DistanceMapPhase::Updating, 1, static_cast<usize>(MapType), iteration);
       }
     }
+
+    if(m_ShouldCancel || m_TaskResult.shouldAbort())
+    {
+      return;
+    }
+    m_ReportProgress(DistanceMapPhase::Converting, 0, static_cast<usize>(MapType), 0);
 
     // Float output converts nearest-seed positions to Euclidean distances.
     if constexpr(std::is_same_v<T, float32>)
@@ -270,6 +326,10 @@ public:
       float64 oneOverxpoints = 1.0 / static_cast<float64>(xpoints);
       for(int64_t m = 0; m < zpoints; m++)
       {
+        if(m_ShouldCancel || m_TaskResult.shouldAbort())
+        {
+          return;
+        }
         zStride = m * zBlock;
         for(int64_t n = 0; n < ypoints; n++)
         {
@@ -290,16 +350,30 @@ public:
             }
           }
         }
+        m_ReportProgress(DistanceMapPhase::Converting, 1, static_cast<usize>(MapType), 0);
       }
     }
 
     // Publish local results after the worker completes propagation.
-    for(usize a = 0; a < m_TotalVoxels; ++a)
+    for(usize chunkStart = 0; chunkStart < m_TotalVoxels; chunkStart += k_DistanceMapChunkSize)
     {
-      m_NearestNeighbors[a * 3 + static_cast<usize>(MapType)] = voxel_NearestNeighbor[a];
-      m_DistBuf[a] = static_cast<T>(voxel_Distance[a]);
+      if(m_ShouldCancel || m_TaskResult.shouldAbort())
+      {
+        return;
+      }
+      const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, m_TotalVoxels);
+      for(usize a = chunkStart; a < chunkEnd; ++a)
+      {
+        m_NearestNeighbors[a * 3 + static_cast<usize>(MapType)] = voxel_NearestNeighbor[a];
+        m_DistBuf[a] = static_cast<T>(voxel_Distance[a]);
+      }
+      m_ReportProgress(DistanceMapPhase::Publishing, 1, static_cast<usize>(MapType), 0);
     }
 
+    if(m_ShouldCancel || m_TaskResult.shouldAbort())
+    {
+      return;
+    }
     Result<> writeResult = m_OutputStore->copyFromBuffer(0, nonstd::span<const T>(m_DistBuf, m_TotalVoxels));
     if(writeResult.invalid())
     {
@@ -309,6 +383,8 @@ public:
 
 private:
   CopyFromArray::ParallelTaskResult& m_TaskResult;
+  const std::atomic_bool& m_ShouldCancel;
+  const DistanceMapProgress& m_ReportProgress;
 };
 } // namespace
 
@@ -328,8 +404,8 @@ ComputeEuclideanDistMap::~ComputeEuclideanDistMap() noexcept = default;
  * @tparam T Specifies int32 city-block or float32 Euclidean output.
  * @param dataStructure Contains the ImageGeom, Feature IDs, and output maps.
  * @param inputValues Selects map types and identifies required objects.
- * @param shouldCancel Signals cancellation during seed discovery.
- * @param messageHandler Preserves the common algorithm call signature.
+ * @param shouldCancel Signals cancellation between seed chunks and worker slices.
+ * @param messageHandler Receives phase and aggregate progress messages.
  * @return The first source or output bulk-I/O error.
  * @pre Requested output maps have the Feature ID tuple count.
  *
@@ -348,6 +424,11 @@ Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDis
 
   const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getDataStoreRef();
   usize totalVoxels = featureIdsStoreRef.getNumberOfTuples();
+  messageHandler.sendInfoMessage("Preparing distance-map buffers");
+  if(shouldCancel)
+  {
+    return {};
+  }
 
   // Direct propagation needs contiguous resident Feature IDs.
   std::vector<int32> featureIdsBuf(totalVoxels);
@@ -430,79 +511,133 @@ Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDis
   std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
+  const usize chunkCount = totalVoxels / k_DistanceMapChunkSize + (totalVoxels % k_DistanceMapChunkSize != 0 ? 1 : 0);
+  const usize mapCount = static_cast<usize>(inputValues->DoBoundaries) + static_cast<usize>(inputValues->DoTripleLines) + static_cast<usize>(inputValues->DoQuadPoints);
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(chunkCount, "Seeding distance-map chunks");
+  std::mutex progressMutex;
+  std::array<usize, 6> completedUnits = {};
+  std::array<bool, 6> announcedPhases = {};
+  const DistanceMapProgress sendThreadSafeProgress = [&](DistanceMapPhase phase, usize delta, usize map, usize iteration) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    const usize phaseIndex = static_cast<usize>(phase);
+    completedUnits[phaseIndex] += delta;
+    if(!announcedPhases[phaseIndex])
+    {
+      constexpr std::array<const char*, 6> k_PhaseLabels = {"Seeding distance maps",         "Initializing distance maps", "Propagating distance maps",
+                                                            "Updating propagated distances", "Converting distance maps",   "Storing distance maps"};
+      messageHandler.sendInfoMessage(k_PhaseLabels[phaseIndex]);
+      announcedPhases[phaseIndex] = true;
+    }
+    if(delta == 0)
+    {
+      return;
+    }
+    switch(phase)
+    {
+    case DistanceMapPhase::Seeding:
+      progressThrottle.updateCount(completedUnits[phaseIndex]);
+      break;
+    case DistanceMapPhase::Initializing:
+      progressThrottle.updateCount("Initializing distance-map chunks", completedUnits[phaseIndex], mapCount * chunkCount);
+      break;
+    case DistanceMapPhase::Propagating:
+      progressThrottle.queueMessage("Propagating distance map {}: iteration {}, {} aggregate Z slabs completed", map + 1, iteration, completedUnits[phaseIndex]);
+      break;
+    case DistanceMapPhase::Updating:
+      progressThrottle.queueMessage("Updating distance map {}: iteration {}, {} aggregate chunks completed", map + 1, iteration, completedUnits[phaseIndex]);
+      break;
+    case DistanceMapPhase::Converting:
+      progressThrottle.updateCount("Converting distance-map slices", completedUnits[phaseIndex], mapCount * udims[2]);
+      break;
+    case DistanceMapPhase::Publishing:
+      // This phase counts chunks staged into the resident buffer, not chunks written to the store.
+      // The store write happens once, after every chunk is staged, so a full count here must not
+      // claim the map has been saved.
+      progressThrottle.updateCount("Preparing distance-map chunks", completedUnits[phaseIndex], mapCount * chunkCount);
+      break;
+    }
+  };
+  sendThreadSafeProgress(DistanceMapPhase::Seeding, 0, 0, 0);
+
   // The seed pass records distinct neighboring Feature IDs for each valid voxel.
-  for(int64 voxelIndex = 0; voxelIndex < static_cast<int64>(totalVoxels); ++voxelIndex)
+  for(usize chunkStart = 0; chunkStart < totalVoxels; chunkStart += k_DistanceMapChunkSize)
   {
     if(shouldCancel)
     {
       return {};
     }
-    feature = featureIdsBuf[voxelIndex];
-    if(feature > 0)
+    const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, totalVoxels);
+    for(int64 voxelIndex = static_cast<int64>(chunkStart); voxelIndex < static_cast<int64>(chunkEnd); ++voxelIndex)
     {
-      int64 xIdx = voxelIndex % dims[0];
-      int64 yIdx = (voxelIndex / dims[0]) % dims[1];
-      int64 zIdx = voxelIndex / (dims[0] * dims[1]);
-
-      std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-      for(const auto& faceIndex : faceNeighborInternalIdx)
+      feature = featureIdsBuf[voxelIndex];
+      if(feature > 0)
       {
-        if(!isValidFaceNeighbor[faceIndex])
-        {
-          continue;
-        }
+        int64 xIdx = voxelIndex % dims[0];
+        int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+        int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
-        neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-        if(featureIdsBuf[neighborPoint] != feature && featureIdsBuf[neighborPoint] >= 0)
+        std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : faceNeighborInternalIdx)
         {
-          add = true;
-          for(const auto& coordination_value : coordination)
+          if(!isValidFaceNeighbor[faceIndex])
           {
-            if(featureIdsBuf[neighborPoint] == coordination_value)
+            continue;
+          }
+
+          neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+          if(featureIdsBuf[neighborPoint] != feature && featureIdsBuf[neighborPoint] >= 0)
+          {
+            add = true;
+            for(const auto& coordination_value : coordination)
             {
-              add = false;
-              break;
+              if(featureIdsBuf[neighborPoint] == coordination_value)
+              {
+                add = false;
+                break;
+              }
+            }
+            if(add)
+            {
+              coordination.push_back(featureIdsBuf[neighborPoint]);
             }
           }
-          if(add)
-          {
-            coordination.push_back(featureIdsBuf[neighborPoint]);
-          }
         }
-      }
 
-      if(coordination.empty())
-      {
-        nearestNeighbors[voxelIndex * 3 + 0] = -1;
-        nearestNeighbors[voxelIndex * 3 + 1] = -1;
-        nearestNeighbors[voxelIndex * 3 + 2] = -1;
-      }
-      if(!coordination.empty() && inputValues->DoBoundaries)
-      {
-        gbDistBuf[voxelIndex] = 0;
-        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
-        nearestNeighbors[voxelIndex * 3 + 1] = -1;
-        nearestNeighbors[voxelIndex * 3 + 2] = -1;
-      }
+        if(coordination.empty())
+        {
+          nearestNeighbors[voxelIndex * 3 + 0] = -1;
+          nearestNeighbors[voxelIndex * 3 + 1] = -1;
+          nearestNeighbors[voxelIndex * 3 + 2] = -1;
+        }
+        if(!coordination.empty() && inputValues->DoBoundaries)
+        {
+          gbDistBuf[voxelIndex] = 0;
+          nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+          nearestNeighbors[voxelIndex * 3 + 1] = -1;
+          nearestNeighbors[voxelIndex * 3 + 2] = -1;
+        }
 
-      if(coordination.size() >= 2 && inputValues->DoTripleLines)
-      {
-        tjDistBuf[voxelIndex] = 0;
-        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
-        nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
-        nearestNeighbors[voxelIndex * 3 + 2] = -1;
-      }
+        if(coordination.size() >= 2 && inputValues->DoTripleLines)
+        {
+          tjDistBuf[voxelIndex] = 0;
+          nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+          nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
+          nearestNeighbors[voxelIndex * 3 + 2] = -1;
+        }
 
-      if(coordination.size() > 2 && inputValues->DoQuadPoints)
-      {
-        qpDistBuf[voxelIndex] = 0;
-        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
-        nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
-        nearestNeighbors[voxelIndex * 3 + 2] = coordination[0];
+        if(coordination.size() > 2 && inputValues->DoQuadPoints)
+        {
+          qpDistBuf[voxelIndex] = 0;
+          nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+          nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
+          nearestNeighbors[voxelIndex * 3 + 2] = coordination[0];
+        }
+        coordination.resize(0);
       }
-      coordination.resize(0);
     }
+    sendThreadSafeProgress(DistanceMapPhase::Seeding, 1, 0, 0);
   }
 
   FloatVec3 spacing = selectedImageGeom.getSpacing();
@@ -514,19 +649,19 @@ Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDis
   if(inputValues->DoBoundaries)
   {
     taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::FeatureBoundary>(*inputValues, nearestNeighbors, featureIdsBuf.data(), gbDistBuf.data(), gbManhattanDistancesStore,
-                                                                                                    totalVoxels, udims, spacing, taskResult));
+                                                                                                    totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
 
   if(inputValues->DoTripleLines)
   {
     taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::TripleJunction>(*inputValues, nearestNeighbors, featureIdsBuf.data(), tjDistBuf.data(), tjManhattanDistancesStore,
-                                                                                                   totalVoxels, udims, spacing, taskResult));
+                                                                                                   totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
 
   if(inputValues->DoQuadPoints)
   {
     taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::QuadPoint>(*inputValues, nearestNeighbors, featureIdsBuf.data(), qpDistBuf.data(), qpManhattanDistancesStore,
-                                                                                              totalVoxels, udims, spacing, taskResult));
+                                                                                              totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
   taskRunner.wait();
   return taskResult.takeResult();

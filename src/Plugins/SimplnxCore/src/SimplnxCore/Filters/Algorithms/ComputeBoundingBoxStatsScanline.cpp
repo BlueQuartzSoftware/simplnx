@@ -8,14 +8,18 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <string_view>
 #include <system_error>
 
 using namespace nx::core;
@@ -29,6 +33,9 @@ constexpr usize k_MaxXIndex = 3;
 constexpr usize k_MaxYIndex = 4;
 constexpr usize k_MaxZIndex = 5;
 constexpr usize k_ChunkSize = 65536;
+
+using ScanProgress = std::function<void(std::string_view, usize, usize)>;
+using BoundsProgress = std::function<void()>;
 
 /* clang-format off */
 template <class T>
@@ -321,7 +328,9 @@ bool Equivalent(const T& lhs, const T& rhs)
  * @param inputStore Supplies the input values.
  * @param voxelIndices Contains half-open voxel bounds.
  * @param buffer Supplies fixed-size read scratch.
- * @param shouldCancel Signals cancellation between rows.
+ * @param shouldCancel Signals cancellation between bounded read blocks.
+ * @param reportProgress Reports each completed read block.
+ * @param progressLabel Identifies the current scan.
  * @param function Receives each value in Z-Y-X order.
  * @return Success, or a bulk-read error.
  *
@@ -330,7 +339,7 @@ bool Equivalent(const T& lhs, const T& rhs)
  */
 template <typename T, class FunctionT>
 Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>& inputStore, const std::array<usize, 6>& voxelIndices, T* buffer, const std::atomic_bool& shouldCancel,
-                         FunctionT&& function)
+                         const ScanProgress& reportProgress, std::string_view progressLabel, FunctionT&& function)
 {
   if(voxelIndices[k_MinXIndex] >= voxelIndices[k_MaxXIndex] || voxelIndices[k_MinYIndex] >= voxelIndices[k_MaxYIndex] || voxelIndices[k_MinZIndex] >= voxelIndices[k_MaxZIndex])
   {
@@ -339,6 +348,10 @@ Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>&
 
   const usize xPoints = imageGeom.getNumXCells();
   const usize yPoints = imageGeom.getNumYCells();
+  const usize totalValues = (voxelIndices[k_MaxXIndex] - voxelIndices[k_MinXIndex]) * (voxelIndices[k_MaxYIndex] - voxelIndices[k_MinYIndex]) * (voxelIndices[k_MaxZIndex] - voxelIndices[k_MinZIndex]);
+  usize completedValues = 0;
+  // The inner loop restarts per row, so report on completed values rather than per row fragment.
+  usize nextReportAt = k_ChunkSize;
   for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
   {
     if(shouldCancel)
@@ -357,6 +370,10 @@ Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>&
       const usize rowLength = voxelIndices[k_MaxXIndex] - voxelIndices[k_MinXIndex];
       for(usize rowOffset = 0; rowOffset < rowLength; rowOffset += k_ChunkSize)
       {
+        if(shouldCancel)
+        {
+          return {};
+        }
         const usize count = std::min(k_ChunkSize, rowLength - rowOffset);
         Result<> copyResult = inputStore.copyIntoBuffer(rowStart + rowOffset, nonstd::span<T>(buffer, count));
         if(copyResult.invalid())
@@ -366,6 +383,12 @@ Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>&
         for(usize index = 0; index < count; index++)
         {
           function(buffer[index]);
+        }
+        completedValues += count;
+        if(totalValues >= k_ChunkSize && completedValues >= nextReportAt)
+        {
+          reportProgress(progressLabel, completedValues, totalValues);
+          nextReportAt = completedValues + k_ChunkSize;
         }
       }
     }
@@ -380,6 +403,7 @@ Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>&
  * @param path Identifies the sorted temporary file.
  * @param count Gives the number of stored values to scan.
  * @param shouldCancel Signals cancellation between fixed-size batches.
+ * @param reportProgress Reports completed batches of sorted values.
  * @param function Receives each value and its frequency.
  * @return Success, or a temporary-file read error.
  *
@@ -387,12 +411,13 @@ Result<> ForEachBoxValue(const ImageGeom& imageGeom, const AbstractDataStore<T>&
  * earlier groups.
  */
 template <typename T, class FunctionT>
-Result<> ScanSortedGroups(const std::filesystem::path& path, usize count, const std::atomic_bool& shouldCancel, FunctionT&& function)
+Result<> ScanSortedGroups(const std::filesystem::path& path, usize count, const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, FunctionT&& function)
 {
   BinaryRunReader<T> reader(path, 0, count);
   std::optional<T> currentValue;
   uint64 currentCount = 0;
   usize valuesUntilCancelCheck = 0;
+  usize completedValues = 0;
   while(reader.hasValue())
   {
     if(valuesUntilCancelCheck == 0 && shouldCancel)
@@ -416,6 +441,11 @@ Result<> ScanSortedGroups(const std::filesystem::path& path, usize count, const 
       currentValue = value;
       currentCount = 1;
     }
+    completedValues++;
+    if(valuesUntilCancelCheck == 0)
+    {
+      reportProgress("Computing Bounding Box Frequency Statistics", completedValues, count);
+    }
   }
   if(reader.failed())
   {
@@ -424,6 +454,10 @@ Result<> ScanSortedGroups(const std::filesystem::path& path, usize count, const 
   if(currentValue.has_value())
   {
     function(currentValue.value(), currentCount);
+  }
+  if(count >= k_ChunkSize)
+  {
+    reportProgress("Computing Bounding Box Frequency Statistics", completedValues, count);
   }
   return {};
 }
@@ -435,13 +469,15 @@ Result<> ScanSortedGroups(const std::filesystem::path& path, usize count, const 
  * @param destinationPath Identifies alternating merge output.
  * @param valueCount Gives the number of values.
  * @param shouldCancel Signals cancellation between bounded writes.
+ * @param reportProgress Reports completed writes in each merge pass.
  * @return The path that contains the current complete run, or an I/O error.
  *
  * Cancellation can leave an incomplete destination file. The caller observes
  * the cancellation flag and does not consume that file.
  */
 template <typename T>
-Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourcePath, const std::filesystem::path& destinationPath, usize valueCount, const std::atomic_bool& shouldCancel)
+Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourcePath, const std::filesystem::path& destinationPath, usize valueCount, const std::atomic_bool& shouldCancel,
+                                              const ScanProgress& reportProgress)
 {
   std::filesystem::path currentSource = sourcePath;
   std::filesystem::path currentDestination = destinationPath;
@@ -461,6 +497,7 @@ Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourc
     }
 
     usize outputCount = 0;
+    usize completedValues = 0;
     for(usize leftStart = 0; leftStart < valueCount;)
     {
       const usize leftCount = std::min(runWidth, valueCount - leftStart);
@@ -494,6 +531,8 @@ Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourc
           {
             return MakeErrorResult<std::filesystem::path>(-69323, fmt::format("ComputeBoundingBoxStats: Failed while writing temporary merge file '{}'.", currentDestination.string()));
           }
+          completedValues += outputCount;
+          reportProgress("Sorting Bounding Box Values: Merging Runs", completedValues, valueCount);
           outputCount = 0;
           if(shouldCancel)
           {
@@ -512,11 +551,13 @@ Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourc
     {
       return MakeErrorResult<std::filesystem::path>(-69323, fmt::format("ComputeBoundingBoxStats: Failed while writing temporary merge file '{}'.", currentDestination.string()));
     }
+    completedValues += outputCount;
     destinationStream.close();
     if(destinationStream.fail())
     {
       return MakeErrorResult<std::filesystem::path>(-69323, fmt::format("ComputeBoundingBoxStats: Failed while closing temporary merge file '{}'.", currentDestination.string()));
     }
+    reportProgress("Sorting Bounding Box Values: Merging Runs", completedValues, valueCount);
     std::swap(currentSource, currentDestination);
     runWidth = runWidth > valueCount / 2 ? valueCount : runWidth * 2;
   }
@@ -532,19 +573,20 @@ Result<std::filesystem::path> MergeSortedRuns(const std::filesystem::path& sourc
  * @param inputBuffer Supplies fixed-size read scratch.
  * @param shouldCancel Signals cancellation.
  * @param stats Receives the complete result after the scan.
+ * @param reportProgress Reports completed scan blocks.
  * @return Success, or a bulk-read error.
  *
  * Cancellation returns success and does not publish a partial cache entry.
  */
 template <typename T>
 Result<> StreamBaseStats(const ImageGeom& imageGeom, const AbstractDataStore<T>& inputStore, const std::array<usize, 6>& voxelIndices, T* inputBuffer, const std::atomic_bool& shouldCancel,
-                         StatsCache<T>& stats)
+                         StatsCache<T>& stats, const ScanProgress& reportProgress)
 {
   T minValue = std::numeric_limits<T>::max();
   T maxValue = std::numeric_limits<T>::lowest();
   T summationValue = static_cast<T>(0);
   usize count = 0;
-  Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, [&](T value) {
+  Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, reportProgress, "Computing Bounding Box Statistics", [&](T value) {
     count++;
     minValue = std::min(minValue, value);
     maxValue = std::max(maxValue, value);
@@ -579,6 +621,7 @@ Result<> StreamBaseStats(const ImageGeom& imageGeom, const AbstractDataStore<T>&
  * @param destinationPath Identifies alternating merge output.
  * @param shouldCancel Signals cancellation.
  * @param stats Receives base statistics after the complete input scan.
+ * @param reportProgress Reports completed scan and merge blocks.
  * @return The sorted-file path, or a storage or temporary-file error.
  *
  * Cancellation returns the source path as a successful value. The caller
@@ -587,7 +630,7 @@ Result<> StreamBaseStats(const ImageGeom& imageGeom, const AbstractDataStore<T>&
 template <typename T>
 Result<std::filesystem::path> StreamStatsAndSortedRuns(const ImageGeom& imageGeom, const AbstractDataStore<T>& inputStore, const std::array<usize, 6>& voxelIndices, T* inputBuffer, T* runBuffer,
                                                        const std::filesystem::path& sourcePath, const std::filesystem::path& destinationPath, const std::atomic_bool& shouldCancel,
-                                                       CompleteStatsCache<T>& stats)
+                                                       CompleteStatsCache<T>& stats, const ScanProgress& reportProgress)
 {
   std::ofstream runStream(sourcePath, std::ios::binary | std::ios::trunc);
   if(!runStream.is_open())
@@ -601,7 +644,7 @@ Result<std::filesystem::path> StreamStatsAndSortedRuns(const ImageGeom& imageGeo
   usize count = 0;
   usize runCount = 0;
   bool writeFailed = false;
-  Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, [&](T value) {
+  Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, reportProgress, "Sorting Bounding Box Values: Creating Runs", [&](T value) {
     count++;
     minValue = std::min(minValue, value);
     maxValue = std::max(maxValue, value);
@@ -647,7 +690,7 @@ Result<std::filesystem::path> StreamStatsAndSortedRuns(const ImageGeom& imageGeo
   {
     return {sourcePath};
   }
-  return MergeSortedRuns<T>(sourcePath, destinationPath, count, shouldCancel);
+  return MergeSortedRuns<T>(sourcePath, destinationPath, count, shouldCancel, reportProgress);
 }
 
 /**
@@ -658,20 +701,22 @@ Result<std::filesystem::path> StreamStatsAndSortedRuns(const ImageGeom& imageGeo
  * @param modesList Receives tied modes, or is null when mode is not requested.
  * @param targetBoundsIndex Selects the mode output list.
  * @param shouldCancel Signals cancellation.
+ * @param reportProgress Reports completed sorted-value batches.
  * @return Success, or a temporary-file read error.
  *
  * This path narrows the maximum mode frequency to int before it compares
  * frequencies. A count above INT_MAX can produce an incorrect or empty list.
  */
 template <typename T>
-Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, CompleteStatsCache<T>& stats, NeighborList<T>* modesList, usize targetBoundsIndex, const std::atomic_bool& shouldCancel)
+Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, CompleteStatsCache<T>& stats, NeighborList<T>* modesList, usize targetBoundsIndex, const std::atomic_bool& shouldCancel,
+                                 const ScanProgress& reportProgress)
 {
   const usize medianPosition = (stats.count / 2) + 1;
   usize cumulativeFrequency = 0;
   uint64 maxCount = 0;
   std::optional<T> previousValue;
   bool medianFound = false;
-  Result<> result = ScanSortedGroups<T>(sortedPath, stats.count, shouldCancel, [&](T value, uint64 frequency) {
+  Result<> result = ScanSortedGroups<T>(sortedPath, stats.count, shouldCancel, reportProgress, [&](T value, uint64 frequency) {
     stats.uniqueValCount++;
     maxCount = std::max(maxCount, frequency);
     cumulativeFrequency += frequency;
@@ -696,7 +741,7 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
 
   // Preserve the direct implementation's narrowing conversion before mode comparisons.
   const int modalCount = maxCount;
-  return ScanSortedGroups<T>(sortedPath, stats.count, shouldCancel, [&](T value, uint64 frequency) {
+  return ScanSortedGroups<T>(sortedPath, stats.count, shouldCancel, reportProgress, [&](T value, uint64 frequency) {
     if(frequency == modalCount)
     {
       modesList->addEntry(targetBoundsIndex, value);
@@ -715,6 +760,8 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
  * @param statsVector Supplies counts and sums.
  * @param stdDevStore Receives completed standard deviations immediately.
  * @param shouldCancel Signals cancellation.
+ * @param reportProgress Reports completed scan blocks.
+ * @param reportCompleted Reports each fully processed bound.
  * @return Success, or a bulk-read error.
  *
  * Cancellation returns success. Values written for earlier boxes remain in
@@ -722,7 +769,7 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
  */
 template <typename T, class CacheT>
 Result<> StreamStdDeviation(const ImageGeom& imageGeom, const AbstractDataStore<T>& inputStore, nonstd::span<const float32> unifiedBounds, T* inputBuffer, const std::vector<CacheT>& statsVector,
-                            Float32AbstractDataStore& stdDevStore, const std::atomic_bool& shouldCancel)
+                            Float32AbstractDataStore& stdDevStore, const std::atomic_bool& shouldCancel, const ScanProgress& reportProgress, const BoundsProgress& reportCompleted)
 {
   for(usize targetBoundsIndex = 0; targetBoundsIndex < statsVector.size(); targetBoundsIndex++)
   {
@@ -732,18 +779,21 @@ Result<> StreamStdDeviation(const ImageGeom& imageGeom, const AbstractDataStore<
     }
     if(statsVector[targetBoundsIndex].count == 0)
     {
+      reportCompleted();
       continue;
     }
 
     const std::array<usize, 6> voxelIndices = GetVoxelIndices(unifiedBounds, targetBoundsIndex, imageGeom);
     const float32 meanValue = statsVector[targetBoundsIndex].summationValue / static_cast<float32>(statsVector[targetBoundsIndex].count);
     float64 sumOfDiffs = 0.0f;
-    Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, [&](T value) { sumOfDiffs += static_cast<float64>((value - meanValue) * (value - meanValue)); });
+    Result<> result = ForEachBoxValue(imageGeom, inputStore, voxelIndices, inputBuffer, shouldCancel, reportProgress, "Computing Bounding Box Standard Deviation",
+                                      [&](T value) { sumOfDiffs += static_cast<float64>((value - meanValue) * (value - meanValue)); });
     if(result.invalid() || shouldCancel)
     {
       return result;
     }
     stdDevStore.setValue(targetBoundsIndex, static_cast<float32>(std::sqrt(sumOfDiffs / static_cast<float64>(statsVector[targetBoundsIndex].count))));
+    reportCompleted();
   }
   return {};
 }
@@ -898,9 +948,26 @@ struct ExecuteBoundsStatsCalculationsScanline
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, const Float32AbstractDataStore& unifiedBoundsStore,
-                      const IDataArray& inputIDataArray, const std::atomic_bool& shouldCancel)
+                      const IDataArray& inputIDataArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const usize numBounds = unifiedBoundsStore.getNumberOfTuples();
+    ThrottledMessageHandler progressThrottle(messageHandler);
+    std::mutex progressMutex;
+    usize completedBounds = 0;
+    const ScanProgress reportProgress = [&](std::string_view label, usize current, usize total) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.updatePercent(label, current, total);
+    };
+    const BoundsProgress reportCompleted = [&] {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.updateCount(++completedBounds);
+    };
+    const auto startPhase = [&](const std::string& label) {
+      messageHandler.sendInfoMessage(label);
+      completedBounds = 0;
+      progressThrottle.reset(numBounds, label);
+    };
+    startPhase("Computing Bounding Box Statistics");
     const usize numBoundValues = unifiedBoundsStore.getSize();
     auto unifiedBounds = std::make_unique<float32[]>(numBoundValues);
     Result<> boundsResult = unifiedBoundsStore.copyIntoBuffer(0, nonstd::span<float32>(unifiedBounds.get(), numBoundValues));
@@ -914,6 +981,7 @@ struct ExecuteBoundsStatsCalculationsScanline
     const bool calculateFrequencyStats = inputValues->CalculateMedian || inputValues->CalculateNumUniqueValues || inputValues->CalculateMode;
     if(calculateFrequencyStats)
     {
+      messageHandler.sendInfoMessage("Sorting Bounding Box Values for Frequency Statistics");
       std::error_code errorCode;
       const std::filesystem::path tempRoot = std::filesystem::temp_directory_path(errorCode);
       if(errorCode)
@@ -943,30 +1011,41 @@ struct ExecuteBoundsStatsCalculationsScanline
           return {};
         }
         const std::array<usize, 6> voxelIndices = GetVoxelIndices(nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), targetBoundsIndex, imageGeom);
-        Result<std::filesystem::path> sortResult =
-            StreamStatsAndSortedRuns(imageGeom, inputStore, voxelIndices, inputBuffer.get(), runBuffer.get(), sourcePath, destinationPath, shouldCancel, statsVector[targetBoundsIndex]);
+        Result<std::filesystem::path> sortResult = StreamStatsAndSortedRuns(imageGeom, inputStore, voxelIndices, inputBuffer.get(), runBuffer.get(), sourcePath, destinationPath, shouldCancel,
+                                                                            statsVector[targetBoundsIndex], reportProgress);
         if(sortResult.invalid())
         {
           return ConvertResult(std::move(sortResult));
         }
+        if(shouldCancel)
+        {
+          return {};
+        }
         if(statsVector[targetBoundsIndex].count > 0)
         {
-          Result<> frequencyResult = CalculateFrequencyStats(sortResult.value(), statsVector[targetBoundsIndex], modesList, targetBoundsIndex, shouldCancel);
+          Result<> frequencyResult = CalculateFrequencyStats(sortResult.value(), statsVector[targetBoundsIndex], modesList, targetBoundsIndex, shouldCancel, reportProgress);
           if(frequencyResult.invalid() || shouldCancel)
           {
             return frequencyResult;
           }
         }
+        reportCompleted();
       }
 
       if(inputValues->CalculateStdDev)
       {
+        startPhase("Computing Bounding Box Standard Deviation");
         auto& stdDevStore = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
-        Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel);
+        Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel,
+                                                   reportProgress, reportCompleted);
         if(stdDevResult.invalid() || shouldCancel)
         {
           return stdDevResult;
         }
+      }
+      if(shouldCancel)
+      {
+        return {};
       }
       return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
     }
@@ -979,21 +1058,28 @@ struct ExecuteBoundsStatsCalculationsScanline
         return {};
       }
       const std::array<usize, 6> voxelIndices = GetVoxelIndices(nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), targetBoundsIndex, imageGeom);
-      Result<> statsResult = StreamBaseStats(imageGeom, inputStore, voxelIndices, inputBuffer.get(), shouldCancel, statsVector[targetBoundsIndex]);
+      Result<> statsResult = StreamBaseStats(imageGeom, inputStore, voxelIndices, inputBuffer.get(), shouldCancel, statsVector[targetBoundsIndex], reportProgress);
       if(statsResult.invalid() || shouldCancel)
       {
         return statsResult;
       }
+      reportCompleted();
     }
 
     if(inputValues->CalculateStdDev)
     {
+      startPhase("Computing Bounding Box Standard Deviation");
       auto& stdDevStore = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
-      Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel);
+      Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel,
+                                                 reportProgress, reportCompleted);
       if(stdDevResult.invalid() || shouldCancel)
       {
         return stdDevResult;
       }
+    }
+    if(shouldCancel)
+    {
+      return {};
     }
     return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
   }
@@ -1026,8 +1112,10 @@ Result<> ComputeBoundingBoxStatsScanline::operator()()
   }
   if(m_InputValues->CalculateMode)
   {
-    return ExecuteNeighborFunction(ExecuteBoundsStatsCalculationsScanline<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel);
+    return ExecuteNeighborFunction(ExecuteBoundsStatsCalculationsScanline<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel,
+                                   m_MessageHandler);
   }
 
-  return ExecuteDataFunctionNoBool(ExecuteBoundsStatsCalculationsScanline<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel);
+  return ExecuteDataFunctionNoBool(ExecuteBoundsStatsCalculationsScanline<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel,
+                                   m_MessageHandler);
 }

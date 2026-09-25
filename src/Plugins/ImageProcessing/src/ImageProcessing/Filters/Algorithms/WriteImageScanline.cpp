@@ -14,6 +14,7 @@
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ScaleBarRenderer.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -176,10 +177,11 @@ uint64 PreferredSliceGroupBytes(usize planeIndex, uint64 sliceBytes)
  * @param dimY Number of source tuples on the Y axis.
  * @param dimZ Number of source tuples on the Z axis.
  * @param numComponents Number of interleaved components in each tuple.
+ * @param reportRows Optional synchronous callback for completed output rows.
  */
 template <typename T>
 void CopySliceFromGroup(nonstd::span<const T> groupValues, std::vector<uint8>& sliceBuffer, usize localSliceIndex, usize groupSliceCount, usize planeIndex, usize dimX, usize dimY, usize dimZ,
-                        usize numComponents)
+                        usize numComponents, const std::function<void(usize, usize)>& reportRows = {})
 {
   const auto copyValues = [&sliceBuffer, &groupValues](usize destinationOffset, usize sourceOffset, usize valueCount) {
     if constexpr(std::is_same_v<T, bool>)
@@ -198,7 +200,15 @@ void CopySliceFromGroup(nonstd::span<const T> groupValues, std::vector<uint8>& s
   if(planeIndex == 0)
   {
     const usize sliceValues = dimX * dimY * numComponents;
-    copyValues(0, localSliceIndex * sliceValues, sliceValues);
+    const usize rowValues = dimX * numComponents;
+    for(usize row = 0; row < dimY; ++row)
+    {
+      copyValues(row * rowValues, localSliceIndex * sliceValues + row * rowValues, rowValues);
+      if(reportRows)
+      {
+        reportRows(row + 1, dimY);
+      }
+    }
     return;
   }
 
@@ -209,6 +219,10 @@ void CopySliceFromGroup(nonstd::span<const T> groupValues, std::vector<uint8>& s
     {
       const usize sourceOffset = (zIndex * groupSliceCount + localSliceIndex) * rowValues;
       copyValues(zIndex * rowValues, sourceOffset, rowValues);
+      if(reportRows)
+      {
+        reportRows(zIndex + 1, dimZ);
+      }
     }
     return;
   }
@@ -220,6 +234,10 @@ void CopySliceFromGroup(nonstd::span<const T> groupValues, std::vector<uint8>& s
       const usize sourceOffset = ((zIndex * dimY + yIndex) * groupSliceCount + localSliceIndex) * numComponents;
       const usize destinationOffset = (zIndex * dimY + yIndex) * numComponents;
       copyValues(destinationOffset, sourceOffset, numComponents);
+    }
+    if(reportRows)
+    {
+      reportRows(zIndex + 1, dimZ);
     }
   }
 }
@@ -245,11 +263,13 @@ struct WriteDirectVolumeFunctor
    * @param dataArrayPath Identifies the source array.
    * @param shouldCancel Stops processing between output slices.
    * @param writeSlice Writes one packed output slice.
+   * @param reportRows Optional synchronous callback for completed output rows.
    * @return Error from the image writer.
    */
   template <typename T>
   Result<> operator()(const IDataArray& dataArray, usize planeIndex, usize dimX, usize dimY, usize dimZ, usize sliceCount, usize sliceW, usize sliceH, usize numComponents,
-                      const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice)
+                      const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice,
+                      const std::function<void(usize, usize)>& reportRows = {})
   {
     const auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize sliceValueCount = sliceW * sliceH * numComponents;
@@ -291,7 +311,7 @@ struct WriteDirectVolumeFunctor
         {
           return {};
         }
-        CopySliceFromGroup(nonstd::span<const T>(groupValues.get(), groupValueCount), sliceBuffer, localSliceIndex, groupSliceCount, planeIndex, dimX, dimY, dimZ, numComponents);
+        CopySliceFromGroup(nonstd::span<const T>(groupValues.get(), groupValueCount), sliceBuffer, localSliceIndex, groupSliceCount, planeIndex, dimX, dimY, dimZ, numComponents, reportRows);
         if(Result<> result = writeSlice(sliceBuffer, firstSlice + localSliceIndex); result.invalid())
         {
           return result;
@@ -352,12 +372,15 @@ struct ColorizeVolumeFunctor
    * @param invalidColor RGB value for masked pixels.
    * @param shouldCancel Stops processing between output slices.
    * @param writeSlice Writes one packed RGB output slice.
+   * @param reportRange Optional synchronous callback for completed range-scan values.
+   * @param reportRows Optional synchronous callback for completed output rows.
    * @return Error from source I/O or the image writer.
    */
   template <typename T>
   Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, usize sliceCount, usize sliceW, usize sliceH, const DataPath& dataArrayPath,
                       const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors, const IDataArray* maskArray, const std::vector<uint8>& invalidColor,
-                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice)
+                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const std::function<void(usize, usize)>& reportRange = {},
+                      const std::function<void(usize, usize)>& reportRows = {})
   {
     const auto& dataStore = dataArrayRef.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numTuples = dataStore.getNumberOfTuples();
@@ -375,6 +398,10 @@ struct ColorizeVolumeFunctor
     bool initialized = false;
     for(usize offset = 0; offset < numTuples; offset += pageElements)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       const usize count = std::min(pageElements, numTuples - offset);
       if(Result<> result = dataStore.copyIntoBuffer(offset, nonstd::span<T>(valuePage.get(), count)); result.invalid())
       {
@@ -393,6 +420,10 @@ struct ColorizeVolumeFunctor
           arrayMin = std::min(arrayMin, valuePage[i]);
           arrayMax = std::max(arrayMax, valuePage[i]);
         }
+      }
+      if(reportRange)
+      {
+        reportRange(offset + count, numTuples);
       }
     }
 
@@ -470,6 +501,10 @@ struct ColorizeVolumeFunctor
 
         for(usize row = 0; row < sliceH; ++row)
         {
+          if(shouldCancel)
+          {
+            return {};
+          }
           for(usize col = 0; col < sliceW; ++col)
           {
             const usize groupValueIndex = GroupSliceValueIndex(planeIndex, localSliceIndex, groupSliceCount, row, col, sliceW, sliceH);
@@ -491,6 +526,10 @@ struct ColorizeVolumeFunctor
             sliceBuffer[dst + 1] = rgb[1];
             sliceBuffer[dst + 2] = rgb[2];
           }
+          if(reportRows)
+          {
+            reportRows(row + 1, sliceH);
+          }
         }
 
         if(Result<> result = writeSlice(sliceBuffer, firstSlice + localSliceIndex); result.invalid())
@@ -505,10 +544,11 @@ struct ColorizeVolumeFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-WriteImageScanline::WriteImageScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel, const WriteImageInputValues& inputValues)
+WriteImageScanline::WriteImageScanline(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const WriteImageInputValues& inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
+, m_MessageHandler(messageHandler)
 {
 }
 
@@ -617,6 +657,18 @@ Result<> WriteImageScanline::operator()()
     metadata.spacing = FloatVec3{spacing[1], spacing[2], 1.0f};
   }
 
+  // All dispatch and image callbacks below run synchronously on this thread.
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(sliceCount, "Writing image slices");
+  m_MessageHandler.sendInfoMessage("Preparing and writing image slices");
+  const std::function<void(usize, usize)> reportRange = [&](usize current, usize total) { progressThrottle.updatePercent("Computing color range", current, total); };
+  const std::function<void(usize, usize)> reportRows = [&](usize current, usize total) {
+    if(sliceCount == 1)
+    {
+      progressThrottle.updatePercent("Preparing image rows", current, total);
+    }
+  };
+
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
     // A single-slice volume writes exactly the user-specified file name; the index suffix is only
@@ -649,12 +701,25 @@ Result<> WriteImageScanline::operator()()
       writeBufferPtr = &paddedBuffer;
     }
 
+    if(sliceCount == 1)
+    {
+      m_MessageHandler.sendInfoMessage("Encoding image file");
+    }
     auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), *writeBufferPtr, metadata);
     if(writeResult.invalid())
     {
       return writeResult;
     }
-    return atomicFile.commit();
+    auto commitResult = atomicFile.commit();
+    if(commitResult.valid())
+    {
+      progressThrottle.updateCount(slice + 1);
+      if(slice + 1 == sliceCount)
+      {
+        m_MessageHandler.sendProgressCount("Writing image slices", sliceCount, sliceCount);
+      }
+    }
+    return commitResult;
   };
 
   if(m_InputValues.createColorTable)
@@ -685,9 +750,10 @@ Result<> WriteImageScanline::operator()()
     }
 
     return ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, m_InputValues.imageDataArrayPath, binPoints,
-                               controlPoints, numControlColors, maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice));
+                               controlPoints, numControlColors, maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange,
+                               reportRows);
   }
 
   return ExecuteDataFunction(WriteDirectVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, nComp, m_InputValues.imageDataArrayPath,
-                             m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice));
+                             m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRows);
 }

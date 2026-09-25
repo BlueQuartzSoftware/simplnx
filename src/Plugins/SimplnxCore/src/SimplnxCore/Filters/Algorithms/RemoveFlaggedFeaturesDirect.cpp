@@ -12,9 +12,9 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -69,14 +69,14 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
  * @param replacementCount Receives the number of negative voxels that have a non-negative source.
  * @param unresolvedCount Receives the number of negative voxels without a non-negative source.
  * @param shouldCancel Stops before later Z slices when true.
- * @param messageHelper Creates a throttled progress messenger.
+ * @param messageHandler Creates a throttled progress messenger.
  * @return True if any negative Feature ID remains unresolved; false after cancellation or none.
  * @pre Flat voxel indexes fit in int32.
  */
 bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, usize& replacementCount, usize& unresolvedCount,
-                       const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -107,7 +107,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
+      progressThrottle.updatePercent("Processing Image", zIdx, dims[2]);
       progressCounter = 0;
     }
     progressCounter++;
@@ -314,7 +314,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     return {};
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> result;
 
   if(function != Functionality::Extract)
@@ -341,7 +341,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
   // Extract and ExtractThenRemove create one cropped geometry per flagged feature.
   if(function != Functionality::Remove)
   {
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
 
     {
       ComputeFeatureRectFilter filter;
@@ -422,7 +422,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
       DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
-      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {}", i)});
+      m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {}", i)});
       taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath, cropTaskResult));
 
       // Stop scheduling crops once one has failed, so the failure is reported instead of
@@ -456,7 +456,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return MergeResults(std::move(result), std::move(cropResult));
     }
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }
 
   if(m_ShouldCancel)
@@ -467,7 +467,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
   // Remove and ExtractThenRemove modify the source feature data.
   if(function != Functionality::Extract)
   {
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
 
     std::vector<int32> neighbors((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()), -1);
     std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
@@ -506,18 +506,18 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       do
       {
         count++;
-        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+        m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
         usize replacementCount = 0;
         usize unresolvedCount = 0;
-        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, replacementCount, unresolvedCount, m_ShouldCancel, messageHelper);
+        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, replacementCount, unresolvedCount, m_ShouldCancel, messageHandler);
 
         if(m_ShouldCancel)
         {
           return result;
         }
 
-        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCount)});
+        m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCount)});
         const usize filledCellCount = FindVoxelArrays(featureIds, neighbors, voxelArrays, m_ShouldCancel);
         if(filledCellCount == 0 && shouldLoop)
         {
@@ -537,7 +537,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return result;
     }
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
     Result<> removeResult = RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler, m_ShouldCancel);
     if(removeResult.invalid())

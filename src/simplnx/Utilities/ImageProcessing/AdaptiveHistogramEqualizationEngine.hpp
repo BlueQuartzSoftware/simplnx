@@ -8,9 +8,9 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <type_traits>
@@ -582,7 +583,8 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
 
 template <class T, class BlockFunction>
 Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const std::array<usize, 3>& radius,
-                                                const AdaptiveHistogramEqualization2DPlan& plan, const std::atomic_bool& shouldCancel, BlockFunction&& blockFunction)
+                                                const AdaptiveHistogramEqualization2DPlan& plan, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle,
+                                                BlockFunction&& blockFunction)
 {
   auto inputBuffer = std::make_unique<T[]>(plan.inputBufferValues);
   std::unique_ptr<uint64[]> horizontalBuffer;
@@ -593,6 +595,7 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
   auto outputBuffer = std::make_unique<T[]>(plan.outputBufferValues);
   const usize dimX = dims[0];
   const usize dimY = dims[1];
+  progressThrottle.reset(dimX * dimY, "Computing 2D adaptive histogram equalization");
   const usize yStep = plan.fullWidth ? plan.coreRows : 1;
   const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
   for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
@@ -655,6 +658,7 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
           return result;
         }
       }
+      progressThrottle.incrementPercent(outputRows * outputColumns);
     }
   }
   if(plan.fixedOutput)
@@ -1037,11 +1041,13 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     }
   }
 
-  MessageHelper messageHelper(messageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(dimZ);
-  progressHelper.setProgressMessageTemplate("Applying adaptive histogram equalization: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  messageHandler.sendInfoMessage("Measuring adaptive histogram input range");
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  std::mutex progressMutex;
+  const auto sendThreadSafeProgress = [&](usize delta) {
+    const std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.incrementPercent(delta);
+  };
 
   const bool useBounded2D = dimZ == 1 && (in.getStoreType() == IDataStore::StoreType::OutOfCore || out.getStoreType() == IDataStore::StoreType::OutOfCore);
   std::unique_ptr<T[]> outPlane;
@@ -1064,6 +1070,9 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
   }
   const float64 minValue = static_cast<float64>(statsResult.value().min);
   const float64 iscale = static_cast<float64>(statsResult.value().max) - minValue;
+
+  messageHandler.sendInfoMessage("Applying adaptive histogram equalization");
+  progressThrottle.reset(volumeValues, "Computing adaptive histogram equalization");
 
   // Constant image (max == min): ITK computes 0/0 = NaN. Pass the input through unchanged instead (documented
   // deviation). Bounded plane-copy loop, reusing outPlane.
@@ -1096,6 +1105,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
         {
           return result;
         }
+        progressThrottle.incrementPercent(count);
       }
       return {};
     }
@@ -1113,6 +1123,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
       {
         return r;
       }
+      progressThrottle.incrementPercent(sliceValues);
     }
     return {};
   }
@@ -1187,7 +1198,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
           return ConvertInvalidResult<void>(std::move(planResult));
         }
         const float unitDifferenceTerm = gLut[static_cast<usize>(1 - dMin)];
-        return detail::ExecuteAdaptiveHistogramEqualization2D<uint8>(in, out, dims, radius, planResult.value(), shouldCancel,
+        return detail::ExecuteAdaptiveHistogramEqualization2D<uint8>(in, out, dims, radius, planResult.value(), shouldCancel, progressThrottle,
                                                                      [&](const uint8* inputBlock, uint8* outputBlock, uint64* horizontalBlock, usize inputXBegin, usize inputYBegin, usize inputWidth,
                                                                          usize inputRows, usize outputXBegin, usize outputYBegin, usize outputWidth, usize outputRows) {
                                                                        detail::CalculateAdaptiveHistogramEqualizationLinear2DBlock(
@@ -1417,6 +1428,10 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
               const float64 result = iscale * (localSum / static_cast<float64>(count) + 0.5) + minValue;
               outputSlot[index] = static_cast<uint8>(result);
             }
+            if(dimZ == 1)
+            {
+              sendThreadSafeProgress(dimX);
+            }
           }
         };
         ParallelDataAlgorithm outputAlgorithm;
@@ -1438,7 +1453,10 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
             return r;
           }
         }
-        progressMessenger.sendProgressMessage(1);
+        if(dimZ > 1)
+        {
+          progressThrottle.incrementPercent(sliceValues, 1);
+        }
 
         if(z + 1 == dimZ)
         {
@@ -1488,7 +1506,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
       return ConvertInvalidResult<void>(std::move(planResult));
     }
     return detail::ExecuteAdaptiveHistogramEqualization2D<T>(
-        in, out, dims, radius, planResult.value(), shouldCancel,
+        in, out, dims, radius, planResult.value(), shouldCancel, progressThrottle,
         [&](const T* inputBlock, T* outputBlock, uint64*, usize inputXBegin, usize inputYBegin, usize inputWidth, usize, usize outputXBegin, usize outputYBegin, usize outputWidth, usize outputRows) {
           ParallelDataAlgorithm parallelAlgorithm;
           parallelAlgorithm.setRange(0, outputRows * outputWidth);
@@ -1563,6 +1581,26 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
 
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, sliceValues);
+    const auto executePlane = [&](const auto& body) {
+      if(dimZ > 1)
+      {
+        parallelAlgorithm.execute(body);
+        return;
+      }
+      parallelAlgorithm.execute([&](const Range& range) {
+        constexpr usize k_ProgressBatchValues = 4096;
+        for(usize begin = range.min(); begin < range.max();)
+        {
+          const usize end = begin + std::min(k_ProgressBatchValues, range.max() - begin);
+          body(Range(begin, end));
+          if(!shouldCancel)
+          {
+            sendThreadSafeProgress(end - begin);
+          }
+          begin = end;
+        }
+      });
+    };
 
     // Integer bounded-range LUT fast path when active; otherwise the exact per-neighbor path (float T, or an
     // integer span above the cap). The if constexpr keeps the LUT body from being instantiated for float T.
@@ -1571,48 +1609,51 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     {
       if(!gLut.empty())
       {
-        parallelAlgorithm.execute(detail::AdaptiveHistogramEqualizationLutPlaneBody<T>{.slab = slab.get(),
-                                                                                       .outPlane = outPlane.get(),
-                                                                                       .dimX = dimX,
-                                                                                       .dimY = dimY,
-                                                                                       .dimZ = dimZ,
-                                                                                       .rx = rx,
-                                                                                       .ry = ry,
-                                                                                       .rz = rz,
-                                                                                       .zLo = zLo,
-                                                                                       .z = z,
-                                                                                       .minValue = minValue,
-                                                                                       .iscale = iscale,
-                                                                                       .beta = beta,
-                                                                                       .gLut = gLut.data(),
-                                                                                       .dMin = dMin,
-                                                                                       .lutSize = gLut.size()});
+        executePlane(detail::AdaptiveHistogramEqualizationLutPlaneBody<T>{.slab = slab.get(),
+                                                                          .outPlane = outPlane.get(),
+                                                                          .dimX = dimX,
+                                                                          .dimY = dimY,
+                                                                          .dimZ = dimZ,
+                                                                          .rx = rx,
+                                                                          .ry = ry,
+                                                                          .rz = rz,
+                                                                          .zLo = zLo,
+                                                                          .z = z,
+                                                                          .minValue = minValue,
+                                                                          .iscale = iscale,
+                                                                          .beta = beta,
+                                                                          .gLut = gLut.data(),
+                                                                          .dMin = dMin,
+                                                                          .lutSize = gLut.size()});
         executed = true;
       }
     }
     if(!executed)
     {
-      parallelAlgorithm.execute(detail::AdaptiveHistogramEqualizationPlaneBody<T>{.slab = slab.get(),
-                                                                                  .outPlane = outPlane.get(),
-                                                                                  .dimX = dimX,
-                                                                                  .dimY = dimY,
-                                                                                  .dimZ = dimZ,
-                                                                                  .rx = rx,
-                                                                                  .ry = ry,
-                                                                                  .rz = rz,
-                                                                                  .zLo = zLo,
-                                                                                  .z = z,
-                                                                                  .minValue = minValue,
-                                                                                  .iscale = iscale,
-                                                                                  .alpha = alpha,
-                                                                                  .beta = beta});
+      executePlane(detail::AdaptiveHistogramEqualizationPlaneBody<T>{.slab = slab.get(),
+                                                                     .outPlane = outPlane.get(),
+                                                                     .dimX = dimX,
+                                                                     .dimY = dimY,
+                                                                     .dimZ = dimZ,
+                                                                     .rx = rx,
+                                                                     .ry = ry,
+                                                                     .rz = rz,
+                                                                     .zLo = zLo,
+                                                                     .z = z,
+                                                                     .minValue = minValue,
+                                                                     .iscale = iscale,
+                                                                     .alpha = alpha,
+                                                                     .beta = beta});
     }
 
     if(Result<> r = out.copyFromBuffer(z * sliceValues, nonstd::span<const T>(outPlane.get(), sliceValues)); r.invalid())
     {
       return r;
     }
-    progressMessenger.sendProgressMessage(1);
+    if(dimZ > 1 && !shouldCancel)
+    {
+      progressThrottle.incrementPercent(sliceValues, 1);
+    }
   }
   return {};
 }

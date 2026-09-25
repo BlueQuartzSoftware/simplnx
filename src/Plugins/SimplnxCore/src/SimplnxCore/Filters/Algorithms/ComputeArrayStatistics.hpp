@@ -8,8 +8,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <chrono>
 #include <mutex>
 
 namespace nx::core
@@ -113,11 +113,31 @@ public:
    */
   Result<> operator()();
 
+  /**
+   * @brief Resets aggregate feature-statistics progress before workers start.
+   * @param totalWork Total feature-tuple scans and feature finalizations.
+   */
+  void resetProgress(usize totalWork);
+
+  /**
+   * @brief Adds completed work under the progress mutex.
+   * @param completedWork Completed feature-tuple scans or feature finalizations.
+   */
+  void sendThreadSafeProgressMessage(usize completedWork);
+
+  /**
+   * @brief Thread-safe guaranteed status message. Safe to call from the parallel range workers.
+   * @param message
+   */
+  void sendThreadSafeInfoMessage(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const ComputeArrayStatisticsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

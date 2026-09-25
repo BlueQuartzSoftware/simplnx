@@ -10,9 +10,9 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -3123,11 +3123,8 @@ public:
     }
     const usize sliceValues = plan.sliceValues;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
-    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
 
     if(dimZ == 1)
     {
@@ -3150,7 +3147,7 @@ public:
                                                 });
       if(result.valid() && !m_ShouldCancel)
       {
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
       }
       return result;
     }
@@ -3182,7 +3179,7 @@ public:
         {
           return r;
         }
-        progressMessenger.sendProgressMessage(outputDepth);
+        progressThrottle.incrementPercent(outputDepth, 1);
       }
       return {};
     }
@@ -3275,7 +3272,7 @@ public:
       {
         return r;
       }
-      progressMessenger.sendProgressMessage(outputDepth);
+      progressThrottle.incrementPercent(outputDepth, 1);
     }
     return {};
   }
@@ -3363,10 +3360,16 @@ private:
     const usize sliceValues = dimX * dimY;
     const usize vol = sliceValues * dimZ;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
+
+    // The throttle is not thread-safe, so every worker reports through this seam, which serializes the
+    // update behind a mutex. The seam replaces the per-worker messenger the shared counter needed before.
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&progressThrottle, &progressMutex](usize delta) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(delta, 1);
+    };
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): pass the
     // input through unchanged, byte-for-byte identical to MorphScanline so the two paths still agree. This
@@ -3537,10 +3540,9 @@ private:
       {
         return;
       }
-      // Per-worker scratch: its own output plane, its own ProgressMessenger (the messenger is not shared-
-      // thread-safe, but the progress COUNTER it feeds is atomic), and its own three nested histograms.
+      // Per-worker scratch: its own output plane and its own three nested histograms. Progress goes
+      // through the shared thread-safe seam.
       auto outPlane = std::make_unique<T[]>(sliceValues);
-      auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
       // Seed this slab's plane-start window at its OWN origin corner (0,0,zBegin), independent of every other
       // slab. histY (line start) and histX (working window) are declared ONCE per worker and reset by
@@ -3589,7 +3591,7 @@ private:
           }
           return;
         }
-        progressMessenger.sendProgressMessage(1);
+        sendThreadSafeProgress(1);
       }
     };
 
@@ -4192,11 +4194,8 @@ public:
     }
     const usize sliceValues = plan.sliceValues;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
-    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
 
     if(dimZ == 1)
     {
@@ -4224,7 +4223,7 @@ public:
             return result;
           }
         }
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
         return {};
       }
 
@@ -4246,7 +4245,7 @@ public:
                                                 });
       if(result.valid() && !m_ShouldCancel)
       {
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
       }
       return result;
     }
@@ -4270,7 +4269,7 @@ public:
         {
           return r;
         }
-        progressMessenger.sendProgressMessage(outputDepth);
+        progressThrottle.incrementPercent(outputDepth, 1);
       }
       return {};
     }
@@ -4347,7 +4346,7 @@ public:
       {
         return r;
       }
-      progressMessenger.sendProgressMessage(outputDepth);
+      progressThrottle.incrementPercent(outputDepth, 1);
     }
     return {};
   }
@@ -4417,10 +4416,16 @@ public:
     const usize sliceValues = dimX * dimY;
     const usize vol = sliceValues * dimZ;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
+
+    // The throttle is not thread-safe, so every worker reports through this seam, which serializes the
+    // update behind a mutex. The seam replaces the per-worker messenger the shared counter needed before.
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&progressThrottle, &progressMutex](usize delta) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(delta, 1);
+    };
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): the gradient
     // is in - in == 0 at every voxel, byte-for-byte identical to MorphGradientScanline. This rare edge case
@@ -4580,10 +4585,9 @@ public:
       {
         return;
       }
-      // Per-worker scratch: its own output plane, its own ProgressMessenger (the messenger is not shared-thread-
-      // safe, but the progress COUNTER it feeds is atomic), and its own three nested histograms.
+      // Per-worker scratch: its own output plane and its own three nested histograms. Progress goes
+      // through the shared thread-safe seam.
       auto outPlane = std::make_unique<T[]>(sliceValues);
-      auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
       // Seed this slab's plane-start window at its OWN origin corner (0,0,zBegin), independent of every other
       // slab. histY (line start) and histX (working window) are declared ONCE per worker and reset by assignment
@@ -4631,7 +4635,7 @@ public:
           }
           return;
         }
-        progressMessenger.sendProgressMessage(1);
+        sendThreadSafeProgress(1);
       }
     };
 
@@ -4821,11 +4825,8 @@ public:
     }
     const usize sliceValues = plan.sliceValues;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
-    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
 
     if(dimZ == 1)
     {
@@ -4851,7 +4852,7 @@ public:
                                                 });
       if(result.valid() && !m_ShouldCancel)
       {
-        progressMessenger.sendProgressMessage(1);
+        progressThrottle.incrementPercent(1, 1);
       }
       return result;
     }
@@ -4883,7 +4884,7 @@ public:
         {
           return r;
         }
-        progressMessenger.sendProgressMessage(outputDepth);
+        progressThrottle.incrementPercent(outputDepth, 1);
       }
       return {};
     }
@@ -5008,7 +5009,7 @@ public:
       {
         return r;
       }
-      progressMessenger.sendProgressMessage(outputDepth);
+      progressThrottle.incrementPercent(outputDepth, 1);
     }
     return {};
   }
@@ -5096,10 +5097,16 @@ private:
     const usize sliceValues = dimX * dimY;
     const usize vol = sliceValues * dimZ;
 
-    MessageHelper messageHelper(m_MessageHandler);
-    auto progressHelper = messageHelper.createProgressMessageHelper();
-    progressHelper.setMaxProgresss(dimZ);
-    progressHelper.setProgressMessageTemplate("Applying morphology filter: {:.1f}%");
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(dimZ, "Applying morphology filter");
+
+    // The throttle is not thread-safe, so every worker reports through this seam, which serializes the
+    // update behind a mutex. The seam replaces the per-worker messenger the shared counter needed before.
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&progressThrottle, &progressMutex](usize delta) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(delta, 1);
+    };
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): pass the
     // input through unchanged, byte-for-byte identical to BinaryMorphScanline so the two paths still agree.
@@ -5280,10 +5287,9 @@ private:
       {
         return;
       }
-      // Per-worker scratch: its own output plane, its own ProgressMessenger (the messenger is not shared-
-      // thread-safe, but the progress COUNTER it feeds is atomic), and its own three nested accumulators.
+      // Per-worker scratch: its own output plane and its own three nested accumulators. Progress goes
+      // through the shared thread-safe seam.
       auto outPlane = std::make_unique<T[]>(sliceValues);
-      auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
       // Seed this slab's plane-start window at its OWN origin corner (0,0,zBegin), independent of every other
       // slab. accY (line start) and accX (working window) are declared ONCE per worker and reset by
@@ -5332,7 +5338,7 @@ private:
           }
           return;
         }
-        progressMessenger.sendProgressMessage(1);
+        sendThreadSafeProgress(1);
       }
     };
 

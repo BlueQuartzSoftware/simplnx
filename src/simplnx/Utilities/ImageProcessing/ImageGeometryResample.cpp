@@ -17,7 +17,6 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -53,6 +52,9 @@ void CalculateResampledSpacing(const DataStructure& dataStructure, ResampleImage
     inputValues.Spacing[2] = spacing[2] * static_cast<float32>(dimensions[2]) / static_cast<float32>(inputValues.ExactDimensions[2]);
   }
 }
+
+// Destination rows completed between shared-seam reports.
+constexpr usize k_ProgressRowBatch = 256;
 
 // This sentinel marks a destination position outside the source bounds.
 constexpr usize k_InvalidAxisIndex = std::numeric_limits<usize>::max();
@@ -142,10 +144,9 @@ public:
     usize cachedYIndex = k_InvalidAxisIndex;
     usize cachedZIndex = k_InvalidAxisIndex;
 
-    const usize numVoxels = m_DestImageGeom.getNumberOfCells();
-    const usize counterIncrement = numVoxels / 100 == 0 ? 100 : numVoxels / 100;
-    usize processedVoxels = 0;
-    usize counter = 0;
+    // Rows are too small a unit to enter the shared seam on. Batch them so the lock is taken once
+    // per k_ProgressRowBatch rows, and flush whatever remains when this worker finishes.
+    usize pendingRows = 0;
 
     for(usize z = 0; z < destDims[2]; z++)
     {
@@ -209,17 +210,19 @@ public:
           return;
         }
 
-        processedVoxels += destDims[0];
-        counter += destDims[0];
-        if(counter >= counterIncrement)
+        pendingRows++;
+        if(pendingRows >= k_ProgressRowBatch)
         {
-          const float progress = static_cast<float>(processedVoxels) / static_cast<float>(numVoxels) * 100.0f;
-          m_AlgorithmPtr->sendThreadSafeProgressMessage(fmt::format("Resampling Data Array '{}' {:.0f}% Complete", m_DestArray.getName(), progress));
-          counter = 0;
+          m_AlgorithmPtr->sendThreadSafeProgressMessage(pendingRows);
+          pendingRows = 0;
         }
       }
     }
-    m_AlgorithmPtr->sendThreadSafeProgressMessage(fmt::format("Resampling Data Array '{}' Complete", m_DestArray.getName()));
+
+    if(pendingRows > 0)
+    {
+      m_AlgorithmPtr->sendThreadSafeProgressMessage(pendingRows);
+    }
   }
 
 private:
@@ -408,6 +411,7 @@ ResampleImageGeom::ResampleImageGeom(DataStructure& dataStructure, const IFilter
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(msgHandler)
 {
 }
 
@@ -423,10 +427,6 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleImageGeom::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  m_ThrottledMessengerPtr = &throttledMessenger;
-
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
@@ -435,6 +435,8 @@ Result<> ResampleImageGeom::operator()()
 
   usize arrayIndex = 0;
   usize totalArrays = srcCellDataAM.getSize();
+  const SizeVec3 destDims = destImageGeom.getDimensions();
+  m_Throttle.reset(totalArrays * destDims[1] * destDims[2], "Resampling cell arrays");
 
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
   CopyFromArray::ParallelTaskResult taskResult;
@@ -452,7 +454,10 @@ Result<> ResampleImageGeom::operator()()
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    {
+      const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+      m_MessageHandler.sendInfoMessage(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    }
 
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel, taskResult);
   }
@@ -526,13 +531,10 @@ Result<> ResampleImageGeom::operator()()
   return {};
 }
 
-void ResampleImageGeom::sendThreadSafeProgressMessage(const std::string& message)
+void ResampleImageGeom::sendThreadSafeProgressMessage(usize completedRows)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  if(nullptr != m_ThrottledMessengerPtr)
-  {
-    m_ThrottledMessengerPtr->sendThrottledMessage([&]() { return message; });
-  }
+  m_Throttle.incrementPercent(completedRows);
 }
 
 Result<> nx::core::ResampleImageGeometry(DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues, const IFilter::MessageHandler& messageHandler,

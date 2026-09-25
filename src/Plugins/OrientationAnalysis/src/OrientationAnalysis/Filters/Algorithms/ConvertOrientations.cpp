@@ -73,10 +73,6 @@ constexpr std::array<std::string_view, 8> k_TypeNames = {"Euler", "Orientation M
         InputType inputInstance;                                                                                                                                                                       \
         for(usize t = 0; t < chunkTuples; ++t)                                                                                                                                                         \
         {                                                                                                                                                                                              \
-          if((m_ShouldCancel != nullptr && m_ShouldCancel->load()) || m_Filter->shouldAbort())                                                                                                         \
-          {                                                                                                                                                                                            \
-            return;                                                                                                                                                                                    \
-          }                                                                                                                                                                                            \
           const usize inOff = t * inNumComps;                                                                                                                                                          \
           const usize outOff = t * outNumComps;                                                                                                                                                        \
           for(usize c = 0; c < inNumComps; ++c)                                                                                                                                                        \
@@ -94,9 +90,9 @@ constexpr std::array<std::string_view, 8> k_TypeNames = {"Euler", "Orientation M
           m_Filter->storeResult(std::move(ioResult));                                                                                                                                                  \
           return;                                                                                                                                                                                      \
         }                                                                                                                                                                                              \
+        m_Filter->sendThreadSafeProgressMessage(chunkTuples);                                                                                                                                          \
         tupleIdx += chunkTuples;                                                                                                                                                                       \
       }                                                                                                                                                                                                \
-      m_Filter->sendThreadSafeProgressMessage(r.max() - r.min());                                                                                                                                      \
     }                                                                                                                                                                                                  \
                                                                                                                                                                                                        \
   private:                                                                                                                                                                                             \
@@ -122,6 +118,7 @@ ConvertOrientations::ConvertOrientations(DataStructure& dataStructure, const IFi
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -136,16 +133,7 @@ void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
-  m_ProgressCounter += counter;
-  const auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  const auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalPoints)) * 100.0f);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
-  m_InitialPoint = now;
+  m_Throttle.incrementPercent(counter);
 }
 
 bool ConvertOrientations::shouldAbort() const noexcept
@@ -164,10 +152,10 @@ Result<> ConvertOrientations::operator()()
   auto& inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
   auto& outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
   const usize totalPoints = inputArray.getNumberOfTuples();
-  m_TotalPoints = totalPoints;
+  m_Throttle.reset(totalPoints, "Converting Orientations");
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->InputType)],
-                                                             k_TypeNames[static_cast<usize>(m_InputValues->OutputType)]));
+  m_MessageHandler.sendInfoMessage(
+      fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->InputType)], k_TypeNames[static_cast<usize>(m_InputValues->OutputType)]));
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, totalPoints);

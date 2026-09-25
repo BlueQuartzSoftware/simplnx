@@ -461,7 +461,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   if(pApplyTransformation)
   {
-    messageHandler(fmt::format("Applying transformation matrix to image geometry '{}'...", pImageGeomPath.getTargetName()));
+    messageHandler.sendInfoMessage(fmt::format("Applying transformation matrix to image geometry '{}'...", pImageGeomPath.getTargetName()));
     const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.centerOfRotation, pInterpolationType);
     Result<> applyResult = ExecuteTransformation(dataStructure, transformationInputValues, messageHandler, shouldCancel);
     if(applyResult.invalid())

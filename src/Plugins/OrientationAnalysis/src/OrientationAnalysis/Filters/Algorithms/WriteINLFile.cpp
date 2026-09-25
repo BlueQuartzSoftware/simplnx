@@ -230,7 +230,7 @@ Result<> WriteINLFile::operator()()
   std::ostringstream textBuffer;
   std::ostream& textStream = useDirectCellData ? static_cast<std::ostream&>(fout) : static_cast<std::ostream&>(textBuffer);
   textStream << std::fixed;
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing INL cell data");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Writing INL cell data");
   for(usize tupleOffset = 0; tupleOffset < totalCells; tupleOffset += k_ChunkTuples)
   {
     if(m_ShouldCancel)

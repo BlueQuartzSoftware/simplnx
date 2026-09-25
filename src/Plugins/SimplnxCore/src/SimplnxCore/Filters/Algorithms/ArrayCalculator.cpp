@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -1876,7 +1877,8 @@ Result<> ArrayCalculatorParser::parseAndValidate(std::vector<usize>& outTupleSha
   return parseResult;
 }
 
-Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units)
+Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units,
+                                             const IFilter::MessageHandler& messageHandler)
 {
   Result<> parseResult = parse();
   if(parseResult.invalid())
@@ -1955,6 +1957,8 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
   std::vector<float64> outWriteBuf;
   outWriteBuf.reserve(tuplesPerChunk * outputNumComps);
 
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(outputNumTuples, "Evaluating Array Expression");
   for(usize tupleStart = 0; tupleStart < outputNumTuples; tupleStart += tuplesPerChunk)
   {
     if(m_ShouldCancel)
@@ -2128,6 +2132,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         return writeResult;
       }
     }
+    progressThrottle.updatePercent(tupleStart + tupleCount);
   }
 
   return parseResult;
@@ -2151,5 +2156,5 @@ const std::atomic_bool& ArrayCalculator::getCancel()
 Result<> ArrayCalculator::operator()()
 {
   ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, m_ShouldCancel);
-  return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units);
+  return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units, m_MessageHandler);
 }

@@ -48,7 +48,7 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 
 - **Thread safety:** `computeVmfWatsonAverage` now calls `dataAlg.setParallelizationEnabled(false)`. The worker read/wrote shared `DataArray`/`DataStore` objects concurrently, which the simplnx thread-safety policy forbids even at distinct indices. Serial execution matches the `ComputeFeatureFaceMisorientation` precedent.
 - **Cancel checking:** added `m_Filter->getCancel()` (new accessor) to the vMF/Watson per-feature loop, which previously could not be cancelled during EM.
-- **Progress messaging:** `computeRodriguesAverage` now emits throttled progress via `MessageHelper`/`ThrottledMessenger` over the per-cell loop.
+- **Progress messaging:** `computeRodriguesAverage` now emits throttled progress feedback over the per-cell loop.
 - **Robustness:** guarded `ops[laueClass]` / `orientationOps[xtal]` against out-of-range `CrystalStructures` values (e.g. `999`/Unknown) to avoid undefined behavior; the feature/voxel is skipped (vMF/Watson outputs stay NaN).
 - **Cosmetic:** removed commented-out dead code, fixed the `dataStruture` parameter typo, removed the unused `m_LastProgressInt` member.
 

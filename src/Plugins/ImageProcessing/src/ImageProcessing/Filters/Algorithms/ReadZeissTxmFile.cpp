@@ -181,12 +181,12 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     }
     std::stringstream pathStrm;
     pathStrm << "/ImageData" << imageGroupIndex << "/Image" << z;
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Constructing Image Path: {}", pathStrm.str())});
+    m_MessageHandler.sendInfoMessage(fmt::format("Constructing Image Path: {}", pathStrm.str()));
 
     StreamPtrType stream = std::make_shared<POLE::Stream>(storage.get(), pathStrm.str());
     if(!stream->fail())
     {
-      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Reading Image: {}", pathStrm.str())});
+      m_MessageHandler.sendInfoMessage(fmt::format("Reading Image: {}", pathStrm.str()));
       readBytes = stream->read(reinterpret_cast<unsigned char*>(buffer.data()), totalBytes);
       if(readBytes != totalBytes)
       {

@@ -5,7 +5,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
+#include <mutex>
 #include <vector>
 
 namespace nx::core
@@ -75,10 +77,18 @@ public:
    */
   const std::atomic_bool& getCancel();
 
+  /**
+   * @brief Adds completed faces under the progress mutex.
+   * @param counter Specifies faces completed since the worker's previous report.
+   */
+  void sendThreadSafeProgressMessage(usize counter);
+
 private:
   DataStructure& m_DataStructure;
   const ComputeTwinBoundariesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 } // namespace nx::core

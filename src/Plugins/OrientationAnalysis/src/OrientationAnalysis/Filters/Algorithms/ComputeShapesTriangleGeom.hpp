@@ -6,6 +6,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -58,9 +61,7 @@ private:
 
   mutable std::mutex m_ProgressMessage_Mutex;
   usize m_NumFeatures = 0;
-  usize m_NumFeatureInc = 0;
-  usize m_FeatureUpdateCount = 0;
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  ThrottledMessageHandler m_Throttle;
 
   Float32Array* m_Omega3s = nullptr;
   Float32Array* m_AxisEulerAngles = nullptr;

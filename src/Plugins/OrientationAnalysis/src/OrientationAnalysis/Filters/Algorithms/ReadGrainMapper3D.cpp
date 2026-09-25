@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
@@ -19,6 +20,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <vector>
 
@@ -38,8 +40,10 @@ constexpr usize k_MaximumTransferValues = 65536;
  * @param datasetReader Source dataset.
  * @param datasetName Dataset name for diagnostics.
  * @param shouldCancel Signals cancellation between transfers.
+ * @param messageHandler Receives dataset and completed-transfer messages.
  * @param maximumValues Maximum values in one transfer. The limit is 65,536.
  * @param callback Consumes each batch and its flat dataset offset.
+ * @param transformReadError Preserves diagnostics for an unconverted dataset, if supplied.
  * @return Read or callback errors. Cancellation returns success after the last completed batch.
  *
  * The callback consumes each flat batch immediately. Phase, Rodrigues, IPF,
@@ -47,7 +51,8 @@ constexpr usize k_MaximumTransferValues = 65536;
  * materializing a complete volume dataset.
  */
 template <typename T, typename Callback>
-Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, const std::string& datasetName, const std::atomic_bool& shouldCancel, usize maximumValues, Callback&& callback)
+Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, const std::string& datasetName, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                              usize maximumValues, Callback&& callback, const std::function<Result<>(Result<>)>& transformReadError = {})
 {
   const auto dimensions = datasetReader.getDimensions();
   if(dimensions.empty())
@@ -102,6 +107,10 @@ Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, co
   std::vector<uint64> start(rank);
   std::vector<uint64> count(rank, 1);
   usize flatOffset = 0;
+  const std::string progressLabel = fmt::format("Importing Dataset {}", datasetName);
+  messageHandler.sendInfoMessage(progressLabel);
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(totalValues, progressLabel);
   for(usize outer = 0; outer < outerCount; outer++)
   {
     if(shouldCancel)
@@ -134,6 +143,10 @@ Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, co
       auto readResult = datasetReader.readIntoSpan<T>(nonstd::span<T>(buffer.data(), valueCount), start, count);
       if(readResult.invalid())
       {
+        if(transformReadError)
+        {
+          return transformReadError(std::move(readResult));
+        }
         return MakeErrorResult(-89363, fmt::format("ReadGrainMapper3D: Error reading '/LabDCT/Data/{}': {}", datasetName, readResult.errors()[0].message));
       }
       auto callbackResult = callback(nonstd::span<const T>(buffer.data(), valueCount), flatOffset);
@@ -142,6 +155,7 @@ Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, co
         return callbackResult;
       }
       flatOffset += valueCount;
+      progressThrottle.updatePercent(flatOffset);
     }
   }
 
@@ -150,6 +164,28 @@ Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, co
     return MakeErrorResult(-89364, fmt::format("ReadGrainMapper3D: Bounded transfer size does not match '/LabDCT/Data/{}'.", datasetName));
   }
   return {};
+}
+
+/**
+ * @brief Announces a dataset, then imports it with one bulk read.
+ * @tparam T Specifies the dataset value type.
+ * @param dataStructure Owns the destination array.
+ * @param dataArrayPath Identifies the destination array.
+ * @param datasetReader Supplies the open dataset.
+ * @param shouldCancel Signals cancellation during the read.
+ * @param messageHandler Receives the dataset announcement.
+ * @return The underlying read result.
+ *
+ * The dataset is the reported work unit. FillDataArray issues one transfer, which keeps the
+ * optimized in-memory path and its parallel decompression; splitting it into bounded batches to
+ * report a percentage would add a second full copy of the volume and remove that codec.
+ */
+template <typename T>
+Result<> FillDataArrayAnnounced(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::atomic_bool& shouldCancel,
+                                const IFilter::MessageHandler& messageHandler)
+{
+  messageHandler.sendInfoMessage(fmt::format("Importing Dataset {}", dataArrayPath.getTargetName()));
+  return nx::core::HDF5::Support::FillDataArray<T>(dataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &shouldCancel);
 }
 
 } // namespace
@@ -278,7 +314,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_PhaseIdName);
     auto& phaseI32 = m_DataStructure.getDataRefAs<Int32Array>(dataArrayPath).getDataStoreRef();
     nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_PhaseIdName);
-    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, GM3DConst::k_PhaseIdName, m_ShouldCancel, k_MaximumTransferValues,
+    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, GM3DConst::k_PhaseIdName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                         [&phaseI32, &dataArrayPath](nonstd::span<const uint8> source, usize offset) -> Result<> {
                                                           if(offset > phaseI32.getSize() || source.size() > phaseI32.getSize() - offset)
                                                           {
@@ -303,7 +339,8 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_RodriguesName);
     constexpr usize k_RodriguesSourceBatchValues = (k_MaximumTransferValues / 4) * 3;
     auto conversionResult = ReadDatasetInBatches<float32>(
-        datasetReader, GM3DConst::k_RodriguesName, m_ShouldCancel, k_RodriguesSourceBatchValues, [&rodData, &dataArrayPath](nonstd::span<const float32> source, usize sourceOffset) -> Result<> {
+        datasetReader, GM3DConst::k_RodriguesName, m_ShouldCancel, m_MessageHandler, k_RodriguesSourceBatchValues,
+        [&rodData, &dataArrayPath](nonstd::span<const float32> source, usize sourceOffset) -> Result<> {
           if(source.size() % 3 != 0)
           {
             return MakeErrorResult(-89366, fmt::format("ReadGrainMapper3D: '/LabDCT/Data/{}' does not contain 3-component Rodrigues values.", dataArrayPath.getTargetName()));
@@ -346,8 +383,8 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
       auto& ipfUint8 = m_DataStructure.getDataRefAs<UInt8Array>(dataArrayPath).getDataStoreRef();
       nx::core::HDF5::DatasetIO datasetReader(dataGid, dataSetName);
       constexpr usize k_IpfSourceBatchValues = (k_MaximumTransferValues / 3) * 3;
-      auto conversionResult =
-          ReadDatasetInBatches<float32>(datasetReader, dataSetName, m_ShouldCancel, k_IpfSourceBatchValues, [&ipfUint8, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
+      auto conversionResult = ReadDatasetInBatches<float32>(
+          datasetReader, dataSetName, m_ShouldCancel, m_MessageHandler, k_IpfSourceBatchValues, [&ipfUint8, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
             if(source.size() % 3 != 0)
             {
               return MakeErrorResult(-89367, fmt::format("ReadGrainMapper3D: '/LabDCT/Data/{}' does not contain 3-component IPF colors.", dataArrayPath.getTargetName()));
@@ -375,7 +412,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_QuaternionName);
     auto& quatData = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath).getDataStoreRef();
     nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_QuaternionName);
-    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, GM3DConst::k_QuaternionName, m_ShouldCancel, k_MaximumTransferValues,
+    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, GM3DConst::k_QuaternionName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                           [&quatData, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
                                                             if(source.size() % 4 != 0 || offset > quatData.getSize() || source.size() > quatData.getSize() - offset)
                                                             {
@@ -407,15 +444,15 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
 
     if(std::count(floatDataSets.begin(), floatDataSets.end(), dataSetName) > 0)
     {
-      result = nx::core::HDF5::Support::FillDataArray<float32>(m_DataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &m_ShouldCancel);
+      result = FillDataArrayAnnounced<float32>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
     }
     else if(std::count(in32DataSets.begin(), in32DataSets.end(), dataSetName) > 0)
     {
-      result = nx::core::HDF5::Support::FillDataArray<int32>(m_DataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &m_ShouldCancel);
+      result = FillDataArrayAnnounced<int32>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
     }
     else if(std::count(uint8DataSets.begin(), uint8DataSets.end(), dataSetName) > 0)
     {
-      result = nx::core::HDF5::Support::FillDataArray<uint8>(m_DataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &m_ShouldCancel);
+      result = FillDataArrayAnnounced<uint8>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
     }
     if(result.invalid())
     {
@@ -444,7 +481,7 @@ Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t 
 
   nx::core::HDF5::DatasetIO datasetReader(gid, GM3DConst::k_DataGroupName);
 
-  return nx::core::HDF5::Support::FillDataArray<uint16>(m_DataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &m_ShouldCancel);
+  return FillDataArrayAnnounced<uint16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
 }
 
 Result<> ReadGrainMapper3D::operator()()

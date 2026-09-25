@@ -226,7 +226,7 @@ Result<> EbsdToH5Ebsd::operator()()
     int32_t totalSlicesImported = 0;
     for(const auto& ebsdFName : fileList)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting File: '{}'", ebsdFName));
+      m_MessageHandler.sendInfoMessage(fmt::format("Converting File: '{}'", ebsdFName));
 
       err = fileImporter->importFile(fileId, z, ebsdFName);
       if(err < 0)
@@ -312,7 +312,7 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
   if(m_ShouldCancel)
   {
     return MakeErrorResult(-1, "Filter cancelled");

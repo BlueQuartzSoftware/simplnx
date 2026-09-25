@@ -210,7 +210,7 @@ Result<> ExtractVertexGeometry::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Preparing arrays for extraction..."));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Preparing arrays for extraction..."));
 
   // Stream the mask for counting, coordinates, and each included array.
   // Repeated reads avoid a cell-sized keep bitmap.
@@ -272,7 +272,7 @@ Result<> ExtractVertexGeometry::operator()()
 
   // getCoordsf() derives each cell center from geometry metadata. Vertex
   // setTuple() writes follow selected source order. A mask requires another pass.
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
 
   IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
@@ -313,7 +313,7 @@ Result<> ExtractVertexGeometry::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));
 
   // Resize all preflight-created vertex arrays to the selected tuple count.
   AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();

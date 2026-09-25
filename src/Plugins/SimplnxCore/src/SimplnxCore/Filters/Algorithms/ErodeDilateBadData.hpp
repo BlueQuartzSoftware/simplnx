@@ -5,8 +5,11 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include <mutex>
 
 namespace nx::core
 {
@@ -58,7 +61,7 @@ public:
   /**
    * @brief Initializes Feature ID morphology.
    * @param dataStructure Contains geometry and sibling cell arrays.
-   * @param mesgHandler Supplies the common interface. This algorithm emits no messages.
+   * @param mesgHandler Supplies phase and slice progress messages.
    * @param shouldCancel Supplies the common cancellation interface.
    * @param inputValues Selects operation, directions, iterations, and paths.
    * @pre All arguments and the inputValues object outlive this executor.
@@ -78,19 +81,27 @@ public:
    * @pre Image dimensions and Feature ID tuple count agree and are nonzero.
    * @pre Feature IDs are nonnegative and slice/component products fit usize.
    *
-   * The algorithm does not inspect the cancellation flag. It also discards all
-   * bulk-transfer Result values. A storage failure can therefore produce partial
-   * or invalid sibling output while this function returns success.
+   * Cancellation returns success during the Feature ID scan and before the first pass. After the first
+   * write, the passes run to completion, because the cell arrays are changed in place.
+   * Bulk-transfer failures return their error and can leave partial output.
    */
   Result<> operator()();
 
   const std::atomic_bool& getCancel() const;
+
+  /**
+   * @brief Reports completed slices through the shared throttle.
+   * @param counter Number of completed slices.
+   */
+  void sendThreadSafeProgressMessage(usize counter);
 
 private:
   DataStructure& m_DataStructure;
   const ErodeDilateBadDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

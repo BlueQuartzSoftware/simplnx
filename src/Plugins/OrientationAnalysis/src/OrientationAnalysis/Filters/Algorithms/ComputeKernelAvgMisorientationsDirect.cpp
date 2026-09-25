@@ -6,13 +6,15 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
+#include <mutex>
 
 using namespace nx::core;
 
@@ -31,15 +33,15 @@ class FindKernelAvgMisorientationsImpl
 public:
   /**
    * @brief Initializes a direct KAM range worker.
-   * @param progressMessenger Creates range-local progress messengers.
+   * @param reportProgress Reports completed items through the synchronized callback.
    * @param dataStructure Provides the selected arrays and Image Geometry.
    * @param inputValues Identifies the selected arrays and KAM settings.
    * @param shouldCancel Signals cancellation.
    * @pre Each argument remains valid while the parallel algorithm executes.
    */
-  FindKernelAvgMisorientationsImpl(ProgressMessageHelper& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
+  FindKernelAvgMisorientationsImpl(const std::function<void(usize)>& reportProgress, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
                                    const std::atomic_bool& shouldCancel)
-  : m_ProgressMessageHelper(progressMessenger)
+  : m_ReportProgress(reportProgress)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
@@ -84,8 +86,6 @@ public:
     usize counter = 0;
     usize increment = std::max(static_cast<usize>(1), (zEnd - zStart) / 100);
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
-
     const usize xPoints = udims[0];
     const usize yPoints = udims[1];
     const usize zPoints = udims[2];
@@ -96,7 +96,7 @@ public:
     {
       if(counter > increment)
       {
-        progressMessenger.sendProgressMessage(counter);
+        m_ReportProgress(counter);
         counter = 0;
       }
 
@@ -182,7 +182,7 @@ public:
         }
       }
     }
-    progressMessenger.sendProgressMessage(counter);
+    m_ReportProgress(counter);
   }
 
   /**
@@ -195,7 +195,7 @@ public:
   }
 
 private:
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  const std::function<void(usize)>& m_ReportProgress;
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -225,11 +225,15 @@ Result<> ComputeKernelAvgMisorientationsDirect::operator()()
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = imageGeom.getDimensions();
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  std::mutex progressMutex;
+  const std::function<void(usize)> reportProgress = [&](usize count) {
+    std::lock_guard<std::mutex> guard(progressMutex);
+    progressThrottle.incrementPercent(count);
+  };
 
-  progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
-  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
+  progressThrottle.reset(udims[2] * udims[1] * udims[0], "Finding Kernel Average Misorientations");
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
@@ -241,7 +245,7 @@ Result<> ComputeKernelAvgMisorientationsDirect::operator()()
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressMessageHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(reportProgress, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }

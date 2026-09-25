@@ -1,32 +1,9 @@
 #include "ReadCSVFile.hpp"
 
 #include "simplnx/Utilities/FileUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 using namespace nx::core;
-
-namespace
-{
-/**
- * @brief Sends progress after each additional five percent of rows.
- * @param lineNumber Specifies the current input row.
- * @param numberOfTuples Specifies expected rows.
- * @param threshold Provides and receives the next progress threshold.
- * @param msgHandler Receives the progress message.
- */
-void notifyProgress(usize lineNumber, usize numberOfTuples, float32& threshold, const IFilter::MessageHandler& msgHandler)
-{
-  const float32 percentCompleted = (static_cast<float32>(lineNumber) / static_cast<float32>(numberOfTuples)) * 100.0f;
-  if(percentCompleted > threshold)
-  {
-    msgHandler({IFilter::Message::Type::Info, fmt::format("Importing CSV Data || {:.{}f}% Complete", static_cast<double>(percentCompleted), 1)});
-    threshold = threshold + 5.0f;
-    if(threshold < percentCompleted)
-    {
-      threshold = percentCompleted;
-    }
-  }
-}
-} // End anonymous namespace
 
 ReadCSVFile::ReadCSVFile() = default;
 
@@ -69,8 +46,9 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
     return MakeErrorResult(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the first line in the file to import ({}).", importStartingRow));
   }
 
-  float32 threshold = 0.0f;
   usize numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
+  ThrottledMessageHandler progressThrottle(msgHandler);
+  progressThrottle.reset(numTuples, "Importing CSV Data");
   usize lineNum = importStartingRow;
   for(usize i = 0; i < numTuples && !in.eof(); i++)
   {
@@ -96,7 +74,10 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
       }
     }
 
-    notifyProgress(lineNum, numTuples, threshold, msgHandler);
+    if(flushRequired || (i + 1) % 1024 == 0 || i + 1 == numTuples || in.eof())
+    {
+      progressThrottle.updatePercent(i + 1);
+    }
     lineNum++;
   }
 

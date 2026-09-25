@@ -421,7 +421,7 @@ Result<> nx::core::FillBadVoxels(DataStructure& dataStructure, const DataPath& f
     {
       if(!scanResult.errors().empty())
       {
-        messageHandler({IFilter::Message::Type::Info, scanResult.errors().front().message});
+        messageHandler.sendMessage({IFilter::Message::Type::Info, scanResult.errors().front().message});
       }
       return scanResult;
     }
@@ -434,7 +434,7 @@ Result<> nx::core::FillBadVoxels(DataStructure& dataStructure, const DataPath& f
       const std::string message = fmt::format(
           "Unable to reassign {} cell(s) in Feature Ids array '{}' because none has a non-negative face neighbor. Ensure the array contains at least one cell assigned to a retained feature.",
           scan.badCount, featureIdsPath.toString());
-      messageHandler({IFilter::Message::Type::Info, message});
+      messageHandler.sendMessage({IFilter::Message::Type::Info, message});
       return MakeErrorResult(-55572, message);
     }
 

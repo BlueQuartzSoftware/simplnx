@@ -1,5 +1,7 @@
 #include "WriteGBCDGMTFile.hpp"
 
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -168,6 +170,9 @@ Result<> WriteGBCDGMTFile::operator()()
   std::vector<double> gmtValues;
   gmtValues.reserve((phiPoints + 1) * (thetaPoints + 1)); // Allocate what should be needed.
 
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  m_MessageHandler.sendInfoMessage("Computing GBCD Phi Rows");
+  progressThrottle.reset(static_cast<usize>(phiPoints + 1), "Computing GBCD Phi Rows");
   for(int32 phiPtIndex = 0; phiPtIndex < phiPoints + 1; phiPtIndex++)
   {
     if(m_ShouldCancel)
@@ -288,6 +293,7 @@ Result<> WriteGBCDGMTFile::operator()()
       gmtValues.push_back((90.0 - phi));
       gmtValues.push_back(sum / float32(count));
     }
+    progressThrottle.updateCount(static_cast<usize>(phiPtIndex + 1));
   }
 
   // The creation-check stream remains open while this C stream rewrites the same path.

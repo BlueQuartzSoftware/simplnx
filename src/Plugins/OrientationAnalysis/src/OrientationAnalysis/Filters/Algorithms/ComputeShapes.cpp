@@ -107,6 +107,7 @@ ComputeShapes::ComputeShapes(DataStructure& dataStructure, const IFilter::Messag
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_Throttle(mesgHandler)
 {
 }
 
@@ -228,8 +229,11 @@ Result<> ComputeShapes::findMoments()
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
   size_t zStride = 0, yStride = 0;
+  m_MessageHandler.sendInfoMessage("Computing Volume Moment Slices");
+  m_Throttle.reset(zPoints, "Computing Volume Moment Slices");
   for(size_t i = 0; i < zPoints; i++)
   {
+    m_Throttle.updateCount(i);
     if(m_ShouldCancel)
     {
       return {};
@@ -309,6 +313,7 @@ Result<> ComputeShapes::findMoments()
       }
     }
   }
+  m_Throttle.updateCount(zPoints);
 
   // Write the accumulated raw voxel counts back to the volumes array (feature-level, one pass).
   // The feature loop below reads these counts in place and rescales them to physical volumes,
@@ -325,8 +330,11 @@ Result<> ComputeShapes::findMoments()
   double konst2 = static_cast<double>((spacing[0]) * (spacing[1]) * (spacing[2]));
   double konst3 = static_cast<double>((modXRes) * (modYRes) * (modZRes));
   double o3 = 0.0, vol5 = 0.0, omega3 = 0.0;
+  m_MessageHandler.sendInfoMessage("Computing Feature Moments");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Feature Moments");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    m_Throttle.updateCount(featureId - 1);
     if(m_ShouldCancel)
     {
       return {};
@@ -400,6 +408,7 @@ Result<> ComputeShapes::findMoments()
     }
     omega3s[featureId] = static_cast<float>(omega3);
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 
   return {};
 }
@@ -465,8 +474,11 @@ Result<> ComputeShapes::findMoments2D()
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
   size_t yStride = 0;
+  m_MessageHandler.sendInfoMessage("Computing Planar Moment Rows");
+  m_Throttle.reset(yPoints, "Computing Planar Moment Rows");
   for(size_t yPoint = 0; yPoint < yPoints; yPoint++)
   {
+    m_Throttle.updateCount(yPoint);
     if(m_ShouldCancel)
     {
       return {};
@@ -503,6 +515,7 @@ Result<> ComputeShapes::findMoments2D()
       featureVoxelCounts[gnum] += 1.0f;
     }
   }
+  m_Throttle.updateCount(yPoints);
 
   // The feature loop rescales raw counts to physical area.
   for(size_t featureId = 0; featureId < numfeatures; featureId++)
@@ -512,8 +525,11 @@ Result<> ComputeShapes::findMoments2D()
 
   double konst1 = static_cast<double>((modXRes / 2.0f) * (modYRes / 2.0f));
   double konst2 = static_cast<double>(spacing[0] * spacing[1]);
+  m_MessageHandler.sendInfoMessage("Computing Planar Feature Moments");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Planar Feature Moments");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    m_Throttle.updateCount(featureId - 1);
     if(m_ShouldCancel)
     {
       return {};
@@ -528,6 +544,7 @@ Result<> ComputeShapes::findMoments2D()
     m_FeatureMoments[featureId * 6 + 1] = m_FeatureMoments[featureId * 6 + 1] * konst1;  // u02
     m_FeatureMoments[featureId * 6 + 2] = -m_FeatureMoments[featureId * 6 + 2] * konst1; // u11
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 
   return {};
 }
@@ -542,8 +559,11 @@ void ComputeShapes::findAxes()
 
   size_t numfeatures = centroids.getNumberOfTuples();
   constexpr double multiplier = 1.0 / (4.0 * std::numbers::pi);
+  m_MessageHandler.sendInfoMessage("Computing Feature Axes");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Feature Axes");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    m_Throttle.updateCount(featureId - 1);
     if(m_ShouldCancel)
     {
       return;
@@ -579,6 +599,7 @@ void ComputeShapes::findAxes()
     aspectRatios[2 * featureId] = bovera;
     aspectRatios[2 * featureId + 1] = covera;
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -613,8 +634,11 @@ void ComputeShapes::findAxes2D()
   double preterm = 4.0 / std::numbers::pi;
   preterm = std::pow(preterm, 0.25);
 
+  m_MessageHandler.sendInfoMessage("Computing Planar Feature Axes");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Planar Feature Axes");
   for(size_t i = 1; i < numfeatures; i++)
   {
+    m_Throttle.updateCount(i - 1);
     if(m_ShouldCancel)
     {
       return;
@@ -657,6 +681,7 @@ void ComputeShapes::findAxes2D()
     aspectRatios[2 * i] = static_cast<float>(r2 / r1);
     aspectRatios[2 * i + 1] = 0.0f;
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -666,8 +691,11 @@ void ComputeShapes::findAxisEulers()
   auto& axisEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
 
   size_t numfeatures = centroids.getNumberOfTuples();
+  m_MessageHandler.sendInfoMessage("Computing Feature Axis Orientations");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Feature Axis Orientations");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    m_Throttle.updateCount(featureId - 1);
     if(m_ShouldCancel)
     {
       return;
@@ -696,6 +724,7 @@ void ComputeShapes::findAxisEulers()
     axisEulerAngles[3 * featureId + 1] = eu[1];
     axisEulerAngles[3 * featureId + 2] = eu[2];
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -706,8 +735,11 @@ void ComputeShapes::findAxisEulers2D()
 
   size_t numfeatures = centroids.getNumberOfTuples();
 
+  m_MessageHandler.sendInfoMessage("Computing Planar Feature Axis Orientations");
+  m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Planar Feature Axis Orientations");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    m_Throttle.updateCount(featureId - 1);
     if(m_ShouldCancel)
     {
       return;
@@ -755,4 +787,5 @@ void ComputeShapes::findAxisEulers2D()
     axisEulerAngles[3 * featureId + 1] = 0.0f;
     axisEulerAngles[3 * featureId + 2] = 0.0f;
   }
+  m_Throttle.updateCount(numfeatures > 0 ? numfeatures - 1 : 0);
 }

@@ -201,7 +201,7 @@ Result<> WritePhaseFiles(const std::map<int32, int32>& phaseLineCounts, const Wr
       continue;
     }
 
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Writing file for phase '{}'", phase));
+    messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing file for phase '{}'", phase));
     const std::string absFilePath = fmt::format("{}/{}_Phase_{}{}", absPath, fileName, phase, suffix);
     std::ofstream file(absFilePath, std::ios::out | std::ios::trunc | std::ios_base::binary);
     if(!file.is_open())

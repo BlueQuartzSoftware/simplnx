@@ -209,7 +209,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     selectedArrayNames.insert(eulerNames[3]);
   }
 
-  mMessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
+  mMessageHandler.sendMessage(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
   uint32 mRefFrameZDir = ebsdReader->getStackingOrder();
 
   ebsdReader->setSliceStart(mInputValues->startSlice);
@@ -451,7 +451,7 @@ Result<> ReadH5Ebsd::operator()()
       args.insertOrAssign(::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Validate the plugin-provided sample transform before it changes geometry.
-      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
+      m_MessageHandler.sendMessage(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
@@ -463,7 +463,7 @@ Result<> ReadH5Ebsd::operator()()
         return result;
       }
 
-      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
+      m_MessageHandler.sendMessage(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
       auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {

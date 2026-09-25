@@ -39,7 +39,6 @@ public:
     // contiguous slab of m_SliceSize tuples in the source. Copy one whole plane per call rather
     // than one tuple at a time; this is far more efficient and out-of-core friendly.
     const usize numPlanes = m_NewToOldZPlane.size();
-    const usize progressIncrement = numPlanes / 100 == 0 ? 1 : numPlanes / 100;
     for(usize destPlane = 0; destPlane < numPlanes; destPlane++)
     {
       if(m_ShouldCancel)
@@ -51,13 +50,7 @@ public:
       const usize srcTupleStart = m_NewToOldZPlane[destPlane] * m_SliceSize;
       destDataStoreRef.copyFrom(destTupleStart, srcDataStoreRef, srcTupleStart, m_SliceSize);
 
-      // Only build/emit a progress string roughly every 1% to avoid formatting a string per plane
-      // that the throttled messenger would otherwise discard.
-      if(destPlane % progressIncrement == 0 || destPlane == numPlanes - 1)
-      {
-        const float32 progress = static_cast<float32>(destPlane + 1) / static_cast<float32>(numPlanes) * 100.0f;
-        m_AlgorithmPtr->sendThreadSafeProgressMessage(fmt::format("Copying Data Array '{}' {:.0f}% Complete", m_DestArray.getName(), progress));
-      }
+      m_AlgorithmPtr->sendThreadSafeProgressMessage(1);
     }
   }
 
@@ -115,6 +108,7 @@ RegularizeZSpacing::RegularizeZSpacing(DataStructure& dataStructure, const IFilt
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(msgHandler)
+, m_Throttle(msgHandler)
 {
 }
 
@@ -130,9 +124,6 @@ const std::atomic_bool& RegularizeZSpacing::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RegularizeZSpacing::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  m_ThrottledMessengerPtr = &throttledMessenger;
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
@@ -175,6 +166,8 @@ Result<> RegularizeZSpacing::operator()()
   usize arrayIndex = 0;
   const usize totalArrays = srcCellDataAM.getSize();
 
+  m_Throttle.reset(totalArrays * newZDim, "Copying Cell Data");
+
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
 
@@ -195,7 +188,10 @@ Result<> RegularizeZSpacing::operator()()
     }
     const std::string srcName = oldDataArrayPtr->getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Copying Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    {
+      std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+      m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    }
 
     ExecuteParallelFunction<RegularizeZSpacingArrayImpl>(oldDataArrayPtr->getDataType(), taskRunner, this, *oldDataArrayPtr, newDataArray, newToOldZPlane, sliceSize, m_ShouldCancel);
   }
@@ -206,12 +202,9 @@ Result<> RegularizeZSpacing::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void RegularizeZSpacing::sendThreadSafeProgressMessage(const std::string& message)
+void RegularizeZSpacing::sendThreadSafeProgressMessage(usize completedPlanes)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  if(nullptr != m_ThrottledMessengerPtr)
-  {
-    m_ThrottledMessengerPtr->sendThrottledMessage([&]() { return message; });
-  }
+  m_Throttle.incrementPercent(completedPlanes);
 }
 } // namespace nx::core

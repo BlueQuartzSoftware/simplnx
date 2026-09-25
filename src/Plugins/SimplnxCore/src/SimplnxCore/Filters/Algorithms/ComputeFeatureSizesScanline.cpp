@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -110,7 +110,7 @@ Result<> WriteFeatureOutputBlock(usize featureStart, usize featureCount, const s
  * @param volumes Receives feature
  * areas or volumes.
  * @param equivalentDiameters Receives feature equivalent diameters.
- * @param throttledMessenger Reports feature progress.
+ * @param progressThrottle Reports feature progress.
  * @param shouldCancel Signals cancellation between
  * features or output blocks.
  * @return Success, or the first feature-count or output-store write error.
@@ -120,7 +120,7 @@ Result<> WriteFeatureOutputBlock(usize featureStart, usize featureCount, const s
  */
 template <typename FeatureSizeFunctorT, typename EquivalentDiameterFunctorT>
 Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featureVoxelCounts, FeatureSizeFunctorT&& featureSizeFunctor, EquivalentDiameterFunctorT&& equivalentDiameterFunctor,
-                             Int32AbstractDataStore& numElements, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, ThrottledMessenger& throttledMessenger,
+                             Int32AbstractDataStore& numElements, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, ThrottledMessageHandler& progressThrottle,
                              const std::atomic_bool& shouldCancel)
 {
   std::vector<int32> numElementsBuffer(k_ChunkTuples);
@@ -156,7 +156,7 @@ Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featu
       return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+    progressThrottle.updatePercent(" - Calculating", featureIdx, numFeatures);
 
     const float64 featureSize = featureSizeFunctor(featureIdx);
     numElementsBuffer[featureCount] = static_cast<int32>(featureVoxelCounts[featureIdx]);
@@ -187,7 +187,7 @@ Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featu
  * @param featureIdsName Identifies the Feature ID array for errors.
  * @param featureAttributeMatrixPath Identifies the feature output parent.
  * @param saveElementSizes True to retain generated element sizes.
- * @param msgHelper Supplies progress messages.
+ * @param messageHandler Supplies progress messages.
  * @param shouldCancel Signals cancellation between chunks or features.
  * @return Success, or an element-size, Feature ID, or feature-count error.
  *
@@ -195,9 +195,9 @@ Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featu
  */
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
                           const Int32AbstractDataStore& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
-                          MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+                          const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = volumes.getNumberOfTuples();
@@ -206,7 +206,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   int32 minFeatureId = std::numeric_limits<int32>::max();
   int32 maxFeatureId = std::numeric_limits<int32>::lowest();
 
-  msgHelper.sendMessage("Finding Voxel Counts...");
+  messageHandler.sendInfoMessage("Finding Voxel Counts...");
   // The count pass validates Feature IDs without a second full-volume read.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   for(usize offset = 0; offset < numVoxels; offset += k_ChunkTuples)
@@ -249,17 +249,17 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   // A unit dimension selects flat ImageGeom area calculation.
   if(xDimSize == 1 || yDimSize == 1 || zDimSize == 1)
   {
-    msgHelper.sendMessage("Singular image detected. Proceeding with 2D calculations...");
+    messageHandler.sendInfoMessage("Singular image detected. Proceeding with 2D calculations...");
     // Preflight permits one unit dimension. More unit dimensions do not identify a unique area plane.
     // The slab convention matches ImageGeom::findElementSizes.
     // It differs from DREAM3D 6.5.171 when flat spacing is not one.
     // The [2DFlatSpacing] V&V case records this compatibility difference.
     const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
 
-    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
+    messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     Result<> outputResult = StoreFeatureOutputs(
         numFeatures, featureVoxelCounts, [&featureVoxelCounts, voxelArea](usize featureIdx) { return static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelArea; },
-        [](float64 featureArea) { return 2.0 * std::sqrt(featureArea / k_ECDAreaDenominator); }, numElements, volumes, equivalentDiameters, throttledMessenger, shouldCancel);
+        [](float64 featureArea) { return 2.0 * std::sqrt(featureArea / k_ECDAreaDenominator); }, numElements, volumes, equivalentDiameters, progressThrottle, shouldCancel);
     if(outputResult.invalid() || shouldCancel)
     {
       return outputResult;
@@ -267,14 +267,14 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   }
   else
   {
-    msgHelper.sendMessage("Image Stack detected. Proceeding with 3D calculations...");
+    messageHandler.sendInfoMessage("Image Stack detected. Proceeding with 3D calculations...");
 
     const float64 voxelVolume = spacing[0] * spacing[1] * spacing[2];
 
-    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
+    messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
     Result<> outputResult = StoreFeatureOutputs(
         numFeatures, featureVoxelCounts, [&featureVoxelCounts, voxelVolume](usize featureIdx) { return static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelVolume; },
-        [](float64 featureVolume) { return 2.0 * std::cbrt(featureVolume / k_ESDVolumeDenominator); }, numElements, volumes, equivalentDiameters, throttledMessenger, shouldCancel);
+        [](float64 featureVolume) { return 2.0 * std::cbrt(featureVolume / k_ESDVolumeDenominator); }, numElements, volumes, equivalentDiameters, progressThrottle, shouldCancel);
     if(outputResult.invalid() || shouldCancel)
     {
       return outputResult;
@@ -283,7 +283,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 
   if(saveElementSizes)
   {
-    msgHelper.sendMessage("Calculating Element Sizes...");
+    messageHandler.sendInfoMessage("Calculating Element Sizes...");
     return imageGeom.findElementSizes(false);
   }
 
@@ -300,7 +300,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
  * @param featureIdsName Identifies the Feature ID array for errors.
  * @param featureAttributeMatrixPath Identifies the feature output parent.
  * @param saveElementSizes True to retain generated element sizes.
- * @param msgHelper Supplies progress messages.
+ * @param messageHandler Supplies progress messages.
  * @param shouldCancel Signals cancellation between chunks or features.
  * @return Success, or an element-size, Feature ID, or feature-count error.
  *
@@ -308,14 +308,14 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
  */
 Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
                              const Int32AbstractDataStore& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
-                             MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+                             const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = volumes.getNumberOfTuples();
 
-  msgHelper.sendMessage("Finding Element Sizes...");
+  messageHandler.sendInfoMessage("Finding Element Sizes...");
   Result<> result = rectGridGeom.findElementSizes(false);
   if(result.invalid())
   {
@@ -331,7 +331,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   int32 minFeatureId = std::numeric_limits<int32>::max();
   int32 maxFeatureId = std::numeric_limits<int32>::lowest();
 
-  msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
+  messageHandler.sendInfoMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Matching chunks validate Feature IDs and keep Kahan accumulation local.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto elemSizeBuf = std::make_unique<float32[]>(k_ChunkTuples);
@@ -376,10 +376,10 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     return validateResult;
   }
 
-  msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
+  messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
   Result<> outputResult = StoreFeatureOutputs(
       numFeatures, featureVoxelCounts, [&featureVolumes](usize featureIdx) { return featureVolumes[featureIdx]; },
-      [](float64 featureVolume) { return 2.0 * std::cbrt(featureVolume / k_ESDVolumeDenominator); }, numElements, volumes, equivalentDiameters, throttledMessenger, shouldCancel);
+      [](float64 featureVolume) { return 2.0 * std::cbrt(featureVolume / k_ESDVolumeDenominator); }, numElements, volumes, equivalentDiameters, progressThrottle, shouldCancel);
   if(outputResult.invalid() || shouldCancel)
   {
     return outputResult;
@@ -387,7 +387,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
   if(!saveElementSizes)
   {
-    msgHelper.sendMessage("Cleaning Up Element Sizes...");
+    messageHandler.sendInfoMessage("Cleaning Up Element Sizes...");
     rectGridGeom.deleteElementSizes();
   }
 
@@ -408,11 +408,11 @@ ComputeFeatureSizesScanline::~ComputeFeatureSizesScanline() noexcept = default;
 
 Result<> ComputeFeatureSizesScanline::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   const bool saveElementSizes = m_InputValues->SaveElementSizes;
 
-  messageHelper.sendMessage("Validating Feature Ids and Feature Attribute Matrix...");
+  messageHandler.sendInfoMessage("Validating Feature Ids and Feature Attribute Matrix...");
   const DataPath featureIdsArrayPath = m_InputValues->FeatureIdsPath;
   const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
 
@@ -432,16 +432,16 @@ Result<> ComputeFeatureSizesScanline::operator()()
   const IGeometry::Type geomType = geom.getGeomType();
   if(geomType == IGeometry::Type::Image)
   {
-    messageHelper.sendMessage("Beginning Processing Features in Image Geometry...");
+    messageHandler.sendInfoMessage("Beginning Processing Features in Image Geometry...");
     auto& imageGeom = dynamic_cast<ImageGeom&>(geom);
-    return ProcessImageGeom(imageGeom, volumes, equivalentDiameters, numElements, featureIds, featureIdsArrayPtr->getName(), featureAttributeMatrixPath, saveElementSizes, messageHelper,
+    return ProcessImageGeom(imageGeom, volumes, equivalentDiameters, numElements, featureIds, featureIdsArrayPtr->getName(), featureAttributeMatrixPath, saveElementSizes, messageHandler,
                             m_ShouldCancel);
   }
   if(geomType == IGeometry::Type::RectGrid)
   {
-    messageHelper.sendMessage("Beginning Processing Features in Rectilinear Grid Geometry...");
+    messageHandler.sendInfoMessage("Beginning Processing Features in Rectilinear Grid Geometry...");
     auto& rectGridGeom = dynamic_cast<RectGridGeom&>(geom);
-    return ProcessRectGridGeom(rectGridGeom, volumes, equivalentDiameters, numElements, featureIds, featureIdsArrayPtr->getName(), featureAttributeMatrixPath, saveElementSizes, messageHelper,
+    return ProcessRectGridGeom(rectGridGeom, volumes, equivalentDiameters, numElements, featureIds, featureIdsArrayPtr->getName(), featureAttributeMatrixPath, saveElementSizes, messageHandler,
                                m_ShouldCancel);
   }
 

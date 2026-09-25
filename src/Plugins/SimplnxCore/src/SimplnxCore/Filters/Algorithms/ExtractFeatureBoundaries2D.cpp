@@ -509,7 +509,7 @@ Result<> ExtractFeatureBoundaries2D::operator()()
 
   const DataType dataType = featureIdsArray.getDataType();
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Extracting feature boundaries...");
+  m_MessageHandler.sendInfoMessage("Extracting feature boundaries...");
 
   // Dispatch because the filter accepts every integral Feature ID type.
   return ExecuteDataFunction(ExtractFeatureBoundariesFunctor{}, dataType, m_DataStructure, m_InputValues->FeatureIdsArrayPath, imageGeom, edgeGeom, m_ShouldCancel, m_InputValues->ZValueChoice,

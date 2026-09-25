@@ -15,6 +15,7 @@
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -31,6 +32,7 @@
 #include <exception>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <string>
@@ -1235,7 +1237,7 @@ Result<> GatherMaurer3DZBatch(const WorkStoreT& workStore, nonstd::span<float32>
  */
 template <class T, class WorkStoreT>
 Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore, WorkStoreT& workStore, const Maurer3DSlabParameters<T>& parameters, const std::atomic_bool& shouldCancel,
-                                          bool& hasBoundary)
+                                          bool& hasBoundary, ThrottledMessageHandler* progressThrottle = nullptr)
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const int64 nX = static_cast<int64>(parameters.dims[0]);
@@ -1465,6 +1467,10 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
       return result;
     }
 
+    if(progressThrottle != nullptr)
+    {
+      progressThrottle->updateCount(static_cast<usize>(z + 1));
+    }
     if(!is2D && hasNext)
     {
       std::swap(prev, cur);
@@ -1489,7 +1495,8 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
  * The I/O thread writes the previous batch and gathers the next batch while workers transform the current batch.
  */
 template <class T, class WorkStoreT>
-Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32>& outputStore, const Maurer3DSlabParameters<T>& parameters, const std::atomic_bool& shouldCancel, bool hasBoundary)
+Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32>& outputStore, const Maurer3DSlabParameters<T>& parameters, const std::atomic_bool& shouldCancel, bool hasBoundary,
+                          ThrottledMessageHandler* progressThrottle = nullptr)
 {
   const usize nX = parameters.dims[0];
   const usize nY = parameters.dims[1];
@@ -1645,6 +1652,10 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     {
       return {};
     }
+    if(progressThrottle != nullptr)
+    {
+      progressThrottle->updatePercent(std::min(nY, (batchIndex + 1) * maxYRows));
+    }
     if(batchIndex + 1 < batchCount)
     {
       // The swap makes the gathered next batch current and preserves the transformed batch in other for the next write.
@@ -1708,6 +1719,13 @@ public:
       return {};
     }
 
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    std::mutex progressMutex;
+    const auto sendThreadSafeProgress = [&](usize completed) {
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      progressThrottle.incrementPercent(completed);
+    };
+    m_MessageHandler.sendInfoMessage("Maurer: Initializing Distances");
     std::unique_ptr<T[]> inputOwner;
     nonstd::span<const T> input;
     const auto* inStorePtr = dynamic_cast<const DataStore<T>*>(&m_In);
@@ -1752,6 +1770,9 @@ public:
       const usize numLines = (d == 0) ? (static_cast<usize>(nZ) * static_cast<usize>(nY)) :
                              (d == 1) ? (static_cast<usize>(nZ) * static_cast<usize>(nX)) :
                                         (static_cast<usize>(nY) * static_cast<usize>(nX));
+      const std::string progressLabel = fmt::format("Maurer: Transforming Axis {}", d);
+      m_MessageHandler.sendInfoMessage(progressLabel);
+      progressThrottle.reset(numLines, progressLabel);
       // Each worker reuses private envelope and line buffers across its assigned lines.
       auto processLines = [&](const Range& lineRange) {
         // The raw pointer avoids the per-element span contract check in the X-axis line kernel.
@@ -1772,7 +1793,12 @@ public:
           {
             RunLine(work, base, stride, nd, sp[d], g, h, lineBuf);
           }
+          if(((k - lineRange.min() + 1) & 31ULL) == 0)
+          {
+            sendThreadSafeProgress(32);
+          }
         }
+        sendThreadSafeProgress((lineRange.max() - lineRange.min()) & 31ULL);
       };
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, numLines);
@@ -1783,6 +1809,7 @@ public:
       }
     }
 
+    m_MessageHandler.sendInfoMessage("Maurer: Finalizing Distances");
     // The encoded sign remains unchanged while the final pass converts squared magnitudes to distances.
     if(!m_Squared)
     {
@@ -1934,8 +1961,11 @@ private:
   Result<> Run3D(WorkStoreT& work)
   {
     const detail::Maurer3DSlabParameters<T> parameters{m_Dims, m_Bg, m_InsidePos, m_Squared, m_UseSpacing, m_Spacing, m_Max3DYRows, m_Max3DWorkers};
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Maurer: Initializing and Transforming XY Slices");
+    progressThrottle.reset(m_Dims[2], "Maurer: Transforming XY Slices");
     bool hasBoundary = false;
-    if(Result<> result = detail::StreamMaurer3DInitAndTransformXY(m_In, work, parameters, m_ShouldCancel, hasBoundary); result.invalid())
+    if(Result<> result = detail::StreamMaurer3DInitAndTransformXY(m_In, work, parameters, m_ShouldCancel, hasBoundary, &progressThrottle); result.invalid())
     {
       return result;
     }
@@ -1944,7 +1974,9 @@ private:
       return {};
     }
 
-    return detail::RunMaurer3DZPass(work, m_Out, parameters, m_ShouldCancel, hasBoundary);
+    m_MessageHandler.sendInfoMessage("Maurer: Transforming Z Row Groups");
+    progressThrottle.reset(m_Dims[1], "Maurer: Transforming Z Row Groups");
+    return detail::RunMaurer3DZPass(work, m_Out, parameters, m_ShouldCancel, hasBoundary, &progressThrottle);
   }
 
   template <class U>
@@ -2096,6 +2128,9 @@ private:
     }
     constexpr float32 k_Max = std::numeric_limits<float32>::max();
 
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Maurer: Initializing and Transforming X Rows");
+    progressThrottle.reset(ny, "Maurer: Transforming X Rows");
     // Phase 1: feature initialization plus X transform, written directly in transposed storage order.
     if(!plan.spillX)
     {
@@ -2225,6 +2260,7 @@ private:
             }
           }
         }
+        progressThrottle.updatePercent(yBegin + rowCount);
       }
     }
     else
@@ -2316,9 +2352,15 @@ private:
         {
           return result;
         }
+        if(!m_ShouldCancel)
+        {
+          progressThrottle.updatePercent(y + 1);
+        }
       }
     }
 
+    m_MessageHandler.sendInfoMessage("Maurer: Transforming Y Columns");
+    progressThrottle.reset(nx, "Maurer: Transforming Y Columns");
     // Phase 2: contiguous transposed Y lines plus final sign/sqrt, written directly to the output geometry.
     if(!plan.spillY)
     {
@@ -2404,8 +2446,11 @@ private:
             }
           }
         }
+        progressThrottle.updatePercent(xBegin + columnCount);
       }
 
+      m_MessageHandler.sendInfoMessage("Maurer: Writing Output Rows");
+      progressThrottle.reset(ny, "Maurer: Writing Output Rows");
       for(usize yBegin = 0; yBegin < ny; yBegin += directRowBatchRows)
       {
         if(m_ShouldCancel)
@@ -2441,6 +2486,7 @@ private:
         {
           return result;
         }
+        progressThrottle.updatePercent(yBegin + rowCount);
       }
     }
     else
@@ -2469,6 +2515,10 @@ private:
            result.invalid())
         {
           return result;
+        }
+        if(!m_ShouldCancel)
+        {
+          progressThrottle.updatePercent(x + 1);
         }
       }
     }

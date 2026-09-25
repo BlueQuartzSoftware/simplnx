@@ -1,4 +1,5 @@
 #include "ComputeKernelAvgMisorientationsScanline.hpp"
+
 #include "ComputeKernelAvgMisorientations.hpp"
 
 #include "simplnx/Common/Constants.hpp"
@@ -7,6 +8,7 @@
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ParallelData2DAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -614,6 +616,7 @@ private:
  * @param inputValues Identifies the selected arrays and KAM settings.
  * @param plan Specifies the rolling-window buffer sizes.
  * @param shouldCancel Signals cancellation.
+ * @param messageHandler Receives phase and completed-work messages.
  * @pre plan.UseRollingWindow is true.
  * @return Success, or a crystal-structure, input, or output bulk-I/O error.
  *
@@ -622,7 +625,7 @@ private:
  * Cancellation is checked before each plane and returns success.
  */
 Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues, const ComputeKernelAvgMisorientationsWorkingSet& plan,
-                              const std::atomic_bool& shouldCancel)
+                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry);
   const SizeVec3 dimensions = imageGeom.getDimensions();
@@ -681,6 +684,9 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     return {};
   };
 
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  messageHandler.sendInfoMessage("Computing Kernel Average Misorientation Planes");
+  progressThrottle.reset(zPoints, "Computing Kernel Average Misorientation Planes");
   usize nextSliceToLoad = 0;
   for(usize plane = 0; plane < zPoints; plane++)
   {
@@ -717,6 +723,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     {
       return result;
     }
+    progressThrottle.updateCount(plane + 1);
   }
 
   return {};
@@ -728,6 +735,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
  * @param inputValues Identifies the selected arrays and KAM settings.
  * @param plan Specifies the fallback block and cache sizes.
  * @param shouldCancel Signals cancellation.
+ * @param messageHandler Receives phase and completed-work messages.
  * @pre plan.UseRollingWindow is false.
  * @return Success, or a crystal-structure, input, or output bulk-I/O error.
  *
@@ -735,7 +743,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
  * each plane and focal block and returns success.
  */
 Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues, const ComputeKernelAvgMisorientationsWorkingSet& plan,
-                           const std::atomic_bool& shouldCancel)
+                           const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry);
   const SizeVec3 dimensions = imageGeom.getDimensions();
@@ -773,6 +781,9 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
   const usize totalTuples = plan.SliceTuples * zPoints;
   InputBlockCache inputCache(featureIdsStore, cellPhasesStore, quatsStore, plan, totalTuples);
   std::vector<float32> outputBlock(plan.BlockTuples);
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  messageHandler.sendInfoMessage("Computing Kernel Average Misorientation Blocks");
+  progressThrottle.reset(totalTuples, "Computing Kernel Average Misorientation Blocks");
 
   for(usize plane = 0; plane < zPoints; plane++)
   {
@@ -900,6 +911,7 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
         return result;
       }
       pointInSliceStart += focalCount;
+      progressThrottle.updatePercent(planeOffset + pointInSliceStart);
     }
   }
 
@@ -945,8 +957,8 @@ Result<> ComputeKernelAvgMisorientationsScanline::operator()()
   const auto& plan = planResult.value();
   if(plan.UseRollingWindow)
   {
-    return ExecuteRollingWindow(m_DataStructure, *m_InputValues, plan, m_ShouldCancel);
+    return ExecuteRollingWindow(m_DataStructure, *m_InputValues, plan, m_ShouldCancel, m_MessageHandler);
   }
 
-  return ExecuteBlockCache(m_DataStructure, *m_InputValues, plan, m_ShouldCancel);
+  return ExecuteBlockCache(m_DataStructure, *m_InputValues, plan, m_ShouldCancel, m_MessageHandler);
 }

@@ -433,7 +433,7 @@ struct IdentifySampleSliceBySliceFunctor
       {
         return {};
       }
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
+      messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
 
       // Read the plane with bulk transfers where its layout permits them.
       if(stride1 == 1 && stride2 == planeDim1)

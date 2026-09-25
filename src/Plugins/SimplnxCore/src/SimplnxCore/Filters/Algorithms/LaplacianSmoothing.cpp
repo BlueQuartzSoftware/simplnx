@@ -78,7 +78,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
+    m_MessageHandler.sendInfoMessage(fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
     for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
     {
@@ -124,7 +124,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       {
         return {};
       }
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
+      m_MessageHandler.sendInfoMessage(fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
       for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
       {

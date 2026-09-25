@@ -188,7 +188,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 
   if(m_InputValues->CalculateSphericity)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.

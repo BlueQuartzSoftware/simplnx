@@ -10,6 +10,8 @@
 #include <EbsdLib/IO/TSL/AngConstants.h>
 #include <EbsdLib/IO/TSL/AngReader.h>
 
+#include "simplnx/Utilities/ProgressEstimator.hpp"
+
 #include <fstream>
 #include <sstream>
 
@@ -391,15 +393,15 @@ Result<> ConvertHexGridToSquareGrid::operator()()
    * into the HDF5 file at the wrong index. YOU HAVE BEEN WARNED.
    */
   // Loop on Each EBSD File
-  auto total = static_cast<float32>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
-  int32 progress;
+  const auto totalFiles = static_cast<usize>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
+  ProgressEstimator progressEstimator;
   int64 z = m_InputValues->InputFileListInfo.startIndex;
 
   auto result = Result<>{};
   ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
+    m_MessageHandler.sendInfoMessage(fmt::format("Now Processing: {}", filepath));
 
     result = MergeResults(converter(filepath), result);
     if(result.invalid())
@@ -409,10 +411,8 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 
     {
       z++;
-      progress = static_cast<int32>(z - m_InputValues->InputFileListInfo.startIndex - 1);
-      progress = static_cast<int32>(100.0f * static_cast<float32>(progress) / total);
-      std::string msg = "Converted File: " + filepath;
-      m_MessageHandler(IFilter::Message::Type::Progress, msg, progress);
+      const auto convertedFiles = static_cast<usize>(z - m_InputValues->InputFileListInfo.startIndex);
+      m_MessageHandler.sendProgressCount("Converting files", convertedFiles, totalFiles, progressEstimator.estimate(convertedFiles, totalFiles));
     }
 
     if(getCancel())
@@ -422,7 +422,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
     }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Saving converted files");
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Saving converted files");
   result = MergeResults(converter.commitAllFiles(), result);
 
   return result;

@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <filesystem>
 #include <vector>
@@ -41,7 +41,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void sendThreadSafeProgressMessage(const std::string& message);
+  void sendThreadSafeProgressMessage(usize completedPlanes);
 
 private:
   DataStructure& m_DataStructure;
@@ -52,7 +52,7 @@ private:
   // Thread safe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
 
-  ThrottledMessenger* m_ThrottledMessengerPtr = nullptr;
+  ThrottledMessageHandler m_Throttle;
 };
 
 /**

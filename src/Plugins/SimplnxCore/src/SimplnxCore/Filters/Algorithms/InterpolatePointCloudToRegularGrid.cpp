@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -546,11 +547,15 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 
   // Each accepted point updates its clipped kernel neighborhood. Accumulators
   // can reside behind bounded external pages.
-  const usize progIncrement = numVerts / 100;
-  usize prog = 1;
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(numVerts, "Interpolating Point Cloud");
 
   for(usize i = 0; i < numVerts; i++)
   {
+    if(i > 0 && i % 1024 == 0)
+    {
+      progressThrottle.updatePercent(i);
+    }
     if(m_ShouldCancel)
     {
       return {};
@@ -654,16 +659,10 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
         }
       }
     }
-
-    if(i > prog)
-    {
-      const auto progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
-      prog += progIncrement;
-    }
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing interpolated results...");
+  progressThrottle.updatePercent(numVerts);
+  m_MessageHandler.sendInfoMessage("Writing interpolated results");
   if(Result<> result = interpAccum.flush(m_ShouldCancel); result.invalid())
   {
     return result;

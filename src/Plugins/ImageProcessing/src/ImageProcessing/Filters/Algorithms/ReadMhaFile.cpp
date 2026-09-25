@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -19,8 +20,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_ProgressTupleStride = 1u << 18; // ~256k tuples
-
 struct CropBounds
 {
   usize xStart{0};
@@ -141,14 +140,13 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
   std::vector<T> srcScanline(srcScanlineElements);
 
   const usize destNx = b.xEnd - b.xStart + 1;
-  const usize destNy = b.yEnd - b.yStart + 1;
-  const usize destNz = b.zEnd - b.zStart + 1;
   const usize destScanlineElements = destNx * comp;
   std::vector<T> destScanline(destScanlineElements);
 
-  const usize totalDestTuples = destNx * destNy * destNz;
   usize destTupleOffset = 0;
-  usize lastProgressTuples = 0;
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset((b.zEnd + 1) * srcNy, "Reading source rows");
+  messageHandler.sendInfoMessage("Reading source rows and copying the selected volume; rows outside the crop are read and discarded");
 
   for(usize srcZ = 0; srcZ < srcNz; srcZ++)
   {
@@ -167,6 +165,10 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
 
     for(usize srcY = 0; srcY < srcNy; srcY++)
     {
+      if(shouldCancel)
+      {
+        return {};
+      }
       Result<> readResult = reader.readBytes(srcScanline.data(), srcScanlineBytes);
       if(readResult.invalid())
       {
@@ -174,11 +176,13 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
       }
       if(!zInRange)
       {
+        progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
         continue;
       }
       const bool yInRange = (srcY >= b.yStart && srcY <= b.yEnd);
       if(!yInRange)
       {
+        progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
         continue;
       }
 
@@ -203,14 +207,10 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
         return copyResult;
       }
       destTupleOffset += destNx;
-    }
-    if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
-    {
-      const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
-      messageHandler({IFilter::Message::Type::Info, fmt::format("{}% Complete", pct)});
-      lastProgressTuples = destTupleOffset;
+      progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
     }
   }
+  messageHandler.sendProgressPercent("Reading source rows", (b.zEnd + 1) * srcNy, (b.zEnd + 1) * srcNy);
   return {};
 }
 

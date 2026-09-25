@@ -9,8 +9,8 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <tbb/combinable.h>
 
@@ -114,7 +114,7 @@ private:
  * @param numElements Receives voxel counts.
  * @param featureIds Supplies Feature IDs.
  * @param saveElementSizes True to retain generated element sizes.
- * @param msgHelper Supplies progress messages.
+ * @param messageHandler Supplies progress messages.
  * @param shouldCancel Signals cancellation between Z slices or features.
  * @return Success, or an element-size or feature-count error.
  *
@@ -122,16 +122,16 @@ private:
  * It does not pin or synchronize store access.
  */
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                          const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+                          const Int32AbstractDataStore& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numFeatures = volumes.getNumberOfTuples();
   SizeVec3 dims = imageGeom.getDimensions();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
-  msgHelper.sendMessage("Finding Voxel Counts...");
+  messageHandler.sendInfoMessage("Finding Voxel Counts...");
   // Count each feature with thread-local Z-slice accumulators.
   FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
@@ -165,14 +165,14 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   // A unit dimension selects flat ImageGeom area calculation.
   if(xDimSize == 1 || yDimSize == 1 || zDimSize == 1)
   {
-    msgHelper.sendMessage("Singular image detected. Proceeding with 2D calculations...");
+    messageHandler.sendInfoMessage("Singular image detected. Proceeding with 2D calculations...");
     // Preflight permits one unit dimension. More unit dimensions do not identify a unique area plane.
     // The slab convention matches ImageGeom::findElementSizes.
     // It differs from DREAM3D 6.5.171 when flat spacing is not one.
     // The [2DFlatSpacing] V&V case records this compatibility difference.
     const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
 
-    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
+    messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
     {
       if(shouldCancel)
@@ -185,7 +185,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
         return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
       }
 
-      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+      progressThrottle.updatePercent(" - Calculating", featureIdx, numFeatures);
 
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
 
@@ -197,11 +197,11 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   }
   else
   {
-    msgHelper.sendMessage("Image Stack detected. Proceeding with 3D calculations...");
+    messageHandler.sendInfoMessage("Image Stack detected. Proceeding with 3D calculations...");
 
     const float64 voxelVolume = spacing[0] * spacing[1] * spacing[2];
 
-    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
+    messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
     for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
     {
       if(shouldCancel)
@@ -214,7 +214,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
         return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
       }
 
-      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+      progressThrottle.updatePercent(" - Calculating", featureIdx, numFeatures);
 
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
 
@@ -227,7 +227,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 
   if(saveElementSizes)
   {
-    msgHelper.sendMessage("Calculating Element Sizes...");
+    messageHandler.sendInfoMessage("Calculating Element Sizes...");
     return imageGeom.findElementSizes(false);
   }
 
@@ -327,7 +327,7 @@ private:
  * @param numElements Receives voxel counts.
  * @param featureIds Supplies Feature IDs.
  * @param saveElementSizes True to retain generated element sizes.
- * @param msgHelper Supplies progress messages.
+ * @param messageHandler Supplies progress messages.
  * @param shouldCancel Signals cancellation between Z slices or features.
  * @return Success, or an element-size or feature-count error.
  *
@@ -335,14 +335,14 @@ private:
  * or element sizes.
  */
 Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                             const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+                             const Int32AbstractDataStore& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+  ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numFeatures = volumes.getNumberOfTuples();
   SizeVec3 dims = rectGridGeom.getDimensions();
 
-  msgHelper.sendMessage("Finding Element Sizes...");
+  messageHandler.sendInfoMessage("Finding Element Sizes...");
   Result<> result = rectGridGeom.findElementSizes(false);
   if(result.invalid())
   {
@@ -354,7 +354,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
   std::vector<float64> featureVolumes(numFeatures, 0.0);
 
-  msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
+  messageHandler.sendInfoMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Count each feature and sum element volumes with thread-local Z ranges.
   FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
@@ -391,7 +391,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     return {};
   }
 
-  msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
+  messageHandler.sendInfoMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
   for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
   {
     if(shouldCancel)
@@ -399,7 +399,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+    progressThrottle.updatePercent(" - Calculating", featureIdx, numFeatures);
 
     if(featureVoxelCounts[featureIdx] > k_MaxVoxelCount)
     {
@@ -413,7 +413,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
   if(!saveElementSizes)
   {
-    msgHelper.sendMessage("Cleaning Up Element Sizes...");
+    messageHandler.sendInfoMessage("Cleaning Up Element Sizes...");
     rectGridGeom.deleteElementSizes();
   }
 
@@ -434,11 +434,11 @@ ComputeFeatureSizesDirect::~ComputeFeatureSizesDirect() noexcept = default;
 
 Result<> ComputeFeatureSizesDirect::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   const bool saveElementSizes = m_InputValues->SaveElementSizes;
 
-  messageHelper.sendMessage("Validating Feature Ids and Feature Attribute Matrix...");
+  messageHandler.sendInfoMessage("Validating Feature Ids and Feature Attribute Matrix...");
   const DataPath featureIdsArrayPath = m_InputValues->FeatureIdsPath;
   const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
   {
@@ -466,15 +466,15 @@ Result<> ComputeFeatureSizesDirect::operator()()
   const IGeometry::Type geomType = geom.getGeomType();
   if(geomType == IGeometry::Type::Image)
   {
-    messageHelper.sendMessage("Beginning Processing Features in Image Geometry...");
+    messageHandler.sendInfoMessage("Beginning Processing Features in Image Geometry...");
     auto& imageGeom = dynamic_cast<ImageGeom&>(geom);
-    return ProcessImageGeom(imageGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHelper, m_ShouldCancel);
+    return ProcessImageGeom(imageGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHandler, m_ShouldCancel);
   }
   if(geomType == IGeometry::Type::RectGrid)
   {
-    messageHelper.sendMessage("Beginning Processing Features in Rectilinear Grid Geometry...");
+    messageHandler.sendInfoMessage("Beginning Processing Features in Rectilinear Grid Geometry...");
     auto& rectGridGeom = dynamic_cast<RectGridGeom&>(geom);
-    return ProcessRectGridGeom(rectGridGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHelper, m_ShouldCancel);
+    return ProcessRectGridGeom(rectGridGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHandler, m_ShouldCancel);
   }
 
   return {};

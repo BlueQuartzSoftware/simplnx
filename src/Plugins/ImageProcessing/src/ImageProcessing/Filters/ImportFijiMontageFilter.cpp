@@ -306,7 +306,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
     {
       return {};
     }
-    messageHandler(IFilter::Message::Type::Info, fmt::format("Importing {}", tile.filePath.filename().string()));
+    messageHandler.sendInfoMessage(fmt::format("Importing {}", tile.filePath.filename().string()));
 
     const TilePaths paths = MakeTilePaths(tile, parentDataGroup, dataGroupName, cellAmName, imageArrayName);
 
@@ -326,7 +326,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
     {
       for(const auto& error : readResult.errors())
       {
-        messageHandler(IFilter::Message::Type::Warning, fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
+        messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
       }
       result.warnings().emplace_back(Warning{-35940, fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
       continue; // mirror legacy: try to continue with the remaining tiles

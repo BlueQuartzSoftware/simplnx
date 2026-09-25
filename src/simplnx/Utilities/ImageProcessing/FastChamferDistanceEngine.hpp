@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -600,6 +601,9 @@ private:
     }
     std::vector<float32> block(capacityValues);
 
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    m_MessageHandler.sendInfoMessage("Fast Chamfer: Forward Pass");
+    progressThrottle.reset(ny, "Fast Chamfer: Forward Rows");
     bool firstBlock = true;
     for(usize rowBegin = 0; rowBegin < ny; rowBegin += coreRows)
     {
@@ -636,9 +640,12 @@ private:
       {
         std::copy_n(block.data() + sourceRows * nx, nx, block.data());
       }
+      progressThrottle.updatePercent(rowBegin + sourceRows);
       firstBlock = false;
     }
 
+    m_MessageHandler.sendInfoMessage("Fast Chamfer: Backward Pass");
+    progressThrottle.reset(ny, "Fast Chamfer: Backward Rows");
     firstBlock = true;
     for(usize rowEnd = ny; rowEnd > 0;)
     {
@@ -677,6 +684,7 @@ private:
       {
         return result;
       }
+      progressThrottle.updatePercent(ny - sourceBegin);
       rowEnd = sourceBegin;
       firstBlock = false;
     }
@@ -685,6 +693,11 @@ private:
 
   Result<> ProcessTiled2DPass(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreCols, usize tileCount, bool forward)
   {
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    const std::string progressLabel = forward ? "Fast Chamfer: Forward Tiles" : "Fast Chamfer: Backward Tiles";
+    m_MessageHandler.sendInfoMessage(progressLabel);
+    progressThrottle.reset(ny * tileCount, progressLabel);
+
     std::array<std::vector<float32>, detail::k_Chamfer2DMaxTileRecords> tileValues;
     for(auto& values : tileValues)
     {
@@ -911,6 +924,10 @@ private:
           {
             return result;
           }
+          if(!m_ShouldCancel)
+          {
+            progressThrottle.incrementPercent();
+          }
         }
       }
     }
@@ -923,6 +940,10 @@ private:
           if(Result<> result = processTile(row, tile); result.invalid())
           {
             return result;
+          }
+          if(!m_ShouldCancel)
+          {
+            progressThrottle.incrementPercent();
           }
         }
       }
@@ -1286,7 +1307,7 @@ private:
    * Levels with several groups run under the parallel data algorithm. Levels with one group run on the calling thread,
    * so a thin volume with one plane or one row group performs a plain serial scan.
    */
-  bool PropagateForwardWavefront(float32* block, usize nx, usize ny, usize sourcePlanes, usize loadedPlanes)
+  bool PropagateForwardWavefront(float32* block, usize nx, usize ny, usize sourcePlanes, usize loadedPlanes, ThrottledMessageHandler* sharedProgress = nullptr)
   {
     if(sourcePlanes == 0 || nx == 0 || ny == 0)
     {
@@ -1297,6 +1318,15 @@ private:
     const usize groupCount = 1 + (ny - 1) / groupRows;
     const usize lastLevel = 3 * (sourcePlanes - 1) + (groupCount - 1);
     const float32 maxDist = m_MaxDist;
+    std::optional<ThrottledMessageHandler> localProgress;
+    if(sharedProgress == nullptr)
+    {
+      localProgress.emplace(m_MessageHandler);
+      sharedProgress = &*localProgress;
+      m_MessageHandler.sendInfoMessage("Fast Chamfer: Forward Pass");
+      sharedProgress->reset(sourcePlanes * groupCount, "Fast Chamfer: Forward Row Groups");
+    }
+    ThrottledMessageHandler& progressThrottle = *sharedProgress;
     for(usize level = 0; level <= lastLevel; ++level)
     {
       if(m_ShouldCancel)
@@ -1334,6 +1364,7 @@ private:
         // Single-group levels run on the calling thread. This avoids a task-scheduler launch when the level has no
         // parallel work.
         processGroup(0);
+        progressThrottle.incrementPercent();
         continue;
       }
       ParallelDataAlgorithm parallelAlgorithm;
@@ -1344,6 +1375,7 @@ private:
           processGroup(index);
         }
       });
+      progressThrottle.incrementPercent(groupsInLevel);
     }
     return true;
   }
@@ -1360,7 +1392,7 @@ private:
    *
    * Level scheduling matches the forward kernel: multi-group levels run in parallel, single-group levels run inline.
    */
-  bool PropagateBackwardWavefront(float32* block, usize nx, usize ny, usize firstSourcePlane, usize loadedPlanes, bool negateSourcePlanes)
+  bool PropagateBackwardWavefront(float32* block, usize nx, usize ny, usize firstSourcePlane, usize loadedPlanes, bool negateSourcePlanes, ThrottledMessageHandler* sharedProgress = nullptr)
   {
     if(firstSourcePlane >= loadedPlanes || nx == 0 || ny == 0)
     {
@@ -1372,6 +1404,15 @@ private:
     const usize groupCount = 1 + (ny - 1) / groupRows;
     const usize lastLevel = 3 * (sourcePlanes - 1) + (groupCount - 1);
     const float32 maxDist = m_MaxDist;
+    std::optional<ThrottledMessageHandler> localProgress;
+    if(sharedProgress == nullptr)
+    {
+      localProgress.emplace(m_MessageHandler);
+      sharedProgress = &*localProgress;
+      m_MessageHandler.sendInfoMessage("Fast Chamfer: Backward Pass");
+      sharedProgress->reset(sourcePlanes * groupCount, "Fast Chamfer: Backward Row Groups");
+    }
+    ThrottledMessageHandler& progressThrottle = *sharedProgress;
     for(usize level = 0; level <= lastLevel; ++level)
     {
       if(m_ShouldCancel)
@@ -1419,6 +1460,7 @@ private:
       if(groupsInLevel == 1)
       {
         processGroup(0);
+        progressThrottle.incrementPercent();
         continue;
       }
       ParallelDataAlgorithm parallelAlgorithm;
@@ -1429,6 +1471,7 @@ private:
           processGroup(index);
         }
       });
+      progressThrottle.incrementPercent(groupsInLevel);
     }
     return true;
   }
@@ -1478,6 +1521,9 @@ private:
     try
     {
       std::vector<float32> block(capacityValues);
+      ThrottledMessageHandler progressThrottle(m_MessageHandler);
+      m_MessageHandler.sendInfoMessage("Fast Chamfer: Forward Pass");
+      progressThrottle.reset(nz * (1 + (ny - 1) / m_RowGroupRows), "Fast Chamfer: Forward Row Groups");
       bool firstBlock = true;
       for(usize planeBegin = 0; planeBegin < nz; planeBegin += corePlanes)
       {
@@ -1505,7 +1551,7 @@ private:
             }
           }
         }
-        if(!PropagateForwardWavefront(block.data(), nx, ny, sourcePlanes, loadedPlanes))
+        if(!PropagateForwardWavefront(block.data(), nx, ny, sourcePlanes, loadedPlanes, &progressThrottle))
         {
           return {};
         }
@@ -1520,6 +1566,8 @@ private:
         firstBlock = false;
       }
 
+      m_MessageHandler.sendInfoMessage("Fast Chamfer: Backward Pass");
+      progressThrottle.reset(nz * (1 + (ny - 1) / m_RowGroupRows), "Fast Chamfer: Backward Row Groups");
       firstBlock = true;
       for(usize planeEnd = nz; planeEnd > 0;)
       {
@@ -1552,7 +1600,7 @@ private:
           }
         }
         const usize sourceOffset = static_cast<usize>(hasHalo) * slice;
-        if(!PropagateBackwardWavefront(block.data(), nx, ny, static_cast<usize>(hasHalo), loadedPlanes, m_NegateOutput))
+        if(!PropagateBackwardWavefront(block.data(), nx, ny, static_cast<usize>(hasHalo), loadedPlanes, m_NegateOutput, &progressThrottle))
         {
           return {};
         }

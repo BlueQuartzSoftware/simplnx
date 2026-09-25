@@ -6,8 +6,11 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
 #include "simplnx/simplnx_export.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -58,7 +61,16 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  MessageHelper& getMessageHelper();
+  const IFilter::MessageHandler& getThreadSafeMessageHandler();
+
+  /**
+   * @brief Thread-safe progress update. Safe to call from the per-array transfer tasks.
+   * @param counter Slices completed since the previous call
+   *
+   * A mutex serializes access because the shared throttle is not thread-safe. Progress is aggregate
+   * across every selected array, so one message per interval describes the whole transfer.
+   */
+  void sendThreadSafeProgressMessage(usize counter);
 
 protected:
   /**
@@ -80,7 +92,10 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  MessageHelper m_MessageHelper;
+  std::mutex m_MessageMutex;
+  const IFilter::MessageHandler m_ThreadSafeMessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  ThrottledMessageHandler m_Throttle;
 };
 
 } // namespace nx::core

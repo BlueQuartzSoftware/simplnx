@@ -5,8 +5,8 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Core/DirectionalStats.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -512,6 +512,7 @@ ComputeAvgOrientations::ComputeAvgOrientations(DataStructure& dataStructure, con
 , m_MessageHandler(mesgHandler)
 , m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
+, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -521,18 +522,7 @@ void ComputeAvgOrientations::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
-  m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_NumberOfFeatures)) * 100.0f);
-  std::string ss = fmt::format("{}% Complete", progressInt);
-  m_MessageHandler(IFilter::Message::Type::Info, ss);
-
-  m_InitialPoint = std::chrono::steady_clock::now();
+  m_Throttle.incrementPercent(counter);
 }
 
 Result<> ComputeAvgOrientations::operator()()
@@ -610,12 +600,12 @@ Result<> ComputeAvgOrientations::executeDirect()
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
-    messageHelper.sendMessage("Computing Rodrigues Average Orientations");
+    messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
 
     Result<> result = computeRodriguesAverage();
     if(result.invalid() || m_ShouldCancel)
@@ -628,15 +618,15 @@ Result<> ComputeAvgOrientations::executeDirect()
   {
     if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
     if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
     if(m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher and Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
 
     Result<> result = computeVmfWatsonAverage();
@@ -780,11 +770,11 @@ Result<> ComputeAvgOrientations::executeScanline()
                                               maximumFeatureId, m_NumberOfFeatures, featureCountPath->toString()));
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
-    messageHelper.sendMessage("Computing Rodrigues Average Orientations");
+    messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
     Result<> result = computeRodriguesAverageScanline();
     if(result.invalid() || m_ShouldCancel)
     {
@@ -796,15 +786,15 @@ Result<> ComputeAvgOrientations::executeScanline()
   {
     if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
     else if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
     {
-      messageHelper.sendMessage("Computing Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
     else
     {
-      messageHelper.sendMessage("Computing von-Mises Fisher and Watson Average Orientations");
+      messageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
     Result<> result = computeVmfWatsonAverageScanline();
     if(result.invalid() || m_ShouldCancel)
@@ -818,6 +808,7 @@ Result<> ComputeAvgOrientations::executeScanline()
 
 Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 {
+  m_Throttle.reset(m_NumberOfFeatures, "Computing average orientations");
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
@@ -905,6 +896,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 
 Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
 {
+  m_Throttle.reset(m_NumberOfFeatures, "Computing average orientations");
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
   const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
   const auto& quaternionsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
@@ -1365,8 +1357,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   auto phasesBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto quatsBuf = std::make_unique<float32[]>(k_ChunkTuples * 4);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger messenger = messageHelper.createThrottledMessenger();
+  auto& progressThrottle = m_Throttle;
 
   for(usize offset = 0; offset < totalPoints;)
   {
@@ -1374,7 +1365,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       return {};
     }
-    messenger.sendThrottledMessage([offset, totalPoints]() { return fmt::format("Computing Rodrigues Average: Cell {}/{}", offset, totalPoints); });
+    progressThrottle.updateCount("Computing Rodrigues Average", offset, totalPoints);
 
     const usize count = std::min(k_ChunkTuples, totalPoints - offset);
     Result<> readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));

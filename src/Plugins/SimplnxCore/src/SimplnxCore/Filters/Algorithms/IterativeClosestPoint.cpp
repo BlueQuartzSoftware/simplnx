@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <Eigen/Geometry>
 
@@ -71,7 +72,7 @@ IterativeClosestPoint::~IterativeClosestPoint() noexcept = default;
 // -----------------------------------------------------------------------------
 void IterativeClosestPoint::updateProgress(const std::string& message)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, message);
+  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------
@@ -126,7 +127,7 @@ Result<> IterativeClosestPoint::operator()()
   using Adaptor = VertexGeomAdaptor<VertexGeom*>;
   const Adaptor adaptor(targetVertexGeom);
 
-  m_MessageHandler("Building kd-tree index...");
+  m_MessageHandler.sendInfoMessage("Building kd-tree index...");
 
   using KDtree = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float32, Adaptor>, Adaptor, 3>;
   KDtree index(3, adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(30));
@@ -140,7 +141,8 @@ Result<> IterativeClosestPoint::operator()()
   UmeyamaTransform globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(m_InputValues->NumIterations, "Performing Registration Iterations");
   for(usize i = 0; i < m_InputValues->NumIterations; i++)
   {
     if(m_ShouldCancel)
@@ -174,12 +176,7 @@ Result<> IterativeClosestPoint::operator()()
     // Update the global transform
     globalTransform = transform * globalTransform;
 
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      m_MessageHandler(fmt::format("Performing Registration Iterations || {}% Completed", static_cast<int64>((static_cast<float>(i) / m_InputValues->NumIterations) * 100.0f)));
-      start = now;
-    }
+    progressThrottle.updateCount(i + 1);
   }
 
   auto& transformStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->TransformArrayPath)->getDataStoreRef();
