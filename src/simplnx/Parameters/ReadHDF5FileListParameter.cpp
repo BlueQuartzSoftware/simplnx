@@ -126,7 +126,7 @@ Result<std::any> ReadHDF5FileListParameter::fromJsonImpl(const nlohmann::json& j
   if(orderingCheck != to_underlying(Ordering::LowToHigh) && orderingCheck != to_underlying(Ordering::HighToLow))
   {
     return MakeErrorResult<std::any>(-799, fmt::format("{}JSON value for key '{}' was not a valid ordering value. [{}|{}] allowed.", prefix, ValueType::k_Ordering_Key.view(),
-                                                        to_underlying(Ordering::LowToHigh), to_underlying(Ordering::HighToLow)));
+                                                       to_underlying(Ordering::LowToHigh), to_underlying(Ordering::HighToLow)));
   }
 
   ValueType value;

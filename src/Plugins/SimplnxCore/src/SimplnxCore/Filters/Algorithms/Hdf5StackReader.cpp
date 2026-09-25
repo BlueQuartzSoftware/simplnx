@@ -125,7 +125,8 @@ namespace nx::core
 // -----------------------------------------------------------------------------
 std::vector<Hdf5StackSliceSource> GenerateSliceSourcesFromDataStack(const ReadHDF5DataStackParameter::ValueType& dataStackInfo)
 {
-  std::vector<std::string> datasetPaths = GenerateHdf5StackDatasetPaths(dataStackInfo.pathPrefix, dataStackInfo.pathSuffix, dataStackInfo.startIndex, dataStackInfo.endIndex, dataStackInfo.paddingDigits);
+  std::vector<std::string> datasetPaths =
+      GenerateHdf5StackDatasetPaths(dataStackInfo.pathPrefix, dataStackInfo.pathSuffix, dataStackInfo.startIndex, dataStackInfo.endIndex, dataStackInfo.paddingDigits);
 
   std::vector<Hdf5StackSliceSource> sources;
   sources.reserve(datasetPaths.size());
@@ -157,8 +158,8 @@ Result<Hdf5StackSliceShape> ReadHdf5StackSliceShape(const HDF5::DatasetIO& datas
   if(dims.size() < 2)
   {
     return MakeErrorResult<Hdf5StackSliceShape>(
-        k_SliceShapeError, fmt::format("Dataset '{}' has {} dimension(s); at least 2 are required to be treated as a 2D slice (with any remaining dimensions treated as component shape).", datasetPath,
-                                       dims.size()));
+        k_SliceShapeError,
+        fmt::format("Dataset '{}' has {} dimension(s); at least 2 are required to be treated as a 2D slice (with any remaining dimensions treated as component shape).", datasetPath, dims.size()));
   }
 
   Hdf5StackSliceShape shape;
@@ -255,8 +256,7 @@ Result<> Hdf5StackReader::operator()()
     }
     else if(shape != referenceShape)
     {
-      return MakeErrorResult(k_SliceDimsMismatch,
-                             fmt::format("Dataset '{}' in file '{}' has dimensions that do not match the first slice in the stack.", source.datasetPath, source.filePath));
+      return MakeErrorResult(k_SliceDimsMismatch, fmt::format("Dataset '{}' in file '{}' has dimensions that do not match the first slice in the stack.", source.datasetPath, source.filePath));
     }
 
     Result<DataType> srcTypeResult = datasetReader.getDataType();

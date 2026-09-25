@@ -87,9 +87,9 @@ Parameters Hdf5StackReaderFilter::parameters() const
   ChoicesParameter::Choices inputModeChoices({"Single File (Multiple Datasets)", "Multiple Files (Same Dataset)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_InputModeKey, "Input Mode", "Whether to read multiple datasets out of a single HDF5 file, or the same dataset path out of multiple HDF5 files.", k_SingleFileInputMode, inputModeChoices));
-  params.insert(std::make_unique<ReadHDF5DataStackParameter>(k_H5DataStack_Key, "Read HDF5 Data Stack", "HDF5 datasets to read, all from a single HDF5 file.", ReadHDF5DataStackParameter::ValueType()));
   params.insert(
-      std::make_unique<ReadHDF5FileListParameter>(k_H5FileList_Key, "Read HDF5 File List", "HDF5 files to read, all using the same dataset path.", ReadHDF5FileListParameter::ValueType()));
+      std::make_unique<ReadHDF5DataStackParameter>(k_H5DataStack_Key, "Read HDF5 Data Stack", "HDF5 datasets to read, all from a single HDF5 file.", ReadHDF5DataStackParameter::ValueType()));
+  params.insert(std::make_unique<ReadHDF5FileListParameter>(k_H5FileList_Key, "Read HDF5 File List", "HDF5 files to read, all using the same dataset path.", ReadHDF5FileListParameter::ValueType()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Created Montage Name", "Montage storing individual slice data", "[Stack Montage]"));
@@ -195,8 +195,8 @@ IFilter::PreflightResult Hdf5StackReaderFilter::preflightImpl(const DataStructur
     }
     else if(shapeResult.value() != referenceShape)
     {
-      return MakePreflightErrorResult(
-          k_SliceDimsMismatch, fmt::format("{}: Dataset '{}' in file '{}' has dimensions that do not match the first slice in the stack.", humanName(), source.datasetPath, source.filePath));
+      return MakePreflightErrorResult(k_SliceDimsMismatch,
+                                      fmt::format("{}: Dataset '{}' in file '{}' has dimensions that do not match the first slice in the stack.", humanName(), source.datasetPath, source.filePath));
     }
   }
 
