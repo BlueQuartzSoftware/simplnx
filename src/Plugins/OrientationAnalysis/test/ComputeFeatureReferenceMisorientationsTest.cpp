@@ -113,17 +113,17 @@ inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usiz
   (*td.crystalStructures)[0] = 999u; // UnknownCrystalStructure sentinel
   (*td.crystalStructures)[1] = 1u;   // Cubic_High (EbsdLib LaueOps index 1)
 
-  // Initialize default zero values
+  // Bulk initialization preserves the same defaults for large HDF5 fixtures.
+  td.featureIds->fill(0);
+  td.cellPhases->fill(0);
+  td.gbEuclideanDistances->fill(0.0F);
+  std::vector<float32> quaternionValues(totalVoxels * 4, 0.0F);
   for(usize i = 0; i < totalVoxels; ++i)
   {
-    (*td.featureIds)[i] = 0;
-    (*td.cellPhases)[i] = 0;
-    (*td.gbEuclideanDistances)[i] = 0.0f;
-    (*td.quats)[i * 4 + 0] = 0.0f;
-    (*td.quats)[i * 4 + 1] = 0.0f;
-    (*td.quats)[i * 4 + 2] = 0.0f;
-    (*td.quats)[i * 4 + 3] = 1.0f; // identity by default
+    quaternionValues[i * 4 + 3] = 1.0F;
   }
+  auto quatsWriteResult = td.quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
   for(usize f = 0; f < numFeatures; ++f)
   {
     (*td.avgQuats)[f * 4 + 0] = 0.0f;
@@ -354,6 +354,69 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: SI
 // =============================================================================
 // V&V Class 1 (Analytical) + Class 4 (Invariant) data fixtures — added 2026-06-01.
 // =============================================================================
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: genuine HDF5 65536-block tail oracle",
+          "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const int32 referenceMode = GENERATE(0, 1);
+  CAPTURE(referenceMode);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  auto fixture = AnalyticalFixtures::CreateScaffold(k_BlockTuples + 1, 1, 1, 2);
+
+  const std::array<usize, 2> cellIndices = {k_BlockTuples - 1, k_BlockTuples};
+  const std::array<float32, 2> angles = {15.0F, 30.0F};
+  for(usize witnessIdx = 0; witnessIdx < cellIndices.size(); witnessIdx++)
+  {
+    const usize cellIdx = cellIndices[witnessIdx];
+    (*fixture.featureIds)[cellIdx] = 1;
+    (*fixture.cellPhases)[cellIdx] = 1;
+    (*fixture.gbEuclideanDistances)[cellIdx] = 5.0F;
+    const auto quat = AnalyticalFixtures::QuatFromPhi1Deg(angles[witnessIdx]);
+    for(usize compIdx = 0; compIdx < 4; compIdx++)
+    {
+      (*fixture.quats)[cellIdx * 4 + compIdx] = quat[compIdx];
+    }
+  }
+  REQUIRE(fixture.featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.gbEuclideanDistances->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  ComputeFeatureReferenceMisorientationsFilter filter;
+  auto args = AnalyticalFixtures::BuildArgs(referenceMode);
+  auto result = filter.execute(fixture.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const auto cellOutputPath = AnalyticalFixtures::k_CellDataPath.createChildPath(AnalyticalFixtures::k_CellMisorientationsOutName);
+  const auto averageOutputPath = AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureAvgMisorientationsOutName);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(cellOutputPath));
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(averageOutputPath));
+  const auto& cellOutput = fixture.ds.getDataRefAs<Float32Array>(cellOutputPath);
+  const auto& averageOutput = fixture.ds.getDataRefAs<Float32Array>(averageOutputPath);
+  REQUIRE(cellOutput.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(averageOutput.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(cellOutput[k_BlockTuples - 1] == Approx(15.0F).margin(1.0E-3F));
+  REQUIRE(cellOutput[k_BlockTuples] == Approx(referenceMode == 0 ? 30.0F : 0.0F).margin(1.0E-3F));
+  REQUIRE(averageOutput[1] == Approx(referenceMode == 0 ? 22.5F : 7.5F).margin(1.0E-3F));
+  REQUIRE(cellOutput[k_BlockTuples - 2] == 0.0F);
+
+  if(referenceMode == 1)
+  {
+    // Equal maximum distances straddle the block boundary; the later cell wins.
+    const auto centersPath = AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName);
+    REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(centersPath));
+    const auto& centers = fixture.ds.getDataRefAs<Float32Array>(centersPath);
+    REQUIRE(centers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(centers[3] == 65536.5F);
+    REQUIRE(centers[4] == 0.5F);
+    REQUIRE(centers[5] == 0.5F);
+  }
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
 
 // Fixture A: Mode 0, single 2x2x2 grain, all identity quats. Expected: FRM = 0, avg = 0.
 // Covers code paths: 1 (Mode 0), 4 (compute branch), 8 (avg finalize, non-zero count).

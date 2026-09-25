@@ -15,12 +15,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | Port with with bug fixes. See 'Dependency' section |
 | Oracle (confirmed) | Class 1 (Analytical) - **12 value-asserting fixtures**: 5 auto-path loading directions, 4 exactly-representable quaternions, and 3 override-path cases. Class 4 assertions cover the physical bound `0 <= m <= 0.5`, angle-component relationships, fixed-point `Poles`, scale invariance, and cubic-symmetry invariance. The fixtures are inline and independent of archived filter output. |
-| Code paths enumerated | 20 of 21 paths exercised - only the cancel path is untested. |
-| Tests today | 6 inline test cases (**598 assertions**, measured): 3 Class 1 / Class 4 oracle cases, 1 options-and-guards case, 1 preflight-validation case, and 1 SIMPL backwards-compatibility case. |
+| Code paths enumerated | 21 of 22 paths exercised - only the cancel path is untested. |
+| Tests today | 6 registered target cases plus one hidden HDF5 boundary test. Paired target selections pass 6/6. |
 | Exemplar archive | **None for this filter.** The circular `6_6_stats_test_v2.tar.gz` comparison was retired. |
 | Legacy comparison | **Run — SIMPLNX vs DREAM3D 6.5.171** One shared six-Feature input was exercised through 10 original pipeline pairs plus 3 zero-vector validation pairs. The independent rerun confirmed **291/291 expected relationships**: auto-path floats matched the exact D1 bias factors, auto-path `SlipSystems` and `Poles` were bit-identical, override-path floats agreed within `1.2e-7` relative, and D5 was traced to equivalent symmetry tables with different ordering and tied maxima. 6 deviations: **D1** truncated cubic normalizers; **D2** legacy `-301` skipped-row sentinel; **D3** undefined library outputs; **D4** mode-dependent angle units, names, and error reporting; **D5** table-relative override index; **D6** malformed-input validation. See the deviations document for root-cause detail. |
 | Bug flags | **Four bugs resolved in SIMPLNX or EbsdLib:** `ComputeSchmidsFilter-D1` (truncated cubic normalizers), `ComputeSchmidsFilter-D2` (legacy `-301` skipped-row initialization), `ComputeSchmidsFilter-D3` (undefined orientation-library outputs), and `ComputeSchmidsFilter-D6` (missing malformed-input validation). |
-| V&V phase | **COMPLETE** |
+| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds real-HDF5 analytical boundary evidence and paired runtime checks. |
 
 ## Summary
 
@@ -114,7 +114,7 @@ This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX
 
 The algorithm is flat: a parameter setup block, a sentinel-row write, then one pass over Features.
 
-20 of 21 paths exercised.
+21 of 22 paths exercised.
 
 | # | Phase | Path | Test case |
 |---|---|---|---|
@@ -139,6 +139,7 @@ The algorithm is flat: a parameter setup block, a sentinel-row write, then one p
 | 19 | *Execute - per-Feature* | Override slip-system path (`getSchmidFactorAndSS(load, plane, direction, ...)`) | "override slip system path" |
 | 20 | *Execute - per-Feature* | Store or omit angle components | auto, override, and StoreAngleComponents=false sections |
 | 21 | *Execute - per-Feature* | `m_ShouldCancel` early return | *Not directly tested. No cancel-signal injection infrastructure exists for algorithm classes; same gap as the rest of this plugin.* |
+| 22 | OOC storage | Quaternion chunk and one-feature tail have different analytical factors and poles | `real HDF5 quaternion-chunk tail oracle` |
 
 ## Test inventory
 
@@ -151,6 +152,7 @@ The algorithm is flat: a parameter setup block, a sentinel-row write, then one p
 | `"OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards"` | new-for-V&V | `StoreAngleComponents == false`; a 20 000-Feature `LaueGroupEnd` skip fixture; a valid no-slip-system Laue class; and the `-13501`/`-13502` phase-id guards. 108 assertions. |
 | `"OrientationAnalysis::ComputeSchmidsFilter: preflight input validation"` | new-for-V&V | Mismatched/empty Feature arrays, empty Crystal Structures, and zero loading/override vectors (`-13503` through `-13508`). 19 assertions. |
 | `"OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility"` | kept, untouched | 2 `DYNAMIC_SECTION` conversion fixtures (SIMPL 6.5 UUID, SIMPL 6.4 Filter_Name). 33 assertions. |
+| `real HDF5 quaternion-chunk tail oracle` | new-for-V&V | Independent HDF5 boundary outputs; 37 assertions across the configured options. |
 
 **598 assertions total** (236 + 109 + 93 + 108 + 19 + 33), taken from a `ctest --verbose` run rather than tallied by hand. All 6 pass on the reviewed branch.
 
@@ -171,6 +173,8 @@ Seven temporary defects were evaluated. Each defect caused the expected V&V test
 | Remove both phase-index guards. | Options, skip path, and phase guards | Detected |
 | Disable the Feature-array tuple-count validation. | Preflight input validation | Detected |
 | Disable all three zero-vector guards. | Preflight input validation | Detected |
+
+OOC recertification (2026-09-21): 6/6 target CTest entries pass in both DREAM3DNX builds. The hidden `real HDF5 quaternion-chunk tail oracle` passes 37 assertions in the OOC binary. The input quaternion store reports a 65,536-tuple chunk. At its final full-chunk feature the identity orientation gives Schmid factor 0.5 and poles [70,0,70]. The tail quaternion (0,0,0.6,0.8) rotates the loading to (0.28,0.96,1)/sqrt(2); cubic equivalents give factor 0.48 and poles [19,67,70]. These expectations account for symmetry, unlike a 90-degree control which is symmetry-equivalent. Existing upstream/develop oracles and tolerances are preserved. No production algorithm or historical sign-off is changed, and no fresh legacy binary run is claimed.
 
 ## Exemplar archive
 

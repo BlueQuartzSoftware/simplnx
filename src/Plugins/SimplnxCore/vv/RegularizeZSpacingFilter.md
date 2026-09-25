@@ -15,12 +15,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** of legacy `RegularizeZSpacing::execute()` — identical Z-plane mapping rule and `floor(extent/newZRes)` dim math (independently hand-traced, including the strict-`>` boundary and clamp cases). Five port-time deltas (bulk copy, new-geometry output mode, preflight validation, parallelization, cell-AM binding); none change output for valid input. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** primary + **Class 4 (Invariant)** companion — closed-form indirection map `out[i] = in[map[i]]`. Element-wise Class 1 assertions in 2 fixtures (`Valid Execution (New Geometry)`, `Valid Execution (Spacing Exceeds Extent)`); Class 4 invariants across the valid fixtures. All pass in-core + OOC. |
-| Code paths enumerated  | 12 of 14 exercised; the 2 uncovered are the redundant file-open guard and the cancel check (reasons below).                  |
-| Tests today            | 5 TEST_CASEs (2 Class-1 valid + 1 in-place valid + 1 invalid-parameters with 6 SECTIONs + 1 SIMPL backwards-compat with 6.5/6.4 fixtures); every documented preflight error code asserted explicitly. |
+| Code paths enumerated  | 13 of 15 exercised; the 2 uncovered are the redundant file-open guard and the cancel check (reasons below).                  |
+| Tests today | 5 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 5/5. |
 | Exemplar archive       | **None** — inline analytical fixtures (no `download_test_data`; avoids a circular oracle per project policy).                 |
 | Legacy comparison      | **Run** vs DREAM3D 6.5.171 on a synthetic multi-type fixture (int32 + bool + 3-component float). Bit-identical: legacy == SIMPLNX == Class-1 oracle on every array and on geometry (dims/spacing/origin). |
 | Bug flags              | None.              |
-| V&V phase              | Oracle applied and reconciled; algorithm review + three independent adversarial reviews applied (fixes folded in); dual-build green; legacy A/B bit-identical with 0 deviations. **Outstanding:** second-engineer oracle review before COMPLETE. |
+| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
 
@@ -54,9 +54,13 @@
 
 *Second-engineer review:* **Pending.** The oracle is a deterministic index remap (lowest-risk oracle class); review still recommended before promotion to COMPLETE.
 
+## Bugs found and fixed
+
+No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+
 ## Code path coverage
 
-`12 of 14 paths exercised.` The 2 uncovered are a redundant file-open guard and the cancel check, listed with reasons.
+`13 of 15 paths exercised.` The 2 uncovered are a redundant file-open guard and the cancel check, listed with reasons.
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZSpacing.cpp` (217 lines) + `Filters/RegularizeZSpacingFilter.cpp` (309 lines, preflight). Logical phases: **(a) preflight validation**, **(b) output-geometry construction**, **(c) mapping + copy**.
 
@@ -76,6 +80,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | 12 | (c) | build `newToOldZPlane` mapping (nearest-below, strict `>`) | `Valid Execution (New Geometry)` — verified against oracle map `[0,1,2,2,3]` |
 | 13 | (c) | per-array bulk `copyFrom` of each plane slab | all three valid fixtures + legacy A/B (int32/bool/float3) |
 | 14 | (c) | cancel check (per-array, per-plane) | *Not directly tested. Requires cancel-signal injection; branch is a simple early return.* |
+| 15 | OOC boundary | slice-copy oracle | `real HDF5 slice-copy oracle` — independent expected outputs on actual HDF5 stores |
 
 ## Test inventory
 
@@ -86,6 +91,9 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | `Valid Execution (Spacing Exceeds Extent)` | new-for-V&V | Class 1 clamp fixture: `newZRes` (20) > extent (10) → 1 output plane sourced from plane 0; dims (2,1,1), Z spacing 20, `Data` = {0,1} asserted. |
 | `Invalid Parameters` | new-for-V&V | 6 SECTIONs — non-positive spacing (`-5555`), too-few file values (`-5557`), non-monotonic values (`-5558`), zero total extent (`-5559`), missing cell AM (`-5560`), non-DataArray cell member (`-5561`); each asserts the specific error code. |
 | `SIMPL Backwards Compatibility` | new-for-V&V | 2 DYNAMIC_SECTIONs — converts the 6.5 (UUID-keyed) and 6.4 (Filter_Name-keyed) fixtures in `test/simpl_conversion/`; asserts converted geometry path, input file, Z spacing, and the in-place default. The 6.4 path exercises the `k_LegacySimplFilterUuidMap` name resolution. |
+| `real HDF5 slice-copy oracle` | new-for-V&V | 67 assertions; The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. |
+
+OOC recertification (2026-09-21): serial CTest passed 5/5 target entries in each DREAM3DNX build. The hidden `real HDF5 slice-copy oracle` passed 67 assertions in the OOC binary. The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
 
 ## Exemplar archive
 

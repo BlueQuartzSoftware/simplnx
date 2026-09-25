@@ -12,6 +12,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/ComputeGroupingDensityFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -382,6 +383,94 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Preflight Error - Parent V
 // SIMPL JSON backwards-compatibility — verifies FromSIMPLJson() correctly
 // translates the SIMPL 6.5 filter parameter keys to the simplnx Arguments.
 // =============================================================================
+
+TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: real HDF5 neighbor-list chunk oracle", "[SimplnxCore][ComputeGroupingDensityFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool nonContiguous = GENERATE(false, true);
+  const bool checked = GENERATE(false, true);
+  CAPTURE(nonContiguous, checked);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  auto* groupPtr = DataGroup::Create(dataStructure, k_DataContainerName);
+  REQUIRE(groupPtr != nullptr);
+  const ShapeType featureShape{3, 1, 3};
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, featureShape, groupPtr->getId());
+  auto* parentsPtr = AttributeMatrix::Create(dataStructure, k_ParentAMName, {3}, groupPtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  REQUIRE(parentsPtr != nullptr);
+  auto volumeStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_VolumesPath, featureShape, {1});
+  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_ParentIdsPath, featureShape, {1});
+  auto parentVolumeStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_ParentVolumesPath, {3}, {1});
+  auto contigStore = DataStoreUtilities::CreateListStore<int32>(dataStructure, k_ContiguousNLPath, featureShape);
+  auto nonContigStore = DataStoreUtilities::CreateListStore<int32>(dataStructure, k_NonContiguousNLPath, featureShape);
+  auto* volumesPtr = Float32Array::Create(dataStructure, "Volumes", volumeStore, featuresPtr->getId());
+  auto* idsPtr = Int32Array::Create(dataStructure, "ParentIds", idsStore, featuresPtr->getId());
+  auto* parentVolumesPtr = Float32Array::Create(dataStructure, "ParentVolumes", parentVolumeStore, parentsPtr->getId());
+  auto* contigPtr = Int32NeighborList::Create(dataStructure, "ContiguousNeighborList", contigStore, featuresPtr->getId());
+  auto* nonContigPtr = Int32NeighborList::Create(dataStructure, "NonContiguousNeighborList", nonContigStore, featuresPtr->getId());
+  REQUIRE(volumesPtr != nullptr);
+  REQUIRE(idsPtr != nullptr);
+  REQUIRE(parentVolumesPtr != nullptr);
+  REQUIRE(contigPtr != nullptr);
+  REQUIRE(nonContigPtr != nullptr);
+  volumesPtr->fill(0);
+  idsPtr->fill(0);
+  parentVolumesPtr->fill(0);
+  (*volumesPtr)[2] = 4.0F;
+  (*volumesPtr)[3] = 8.0F;
+  (*volumesPtr)[4] = 4.0F;
+  (*volumesPtr)[8] = 8.0F;
+  (*idsPtr)[2] = 1;
+  (*idsPtr)[3] = 1;
+  (*parentVolumesPtr)[1] = 12.0F;
+  // Rank-three HDF5 lists use one outer slice per chunk: three tuples here.
+  // Features 2 and 3 straddle chunks; repeated neighbor 4 must count once.
+  contigPtr->setList(2, std::vector<int32>{3, 4});
+  contigPtr->setList(3, std::vector<int32>{2, 4});
+  nonContigPtr->setList(3, std::vector<int32>{8});
+  REQUIRE(volumeStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(idsStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(parentVolumeStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(contigStore->isOutOfCore());
+  REQUIRE(nonContigStore->isOutOfCore());
+
+  ComputeGroupingDensityFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_FeatureVolumesArrayPath_Key, std::make_any<DataPath>(k_VolumesPath));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_ParentIdsPath_Key, std::make_any<DataPath>(k_ParentIdsPath));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_ParentVolumesPath_Key, std::make_any<DataPath>(k_ParentVolumesPath));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_ContiguousNLPath));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_NonContiguousNLPath));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(nonContiguous));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_FindCheckedFeatures_Key, std::make_any<bool>(checked));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_CheckedFeaturesName_Key, std::make_any<std::string>(k_ComputedCheckedFeaturesName));
+  args.insertOrAssign(ComputeGroupingDensityFilter::k_GroupingDensitiesName_Key, std::make_any<std::string>(k_ComputedGroupingDensitiesName));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_ComputedGroupingDensitiesPath));
+  const auto& densities = dataStructure.getDataRefAs<Float32Array>(k_ComputedGroupingDensitiesPath);
+  REQUIRE(densities.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(densities[0] == 0.0F);
+  REQUIRE(densities[1] == (nonContiguous ? 0.5F : 0.75F));
+  REQUIRE(densities[2] == -1.0F);
+  if(checked)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ComputedCheckedFeaturesPath));
+    const auto& claims = dataStructure.getDataRefAs<Int32Array>(k_ComputedCheckedFeaturesPath);
+    REQUIRE(claims.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    for(usize featureIdx = 0; featureIdx < 9; featureIdx++)
+    {
+      REQUIRE(claims[featureIdx] == ((featureIdx == 2 || featureIdx == 3 || featureIdx == 4 || (nonContiguous && featureIdx == 8)) ? 1 : 0));
+    }
+  }
+  else
+  {
+    REQUIRE_FALSE(dataStructure.containsData(k_ComputedCheckedFeaturesPath));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeGroupingDensityFilter][BackwardsCompatibility]")
 {

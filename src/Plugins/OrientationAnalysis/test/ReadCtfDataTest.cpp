@@ -564,6 +564,61 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - U
 // SIMPL Backwards Compatibility — validates UUID + parameter conversion from
 // the legacy ReadCtfData (SIMPL UUID d1df969c-0428-53c3-b61d-99ea2bb6da28).
 //------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: real HDF5 65536-block conversion oracle", "[OrientationAnalysis][ReadCtfDataFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  std::string data;
+  for(usize tupleIdx = 0; tupleIdx <= k_BlockTuples; tupleIdx++)
+  {
+    const float32 x = static_cast<float32>(tupleIdx) * 0.25F;
+    if(tupleIdx == k_BlockTuples - 1)
+    {
+      data += fmt::format("1\t{}\t0\t5\t0\t1.25\t1.375\t7.125\t0.375\t134\t232\n", x);
+    }
+    else if(tupleIdx == k_BlockTuples)
+    {
+      data += fmt::format("0\t{}\t0\t0\t3\t2\t2.125\t2.25\t0\t68\t151\n", x);
+    }
+    else
+    {
+      data += fmt::format("2\t{}\t0\t6\t0\t0.5\t0.625\t0.75\t0.25\t120\t209\n", x);
+    }
+  }
+  const auto inputFile = WriteCtfFile("read_ctf_ooc_boundary.ctf", MakeToyCtf("", k_TwoPhaseBlock, k_ColumnHeader, data, 65537, 1));
+  DataStructure dataStructure;
+  ReadCtfDataFilter filter;
+  auto args = MakeDefaultArgs(inputFile, true, true);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto cellsPath = k_DataContainerPath.createChildPath(k_CellData);
+  const auto eulersPath = cellsPath.createChildPath("EulerAngles");
+  const auto phasesPath = cellsPath.createChildPath("Phases");
+  const auto bandsPath = cellsPath.createChildPath("Bands");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(bandsPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulersPath);
+  const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  const auto& bands = dataStructure.getDataRefAs<Int32Array>(bandsPath);
+  REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(bands.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // Reuse the independently rounded literals from Euler Conversion Combinations.
+  const std::array<float32, 9> expected = {0.008726646F, 0.0109083075F, 0.01308997F, 0.021816615F, 0.023998277F, 0.6479535F, 0.034906585F, 0.037088245F, 0.03926991F};
+  for(usize compIdx = 0; compIdx < expected.size(); compIdx++)
+  {
+    REQUIRE(eulers[(k_BlockTuples - 2) * 3 + compIdx] == expected[compIdx]);
+  }
+  REQUIRE(phases[k_BlockTuples - 1] == 1);
+  REQUIRE(phases[k_BlockTuples] == 0);
+  REQUIRE(bands[k_BlockTuples - 1] == 5);
+  REQUIRE(bands[k_BlockTuples] == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadCtfDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

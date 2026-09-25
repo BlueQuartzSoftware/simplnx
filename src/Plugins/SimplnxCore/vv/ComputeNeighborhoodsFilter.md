@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** of legacy `FindNeighborhoods`. Legacy tested an axis-aligned box in normalized bin-space with a per-feature reach; NX tests a true Euclidean sphere. A real **NX regression is resolved** (see Bug flags). A new "Search Radius (microns)" mode and removal of the unused Feature Phases input were also added. |
 | Oracle (confirmed)     | **Class 1 (Analytical) + Class 4 (Invariant).** Two hand-built synthetic fixtures with exact neighbor counts (microns mode; per-feature multiples mode incl. an asymmetry case), plus count==list-size and symmetry/asymmetry invariants. Encoded in `test/ComputeNeighborhoodsTest.cpp`; all pass. |
-| Code paths enumerated  | 13 of 14 exercised; 1 uncovered (the cancel-signal path, which requires cancel-signal injection).                                  |
-| Tests today            | **5 TEST_CASEs** — 2 analytical oracles (microns + per-feature multiples, incl. an exact-boundary inclusion pin and background-feature-0 exclusion assertions), 1 preflight info/warnings (3 sections), 1 invalid-parameter (4 sections, all error codes asserted), 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). All inline/synthetic — no exemplar archive. |
+| Code paths enumerated  | 14 of 15 exercised; 1 uncovered (the cancel-signal path, which requires cancel-signal injection).                                  |
+| Tests today | 5 registered cases plus one hidden HDF5 boundary case. Both serial CTest selections pass 5/5. |
 | Exemplar archive       | **None.** All oracles are inline analytical values. The legacy comparison used the shared `6_6_stats_test_v2.tar.gz` Small IN100 stats dataset as input only (not a unit-test exemplar for this filter).                                     |
 | Legacy comparison      | **Run** on Small IN100 (`6_6_stats_test_v2.dream3d`, 620 features, mult=1) via 6.5.171 `PipelineRunner` vs `nxrunner`. After the fix, NX correlates **0.894** with legacy and finds **50.8%** as many neighbors — exactly the sphere/box volume ratio. One documented deviation (D1); phases removal (D2). |
 | Bug flags              | **Resolved NX regression** (not a legacy bug; PR #1485 landed 2026-01-08, so **7.4.1 is the only affected release**): the prior NX rewrite (PR #1485) introduced a `÷2` factor and a global (vs per-feature) radius, making the default `mult=1` find ~37× fewer neighbors than legacy (mean 0.29 vs 10.93). Fixed by restoring a per-feature Euclidean radius. |
-| V&V phase              | Oracle chosen and encoded; SIMPLNX-vs-oracle reconciliation complete (bug fixed); legacy 6.5.171 comparison run and explained; docs updated. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
+| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds independent HDF5 boundary evidence and paired runtime checks. |
 
 ## Summary
 
@@ -46,6 +46,8 @@
 3. **Feature Phases removed.** Legacy required a `FeaturePhases` input but never used it in the computation; NX removes the parameter (D2).
 4. **New "Search Radius (microns)" mode.** No legacy equivalent; lets the user supply an absolute radius and does not require Equivalent Diameters.
 
+OOC source: `Algorithms/ComputeNeighborhoods.cpp` (320 lines). The new test targets the storage path documented below.
+
 ## Oracle
 
 *Class:* **1 (Analytical)** primary, **4 (Invariant)** companion.
@@ -56,11 +58,15 @@
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. Existing defect and deviation dispositions in this report and its sidecar are retained.
+
 ## Code path coverage
 
-*13 of 14 paths exercised.*
+*14 of 15 paths exercised.*
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` (~300 lines) + `ComputeNeighborhoodsFilter.cpp` preflight.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` (320 lines) + `ComputeNeighborhoodsFilter.cpp` preflight.
 
 Logical phases: **(a) preflight validation/actions**, **(b) radius + bin setup**, **(c) parallel per-feature spatial scan**, **(d) neighbor-list finalize**.
 
@@ -80,6 +86,7 @@ Logical phases: **(a) preflight validation/actions**, **(b) radius + bin setup**
 | 12 | (c) | Self-skip (`j == i`) and background exclusion — feature 0 is excluded both as a search **source** (`Range(1, N)`) and as a **candidate** (`binToFeatures` built from feature 1) | Explicitly asserted in both oracles: `Neighborhoods[0] == 0` and `NeighborhoodList[0]` empty; the multiples fixture places feature 0's centroid coincident with feature 1's so a regression here fails the assertion |
 | 13 | (c) | `shouldCancel` → early return from the parallel scan | *Not directly tested. Requires cancel-signal injection.* |
 | 14 | (c) | Inclusive boundary: `distSq == radiusSq` counts as a neighbor | `..._SyntheticOracle` (features 4 and 6 at exactly radius distance, exactly representable in float32) |
+| 15 | Storage | HDF5 NeighborList output crosses three-tuple chunks | `real HDF5 list-chunk oracle` — exact directed lists and counts in both radius modes |
 
 ## Test inventory
 
@@ -93,8 +100,11 @@ Logical phases: **(a) preflight validation/actions**, **(b) radius + bin setup**
 | `ComputeNeighborhoods_1` | retired | Circular exemplar comparison (golden `Neighborhoods_1` was not an independent oracle) and invalidated by the radius fix. Replaced by the Class 1 analytical oracle + legacy comparison. |
 | `ComputeNeighborhoods_3` | retired | Same as `_1` for `mult=3`. |
 | `ComputeNeighborhoods_SearchRadiusMicrons` | retired | Premise (microns ≡ multiples when `r = avgDiam/2`) is invalid under the per-feature fix. Microns mode is covered by `SyntheticOracle`. |
+| `real HDF5 list-chunk oracle` | new-for-V&V | Actual HDF5 input/output and independent boundary expectations; 79 assertions across the configured options. |
 
 All non-retired tests pass at the verified commit. *(In-core build confirmed; OOC build to be confirmed per dual-build protocol.)*
+
+OOC recertification (2026-09-21): serial CTest passed 5/5 in each DREAM3DNX build. `test/ComputeNeighborhoodsTest.cpp::real HDF5 list-chunk oracle` passed 79 assertions in the OOC binary. The hidden case reuses BuildSyntheticFeatures and gives the feature AttributeMatrix shape {3,1,3}. The HDF5 list factory creates three-tuple chunks, so features 2/3 straddle a real list chunk boundary. At positions x=0,3,6, the fixed-radius mode gives lists {3}, {2,4}, {3}; the diameter-based mode gives {3}, {}, {3}. All other features are isolated. Numeric inputs/output are HDF5-OOC; the output list is asserted out-of-core. Existing legacy deviation dispositions remain unchanged. Upstream/develop oracle assertions and tolerances remain intact. No fresh legacy binary comparison is claimed.
 
 ## Exemplar archive
 

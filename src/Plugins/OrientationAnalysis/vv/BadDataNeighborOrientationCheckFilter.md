@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** of legacy `BadDataNeighborOrientationCheck::execute()`. Same two-pass iterative-decay structure; SIMPLNX bundles two legacy bug fixes (D1, D2 — PR #1499) and a SIMPLNX-side float-π precision fix.        |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — engineer's hand-derived `expectedMask` arrays for all 27 algorithmic fixtures, mirrored from `bad_data_neighbor_orientation_check_v2/test_design.md`. **Class 4 (Invariant) companion** — monotonicity + no-degrade asserted via `ClassFourInvariants` helper across all base fixtures and a dedicated idempotence test.    |
-| Code paths enumerated  | 7 of 7 algorithmic paths exercised (cancel check, mask-skip, mixed-phase skip, background-voxel skip, within-tolerance increment, above-tolerance skip, iterative-decay flip + neighbor-count update).         |
-| Tests today            | **31 TEST_CASEs / 49 ctest entries**, 100% pass (2.40s). 27 Class 1 base + 1 SIMPL backwards-compat + 1 Class 4 Invariants Sweep (18 DYNAMIC_SECTIONs) + 1 Class 4 Idempotence + 1 2D Image Fixture (inline-constructed). |
-| Exemplar archive       | `7_bad_data_neighbor_orientation_check.tar.gz` — **INPUT** `.dream3d` files only (one per case). Expected outputs are inline `expectedMask` literals in the test source. Class 1 oracle source-of-truth (`test_design.md`) bundled in the local archive copy.    |
+| Code paths enumerated | 9 of 11 exercised; cancellation and the unused-Laue sentinel guard are not directly tested. |
+| Tests today | 33 registered cases plus 2 hidden HDF5 cases (Bool and UInt8 masks). Both serial CTest selections pass 33/33. |
+| Exemplar archive       | `bad_data_neighbor_orientation_check_v2.tar.gz` — **INPUT** `.dream3d` files only (one per case). Expected outputs are inline `expectedMask` literals in the test source. Class 1 oracle source-of-truth (`test_design.md`) bundled in the local archive copy.    |
 | Legacy comparison      | **Run** against DREAM3D 6.5.171 on all 27 algorithmic fixtures. 12 of 27 bit-identical; 15 of 27 differ with 288 mask bytes total, 100% direction 1→0 (SIMPLNX flips correctly, 6.5.171 misses). All observed diffs trace to D1.|
 | Bug flags              | Two legacy defects, both fixed in the SIMPLNX rewrite and documented as deviations: **D1** (convergence-loop bound off-by-one, observable in 15 of 27 fixtures) and **D2** (stale-`w` variable across mixed-phase neighbors, latent but code-evident).            |
-| V&V phase              | **All V&V work complete per V2 policy.** Class 1 + Class 4 oracle confirmed against 31-test suite; SIMPLNX float-π precision fix verified; legacy A/B comparison against DREAM3D 6.5.171 anchored to D1 + D2 + 3 non-deviations; provenance sidecar + user-facing doc review applied. Three source-tree deliverables (this report + `vv/deviations/...` + `vv/provenance/...`) are in place. **V&V complete and signed off by Michael Jackson (technical authority), 2026-06-01.**         |
+| V&V phase | The original COMPLETE status and sign-off are retained. Section 4.3 recertification adds real-HDF5 reverse-slice cascade coverage and confirms both builds. |
 
 ## Summary
 
@@ -96,11 +96,15 @@ A third invariant (**Idempotence**: running the filter on its own output produce
 - *The Class 4 invariant set for completeness — are there other properties this algorithm must satisfy?*
 - *The Phase 9 deviation narrative (D1 loop bound + D2 stale `w`) and the determination that the EbsdLib 2.4.1 CubicOps precision improvement is non-observable in this filter's test data.*
 
+## Bugs found and fixed
+
+The existing D1 loop-bound and D2 stale-angle corrections remain in this branch. Their historical affected behavior is documented in `vv/deviations/BadDataNeighborOrientationCheckFilter.md`. No production algorithm changed during this OOC recertification.
+
 ## Code path coverage
 
-*7 of 7 paths exercised.*
+9 of 11 paths exercised.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.cpp` (~260 lines).
+Source: `Algorithms/BadDataNeighborOrientationCheck.cpp` (37 lines), `BadDataNeighborOrientationCheckWorklist.cpp` (243 lines), and `BadDataNeighborOrientationCheckScanline.cpp` (376 lines).
 
 The algorithm has two passes: (a) initial face-neighbor count over all voxels, and (b) iterative-decay flip pass that decrements `currentLevel = 6 → NumberOfNeighbors`. Each pass's per-voxel kernel has branches for mask state, phase match, and tolerance pass.
 
@@ -113,21 +117,29 @@ The algorithm has two passes: (a) initial face-neighbor count over all voxels, a
 | 5 | (a) Initial scan   | Mask = false, neighbor same-phase + misorientation `>= tolerance` → don't increment    | `Case 1.X.3` (boundary-exact at 5°) + `Case 1.1.3` (6° vs 1° = ~5°+ε)               |
 | 6 | (b) Iterative flip | `neighborCount[voxelIndex] >= currentLevel` AND mask still false → flip + update still-bad neighbors' counts | `Case 1.X.1` (basic flip), `Case 2.X` (sequential), `Case 3.X` (long chains), Case 4 (semi-complex)  |
 | 7 | (b) Iterative flip | Defensive `laueClassIndex >= numOrientationOps` skip (sentinel-aware bounds guard)    | *Not directly tested.* Exercised implicitly when the filter runs on any fixture whose CrystalStructures contains the `UnknownCrystalStructure` sentinel at an unused index (all 27 base fixtures). Low-value gap — adding a deliberate sentinel-at-used-index fixture would only verify the early-exit branch. |
+| 8 | Scanline | Reverse propagation crosses five rolling slices; Bool and UInt8 bulk mask paths | `real HDF5 reverse-slice cascade oracle` — exact full mask and target-only OOC dispatch counter |
+| 9 | Validation | Participating phase bounds | `Phase Index Bounds` |
+| 10 | Preflight | Cell tuple-count mismatch | `Preflight Error - Cell array tuple count mismatch (-6809)` — asserts preflight invalid |
+| 11 | Cancellation | Stop an active propagation pass | *Not directly tested. Requires cancel-signal injection and is outside this scope.* |
 
 ## Test inventory
 
 | Test case            | Status      | Notes              |
 |-------------------|-------------|-----------------------------------------------|
-| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.1` through `Case 1.6.3` (18 cases) | retained    | Class 1 hand-derived `expectedMask` per case, 27-element arrays. The 4 cases 1.X.3 (X ∈ {3,4,5,6}) were reverted from a 2026-05-29 circular-oracle update back to the engineer's hand-derived values during Phase 6.        |
-| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1` through `Case 2.6` (6 cases)      | retained    | 5×5×5 sequential / recursive fixtures. Expected output is `all 1` (full convergence), asserted via `maskStore.getValue(i) != 1` loop.   |
-| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1` + `Case 3.2`     | retained    | 5×5×5 long-chain cases with `NumberOfNeighbors = 1`; verifies full-grid convergence.  |
-| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4`   | retained    | 5×5×5 semi-complex fixture with 3 phases, `NumberOfNeighbors = 4`. Hand-derived 125-element expected mask.       |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.1` through `Case 1.6.3` (18 cases) | kept | Class 1 hand-derived `expectedMask` per case, 27-element arrays. The 4 cases 1.X.3 (X ∈ {3,4,5,6}) were reverted from a 2026-05-29 circular-oracle update back to the engineer's hand-derived values during Phase 6.        |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1` through `Case 2.6` (6 cases)      | kept | 5×5×5 sequential / recursive fixtures. Expected output is `all 1` (full convergence), asserted via `maskStore.getValue(i) != 1` loop.   |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1` + `Case 3.2`     | kept | 5×5×5 long-chain cases with `NumberOfNeighbors = 1`; verifies full-grid convergence.  |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4`   | kept | 5×5×5 semi-complex fixture with 3 phases, `NumberOfNeighbors = 4`. Hand-derived 125-element expected mask.       |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 Invariants Sweep`  | new-for-V&V | Added 2026-05-29. DYNAMIC_SECTIONs over all 18 Case 1.X.Y fixtures. Asserts monotonicity + no-degrade per filter run.  |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 Idempotence`       | new-for-V&V | Added 2026-05-29. Runs Case 4 input through the filter twice; asserts second run reproduces first run exactly.   |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image Fixture (3x3x1)`  | new-for-V&V | Added 2026-05-29. Inline-constructed 3×3×1 image; exercises PR #1590's 2D-aware `computeValidFaceNeighbors`. Does not consume the exemplar archive.       |
-| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Backwards Compatibility`              | retained    | Added by PR #1588. `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures (`test/simpl_conversion/6_*/BadDataNeighborOrientationCheckFilter.json`); validates UUID + argument-key + parameter-value decoding.            |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Backwards Compatibility`              | kept | Added by PR #1588. `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures (`test/simpl_conversion/6_*/BadDataNeighborOrientationCheckFilter.json`); validates UUID + argument-key + parameter-value decoding.            |
+| `Preflight Error - Cell array tuple count mismatch (-6809)` | kept | Rejects unequal cell tuple counts. |
+| `Phase Index Bounds` | kept | Retains the branch's invalid-phase regression. |
+| `real HDF5 reverse-slice cascade oracle - uint8` | new-for-V&V | Five 3×3 slices; one last-slice seed propagates backward through the central column, while a 30° control stays bad. |
+| `real HDF5 reverse-slice cascade oracle - bool` | new-for-V&V | Same literal mask oracle through the Bool bulk conversion path. |
 
-All 31 TEST_CASEs (49 ctest entries) pass at the verified commit. Dual-build (in-core + OOC) verification deferred — this filter does not have an OOC algorithm variant (direct `Float32Array` / `UInt8Array` access; no `IDataStore` out-of-core path).
+On 2026-09-21, serial CTest passed 33/33 in both DREAM3DNX builds. The two hidden real-HDF5 cases passed 139 assertions. They assert all four input stores and the modified mask use HDF5-OOC and prove the target selected Scanline on OOC arrays. Each output mask has exactly the five central-column voxels set. This is an algorithm slice-buffer boundary witness, not a physical chunk-eviction benchmark. Existing upstream/develop oracle assertions and tolerances remain unchanged. D1 and D2 dispositions are retained; no fresh legacy binary comparison is claimed.
 
 ## Exemplar archive
 

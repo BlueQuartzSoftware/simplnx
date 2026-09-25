@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -1671,6 +1672,84 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
     INFO("2D fixture: index " << i);
     REQUIRE(maskStore.getValue(i) == expectedMask[i]);
   }
+}
+
+TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: real HDF5 reverse-slice cascade oracle",
+                   "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter][.OocStoreContract]", uint8, bool)
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 3, 5});
+  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, {5, 3, 3}, imageGeomPtr->getId());
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, {2}, imageGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  REQUIRE(ensemblesPtr != nullptr);
+  imageGeomPtr->setCellData(*cellsPtr);
+  auto maskStore = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, VerificationConstants::k_MaskArrayPath, {5, 3, 3}, {1});
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, VerificationConstants::k_PhasesArrayPath, {5, 3, 3}, {1});
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, VerificationConstants::k_QuatsArrayPath, {5, 3, 3}, {4});
+  auto crystalsStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, VerificationConstants::k_CStuctsArrayPath, {2}, {1});
+  auto* maskPtr = DataArray<TestType>::Create(dataStructure, VerificationConstants::k_MaskName, maskStore, cellsPtr->getId());
+  auto* phasesPtr = Int32Array::Create(dataStructure, VerificationConstants::k_PhasesName, phasesStore, cellsPtr->getId());
+  auto* quatsPtr = Float32Array::Create(dataStructure, VerificationConstants::k_QuatsName, quatsStore, cellsPtr->getId());
+  auto* crystalsPtr = UInt32Array::Create(dataStructure, VerificationConstants::k_CStuctsName, crystalsStore, ensemblesPtr->getId());
+  REQUIRE(maskPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(quatsPtr != nullptr);
+  REQUIRE(crystalsPtr != nullptr);
+  maskPtr->fill(0);
+  phasesPtr->fill(0);
+  std::array<float32, 45 * 4> quaternionValues{};
+  for(usize voxelIdx = 0; voxelIdx < 45; voxelIdx++)
+  {
+    quaternionValues[voxelIdx * 4 + 3] = 1.0F;
+  }
+  for(usize z = 0; z < 5; z++)
+  {
+    (*phasesPtr)[z * 9 + 4] = 1;
+  }
+  (*maskPtr)[40] = 1;
+  // A 30-degree rotation about Z exceeds the one-degree matching tolerance.
+  (*phasesPtr)[23] = 1;
+  quaternionValues[23 * 4 + 2] = 0.2588190451F;
+  quaternionValues[23 * 4 + 3] = 0.9659258263F;
+  auto writeResult = quatsStore->copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  (*crystalsPtr)[0] = 999;
+  (*crystalsPtr)[1] = 1;
+  REQUIRE(maskStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(phasesStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(quatsStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(crystalsStore->getDataFormat() == "HDF5-OOC");
+
+  BadDataNeighborOrientationCheckFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(maskPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  for(usize voxelIdx = 0; voxelIdx < 45; voxelIdx++)
+  {
+    INFO("voxel " << voxelIdx);
+    REQUIRE(static_cast<bool>((*maskPtr)[voxelIdx]) == (voxelIdx % 9 == 4));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Index Bounds", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")

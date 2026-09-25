@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **New filter, no legacy equivalent.** `ReadH5OinaDataFilter` was added in SIMPLNX and first shipped in DREAM3D-NX 7.0.0. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariant, with Class 2 independent h5py readback.** The tests create small H5OINA inputs and compare all imported values with independently derived values. |
-| Code paths enumerated | **26 of 33 paths exercised.** The uncovered paths require file-permission changes, file replacement during execution, cancel injection, or HDF5 objects that the fixture writer cannot create. |
-| Tests today | **20 test cases and 9,943 assertions through ctest.** The tests cover data conversion, multi-scan stacking, phase definitions, malformed inputs, error propagation, and a real AZtec file. |
+| Code paths enumerated | **27 of 34 paths exercised.** The uncovered paths require file-permission changes, file replacement during execution, cancel injection, or HDF5 objects that the fixture writer cannot create. |
+| Tests today | 20 registered tests in the filter file plus 1 hidden HDF5 batch-tail oracle; the OOC build also registers `actual OOC output parity`. Existing conversion, stacking, malformed-input, and vendor-file tests are retained. |
 | Exemplar archive | **`H5Oina_Test_Data.tar.gz` retained as input only.** The vendor `.h5oina` file is used. The generated `.dream3d` output was retired as a circular oracle. |
 | Legacy comparison | **Not applicable.** DREAM.3D 6.5.171 has no H5OINA importer. The independent h5py readback replaces the legacy comparison. |
 | Bug flags | **Thirteen bugs resolved:** `ReadH5OinaDataFilter-D1` through `ReadH5OinaDataFilter-D13`. The affected released versions are DREAM3D-NX 7.0.0 through 7.4.1. |
@@ -43,7 +43,7 @@
 
 *Applied:* The tests write small H5OINA files from explicit fixture specifications. Expected geometry, cell arrays, ensemble arrays, unit conversions, stacking order, and rejection results are derived from those specifications. A separate h5py script reads the vendor file and derives its expected imported values without EbsdLib or SIMPLNX.
 
-*Encoded:* `test/ReadH5OinaDataTest.cpp` contains 20 test cases. The archived `h5oina_oracle.py` script reproduces its Class 1 values and the vendor-file readback.
+*Encoded:* `test/ReadH5OinaDataTest.cpp` contains 20 registered test cases and the hidden `genuine HDF5 batch-tail and slab oracle`. The archived `h5oina_oracle.py` script reproduces its Class 1 values and the vendor-file readback.
 
 *Second-engineer review:* Pending PR review.
 
@@ -69,9 +69,9 @@ This branch fixes all defects in this table. The fixes are intended for DREAM3D-
 
 ## Code path coverage
 
-26 of 33 paths are exercised.
+27 of 34 paths are exercised.
 
-Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.cpp`, and the shared `utilities/IEbsdOemReader.hpp` read and ensemble-fill path.
+Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.cpp` (352 lines), and the shared `utilities/IEbsdOemReader.hpp` read and ensemble-fill path.
 
 | # | Phase | Path | Test case |
 |---|---|---|---|
@@ -108,6 +108,8 @@ Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.c
 | 31 | Execute/Copy | Return at the three cancellation checks | *Not directly tested. Requires cancel-signal injection.* |
 | 32 | EbsdLib | Reject a noncanonical phase-group name (`-90034`, surfaced as `-9582`) | `Invalid Phase Group Name rejected` |
 | 33 | EbsdLib | Reject an unreadable phase group, lattice dimensions, or Laue group | *Not directly tested. The fixture writer cannot create the unreadable-group case; the other required-dataset cases use the same checked path as lattice angles.* |
+| 34 | Bounded I/O | Full 65,536-point batch, one-point tail, and second-scan offset | `genuine HDF5 batch-tail and slab oracle` — all nine imported arrays have independent boundary values |
+
 
 ## Test inventory
 
@@ -134,8 +136,10 @@ Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.c
 | `Stacking Order` | new-for-V&V | Verifies both scan orders. |
 | `Real AZtec File Readback` | kept, modified | Uses the vendor H5OINA input and independent readback. The generated DREAM3D exemplar is not used. |
 | `InValid Filter Execution` | retired | The old test used a missing file and did not verify the intended error. |
+| `genuine HDF5 batch-tail and slab oracle` | new-for-V&V | Two 65,537-point scans; all nine cell arrays use HDF5-OOC. Exact values distinguish the full-batch end, partial tail, next scan, and final tuple. |
 
-All 20 test cases pass. The ctest run reports 9,943 assertions.
+
+The new fixture uses the existing `ScanSpec`, `WriteH5OinaFixture`, and `MakeArgs` helpers. Expected Euler values retain the independently derived float32 rounding literals. The fixture includes hexagonal, cubic, and unindexed boundary points and verifies phase widening. Upstream/develop independent-oracle assertions remain unchanged. The existing D1–D13 dispositions are retained; DREAM.3D 6.5.171 still has no corresponding importer.
 
 ## Test sensitivity verification
 
@@ -156,6 +160,8 @@ Eleven temporary defects were evaluated. Each defect caused the expected V&V tes
 | Disable phase-definition validation. | Scan phase definition mismatch | Detected |
 | Disable spacing validation. | Parameter rejections; invalid scan spacing | Detected |
 | Remove the file path from the Phase-range error. | Out-of-range Phase value | Detected |
+
+OOC recertification, 2026-09-18: serial CTest passed 20/20 in `NX-Com-Qt69-Vtk96-Rel` and 21/21 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 166 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 

@@ -15,9 +15,9 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port with Minor Changes** — float→double accumulation + counter-reorder + error-code re-numbering (PR #1438); EbsdLib 2.0 API (PR #1472); cancel checks (PR #1582); `counter==0`→NaN finalize + per-feature normalize (V&V refactor). 7 deltas total — see Algorithm Relationship.           |
-| Oracle (confirmed)     | **Class 1 (Analytical)** — 11-cell hand-built dataset, closed-form `AvgCAxes` per feature, 8 of 12 code paths covered. **Class 4 (Invariant)** — `||AvgCAxes||==1.0` for hex-valid; `NaN` for empty/non-hex. F7 only asserts unit-vector magnitude (direction is precision-sensitive at the antipodal-flip cancellation boundary). Class 3 N/A.       |
-| Code paths enumerated  | 12 (from line-by-line scan of `ComputeAvgCAxes.cpp`)|
-| Tests today            | 3: 1 valid-execution exemplar (positive), 1 all-non-hex error (negative), 1 SIMPL 6.4+6.5 backwards-compat (DYNAMIC_SECTION)             |
+| Oracle (confirmed)     | **Class 1 (Analytical)** — 11-cell hand-built dataset plus a 4,097-cell real-HDF5 block-tail fixture, with closed-form `AvgCAxes` values; 10 of 12 code paths covered. **Class 4 (Invariant)** — `||AvgCAxes||==1.0` for hex-valid; `NaN` for empty/non-hex. F7 only asserts unit-vector magnitude (direction is precision-sensitive at the antipodal-flip cancellation boundary). Class 3 N/A.       |
+| Code paths enumerated  | 10 of 12 exercised; the two cancellation paths remain outside this regression. |
+| Tests today            | 5 registered cases: analytical oracle, all-non-hex error, tuple-mismatch preflight error, phase-index bounds, and SIMPL 6.4/6.5 compatibility. One hidden OOC-only case verifies a 4,096-tuple block plus one-cell tail on actual HDF5 stores. |
 | Exemplar archive       | **`7_2_AvgCAxis.tar.gz` retired** — confirmed legacy-by-reputation oracle: reference values produced by a "special build of DREAM3D 6.6.379 with micro-texture bug fixes," not by an independent oracle. Per policy line 33, not eligible as a correctness oracle. Replaced by `compute_avg_c_axis.tar.gz` (hand-built Class 1 dataset, this V&V cycle).              |
 | Legacy comparison      | **Complete (Run — SIMPLNX vs DREAM3D 6.5.171, post-normalize).** Two deviation classes, 4 feature-level differences vs 6.5.171: D1 (`counter==0` → NaN vs `(0,0,1)` rescue) at F0/F5/F6; D2 (precision-sensitive direction at antipodal-flip cancellation boundary + unit-vector vs unnormalized magnitude) at F7. Each root cause was proven by applying the corresponding surgical fixes to a local build of the legacy source, after which the legacy output became bit-identical to SIMPLNX across all 8 features. See `vv/comparisons/ComputeAvgCAxesFilter/results/three_way_comparison.txt`.                |
 | Bug flags              | None confirmed. PR #1438's silent semantic changes are deviation candidates, not bugs.|
@@ -32,7 +32,7 @@
 
 *Classification:* **Port** with Minor Changes
 
-*Evidence:* The SIMPLNX algorithm at `Algorithms/ComputeAvgCAxes.cpp` (181 lines) is a translation of the legacy `FindAvgCAxes::execute()` from `DREAM3D/Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgCAxes.cpp` (DREAM3D 6.5.171). 
+*Evidence:* The SIMPLNX algorithm at `Algorithms/ComputeAvgCAxes.cpp` (206 lines) is a translation of the legacy `FindAvgCAxes::execute()` from `DREAM3D/Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgCAxes.cpp` (DREAM3D 6.5.171).
 - Same SIMPL UUID retained via `OrientationAnalysisLegacyUUIDMapping.hpp` + SIMPL 6.4 and 6.5 conversion fixtures at `test/simpl_conversion/6_*/ComputeAvgCAxesFilter.json`. 
 - The control flow is preserved: phase-validity preflight → per-cell accumulation loop (passive-quaternion → orientation matrix → transpose → c-axis · `[0,0,1]`, antipodal-flip aware) → per-feature finalize (divide-by-count or `counter==0` handling). 
 - However, PR #1438 ("ENH: Microtexture related filter cleanup") applied intentional silent changes that distinguish this from a pure line-by-line port; 
@@ -111,6 +111,7 @@ Derivable properties asserted inline in test code (Phase 8 work):
 
 - **Class 1 (Analytical)**: `test/ComputeAvgCAxesTest.cpp::"Class 1 Oracle (hand-built dataset)"` — exact-value comparisons for F0–F6 per the table above (NaN checks for F0/F5/F6; exact component-wise checks for F1–F4). Encoded as a `DYNAMIC_SECTION` per feature.
 - **Class 4 (Invariant)**: same test, with the `magnitude == 1.0` assertion for F7 plus a general invariant `DYNAMIC_SECTION` asserting `||AvgCAxes[i]|| == 1.0` over all hex-valid features.
+- **Real-HDF5 block-tail (Class 1 + 4)**: `test/ComputeAvgCAxesTest.cpp::"genuine HDF5 4096-block tail oracle"` — 4,097 cells place identity and +60° X contributions on opposite sides of the 4,096-tuple bulk-read boundary. The literal expected result is the normalized +30° c-axis `(0, 0.5, √3/2)`; feature 0 remains NaN. Input and output stores must report `HDF5-OOC`.
 - *(retained)* `test/ComputeAvgCAxesTest.cpp::"Invalid Filter Execution"` — all-non-hex error path (`-76402`) by mutating `crystalStructs[1] = 1` (Cubic_High).
 - *(retained)* `test/ComputeAvgCAxesTest.cpp::"SIMPL Backwards Compatibility"` — SIMPL 6.4 + 6.5 conversion paths via `DYNAMIC_SECTION`.
 
@@ -118,20 +119,24 @@ Derivable properties asserted inline in test code (Phase 8 work):
 
 **Pending**
 
+## Bugs found and fixed
+
+None. The existing D1 and D2 entries describe documented output conventions and precision effects.
+
 ## Code path coverage
 
-*8 of 12 code paths exercised by unit tests. 4 gaps remain: path 2 (all-hex ensemble), path 4 (background `featureId == 0` cell), and paths 8 & 12 (cancel-signal during execution). Path 4 and the cancel paths are low-value coverage gaps (algorithm-loop guards rather than algorithmic logic); path 2 is the more notable gap but is trivially exercised by every shipping all-hex pipeline.*
+*10 of 12 code paths exercised by unit tests. The two remaining gaps are the cancel-signal paths 8 and 12, which require mid-execution cancellation injection.*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgCAxes.cpp` (181 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgCAxes.cpp` (206 lines).
 
 The algorithm has three logical phases: (a) phase-validity preflight scan, (b) per-cell accumulation loop, (c) per-feature finalize loop. Each phase contains decision branches enumerated below.
 
 | #  | Phase           | Path| Test case      |
 |----|-----------------|-----------|------------------------------------------------------------------------------------|
 | 1  | (a) Preflight   | All phases non-Hexagonal → return `-76402` error       | `No_Hex_Phase` (mutates `CrystalStructures[1] = 1` to make all ensemble phases non-hex) |
-| 2  | (a) Preflight   | All phases Hexagonal → no error, no warning            | *Not directly tested.* The Class 1 dataset is intentionally mixed-phase to exercise paths 3 and 5. Exercised implicitly by shipping pipelines (e.g., `EBSD_Hexagonal_Data_Analysis`). |
+| 2  | (a) Preflight   | All phases Hexagonal → no error, no warning            | `genuine HDF5 4096-block tail oracle` — the ensemble contains only `Unknown` and `Hexagonal_High`; the test asserts that execution returns no warnings. |
 | 3  | (a) Preflight   | Mixed phases (some Hex, some non-Hex) → warning `-76403` pushed, computation proceeds    | `Class 1 Oracle` (ensemble has Hex_High + Cubic_High; warning fires once and the test sees it in the per-section warning log) |
-| 4  | (b) Per-cell    | `featureId == 0` (background) → skip cell (`if(currentFeatureId > 0)` guard)             | *Not directly tested.* The Class 1 input has no background voxels (`FeatureIds = [1,2,3,3,3,4,4,6,7,7,7]`). Low-value gap — this is a loop-guard, not algorithmic logic. |
+| 4  | (b) Per-cell    | `featureId == 0` (background) → skip cell (`if(currentFeatureId > 0)` guard)             | `genuine HDF5 4096-block tail oracle` — 4,095 background cells must not contribute; feature 0 remains `(NaN, NaN, NaN)`. |
 | 5  | (b) Per-cell    | `featureId > 0` + non-Hex crystal struct → `continue` (no in-place NaN write; counter NOT incremented; NaN handled later at finalize)       | `Class 1 Oracle` — F6 (sole cell is Cubic_High) verifies via the F6 = NaN assertion |
 | 6  | (b) Per-cell    | `featureId > 0` + Hex crystal struct → normal accumulation (passive→active rotation → unit-vector → running-average + antipodal flip → add) | `Class 1 Oracle` — F1, F2, F3 exact-value checks verify the rotation + accumulation |
 | 7  | (b) Per-cell    | Antipodal-flip branch: `CosBetweenVectors(c1, curCAxis) < 0` → `c1 *= -1` before accumulating             | `Class 1 Oracle` — F4 (antipodal-pair → (0,0,1)) exact-value check + F7 magnitude invariant (cancellation-boundary case) |
@@ -147,7 +152,14 @@ The algorithm has three logical phases: (a) phase-validity preflight scan, (b) p
 |--------------------------------------------------------------------------------------|-------------|-----------|
 | `OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-built dataset)`    | new-for-V&V | Replaces the retired `7_2_AvgCAxis` exemplar test. Encodes Class 1 + Class 4 oracle: exact-value checks for F0–F6 plus magnitude == 1.0 invariant for F7 and a general unit-vector invariant across all hex-valid features. |
 | `OrientationAnalysis::ComputeAvgCAxesFilter:No_Hex_Phase`           | kept        | Retained; switched from the legacy `caxis_data` archive to the new hand-built input by mutating `CrystalStructures[1] = 1` (Cubic_High) to trigger `-76402` (all-non-hex error path). |
+| `OrientationAnalysis::ComputeAvgCAxesFilter: Preflight Error - Cell array tuple count mismatch (-6400)` | new-for-OOC recertification | Verifies invalid preflight and exact error `-6400` when Quats, FeatureIds, and CellPhases tuple counts differ. |
 | `OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibility`          | kept        | Unchanged. `DYNAMIC_SECTION` over SIMPL 6.4 and 6.5 conversion fixtures (`test/simpl_conversion/6_*/ComputeAvgCAxesFilter.json`); validates UUID, argument keys, and parameter conversion only. |
+| `OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds` | new-for-OOC recertification | Uses actual HDF5 stores in the OOC build. An invalid participating phase returns `-76404`; an invalid phase on a background cell is skipped. |
+| `OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block tail oracle` | new-for-OOC recertification | Hidden OOC-only Class 1/4 case. It verifies actual HDF5 input/output stores and the literal +30° average from contributions at tuple indices 4,095 and 4,096. |
+
+All five registered cases pass in both DREAM3D-NX builds. The hidden HDF5 block-tail case passes in the OOC build with 38 assertions.
+
+OOC recertification, 2026-09-18: serial CTest passed 5/5 in `NX-Com-Qt69-Vtk96-Rel` and 5/5 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 38 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 

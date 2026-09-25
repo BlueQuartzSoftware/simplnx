@@ -14,12 +14,13 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branches when the crystal structure type is not hexagonal. |
-| Oracle (confirmed)     | Class 1 (Analytical) -  15 hand derived data fixtures |
+| Oracle (confirmed)     | **Class 1 (Analytical)** — 15 hand-derived orientation fixtures plus one 65,537-cell real-HDF5 page-tail fixture; all pass. |
 | Code paths enumerated  | 7 of 8 paths exercised - only the filter cancelation path is untested |
-| Tests today            | 5 test cases - 1 test with Class 1 Oracle, 2 error path tests, 1 warning path test, 1 SIMPL json backwards compatibility test |
+| Tests today            | 7 registered cases cover analytical, mixed-phase, error, warning, bounds, and SIMPL-conversion behavior. One hidden OOC-only case verifies a 65,536-tuple page plus one-cell tail. |
 | Exemplar archive       | None - removed test using circular oracle data from `caxis_data.tar.gz` |
 | Legacy comparison      | Run 2026-07-31 against DREAM3D 6.5.171 using the 15 inline Class 1 fixtures and a shared serialized input. All 45 output float32 values were bit-identical, and the comparison artifacts were uploaded to OneDrive on 2026-07-31. |
 | Bug flags              | None |
+| V&V phase              | V&V is complete. OOC recertification now includes an output-sensitive real-HDF5 page-tail oracle. |
 
 For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrientationCheckFilter.md` and `src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md` (on `topic/vv/compute_avg_caxis`).
 
@@ -58,15 +59,19 @@ There were no deviations that affect the output found for hexagonal materials.
 
 *Applied:* Handed derived output of C-axis locations from quaternions. The expected outputs agree between DREAM3DNX, DREAM3D 6.5.171, and manual calculations (`v_passive ​= Rᵀv` with z component forced to positive). Includes 15 different orientations about x, y, and z at different angles. Using the previous formula, the exact form results were produced and compared against DREAM3D output.
 
-*Encoded:* *`test/ComputeCAxisLocationsTest.cpp::"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"` - 15 fixtures, all pass.*
+*Encoded:* `test/ComputeCAxisLocationsTest.cpp::"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"` — 15 fixtures, all pass. `::"genuine HDF5 65536-page tail oracle"` verifies distinct analytical outputs at tuple indices 65,535 and 65,536 on actual HDF5 input/output stores.
 
 *Second-engineer review:* *Pending*
+
+## Bugs found and fixed
+
+None.
 
 ## Code path coverage
 
 *7 of 8 paths exercised. The non-covered path is the cancellation branch which is not currently able to be tested for all filters*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeCAxisLocations.cpp` (107 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeCAxisLocations.cpp` (138 lines).
 
 | #  | Phase           | Path            | Test case|
 |----|-----------------|---------------------------------------------------|--------------------------------------------|
@@ -90,6 +95,13 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" | new-for-V&V | Covers no hexagonal phases branch |
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" | new-for-V&V | Covers non-hexagonal branch |
 | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" | new-for-V&V | Covers hand calculated quaternions which also agree with DREAM3D 6.5.171. Also covers the sign flip path. |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mixed hexagonal and non-hexagonal phases" | new-for-OOC recertification | Verifies exact analytical values for hexagonal cells and NaN output for non-hexagonal cells in one execution. |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Phase Index Bounds" | new-for-OOC recertification | Uses OOC-aware stores and verifies exact error `-3524` for negative and out-of-range phase indices. |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 65536-page tail oracle" | new-for-OOC recertification | Hidden OOC-only case. It verifies actual HDF5 input/output stores and distinct literal c-axis values at the final tuple of a 65,536-tuple page and its one-cell tail. |
+
+All seven registered cases pass in both DREAM3D-NX builds. The hidden page-tail case passes in the OOC build with 25 assertions.
+
+OOC recertification, 2026-09-18: serial CTest passed 7/7 in `NX-Com-Qt69-Vtk96-Rel` and 7/7 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 25 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 

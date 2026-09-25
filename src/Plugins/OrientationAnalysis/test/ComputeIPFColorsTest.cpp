@@ -13,6 +13,7 @@
 #include "OrientationAnalysis/Filters/ComputeIPFColorsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -24,6 +25,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -138,6 +140,69 @@ std::array<uint8, 3> EbsdLibReferenceColor(const std::array<double, 3>& euler, u
   return {static_cast<uint8>(RgbColor::dRed(argb)), static_cast<uint8>(RgbColor::dGreen(argb)), static_cast<uint8>(RgbColor::dBlue(argb))};
 }
 } // namespace
+
+TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block color oracle", "[OrientationAnalysis][ComputeIPFColorsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool byteMask = GENERATE(false, true);
+  CAPTURE(byteMask);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 65536;
+  auto dataStructure = BuildAnalyticalDataset();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
+  auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath).resizeTuples({1, 1, k_BlockTuples + 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_GeomPath));
+  dataStructure.getDataRefAs<ImageGeom>(k_GeomPath).setDimensions({k_BlockTuples + 1, 1, 1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_MaskPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_MaskU8Path));
+  auto& eulers = dataStructure.getDataRefAs<Float32Array>(k_EulersPath);
+  auto& phases = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath);
+  auto& boolMaskArray = dataStructure.getDataRefAs<BoolArray>(k_MaskPath);
+  auto& byteMaskArray = dataStructure.getDataRefAs<UInt8Array>(k_MaskU8Path);
+  eulers.fill(0);
+  phases.fill(1);
+  boolMaskArray.fill(false);
+  byteMaskArray.fill(0);
+  boolMaskArray[k_BlockTuples - 1] = true;
+  boolMaskArray[k_BlockTuples] = true;
+  byteMaskArray[k_BlockTuples - 1] = 1;
+  byteMaskArray[k_BlockTuples] = 1;
+  phases[k_BlockTuples] = 2;
+  eulers[k_BlockTuples * 3] = numbers::pi_v<float32> / 3.0F;
+  const auto maskPath = byteMask ? k_MaskU8Path : k_MaskPath;
+  for(const auto& path : {k_EulersPath, k_PhasesPath, maskPath, k_CrystalStructuresPath})
+  {
+    auto array = dataStructure.getSharedDataAs<IDataArray>(path);
+    REQUIRE(array != nullptr);
+    REQUIRE(ConvertIDataArray(array, "HDF5-OOC"));
+    REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  ComputeIPFColorsFilter filter;
+  auto args = MakeArgs(true, maskPath, {1.0F, 0.0F, 0.0F}, 0, k_IpfColorsName);
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath));
+  const auto& colors = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath);
+  REQUIRE(colors.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const std::array<usize, 3> indices = {0, k_BlockTuples - 1, k_BlockTuples};
+  const std::array<std::array<uint8, 3>, 3> expected = {{{0, 0, 0}, {255, 0, 0}, {0, 255, 0}}};
+  for(usize witnessIdx = 0; witnessIdx < indices.size(); witnessIdx++)
+  {
+    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    {
+      REQUIRE(colors[indices[witnessIdx] * 3 + compIdx] == expected[witnessIdx][compIdx]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inline analytical dataset)", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {

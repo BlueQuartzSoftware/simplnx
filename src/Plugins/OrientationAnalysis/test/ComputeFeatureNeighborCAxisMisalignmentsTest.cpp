@@ -15,6 +15,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <filesystem>
@@ -565,6 +566,104 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -1560);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: genuine HDF5 1MiB-chunk tail oracle",
+          "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+
+  // Each four-component float32 quaternion tuple is 16 bytes. The 1 MiB HDF5
+  // chunk policy therefore places 65,536 tuples in one physical chunk.
+  constexpr usize k_ChunkTuples = 65536;
+  constexpr usize k_FeatureTuples = k_ChunkTuples + 1;
+  constexpr usize k_LastFullChunkTuple = k_ChunkTuples - 1;
+  constexpr usize k_TailTuple = k_ChunkTuples;
+
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  DataStructure dataStructure;
+  auto* dataGroup = DataGroup::Create(dataStructure, AnalyticalFixtures::k_GeomName);
+  REQUIRE(dataGroup != nullptr);
+  auto* featureData = AttributeMatrix::Create(dataStructure, AnalyticalFixtures::k_FeatureDataPath.getTargetName(), {k_FeatureTuples}, dataGroup->getId());
+  auto* ensembleData = AttributeMatrix::Create(dataStructure, AnalyticalFixtures::k_EnsembleDataPath.getTargetName(), {2}, dataGroup->getId());
+  REQUIRE(featureData != nullptr);
+  REQUIRE(ensembleData != nullptr);
+
+  const DataPath featurePhasesPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_FeaturePhasesName);
+  const DataPath avgQuatsPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgQuatsName);
+  const DataPath neighborListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_NeighborListName);
+  const DataPath crystalStructuresPath = AnalyticalFixtures::k_EnsembleDataPath.createChildPath(AnalyticalFixtures::k_CrystalStructuresName);
+  const DataPath misalignmentListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_CAxisMisalignmentListOutName);
+  const DataPath avgMisalignmentsPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgCAxisMisalignmentsOutName);
+
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {k_FeatureTuples}, {1});
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {k_FeatureTuples}, {4});
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto* featurePhases = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureData->getId());
+  auto* avgQuats = Float32Array::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, featureData->getId());
+  auto* neighborList = NeighborList<int32>::Create(dataStructure, neighborListPath.getTargetName(), {k_FeatureTuples}, featureData->getId());
+  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleData->getId());
+  REQUIRE(featurePhases != nullptr);
+  REQUIRE(avgQuats != nullptr);
+  REQUIRE(neighborList != nullptr);
+  REQUIRE(crystalStructures != nullptr);
+
+  std::vector<int32> featurePhaseValues(k_FeatureTuples, 1);
+  featurePhaseValues[0] = 0;
+  std::vector<float32> avgQuatValues(k_FeatureTuples * 4, 0.0F);
+  for(usize featureIdx = 0; featureIdx < k_FeatureTuples; featureIdx++)
+  {
+    avgQuatValues[featureIdx * 4 + 3] = 1.0F;
+  }
+  const auto lastFullChunkQuat = AnalyticalFixtures::QuatFromPhiDeg(15.0F);
+  const auto tailQuat = AnalyticalFixtures::QuatFromPhiDeg(30.0F);
+  std::copy(lastFullChunkQuat.cbegin(), lastFullChunkQuat.cend(), avgQuatValues.begin() + k_LastFullChunkTuple * 4);
+  std::copy(tailQuat.cbegin(), tailQuat.cend(), avgQuatValues.begin() + k_TailTuple * 4);
+  const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
+
+  auto featurePhasesWriteResult = featurePhases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featurePhaseValues.data(), featurePhaseValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(featurePhasesWriteResult);
+  auto avgQuatsWriteResult = avgQuats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(avgQuatValues.data(), avgQuatValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(avgQuatsWriteResult);
+  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
+
+  neighborList->setList(k_LastFullChunkTuple, std::vector<int32>{1});
+  neighborList->setList(k_TailTuple, std::vector<int32>{1});
+
+  REQUIRE(featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const auto quaternionMetadata = avgQuats->getDataStoreRef().getRecoveryMetadata();
+  REQUIRE(quaternionMetadata.at("OocChunkShape") == "65536");
+  REQUIRE(crystalStructures->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(executeResult.result.warnings().empty());
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(misalignmentListPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgMisalignmentsPath));
+  const auto& misalignmentList = dataStructure.getDataRefAs<NeighborList<float32>>(misalignmentListPath);
+  const auto& avgMisalignments = dataStructure.getDataRefAs<Float32Array>(avgMisalignmentsPath);
+  REQUIRE(avgMisalignments.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+
+  const auto lastFullChunkValues = misalignmentList.at(k_LastFullChunkTuple);
+  REQUIRE(lastFullChunkValues.size() == 1);
+  REQUIRE(lastFullChunkValues[0] == Approx(15.0F).margin(1.0E-3F));
+  REQUIRE(avgMisalignments[k_LastFullChunkTuple] == Approx(15.0F).margin(1.0E-3F));
+
+  const auto tailValues = misalignmentList.at(k_TailTuple);
+  REQUIRE(tailValues.size() == 1);
+  REQUIRE(tailValues[0] == Approx(30.0F).margin(1.0E-3F));
+  REQUIRE(avgMisalignments[k_TailTuple] == Approx(30.0F).margin(1.0E-3F));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")

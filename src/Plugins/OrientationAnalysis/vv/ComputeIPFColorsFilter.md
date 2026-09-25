@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** of DREAM3D 6.5.171 `GenerateIPFColors`. The per-cell loop is a line-for-line translation; deltas are the color library (OrientationLib → EbsdLib), a new `Color Key` choice (TSL/PUCM/Nolze-Hielscher; legacy was TSL-only), bool-or-uint8 mask (legacy bool-only), and added cancel checks. |
 | Oracle (confirmed)     | **Class 1 + 4** (orchestration: mask→black, invalid crystal structure→black, refDir normalization, phase-out-of-range→`-48000`, output invariants) with **Class 2** (each colored cell == a direct in-process EbsdLib `generateIPFColor` call) and **Class 3** (identity cubic viewed down [001] = red IPF corner). 8 tests in `test/ComputeIPFColorsTest.cpp`, all pass in-core and OOC. |
-| Code paths enumerated  | 16 of 18 exercised. The 2 gaps are the mid-loop cancel branch and the unreachable `-23510` color-key default. |
-| Tests today            | 8 test cases: 1 main analytical oracle (4 SECTIONs), uint8-mask, no-mask, refDir-normalization, phase-out-of-range error, color-key wiring, preflight `-651`, SIMPL 6.4/6.5 backward-compat. |
+| Code paths enumerated  | 17 of 19 exercised. The 2 gaps are the mid-loop cancel branch and the unreachable `-23510` color-key default. |
+| Tests today | 9 registered cases plus one hidden HDF5 boundary case. Both serial CTest selections pass 9/9. |
 | Exemplar archive       | **None for this filter** — the oracle dataset is built inline in C++. The legacy-produced `so3_cubic_high_ipf_001.tar.gz` was **retired as a circular oracle** from this test (it is still downloaded for `CreateEnsembleInfoTest`, so the `download_test_data()` line remains). |
 | Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171 (TSL).** SIMPLNX is byte-identical to the stored legacy `IPF Colors` (0/343,963); vs a fresh 6.5.171 run, 14/343,963 cells (0.004%) differ by exactly ±1/255 in one channel. One deviation: `ComputeIPFColorsFilter-D1` (precision + library, quantization jitter). |
 | Bug flags              | None. |
-| V&V phase              | Discovery, oracle design, oracle reconciliation (0 SIMPLNX bugs), algorithm review (2 warnings fixed: dead `orientationOps`, atomic phase-warning counter), dual-build, legacy comparison, and documentation complete. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
+| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds independent HDF5 boundary evidence and paired runtime checks. |
 
 ## Summary
 
@@ -43,6 +43,8 @@
 
 *Material PRs since baseline:* #1631 ("EbsdLib 3.0.0 + V&V of 6 Filters", added the Color Key), #1472 (EbsdLib 2.0.0 API), #1438 (microtexture cleanup), #1501 (Vec3 unification). None alter the coloring logic beyond the deltas above.
 
+OOC source: `Algorithms/ComputeIPFColorsScanline.cpp` (189 lines). The new test targets the storage path documented below.
+
 ## Oracle
 
 *Class:* **1 (Analytical)** + **4 (Invariant)** primary, **2 (Reference — EbsdLib)** and **3 (Paper/standard-IPF)** companions.
@@ -61,11 +63,15 @@ Per the "test the value-add, not upstream" principle: EbsdLib is the trusted ref
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. Existing defect and deviation dispositions in this report and its sidecar are retained.
+
 ## Code path coverage
 
-*16 of 18 code paths exercised. The 2 uncovered paths are the mid-loop cancel branch (requires injecting a cancel signal) and the color-key `default` error `-23510` (unreachable through normal preflight because `ChoicesParameter` already constrains the value to 0–2). Both are low-value.*
+*17 of 19 code paths exercised. The 2 uncovered paths are the mid-loop cancel branch (requires injecting a cancel signal) and the color-key `default` error `-23510` (unreachable through normal preflight because `ChoicesParameter` already constrains the value to 0–2). Both are low-value.*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeIPFColors.cpp` (203 lines).
+Source: `Algorithms/ComputeIPFColors.cpp` (36 lines), `ComputeIPFColorsDirect.cpp` (276 lines), and `ComputeIPFColorsScanline.cpp` (189 lines).
 
 Logical phases: (a) `operator()` setup + parallel dispatch, (b) per-cell `convert()` loop, (c) post-loop phase-warning error; plus (d) filter-level preflight / executeImpl wiring.
 
@@ -89,6 +95,7 @@ Logical phases: (a) `operator()` setup + parallel dispatch, (b) per-cell `conver
 | 16 | (d) Filter   | `Color Key` `default` → error `-23510`                                                        | *Not directly tested. Unreachable via preflight — `ChoicesParameter` constrains the value to [0,2].* |
 | 17 | (d) Filter   | `validateNumberOfTuples` fails → error `-651`                                                 | `Preflight Error - Cell array tuple count mismatch (-651)`                |
 | 18 | (d) Filter   | preflight creates the 3-component uint8 output array                                          | every passing test (preflight is `REQUIRE`-valid)                         |
+| 19 | Scanline | A 65,536-cell block and one-cell tail, Bool/UInt8 masks | `real HDF5 65536-block color oracle` — exact black, cubic red, and hex green RGB tuples |
 
 ## Test inventory
 
@@ -103,6 +110,10 @@ Logical phases: (a) `operator()` setup + parallel dispatch, (b) per-cell `conver
 | `OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell array tuple count mismatch (-651)` | kept | Synthetic mismatched tuple counts → `-651`. |
 | `OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + argument conversion. |
 | *(retired)* `OrientationAnalysis::ComputeIPFColors` | retired | Circular oracle — compared filter output against the legacy-produced `IPF Colors` array inside `so3_cubic_high_ipf_001.dream3d` ("produced by SIMPL/DREAM3D … our results should match theirs"). Replaced by the analytical oracle above. |
+| `real HDF5 65536-block color oracle` | new-for-V&V | Actual HDF5 input/output and independent boundary expectations; 87 assertions across the configured options. |
+| `negative Phase bounds` | kept | Existing invalid participating-phase and skipped-mask validation cases. |
+
+OOC recertification (2026-09-21): serial CTest passed 9/9 in each DREAM3DNX build. `test/ComputeIPFColorsTest.cpp::real HDF5 65536-block color oracle` passed 87 assertions in the OOC binary. The hidden case checks both Bool and UInt8 masks with actual HDF5 inputs and output. A masked cell is black, cell 65,535 is cubic red, and the one-cell tail is hex green under the existing TSL corner convention. Target-only dispatch counters prove Scanline ran on OOC arrays. Existing precision/library and legacy dispositions are retained. Upstream/develop oracle assertions and tolerances remain intact. No fresh legacy binary comparison is claimed.
 
 ## Exemplar archive
 

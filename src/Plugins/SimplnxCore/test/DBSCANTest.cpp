@@ -11,10 +11,12 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
 
+#include <array>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -579,6 +581,77 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
 
   ::CheckClusterInvariants(dataStructure, clusterIdsPath, featureAMPath);
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[SimplnxCore][DBSCAN][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BatchTuples = 65536;
+  constexpr usize k_PointTuples = k_BatchTuples + 2;
+  DataStructure dataStructure;
+  const DataPath pointsPath({"Boundary Points"});
+  const DataPath maskPath({"Boundary Mask"});
+  const DataPath idsPath({"Boundary ClusterIds"});
+  const DataPath featurePath({"Boundary Clusters"});
+  auto pointStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, pointsPath, {k_PointTuples}, {2});
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_PointTuples}, {1});
+  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  auto* mask = UInt8Array::Create(dataStructure, maskPath.getTargetName(), maskStore);
+  REQUIRE(points != nullptr);
+  REQUIRE(mask != nullptr);
+  points->fill(100.0F);
+  mask->fill(0);
+  (*points)[0] = 0.0F;
+  (*points)[1] = 0.0F;
+  (*mask)[0] = 1;
+
+  // Four nearby points form two adjacent core grids with epsilon=1 and
+  // minPoints=2. They form one cluster; the distant origin point is noise.
+  const std::array<float32, 4> xValues = {10.0F, 10.125F, 10.75F, 10.875F};
+  for(usize witnessIdx = 0; witnessIdx < xValues.size(); witnessIdx++)
+  {
+    const usize pointIdx = k_BatchTuples - 2 + witnessIdx;
+    (*points)[pointIdx * 2] = xValues[witnessIdx];
+    (*points)[pointIdx * 2 + 1] = 10.0F;
+    (*mask)[pointIdx] = 1;
+  }
+  REQUIRE(pointStore->getDataFormat() == "HDF5-OOC");
+  REQUIRE(maskStore->getDataFormat() == "HDF5-OOC");
+
+  DBSCANFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+  args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(2));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(pointsPath));
+  args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(idsPath.getTargetName()));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(featurePath));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(executeResult.result.warnings().empty());
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
+  REQUIRE(ids.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  std::vector<int32> actual(k_PointTuples);
+  auto readResult = ids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  for(usize pointIdx = 0; pointIdx < k_PointTuples; pointIdx++)
+  {
+    INFO("point " << pointIdx);
+    REQUIRE(actual[pointIdx] == (pointIdx >= k_BatchTuples - 2 ? 1 : 0));
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getNumberOfTuples() == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

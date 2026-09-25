@@ -579,6 +579,70 @@ TEST_CASE("SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang", "[Core][
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle", "[SimplnxCore][FillBadDataFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool newPhase = GENERATE(false, true);
+  const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  BuildFillBadDataTestData(dataStructure, 5, 5, 5, 5);
+  const DataPath featureIdsPath({"DataContainer", "CellData", "FeatureIds"});
+  const DataPath phasesPath({"DataContainer", "CellData", "Phases"});
+  const DataPath payloadPath({"DataContainer", "CellData", "Payload"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(payloadPath.getParent()));
+  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  auto& cells = dataStructure.getDataRefAs<AttributeMatrix>(payloadPath.getParent());
+  auto payloadStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, payloadPath, cells.getShape(), {2});
+  auto* payloadPtr = Float32Array::Create(dataStructure, "Payload", payloadStore, cells.getId());
+  REQUIRE(payloadPtr != nullptr);
+  featureIds.fill(1);
+  phases.fill(1);
+  for(usize voxelIdx = 0; voxelIdx < 125; voxelIdx++)
+  {
+    (*payloadPtr)[voxelIdx * 2] = 7.0F;
+    (*payloadPtr)[voxelIdx * 2 + 1] = -2.0F;
+  }
+  // The three-cell component spans Z slices and meets the retention threshold.
+  // The isolated diagonal cell has only one voxel and must copy a good tuple.
+  for(usize voxelIdx : {37ULL, 62ULL, 87ULL, 56ULL})
+  {
+    featureIds[voxelIdx] = 0;
+    phases[voxelIdx] = 0;
+    (*payloadPtr)[voxelIdx * 2] = -5.0F;
+    (*payloadPtr)[voxelIdx * 2 + 1] = -6.0F;
+  }
+  REQUIRE(featureIds.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(payloadStore->getDataFormat() == "HDF5-OOC");
+  FillBadDataFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(3));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(newPhase));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  for(usize voxelIdx = 0; voxelIdx < 125; voxelIdx++)
+  {
+    const bool retainedDefect = voxelIdx == 37 || voxelIdx == 62 || voxelIdx == 87;
+    INFO("voxel " << voxelIdx);
+    REQUIRE(featureIds[voxelIdx] == (retainedDefect ? 0 : 1));
+    REQUIRE(phases[voxelIdx] == (retainedDefect ? (newPhase ? 2 : 0) : 1));
+    REQUIRE((*payloadPtr)[voxelIdx * 2] == (retainedDefect ? -5.0F : 7.0F));
+    REQUIRE((*payloadPtr)[voxelIdx * 2 + 1] == (retainedDefect ? -6.0F : -2.0F));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][FillBadDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

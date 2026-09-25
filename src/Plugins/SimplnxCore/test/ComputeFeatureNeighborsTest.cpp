@@ -6,6 +6,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -639,6 +640,37 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: real HDF5 five-slice analytical oracle", "[SimplnxCore][ComputeFeatureNeighborsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  auto dataStructure = Create3DDataStructure();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  auto store = DataStoreUtilities::ConvertDataStore<int32>(featureIds.getDataStoreRef(), "HDF5-OOC");
+  REQUIRE(store != nullptr);
+  auto replaceResult = featureIds.setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
+  REQUIRE(featureIds.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // The existing 5x5x5 fixture independently specifies all five outputs and
+  // contains feature contacts across each of the rolling 25-cell slices.
+  const auto before = GetAlgorithmPathExecutionCounts();
+  ExecuteFilter(dataStructure, true, true);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  for(const auto& path : {k_BoundaryCellsPath, k_SurfaceFeaturesPath, k_NumNeighborsPath})
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(path).getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32NeighborList>(k_NeighborsListPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32NeighborList>(k_SSAListPath));
+  REQUIRE(dataStructure.getDataRefAs<Int32NeighborList>(k_NeighborsListPath).getStore()->isOutOfCore());
+  REQUIRE(dataStructure.getDataRefAs<Float32NeighborList>(k_SSAListPath).getStore()->isOutOfCore());
+}
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {

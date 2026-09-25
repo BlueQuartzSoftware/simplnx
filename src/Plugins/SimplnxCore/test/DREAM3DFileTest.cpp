@@ -35,8 +35,10 @@
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
@@ -1085,6 +1087,50 @@ TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDRE
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle", "[SimplnxCore][WriteDREAM3DFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool compress = GENERATE(false, true);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_ChunkTuples = 65536;
+  DataStructure dataStructure;
+  const DataPath valuesPath({"Values"});
+  auto store = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, valuesPath, {k_ChunkTuples + 1}, {4});
+  auto* valuesPtr = UInt32Array::Create(dataStructure, "Values", store);
+  REQUIRE(valuesPtr != nullptr);
+  std::vector<uint32> expected((k_ChunkTuples + 1) * 4);
+  for(usize valueIdx = 0; valueIdx < expected.size(); valueIdx++)
+  {
+    expected[valueIdx] = static_cast<uint32>(valueIdx);
+  }
+  auto writeResult = store->copyFromBuffer(0, nonstd::span<const uint32>(expected.data(), expected.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(store->getDataFormat() == "HDF5-OOC");
+  REQUIRE(store->getRecoveryMetadata().at("OocChunkShape") == "65536");
+  const auto outputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / (compress ? "write_dream3d_ooc_tail_compressed.dream3d" : "write_dream3d_ooc_tail.dream3d");
+  WriteDREAM3DFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<fs::path>(outputFile));
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(compress));
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(fs::exists(outputFile));
+  auto file = HDF5::FileIO::ReadFile(outputFile);
+  REQUIRE(file.isValid());
+  auto group = file.openGroup("DataStructure");
+  REQUIRE(group.isValid());
+  auto dataset = group.openDataset("Values");
+  REQUIRE(group.isDataset("Values"));
+  const auto actual = dataset.readAsVector<uint32>();
+  REQUIRE(actual == expected);
+  const auto probe = UnitTest::ProbeHdf5Dataset(outputFile, "/DataStructure/Values");
+  REQUIRE(probe.has_value());
+  REQUIRE(probe->hasDeflate == compress);
 }
 
 TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")

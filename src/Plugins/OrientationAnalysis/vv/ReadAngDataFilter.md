@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes.** Faithful port of legacy `ReadAngData` control flow with 4 deliberate deltas: material-name trim added (D1), TEM/ACOM Nanometer-units detection dropped (D2, obsolete file variants), non-contiguous phase-index handling fixed (D3, legacy crashes), and error-code renumbering (D4). The legacy PIMPL file-cache was dropped (no output effect). |
 | Oracle (confirmed)     | **Confirmed.** **Class 1 (analytical) + Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule — EbsdLib (vcpkg 3.0.0) owns `.ang` parsing and is trusted (Class 2 boundary). A hand-authored inline toy `.ang` (3×2 grid, 2 phases, phase-0 points, all values float32-exact) with every expected value hand-derived from the fixture text. Encoded as 7 TEST_CASEs in `test/ReadAngDataTest.cpp`; all pass. SIMPLNX matched the oracle on every fixture with zero discrepancies. |
-| Code paths enumerated  | 13 of 17 paths exercised (see Code path coverage); the gaps are one unreachable dead branch (`phases.empty()`), two file-changed/malformed-input guards (`-19503`, `-19504`), and the cancel-signal paths — all untestable without injection. |
-| Tests today            | 7 test cases: Class 1+4 analytical oracle, non-contiguous phase-index invariant (regression pin for D3), 2 value-add preflight error paths (-19500/-19501), 2 EbsdLib error passthroughs (-150/-600), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION, new — the filter previously had no conversion test). All inline hand-built fixtures — no exemplar archive. |
+| Code paths enumerated  | 14 of 18 paths exercised (see Code path coverage); the gaps are one unreachable dead branch (`phases.empty()`), two file-changed/malformed-input guards (`-19503`, `-19504`), and the cancel-signal paths — all untestable without injection. |
+| Tests today | 8 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 8/8. |
 | Exemplar archive       | **None — retired `read_ang_test.tar.gz`** (circular oracle: the exemplar `.dream3d` was generated from this filter's own output). `download_test_data()` entry removed from `test/CMakeLists.txt`; retirement documented in `vv/provenance/read_ang_test.md`. |
 | Legacy comparison      | **Run (2026-07-07) vs the official DREAM3D 6.5.171 release.** Three fixtures: hand-authored toy, Small IN100 `Slice_1.ang` (189×201 production scan), non-contiguous-phase toy. On the two supported-format fixtures **all numeric outputs are bit-identical** (cell arrays, ensemble arrays, geometry). Differences: MaterialName trailing space (D1) and the non-contiguous-phase fixture, where **6.5.171 segfaults** (D3). |
 | Bug flags              | One **legacy** bug, empirically confirmed: `ReadAngDataFilter-D3` (6.5.171 out-of-bounds ensemble write → SIGSEGV on non-contiguous phase indices; SIMPLNX resolved and pinned by test). **No SIMPLNX bugs** — the same latent OOB existed in the NX port and was found by the algorithm review and fixed before the comparison. |
-| V&V phase              | Discovery, oracle, reconciliation, algorithm review (fixes applied), tests, legacy comparison, deviations, provenance, docs — **complete**. In-core build/tests pass (`simplnx-rel`); OOC build skipped (no OOC build configured in this workspace, per maintainer precedent). Outstanding: sign-off. |
+| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
 
@@ -78,9 +78,13 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 - **Progress messaging:** added status messages before the EbsdLib read and the cell-data copy (the loops themselves are memcpy-speed; no throttled messenger warranted).
 - **Naming:** local `CamelCase` path variables renamed to `camelBack`; doc `@brief`s filled in.
 
+## Bugs found and fixed
+
+No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+
 ## Code path coverage
 
-*13 of 17 enumerated paths exercised; 1 is unreachable dead code (row 8) and 3 are file-changed/malformed-input guards or cancel checks that need injection (rows 11b, 15b, 16). Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadAngData.cpp` + preflight in `Filters/ReadAngDataFilter.cpp`.* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
+*14 of 18 enumerated paths exercised; 1 is unreachable dead code (row 8) and 3 are file-changed/malformed-input guards or cancel checks that need injection (rows 11b, 15b, 16). Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadAngData.cpp` + preflight in `Filters/ReadAngDataFilter.cpp`.* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
 
 | #  | Phase | Path | Test case |
 |----|-------|------|-----------|
@@ -101,6 +105,7 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 | 14 | (c) Copy | Verbatim copies: IQ, CI, SEM Signal, Fit, X/Y Position | `Class 1 Analytical Oracle` (6 arrays element-wise) |
 | 15b | (c) Copy | reader element count `< totalCells` → `-19503` (out-of-bounds read guard) | *Not directly tested. Only reachable if the file changes between preflight and execute or a malformed `NCOLS_EVEN > NCOLS_ODD` header; requires injection.* |
 | 16 | (b)/(c) | Cancel checks (4 sites) | *Not directly tested. Requires cancel-signal injection; standard early-return pattern.* |
+| 18 | OOC boundary | 65536-block import oracle | `real HDF5 65536-block import oracle` — independent expected outputs on actual HDF5 stores |
 
 ## Test inventory
 
@@ -117,6 +122,10 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 | *(retired)* `OrientationAnalysis::ReadAngData: Exemplary Test` | retired | Exemplar comparison against `read_ang_test.dream3d` — **circular oracle** (exemplar generated from this filter's own output). Replaced by the Class 1 oracle above. |
 | *(retired)* `OrientationAnalysis::ReadAngData: Invalid Phase` | retired | Archive-based `-150` test; superseded by the inline passthrough test. |
 | *(retired)* `OrientationAnalysis::ReadAngData: Invalid Columns & Rows` | retired | Archive-based `-600` test; superseded by the inline passthrough test. |
+| `real HDF5 65536-block import oracle` | new-for-V&V | 36 assertions; A generated 65,537-point ANG file puts distinct exact Euler triples and Image Quality values at the end of the full interleaving block and in its one-point tail. Phase zero in the tail must map to phase one, preserving the established ANG contract. The three checked output arrays are HDF5-OOC. |
+| `Phase 0 rejected (-19502)` | kept | Existing invalid phase-header regression, distinct from remapping unindexed cell values. |
+
+OOC recertification (2026-09-21): serial CTest passed 8/8 target entries in each DREAM3DNX build. The hidden `real HDF5 65536-block import oracle` passed 36 assertions in the OOC binary. A generated 65,537-point ANG file puts distinct exact Euler triples and Image Quality values at the end of the full interleaving block and in its one-point tail. Phase zero in the tail must map to phase one, preserving the established ANG contract. The three checked output arrays are HDF5-OOC. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
 
 ## Exemplar archive
 

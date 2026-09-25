@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -779,6 +780,54 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     CHECK(preflightResult.outputActions.errors()[0].code == -13508);
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk tail oracle", "[OrientationAnalysis][ComputeSchmidsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  constexpr usize k_ChunkTuples = 65536;
+  auto fixture = [] {
+    const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+    return MakeFixture(k_ChunkTuples + 1);
+  }();
+  fixture.featurePhasesPtr->fill(0);
+  (*fixture.featurePhasesPtr)[k_ChunkTuples - 1] = 1;
+  (*fixture.featurePhasesPtr)[k_ChunkTuples] = 1;
+  SetQuat(fixture, k_ChunkTuples, {0.0F, 0.0F, 0.6F, 0.8F});
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  for(const auto& path : {k_FeatureAMPath.createChildPath(k_PhasesName), k_FeatureAMPath.createChildPath(k_AvgQuatsName), k_EnsembleAMPath.createChildPath(k_CrystalStructuresName)})
+  {
+    auto array = fixture.ds.getSharedDataAs<IDataArray>(path);
+    REQUIRE(array != nullptr);
+    REQUIRE(ConvertIDataArray(array, "HDF5-OOC"));
+    REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  const auto metadata = fixture.avgQuatsPtr->getDataStoreRef().getRecoveryMetadata();
+  REQUIRE(metadata.at("OocChunkShape") == "65536");
+  ComputeSchmidsFilter filter;
+  auto args = MakeArgs({1.0F, 0.0F, 1.0F}, true, true);
+  auto result = filter.execute(fixture.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto schmidsPath = k_FeatureAMPath.createChildPath(k_SchmidsArrayName);
+  const auto polesPath = k_FeatureAMPath.createChildPath(k_PolesArrayName);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(schmidsPath));
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(polesPath));
+  const auto& schmids = fixture.ds.getDataRefAs<Float32Array>(schmidsPath);
+  const auto& poles = fixture.ds.getDataRefAs<Int32Array>(polesPath);
+  REQUIRE(schmids.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(poles.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // Cubic equivalents select the largest product of two loading components.
+  // The tail loading is (0.28,0.96,1)/sqrt(2), so m=0.96/2=0.48.
+  REQUIRE(schmids[k_ChunkTuples - 1] == Approx(0.5F).margin(1.0E-6F));
+  REQUIRE(schmids[k_ChunkTuples] == Approx(0.48F).margin(1.0E-6F));
+  REQUIRE(schmids[k_ChunkTuples - 2] == 0.0F);
+  const std::array<int32, 6> expectedPoles = {70, 0, 70, 19, 67, 70};
+  for(usize compIdx = 0; compIdx < expectedPoles.size(); compIdx++)
+  {
+    REQUIRE(poles[(k_ChunkTuples - 1) * 3 + compIdx] == expectedPoles[compIdx]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSchmidsFilter][BackwardsCompatibility]")

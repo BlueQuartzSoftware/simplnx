@@ -16,8 +16,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** — same two-mode structure + per-voxel math via `LaueOps`. `QuatF`→`QuatD`; `getMisoQuat`→`calculateMisorientation`; raster→linear iteration; cancel checks added; new optional `EuclideanCenters` array (Mode 1). UUID reassigned for `Find`→`Compute` rename.             |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — 6 hand-derived data fixtures covering both reference-orientation modes + 2D + 3D + multi-feature + edge cases. **Class 4 (Invariant) companion** — monotonicity, range bounds, skip-condition correctness, and the per-feature averaging formula asserted via `ClassFourInvariants::AssertClass4Invariants()` across both fixture configurations.|
-| Code paths enumerated  | 7 of 8 algorithmic paths exercised directly (Mode 0 vs Mode 1 dispatch, `m_Centers` selection, `EuclideanCenters` writing, valid-voxel accumulate, skip-voxel, finalize-non-empty, finalize-empty-count). 1 path (cancel-check) tested implicitly via the unconditional cancel-check-at-loop-top instrumentation. |
-| Tests today            | **8 TEST_CASEs / 8 ctest entries**, 100% pass (~0.7s). 6 Class 1 data fixtures + 1 Class 4 invariants sweep + 1 SIMPL backwards-compatibility test. **No exemplar archive consumed.**      |
+| Code paths enumerated | 10 of 11 exercised. Cancellation is not directly tested. |
+| Tests today | 9 registered tests plus 1 hidden OOC contract test. The latter runs both reference modes over a 65,536-cell block and one-cell tail. |
 | Exemplar archive       | **None — inline-constructed in test source.** The pre-existing `compute_feature_reference_misorientation.tar.gz` archive (Small-IN100-based regression-against-exemplar) was **retired 2026-06-01** because its exemplar arrays were a circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output). The 6 hand-derived data fixtures cover all 8 algorithmic paths and replace the regression-against-archive coverage.            |
 | Legacy comparison      | **Source-inspection comparison against DREAM3D 6.5.171** completed. Algorithm structurally identical to legacy modulo port-time deltas. **No algorithmic deviations** observed (no behavioral bugs in either implementation). One precision-class non-deviation documented: the EbsdLib 2.4.1 `CubicOps::calculateMisorientationInternal` precision improvement (already characterized in `BadDataNeighborOrientationCheckFilter`'s V&V cycle) propagates into per-feature averages for sym-op-aligned grain boundaries — non-observable on data fixtures. |
 | Bug flags              | None.         |
@@ -35,7 +35,7 @@ A pre-existing `compute_feature_reference_misorientation.tar.gz` archive (Small-
 
 *Classification:* **Port (with UUID reassignment and API modernization)** ~~| Minor changes | Rewrite | New filter~~
 
-*Evidence:* The SIMPLNX algorithm at `Algorithms/ComputeFeatureReferenceMisorientations.cpp` (~175 lines) is a near line-by-line translation of legacy `FindFeatureReferenceMisorientations::execute()` (DREAM3D 6.5.171, ~110 lines). Same two-mode dispatch (`ReferenceOrientation` parameter), same per-voxel main loop computing misorientation via `LaueOps`, same per-feature averaging finalization. The SIMPLNX filter was assigned a **new UUID** (`24b54daf-3bf5-4331-93f6-03a49f719bf1` vs legacy `428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c`) for the `Find` → `Compute` rename; SIMPL 6.4/6.5 pipelines still open correctly via the conversion fixtures at `test/simpl_conversion/6_*/`.
+*Evidence:* The SIMPLNX algorithm at `Algorithms/ComputeFeatureReferenceMisorientations.cpp` (249 lines) is a near line-by-line translation of legacy `FindFeatureReferenceMisorientations::execute()` (DREAM3D 6.5.171, ~110 lines). Same two-mode dispatch (`ReferenceOrientation` parameter), same per-voxel main loop computing misorientation via `LaueOps`, same per-feature averaging finalization. The SIMPLNX filter was assigned a **new UUID** (`24b54daf-3bf5-4331-93f6-03a49f719bf1` vs legacy `428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c`) for the `Find` → `Compute` rename; SIMPL 6.4/6.5 pipelines still open correctly via the conversion fixtures at `test/simpl_conversion/6_*/`.
 
 *Port-time deltas (non-deviation — preserve algorithmic equivalence at hand-built-fixture precision):*
 
@@ -82,11 +82,15 @@ Five invariants every filter run must satisfy regardless of input configuration,
 - *The Class 4 invariant set for completeness — are there other properties this algorithm must satisfy?*
 - *The decision to retire the `compute_feature_reference_misorientation.tar.gz` Small-IN100 exemplar archive in favor of inline data fixtures.*
 
+## Bugs found and fixed
+
+None in the filter during this recertification. The existing EbsdLib precision correction remains documented in D1.
+
 ## Code path coverage
 
-*7 of 8 paths exercised directly; 1 (cancel) implicitly via the unconditional cancel-check-at-loop-top instrumentation.*
+10 of 11 paths exercised. Cancellation is not directly tested.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureReferenceMisorientations.cpp` (~175 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureReferenceMisorientations.cpp` (249 lines).
 
 The algorithm has three logical phases: (a) Mode 1 pre-loop (populate `centers[fid]` from `gbEuclideanDistances` + write `EuclideanCenters` coords); (b) main per-voxel loop (compute per-voxel misorientation, accumulate per-feature sums + counts); (c) per-feature finalize (compute per-feature average from sum/count).
 
@@ -100,6 +104,10 @@ The algorithm has three logical phases: (a) Mode 1 pre-loop (populate `centers[f
 | 6  | (b) Main loop     | Cancel check at loop top (`m_ShouldCancel.load()` → early return)              | *Not directly tested.* Unconditional check at loop top in both passes; failure mode (silent cancel-disregard) would manifest as test hang in any test, but is not specifically exercised. Low-value gap. |
 | 7  | (c) Finalize      | `avgMisorientationCounts[fid] == 0` → `avgRefMis[fid] = 0`    | Fixture C — feature 4 has all-unphased voxels, so `count[4] == 0` |
 | 8  | (c) Finalize      | Otherwise → `avgRefMis[fid] = sums[fid] / counts[fid]`         | All Class 1 fixtures with non-empty features     |
+| 9 | Validation | Invalid participating phase or Laue index | `Phase and Laue Index Bounds` — both reference modes |
+| 10 | Mode 1 | Last-equal-distance center selection across a block boundary | `genuine HDF5 65536-block tail oracle` — center at x=65536.5 |
+| 11 | Main loop | Full 65,536-cell block and one-cell tail in both reference modes | `genuine HDF5 65536-block tail oracle` — literal cell angles and feature means |
+
 
 ## Test inventory
 
@@ -112,11 +120,18 @@ The algorithm has three logical phases: (a) Mode 1 pre-loop (populate `centers[f
 | `ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 MultiGrain CenterIsolation`            | new-for-V&V | 2×3×1; 2 features; verifies `centers[fid]` isolation per feature + tied-distance `>=` later-voxel-wins tie-break. Class 4 invariants asserted.                |
 | `ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 3D Volume`            | new-for-V&V | 3×3×2; single feature; verifies linear `voxelIdx → (x,y,z)` arithmetic when `dimZ > 1`. Class 4 invariants asserted.          |
 | `ComputeFeatureReferenceMisorientationsFilter: Class 4 - Invariants Sweep`            | new-for-V&V | Runs Mode 0 and Mode 1 configurations distinct from the value-specific fixtures; asserts only the Class 4 invariants. Catches future regressions where specific values shift but invariants still hold.       |
-| `ComputeFeatureReferenceMisorientationsFilter: SIMPL Backwards Compatibility`         | retained    | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures (`test/simpl_conversion/6_*/ComputeFeatureReferenceMisorientationsFilter.json`); validates UUID + argument-key + parameter-value decoding.            |
+| `ComputeFeatureReferenceMisorientationsFilter: SIMPL Backwards Compatibility`         | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures (`test/simpl_conversion/6_*/ComputeFeatureReferenceMisorientationsFilter.json`); validates UUID + argument-key + parameter-value decoding.            |
 | *(retired)* `ComputeFeatureReferenceMisorientationsFilter_AverageMisorientation`      | retired     | Removed 2026-06-01. Regression-against-archive test consuming `compute_feature_reference_misorientation.tar.gz` exemplar arrays; archive's exemplar values were a circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output). Test failure surfaced when EbsdLib 2.4.1 CubicOps precision fix shifted exemplar values by 2× epsilon. Replaced by inline Class 1 + Class 4 fixtures above. |
 | *(retired)* `ComputeFeatureReferenceMisorientationsFilter_EuclideanDistance`          | retired     | Same as above for Mode 1; archive exemplar shifted by 10× epsilon post-EbsdLib-2.4.1.|
+| `Phase and Laue Index Bounds` | kept | Invalid participating phase/Laue indices and ignored feature zero in both modes. |
+| `genuine HDF5 65536-block tail oracle` | new-for-V&V | Both modes use HDF5 inputs and outputs. Mode 0 expects [15°, 30°] and mean 22.5°. Mode 1 selects the later tied center and expects [15°, 0°] and mean 7.5°, plus literal center coordinates. |
 
-All 8 active TEST_CASEs pass at the verified commit (`100% tests passed, 0 tests failed out of 8` in ~0.7s).
+
+The shared scaffold now bulk-initializes the same zero/identity input values. Upstream/develop oracle expectations and tolerances are preserved. The hidden test uses direct `Approx` assertions and does not derive its expected values from filter output.
+
+The current default selection contains nine tests. The hidden test requires the OOC manager and runs separately. The existing D1 precision disposition remains unchanged; no fresh legacy binary comparison is claimed.
+
+OOC recertification, 2026-09-18: serial CTest passed 9/9 in `NX-Com-Qt69-Vtk96-Rel` and 9/9 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 63 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
 ## Exemplar archive
 

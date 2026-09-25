@@ -30,6 +30,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/OrientationMath/OrientationConverter.hpp>
@@ -397,6 +398,51 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations", "[C
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors()[0].code == convert_orientations_constants::k_MatchingTypesError);
+}
+
+TEST_CASE("OrientationAnalysis::ConvertOrientations: real HDF5 4096-block stereographic oracle", "[OrientationAnalysis][ConvertOrientationsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  constexpr usize k_BlockTuples = 4096;
+  DataStructure dataStructure;
+  const DataPath inputPath({"Quaternions"});
+  const DataPath outputPath({"Stereographic"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, {k_BlockTuples + 1}, {4});
+  auto* inputPtr = Float32Array::Create(dataStructure, inputPath.getTargetName(), store);
+  REQUIRE(inputPtr != nullptr);
+  std::vector<float32> values((k_BlockTuples + 1) * 4, 0.0F);
+  for(usize tupleIdx = 0; tupleIdx <= k_BlockTuples; tupleIdx++)
+  {
+    values[tupleIdx * 4 + 3] = 1.0F;
+  }
+  values[(k_BlockTuples - 1) * 4 + 2] = 0.6F;
+  values[(k_BlockTuples - 1) * 4 + 3] = 0.8F;
+  values[k_BlockTuples * 4] = 0.6F;
+  values[k_BlockTuples * 4 + 3] = 0.8F;
+  auto writeResult = store->copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(store->getDataFormat() == "HDF5-OOC");
+  ConvertOrientationsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(7));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float32Array>(outputPath);
+  REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  // Stereographic coordinates equal (qx,qy,qz)/(1+qw).
+  const std::array<float32, 6> expected = {0, 0, 1.0F / 3.0F, 1.0F / 3.0F, 0, 0};
+  for(usize compIdx = 0; compIdx < expected.size(); compIdx++)
+  {
+    REQUIRE(output[(k_BlockTuples - 1) * 3 + compIdx] == Approx(expected[compIdx]).margin(1.0E-6F));
+  }
+  REQUIRE(output[0] == 0.0F);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ConvertOrientationsFilter][BackwardsCompatibility]")

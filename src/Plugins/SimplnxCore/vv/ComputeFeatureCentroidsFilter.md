@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** — the non-periodic path of `ComputeFeatureCentroids::operator()` is a near line-by-line translation of legacy `FindFeatureCentroids::find_centroids()`, including the identical Kahan compensated summation and `float64`/`float64`/`uint64` sum/compensation/count triplet. Port-time additions: SIMPLNX-only `Is Periodic` option, disabled `ParallelDataAlgorithm` scaffolding, `float64` voxel-center fetch (`Point3Dd`), and a FeatureIds→AttributeMatrix indexing guard. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** (confirmed 2026-07-07). 5 hand-derived toy fixtures A–E (centroid = mean of voxel centers, `voxel-center = origin + (index+0.5)·spacing`). Signed off by Michael Jackson (technical authority) 2026-07-16. |
-| Code paths enumerated  | **8 of 8 exercised** — range filter, range tracking, Kahan accumulate, `count>0` finalize, `count==0` skip, periodic-fires, periodic-not-fires, validation-error. |
-| Tests today            | **4 TEST_CASEs (5 ctest entries), all pass** in-core — Class 1 Analytical (A/B/C, 3 SECTIONs), Class 1/4 Periodic (D/E), validation-error (`-5351`), and SIMPL 6.4/6.5 backwards-compat (`DYNAMIC_SECTION`). Retired the prior circular consistency test. |
+| Code paths enumerated | 9 of 9 listed numerical/validation paths exercised; cancellation and internal error-site exhaustiveness are outside this campaign. |
+| Tests today | 5 registered cases plus 1 hidden real-HDF5 block-tail case, which runs periodic mode off and on. Serial CTest passes 5/5 in both builds. |
 | Exemplar archive       | **None — inline analytical fixtures** (provenance sidecar written). The shared `6_6_stats_test_v2.tar.gz` is no longer consumed by this test (kept for 5 other tests); `6_6_find_feature_centroids.tar.gz` kept (used by ExtractComponentAsArray / WriteAbaqusHexahedron). |
-| Legacy comparison      | **Source-inspection** (6.5.171/6.5.172 vs SIMPLNX), backed by the independent Class 1 fixtures. Non-periodic path is an exact Kahan port; 2 deviations (D1 float32→float64 voxel-center precision; D2 SIMPLNX-only `Is Periodic`). Empirical binary A/B available if bit-confirmation is required. |
+| Legacy comparison      | **Source-inspection** (DREAM3D 6.5.171 vs SIMPLNX; local legacy source used for corroboration), backed by the independent Class 1 fixtures. Non-periodic path is an exact Kahan port; 2 deviations (D1 float32→float64 voxel-center precision; D2 SIMPLNX-only `Is Periodic`). Empirical binary A/B available if bit-confirmation is required. |
 | Bug flags              | **None outstanding.** One SIMPLNX-internal bug found and resolved: the `ImageGeom` overload of `AdjustCentroidsForPeriodicFaces` added `(dim−1)/2` in cell-index units to a physical-coordinate centroid (ignoring spacing); fixed to scale by spacing (`GeometryHelpers.cpp:245`), with Fixture E as the regression pin. Not a legacy deviation (legacy has no periodic path). |
-| V&V phase              | Oracle design + reconciliation, algorithm review, code-path coverage, test inventory, legacy comparison, deviations, and provenance complete. **V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16.** Outstanding: OOC dual-build run (deferred — feature-indexed serial algorithm, no OOC-specific variant). |
+| V&V phase | Historical COMPLETE status and sign-off retained. OOC recertification verifies preserved analytical tests and a real-HDF5 block-tail case. |
 
 ## Summary
 
@@ -39,7 +39,7 @@ spacing bug.
 *Classification:* **Port**
 
 *Evidence:* `ComputeFeatureCentroids::operator()` is a near line-by-line translation of legacy
-`FindFeatureCentroids::find_centroids()` (6.5.172 `Generic/GenericFilters/FindFeatureCentroids.cpp:144–224`),
+`FindFeatureCentroids::find_centroids()` (local legacy source `Generic/GenericFilters/FindFeatureCentroids.cpp:144–224`),
 preserving the identical Kahan compensated summation, the `float64`/`float64`/`uint64` sum/compensation/count
 triplet, and the `count>0` divide-and-store finalize. Same SIMPL UUID retained
 (`6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca`); SIMPL 6.4/6.5 conversion fixtures at
@@ -82,10 +82,14 @@ all pass at float32 margin 1e-4.
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. The historical periodic-spacing correction described above remains in the branch.
+
 ## Code path coverage
 
-*8 of 8 paths exercised.* Source:
-`src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp` (~222 lines).
+9 of 9 listed numerical/validation paths exercised. Source:
+`src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp` (182 lines).
 Logical phases: (a) per-cell sweep (accumulate + range-track), (b) per-feature finalize, (c) optional periodic
 adjust.
 
@@ -99,6 +103,7 @@ adjust.
 | 6 | (c) Periodic | `IsPeriodic` + feature spans full extent → offset applied (spacing-aware) | D (spacing 1), E (spacing 2, regression pin) |
 | 7 | (c) Periodic | `IsPeriodic` + feature does not span → unchanged | D (feature 2), all non-periodic runs |
 | 8 | (pre) | `ValidateFeatureIdsToFeatureAttributeMatrixIndexing` failure (`maxId ≥ numFeatures`, `-5351`) | `Error - FeatureId exceeds Feature AM` |
+| 9 | Bulk I/O | Feature accumulation crosses a 65,536-cell block and one-cell tail | `real HDF5 65536-block tail oracle` — exact centroid 131082, -0.5, 9 in both periodic modes |
 
 *The preflight AttributeMatrix-null path (`-12700`) is guarded by the `AttributeMatrixSelectionParameter` and
 cannot be triggered with valid arguments — not separately tested. The OOC dual-build run is deferred: the
@@ -113,8 +118,12 @@ algorithm is a feature-indexed serial sweep with no OOC-specific variant.*
 | `SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boundary` | new-for-V&V | Fixtures D/E; periodic fire-condition + spacing-aware offset (Fixture E pins the bug fix). |
 | `SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds Feature AM` | new-for-V&V | Pins the `-5351` validation error path. |
 | `SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.5 (UUID) + 6.4 (Filter_Name); validates UUID + 3 argument values. Conversion coverage only. |
+| `Bulk boundary and failure propagation` | kept | Existing bulk-read boundary and injected-failure regression. |
+| `real HDF5 65536-block tail oracle` | new-for-V&V | Reuses CentroidToy::Build and Run; checks exact physical centroids for background, the two-cell feature across the boundary, and an empty feature. |
 
 All active TEST_CASEs pass in-core (`NX-Com-Qt69-Vtk96-Rel`). OOC dual-build deferred (see Code path coverage).
+
+OOC recertification (2026-09-21): 5/5 registered CTest entries pass in each DREAM3DNX build. The new hidden case passes 35 assertions across periodic off/on. Input FeatureIds and output Centroids are asserted HDF5-OOC. The two contributing X coordinates are 131081 and 131083, so the expected mean is exactly 131082. Upstream numerical assertions and tolerances remain unchanged; legacy deviation dispositions are retained without claiming a new binary comparison.
 
 ## Exemplar archive
 

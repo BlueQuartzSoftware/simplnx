@@ -16,12 +16,12 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes.** Faithful port of legacy `ReadCtfData` control flow with deliberate deltas: unindexed-point (Phase 0) remap removed (D1/D2, PR #937 — predates this pass), 3D multi-slice support restored (D4, resolved), five malformed-input guards added (D3), Euler math on double-precision intermediates (restores legacy bit-parity), and the legacy PIMPL file-cache dropped (no output effect). |
 | Oracle (confirmed)     | **Confirmed.** **Class 1 (analytical) + Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule — EbsdLib (vcpkg 3.1.0) owns `.ctf` parsing and is trusted (Class 2 boundary). Hand-authored inline toy `.ctf` fixtures (3×2 two-phase, 2×2×2 multi-slice; all values float32-exact) with every expected value hand-derived from the fixture text; the two angle transforms (+30° hex alignment, degrees→radians) are correctly-rounded IEEE-754 double-intermediate results derived independently with NumPy. Encoded as 12 TEST_CASEs in `test/ReadCtfDataTest.cpp`; all pass. SIMPLNX matched the oracle with zero discrepancies. |
-| Code paths enumerated  | 19 of 22 paths exercised (see Code path coverage); the gaps are the unreadable-header passthrough (needs permission manipulation), the file-changed phase-count guard `-19605` (race window inside a single execute; needs injection), and the cancel-signal paths (need injection; untested per scope). |
-| Tests today            | 12 test cases: Class 1+4 analytical oracle, 4-combo Euler-conversion sweep (DYNAMIC_SECTION) with double-precision-pinning angle values, 2-case 3D multi-slice (DYNAMIC_SECTION), 5 value-add error-guard tests (−19600…−19604 incl. an exact-boundary phase value; −19605 is injection-only), 3 EbsdLib error passthroughs (−102/−105/−107), and SIMPL 6.4/6.5 backwards-compat (new — the filter previously had no conversion test). All inline hand-built fixtures — no exemplar archive. |
+| Code paths enumerated  | 20 of 23 paths exercised (see Code path coverage); the gaps are the unreadable-header passthrough (needs permission manipulation), the file-changed phase-count guard `-19605` (race window inside a single execute; needs injection), and the cancel-signal paths (need injection; untested per scope). |
+| Tests today | 12 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 12/12. |
 | Exemplar archive       | **None — retired `6_6_read_ctf_data_2.tar.gz`** (legacy-generated exemplar = forbidden oracle). `download_test_data()` entry removed from `test/CMakeLists.txt`; retirement documented in `vv/provenance/6_6_read_ctf_data_2.md`. Its production Cugrid scan lives on as an A/B fixture in the comparison working folder only. |
 | Legacy comparison      | **Run (2026-07-24) vs the official DREAM3D 6.5.171 release.** Four runs over three byte-identical input files: toy (2 conversion combos), Cugrid 550×400 production scan, 2×2×2 multi-slice toy. **All numeric outputs bit-identical** — 543,950 of the production scan's 660,000 Euler values match exactly (the 116,050 differing values are all the unindexed points' φ2), and the toy's double-precision-pinning angles match legacy bit-for-bit — except the unindexed-point family: Phases 0→1 remap (D1) and the consequent +30° on unindexed φ2 (D2). Three malformed-input fixtures demonstrated legacy segfaults/silent corruption vs SIMPLNX errors (D3). |
 | Bug flags              | Legacy: crash/UB on malformed files, **empirically confirmed** (two segfaults, one silent heap-dependent output) — D3. SIMPLNX (all releases through 7.4.1): multi-slice `.ctf` silently truncated to slice 0 — D4, **resolved** and pinned by the 3D test; latent OOB/null-deref twins of the legacy crashes existed in the NX copy path and were guarded this pass (−19600/−19601/−19602/−19603). |
-| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review (fixes applied), tests, legacy comparison, deviations, provenance, docs — **complete**. Tests pass 12/12 in both `simplnx-Rel` and `simplnx-ooc-Rel` (OOC caveat: that build's out-of-core backend registration is under separate investigation; its pass is reported as-run). Second-engineer sign-off completed at PR review (Jared Duffey, 2026-07-28, PR #1692). |
+| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
 
@@ -91,9 +91,13 @@ Five independent reviews were run after the deliverables were drafted; all findi
 - **Memory:** no bugs; peak ≈ 88 bytes/scan-point (reader + destination resident simultaneously) now documented in the filter docs; reader lifetime/cleanup verified correct on all return paths.
 - **Out-of-core:** all destination writes are forward-sequential and chunk-cache-benign; the Euler loop's re-read of the just-written Phases array was replaced with the reader's in-core buffer (bit-identical, removes an OOC read-back stream); `copyFromBuffer`-style conversions deferred until that API exists outside the OOC rewrite branch.
 
+## Bugs found and fixed
+
+No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+
 ## Code path coverage
 
-*19 of 22 enumerated paths exercised; the gaps are one passthrough needing permission manipulation (row 1), the file-changed phase-count guard (row 9b), and the cancel checks (row 21). Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadCtfData.cpp` (272 lines) + preflight in `Filters/ReadCtfDataFilter.cpp` (268 lines).* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
+*20 of 23 enumerated paths exercised; the gaps are one passthrough needing permission manipulation (row 1), the file-changed phase-count guard (row 9b), and the cancel checks (row 21). Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadCtfData.cpp` (285 lines) + preflight in `Filters/ReadCtfDataFilter.cpp` (268 lines).* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
 
 | #  | Phase | Path | Test case |
 |----|-------|------|-----------|
@@ -119,6 +123,7 @@ Five independent reviews were run after the deliverables were drafted; all findi
 | 19 | (c) Copy | Multi-slice data volume (x·y·z cells) | `3D Multi-Slice CTF` (8 cells across 2 slices, element-wise) |
 | 20 | —  | SIMPL 6.4/6.5 parameter conversion | `SIMPL Backwards Compatibility` |
 | 21 | (b)/(c) | Cancel checks (3 sites) | *Not directly tested. Requires cancel-signal injection; standard early-return pattern. Excluded from scope by direction.* |
+| 23 | OOC boundary | 65536-block conversion oracle | `real HDF5 65536-block conversion oracle` — independent expected outputs on actual HDF5 stores |
 
 ## Test inventory
 
@@ -137,6 +142,9 @@ Five independent reviews were run after the deliverables were drafted; all findi
 | `…: EbsdLib Error Passthrough - Unknown Column (-107)` | new-for-V&V | Column-allocation return point. |
 | `…: SIMPL Backwards Compatibility` | new-for-V&V | DYNAMIC_SECTION over the existing 6.4/6.5 conversion fixtures — the filter previously had **no** conversion test despite shipping the fixtures. |
 | *(retired)* `OrientationAnalysis::ReadCtfData: Valid Execution` | retired | Exemplar comparison against `6_6_read_ctf_data.dream3d` — **legacy-generated oracle** (forbidden). Replaced by the Class 1 oracle above. |
+| `real HDF5 65536-block conversion oracle` | new-for-V&V | 38 assertions; A generated 65,537-point CTF file crosses the Euler interleaving block with cubic, hexagonal, and unindexed witnesses. Existing independently rounded radians/hex-alignment literals are checked exactly. Unlike ANG, the unindexed tail phase remains zero. Euler, phase, and band arrays are HDF5-OOC. |
+
+OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in each DREAM3DNX build. The hidden `real HDF5 65536-block conversion oracle` passed 38 assertions in the OOC binary. A generated 65,537-point CTF file crosses the Euler interleaving block with cubic, hexagonal, and unindexed witnesses. Existing independently rounded radians/hex-alignment literals are checked exactly. Unlike ANG, the unindexed tail phase remains zero. Euler, phase, and band arrays are HDF5-OOC. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
 
 ## Exemplar archive
 
@@ -153,4 +161,3 @@ Five independent reviews were run after the deliverables were drafted; all findi
 - `ReadCtfDataFilter-D3` — Malformed-input behavior: legacy segfaults (missing column; empty phases — both demonstrated, exit 139) or silently emits heap-dependent output (out-of-range phase value — demonstrated, exit 0); SIMPLNX rejects with −19600…−19604. Trust SIMPLNX.
 - `ReadCtfDataFilter-D4` — *(retired)* Multi-slice `.ctf` silently truncated to slice 0 by earlier DREAM3D-NX releases; resolved, now bit-identical to legacy 3D output. Trust SIMPLNX (current).
 **Fixed in DREAM3D-NX 7.4.2:** `ReadCtfDataFilter-D4`.
-

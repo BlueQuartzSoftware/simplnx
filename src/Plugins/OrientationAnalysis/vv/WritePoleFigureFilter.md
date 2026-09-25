@@ -14,17 +14,17 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
-| Oracle (confirmed)     | **Class 5 (Expert-visual)** primary + **Class 4 (Invariant)** companions. Expert side-by-side sign-off of hex and cubic renders (6.5.171 / 6.5.172 / SIMPLNX). Invariants encoded in `WritePoleFigureTest.cpp` (mask-effectiveness, hex-convention plumbing) pass on EbsdLib 3.1.0. |
-| Code paths enumerated  | 10 of 13 simplnx-wrapper paths exercised in CI; the 3 uncovered are defensive/error branches noted below. (Per-Laue-class + pixel rendering is owned and byte-tested by EbsdLib upstream.) |
-| Tests today            | 3 test cases — mask-effectiveness (Class 4), hex-convention plumbing (Class 4, intensity + composite paths), SIMPL 6.4/6.5 backward-compat. All pass against EbsdLib 3.1.0. |
+| Oracle (confirmed) | Class 5 expert-visual and Class 4 wiring invariants are retained; the new Class 1 HDF5 boundary oracle checks exact discrete pole counts and the entire <001> intensity image. |
+| Code paths enumerated | 10 of 14 listed paths exercised; layout selection and three defensive validation/warning rows remain unasserted. Empty-phase skipping is not separately proven. |
+| Tests today | 4 registered entries in the focused selection, plus one hidden HDF5 boundary case. Paired selections pass 4/4. |
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
-| Legacy comparison      | Three-way expert-visual (6.5.171 / 6.5.172 / SIMPLNX) on hex **and** cubic. 6.5.171 == 6.5.172 (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
+| Legacy comparison      | Three-way expert-visual (6.5.171 / patched local legacy build / SIMPLNX) on hex **and** cubic. 6.5.171 matches the patched local legacy build (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
 | Bug flags              | **None.** All 4 deviations are cosmetic (axis/family labels, font) or an intentional rendering improvement (discrete vector markers). No correctness defect. |
-| V&V phase              | All phases complete: oracle chosen + applied before legacy comparison, expert sign-off recorded, invariants pass on EbsdLib 3.1.0. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
+| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds independent HDF5 boundary evidence and paired CTest checks. |
 
 ## Summary
 
-`WritePoleFigureFilter` generates `<001>/<011>/<111>` (or the hexagonal/trigonal equivalents) pole figures for each phase from per-cell Euler angles, phases, and crystal structures, optionally masked. It was verified by expert (Class 5) side-by-side comparison of hex and cubic pole figures rendered through DREAM3D 6.5.171, 6.5.172, and SIMPLNX (EbsdLib 3.1.0), backed by Class 4 invariant unit tests for the simplnx-unique wiring. The pole-figure data is visually identical across all versions; the only differences are cosmetic labeling/font and an intentional discrete-marker rendering improvement — four documented, non-defect deviations.
+`WritePoleFigureFilter` generates `<001>/<011>/<111>` (or the hexagonal/trigonal equivalents) pole figures for each phase from per-cell Euler angles, phases, and crystal structures, optionally masked. It was verified by expert (Class 5) side-by-side comparison of hex and cubic pole figures rendered through DREAM3D 6.5.171, a patched local legacy build, and SIMPLNX (EbsdLib 3.1.0), backed by Class 4 invariant unit tests for the simplnx-unique wiring. The pole-figure data is visually identical across all versions; the only differences are cosmetic labeling/font and an intentional discrete-marker rendering improvement — four documented, non-defect deviations.
 
 ## Algorithm Relationship
 
@@ -45,7 +45,7 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 *Justification for Class 5:* the filter's output is a rasterized pole-figure image whose correctness is inherently visual; legacy DREAM3D emits **only PDFs** (no numeric ground truth to diff), and the pixel-level rendering is owned and byte-tested by EbsdLib upstream. No Class 1–3 oracle fully specifies the rendered image. The analytically-checkable part (pole positions) and the simplnx-unique wiring are covered by the Class 4 invariants below.
 
-*Applied:* the same 502 hex-Ti orientations (and a cubic-relabeled variant) were rendered through DREAM3D 6.5.171, 6.5.172, and SIMPLNX (EbsdLib 3.1.0) in Color and Discrete modes; a domain expert reviewed the figures side by side. Pole positions, intensity distribution, and color-intensity mapping are visually identical across all three; the only differences are the four cosmetic/rendering items in the Deviations file.
+*Applied:* the same 502 hex-Ti orientations (and a cubic-relabeled variant) were rendered through DREAM3D 6.5.171, a patched local legacy build, and SIMPLNX (EbsdLib 3.1.0) in Color and Discrete modes; a domain expert reviewed the figures side by side. Pole positions, intensity distribution, and color-intensity mapping are visually identical across all three; the only differences are the four cosmetic/rendering items in the Deviations file.
 
 *Encoded:*
 - **Class 4 (Invariant):** `test/WritePoleFigureTest.cpp::"OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure"` (masked output differs from unmasked by >1% of bytes → mask is wired) and `::"…: HexConvention choice reaches algorithm"` (X‖a vs X‖a* rotates the basal families 30° in both the intensity array and the composite RGB → both plumbing paths honor the convention). Both pass against EbsdLib 3.1.0.
@@ -54,11 +54,15 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
+## Bugs found and fixed
+
+No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+
 ## Code path coverage
 
-10 of 13 simplnx-wrapper paths exercised in CI. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
+10 of 14 listed simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/WritePoleFigure.cpp` + `WritePoleFigureFilter.cpp`.
+Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilter.cpp` preflight.
 
 | #  | Phase              | Path                                                                     | Test case                                                        |
 |----|--------------------|--------------------------------------------------------------------------|------------------------------------------------------------------|
@@ -75,6 +79,7 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | 11 | (a) Preflight      | mask array wrong type → error `-53900`                                  | *Not directly tested — low-value validation branch.*             |
 | 12 | (a) Preflight      | ImageSize ≤ 0 → error `-680002`; Discrete mode with marker radius < 1 → error `-680003` | *Guards added during review; not directly tested — low-value validation branches.* |
 | 13 | (h) SIMPL convert  | 6.4 / 6.5 SIMPL JSON → Arguments (legacy ImageFormat dropped, D5)       | `SIMPL Backwards Compatibility`                                  |
+| 14 | OOC storage | 65536-block discrete-count oracle | `real HDF5 65536-block discrete-count oracle` — independent exact values across the boundary |
 
 ## Test inventory
 
@@ -84,6 +89,9 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | `HexConvention choice reaches algorithm` | kept | Class 4 invariant: X‖a vs X‖a* differ in both the intensity array and the composite RGB (both plumbing paths). Passes on EbsdLib 3.1.0. |
 | `Discrete mode and marker radius reach algorithm` | new-for-V&V | Class 4 invariant: Discrete vs Color composites differ; 1 px vs 10 px marker radii differ. Pins the GenerationAlgorithm and DiscreteMarkerRadius plumbing in CI (previously covered only by manual A/B renders). |
 | `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. The legacy `ImageFormat` key is intentionally not converted (D5). |
+| `real HDF5 65536-block discrete-count oracle` | new-for-V&V | 29 assertions; Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. |
+
+OOC recertification (2026-09-21): 4/4 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 65536-block discrete-count oracle` passes 29 assertions. Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
 
 ## Exemplar archive
 
@@ -94,7 +102,7 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 
 ## Deviations from DREAM3D 6.5.171
 
-Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 == 6.5.172. Full renders archived to OneDrive; regeneration scripts committed under `Code_Review/vv/WritePoleFigure/`. All four are cosmetic / labeling / intentional-rendering; none is a defect.
+Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 matches the patched local legacy build. Full renders archived to OneDrive; regeneration scripts committed under `Code_Review/vv/WritePoleFigure/`. All four are cosmetic / labeling / intentional-rendering; none is a defect.
 
 - `WritePoleFigureFilter-D1` — axis labels `X`/`Y` (legacy) → `A1`/`A2` (SIMPLNX). Cosmetic.
 - `WritePoleFigureFilter-D2` — font/text-metrics differ (libharu Helvetica → EbsdLib canvas_ity). Library, cosmetic.

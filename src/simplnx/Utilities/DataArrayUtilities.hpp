@@ -177,7 +177,7 @@ bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, co
  * @return True if conversion succeeds.
  * @pre dataArray is not null.
  */
-bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat);
+SIMPLNX_EXPORT bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat);
 
 /**
  * @brief Creates a NeighborList with resolver-selected storage.
