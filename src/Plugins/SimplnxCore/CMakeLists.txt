@@ -157,6 +157,7 @@ set(FilterList
   WriteLAMMPSFileFilter
   WriteLosAlamosFFTFilter
   WriteNodesAndElementsFilesFilter
+  WriteOnScaleTableFileFilter
   WriteSPParksSitesFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
@@ -365,6 +366,7 @@ set(AlgorithmList
   WriteFeatureDataCSV
   WriteLosAlamosFFT
   WriteNodesAndElementsFiles
+  WriteOnScaleTableFile
   WriteSPParksSites
   WriteStlFile
   WriteVtkRectilinearGrid
