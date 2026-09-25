@@ -3,10 +3,9 @@
 #include "Algorithms/PartitionGeometry.hpp"
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
+#include "SimplnxCore/utils/PartitionUtilities.hpp"
 
-#include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -43,29 +42,14 @@ public:
   PartitionGeometryFilter& operator=(const PartitionGeometryFilter&) = delete;
   PartitionGeometryFilter& operator=(PartitionGeometryFilter&&) noexcept = delete;
 
-  enum class PartitioningMode
-  {
-    Basic = 0,
-    Advanced = 1,
-    BoundingBox = 2,
-    ExistingPartitionGrid = 3
-  };
-
-  // Parameter Keys
-  static constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode_index";
+  // Parameter Keys — shared partition grid keys live in PartitionUtilities::Parameters
   static constexpr StringLiteral k_StartingFeatureID_Key = "starting_partition_id";
   static constexpr StringLiteral k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
-  static constexpr StringLiteral k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";
-  static constexpr StringLiteral k_PartitionGridOrigin_Key = "partitioning_scheme_origin";
-  static constexpr StringLiteral k_CellLength_Key = "length_per_partition";
-  static constexpr StringLiteral k_MinGridCoord_Key = "lower_left_coord";
-  static constexpr StringLiteral k_MaxGridCoord_Key = "upper_right_coord";
   static constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "input_geometry_attribute_matrix_path";
   static constexpr StringLiteral k_PartitionGridGeometry_Key = "output_image_geometry_path";
   static constexpr StringLiteral k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
   static constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
   static constexpr StringLiteral k_InputGeometryToPartition_Key = "input_geometry_path";
-  static constexpr StringLiteral k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
   static constexpr StringLiteral k_UseVertexMask_Key = "use_vertex_mask";
   static constexpr StringLiteral k_VertexMaskPath_Key = "vertex_mask_path";
   static constexpr StringLiteral k_FeatureAttrMatrixName_Key = "feature_attr_matrix_name";
@@ -163,20 +147,13 @@ protected:
   Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
                                     const AttributeMatrix& attrMatrix) const;
 
-  static Result<> DataCheckExistingGeometryMode();
-
   template <typename GeomType>
   Result<> dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const;
 
-  /**
-   * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
-   */
-  static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
-
   static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 
-  Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                const DataPath& attrMatrixPath) const;
+  Result<PartitionUtilities::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
+                                                                 const DataPath& attrMatrixPath) const;
 };
 } // namespace nx::core
 
