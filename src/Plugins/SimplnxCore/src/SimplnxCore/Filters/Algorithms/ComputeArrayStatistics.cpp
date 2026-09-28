@@ -1846,6 +1846,25 @@ Result<> writeStatisticsOutput(DataArray<T>* outputArray, const T* values, usize
 }
 
 /**
+ * @brief Rewrites each byte of a bool buffer to 0 or 1.
+ * @param buffer Bool objects that can hold any byte.
+ *
+ * A store can move bool values as raw bytes. A file from h5py, MATLAB, or a legacy writer can then supply bytes
+ * such as 255. Reading a bool object that holds such a byte is undefined behavior. In an optimized build the byte
+ * can index past a two-counter histogram or add a mask weight of 255. The bytes are read and written through
+ * unsigned char, which is defined for any object representation.
+ */
+void canonicalizeBoolBytes(nonstd::span<bool> buffer)
+{
+  static_assert(sizeof(bool) == 1, "Bool canonicalization rewrites one byte for each bool object.");
+  auto* bytes = reinterpret_cast<unsigned char*>(buffer.data());
+  for(usize index = 0; index < buffer.size(); ++index)
+  {
+    bytes[index] = static_cast<unsigned char>(bytes[index] != 0);
+  }
+}
+
+/**
  * @brief Bulk-reads one tuple range and names the array and range in any error.
  * @tparam U Store value type.
  * @param store Source store.
@@ -1853,6 +1872,9 @@ Result<> writeStatisticsOutput(DataArray<T>* outputArray, const T* values, usize
  * @param buffer Destination with one value for each tuple.
  * @param arrayPath Array path for diagnostics.
  * @return Bulk-read result.
+ *
+ * Every value and mask page of the scanline statistics is filled here. A bool buffer is canonicalized after a
+ * successful read, so every nonzero byte is one true value for all engines that read the page.
  */
 template <typename U>
 Result<> readStatisticsTuples(const AbstractDataStore<U>& store, usize offset, nonstd::span<U> buffer, const DataPath& arrayPath)
@@ -1864,6 +1886,11 @@ Result<> readStatisticsTuples(const AbstractDataStore<U>& store, usize offset, n
     {
       error.message = fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", arrayPath.toString(), offset, offset + buffer.size(), error.message);
     }
+    return result;
+  }
+  if constexpr(std::is_same_v<U, bool>)
+  {
+    canonicalizeBoolBytes(buffer);
   }
   return result;
 }
@@ -2160,6 +2187,8 @@ public:
    * @param offset First tuple.
    * @param count Tuples to read; at most the capacity.
    * @return First bulk-read error.
+   *
+   * readStatisticsTuples() canonicalizes a bool value or mask page, so every byte of it is 0 or 1.
    */
   Result<> read(usize offset, usize count)
   {

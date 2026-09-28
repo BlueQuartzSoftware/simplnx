@@ -1460,7 +1460,52 @@ void WriteTestValues(AbstractDataStore<T>& store, const std::vector<T>& values)
 }
 
 /**
- * @brief Creates one array with an in-memory store, or with the store that the storage preferences select.
+ * @enum BoolBytes
+ * @brief Selects the byte that a test Boolean store holds for each true value.
+ */
+enum class BoolBytes
+{
+  Canonical,   ///< Byte 1 for each true value.
+  NonCanonical ///< A nonzero byte from {1, 2, 127, 128, 255} for each true value, as h5py, MATLAB, or legacy writers can store.
+};
+
+/**
+ * @brief Writes Boolean test values to a store through one bulk write.
+ * @param store Destination store.
+ * @param values Canonical values that the oracles use.
+ * @param boolBytes Byte that the store holds for each true value.
+ *
+ * Non-canonical bytes go into the bool buffer through memcpy, so no bool conversion changes them. The test then
+ * reads the store back and requires the same bytes. Thus the engines under test receive non-canonical bytes.
+ */
+void WriteBoolTestValues(AbstractDataStore<bool>& store, const std::vector<bool>& values, BoolBytes boolBytes)
+{
+  if(boolBytes == BoolBytes::Canonical)
+  {
+    WriteTestValues(store, values);
+    return;
+  }
+  static_assert(sizeof(bool) == 1, "The non-canonical byte pattern requires one-byte bool objects.");
+  constexpr std::array<uint8, 5> k_TrueBytes = {1, 2, 127, 128, 255};
+  std::vector<uint8> bytes(values.size());
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    bytes[index] = values[index] ? k_TrueBytes[index % k_TrueBytes.size()] : 0;
+  }
+  auto buffer = std::make_unique<bool[]>(bytes.size());
+  std::memcpy(buffer.get(), bytes.data(), bytes.size());
+  auto writeResult = store.copyFromBuffer(0, nonstd::span<const bool>(buffer.get(), bytes.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  auto readBack = std::make_unique<bool[]>(bytes.size());
+  auto readResult = store.copyIntoBuffer(0, nonstd::span<bool>(readBack.get(), bytes.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  REQUIRE(std::memcmp(readBack.get(), bytes.data(), bytes.size()) == 0);
+}
+
+/**
+ * @brief Creates one array with an in-memory store, or with the out-of-core store that the ForceOutOfCore preference selects.
+ * @pre With preferenceStore, the caller set the ForceOutOfCore storage preference.
  */
 template <typename T>
 DataArray<T>* CreateWholeArrayInput(DataStructure& dataStructure, const std::string& name, usize tupleCount, bool preferenceStore, DataObject::IdType parentId)
@@ -1471,6 +1516,7 @@ DataArray<T>* CreateWholeArrayInput(DataStructure& dataStructure, const std::str
   }
   auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, DataPath({"Input", name}), {tupleCount}, {1});
   REQUIRE(store != nullptr);
+  REQUIRE(store->getStoreType() == IDataStore::StoreType::OutOfCore);
   return DataArray<T>::Create(dataStructure, name, store, parentId);
 }
 
@@ -1481,16 +1527,25 @@ DataArray<T>* CreateWholeArrayInput(DataStructure& dataStructure, const std::str
  * @param maskKind Mask pattern, if any.
  * @param orderStatistics True to request median, unique count, and (for integer input) mode.
  * @param preferenceStores True to create input stores through the storage preferences instead of as in-memory stores.
+ * @param boolBytes Byte that Boolean input and Boolean mask stores hold for each true value.
  */
 template <typename T, typename ExecuteT>
-WholeArrayResult<T> RunWholeArrayCase(const ExecuteT& execute, const std::vector<T>& values, WholeArrayMask maskKind, bool orderStatistics, bool preferenceStores = false)
+WholeArrayResult<T> RunWholeArrayCase(const ExecuteT& execute, const std::vector<T>& values, WholeArrayMask maskKind, bool orderStatistics, bool preferenceStores = false,
+                                      BoolBytes boolBytes = BoolBytes::Canonical)
 {
   DataStructure dataStructure;
   auto* inputGroup = DataGroup::Create(dataStructure, "Input");
   REQUIRE(inputGroup != nullptr);
   auto* inputArray = CreateWholeArrayInput<T>(dataStructure, "Values", values.size(), preferenceStores, inputGroup->getId());
   REQUIRE(inputArray != nullptr);
-  WriteTestValues(inputArray->getDataStoreRef(), values);
+  if constexpr(std::is_same_v<T, bool>)
+  {
+    WriteBoolTestValues(inputArray->getDataStoreRef(), values, boolBytes);
+  }
+  else
+  {
+    WriteTestValues(inputArray->getDataStoreRef(), values);
+  }
   std::optional<DataPath> maskPath;
   if(maskKind == WholeArrayMask::Bool)
   {
@@ -1501,7 +1556,7 @@ WholeArrayResult<T> RunWholeArrayCase(const ExecuteT& execute, const std::vector
     {
       maskValues[index] = IsSelectedByTestMask(maskKind, index);
     }
-    WriteTestValues(mask->getDataStoreRef(), maskValues);
+    WriteBoolTestValues(mask->getDataStoreRef(), maskValues, boolBytes);
     maskPath = DataPath({"Input", "Mask"});
   }
   else if(maskKind == WholeArrayMask::UInt8 || maskKind == WholeArrayMask::AllMasked)
@@ -1868,6 +1923,67 @@ WholeArrayResult<T> RunScanlineWithLimits(UnitTest::AlgorithmTestScenario scanli
   const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
   return RunWholeArrayCase<T>(execute, values, WholeArrayMask::Bool, orderStatistics);
 }
+
+/**
+ * @brief Requires that every nonzero Boolean byte counts as one true value in each whole-array engine.
+ * @param execute Runs the filter; it receives the filter, the DataStructure, and the arguments.
+ * @param tupleCount Input tuples.
+ * @param preferenceStores True to create the input and mask stores through the storage preferences.
+ *
+ * The oracles use the canonical values. The stores hold the bytes {1, 2, 127, 128, 255} for true values. A
+ * non-canonical byte that reaches an engine as a bool object gives a counter index past the Boolean histogram,
+ * or adds a selection weight larger than one.
+ */
+template <typename ExecuteT>
+void RequireNonCanonicalBoolBytesCountOnce(const ExecuteT& execute, usize tupleCount, bool preferenceStores)
+{
+  {
+    INFO("Boolean input on the histogram engine");
+    const std::vector<bool> values = MakeWholeArrayInput<bool>(tupleCount);
+    const uint64 trueCount = static_cast<uint64>(std::count(values.cbegin(), values.cend(), true));
+    REQUIRE(trueCount > 0);
+    REQUIRE(trueCount < tupleCount);
+    const auto actual = RunWholeArrayCase<bool>(execute, values, WholeArrayMask::None, true, preferenceStores, BoolBytes::NonCanonical);
+    REQUIRE(actual.Length == tupleCount);
+    REQUIRE(actual.Summation == static_cast<float32>(trueCount));
+    REQUIRE(actual.Mean == static_cast<float32>(trueCount) / static_cast<float32>(tupleCount));
+    REQUIRE(actual.Minimum == false);
+    REQUIRE(actual.Maximum == true);
+    REQUIRE(actual.Unique == 2);
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::None, actual);
+  }
+  {
+    INFO("UInt16 input with a Boolean mask on the histogram engine");
+    const std::vector<uint16> values = MakeWholeArrayInput<uint16>(tupleCount);
+    const auto actual = RunWholeArrayCase<uint16>(execute, values, WholeArrayMask::Bool, true, preferenceStores, BoolBytes::NonCanonical);
+    const TodayScanlineOracle<uint16> expected = ComputeTodayScanlineOracle(values, WholeArrayMask::Bool);
+    REQUIRE(actual.Length == expected.Length);
+    REQUIRE(actual.Summation == expected.Summation);
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::Bool, actual);
+  }
+  {
+    INFO("Int32 input with a Boolean mask on the two-pass engine");
+    const std::vector<int32> values = MakeWholeArrayInput<int32>(tupleCount);
+    const auto actual = RunWholeArrayCase<int32>(execute, values, WholeArrayMask::Bool, false, preferenceStores, BoolBytes::NonCanonical);
+    RequireTwoPassResultMatchesOracle(values, WholeArrayMask::Bool, actual);
+  }
+  {
+    INFO("Int32 input with a Boolean mask on the sorted exact path");
+    const std::vector<int32> values = MakeWholeArrayInput<int32>(tupleCount);
+    const auto actual = RunWholeArrayCase<int32>(execute, values, WholeArrayMask::Bool, true, preferenceStores, BoolBytes::NonCanonical);
+    const TodayScanlineOracle<int32> expected = ComputeTodayScanlineOracle(values, WholeArrayMask::Bool);
+    REQUIRE(actual.Length == expected.Length);
+    REQUIRE(actual.Minimum == expected.Minimum);
+    REQUIRE(actual.Maximum == expected.Maximum);
+    REQUIRE(actual.Summation == expected.Summation);
+    REQUIRE(actual.Mean == expected.Mean);
+    REQUIRE(actual.Median == expected.Median);
+    REQUIRE(actual.Unique == expected.Unique);
+    REQUIRE(actual.Modes == expected.Modes);
+    REQUIRE(actual.StandardDeviation == expected.StandardDeviation);
+    RequireStandardizedMatchesFormula(values, WholeArrayMask::Bool, actual);
+  }
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array histogram engine matches the scanline oracle", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -2200,6 +2316,36 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines on gen
     REQUIRE(witness.DeviationPages == witness.MomentPages);
     REQUIRE(witness.StandardizePages > 1);
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines count non-canonical Boolean bytes once", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+  RequireNonCanonicalBoolBytesCountOnce(execute, 4099, false);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines count non-canonical Boolean bytes once on genuine out-of-core stores",
+          "[SimplnxCore][ComputeArrayStatisticsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+    SUCCEED("No out-of-core store format is registered.");
+    return;
+  }
+  UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const ScanSeamScope seams(64 * 1024, 1024);
+  const auto execute = [](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return filter.execute(dataStructure, args); };
+  RequireNonCanonicalBoolBytesCountOnce(execute, 200003, true);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array deviation-pass cancellation preserves unwritten outputs", "[SimplnxCore][ComputeArrayStatisticsFilter]")
