@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -487,4 +488,156 @@ TEST_CASE("DataArray deepCopy does not insert a destination after a source bulk-
   REQUIRE_FALSE(dataStructure.containsData(copyPath));
   REQUIRE(dataStructure.getDataAs<DataArray<int32>>(copyPath) == nullptr);
   REQUIRE(sourceStore->m_BulkReadCalls == 1);
+}
+
+namespace
+{
+/**
+ * @struct RecordedWrite
+ * @brief Records the flat element range of one bulk write.
+ */
+struct RecordedWrite
+{
+  usize startIndex = 0;
+  usize valueCount = 0;
+
+  bool operator==(const RecordedWrite&) const = default;
+};
+
+/**
+ * @class ChunkReportingDataStore
+ * @brief Resident store that reports a configurable residency and chunk grid and records every bulk write.
+ *
+ * The grid can change after the first write, which models the promotion of a read-only destination.
+ */
+class ChunkReportingDataStore final : public DataStore<int32>
+{
+public:
+  ChunkReportingDataStore(const ShapeType& tupleShape, IDataStore::StoreType storeType, std::optional<ShapeType> chunkShape)
+  : DataStore<int32>(tupleShape, ShapeType{2}, 0)
+  , m_StoreType(storeType)
+  , m_ChunkShape(std::move(chunkShape))
+  {
+  }
+
+  std::vector<RecordedWrite> m_Writes;
+  mutable usize m_ChunkShapeQueries = 0;
+  std::optional<ShapeType> m_ChunkShapeAfterFirstWrite;
+
+  IDataStore::StoreType getStoreType() const override
+  {
+    return m_StoreType;
+  }
+
+  std::optional<ShapeType> getChunkShape() const override
+  {
+    ++m_ChunkShapeQueries;
+    return m_ChunkShape;
+  }
+
+  [[nodiscard]] Result<> copyFromBuffer(usize startIndex, nonstd::span<const int32> buffer) override
+  {
+    m_Writes.push_back({startIndex, buffer.size()});
+    if(m_ChunkShapeAfterFirstWrite.has_value())
+    {
+      m_ChunkShape = m_ChunkShapeAfterFirstWrite;
+      m_ChunkShapeAfterFirstWrite.reset();
+    }
+    return DataStore<int32>::copyFromBuffer(startIndex, buffer);
+  }
+
+private:
+  IDataStore::StoreType m_StoreType;
+  std::optional<ShapeType> m_ChunkShape;
+};
+} // namespace
+
+namespace Catch
+{
+/**
+ * @brief Prints a recorded write in assertion messages.
+ */
+template <>
+struct StringMaker<RecordedWrite>
+{
+  static std::string convert(const RecordedWrite& write)
+  {
+    return "{" + std::to_string(write.startIndex) + ", " + std::to_string(write.valueCount) + "}";
+  }
+};
+} // namespace Catch
+
+TEST_CASE("DataStore copyFrom follows the destination chunk grid only for out-of-core destinations", "[simplnx][DataStore][DataStoreBulk][ChunkAlignedTransfer]")
+{
+  // Two int32 components per tuple: a slice of 64 x 256 tuples is 128 KiB, and 1 MiB is 131072 tuples.
+  const ShapeType tupleShape{12, 64, 256};
+  constexpr usize k_SliceTuples = 64 * 256;
+  constexpr usize k_Tuples = 12 * k_SliceTuples;
+  constexpr usize k_PageValues = 1024 * 1024 / sizeof(int32);
+  DataStore<int32> source(tupleShape, ShapeType{2}, 0);
+  for(usize index = 0; index < source.getSize(); ++index)
+  {
+    source.setValue(index, static_cast<int32>(index * 3 + 1));
+  }
+  const auto requireCopied = [&](const ChunkReportingDataStore& destination, usize destinationTuple, usize tupleCount) {
+    REQUIRE(std::equal(source.data(), source.data() + tupleCount * 2, destination.data() + destinationTuple * 2));
+  };
+
+  SECTION("An in-memory destination with a chunk grid keeps 1 MiB pages and does not query the grid")
+  {
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::InMemory, ShapeType{4, 64, 256});
+    REQUIRE(destination.copyFrom(0, source, 0, k_Tuples).valid());
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{0, k_PageValues}, {k_PageValues, k_PageValues / 2}});
+    CHECK(destination.m_ChunkShapeQueries == 0);
+    requireCopied(destination, 0, k_Tuples);
+  }
+
+  SECTION("An out-of-core destination without a chunk grid keeps 1 MiB pages")
+  {
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, std::nullopt);
+    REQUIRE(destination.copyFrom(0, source, 0, k_Tuples).valid());
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{0, k_PageValues}, {k_PageValues, k_PageValues / 2}});
+    requireCopied(destination, 0, k_Tuples);
+  }
+
+  SECTION("A copy of at most 1 MiB does not query the grid")
+  {
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, ShapeType{4, 64, 256});
+    REQUIRE(destination.copyFrom(0, source, 0, 8 * k_SliceTuples).valid());
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{0, k_PageValues}});
+    CHECK(destination.m_ChunkShapeQueries == 0);
+    requireCopied(destination, 0, 8 * k_SliceTuples);
+  }
+
+  SECTION("A copy smaller than one aligned unit keeps 1 MiB pages")
+  {
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, ShapeType{12, 64, 256});
+    REQUIRE(destination.copyFrom(0, source, 0, 10 * k_SliceTuples).valid());
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{0, k_PageValues}, {k_PageValues, k_PageValues / 4}});
+    CHECK(destination.m_ChunkShapeQueries == 1);
+    requireCopied(destination, 0, 10 * k_SliceTuples);
+  }
+
+  SECTION("An out-of-core destination gets an unaligned head and chunk-aligned pieces")
+  {
+    constexpr usize k_Offset = 100;
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, ShapeType{4, 64, 256});
+    REQUIRE(destination.copyFrom(k_Offset, source, 0, k_Tuples - k_Offset).valid());
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{2 * k_Offset, 2 * (4 * k_SliceTuples - k_Offset)}, {2 * 4 * k_SliceTuples, 2 * 8 * k_SliceTuples}});
+    // One query selects the path, then one query plans each piece.
+    CHECK(destination.m_ChunkShapeQueries == 3);
+    requireCopied(destination, k_Offset, k_Tuples - k_Offset);
+  }
+
+  SECTION("The grid is queried again before each piece")
+  {
+    constexpr usize k_Offset = 100;
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, ShapeType{4, 64, 256});
+    destination.m_ChunkShapeAfterFirstWrite = ShapeType{3, 64, 256};
+    REQUIRE(destination.copyFrom(k_Offset, source, 0, k_Tuples - k_Offset).valid());
+    // Slice 4 is not on the three-slice grid, so an unaligned piece runs to slice 6 before the aligned tail.
+    CHECK(destination.m_Writes ==
+          std::vector<RecordedWrite>{{2 * k_Offset, 2 * (4 * k_SliceTuples - k_Offset)}, {2 * 4 * k_SliceTuples, 2 * 2 * k_SliceTuples}, {2 * 6 * k_SliceTuples, 2 * 6 * k_SliceTuples}});
+    requireCopied(destination, k_Offset, k_Tuples - k_Offset);
+  }
 }

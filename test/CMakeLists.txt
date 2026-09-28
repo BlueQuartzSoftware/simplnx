@@ -31,6 +31,7 @@ set(SIMPLNX_TEST_SRCS
   AppTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
+  ChunkAlignedTransferTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   DataArrayTest.cpp

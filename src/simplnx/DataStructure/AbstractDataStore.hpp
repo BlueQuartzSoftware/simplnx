@@ -5,6 +5,7 @@
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Utilities/ChunkAlignedTransfer.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -1027,6 +1028,15 @@ public:
    * The stores must have the same component count. Bounded bulk pages preserve
    * resolver-selected destination backends. They avoid full source
    * materialization and per-value virtual or cache access.
+   *
+   * A copy of at most 1 MiB uses pages of at most 1 MiB. The same pages apply if
+   * the destination is not out of core or has no chunk shape. They also apply if
+   * the copy is smaller than one nominal aligned unit of the destination chunk grid.
+   *
+   * Other copies use pieces of whole tuples that follow the destination chunk grid,
+   * so a backend can write whole chunks in parallel. A piece holds at most 32 MiB,
+   * or one tuple if a tuple is larger. The grid is queried again before each piece,
+   * because the first write to a read-only destination can replace its grid.
    * @param destTupleOffset First destination tuple to replace.
    * @param source Source store; it may use a different backing implementation.
    * @param srcTupleOffset First source tuple to read.
@@ -1067,6 +1077,19 @@ public:
 
     constexpr usize k_TargetBufferBytes = 1024 * 1024;
     const usize totalElements = totalSrcTuples * numComponents;
+    // The size test comes first, so small copies such as per-tuple or per-row calls never query the store.
+    if(totalElements * sizeof(T) > k_TargetBufferBytes && getStoreType() == IDataStore::StoreType::OutOfCore)
+    {
+      if(const std::optional<ShapeType> chunkShape = getChunkShape(); chunkShape.has_value())
+      {
+        const usize unitTuples = ComputeNominalChunkAlignedUnitTuples(getTupleShape(), *chunkShape);
+        if(unitTuples != 0 && totalSrcTuples >= unitTuples)
+        {
+          return copyFromChunkAligned(destTupleOffset, source, srcTupleOffset, totalSrcTuples);
+        }
+      }
+    }
+
     const usize bufferElements = std::max<usize>(1, std::min(totalElements, k_TargetBufferBytes / sizeof(T)));
     auto buffer = std::make_unique<T[]>(bufferElements);
 
@@ -1256,6 +1279,50 @@ protected:
   AbstractDataStore(AbstractDataStore&& other)
   : IDataStore(std::move(other))
   {
+  }
+
+private:
+  /**
+   * @brief Copies complete tuples in pieces that follow the destination chunk grid.
+   * @param destTupleOffset First destination tuple to replace.
+   * @param source Source store with the same component count.
+   * @param srcTupleOffset First source tuple to read.
+   * @param totalSrcTuples Number of complete tuples to transfer.
+   * @return First source-read or destination-write error.
+   * @pre copyFrom() validated the component counts and both tuple ranges.
+   *
+   * Pieces are planned against destination tuple positions, because the destination grid decides which writes
+   * cover whole chunks. The grid is queried again before each piece. The first write to a read-only destination
+   * can promote it to a new backing dataset with a different grid. An earlier plan is then stale.
+   */
+  Result<> copyFromChunkAligned(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
+  {
+    // 32 MiB holds many chunks of the default session grid, so the backend can compress them on every core.
+    constexpr usize k_TargetPieceBytes = 32 * 1024 * 1024;
+    const usize numComponents = getNumberOfComponents();
+    const usize maxPieceTuples = std::max<usize>(1, k_TargetPieceBytes / (numComponents * sizeof(T)));
+    const usize bufferTuples = std::min(totalSrcTuples, maxPieceTuples);
+    auto buffer = std::make_unique<T[]>(bufferTuples * numComponents);
+
+    for(usize copiedTuples = 0; copiedTuples < totalSrcTuples;)
+    {
+      const ShapeType chunkShape = getChunkShape().value_or(ShapeType{});
+      const ChunkAlignedPiece piece = ComputeNextChunkAlignedPiece(getTupleShape(), chunkShape, destTupleOffset + copiedTuples, totalSrcTuples - copiedTuples, bufferTuples);
+      const usize pieceElements = piece.tupleCount * numComponents;
+      Result<> readResult = source.copyIntoBuffer((srcTupleOffset + copiedTuples) * numComponents, nonstd::span<T>(buffer.get(), pieceElements));
+      if(readResult.invalid())
+      {
+        return readResult;
+      }
+
+      Result<> writeResult = copyFromBuffer((destTupleOffset + copiedTuples) * numComponents, nonstd::span<const T>(buffer.get(), pieceElements));
+      if(writeResult.invalid())
+      {
+        return writeResult;
+      }
+      copiedTuples += piece.tupleCount;
+    }
+    return {};
   }
 };
 
