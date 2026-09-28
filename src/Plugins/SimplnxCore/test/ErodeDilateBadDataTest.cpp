@@ -490,6 +490,34 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][E
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Preflight Feature Data Modification Warning", "[SimplnxCore][ErodeDilateBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateTestData();
+
+  const ErodeDilateBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Dilate));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.valid());
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
+  const auto& outputValues = preflightResult.outputValues;
+  REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
+  REQUIRE(std::none_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Stale Arrays"; }));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Direction", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();

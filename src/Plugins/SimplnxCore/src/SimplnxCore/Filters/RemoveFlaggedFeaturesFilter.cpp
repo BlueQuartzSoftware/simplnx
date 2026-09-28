@@ -132,12 +132,12 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
-  nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
-
   // If we are in any way removing features, inform the user
   if(operationType == 0 || operationType == 2)
   {
+    // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
+    nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
+
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
