@@ -2776,6 +2776,10 @@ Result<WholeArrayStatistics<T>> computeMomentStatistics(const AbstractDataStore<
     {
       return ConvertInvalidResult<WholeArrayStatistics<T>>(std::move(passResult));
     }
+    if(shouldCancel)
+    {
+      return {statistics};
+    }
     statistics.StandardDeviation = static_cast<float32>(std::sqrt(sumOfDifferences / static_cast<float64>(statistics.Length)));
   }
   return {statistics};
