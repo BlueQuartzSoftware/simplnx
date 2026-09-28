@@ -1297,8 +1297,9 @@ private:
    */
   Result<> copyFromChunkAligned(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
   {
-    // A piece can hold more than 64 default 1 MiB session chunks. The parallel deflate writer then compresses one batch
-    // while it commits the previous batch. Large pieces also need fewer source-read and destination-write handoffs.
+    // A piece can hold more than 64 destination chunks, the k_MaxPreparedBatchChunks limit of
+    // HDF5::ParallelChunkCodec::deflateSpanIntoChunks(). The codec then compresses one batch while it commits the
+    // previous batch. Large pieces also need fewer source-read and destination-write handoffs.
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
     const usize targetPieceBytes = GetAlignedCopyTargetBytesForTesting();
 #else

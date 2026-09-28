@@ -11,11 +11,12 @@ namespace nx::core
 /**
  * @brief Byte target of one piece of a chunk-aligned store-to-store copy.
  *
- * AbstractDataStore::copyFrom() reads and writes an aligned copy in pieces of at most this size. A piece can then hold
- * more than 64 of the default 1 MiB session chunks. The parallel deflate writer prepares at most 64 chunks in one batch.
- * Thus it can divide such a piece into several batches. It compresses the next batch while it commits the previous
- * batch. A larger piece also decreases the number of source-read and destination-write handoffs. Worker threads are
- * idle during each handoff. One buffer of this size is allocated for each aligned copy.
+ * AbstractDataStore::copyFrom() reads and writes an aligned copy in pieces of at most this size. A piece then holds
+ * more than 64 destination chunks when each chunk is smaller than 2 MiB. HDF5::ParallelChunkCodec::deflateSpanIntoChunks()
+ * prepares at most k_MaxPreparedBatchChunks (64) chunks in one batch (ParallelChunkCodec.cpp). Thus it can divide such
+ * a piece into several batches. It compresses the next batch while it commits the previous batch. A larger piece also
+ * decreases the number of source-read and destination-write handoffs. Worker threads are idle during each handoff.
+ * One buffer of this size is allocated for each aligned copy.
  */
 inline constexpr usize k_AlignedCopyTargetBytes = 128 * 1024 * 1024;
 
