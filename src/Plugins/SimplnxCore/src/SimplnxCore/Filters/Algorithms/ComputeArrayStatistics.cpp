@@ -2313,16 +2313,21 @@ T histogramValue(usize bin)
 }
 
 /**
- * @brief Adds the selected values of one block to a histogram.
+ * @brief Largest histogram that countBlockValues() counts in a stack-local array: 2 KiB of counters.
+ */
+constexpr usize k_MaxStackHistogramBins = 256;
+
+/**
+ * @brief Adds the selected values of one block to counters.
  * @tparam T Boolean or 8/16-bit input type.
  * @tparam MaskT Mask value type.
  * @param values Block values.
  * @param mask Block mask, or nullptr when every tuple is selected.
  * @param count Tuples in the block.
- * @param histogram Counters of the calling thread.
+ * @param histogram Counters that only the calling thread uses.
  */
 template <typename T, typename MaskT>
-void countBlockValues(const T* values, const MaskT* mask, usize count, uint64* histogram)
+void addBlockValues(const T* values, const MaskT* mask, usize count, uint64* histogram)
 {
   if(mask == nullptr)
   {
@@ -2336,6 +2341,37 @@ void countBlockValues(const T* values, const MaskT* mask, usize count, uint64* h
   for(usize index = 0; index < count; ++index)
   {
     histogram[histogramBin(values[index])] += static_cast<uint64>(static_cast<bool>(mask[index]));
+  }
+}
+
+/**
+ * @brief Adds the selected values of one block to the histogram of the calling thread.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @tparam MaskT Mask value type.
+ * @param values Block values.
+ * @param mask Block mask, or nullptr when every tuple is selected.
+ * @param count Tuples in the block.
+ * @param histogram Counters of the calling thread.
+ *
+ * The small histograms of Boolean and 8-bit input of different threads can share a cache line. Thus a histogram
+ * of at most k_MaxStackHistogramBins counters counts the block in a stack-local array and adds it to the thread's
+ * counters once. Integer counts commute, so the result does not change.
+ */
+template <typename T, typename MaskT>
+void countBlockValues(const T* values, const MaskT* mask, usize count, uint64* histogram)
+{
+  if constexpr(k_HistogramBins<T> <= k_MaxStackHistogramBins)
+  {
+    std::array<uint64, k_HistogramBins<T>> blockHistogram = {};
+    addBlockValues(values, mask, count, blockHistogram.data());
+    for(usize bin = 0; bin < blockHistogram.size(); ++bin)
+    {
+      histogram[bin] += blockHistogram[bin];
+    }
+  }
+  else
+  {
+    addBlockValues(values, mask, count, histogram);
   }
 }
 
