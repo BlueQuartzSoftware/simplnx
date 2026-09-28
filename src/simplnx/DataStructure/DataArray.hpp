@@ -302,7 +302,8 @@ public:
    *
    * The current DataStructure resolver selects the store format from checked logical bytes and copyPath.
    * Unknown formats use memory in-core and fail in OOC builds. Empty stores remain metadata placeholders.
-   * The numeric transfer buffer uses at most 1 MiB. Backend adapters can also allocate one complete tuple.
+   * The numeric transfer buffer uses at most 1 MiB, or at most 128 MiB for a chunk-aligned copy into an out-of-core store (see AbstractDataStore::copyFrom). Backend adapters can also allocate one
+   * complete tuple.
    * @warning An in-memory destination requires the complete copied array in RAM.
    * Direct store callers must resolve a destination format. This array operation resolves the policy automatically.
    */

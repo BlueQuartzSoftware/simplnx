@@ -58,7 +58,8 @@ SIMPLNX_EXPORT uint64 CalculateStoreCopyBytes(const ShapeType& tupleShape, const
  * @throws std::bad_alloc If an allocation fails.
  *
  * Unknown formats fall back to memory in-core and fail in OOC builds. Failed factories never fall back.
- * Placeholders retain no values. The transfer buffer uses at most 1 MiB; backend buffers can contain a complete tuple.
+ * Placeholders retain no values. The transfer buffer uses at most 1 MiB, or at most 128 MiB for a chunk-aligned copy into an out-of-core store (see AbstractDataStore::copyFrom). Backend buffers can
+ * contain a complete tuple.
  * @warning For materialized stores, explicit in-memory storage requires a complete resident destination and can exhaust available RAM.
  * Resolve destination policy or use DataArray::deepCopy for automatic selection.
  */
