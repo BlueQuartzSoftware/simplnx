@@ -14,7 +14,9 @@ namespace nx::core
  */
 struct ChunkAlignedPiece
 {
+  /// First flat tuple of the range.
   usize startTuple = 0;
+  /// Number of tuples in the range. The count is 0 only for a piece of an empty range.
   usize tupleCount = 0;
   /**
    * @brief True if the range covers only whole chunks of the grid.
