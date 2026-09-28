@@ -2348,6 +2348,107 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines count 
   RequireNonCanonicalBoolBytesCountOnce(execute, 200003, true);
 }
 
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array masked Standardize keeps the current value of unselected tuples", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  // The filter creates a zero-filled output, so a zero-filled piece buffer could hide a missing read-back.
+  // The algorithm runs directly on an output that holds a nonzero sentinel instead.
+  constexpr float32 k_Sentinel = 42.0F;
+  constexpr usize k_TupleCount = 4099;
+  const auto runType = [&scanlineScenario, k_Sentinel](auto typeTag, WholeArrayMask maskKind) {
+    using T = decltype(typeTag);
+    CAPTURE(std::string(DataTypeToString(GetDataType<T>()).view()), static_cast<int32>(maskKind));
+    const std::vector<T> values = MakeWholeArrayInput<T>(k_TupleCount);
+    DataStructure dataStructure;
+    auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+    auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+    REQUIRE(inputGroup != nullptr);
+    REQUIRE(output != nullptr);
+    auto* input = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, "Values", {k_TupleCount}, {1}, inputGroup->getId());
+    auto* mean = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Mean", {1}, {1}, output->getId());
+    auto* deviation = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "StandardDeviation", {1}, {1}, output->getId());
+    auto* standardized = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Standardized", {k_TupleCount}, {1}, inputGroup->getId());
+    REQUIRE(input != nullptr);
+    REQUIRE(mean != nullptr);
+    REQUIRE(deviation != nullptr);
+    REQUIRE(standardized != nullptr);
+    WriteTestValues(input->getDataStoreRef(), values);
+    standardized->fill(k_Sentinel);
+    if(maskKind == WholeArrayMask::Bool)
+    {
+      auto* mask = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {k_TupleCount}, {1}, inputGroup->getId());
+      REQUIRE(mask != nullptr);
+      std::vector<bool> maskValues(k_TupleCount);
+      for(usize index = 0; index < k_TupleCount; ++index)
+      {
+        maskValues[index] = IsSelectedByTestMask(maskKind, index);
+      }
+      WriteTestValues(mask->getDataStoreRef(), maskValues);
+    }
+    else
+    {
+      auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {k_TupleCount}, {1}, inputGroup->getId());
+      REQUIRE(mask != nullptr);
+      std::vector<uint8> maskValues(k_TupleCount);
+      for(usize index = 0; index < k_TupleCount; ++index)
+      {
+        maskValues[index] = IsSelectedByTestMask(maskKind, index) ? 1 : 0;
+      }
+      WriteTestValues(mask->getDataStoreRef(), maskValues);
+    }
+
+    ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+    inputValues.FindMean = true;
+    inputValues.FindStdDeviation = true;
+    inputValues.StandardizeData = true;
+    inputValues.UseMask = true;
+    inputValues.MaskArrayPath = DataPath({"Input", "Mask"});
+    const std::atomic_bool shouldCancel = false;
+    const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+    // Several pieces make the piece buffer hold values of an earlier piece.
+    REQUIRE(GetComputeArrayStatisticsScanWitnessForTesting().StandardizePages > 1);
+
+    const float32 actualMean = (*mean)[0];
+    const float32 actualDeviation = (*deviation)[0];
+    const TodayScanlineOracle<T> expected = ComputeTodayScanlineOracle(values, maskKind);
+    if constexpr(std::is_integral_v<T>)
+    {
+      REQUIRE(actualMean == expected.Mean);
+    }
+    REQUIRE(actualDeviation == Approx(expected.StandardDeviation).epsilon(1.0e-6));
+    std::vector<float32> actual(k_TupleCount);
+    auto readResult = standardized->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actual.data(), actual.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    usize unselectedCount = 0;
+    for(usize index = 0; index < k_TupleCount; ++index)
+    {
+      if(IsSelectedByTestMask(maskKind, index))
+      {
+        REQUIRE(actual[index] == (static_cast<float32>(values[index]) - actualMean) / actualDeviation);
+      }
+      else
+      {
+        REQUIRE(actual[index] == k_Sentinel);
+        ++unselectedCount;
+      }
+    }
+    REQUIRE(unselectedCount > 0);
+  };
+  runType(uint16{}, WholeArrayMask::Bool);
+  runType(uint16{}, WholeArrayMask::UInt8);
+  runType(int32{}, WholeArrayMask::Bool);
+  runType(float32{}, WholeArrayMask::UInt8);
+}
+
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array deviation-pass cancellation preserves unwritten outputs", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   UnitTest::LoadPlugins();
