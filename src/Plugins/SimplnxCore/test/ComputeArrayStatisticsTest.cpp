@@ -161,6 +161,39 @@ ComputeArrayStatisticsInputValues CreateMinimalStatisticsInputValues(const DataP
   return inputValues;
 }
 
+/**
+ * @class ScanSeamScope
+ * @brief Applies small page and block sizes to the whole-array statistics engines and restores the production sizes.
+ *
+ * Small sizes let a test array of a few thousand tuples span many pages, end in a partial page, and hold several
+ * blocks in each page. The constructor also clears the parallel dispatch witness.
+ */
+class ScanSeamScope
+{
+public:
+  ScanSeamScope(usize pageBytes, usize blockTuples)
+  {
+    SetComputeArrayStatisticsPageBytesForTesting(pageBytes);
+    SetComputeArrayStatisticsBlockTuplesForTesting(blockTuples);
+    ResetComputeArrayStatisticsScanWitnessForTesting();
+  }
+
+  ~ScanSeamScope()
+  {
+    SetComputeArrayStatisticsPageBytesForTesting(0);
+    SetComputeArrayStatisticsBlockTuplesForTesting(0);
+    ResetComputeArrayStatisticsScanWitnessForTesting();
+  }
+
+  ScanSeamScope(const ScanSeamScope&) = delete;
+  ScanSeamScope(ScanSeamScope&&) = delete;
+  ScanSeamScope& operator=(const ScanSeamScope&) = delete;
+  ScanSeamScope& operator=(ScanSeamScope&&) = delete;
+};
+
+constexpr usize k_SeamPageBytes = 1024; // Page budget for the small-array engine tests.
+constexpr usize k_SeamBlockTuples = 64; // Block size for the small-array engine tests.
+
 template <typename T>
 bool VectorContains(const std::vector<T>& vector, T value)
 {
@@ -768,6 +801,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: entry and mid-pass cancell
   SECTION("mid-pass cancellation")
   {
     constexpr usize k_TupleCount = 65537;
+    // Small pages split the input into many pages, so the first page read cancels a pass that has more pages to read.
+    const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
     std::atomic_bool shouldCancel = false;
     DataStructure dataStructure;
     auto* inputGroup = DataGroup::Create(dataStructure, "Input");
