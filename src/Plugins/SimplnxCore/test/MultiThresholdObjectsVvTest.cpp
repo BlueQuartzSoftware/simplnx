@@ -1220,8 +1220,8 @@ void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonV
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
   {
-    int8 targetValue = (i < comparisonValue) ? 1 : 0;
-    REQUIRE(static_cast<bool>(mask[i]) == targetValue);
+    int8 targetValue = (static_cast<float64>(i) < comparisonValue) ? 1 : 0;
+    REQUIRE(mask[i] == targetValue);
   }
 }
 void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
@@ -1229,8 +1229,8 @@ void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 compari
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
   {
-    int8 targetValue = (static_cast<bool>(i) < comparisonValue) ? 1 : 0;
-    REQUIRE(static_cast<bool>(mask[i]) == targetValue);
+    int8 targetValue = (static_cast<float64>(static_cast<bool>(i)) < comparisonValue) ? 1 : 0;
+    REQUIRE(mask[i] == targetValue);
   }
 }
 
