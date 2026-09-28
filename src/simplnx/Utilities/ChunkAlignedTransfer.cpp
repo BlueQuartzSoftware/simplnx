@@ -1,13 +1,19 @@
 #include "ChunkAlignedTransfer.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 namespace nx::core
 {
 namespace
 {
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+std::atomic<usize> g_AlignedCopyTargetBytesOverride{0}; // Test piece byte target; 0 selects k_AlignedCopyTargetBytes.
+#endif
+
 /**
  * @brief Tells if a chunk grid can classify ranges of a tuple shape.
  * @param tupleShape Row-major tuple shape.
@@ -311,4 +317,17 @@ std::vector<ChunkAlignedPiece> PlanChunkAlignedPieces(const ShapeType& tupleShap
   }
   return pieces;
 }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+void SetAlignedCopyTargetBytesForTesting(usize targetBytes)
+{
+  g_AlignedCopyTargetBytesOverride.store(targetBytes, std::memory_order_relaxed);
+}
+
+usize GetAlignedCopyTargetBytesForTesting()
+{
+  const usize targetBytes = g_AlignedCopyTargetBytesOverride.load(std::memory_order_relaxed);
+  return targetBytes != 0 ? targetBytes : k_AlignedCopyTargetBytes;
+}
+#endif
 } // namespace nx::core

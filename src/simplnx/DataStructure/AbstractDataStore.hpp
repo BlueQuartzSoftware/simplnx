@@ -1034,7 +1034,7 @@ public:
    * the copy is smaller than one nominal aligned unit of the destination chunk grid.
    *
    * Other copies use pieces of whole tuples that follow the destination chunk grid,
-   * so a backend can write whole chunks in parallel. A piece holds at most 32 MiB,
+   * so a backend can write whole chunks in parallel. A piece holds at most k_AlignedCopyTargetBytes (128 MiB),
    * or one tuple if a tuple is larger. The grid is queried again before each piece,
    * because the first write to a read-only destination can replace its grid.
    * @param destTupleOffset First destination tuple to replace.
@@ -1297,10 +1297,15 @@ private:
    */
   Result<> copyFromChunkAligned(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
   {
-    // 32 MiB holds many chunks of the default session grid, so the backend can compress them on every core.
-    constexpr usize k_TargetPieceBytes = 32 * 1024 * 1024;
+    // A piece can hold more than 64 default 1 MiB session chunks. The parallel deflate writer then compresses one batch
+    // while it commits the previous batch. Large pieces also need fewer source-read and destination-write handoffs.
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+    const usize targetPieceBytes = GetAlignedCopyTargetBytesForTesting();
+#else
+    constexpr usize targetPieceBytes = k_AlignedCopyTargetBytes;
+#endif
     const usize numComponents = getNumberOfComponents();
-    const usize maxPieceTuples = std::max<usize>(1, k_TargetPieceBytes / (numComponents * sizeof(T)));
+    const usize maxPieceTuples = std::max<usize>(1, targetPieceBytes / (numComponents * sizeof(T)));
     const usize bufferTuples = std::min(totalSrcTuples, maxPieceTuples);
     // copyIntoBuffer() overwrites each element of a piece before copyFromBuffer() reads it, so the buffer is not value-initialized.
     auto buffer = std::make_unique_for_overwrite<T[]>(bufferTuples * numComponents);
