@@ -3,7 +3,7 @@
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -64,12 +64,7 @@ WriteStatus CloseOutput(std::ofstream& output)
   return output ? WriteStatus::Success : WriteStatus::WriteError;
 }
 
-void SendProgress(ThrottledMessenger& messenger, std::string_view label, usize current, usize total)
-{
-  messenger.sendThrottledMessage([=]() { return fmt::format("{}: {:.0f}%", label, CalculatePercentComplete(current, total)); });
-}
-
-WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -83,7 +78,7 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
   const std::array<usize, 3> nodeDimensions = {dimensions[0] + 1, dimensions[1] + 1, dimensions[2] + 1};
   fmt::memory_buffer buffer;
   fmt::format_to(std::back_inserter(buffer), "*NODE, NSET=ALLNODES\n");
-  ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(nodeDimensions[2], "Writing Nodes (File 1/5)");
 
   for(usize z = 0; z < nodeDimensions[2]; z++)
   {
@@ -108,13 +103,13 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
     {
       return WriteStatus::WriteError;
     }
-    SendProgress(progressMessenger, "Writing Nodes (File 1/5)", z + 1, nodeDimensions[2]);
+    progressThrottle.updateCount(z + 1);
   }
 
   return CloseOutput(output);
 }
 
-WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, bool useReducedIntegration, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, bool useReducedIntegration, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -127,7 +122,7 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
   const usize nodesY = dimensions[1] + 1;
   fmt::memory_buffer buffer;
   fmt::format_to(std::back_inserter(buffer), "*ELEMENT, TYPE={}, ELSET=ALLELEMENTS\n", useReducedIntegration ? "C3D8R" : "C3D8");
-  ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(dimensions[2], "Writing Elements (File 2/5)");
 
   for(usize z = 0; z < dimensions[2]; z++)
   {
@@ -158,13 +153,13 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
     {
       return WriteStatus::WriteError;
     }
-    SendProgress(progressMessenger, "Writing Elements (File 2/5)", z + 1, dimensions[2]);
+    progressThrottle.updateCount(z + 1);
   }
 
   return CloseOutput(output);
 }
 
-WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainData, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainData, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -174,7 +169,7 @@ WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainDat
 
   const usize grainCount = grainData.Phases.size() - 1;
   fmt::memory_buffer buffer;
-  ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(grainCount, "Writing Element Sets (File 3/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
     if(shouldCancel)
@@ -200,7 +195,7 @@ WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainDat
     {
       return WriteStatus::WriteError;
     }
-    SendProgress(progressMessenger, "Writing Element Sets (File 3/5)", grainId, grainCount);
+    progressThrottle.updateCount(grainId);
   }
 
   return CloseOutput(output);
@@ -229,7 +224,7 @@ void WriteMaterialConstants(fmt::memory_buffer& buffer, const DynamicTableParame
 }
 
 WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasticityInputValues& inputValues, const GrainData& grainData, const std::atomic_bool& shouldCancel,
-                        MessageHelper& messageHelper)
+                        ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -251,7 +246,7 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
 
   const usize materialConstantCount = inputValues.MaterialConstants.size();
   const usize grainCount = grainData.Phases.size() - 1;
-  ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(grainCount, "Writing Master File (File 4/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
     if(shouldCancel)
@@ -275,14 +270,14 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
     {
       return WriteStatus::WriteError;
     }
-    SendProgress(progressMessenger, "Writing Master File (File 4/5)", grainId, grainCount);
+    progressThrottle.updateCount(grainId);
   }
 
   return CloseOutput(output);
 }
 
 WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, bool useReducedIntegration, int32 hourglassStiffness, const std::atomic_bool& shouldCancel,
-                          MessageHelper& messageHelper)
+                          ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -292,7 +287,7 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
 
   const usize grainCount = grainData.Phases.size() - 1;
   fmt::memory_buffer buffer;
-  ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(grainCount, "Writing Sections (File 5/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
     if(shouldCancel)
@@ -310,7 +305,7 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
     {
       return WriteStatus::WriteError;
     }
-    SendProgress(progressMessenger, "Writing Sections (File 5/5)", grainId, grainCount);
+    progressThrottle.updateCount(grainId);
   }
 
   return CloseOutput(output);
@@ -357,7 +352,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     return MakeErrorResult(-12011, fmt::format("The feature IDs array '{}' has no positive feature IDs. The Abaqus deck requires at least one grain.", m_InputValues->FeatureIdsArrayPath.toString()));
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
   const usize grainCount = static_cast<usize>(maxGrainId);
   const auto dimensions = imageGeom.getDimensions();
   const usize cellsPerSlice = dimensions[0] * dimensions[1];
@@ -368,7 +363,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   // The contiguous buckets use 8 bytes per positive cell; counts and offsets add 16 bytes per grain.
   std::vector<usize> counts(grainCount + 1, 0);
   constexpr float64 k_RadiansToDegrees = 180.0 / std::numbers::pi;
-  ThrottledMessenger countMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(dimensions[2], "Bucketing Elements (Pass 1/2)");
   for(usize z = 0; z < dimensions[2]; z++)
   {
     if(m_ShouldCancel)
@@ -391,14 +386,14 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
         grainData.Orientations[grainId][2] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3 + 2] * k_RadiansToDegrees);
       }
     }
-    SendProgress(countMessenger, "Bucketing Elements (Pass 1/2)", z + 1, dimensions[2]);
+    progressThrottle.updateCount(z + 1);
   }
 
   const usize emptyGrainCount = static_cast<usize>(std::count(counts.cbegin() + 1, counts.cend(), 0));
   if(emptyGrainCount > 0)
   {
-    m_MessageHandler(IFilter::Message::Type::Warning,
-                     fmt::format("{} feature ids in [1, {}] have no cells. Empty element sets and materials with zero orientation were written for them.", emptyGrainCount, maxGrainId));
+    m_MessageHandler.sendWarningMessage(
+        fmt::format("{} feature ids in [1, {}] have no cells. Empty element sets and materials with zero orientation were written for them.", emptyGrainCount, maxGrainId));
   }
 
   grainData.Offsets.resize(grainCount + 2, 0);
@@ -409,7 +404,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   }
   grainData.CellIndices.resize(grainData.Offsets.back());
 
-  ThrottledMessenger fillMessenger = messageHelper.createThrottledMessenger();
+  progressThrottle.reset(dimensions[2], "Bucketing Elements (Pass 2/2)");
   for(usize z = 0; z < dimensions[2]; z++)
   {
     if(m_ShouldCancel)
@@ -429,7 +424,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
         counts[grainId]++;
       }
     }
-    SendProgress(fillMessenger, "Bucketing Elements (Pass 2/2)", z + 1, dimensions[2]);
+    progressThrottle.updateCount(z + 1);
   }
 
   const std::array<fs::path, 5> fileList = {
@@ -456,7 +451,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
       return {};
     }
 
-    messageHelper.sendMessage(std::string(progressMessage));
+    m_MessageHandler.sendInfoMessage(std::string(progressMessage));
     const usize index = ToIndex(fileIndex);
     const fs::path tempPath = files[index].value().tempFilePath();
     const WriteStatus status = writer(tempPath);
@@ -478,33 +473,34 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     return {};
   };
 
-  Result<> writeResult = writeFile(FileIndex::Nodes, "Writing Nodes (File 1/5)...", [&](const fs::path& path) { return WriteNodes(path, imageGeom, m_ShouldCancel, messageHelper); });
+  Result<> writeResult = writeFile(FileIndex::Nodes, "Writing Nodes (File 1/5)...", [&](const fs::path& path) { return WriteNodes(path, imageGeom, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;
   }
 
   writeResult = writeFile(FileIndex::Elems, "Writing Elements (File 2/5)...",
-                          [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->UseReducedIntegration, m_ShouldCancel, messageHelper); });
+                          [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->UseReducedIntegration, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Elset, "Writing Element Sets (File 3/5)...", [&](const fs::path& path) { return WriteElementSets(path, grainData, m_ShouldCancel, messageHelper); });
+  writeResult = writeFile(FileIndex::Elset, "Writing Element Sets (File 3/5)...", [&](const fs::path& path) { return WriteElementSets(path, grainData, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Master, "Writing Master File (File 4/5)...", [&](const fs::path& path) { return WriteMaster(path, *m_InputValues, grainData, m_ShouldCancel, messageHelper); });
+  writeResult = writeFile(FileIndex::Master, "Writing Master File (File 4/5)...", [&](const fs::path& path) { return WriteMaster(path, *m_InputValues, grainData, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...",
-                          [&](const fs::path& path) { return WriteSections(path, grainData, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness, m_ShouldCancel, messageHelper); });
+  writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...", [&](const fs::path& path) {
+    return WriteSections(path, grainData, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness, m_ShouldCancel, progressThrottle);
+  });
   if(writeResult.invalid())
   {
     return writeResult;
