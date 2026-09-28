@@ -1,8 +1,10 @@
 #include "simplnx/Common/Extent.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
+#include "simplnx/Utilities/ChunkAlignedTransfer.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -640,4 +642,33 @@ TEST_CASE("DataStore copyFrom follows the destination chunk grid only for out-of
           std::vector<RecordedWrite>{{2 * k_Offset, 2 * (4 * k_SliceTuples - k_Offset)}, {2 * 4 * k_SliceTuples, 2 * 2 * k_SliceTuples}, {2 * 6 * k_SliceTuples, 2 * 6 * k_SliceTuples}});
     requireCopied(destination, k_Offset, k_Tuples - k_Offset);
   }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  SECTION("The piece byte target caps each aligned piece")
+  {
+    // Three slices of 128 KiB. The copy of twelve slices then needs four aligned pieces.
+    constexpr usize k_PieceBytes = 3 * k_SliceTuples * 2 * sizeof(int32);
+    SetAlignedCopyTargetBytesForTesting(k_PieceBytes);
+    const auto restoreTarget = MakeScopeGuard([]() noexcept { SetAlignedCopyTargetBytesForTesting(0); });
+    REQUIRE(GetAlignedCopyTargetBytesForTesting() == k_PieceBytes);
+    ChunkReportingDataStore destination(tupleShape, IDataStore::StoreType::OutOfCore, ShapeType{1, 64, 256});
+    REQUIRE(destination.copyFrom(0, source, 0, k_Tuples).valid());
+    constexpr usize k_PieceValues = 2 * 3 * k_SliceTuples;
+    CHECK(destination.m_Writes == std::vector<RecordedWrite>{{0, k_PieceValues}, {k_PieceValues, k_PieceValues}, {2 * k_PieceValues, k_PieceValues}, {3 * k_PieceValues, k_PieceValues}});
+    requireCopied(destination, 0, k_Tuples);
+  }
+#endif
 }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+TEST_CASE("The chunk-aligned copy piece target is 128 MiB unless a test overrides it", "[simplnx][DataStore][DataStoreBulk][ChunkAlignedTransfer]")
+{
+  STATIC_REQUIRE(k_AlignedCopyTargetBytes == 128 * 1024 * 1024);
+  const auto restoreTarget = MakeScopeGuard([]() noexcept { SetAlignedCopyTargetBytesForTesting(0); });
+  CHECK(GetAlignedCopyTargetBytesForTesting() == k_AlignedCopyTargetBytes);
+  SetAlignedCopyTargetBytesForTesting(4096);
+  CHECK(GetAlignedCopyTargetBytesForTesting() == 4096);
+  SetAlignedCopyTargetBytesForTesting(0);
+  CHECK(GetAlignedCopyTargetBytesForTesting() == k_AlignedCopyTargetBytes);
+}
+#endif
