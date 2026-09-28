@@ -23,6 +23,7 @@
 #include <atomic>
 #include <catch2/catch.hpp>
 #include <cmath>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -31,6 +32,10 @@
 #include <optional>
 #include <system_error>
 #include <vector>
+
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/global_control.h>
+#endif
 
 using namespace nx::core;
 using namespace nx::core::Constants;
@@ -111,6 +116,43 @@ public:
 private:
   std::atomic_bool& m_ShouldCancel;
   mutable bool m_DidCancel = false;
+};
+
+/**
+ * @class StatisticsCancelAfterReadsDataStore
+ * @brief Sets the cancellation flag after a chosen number of successful bulk reads, and counts every bulk read.
+ */
+template <typename T>
+class StatisticsCancelAfterReadsDataStore : public DataStore<T>
+{
+public:
+  StatisticsCancelAfterReadsDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue, std::atomic_bool& shouldCancel, usize cancelAfterReads)
+  : DataStore<T>(tupleShape, componentShape, initValue)
+  , m_ShouldCancel(shouldCancel)
+  , m_CancelAfterReads(cancelAfterReads)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    Result<> result = DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    ++m_ReadCount;
+    if(result.valid() && m_ReadCount == m_CancelAfterReads)
+    {
+      m_ShouldCancel.store(true);
+    }
+    return result;
+  }
+
+  usize readCount() const
+  {
+    return m_ReadCount;
+  }
+
+private:
+  std::atomic_bool& m_ShouldCancel;
+  usize m_CancelAfterReads = 0;
+  mutable usize m_ReadCount = 0;
 };
 
 template <typename T>
@@ -1281,6 +1323,926 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: every supported scalar typ
   RunCompactNumericStatistics<float32>(scope);
   RunCompactNumericStatistics<float64>(scope);
   RunCompactNumericStatistics<bool>(scope);
+}
+
+namespace
+{
+
+/**
+ * @enum WholeArrayMask
+ * @brief Selects the mask array of one whole-array test case.
+ */
+enum class WholeArrayMask
+{
+  None,
+  Bool,
+  UInt8,
+  AllMasked
+};
+
+/**
+ * @brief Returns whether tuple index is selected by a test mask pattern.
+ */
+bool IsSelectedByTestMask(WholeArrayMask maskKind, usize index)
+{
+  switch(maskKind)
+  {
+  case WholeArrayMask::None:
+    return true;
+  case WholeArrayMask::Bool:
+    return index % 3 != 1;
+  case WholeArrayMask::UInt8:
+    return index % 5 < 3;
+  case WholeArrayMask::AllMasked:
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Returns the number of pages that a whole-array reduction pass reads with the test seams.
+ * @param tupleCount Input tuples.
+ * @param bytesPerTuple Value bytes plus mask bytes for one tuple.
+ */
+usize ExpectedReductionPages(usize tupleCount, usize bytesPerTuple)
+{
+  const usize pageTuples = std::max(k_SeamBlockTuples, (k_SeamPageBytes / bytesPerTuple / k_SeamBlockTuples) * k_SeamBlockTuples);
+  return (tupleCount + pageTuples - 1) / pageTuples;
+}
+
+/**
+ * @brief Deterministic 64-bit mix of a tuple index for synthetic input.
+ */
+uint64 MixIndex(usize index)
+{
+  uint64 value = static_cast<uint64>(index) + 0x9E3779B97F4A7C15ULL;
+  value = (value ^ (value >> 30)) * 0xBF58476D1CE4E5B9ULL;
+  value = (value ^ (value >> 27)) * 0x94D049BB133111EBULL;
+  return value ^ (value >> 31);
+}
+
+/**
+ * @brief Creates synthetic input with ties, negative values for signed types, and large magnitudes for wide types.
+ */
+template <typename T>
+std::vector<T> MakeWholeArrayInput(usize tupleCount)
+{
+  std::vector<T> values(tupleCount);
+  for(usize index = 0; index < tupleCount; ++index)
+  {
+    const uint64 mixed = MixIndex(index);
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      values[index] = (mixed % 7) < 3;
+    }
+    else if constexpr(std::is_integral_v<T> && sizeof(T) <= 2)
+    {
+      // 97 levels from the lowest to the highest value give ties, negative values for signed types, and both extremes.
+      const int64 level = static_cast<int64>(mixed % 97);
+      const int64 low = static_cast<int64>(std::numeric_limits<T>::min());
+      const int64 high = static_cast<int64>(std::numeric_limits<T>::max());
+      values[index] = static_cast<T>(low + level * (high - low) / 96);
+    }
+    else if constexpr(std::is_same_v<T, int32>)
+    {
+      values[index] = static_cast<T>(static_cast<int64>(mixed % 2000000000ULL) - 1000000000LL);
+    }
+    else if constexpr(std::is_same_v<T, uint32>)
+    {
+      // Values near 4e9 are where the Float32 mean quantization is visible.
+      values[index] = static_cast<T>(4000000000ULL + mixed % 290000000ULL);
+    }
+    else if constexpr(std::is_same_v<T, int64>)
+    {
+      values[index] = static_cast<T>(static_cast<int64>(mixed % 2000000000000000ULL) - 1000000000000000LL);
+    }
+    else if constexpr(std::is_same_v<T, uint64>)
+    {
+      values[index] = static_cast<T>(mixed % 1000000000000000ULL);
+    }
+    else
+    {
+      values[index] = static_cast<T>(static_cast<float64>(static_cast<int64>(mixed % 2000001ULL) - 900000) / 7.0);
+    }
+  }
+  return values;
+}
+
+/**
+ * @struct WholeArrayResult
+ * @brief Whole-array statistics read back from one filter execution.
+ */
+template <typename T>
+struct WholeArrayResult
+{
+  uint64 Length = 0;
+  T Minimum = {};
+  T Maximum = {};
+  float32 Mean = 0.0F;
+  float32 Median = 0.0F;
+  float32 StandardDeviation = 0.0F;
+  float32 Summation = 0.0F;
+  int32 Unique = 0;
+  std::vector<T> Modes;
+  std::vector<float32> Standardized;
+};
+
+/**
+ * @brief Writes test values to a store through one bulk write.
+ */
+template <typename T>
+void WriteTestValues(AbstractDataStore<T>& store, const std::vector<T>& values)
+{
+  auto buffer = std::make_unique<T[]>(values.size());
+  std::copy(values.cbegin(), values.cend(), buffer.get());
+  auto writeResult = store.copyFromBuffer(0, nonstd::span<const T>(buffer.get(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+}
+
+/**
+ * @brief Creates one array with an in-memory store, or with the store that the storage preferences select.
+ */
+template <typename T>
+DataArray<T>* CreateWholeArrayInput(DataStructure& dataStructure, const std::string& name, usize tupleCount, bool preferenceStore, DataObject::IdType parentId)
+{
+  if(!preferenceStore)
+  {
+    return DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, name, {tupleCount}, {1}, parentId);
+  }
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, DataPath({"Input", name}), {tupleCount}, {1});
+  REQUIRE(store != nullptr);
+  return DataArray<T>::Create(dataStructure, name, store, parentId);
+}
+
+/**
+ * @brief Runs the filter on one ungrouped input and reads back every whole-array output.
+ * @param execute Runs the filter; it receives the filter, the DataStructure, and the arguments.
+ * @param values Input values.
+ * @param maskKind Mask pattern, if any.
+ * @param orderStatistics True to request median, unique count, and (for integer input) mode.
+ * @param preferenceStores True to create input stores through the storage preferences instead of as in-memory stores.
+ */
+template <typename T, typename ExecuteT>
+WholeArrayResult<T> RunWholeArrayCase(const ExecuteT& execute, const std::vector<T>& values, WholeArrayMask maskKind, bool orderStatistics, bool preferenceStores = false)
+{
+  DataStructure dataStructure;
+  auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(inputGroup != nullptr);
+  auto* inputArray = CreateWholeArrayInput<T>(dataStructure, "Values", values.size(), preferenceStores, inputGroup->getId());
+  REQUIRE(inputArray != nullptr);
+  WriteTestValues(inputArray->getDataStoreRef(), values);
+  std::optional<DataPath> maskPath;
+  if(maskKind == WholeArrayMask::Bool)
+  {
+    auto* mask = CreateWholeArrayInput<bool>(dataStructure, "Mask", values.size(), preferenceStores, inputGroup->getId());
+    REQUIRE(mask != nullptr);
+    std::vector<bool> maskValues(values.size());
+    for(usize index = 0; index < values.size(); ++index)
+    {
+      maskValues[index] = IsSelectedByTestMask(maskKind, index);
+    }
+    WriteTestValues(mask->getDataStoreRef(), maskValues);
+    maskPath = DataPath({"Input", "Mask"});
+  }
+  else if(maskKind == WholeArrayMask::UInt8 || maskKind == WholeArrayMask::AllMasked)
+  {
+    auto* mask = CreateWholeArrayInput<uint8>(dataStructure, "Mask", values.size(), preferenceStores, inputGroup->getId());
+    REQUIRE(mask != nullptr);
+    std::vector<uint8> maskValues(values.size());
+    for(usize index = 0; index < values.size(); ++index)
+    {
+      // Nonzero values other than 1 must also select a tuple.
+      maskValues[index] = IsSelectedByTestMask(maskKind, index) ? static_cast<uint8>(1 + index % 3) : 0;
+    }
+    WriteTestValues(mask->getDataStoreRef(), maskValues);
+    maskPath = DataPath({"Input", "Mask"});
+  }
+
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(orderStatistics));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(orderStatistics));
+  constexpr bool k_SupportsMode = std::is_integral_v<T> && !std::is_same_v<T, bool>;
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(orderStatistics && k_SupportsMode));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  if(maskPath.has_value())
+  {
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(*maskPath));
+  }
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = execute(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath statisticsPath({"Statistics"});
+  WholeArrayResult<T> result;
+  result.Length = dataStructure.getDataRefAs<UInt64Array>(statisticsPath.createChildPath("Length"))[0];
+  result.Minimum = dataStructure.getDataRefAs<DataArray<T>>(statisticsPath.createChildPath("Minimum"))[0];
+  result.Maximum = dataStructure.getDataRefAs<DataArray<T>>(statisticsPath.createChildPath("Maximum"))[0];
+  result.Mean = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Mean"))[0];
+  result.StandardDeviation = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("StandardDeviation"))[0];
+  result.Summation = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Summation"))[0];
+  if(orderStatistics)
+  {
+    result.Median = dataStructure.getDataRefAs<Float32Array>(statisticsPath.createChildPath("Median"))[0];
+    result.Unique = dataStructure.getDataRefAs<Int32Array>(statisticsPath.createChildPath("NumUniqueValues"))[0];
+    if constexpr(k_SupportsMode)
+    {
+      result.Modes = dataStructure.getDataRefAs<NeighborList<T>>(statisticsPath.createChildPath("Mode")).getList(0);
+    }
+  }
+  result.Standardized.resize(values.size());
+  auto standardizedReadResult = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input", "Standardized"})).getDataStoreRef().copyIntoBuffer(0, result.Standardized);
+  SIMPLNX_RESULT_REQUIRE_VALID(standardizedReadResult);
+  return result;
+}
+
+/**
+ * @struct TodayScanlineOracle
+ * @brief Whole-array statistics computed with the element-order formulas of the bounded implementation.
+ *
+ * Min and max use strict comparisons against the max() and lowest() sentinels, so NaN is ignored and the first
+ * of equal values is kept. The sum uses Int64, UInt64, or Float64 in element order. The mean divides the Float32
+ * sum by the Float32 length. The deviation accumulates Float64(value - mean) squared in element order, where the
+ * subtraction uses the promoted type of value and the Float32 mean.
+ */
+template <typename T>
+struct TodayScanlineOracle
+{
+  uint64 Length = 0;
+  T Minimum = {};
+  T Maximum = {};
+  float32 Summation = 0.0F;
+  float32 Mean = 0.0F;
+  float32 StandardDeviation = 0.0F;
+  float32 Median = 0.0F;
+  int32 Unique = 0;
+  std::vector<T> Modes;
+  float64 AbsoluteSum = 0.0; ///< Sum of |x| over the selected values, for the summation regrouping bound.
+};
+
+template <typename T>
+TodayScanlineOracle<T> ComputeTodayScanlineOracle(const std::vector<T>& values, WholeArrayMask maskKind)
+{
+  using SumType = std::conditional_t<std::is_integral_v<T>, std::conditional_t<std::is_signed_v<T>, int64, uint64>, float64>;
+  std::vector<T> selected;
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    if(IsSelectedByTestMask(maskKind, index))
+    {
+      selected.push_back(values[index]);
+    }
+  }
+  TodayScanlineOracle<T> oracle;
+  oracle.Length = selected.size();
+  if(selected.empty())
+  {
+    return oracle;
+  }
+  T minimum = std::numeric_limits<T>::max();
+  T maximum = std::numeric_limits<T>::lowest();
+  SumType sum = 0;
+  for(const T value : selected)
+  {
+    if(value < minimum)
+    {
+      minimum = value;
+    }
+    if(value > maximum)
+    {
+      maximum = value;
+    }
+    sum += static_cast<SumType>(value);
+    oracle.AbsoluteSum += std::fabs(static_cast<float64>(value));
+  }
+  oracle.Minimum = minimum;
+  oracle.Maximum = maximum;
+  oracle.Summation = static_cast<float32>(sum);
+  oracle.Mean = oracle.Summation / static_cast<float32>(selected.size());
+  float64 sumOfDifferences = 0.0;
+  for(const T value : selected)
+  {
+    const float64 difference = static_cast<float64>(value - oracle.Mean);
+    sumOfDifferences += difference * difference;
+  }
+  oracle.StandardDeviation = static_cast<float32>(std::sqrt(sumOfDifferences / static_cast<float64>(selected.size())));
+
+  if constexpr(std::is_integral_v<T>)
+  {
+    std::sort(selected.begin(), selected.end());
+    const T lower = selected[(selected.size() - 1) / 2];
+    const T upper = selected[selected.size() / 2];
+    oracle.Median = selected.size() % 2 == 1 ? static_cast<float32>(upper) : static_cast<float32>((lower + upper) * 0.5F);
+    usize maximumRun = 0;
+    for(usize index = 0; index < selected.size();)
+    {
+      usize next = index;
+      while(next < selected.size() && selected[next] == selected[index])
+      {
+        ++next;
+      }
+      const usize run = next - index;
+      if(run > maximumRun)
+      {
+        maximumRun = run;
+        oracle.Modes.clear();
+      }
+      if(run == maximumRun)
+      {
+        oracle.Modes.push_back(selected[index]);
+      }
+      ++oracle.Unique;
+      index = next;
+    }
+  }
+  return oracle;
+}
+
+/**
+ * @brief Compares two Float32 results that may differ by regrouped Float64 summation and one Float32 rounding.
+ * @param actual Result under test.
+ * @param expected Oracle result.
+ * @param absoluteBound Largest Float64 difference that regrouped summation can produce before the Float32 cast.
+ * @return True for equal NaN state and a difference within the bound plus two Float32 units in the last place.
+ */
+bool WithinRegroupedTolerance(float32 actual, float32 expected, float64 absoluteBound)
+{
+  if(std::isnan(expected) || std::isnan(actual))
+  {
+    return std::isnan(expected) && std::isnan(actual);
+  }
+  if(std::isinf(expected) || std::isinf(actual))
+  {
+    return actual == expected;
+  }
+  const float64 unitInLastPlace = std::fabs(static_cast<float64>(expected)) * static_cast<float64>(std::numeric_limits<float32>::epsilon());
+  return std::fabs(static_cast<float64>(actual) - static_cast<float64>(expected)) <= absoluteBound + 2.0 * unitInLastPlace;
+}
+
+/**
+ * @brief Checks the standardized output against the formula applied with the reported mean and deviation.
+ *
+ * Unselected tuples keep the value 0 that the created output array starts with.
+ */
+template <typename T>
+void RequireStandardizedMatchesFormula(const std::vector<T>& values, WholeArrayMask maskKind, const WholeArrayResult<T>& actual)
+{
+  REQUIRE(actual.Standardized.size() == values.size());
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    const float32 expected = IsSelectedByTestMask(maskKind, index) ? (static_cast<float32>(values[index]) - actual.Mean) / actual.StandardDeviation : 0.0F;
+    if(std::isnan(expected))
+    {
+      CHECK(std::isnan(actual.Standardized[index]));
+    }
+    else
+    {
+      CHECK(actual.Standardized[index] == expected);
+    }
+  }
+}
+
+/**
+ * @brief Compares results of the histogram engine with the oracle: exact except the deviation.
+ */
+template <typename T>
+void RequireHistogramResultMatchesOracle(const std::vector<T>& values, WholeArrayMask maskKind, const WholeArrayResult<T>& actual)
+{
+  const TodayScanlineOracle<T> expected = ComputeTodayScanlineOracle(values, maskKind);
+  REQUIRE(actual.Length == expected.Length);
+  REQUIRE(actual.Minimum == expected.Minimum);
+  REQUIRE(actual.Maximum == expected.Maximum);
+  REQUIRE(actual.Summation == expected.Summation);
+  REQUIRE(actual.Mean == expected.Mean);
+  REQUIRE(actual.Median == expected.Median);
+  REQUIRE(actual.Unique == expected.Unique);
+  if constexpr(!std::is_same_v<T, bool>)
+  {
+    REQUIRE(actual.Modes == expected.Modes);
+  }
+  // Only the summation order differs from the element-order oracle.
+  REQUIRE(actual.StandardDeviation == Approx(expected.StandardDeviation).epsilon(1.0e-6));
+  RequireStandardizedMatchesFormula(values, maskKind, actual);
+}
+
+/**
+ * @brief Compares results of the two-pass engine with the oracle.
+ *
+ * Integer extrema and sums are exact. Float sums may differ by regrouped Float64 summation, which is bounded by
+ * n * eps * sum(|x|) before the Float32 cast.
+ */
+template <typename T>
+void RequireTwoPassResultMatchesOracle(const std::vector<T>& values, WholeArrayMask maskKind, const WholeArrayResult<T>& actual)
+{
+  const TodayScanlineOracle<T> expected = ComputeTodayScanlineOracle(values, maskKind);
+  REQUIRE(actual.Length == expected.Length);
+  REQUIRE(actual.Minimum == expected.Minimum);
+  REQUIRE(actual.Maximum == expected.Maximum);
+  if constexpr(std::is_integral_v<T>)
+  {
+    REQUIRE(actual.Summation == expected.Summation);
+    REQUIRE(actual.Mean == expected.Mean);
+  }
+  else
+  {
+    const float64 sumBound = static_cast<float64>(expected.Length) * std::numeric_limits<float64>::epsilon() * expected.AbsoluteSum;
+    CHECK(WithinRegroupedTolerance(actual.Summation, expected.Summation, sumBound));
+    const float64 meanBound = expected.Length == 0 ? 0.0 : sumBound / static_cast<float64>(expected.Length) + std::fabs(static_cast<float64>(expected.Mean)) * 1.0e-6;
+    CHECK(WithinRegroupedTolerance(actual.Mean, expected.Mean, meanBound));
+  }
+  REQUIRE(actual.StandardDeviation == Approx(expected.StandardDeviation).epsilon(1.0e-6));
+  RequireStandardizedMatchesFormula(values, maskKind, actual);
+}
+
+/**
+ * @brief Runs every length and mask case of the histogram engine for one type on the scanline path.
+ */
+template <typename T>
+void RunHistogramOracleCases(UnitTest::AlgorithmTestScenario scanlineScenario)
+{
+  // One tuple, one partial page, several pages with a partial last page, and a larger multi-page case.
+  for(const usize tupleCount : {usize{1}, usize{7}, usize{1000}, usize{4099}})
+  {
+    for(const WholeArrayMask maskKind : {WholeArrayMask::None, WholeArrayMask::Bool, WholeArrayMask::UInt8, WholeArrayMask::AllMasked})
+    {
+      CAPTURE(std::string(DataTypeToString(GetDataType<T>()).view()), tupleCount, static_cast<int32>(maskKind));
+      const std::vector<T> values = MakeWholeArrayInput<T>(tupleCount);
+      const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+      UnitTest::AlgorithmTestScope scope(scanlineScenario);
+      const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+      const WholeArrayResult<T> actual = RunWholeArrayCase<T>(execute, values, maskKind, true);
+      RequireHistogramResultMatchesOracle(values, maskKind, actual);
+
+      const usize maskBytes = maskKind == WholeArrayMask::None ? 0 : (maskKind == WholeArrayMask::Bool ? sizeof(bool) : sizeof(uint8));
+      const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+      REQUIRE(witness.HistogramPages == ExpectedReductionPages(tupleCount, sizeof(T) + maskBytes));
+      REQUIRE(witness.MomentPages == 0);
+      REQUIRE(witness.DeviationPages == 0);
+      REQUIRE(witness.StandardizePages > 0);
+    }
+  }
+}
+
+/**
+ * @brief Runs every length and mask case of the two-pass engine for one type on the scanline path.
+ */
+template <typename T>
+void RunTwoPassOracleCases(UnitTest::AlgorithmTestScenario scanlineScenario)
+{
+  for(const usize tupleCount : {usize{1}, usize{7}, usize{1000}, usize{4099}})
+  {
+    for(const WholeArrayMask maskKind : {WholeArrayMask::None, WholeArrayMask::Bool, WholeArrayMask::UInt8, WholeArrayMask::AllMasked})
+    {
+      CAPTURE(std::string(DataTypeToString(GetDataType<T>()).view()), tupleCount, static_cast<int32>(maskKind));
+      const std::vector<T> values = MakeWholeArrayInput<T>(tupleCount);
+      const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+      UnitTest::AlgorithmTestScope scope(scanlineScenario);
+      const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+      const WholeArrayResult<T> actual = RunWholeArrayCase<T>(execute, values, maskKind, false);
+      RequireTwoPassResultMatchesOracle(values, maskKind, actual);
+
+      const usize maskBytes = maskKind == WholeArrayMask::None ? 0 : (maskKind == WholeArrayMask::Bool ? sizeof(bool) : sizeof(uint8));
+      const usize expectedPages = ExpectedReductionPages(tupleCount, sizeof(T) + maskBytes);
+      const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+      REQUIRE(witness.HistogramPages == 0);
+      REQUIRE(witness.MomentPages == expectedPages);
+      // The deviation pass runs only when a tuple is selected.
+      REQUIRE(witness.DeviationPages == (maskKind == WholeArrayMask::AllMasked ? 0 : expectedPages));
+      REQUIRE(witness.StandardizePages > 0);
+    }
+  }
+}
+
+/**
+ * @brief Returns true when two Float32 values have identical bits.
+ */
+bool SameBits(float32 left, float32 right)
+{
+  return std::memcmp(&left, &right, sizeof(float32)) == 0;
+}
+
+/**
+ * @brief Requires bit-identical whole-array results.
+ */
+template <typename T>
+void RequireBitIdentical(const WholeArrayResult<T>& left, const WholeArrayResult<T>& right)
+{
+  REQUIRE(left.Length == right.Length);
+  REQUIRE(std::memcmp(&left.Minimum, &right.Minimum, sizeof(T)) == 0);
+  REQUIRE(std::memcmp(&left.Maximum, &right.Maximum, sizeof(T)) == 0);
+  REQUIRE(SameBits(left.Mean, right.Mean));
+  REQUIRE(SameBits(left.Median, right.Median));
+  REQUIRE(SameBits(left.StandardDeviation, right.StandardDeviation));
+  REQUIRE(SameBits(left.Summation, right.Summation));
+  REQUIRE(left.Unique == right.Unique);
+  REQUIRE(left.Modes == right.Modes);
+  REQUIRE(left.Standardized.size() == right.Standardized.size());
+  REQUIRE(std::memcmp(left.Standardized.data(), right.Standardized.data(), left.Standardized.size() * sizeof(float32)) == 0);
+}
+
+/**
+ * @brief Runs one scanline whole-array case with the given page budget and optional TBB thread limit.
+ * @param threadLimit Maximum TBB parallelism, or 0 for the default.
+ */
+template <typename T>
+WholeArrayResult<T> RunScanlineWithLimits(UnitTest::AlgorithmTestScenario scanlineScenario, const std::vector<T>& values, bool orderStatistics, usize pageBytes, usize threadLimit)
+{
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  std::optional<tbb::global_control> parallelismLimit;
+  if(threadLimit != 0)
+  {
+    parallelismLimit.emplace(tbb::global_control::max_allowed_parallelism, threadLimit);
+  }
+#endif
+  const ScanSeamScope seams(pageBytes, k_SeamBlockTuples);
+  UnitTest::AlgorithmTestScope scope(scanlineScenario);
+  const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+  return RunWholeArrayCase<T>(execute, values, WholeArrayMask::Bool, orderStatistics);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array histogram engine matches the scanline oracle", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  RunHistogramOracleCases<bool>(*scanlineScenario);
+  RunHistogramOracleCases<int8>(*scanlineScenario);
+  RunHistogramOracleCases<uint8>(*scanlineScenario);
+  RunHistogramOracleCases<int16>(*scanlineScenario);
+  RunHistogramOracleCases<uint16>(*scanlineScenario);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array histogram order statistics", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+
+  SECTION("signed values with two tied modes and an odd length")
+  {
+    const std::vector<int16> values = {-300, 7, -300, 12, 7, -32768, 32767};
+    const auto actual = RunWholeArrayCase<int16>(execute, values, WholeArrayMask::None, true);
+    REQUIRE(actual.Minimum == -32768);
+    REQUIRE(actual.Maximum == 32767);
+    REQUIRE(actual.Median == 7.0F);
+    REQUIRE(actual.Unique == 5);
+    REQUIRE(actual.Modes == std::vector<int16>{-300, 7});
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::None, actual);
+  }
+
+  SECTION("negative int8 values with an even length average the middle pair")
+  {
+    const std::vector<int8> values = {-128, -5, -4, 127, -5, -4};
+    const auto actual = RunWholeArrayCase<int8>(execute, values, WholeArrayMask::None, true);
+    REQUIRE(actual.Median == -4.5F);
+    REQUIRE(actual.Modes == std::vector<int8>{-5, -4});
+    REQUIRE(actual.Unique == 4);
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::None, actual);
+  }
+
+  SECTION("every value is a mode")
+  {
+    const std::vector<uint8> values = {9, 3, 255, 0};
+    const auto actual = RunWholeArrayCase<uint8>(execute, values, WholeArrayMask::None, true);
+    REQUIRE(actual.Median == 6.0F);
+    REQUIRE(actual.Modes == std::vector<uint8>{0, 3, 9, 255});
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::None, actual);
+  }
+
+  SECTION("Boolean median with even and odd lengths")
+  {
+    const std::vector<bool> evenValues = {true, false, false, true};
+    const auto even = RunWholeArrayCase<bool>(execute, evenValues, WholeArrayMask::None, true);
+    REQUIRE(even.Median == 0.5F);
+    REQUIRE(even.Unique == 2);
+    RequireHistogramResultMatchesOracle(evenValues, WholeArrayMask::None, even);
+    const std::vector<bool> oddValues = {true, false, true};
+    const auto odd = RunWholeArrayCase<bool>(execute, oddValues, WholeArrayMask::None, true);
+    REQUIRE(odd.Median == 1.0F);
+    RequireHistogramResultMatchesOracle(oddValues, WholeArrayMask::None, odd);
+  }
+
+  SECTION("all-masked input has no mode entries and zero extrema")
+  {
+    const std::vector<uint16> values = {4, 5, 6};
+    const auto actual = RunWholeArrayCase<uint16>(execute, values, WholeArrayMask::AllMasked, true);
+    REQUIRE(actual.Length == 0);
+    REQUIRE(actual.Minimum == 0);
+    REQUIRE(actual.Maximum == 0);
+    REQUIRE(actual.Mean == 0.0F);
+    REQUIRE(actual.Median == 0.0F);
+    REQUIRE(actual.StandardDeviation == 0.0F);
+    REQUIRE(actual.Unique == 0);
+    REQUIRE(actual.Modes.empty());
+    REQUIRE(actual.Standardized == std::vector<float32>{0.0F, 0.0F, 0.0F});
+  }
+
+  SECTION("one tuple")
+  {
+    const std::vector<int16> values = {-17};
+    const auto actual = RunWholeArrayCase<int16>(execute, values, WholeArrayMask::None, true);
+    REQUIRE(actual.Length == 1);
+    REQUIRE(actual.Minimum == -17);
+    REQUIRE(actual.Maximum == -17);
+    REQUIRE(actual.Mean == -17.0F);
+    REQUIRE(actual.Median == -17.0F);
+    REQUIRE(actual.StandardDeviation == 0.0F);
+    REQUIRE(actual.Modes == std::vector<int16>{-17});
+    REQUIRE(std::isnan(actual.Standardized[0]));
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array two-pass engine matches the scanline oracle", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  RunTwoPassOracleCases<int32>(*scanlineScenario);
+  RunTwoPassOracleCases<uint32>(*scanlineScenario);
+  RunTwoPassOracleCases<int64>(*scanlineScenario);
+  RunTwoPassOracleCases<uint64>(*scanlineScenario);
+  RunTwoPassOracleCases<float32>(*scanlineScenario);
+  RunTwoPassOracleCases<float64>(*scanlineScenario);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array order statistics keep the sorted path for wide types", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+  const std::vector<int32> values = MakeWholeArrayInput<int32>(1000);
+  const auto actual = RunWholeArrayCase<int32>(execute, values, WholeArrayMask::Bool, true);
+  const TodayScanlineOracle<int32> expected = ComputeTodayScanlineOracle(values, WholeArrayMask::Bool);
+  REQUIRE(actual.Median == expected.Median);
+  REQUIRE(actual.Unique == expected.Unique);
+  REQUIRE(actual.Modes == expected.Modes);
+  // The element-order implementation computes these, so the deviation matches exactly.
+  REQUIRE(actual.StandardDeviation == expected.StandardDeviation);
+  const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+  REQUIRE(witness.HistogramPages == 0);
+  REQUIRE(witness.MomentPages == 0);
+  REQUIRE(witness.DeviationPages == 0);
+  REQUIRE(witness.StandardizePages == 0);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array two-pass engine keeps NaN, signed-zero, and infinity semantics", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  const ScanSeamScope seams(k_SeamPageBytes, 2);
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  const auto execute = [&scope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return scope.executeFilter(filter, dataStructure, args); };
+  const auto runBoth = [&](auto typeTag) {
+    using T = decltype(typeTag);
+    constexpr T k_NaN = std::numeric_limits<T>::quiet_NaN();
+    constexpr T k_Inf = std::numeric_limits<T>::infinity();
+
+    // NaN in the first block is ignored by min and max but propagates into sum, mean, and deviation.
+    // Blocks of two tuples put -0 and +0 in different blocks; the first seen minimum (-0) is kept.
+    const std::vector<T> withNaN = {k_NaN, static_cast<T>(-0.0), static_cast<T>(0.0), static_cast<T>(3), static_cast<T>(1)};
+    const auto nanResult = RunWholeArrayCase<T>(execute, withNaN, WholeArrayMask::None, false);
+    REQUIRE(nanResult.Length == 5);
+    REQUIRE(nanResult.Minimum == static_cast<T>(0));
+    REQUIRE(std::signbit(nanResult.Minimum));
+    REQUIRE(nanResult.Maximum == static_cast<T>(3));
+    REQUIRE(std::isnan(nanResult.Summation));
+    REQUIRE(std::isnan(nanResult.Mean));
+    REQUIRE(std::isnan(nanResult.StandardDeviation));
+
+    // Only NaN values leave the sentinels in place.
+    const std::vector<T> onlyNaN = {k_NaN, k_NaN, k_NaN};
+    const auto onlyNaNResult = RunWholeArrayCase<T>(execute, onlyNaN, WholeArrayMask::None, false);
+    REQUIRE(onlyNaNResult.Minimum == std::numeric_limits<T>::max());
+    REQUIRE(onlyNaNResult.Maximum == std::numeric_limits<T>::lowest());
+
+    // +Inf is the maximum, and its difference from the infinite mean makes the deviation NaN.
+    const std::vector<T> withInf = {static_cast<T>(1), static_cast<T>(-2), k_Inf, static_cast<T>(2)};
+    const auto infResult = RunWholeArrayCase<T>(execute, withInf, WholeArrayMask::None, false);
+    REQUIRE(infResult.Minimum == static_cast<T>(-2));
+    REQUIRE(infResult.Maximum == k_Inf);
+    REQUIRE(infResult.Summation == std::numeric_limits<float32>::infinity());
+    REQUIRE(infResult.Mean == std::numeric_limits<float32>::infinity());
+    REQUIRE(std::isnan(infResult.StandardDeviation));
+
+    // A +0 before -0 keeps +0 as the minimum; +Inf alone never beats the max() sentinel.
+    const std::vector<T> positiveZeroFirst = {static_cast<T>(0.0), static_cast<T>(-0.0), k_Inf};
+    const auto zeroResult = RunWholeArrayCase<T>(execute, positiveZeroFirst, WholeArrayMask::None, false);
+    REQUIRE(zeroResult.Minimum == static_cast<T>(0));
+    REQUIRE_FALSE(std::signbit(zeroResult.Minimum));
+    REQUIRE(zeroResult.Maximum == k_Inf);
+
+    for(const auto* values : {&withNaN, &onlyNaN, &withInf, &positiveZeroFirst})
+    {
+      const TodayScanlineOracle<T> expected = ComputeTodayScanlineOracle(*values, WholeArrayMask::None);
+      const auto actual = RunWholeArrayCase<T>(execute, *values, WholeArrayMask::None, false);
+      REQUIRE(actual.Length == expected.Length);
+      // Signed zeros compare by value.
+      REQUIRE(actual.Minimum == expected.Minimum);
+      REQUIRE(actual.Maximum == expected.Maximum);
+      REQUIRE(WithinRegroupedTolerance(actual.Summation, expected.Summation, 0.0));
+      REQUIRE(WithinRegroupedTolerance(actual.Mean, expected.Mean, 0.0));
+      REQUIRE(WithinRegroupedTolerance(actual.StandardDeviation, expected.StandardDeviation, 0.0));
+    }
+  };
+  runBoth(float32{});
+  runBoth(float64{});
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array two-pass engine agrees with the Direct path", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto compareType = [](auto typeTag) {
+    using T = decltype(typeTag);
+    for(const WholeArrayMask maskKind : {WholeArrayMask::None, WholeArrayMask::UInt8})
+    {
+      CAPTURE(std::string(DataTypeToString(GetDataType<T>()).view()), static_cast<int32>(maskKind));
+      const std::vector<T> values = MakeWholeArrayInput<T>(4099);
+      const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+      UnitTest::AlgorithmTestScope directScope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+      const auto executeDirect = [&directScope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) {
+        return directScope.executeFilter(filter, dataStructure, args);
+      };
+      const WholeArrayResult<T> direct = RunWholeArrayCase<T>(executeDirect, values, maskKind, false);
+      UnitTest::AlgorithmTestScope scanlineScope(UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+      const auto executeScanline = [&scanlineScope](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) {
+        return scanlineScope.executeFilter(filter, dataStructure, args);
+      };
+      const WholeArrayResult<T> scanline = RunWholeArrayCase<T>(executeScanline, values, maskKind, false);
+      REQUIRE(GetComputeArrayStatisticsScanWitnessForTesting().MomentPages > 0);
+
+      const TodayScanlineOracle<T> reference = ComputeTodayScanlineOracle(values, maskKind);
+      const float64 sumBound = static_cast<float64>(reference.Length) * std::numeric_limits<float64>::epsilon() * reference.AbsoluteSum;
+      REQUIRE(scanline.Length == direct.Length);
+      REQUIRE(scanline.Minimum == direct.Minimum);
+      REQUIRE(scanline.Maximum == direct.Maximum);
+      CHECK(WithinRegroupedTolerance(scanline.Summation, direct.Summation, sumBound));
+      CHECK(WithinRegroupedTolerance(scanline.Mean, direct.Mean, sumBound / static_cast<float64>(reference.Length) + std::fabs(static_cast<float64>(direct.Mean)) * 1.0e-6));
+      REQUIRE(scanline.StandardDeviation == Approx(direct.StandardDeviation).epsilon(1.0e-6));
+      for(usize index = 0; index < values.size(); ++index)
+      {
+        REQUIRE(scanline.Standardized[index] == Approx(direct.Standardized[index]).epsilon(1.0e-5).margin(1.0e-6));
+      }
+    }
+  };
+  compareType(int32{});
+  compareType(uint32{});
+  compareType(int64{});
+  compareType(uint64{});
+  compareType(float32{});
+  compareType(float64{});
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines do not depend on the thread count or page size", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline engine contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  // One thread against the default limit, which permits every core of the machine.
+  constexpr usize k_SerialLimit = 1;
+#else
+  constexpr usize k_SerialLimit = 0;
+#endif
+  const auto compareType = [&scanlineScenario](auto typeTag, bool orderStatistics) {
+    using T = decltype(typeTag);
+    CAPTURE(std::string(DataTypeToString(GetDataType<T>()).view()));
+    const std::vector<T> values = MakeWholeArrayInput<T>(20011);
+    const WholeArrayResult<T> serial = RunScanlineWithLimits<T>(*scanlineScenario, values, orderStatistics, k_SeamPageBytes, k_SerialLimit);
+    const WholeArrayResult<T> parallel = RunScanlineWithLimits<T>(*scanlineScenario, values, orderStatistics, k_SeamPageBytes, 0);
+    RequireBitIdentical(serial, parallel);
+    // A four-times larger page keeps the same global block grid.
+    const WholeArrayResult<T> largerPages = RunScanlineWithLimits<T>(*scanlineScenario, values, orderStatistics, 4 * k_SeamPageBytes, 0);
+    RequireBitIdentical(serial, largerPages);
+  };
+  compareType(uint16{}, true);
+  compareType(int8{}, true);
+  compareType(int32{}, false);
+  compareType(uint64{}, false);
+  compareType(float32{}, false);
+  compareType(float64{}, false);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array engines on genuine out-of-core stores", "[SimplnxCore][ComputeArrayStatisticsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+    SUCCEED("No out-of-core store format is registered.");
+    return;
+  }
+  UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const auto execute = [](ComputeArrayStatisticsFilter& filter, DataStructure& dataStructure, const Arguments& args) { return filter.execute(dataStructure, args); };
+  // Several KiB pages over a 200000-tuple input read many chunk-sized pieces with a partial last page.
+  constexpr usize k_TupleCount = 200003;
+  constexpr usize k_PageBytes = 64 * 1024;
+  constexpr usize k_BlockTuples = 1024;
+
+  SECTION("uint16 histogram engine")
+  {
+    const std::vector<uint16> values = MakeWholeArrayInput<uint16>(k_TupleCount);
+    const ScanSeamScope seams(k_PageBytes, k_BlockTuples);
+    const auto actual = RunWholeArrayCase<uint16>(execute, values, WholeArrayMask::UInt8, true, true);
+    RequireHistogramResultMatchesOracle(values, WholeArrayMask::UInt8, actual);
+    const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+    REQUIRE(witness.HistogramPages > 1);
+    REQUIRE(witness.StandardizePages > 1);
+  }
+
+  SECTION("int32 two-pass engine")
+  {
+    const std::vector<int32> values = MakeWholeArrayInput<int32>(k_TupleCount);
+    const ScanSeamScope seams(k_PageBytes, k_BlockTuples);
+    const auto actual = RunWholeArrayCase<int32>(execute, values, WholeArrayMask::None, false, true);
+    RequireTwoPassResultMatchesOracle(values, WholeArrayMask::None, actual);
+    const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+    REQUIRE(witness.MomentPages > 1);
+    REQUIRE(witness.DeviationPages == witness.MomentPages);
+    REQUIRE(witness.StandardizePages > 1);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: whole-array deviation-pass cancellation preserves unwritten outputs", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scanlineScenario = SelectScanlineInMemoryScenario();
+  if(!scanlineScenario.has_value())
+  {
+    SUCCEED("The scanline transfer contract is omitted by the InCoreOnly selection.");
+    return;
+  }
+  constexpr usize k_TupleCount = 4099;
+  const usize pagesPerPass = ExpectedReductionPages(k_TupleCount, sizeof(int32));
+  std::atomic_bool shouldCancel = false;
+  DataStructure dataStructure;
+  auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+  auto* output = AttributeMatrix::Create(dataStructure, "Statistics", {1});
+  REQUIRE(inputGroup != nullptr);
+  REQUIRE(output != nullptr);
+  // The first read of the deviation pass sets the cancellation flag.
+  auto inputStore = std::make_shared<StatisticsCancelAfterReadsDataStore<int32>>(ShapeType{k_TupleCount}, ShapeType{1}, std::optional<int32>{3}, shouldCancel, pagesPerPass + 1);
+  auto* values = Int32Array::Create(dataStructure, "Values", inputStore, inputGroup->getId());
+  auto* length = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Length", {1}, {1}, output->getId());
+  auto* deviation = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "StandardDeviation", {1}, {1}, output->getId());
+  REQUIRE(values != nullptr);
+  REQUIRE(length != nullptr);
+  REQUIRE(deviation != nullptr);
+  length->fill(94);
+  deviation->fill(95.0F);
+  ComputeArrayStatisticsInputValues inputValues = CreateMinimalStatisticsInputValues(DataPath({"Input", "Values"}), DataPath({"Statistics"}));
+  inputValues.FindLength = true;
+  inputValues.FindStdDeviation = true;
+  const ScanSeamScope seams(k_SeamPageBytes, k_SeamBlockTuples);
+  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  const auto executeResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+  REQUIRE(shouldCancel.load());
+  REQUIRE(inputStore->readCount() == pagesPerPass + 1);
+  const ComputeArrayStatisticsScanWitness witness = GetComputeArrayStatisticsScanWitnessForTesting();
+  REQUIRE(witness.MomentPages == pagesPerPass);
+  REQUIRE(witness.DeviationPages == 0);
+  REQUIRE((*length)[0] == 94);
+  REQUIRE((*deviation)[0] == 95.0F);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][ComputeArrayStatisticsFilter]")
