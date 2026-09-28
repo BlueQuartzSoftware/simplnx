@@ -577,6 +577,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ChunkAlignedTransfer.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StoreCopyUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
@@ -820,6 +821,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ChunkAlignedTransfer.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StoreCopyUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
