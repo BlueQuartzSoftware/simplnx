@@ -9,6 +9,17 @@
 namespace nx::core
 {
 /**
+ * @brief Byte target of one piece of a chunk-aligned store-to-store copy.
+ *
+ * AbstractDataStore::copyFrom() reads and writes an aligned copy in pieces of at most this size. A piece can then hold
+ * more than 64 of the default 1 MiB session chunks. The parallel deflate writer prepares at most 64 chunks in one batch.
+ * Thus it can divide such a piece into several batches. It compresses the next batch while it commits the previous
+ * batch. A larger piece also decreases the number of source-read and destination-write handoffs. Worker threads are
+ * idle during each handoff. One buffer of this size is allocated for each aligned copy.
+ */
+inline constexpr usize k_AlignedCopyTargetBytes = 128 * 1024 * 1024;
+
+/**
  * @struct ChunkAlignedPiece
  * @brief Describes one consecutive flat tuple range of a transfer plan.
  */
@@ -98,4 +109,22 @@ SIMPLNX_EXPORT ChunkAlignedPiece ComputeNextChunkAlignedPiece(const ShapeType& t
  * Each piece is the result of ComputeNextChunkAlignedPiece() at the end of the previous piece.
  */
 SIMPLNX_EXPORT std::vector<ChunkAlignedPiece> PlanChunkAlignedPieces(const ShapeType& tupleShape, const ShapeType& chunkShape, usize startTuple, usize tupleCount, usize maxTuplesPerPiece);
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+/**
+ * @brief Overrides the piece byte target of chunk-aligned store-to-store copies.
+ * @param targetBytes Piece byte target, or 0 to restore k_AlignedCopyTargetBytes.
+ *
+ * This is a `*ForTesting` seam. Its storage is in ChunkAlignedTransfer.cpp, so simplnx and every test executable
+ * share one value on every platform. A header-inline seam would give each module its own copy. A test that sets a
+ * value restores 0 before it ends.
+ */
+SIMPLNX_EXPORT void SetAlignedCopyTargetBytesForTesting(usize targetBytes);
+
+/**
+ * @brief Returns the piece byte target of chunk-aligned store-to-store copies.
+ * @return The value from SetAlignedCopyTargetBytesForTesting(), or k_AlignedCopyTargetBytes if no value is set.
+ */
+SIMPLNX_EXPORT usize GetAlignedCopyTargetBytesForTesting();
+#endif
 } // namespace nx::core
