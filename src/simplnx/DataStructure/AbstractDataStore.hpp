@@ -1302,7 +1302,8 @@ private:
     const usize numComponents = getNumberOfComponents();
     const usize maxPieceTuples = std::max<usize>(1, k_TargetPieceBytes / (numComponents * sizeof(T)));
     const usize bufferTuples = std::min(totalSrcTuples, maxPieceTuples);
-    auto buffer = std::make_unique<T[]>(bufferTuples * numComponents);
+    // copyIntoBuffer() overwrites each element of a piece before copyFromBuffer() reads it, so the buffer is not value-initialized.
+    auto buffer = std::make_unique_for_overwrite<T[]>(bufferTuples * numComponents);
 
     for(usize copiedTuples = 0; copiedTuples < totalSrcTuples;)
     {
