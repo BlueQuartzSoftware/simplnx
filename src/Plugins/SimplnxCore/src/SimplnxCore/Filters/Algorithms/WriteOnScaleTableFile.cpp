@@ -14,8 +14,8 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <Eigen/Dense>
 
@@ -147,11 +147,6 @@ WriteStatus OpenOutput(const fs::path& filePath, std::ofstream& output)
   return output.is_open() ? WriteStatus::Success : WriteStatus::OpenError;
 }
 
-void SendProgress(ThrottledMessenger& messenger, std::string_view label, usize current, usize total)
-{
-  messenger.sendThrottledMessage([=]() { return fmt::format("{}: {:.0f}%", label, CalculatePercentComplete(current, total)); });
-}
-
 template <class Generator>
 void WriteEntries(fmt::memory_buffer& buffer, usize count, usize maxEntriesPerLine, Generator&& generator)
 {
@@ -248,12 +243,12 @@ struct CopyFeatureIds
 struct WriteFeatureIds
 {
   template <class T>
-  WriteStatus operator()(std::ofstream& output, const IDataArray& featureIds, const SizeVec3& dimensions, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper) const
+  WriteStatus operator()(std::ofstream& output, const IDataArray& featureIds, const SizeVec3& dimensions, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle) const
   {
     const auto& typedFeatureIds = dynamic_cast<const DataArray<T>&>(featureIds);
     const usize cellsPerSlice = dimensions[0] * dimensions[1];
     fmt::memory_buffer buffer;
-    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+    progressThrottle.reset(dimensions[2], "Writing matrix values");
     for(usize z = 0; z < dimensions[2]; z++)
     {
       if(shouldCancel)
@@ -276,7 +271,7 @@ struct WriteFeatureIds
       {
         return WriteStatus::WriteError;
       }
-      SendProgress(progressMessenger, "Writing matrix values", z + 1, dimensions[2]);
+      progressThrottle.updatePercent(z + 1, 0);
     }
     return WriteStatus::Success;
   }
@@ -386,8 +381,8 @@ Result<> WriteOnScaleTableFile::operator()()
                       StringUtilities::formatDimensions3D(reorderedDimensions), m_InputValues->InputGeometryPath.toString(), StringUtilities::formatDimensions3D(expectedDimensions)));
     }
     exportFeatureIds = &rotatedDataStructure.getDataRefAs<IDataArray>(k_ScratchCellDataPath.createChildPath(inputFeatureIds.getName()));
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Applied an OnScale axis reorder with Rotate Sample Reference Frame. New dimensions: {} x {} x {}.", reorderedDimensions[0],
-                                                                reorderedDimensions[1], reorderedDimensions[2])});
+    m_MessageHandler.sendInfoMessage(
+        fmt::format("Applied an OnScale axis reorder with Rotate Sample Reference Frame. New dimensions: {} x {} x {}.", reorderedDimensions[0], reorderedDimensions[1], reorderedDimensions[2]));
   }
   else
   {
@@ -402,7 +397,7 @@ Result<> WriteOnScaleTableFile::operator()()
   const usize maxGrainId = featureIdStats.MaxGrainId;
   if(maxGrainId == 0)
   {
-    m_MessageHandler(IFilter::Message::Type::Warning, fmt::format("No positive feature ids were found in '{}'; the name section is empty.", m_InputValues->FeatureIdsArrayPath.toString()));
+    m_MessageHandler.sendWarningMessage(fmt::format("No positive feature ids were found in '{}'; the name section is empty.", m_InputValues->FeatureIdsArrayPath.toString()));
   }
 
   const fs::path outputPath = m_InputValues->OutputPath / fmt::format("{}.flxtbl", m_InputValues->FilePrefix);
@@ -423,13 +418,13 @@ Result<> WriteOnScaleTableFile::operator()()
   const auto makeWriteError = [&tempPath, &outputPath]() {
     return MakeErrorResult(-12035, fmt::format("Writing to '{}' failed (target '{}'). Check available disk space.", tempPath.string(), outputPath.string()));
   };
-  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
 
   if(m_ShouldCancel)
   {
     return {};
   }
-  m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale header..."});
+  m_MessageHandler.sendInfoMessage("Writing OnScale header...");
   output << "hedr 0\ninfo 1\n";
 
   const SizeVec3 dimensions = exportGeometry->getDimensions();
@@ -444,7 +439,7 @@ Result<> WriteOnScaleTableFile::operator()()
       {
         return {};
       }
-      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Writing {} coordinates...", labels[axis])});
+      m_MessageHandler.sendInfoMessage(fmt::format("Writing {} coordinates...", labels[axis]));
       if(WriteImageCoordinates(output, labels[axis], dimensions[axis] + 1, origin[axis], spacing[axis]) == WriteStatus::WriteError)
       {
         return makeWriteError();
@@ -467,7 +462,7 @@ Result<> WriteOnScaleTableFile::operator()()
       {
         return {};
       }
-      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Writing {} coordinates...", label)});
+      m_MessageHandler.sendInfoMessage(fmt::format("Writing {} coordinates...", label));
       if(WriteRectGridCoordinates(output, label, *boundsArray) == WriteStatus::WriteError)
       {
         return makeWriteError();
@@ -479,21 +474,21 @@ Result<> WriteOnScaleTableFile::operator()()
   {
     return {};
   }
-  m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale keypoints..."});
+  m_MessageHandler.sendInfoMessage("Writing OnScale keypoints...");
   output << "keypoints\n" << m_InputValues->NumKeypoints[0] << ' ' << m_InputValues->NumKeypoints[1] << ' ' << m_InputValues->NumKeypoints[2] << '\n';
 
   if(m_ShouldCancel)
   {
     return {};
   }
-  m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale divisions..."});
+  m_MessageHandler.sendInfoMessage("Writing OnScale divisions...");
   output << "divisions\n" << dimensions[0] << ' ' << dimensions[1] << ' ' << dimensions[2] << '\n';
 
   if(m_ShouldCancel)
   {
     return {};
   }
-  m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale phase names..."});
+  m_MessageHandler.sendInfoMessage("Writing OnScale phase names...");
   output << "name " << maxGrainId << '\n';
   const usize phaseNameCount = phaseNames.getNumberOfTuples();
   for(usize grainId = 1; grainId <= maxGrainId; grainId++)
@@ -506,8 +501,8 @@ Result<> WriteOnScaleTableFile::operator()()
   {
     return {};
   }
-  m_MessageHandler({IFilter::Message::Type::Info, "Writing OnScale matrix values..."});
-  const WriteStatus matrixStatus = ExecuteDataFunctionIntType(WriteFeatureIds{}, exportFeatureIds->getDataType(), output, *exportFeatureIds, dimensions, m_ShouldCancel, messageHelper);
+  m_MessageHandler.sendInfoMessage("Writing OnScale matrix values...");
+  const WriteStatus matrixStatus = ExecuteDataFunctionIntType(WriteFeatureIds{}, exportFeatureIds->getDataType(), output, *exportFeatureIds, dimensions, m_ShouldCancel, progressThrottle);
   if(matrixStatus == WriteStatus::Cancelled || m_ShouldCancel)
   {
     return {};
