@@ -3,7 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
 
@@ -399,8 +399,6 @@ Result<> ReadOnScaleTableFile::operator()()
     }
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
-
   // The parser writes directly into the outputs and retains only one input line.
   std::string line;
   usize lineNumber = 0;
@@ -433,7 +431,7 @@ Result<> ReadOnScaleTableFile::operator()()
                                                                m_InputValues->InputFile.string(), count, boundsArrays[axis]->getNumberOfTuples()));
       }
 
-      messageHelper.sendMessage(fmt::format("Reading {} bounds", SectionName(section).substr(0, 1)));
+      m_MessageHandler.sendInfoMessage(fmt::format("Reading {} bounds", SectionName(section).substr(0, 1)));
       auto valuesResult =
           ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
             auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->InputFile);
@@ -458,7 +456,7 @@ Result<> ReadOnScaleTableFile::operator()()
                                                                m_InputValues->InputFile.string(), count, names.getNumberOfTuples()));
       }
 
-      messageHelper.sendMessage("Reading names");
+      m_MessageHandler.sendInfoMessage("Reading names");
       auto namesResult =
           ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_NameValuesTooShortError, [&](std::string_view token, usize, usize index) -> Result<> {
             names.setValue(index, std::string(token));
@@ -481,11 +479,9 @@ Result<> ReadOnScaleTableFile::operator()()
         result.warnings().push_back({k_MaterialCountMismatchWarning, message});
       }
 
-      messageHelper.sendMessage("Reading material values 0%");
-      auto progressHelper = messageHelper.createProgressMessageHelper();
-      progressHelper.setMaxProgresss(numCells);
-      progressHelper.setProgressMessageTemplate("Reading material values {:.0f}%");
-      auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(100));
+      ThrottledMessageHandler progressThrottle(m_MessageHandler, std::chrono::milliseconds(100));
+      progressThrottle.reset(numCells, "Reading material values");
+      progressThrottle.updatePercent(0, 0);
       const usize cancelIncrement = std::max<usize>(1, numCells / 100);
       usize materialCount = 0;
       usize extraCount = 0;
@@ -513,7 +509,7 @@ Result<> ReadOnScaleTableFile::operator()()
             }
             featureIds[materialCount] = valueResult.value();
             materialCount++;
-            progressMessenger.sendProgressMessage(1);
+            progressThrottle.updatePercent(materialCount, 0);
           }
           else
           {
