@@ -2925,14 +2925,13 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   }
 
   // Promote surface nodes to their exterior variant (+10). A triangle that borders the outside of the
-  // volume has exactly one negative feature label (nSpin[0]*nSpin[1] < 0), so each of its nodes lies on
-  // the volume boundary. This is the only output-relevant effect of the legacy triangle-side/inner-edge
-  // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
-  // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
-  // has been removed.
+  // volume has exactly one negative feature label, so each of its nodes lies on the volume boundary.
+  // This is the only output-relevant effect of the legacy triangle-side/inner-edge connectivity pass:
+  // the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also built never appear
+  // in the output (Triangle Geometry + Face Labels + Node Types), so that machinery has been removed.
   for(usize j = 0; j < triangles.size(); j++)
   {
-    if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
+    if((triangles[j].nSpin[0] < 0) != (triangles[j].nSpin[1] < 0))
     {
       for(int i = 0; i < 3; i++)
       {
