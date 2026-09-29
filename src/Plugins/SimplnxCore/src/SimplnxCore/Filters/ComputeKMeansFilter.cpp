@@ -19,6 +19,8 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/format.h>
+
 #include <random>
 
 using namespace nx::core;
@@ -67,7 +69,7 @@ Parameters ComputeKMeansFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
+  params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "Number of clusters to create. The value must be greater than zero. The default is 1.", uint64{1}));
   params.insert(std::make_unique<ChoicesParameter>(
       k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
       ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
@@ -115,6 +117,11 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   auto pMeansArrayNameValue = filterArgs.value<std::string>(k_MeansArrayName_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
+
+  if(pInitClustersValue == 0)
+  {
+    return MakePreflightErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", pInitClustersValue, pSelectedArrayPathValue.toString()));
+  }
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
