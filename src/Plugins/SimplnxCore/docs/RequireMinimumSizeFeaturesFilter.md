@@ -71,7 +71,7 @@ Cell arrays are processed sequentially, so peak scratch is three Feature ID slic
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying the cell-level Feature Ids, any feature-level data that was previously computed (sizes, centroids, average orientations, etc.) will almost certainly be invalid after this filter runs. Re-run any feature-level computation filters downstream of this one to ensure accurate results.
+By modifying the cell-level Feature Ids, any feature-level data that was previously computed (sizes, centroids, average orientations, etc.) will almost certainly be invalid after this filter runs. Re-run any feature-level computation filters downstream of this one to ensure accurate results. Preflight lists each array in the Cell Feature **Attribute Matrix** under *Stale Arrays* so you can see which ones to recompute.
 
 ## WARNING: NeighborList Removal
 

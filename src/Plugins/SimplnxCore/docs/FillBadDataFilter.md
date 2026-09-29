@@ -41,7 +41,7 @@ The implementation is chunk-sequential and optimized for out-of-core data. For l
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying cell-level data, any feature-level data that was previously computed (sizes, centroids, average orientations, etc.) will most likely be invalid after this filter runs. Re-run any downstream feature-level computation filters to ensure accurate results.
+By modifying cell-level data, any feature-level data that was previously computed (sizes, centroids, average orientations, etc.) will most likely be invalid after this filter runs. Re-run any downstream feature-level computation filters to ensure accurate results. Preflight reports this as warning *-14600*.
 
 ### Required Input Sources
 

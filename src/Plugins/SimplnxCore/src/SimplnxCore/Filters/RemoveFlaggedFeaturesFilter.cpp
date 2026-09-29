@@ -130,9 +130,14 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
         -9892, fmt::format("Could not find the parent Attribute Matrix for the selected Flagged Features Data Array at path '{}'", pFlaggedFeaturesArrayPathValue.toString()))};
   }
 
+  std::vector<PreflightValue> preflightUpdatedValues;
+
   // If we are in any way removing features, inform the user
   if(operationType == 0 || operationType == 2)
   {
+    // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
+    nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
+
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
@@ -147,7 +152,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -63,7 +63,7 @@ Peak cell-level scratch is `O(Dx * Dy * largest_tuple_width)`: three Feature ID 
 
 ## WARNING: Feature Data Will Become Invalid
 
-Modifying Feature IDs changes the feature topology. Previously computed feature-level data may therefore be invalid even after its tuples are compacted. Rerun filters that compute feature data after this **Filter**.
+Modifying Feature IDs changes the feature topology. Previously computed feature-level data may therefore be invalid even after its tuples are compacted. Rerun filters that compute feature data after this **Filter**. Preflight lists each array in the feature **Attribute Matrix** under *Stale Arrays* so you can see which ones to recompute.
 
 ## WARNING: NeighborList Removal
 

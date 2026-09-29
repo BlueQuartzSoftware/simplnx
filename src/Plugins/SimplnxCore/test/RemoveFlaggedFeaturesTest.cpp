@@ -831,6 +831,33 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
 // Preflight
 // =====================================================================================================
 
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays Only When Modifying", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureA());
+  RemoveFlaggedFeaturesFilter filter;
+
+  for(const uint64 functionality : {k_Extract, k_Remove, k_ExtractThenRemove})
+  {
+    CAPTURE(functionality);
+    const auto preflightResult = filter.preflight(dataStructure, MakeArgs(functionality, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    const bool hasStaleArrays =
+        std::any_of(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [](const IFilter::PreflightValue& value) { return value.name == "Stale Arrays"; });
+    if(functionality == k_Extract)
+    {
+      CHECK_FALSE(hasStaleArrays);
+    }
+    else
+    {
+      CHECK(hasStaleArrays);
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Error - flag array parent is not an Attribute Matrix (-9892)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
