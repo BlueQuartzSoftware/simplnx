@@ -21,6 +21,7 @@ add_subdirectory(ConversionTest)
 set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   AppTest.cpp
+  ArraySelectionParameterTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
   ChunkIndexTest.cpp
