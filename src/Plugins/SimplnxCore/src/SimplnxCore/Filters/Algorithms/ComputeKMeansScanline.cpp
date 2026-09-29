@@ -463,6 +463,11 @@ const std::atomic_bool& ComputeKMeansScanline::getCancel()
 
 Result<> ComputeKMeansScanline::operator()()
 {
+  if(m_InputValues->InitClusters == 0)
+  {
+    return MakeErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", m_InputValues->InitClusters, m_InputValues->ClusteringArrayPath.toString()));
+  }
+
   const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   const IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
   auto& meansArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath);
