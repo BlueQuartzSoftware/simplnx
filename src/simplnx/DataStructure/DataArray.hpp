@@ -828,6 +828,24 @@ public:
   }
 
   /**
+   * @brief Flushes the backing store and preserves its diagnostics.
+   * @return Store diagnostics, or error -6070 for missing storage or a failure without an error diagnostic.
+   */
+  [[nodiscard]] Result<> flushChecked() const override
+  {
+    if(m_DataStore == nullptr)
+    {
+      return MakeErrorResult(-6070, fmt::format("Cannot flush numeric array '{}': its data store is null.", getName()));
+    }
+    auto result = m_DataStore->flushChecked();
+    if(result.invalid() && result.errors().empty())
+    {
+      result.errors().push_back({-6070, fmt::format("Cannot flush numeric array '{}': its data store failed without an error diagnostic.", getName())});
+    }
+    return result;
+  }
+
+  /**
    * @brief Returns data-store memory usage in bytes.
    * @return Approximate memory usage in bytes.
    */
