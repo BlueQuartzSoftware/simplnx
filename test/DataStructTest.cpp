@@ -798,7 +798,10 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
-  rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+  // setBounds() validates values, which planned stores cannot provide; link IDs as preflight actions do.
+  rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
+  rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
+  rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
 
   nlohmann::json json;
   REQUIRE_NOTHROW(json = dataStructure.exportHierarchyAsJson());
@@ -847,7 +850,10 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPlannedOutOfCoreBounds"
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
-  rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+  // setBounds() validates values, which planned stores cannot provide; link IDs as preflight actions do.
+  rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
+  rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
+  rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
 
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
   const auto& rectGridNode = findNode(json.at("objects"), "Rect Grid");
