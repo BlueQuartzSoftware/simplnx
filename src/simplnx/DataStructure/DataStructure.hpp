@@ -639,6 +639,17 @@ public:
    */
   void flush() const;
 
+  /**
+   * @brief Flushes each live object once and retains all diagnostics in identifier order.
+   * @return Combined object diagnostics with names, identifiers, and paths.
+   *
+   * @pre The caller excludes concurrent mutations.
+   *
+   * @note Later objects are flushed after a failure when diagnostic allocation succeeds.
+   * A failure without error diagnostics receives error -6070.
+   */
+  [[nodiscard]] Result<> flushChecked() const;
+
   uint64 memoryUsage() const;
 
   /**

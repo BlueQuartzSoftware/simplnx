@@ -39,6 +39,15 @@ public:
     return false;
   }
 
+  /**
+   * @brief Flushes pending list changes when the store has a backing target.
+   * @return Success for the default resident-store operation.
+   */
+  [[nodiscard]] virtual Result<> flushChecked() const
+  {
+    return {};
+  }
+
   virtual usize getNumberOfTuples() const = 0;
 
   /**

@@ -457,6 +457,21 @@ const IListStore* NeighborList<T>::getIListStore() const
 }
 
 template <typename T>
+Result<> NeighborList<T>::flushChecked() const
+{
+  if(m_Store == nullptr)
+  {
+    return MakeErrorResult(-6070, fmt::format("Cannot flush neighbor list '{}': its list store is null.", getName()));
+  }
+  auto result = m_Store->flushChecked();
+  if(result.invalid() && result.errors().empty())
+  {
+    result.errors().push_back({-6070, fmt::format("Cannot flush neighbor list '{}': its list store failed without an error diagnostic.", getName())});
+  }
+  return result;
+}
+
+template <typename T>
 std::shared_ptr<typename NeighborList<T>::store_type> NeighborList<T>::getStore() const
 {
   return m_Store;

@@ -4,7 +4,11 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <fmt/format.h>
+
 #include <algorithm>
+#include <exception>
+#include <new>
 #include <stdexcept>
 
 using namespace nx::core;
@@ -339,6 +343,24 @@ std::vector<DataPath> DataObject::getDataPaths() const
 
 void DataObject::flush() const
 {
+}
+
+Result<> DataObject::flushChecked() const
+{
+  try
+  {
+    flush();
+    return {};
+  } catch(const std::bad_alloc& error)
+  {
+    return MakeErrorResult(-272, fmt::format("Cannot flush object '{}': memory allocation failed: {}", getName(), error.what()));
+  } catch(const std::exception& error)
+  {
+    return MakeErrorResult(-6070, fmt::format("Cannot flush object '{}': {}", getName(), error.what()));
+  } catch(...)
+  {
+    return MakeErrorResult(-6070, fmt::format("Cannot flush object '{}': unknown storage failure.", getName()));
+  }
 }
 
 uint64 DataObject::memoryUsage() const
