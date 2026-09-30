@@ -32,6 +32,7 @@ set(SIMPLNX_TEST_SRCS
   ArraySelectionParameterTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
+  CheckedFlushTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   DataArrayTest.cpp
