@@ -20,6 +20,8 @@
 
 #include <fmt/core.h>
 
+#include <exception>
+#include <new>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -986,6 +988,83 @@ void DataStructure::flush() const
     }
     sharedObj->flush();
   }
+}
+
+Result<> DataStructure::flushChecked() const
+{
+  ErrorCollection errors;
+  WarningCollection warnings;
+  for(const auto& [id, weakObject] : m_DataObjects)
+  {
+    const auto object = weakObject.lock();
+    if(object == nullptr)
+    {
+      continue;
+    }
+
+    Result<> objectResult;
+    try
+    {
+      objectResult = object->flushChecked();
+    } catch(const std::bad_alloc& error)
+    {
+      objectResult = MakeErrorResult(-272, fmt::format("Memory allocation failed during checked flush: {}", error.what()));
+    } catch(const std::exception& error)
+    {
+      objectResult = MakeErrorResult(-6070, fmt::format("Checked flush failed: {}", error.what()));
+    } catch(...)
+    {
+      objectResult = MakeErrorResult(-6070, "Checked flush failed: unknown storage failure.");
+    }
+    if(objectResult.invalid() && objectResult.errors().empty())
+    {
+      objectResult.errors().push_back({-6070, "Checked flush failed without an error diagnostic."});
+    }
+    if(objectResult.valid() && objectResult.warnings().empty())
+    {
+      continue;
+    }
+
+    // Clean objects avoid path construction. The ID index visits linked objects only once.
+    std::string context = fmt::format("Checked flush for object '{}' (ID {})", object->getName(), id);
+    const auto paths = object->getDataPaths();
+    if(!paths.empty())
+    {
+      context += " at paths [";
+      for(usize pathIdx = 0; pathIdx < paths.size(); ++pathIdx)
+      {
+        if(pathIdx != 0)
+        {
+          context += ", ";
+        }
+        context += fmt::format("'{}'", paths[pathIdx].toString());
+      }
+      context += "]";
+    }
+
+    // Normal vector growth avoids repeatedly reallocating all earlier diagnostics.
+    if(objectResult.invalid())
+    {
+      for(auto& error : objectResult.errors())
+      {
+        error.message = fmt::format("{}: {}", context, error.message);
+        errors.push_back(std::move(error));
+      }
+    }
+    for(auto& warning : objectResult.warnings())
+    {
+      warning.message = fmt::format("{}: {}", context, warning.message);
+      warnings.push_back(std::move(warning));
+    }
+  }
+
+  Result<> result;
+  if(!errors.empty())
+  {
+    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+  }
+  result.warnings() = std::move(warnings);
+  return result;
 }
 
 uint64 DataStructure::memoryUsage() const
