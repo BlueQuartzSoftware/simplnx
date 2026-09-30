@@ -80,6 +80,7 @@ static const std::map<std::string, std::string> k_LegacySimplFilterUuidMap{
     {"Export3dSolidMesh", "fcff3b03-bff6-5511-bc65-5e558d12f0a6"},
     {"ExportDAMASKFiles", "7c58e612-d7d6-5ec7-806b-cce0c1c211a3"},
     {"ExportLAMMPSFile", "33c10889-4cdc-5992-ae00-1795e9bee022"},
+    {"ExportOnScaleTableFile", "8efc447d-1c92-5ec5-885c-60b4a597835c"},
     {"ExtractAttributeArraysFromGeometry", "2060a933-b6f5-50fd-9382-a008a5cef17f"},
     {"ExtractComponentAsArray", "79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4"},
     {"ExtractFlaggedFeatures", "e0555de5-bdc6-5bea-ba2f-aacfbec0a022"},
