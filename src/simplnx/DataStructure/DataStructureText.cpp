@@ -119,7 +119,7 @@ private:
 
 void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
 {
-  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export::GetSortedObjectPointers(m_RootGroup);
+  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
   std::vector<PendingTextNode> pendingNodes;
   pendingNodes.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : std::ranges::reverse_view(rootObjectPtrs))
@@ -144,7 +144,7 @@ void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
       continue;
     }
 
-    const std::vector<const DataObject*> childObjectPtrs = data_structure_export::GetSortedObjectPointers(groupPtr->getDataMap());
+    const std::vector<const DataObject*> childObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
     for(const DataObject* childPtr : std::ranges::reverse_view(childObjectPtrs))
     {
       pendingNodes.emplace_back(childPtr, pendingNode.getDepth() + 1);

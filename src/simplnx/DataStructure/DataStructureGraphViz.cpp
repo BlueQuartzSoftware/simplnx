@@ -83,7 +83,7 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
                << "\tnode [shape=record style=\"filled\" fillcolor=\"#1D7ECD\" fontsize=12 fontcolor=\"#FFFFFA\"]\n"
                << "\tedge [dir=front arrowtail=empty style=\"\" color=\"#FFFFFA\"]\n\n";
 
-  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export::GetSortedObjectPointers(m_RootGroup);
+  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
   std::vector<const DataObject*> pendingObjectPtrs;
   pendingObjectPtrs.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : std::ranges::reverse_view(rootObjectPtrs))
@@ -113,7 +113,7 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
       continue;
     }
 
-    const std::vector<const DataObject*> childObjectPtrs = data_structure_export::GetSortedObjectPointers(groupPtr->getDataMap());
+    const std::vector<const DataObject*> childObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
     for(const DataObject* childPtr : childObjectPtrs)
     {
       writeGraphVizNodeId(outputStream, objectPtr->getId());

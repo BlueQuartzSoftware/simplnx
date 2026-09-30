@@ -11,10 +11,12 @@
 #include <vector>
 
 /**
- * @namespace nx::core::data_structure_export
+ * @namespace nx::core::DataStructureExportUtilities
  * @brief Contains implementation helpers shared by hierarchy exporters.
+ *
+ * These helpers are internal implementation details shared by DataStructureJson.cpp, DataStructureText.cpp, and DataStructureGraphViz.cpp and are not intended as public API.
  */
-namespace nx::core::data_structure_export
+namespace nx::core::DataStructureExportUtilities
 {
 /**
  * @brief Gets non-null objects in alphabetic order.
@@ -35,4 +37,4 @@ namespace nx::core::data_structure_export
   std::ranges::sort(sortedObjectPtrs, [](const DataObject* lhsPtr, const DataObject* rhsPtr) { return lhsPtr->getName() < rhsPtr->getName(); });
   return sortedObjectPtrs;
 }
-} // namespace nx::core::data_structure_export
+} // namespace nx::core::DataStructureExportUtilities

@@ -7,6 +7,7 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -39,6 +40,44 @@ namespace nx::core
 {
 namespace
 {
+/**
+ * @namespace Keys
+ * @brief Defines object keys for the hierarchy JSON schema.
+ */
+namespace Keys
+{
+constexpr StringLiteral k_DataType = "data_type";
+constexpr StringLiteral k_TupleShape = "tuple_shape";
+constexpr StringLiteral k_ComponentShape = "component_shape";
+constexpr StringLiteral k_NumTuples = "num_tuples";
+constexpr StringLiteral k_NumComponents = "num_components";
+constexpr StringLiteral k_StoreType = "store_type";
+constexpr StringLiteral k_Dimensions = "dimensions";
+constexpr StringLiteral k_CellDataPath = "cell_data_path";
+constexpr StringLiteral k_Origin = "origin";
+constexpr StringLiteral k_Spacing = "spacing";
+constexpr StringLiteral k_NumVertices = "num_vertices";
+constexpr StringLiteral k_VertexDataPath = "vertex_data_path";
+constexpr StringLiteral k_NumEdges = "num_edges";
+constexpr StringLiteral k_EdgeDataPath = "edge_data_path";
+constexpr StringLiteral k_NumFaces = "num_faces";
+constexpr StringLiteral k_FaceDataPath = "face_data_path";
+constexpr StringLiteral k_NumPolyhedra = "num_polyhedra";
+constexpr StringLiteral k_PolyhedronDataPath = "polyhedron_data_path";
+constexpr StringLiteral k_GeometryType = "geometry_type";
+constexpr StringLiteral k_UnitDimensionality = "unit_dimensionality";
+constexpr StringLiteral k_LengthUnits = "length_units";
+constexpr StringLiteral k_NumCells = "num_cells";
+constexpr StringLiteral k_Geometry = "geometry";
+constexpr StringLiteral k_Name = "name";
+constexpr StringLiteral k_Path = "path";
+constexpr StringLiteral k_Id = "id";
+constexpr StringLiteral k_Type = "type";
+constexpr StringLiteral k_Children = "children";
+constexpr StringLiteral k_SchemaVersion = "schema_version";
+constexpr StringLiteral k_Objects = "objects";
+} // namespace Keys
+
 constexpr int32 k_HierarchyJsonSchemaVersion = 1;
 
 /**
@@ -83,12 +122,12 @@ std::string_view storeTypeToString(IDataStore::StoreType storeType)
  */
 void appendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
 {
-  node["data_type"] = std::string(DataTypeToString(dataArray.getDataType()).view());
-  node["tuple_shape"] = shapeToJson(dataArray.getTupleShape());
-  node["component_shape"] = shapeToJson(dataArray.getComponentShape());
-  node["num_tuples"] = dataArray.getNumberOfTuples();
-  node["num_components"] = dataArray.getNumberOfComponents();
-  node["store_type"] = storeTypeToString(dataArray.getIDataStoreRef().getStoreType());
+  node[Keys::k_DataType.view()] = std::string(DataTypeToString(dataArray.getDataType()).view());
+  node[Keys::k_TupleShape.view()] = shapeToJson(dataArray.getTupleShape());
+  node[Keys::k_ComponentShape.view()] = shapeToJson(dataArray.getComponentShape());
+  node[Keys::k_NumTuples.view()] = dataArray.getNumberOfTuples();
+  node[Keys::k_NumComponents.view()] = dataArray.getNumberOfComponents();
+  node[Keys::k_StoreType.view()] = storeTypeToString(dataArray.getIDataStoreRef().getStoreType());
 }
 
 /**
@@ -98,8 +137,8 @@ void appendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
  */
 void appendStringArrayFields(nlohmann::json& node, const StringArray& stringArray)
 {
-  node["data_type"] = "string";
-  node["num_tuples"] = stringArray.getNumberOfTuples();
+  node[Keys::k_DataType.view()] = "string";
+  node[Keys::k_NumTuples.view()] = stringArray.getNumberOfTuples();
 }
 
 /**
@@ -109,8 +148,8 @@ void appendStringArrayFields(nlohmann::json& node, const StringArray& stringArra
  */
 void appendNeighborListFields(nlohmann::json& node, const INeighborList& neighborList)
 {
-  node["data_type"] = std::string(DataTypeToString(neighborList.getDataType()).view());
-  node["num_tuples"] = neighborList.getNumberOfTuples();
+  node[Keys::k_DataType.view()] = std::string(DataTypeToString(neighborList.getDataType()).view());
+  node[Keys::k_NumTuples.view()] = neighborList.getNumberOfTuples();
 }
 
 /**
@@ -120,7 +159,7 @@ void appendNeighborListFields(nlohmann::json& node, const INeighborList& neighbo
  */
 void appendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& attributeMatrix)
 {
-  node["tuple_shape"] = shapeToJson(attributeMatrix.getShape());
+  node[Keys::k_TupleShape.view()] = shapeToJson(attributeMatrix.getShape());
 }
 
 /**
@@ -170,23 +209,23 @@ bool hasReadableBounds(const RectGridGeom& rectGridGeom)
  */
 void appendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry& gridGeometry)
 {
-  geometryNode["dimensions"] = vec3ToJson(gridGeometry.getDimensions());
+  geometryNode[Keys::k_Dimensions.view()] = vec3ToJson(gridGeometry.getDimensions());
   if(gridGeometry.getCellDataId().has_value())
   {
-    geometryNode["cell_data_path"] = gridGeometry.getCellDataPath().toString();
+    geometryNode[Keys::k_CellDataPath.view()] = gridGeometry.getCellDataPath().toString();
   }
 
   if(const auto* imageGeomPtr = dynamic_cast<const ImageGeom*>(&gridGeometry); imageGeomPtr != nullptr)
   {
-    geometryNode["origin"] = vec3ToJson(imageGeomPtr->getOrigin());
-    geometryNode["spacing"] = vec3ToJson(imageGeomPtr->getSpacing());
+    geometryNode[Keys::k_Origin.view()] = vec3ToJson(imageGeomPtr->getOrigin());
+    geometryNode[Keys::k_Spacing.view()] = vec3ToJson(imageGeomPtr->getSpacing());
   }
   else if(const auto* rectGridGeomPtr = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeomPtr != nullptr && hasReadableBounds(*rectGridGeomPtr))
   {
     const Result<FloatVec3> originResult = rectGridGeomPtr->getOrigin();
     if(originResult.valid())
     {
-      geometryNode["origin"] = vec3ToJson(originResult.value());
+      geometryNode[Keys::k_Origin.view()] = vec3ToJson(originResult.value());
     }
   }
 }
@@ -200,36 +239,36 @@ void appendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry&
  */
 void appendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0D& nodeGeometry)
 {
-  geometryNode["num_vertices"] = nodeGeometry.getNumberOfVertices();
+  geometryNode[Keys::k_NumVertices.view()] = nodeGeometry.getNumberOfVertices();
   if(nodeGeometry.getVertexAttributeMatrixId().has_value())
   {
-    geometryNode["vertex_data_path"] = nodeGeometry.getVertexAttributeMatrixDataPath().toString();
+    geometryNode[Keys::k_VertexDataPath.view()] = nodeGeometry.getVertexAttributeMatrixDataPath().toString();
   }
 
   if(const auto* geom1DPtr = dynamic_cast<const INodeGeometry1D*>(&nodeGeometry); geom1DPtr != nullptr)
   {
-    geometryNode["num_edges"] = geom1DPtr->getNumberOfEdges();
+    geometryNode[Keys::k_NumEdges.view()] = geom1DPtr->getNumberOfEdges();
     if(geom1DPtr->getEdgeAttributeMatrixId().has_value())
     {
-      geometryNode["edge_data_path"] = geom1DPtr->getEdgeAttributeMatrixDataPath().toString();
+      geometryNode[Keys::k_EdgeDataPath.view()] = geom1DPtr->getEdgeAttributeMatrixDataPath().toString();
     }
   }
 
   if(const auto* geom2DPtr = dynamic_cast<const INodeGeometry2D*>(&nodeGeometry); geom2DPtr != nullptr)
   {
-    geometryNode["num_faces"] = geom2DPtr->getNumberOfFaces();
+    geometryNode[Keys::k_NumFaces.view()] = geom2DPtr->getNumberOfFaces();
     if(geom2DPtr->getFaceAttributeMatrixId().has_value())
     {
-      geometryNode["face_data_path"] = geom2DPtr->getFaceAttributeMatrixDataPath().toString();
+      geometryNode[Keys::k_FaceDataPath.view()] = geom2DPtr->getFaceAttributeMatrixDataPath().toString();
     }
   }
 
   if(const auto* geom3DPtr = dynamic_cast<const INodeGeometry3D*>(&nodeGeometry); geom3DPtr != nullptr)
   {
-    geometryNode["num_polyhedra"] = geom3DPtr->getNumberOfPolyhedra();
+    geometryNode[Keys::k_NumPolyhedra.view()] = geom3DPtr->getNumberOfPolyhedra();
     if(geom3DPtr->getPolyhedraAttributeMatrixId().has_value())
     {
-      geometryNode["polyhedron_data_path"] = geom3DPtr->getPolyhedronAttributeMatrixDataPath().toString();
+      geometryNode[Keys::k_PolyhedronDataPath.view()] = geom3DPtr->getPolyhedronAttributeMatrixDataPath().toString();
     }
   }
 }
@@ -242,10 +281,10 @@ void appendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0
 void appendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
 {
   nlohmann::json geometryNode;
-  geometryNode["geometry_type"] = IGeometry::GeomTypeToString(geometry.getGeomType());
-  geometryNode["unit_dimensionality"] = geometry.getUnitDimensionality();
-  geometryNode["length_units"] = IGeometry::LengthUnitToString(geometry.getUnits());
-  geometryNode["num_cells"] = geometry.getNumberOfCells();
+  geometryNode[Keys::k_GeometryType.view()] = IGeometry::GeomTypeToString(geometry.getGeomType());
+  geometryNode[Keys::k_UnitDimensionality.view()] = geometry.getUnitDimensionality();
+  geometryNode[Keys::k_LengthUnits.view()] = IGeometry::LengthUnitToString(geometry.getUnits());
+  geometryNode[Keys::k_NumCells.view()] = geometry.getNumberOfCells();
 
   if(const auto* gridGeometryPtr = dynamic_cast<const IGridGeometry*>(&geometry); gridGeometryPtr != nullptr)
   {
@@ -256,7 +295,7 @@ void appendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
     appendNodeGeometryFields(geometryNode, *nodeGeometryPtr);
   }
 
-  node["geometry"] = std::move(geometryNode);
+  node[Keys::k_Geometry.view()] = std::move(geometryNode);
 }
 
 /**
@@ -268,10 +307,10 @@ void appendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
 nlohmann::json makeObjectNode(const DataObject& object, const DataPath& path)
 {
   nlohmann::json node;
-  node["name"] = object.getName();
-  node["path"] = path.toString();
-  node["id"] = object.getId();
-  node["type"] = object.getTypeName();
+  node[Keys::k_Name.view()] = object.getName();
+  node[Keys::k_Path.view()] = path.toString();
+  node[Keys::k_Id.view()] = object.getId();
+  node[Keys::k_Type.view()] = object.getTypeName();
 
   if(const auto* geometryPtr = dynamic_cast<const IGeometry*>(&object); geometryPtr != nullptr)
   {
@@ -294,7 +333,7 @@ nlohmann::json makeObjectNode(const DataObject& object, const DataPath& path)
     appendNeighborListFields(node, *neighborListPtr);
   }
 
-  node["children"] = nlohmann::json::array();
+  node[Keys::k_Children.view()] = nlohmann::json::array();
   return node;
 }
 
@@ -374,8 +413,8 @@ nlohmann::json makeHierarchyNode(const DataObject& object, const DataPath& path)
       continue;
     }
 
-    const std::vector<const DataObject*> sortedChildPtrs = data_structure_export::GetSortedObjectPointers(groupPtr->getDataMap());
-    auto& children = pendingNode.getJson().at("children").get_ref<nlohmann::json::array_t&>();
+    const std::vector<const DataObject*> sortedChildPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
+    auto& children = pendingNode.getJson().at(Keys::k_Children.view()).get_ref<nlohmann::json::array_t&>();
     // Reserve before pendingNodes stores pointers to child JSON values.
     children.reserve(sortedChildPtrs.size());
     for(const DataObject* childPtr : sortedChildPtrs)
@@ -392,11 +431,11 @@ nlohmann::json makeHierarchyNode(const DataObject& object, const DataPath& path)
 nlohmann::json DataStructure::exportHierarchyAsJson() const
 {
   nlohmann::json root;
-  root["schema_version"] = k_HierarchyJsonSchemaVersion;
-  root["objects"] = nlohmann::json::array();
+  root[Keys::k_SchemaVersion.view()] = k_HierarchyJsonSchemaVersion;
+  root[Keys::k_Objects.view()] = nlohmann::json::array();
 
-  auto& objects = root["objects"].get_ref<nlohmann::json::array_t&>();
-  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export::GetSortedObjectPointers(m_RootGroup);
+  auto& objects = root[Keys::k_Objects.view()].get_ref<nlohmann::json::array_t&>();
+  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
   objects.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : rootObjectPtrs)
   {
