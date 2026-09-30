@@ -23,7 +23,7 @@ namespace
 const std::string k_PointCloudName = "PointCloud";
 const std::string k_GridGeomName = "GridGeom";
 const std::string k_NewGeomName = "NewImageGeom";
-const std::string k_DefaultMaskName = "Shared Voxels Mask";
+const std::string k_DefaultMaskName = "Voxel Mask";
 
 const DataPath k_VertexGeomPath({k_PointCloudName});
 const DataPath k_GridGeomPath({k_GridGeomName});
@@ -131,7 +131,7 @@ Arguments MakeNewGeomArgs(const std::vector<int32>& numPartitions, const std::st
   return args;
 }
 
-// Use for Advanced mode (TC-E1, TC-P8). origin and cellLength fix the new geometry's position/spacing.
+// Use for Advanced mode (TC-E1, TC-P8, TC-P10). origin and cellLength fix the new geometry's position/spacing.
 Arguments MakeAdvancedArgs(const std::vector<int32>& numPartitions, const std::vector<float32>& origin, const std::vector<float32>& cellLength, const std::string& maskName = k_DefaultMaskName)
 {
   Arguments args;
@@ -146,7 +146,7 @@ Arguments MakeAdvancedArgs(const std::vector<int32>& numPartitions, const std::v
   return args;
 }
 
-// Use for BoundingBox mode (TC-F1, TC-P9). The filter derives cell spacing from (max-min)/numPartitions.
+// Use for BoundingBox mode (TC-F1, TC-F2, TC-P9). The filter derives cell spacing from (max-min)/numPartitions.
 Arguments MakeBoundingBoxArgs(const std::vector<int32>& numPartitions, const std::vector<float32>& minCoord, const std::vector<float32>& maxCoord, const std::string& maskName = k_DefaultMaskName)
 {
   Arguments args;
@@ -163,7 +163,7 @@ Arguments MakeBoundingBoxArgs(const std::vector<int32>& numPartitions, const std
 } // namespace
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Path A — UseExistingGeom = false  (new ImageGeom auto-sized from point cloud)
+// Mode: Basic — new ImageGeom auto-sized from the point cloud bounding box
 // ═════════════════════════════════════════════════════════════════════════════
 TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore][VoxelizePointCloudFilter]")
 {
@@ -171,20 +171,23 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A1: All points — including the max-boundary corner — are included after auto-sizing")
   {
-    // 10 partitions over extent=10 → spacing≈1.  ResizeImageGeom: padding=0.01, distance≈10.02,
-    // dims=ceil(10.02/1)={11,11,11}, origin≈(-0.01,-0.01,-0.01).
+    // N=10 per axis.  extent=10, 0.1% padding=0.01 per side → paddedDist=10.02.
+    // dims={10,10,10} (user-requested), spacing=10.02/10=1.002, origin≈-0.01.
     //
-    // Flat index = z*11*11 + y*11 + x  (dims={11,11,11})
-    //   (0,0,0)   → cell (0,0,0)   → flat 0
-    //   (2,3,4)   → cell (2,3,4)   → flat 4*121+3*11+2  = 519
-    //   (7,5,8)   → cell (7,5,8)   → flat 8*121+5*11+7  = 1030
-    //   (10,10,10)→ cell (10,10,10)→ flat 10*121+10*11+10 = 1330
+    // (7.5,5.5,8.5) avoids y=5 landing on the exact cell boundary -0.01+5×1.002=5.0,
+    // which is float-rounding ambiguous in float32.
+    //
+    // Flat index = z*100 + y*10 + x  (dims={10,10,10})
+    //   (0,0,0)         → xRaw=0.01/1.002≈0.010  → cell (0,0,0)   → flat   0
+    //   (2,3,4)         → xRaw=2.01/1.002≈2.006  → cell (2,3,4)   → flat 432
+    //   (7.5,5.5,8.5)   → xRaw=7.51/1.002≈7.495  → cell (7,5,8)   → flat 857
+    //   (10,10,10)      → xRaw=10.01/1.002≈9.990 → cell (9,9,9)   → flat 999
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {
                                         {0.0f, 0.0f, 0.0f},
                                         {10.0f, 10.0f, 10.0f},
                                         {2.0f, 3.0f, 4.0f},
-                                        {7.0f, 5.0f, 8.0f},
+                                        {7.5f, 5.5f, 8.5f},
                                     });
 
     VoxelizePointCloudFilter filter;
@@ -193,20 +196,20 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath));
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
-    REQUIRE(newGeom.getDimensions() == SizeVec3{11, 11, 11});
+    REQUIRE(newGeom.getDimensions() == SizeVec3{10, 10, 10});
 
     const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(maskPath));
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
 
-    REQUIRE(mask.getNumberOfTuples() == 1331u);             // 11*11*11
-    REQUIRE(mask.getTupleShape() == ShapeType{11, 11, 11}); // {z, y, x} row-major
+    REQUIRE(mask.getNumberOfTuples() == 1000u);             // 10*10*10
+    REQUIRE(mask.getTupleShape() == ShapeType{10, 10, 10}); // {z, y, x} row-major
     REQUIRE(CountMarked(dataStructure, maskPath) == 4u);    // all 4 points included
 
-    REQUIRE(mask[0] == 1u);    // (0,0,0)
-    REQUIRE(mask[519] == 1u);  // (2,3,4)
-    REQUIRE(mask[1030] == 1u); // (7,5,8)
-    REQUIRE(mask[1330] == 1u); // (10,10,10)
+    REQUIRE(mask[0] == 1u);   // (0,0,0)     → cell (0,0,0)
+    REQUIRE(mask[432] == 1u); // (2,3,4)     → cell (2,3,4)
+    REQUIRE(mask[857] == 1u); // (7.5,5.5,8.5) → cell (7,5,8)
+    REQUIRE(mask[999] == 1u); // (10,10,10)  → cell (9,9,9)
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -225,10 +228,10 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A3: Single point — zero-extent bounding box collapses to 1x1x1 geometry")
   {
-    // 1 partition over zero extent → spacing=2e-6 (from GeometryUtilities 1e-6 padding).
-    // ResizeImageGeom: 0.1% padding of zero side-length is 0, nextafter gives ±1 ULP
-    // of expansion (≈9.5e-7 at magnitude 5), so distance≈1.9e-6, dims=max(1,ceil(0.95))=1.
-    // origin=nextafter(5,-inf). Point maps to xRaw≈0.48→xPos=0 → cell(0,0,0) → flat 0.
+    // N={1,1,1}.  0.1% padding of zero side-length is 0; nextafter gives ±1 ULP of expansion
+    // (≈4.8e-7 at magnitude 5), so distance≈9.5e-7 (normal float, >> float32::min()).
+    // dims={1,1,1} from preflight; spacing=distance/1≈9.5e-7.  origin=nextafter(5,-inf).
+    // Point maps to xRaw≈0.5→xPos=0 → cell(0,0,0) → flat 0.
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{5.0f, 5.0f, 5.0f}});
 
@@ -250,13 +253,14 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
 
   SECTION("TC-A4: Planar point cloud (zero Z extent) — collapses Z to 1, XY sized normally")
   {
-    // {2,3,1} partitions over extent=(2,3,0) → spacing≈(1,1,2e-6).
-    // ResizeImageGeom: padding=(0.002,0.003,0). Z uses nextafter expansion (±1 subnormal ULP)
-    // giving distance_z≈2.8e-45; ceil(2.8e-45/2e-6)=1, clamped to max(1,1)=1.
-    // dims={3,4,1}, origin≈(-0.002,-0.003,0), sliceSize=3*4=12.
-    //   (0,0,0) → xRaw=0.002→xPos=0, yRaw=0.003→yPos=0, zPos=0 → flat 0
-    //   (2,0,0) → xRaw=2.002→xPos=2, yPos=0, zPos=0            → flat 2
-    //   (0,3,0) → xPos=0, yRaw=3.003→yPos=3, zPos=0            → flat 9
+    // N={2,3,1} over extent=(2,3,0).  0.1% padding=(0.002,0.003,0); nextafter expands Z
+    // by ±1 subnormal ULP → distance_z=2.8e-45 (subnormal).  spacing_z is clamped to
+    // float32::min()≈1.175e-38 so that 1/spacing_z stays finite.
+    // XY: paddedDist=(2.004,3.006), spacing=(1.002,1.002).
+    // origin≈(-0.002,-0.003,nextafter(0,-inf)), sliceSize=2*3=6.
+    //   (0,0,0) → xRaw=0.002/1.002≈0.002→xPos=0, yPos=0, zPos=0 → flat 0
+    //   (2,0,0) → xRaw=2.002/1.002≈1.998→xPos=1, yPos=0, zPos=0 → flat 1
+    //   (0,3,0) → xPos=0, yRaw=3.003/1.002≈2.997→yPos=2, zPos=0 → flat 4
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{0.0f, 0.0f, 0.0f}, {2.0f, 0.0f, 0.0f}, {0.0f, 3.0f, 0.0f}});
 
@@ -265,34 +269,29 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
-    REQUIRE(newGeom.getDimensions() == SizeVec3{3, 4, 1});
+    REQUIRE(newGeom.getDimensions() == SizeVec3{2, 3, 1});
 
     const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
-    REQUIRE(mask.getNumberOfTuples() == 12u);
-    REQUIRE(mask.getTupleShape() == ShapeType{1, 4, 3}); // {z=1, y=4, x=3} — distinguishes {12} from {1,4,3}
+    REQUIRE(mask.getNumberOfTuples() == 6u);
+    REQUIRE(mask.getTupleShape() == ShapeType{1, 3, 2}); // {z=1, y=3, x=2} — distinguishes {6} from {1,3,2}
     REQUIRE(CountMarked(dataStructure, maskPath) == 3u);
-    REQUIRE(mask[0] == 1u);
-    REQUIRE(mask[2] == 1u);
-    REQUIRE(mask[9] == 1u);
+    REQUIRE(mask[0] == 1u); // (0,0,0)
+    REQUIRE(mask[1] == 1u); // (2,0,0)
+    REQUIRE(mask[4] == 1u); // (0,3,0)
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("TC-A5: Cloud far from origin — sub-ULP padding is rescued by nextafter expansion")
   {
-    // At 1e7f the float32 ULP is 1.0, so 0.1% of a 2.0f extent = 0.002f rounds
-    // to zero when added to the bounding-box faces.  Without the nextafter fix the
-    // padded extent stays at 2.0f, dims={2,2,2}, and the max-boundary point hits
-    // xRaw==dims[0] and is silently excluded.
-    // 2 partitions over extent=2 → spacing=1.  With nextafter:
-    //   minPoint ≈ 9999999.0f  (one ULP below origMin)
-    //   maxPoint ≈ 10000003.0f (one ULP above origMax)
-    //   distance = 4.0f → dims=ceil(4/1) = {4,4,4}
+    // At 1e7 the float32 ULP is 1.0, so 0.1% of extent=2 rounds to zero.
+    // nextafter expands: minPoint=9999999, maxPoint=10000003, distance=4.
+    // N={2,2,2} from preflight; spacing=4/2=2, origin=9999999.
     //
-    // sliceSize = 4*4 = 16.  flat = z*16 + y*4 + x.
-    //   (1e7,   1e7,   1e7  ) → cell(1,1,1) → flat 21  (1*16 + 1*4 + 1)
-    //   (1e7+2, 1e7+2, 1e7+2) → cell(3,3,3) → flat 63  (3*16 + 3*4 + 3)
+    // sliceSize=2*2=4.  flat = z*4 + y*2 + x.
+    //   (1e7,   1e7,   1e7  ) → xRaw=(1e7-9999999)/2=0.5→cell 0 → flat  0
+    //   (1e7+2, 1e7+2, 1e7+2) → xRaw=(1e7+2-9999999)/2=1.5→cell 1 → flat  7  (1*4+1*2+1)
     constexpr float32 k_Base = 10000000.0f; // 1e7 — ULP = 1.0 at this magnitude
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{k_Base, k_Base, k_Base}, {k_Base + 2.0f, k_Base + 2.0f, k_Base + 2.0f}});
@@ -302,26 +301,58 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
-    REQUIRE(newGeom.getDimensions() == SizeVec3{4, 4, 4});
+    REQUIRE(newGeom.getDimensions() == SizeVec3{2, 2, 2});
 
     const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
 
     REQUIRE(CountMarked(dataStructure, maskPath) == 2u);
-    REQUIRE(mask[21] == 1u);
-    REQUIRE(mask[63] == 1u);
+    REQUIRE(mask[0] == 1u); // (1e7,1e7,1e7)     → cell (0,0,0)
+    REQUIRE(mask[7] == 1u); // (1e7+2,1e7+2,1e7+2) → cell (1,1,1)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("TC-A7: Planar cloud at z=100 — nextafter expansion produces valid spacing even when proportional padding vanishes")
+  {
+    // Side-length Z=0 (all points at z=100); 0.1% padding vanishes.  ResizeImageGeom's
+    // nextafter expansion gives distance_z=2*ULP(100)≈1.5e-5 (a normal float — unlike
+    // TC-A4 where z=0 gives subnormals).  spacing_z=distance_z/1≈1.5e-5; no clamping needed.
+    // XY is identical to TC-A4: paddedDist=(2.004,3.006), spacing=(1.002,1.002).
+    // dims={2,3,1} from preflight, sliceSize=2*3=6, flat = z*6 + y*2 + x.
+    //   (0,0,100) → xRaw≈0.002→xPos=0, yPos=0, zPos=0 → flat 0
+    //   (2,0,100) → xRaw≈1.998→xPos=1, yPos=0, zPos=0 → flat 1
+    //   (0,3,100) → xPos=0, yRaw≈2.997→yPos=2, zPos=0 → flat 4
+    DataStructure dataStructure;
+    CreatePointCloud(dataStructure, {{0.0f, 0.0f, 100.0f}, {2.0f, 0.0f, 100.0f}, {0.0f, 3.0f, 100.0f}});
+
+    VoxelizePointCloudFilter filter;
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({2, 3, 1}));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
+    REQUIRE(newGeom.getDimensions() == SizeVec3{2, 3, 1});
+
+    const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
+    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
+    REQUIRE(mask.getNumberOfTuples() == 6u);
+    REQUIRE(mask.getTupleShape() == ShapeType{1, 3, 2});
+    REQUIRE(CountMarked(dataStructure, maskPath) == 3u);
+    REQUIRE(mask[0] == 1u); // (0,0,100)
+    REQUIRE(mask[1] == 1u); // (2,0,100)
+    REQUIRE(mask[4] == 1u); // (0,3,100)
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("TC-A6: Large-extent cloud with coarse partitioning produces correct small grid")
   {
-    // 3 partitions over extent=30000 → spacing=10000. ResizeImageGeom: 0.1% padding=30,
-    // distance=30060, dims=ceil(30060/10000)=4 → {4,4,4}, origin=(-30,-30,-30).
+    // N={3,3,3} over extent=30000.  0.1% padding=30 per side; paddedDist=30060.
+    // dims={3,3,3} from preflight; spacing=30060/3=10020, origin=-30.
     //
-    // sliceSize=16.  flat = z*16 + y*4 + x.
-    //   (0,0,0)         → xRaw=30/10000=0.003→xPos=0 → flat   0
-    //   (30000,30000,30000) → xRaw=30030/10000=3.003→xPos=3 → flat  63
+    // sliceSize=9.  flat = z*9 + y*3 + x.
+    //   (0,0,0)             → xRaw=30/10020≈0.003→xPos=0 → flat  0
+    //   (30000,30000,30000) → xRaw=30030/10020≈2.997→xPos=2 → flat 26  (2*9+2*3+2)
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{0.0f, 0.0f, 0.0f}, {30000.0f, 30000.0f, 30000.0f}});
 
@@ -330,20 +361,20 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: New ImageGeom", "[SimplnxCore]
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
-    REQUIRE(newGeom.getDimensions() == SizeVec3{4, 4, 4});
+    REQUIRE(newGeom.getDimensions() == SizeVec3{3, 3, 3});
 
     const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
     REQUIRE(CountMarked(dataStructure, maskPath) == 2u);
     REQUIRE(mask[0] == 1u);
-    REQUIRE(mask[63] == 1u);
+    REQUIRE(mask[26] == 1u);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Path B — UseExistingGeom = true, destination is an ImageGeom
+// Mode: ExistingPartitionGrid — destination is an ImageGeom
 // ═════════════════════════════════════════════════════════════════════════════
 TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Existing ImageGeom", "[SimplnxCore][VoxelizePointCloudFilter]")
 {
@@ -599,7 +630,7 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Existing ImageGeom", "[Simplnx
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Path C — UseExistingGeom = true, destination is a RectGridGeom
+// Mode: ExistingPartitionGrid — destination is a RectGridGeom
 // ═════════════════════════════════════════════════════════════════════════════
 TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Existing RectGridGeom", "[SimplnxCore][VoxelizePointCloudFilter]")
 {
@@ -899,6 +930,39 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: BoundingBox Mode", "[SimplnxCo
 {
   UnitTest::LoadPlugins();
 
+  SECTION("TC-F2: Planar cloud at z=100 in BoundingBox mode — safeExtent prevents silent all-zero mask")
+  {
+    // DataCheckBoundingBoxCoords uses >, not >=, so min.z==max.z==100 passes preflight.
+    // Without the fix: spacingZ=(100-100)/1=0, zInv=inf, zRaw=0*inf=NaN for every point → all skipped.
+    // After the fix: safeExtent gives spacingZ≈1.5e-5, zRaw=0 for all z=100 points → land in zPos=0.
+    // min={-1,-1,100}, max={6,6,100}, N={2,2,1}.
+    // spacing={7/2,7/2,~1.5e-5}={3.5,3.5,~1.5e-5}, origin={-1,-1,100}, dims={2,2,1}, sliceSize=4.
+    // flat = z*4 + y*2 + x.
+    //   (0,0,100) → xRaw=1/3.5≈0.286→0, yRaw≈0.286→0, zPos=0 → flat 0
+    //   (5,0,100) → xRaw=6/3.5≈1.714→1, yRaw≈0.286→0, zPos=0 → flat 1
+    //   (0,5,100) → xRaw≈0.286→0,       yRaw≈1.714→1, zPos=0 → flat 2
+    DataStructure dataStructure;
+    CreatePointCloud(dataStructure, {{0.0f, 0.0f, 100.0f}, {5.0f, 0.0f, 100.0f}, {0.0f, 5.0f, 100.0f}});
+
+    VoxelizePointCloudFilter filter;
+    auto executeResult = filter.execute(dataStructure, MakeBoundingBoxArgs({2, 2, 1}, {-1.0f, -1.0f, 100.0f}, {6.0f, 6.0f, 100.0f}));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewGeomPath);
+    REQUIRE(newGeom.getDimensions() == SizeVec3{2, 2, 1});
+
+    const DataPath maskPath = k_NewGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath(k_DefaultMaskName);
+    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
+    REQUIRE(mask.getNumberOfTuples() == 4u);
+    REQUIRE(mask.getTupleShape() == ShapeType{1, 2, 2});
+    REQUIRE(CountMarked(dataStructure, maskPath) == 3u);
+    REQUIRE(mask[0] == 1u);
+    REQUIRE(mask[1] == 1u);
+    REQUIRE(mask[2] == 1u);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
   SECTION("TC-F1: Explicit bounding box produces the correct geometry and mask")
   {
     // min={0,0,0}, max={10,10,10}, 5 cells/axis → spacing=(10-0)/5={2,2,2}, origin={0,0,0}, dims={5,5,5}.
@@ -1085,7 +1149,8 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Preflight validation", "[Simpl
 
   SECTION("TC-P7: Zero X partitions in Basic mode triggers error -3012")
   {
-    // DataCheckNumberOfPartitions: static_cast<usize>(0) == 0, 0 <= 0 → error -3012.
+    // DataCheckNumberOfPartitions(std::vector<int32>): int32 value 0 <= 0 → error -3012
+    // (caught before cast to usize).
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{0.5f, 0.5f, 0.5f}});
 
@@ -1096,14 +1161,43 @@ TEST_CASE("SimplnxCore::VoxelizePointCloudFilter: Preflight validation", "[Simpl
     REQUIRE(executeResult.result.errors()[0].code == -3012);
   }
 
+  SECTION("TC-P11: Negative X partitions in Basic mode triggers error -3012")
+  {
+    // DataCheckNumberOfPartitions(std::vector<int32>): int32 value -1 <= 0 → error -3012.
+    // Without the pre-cast check, static_cast<usize>(-1) = SIZE_MAX which passes the
+    // SizeVec3-based check and causes the filter to request a ~2^64-voxel allocation.
+    DataStructure dataStructure;
+    CreatePointCloud(dataStructure, {{0.5f, 0.5f, 0.5f}});
+
+    VoxelizePointCloudFilter filter;
+    auto executeResult = filter.execute(dataStructure, MakeNewGeomArgs({-1, 5, 5}));
+
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -3012);
+  }
+
   SECTION("TC-P8: Negative X cell length in Advanced mode triggers error -3003")
   {
-    // DataCheckCellLength: -1.0f < 0 → error -3003.
+    // DataCheckCellLength: -1.0f <= 0 → error -3003.
     DataStructure dataStructure;
     CreatePointCloud(dataStructure, {{0.5f, 0.5f, 0.5f}});
 
     VoxelizePointCloudFilter filter;
     auto executeResult = filter.execute(dataStructure, MakeAdvancedArgs({5, 5, 5}, {0.0f, 0.0f, 0.0f}, {-1.0f, 1.0f, 1.0f}));
+
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -3003);
+  }
+
+  SECTION("TC-P10: Zero X cell length in Advanced mode triggers error -3003")
+  {
+    // DataCheckCellLength: 0.0f <= 0 → error -3003.  A zero cell length gives spacing=0,
+    // which causes 1/spacing=inf in CalculateImageVoxelMask and silently skips every point.
+    DataStructure dataStructure;
+    CreatePointCloud(dataStructure, {{0.5f, 0.5f, 0.5f}});
+
+    VoxelizePointCloudFilter filter;
+    auto executeResult = filter.execute(dataStructure, MakeAdvancedArgs({5, 5, 5}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 1.0f}));
 
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -3003);

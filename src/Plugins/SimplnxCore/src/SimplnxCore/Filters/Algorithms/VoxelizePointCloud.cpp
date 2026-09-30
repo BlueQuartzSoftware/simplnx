@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <limits>
 #include <new>
@@ -39,11 +39,8 @@ Result<usize> CalculateImageVoxelMask(const INodeGeometry0D::SharedVertexList& p
 
   usize skipped = 0;
 
-  MessageHelper msgHelper(messageHandler);
-  auto progressHelper = msgHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(numTup);
-  progressHelper.setProgressMessageTemplate("Voxelizing points: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressMessenger(messageHandler);
+  progressMessenger.reset(numTup, "Voxelizing points:");
 
   for(usize i = 0; i < numTup; i++)
   {
@@ -53,7 +50,7 @@ Result<usize> CalculateImageVoxelMask(const INodeGeometry0D::SharedVertexList& p
     }
     if((i & (k_ProgressInterval - 1)) == 0)
     {
-      progressMessenger.sendProgressMessage(k_ProgressInterval);
+      progressMessenger.updateCount(i);
     }
 
     const float32 xRaw = (vertices.getValue(i * 3) - origin[0]) * xInv;
@@ -106,11 +103,8 @@ Result<usize> CalculateRectGridVoxelMask(const INodeGeometry0D::SharedVertexList
 
   usize skipped = 0;
 
-  MessageHelper msgHelper(messageHandler);
-  auto progressHelper = msgHelper.createProgressMessageHelper();
-  progressHelper.setMaxProgresss(numTup);
-  progressHelper.setProgressMessageTemplate("Voxelizing points: {:.1f}%");
-  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+  ThrottledMessageHandler progressMessenger(messageHandler);
+  progressMessenger.reset(numTup, "Voxelizing points:");
 
   for(usize i = 0; i < numTup; i++)
   {
@@ -120,7 +114,7 @@ Result<usize> CalculateRectGridVoxelMask(const INodeGeometry0D::SharedVertexList
     }
     if((i & (k_ProgressInterval - 1)) == 0)
     {
-      progressMessenger.sendProgressMessage(k_ProgressInterval);
+      progressMessenger.updateCount(i);
     }
     const usize xPos = std::upper_bound(xBounds.begin(), xBounds.end(), vertices.getValue(i * 3)) - xBounds.begin();
     if(xPos == 0 || xPos > dims[0])
@@ -151,7 +145,6 @@ Result<usize> CalculateRectGridVoxelMask(const INodeGeometry0D::SharedVertexList
 Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* imageGeom)
 {
   constexpr float32 k_PaddingMult = 0.001f; // will add 0.1% of the side lengths of the bounding box
-  const FloatVec3 spacing = imageGeom->getSpacing();
 
   const BoundingBox3Df bounds = pointCloud.getBoundingBox();
 
@@ -179,10 +172,18 @@ Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* imageGeom
                           std::max(rawMaxPoint[2], std::nextafter(origMax[2], k_Inf))};
   distance = maxPoint - minPoint;
 
-  const SizeVec3 dims{std::max(usize{1}, static_cast<usize>(std::ceil(distance[0] / spacing[0]))), std::max(usize{1}, static_cast<usize>(std::ceil(distance[1] / spacing[1]))),
-                      std::max(usize{1}, static_cast<usize>(std::ceil(distance[2] / spacing[2])))};
+  // Keep the user-requested cell count (set in preflight from Number Of Cells Per Axis).
+  // Derive spacing from the padded extent so that exactly dims[i] cells cover the region.
+  // Clamp to float32::min so that a subnormal padded extent (e.g. a planar cloud at z=0
+  // where nextafter gives ±1.4e-45) does not produce a subnormal spacing, which would
+  // make 1/spacing overflow to infinity and cause every point to fail the bounds check.
+  const SizeVec3 dims = imageGeom->getDimensions();
+  constexpr float32 k_MinSpacing = std::numeric_limits<float32>::min();
+  const FloatVec3 spacing{std::max(k_MinSpacing, distance[0] / static_cast<float32>(dims[0])), std::max(k_MinSpacing, distance[1] / static_cast<float32>(dims[1])),
+                          std::max(k_MinSpacing, distance[2] / static_cast<float32>(dims[2]))};
 
   imageGeom->setDimensions(dims);
+  imageGeom->setSpacing(spacing);
   imageGeom->setOrigin(minPoint);
 
   auto* cellData = imageGeom->getCellData();
@@ -194,9 +195,7 @@ Result<> ResizeImageGeom(const INodeGeometry0D& pointCloud, ImageGeom* imageGeom
     }
   } catch(const std::bad_alloc&)
   {
-    return MakeErrorResult(-45982, fmt::format("Failed to allocate voxel grid of {}x{}x{} voxels. "
-                                               "The point cloud extent relative to the current spacing is too large.",
-                                               dims[0], dims[1], dims[2]));
+    return MakeErrorResult(-45982, fmt::format("Failed to allocate voxel grid of {}x{}x{} voxels.", dims[0], dims[1], dims[2]));
   }
 
   return {};
@@ -224,8 +223,8 @@ Result<> VoxelizePointCloud::operator()()
   auto emitSkipWarning = [&](usize skipped) {
     if(skipped > 0)
     {
-      m_MessageHandler(IFilter::Message{IFilter::Message::Type::Warning,
-                                        fmt::format("{} of {} point(s) had non-finite coordinates or fell outside the destination geometry and were not voxelized.", skipped, numPoints)});
+      m_MessageHandler.sendMessage(IFilter::Message{IFilter::Message::Type::Warning,
+                                                    fmt::format("{} of {} point(s) had non-finite coordinates or fell outside the destination geometry and were not voxelized.", skipped, numPoints)});
     }
   };
 

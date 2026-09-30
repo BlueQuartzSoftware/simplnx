@@ -104,19 +104,39 @@ inline Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPe
   return {};
 }
 
+// Overload that accepts the raw VectorInt32Parameter values before the signed→usize cast.
+// A negative int32 cast to usize wraps to a huge positive number and would pass the SizeVec3
+// overload above; checking here while the values are still signed catches that case.
+inline Result<> DataCheckNumberOfPartitions(const std::vector<int32>& numberOfPartitionsPerAxis)
+{
+  if(numberOfPartitionsPerAxis[0] <= 0)
+  {
+    return MakeErrorResult(-3012, fmt::format("Number of Partitions Per Axis: The X dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis[0]));
+  }
+  if(numberOfPartitionsPerAxis[1] <= 0)
+  {
+    return MakeErrorResult(-3013, fmt::format("Number of Partitions Per Axis: The Y dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis[1]));
+  }
+  if(numberOfPartitionsPerAxis[2] <= 0)
+  {
+    return MakeErrorResult(-3014, fmt::format("Number of Partitions Per Axis: The Z dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis[2]));
+  }
+  return {};
+}
+
 inline Result<> DataCheckCellLength(std::string_view filterName, const FloatVec3& lengthPerPartition)
 {
-  if(lengthPerPartition.getX() < 0)
+  if(lengthPerPartition.getX() <= 0)
   {
-    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value ({}) cannot be negative.", filterName, lengthPerPartition.getX()));
+    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value ({}) must be greater than zero.", filterName, lengthPerPartition.getX()));
   }
-  if(lengthPerPartition.getY() < 0)
+  if(lengthPerPartition.getY() <= 0)
   {
-    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value ({}) cannot be negative.", filterName, lengthPerPartition.getY()));
+    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value ({}) must be greater than zero.", filterName, lengthPerPartition.getY()));
   }
-  if(lengthPerPartition.getZ() < 0)
+  if(lengthPerPartition.getZ() <= 0)
   {
-    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value ({}) cannot be negative.", filterName, lengthPerPartition.getZ()));
+    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value ({}) must be greater than zero.", filterName, lengthPerPartition.getZ()));
   }
   return {};
 }

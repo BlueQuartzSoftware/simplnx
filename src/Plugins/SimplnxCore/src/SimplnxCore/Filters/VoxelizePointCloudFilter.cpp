@@ -67,8 +67,8 @@ Parameters VoxelizePointCloudFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_MaskArrayName_Key, "Voxel Mask Name", "Name of the array containing a mask of active voxels in the overlapped Geometries", "Shared Voxels Mask"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MaskArrayName_Key, "Voxel Mask Name",
+                                                          "Name of the UInt8 array that is 1 for each voxel that contains one or more points and 0 for all other voxels.", "Voxel Mask"));
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "New Image Geometry", "The path to the new geometry that will wrap the point cloud", DataPath({"Image Geometry"})));
 
@@ -167,10 +167,12 @@ IFilter::PreflightResult VoxelizePointCloudFilter::preflightImpl(const DataStruc
     const auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PUP::k_MinGridCoord_Key);
     const auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PUP::k_MaxGridCoord_Key);
 
+    // Check signed values before cast: negative int32 wraps to a huge usize and passes
+    // the SizeVec3-based overload, so the int32 overload must be called first.
+    Result<> result = PU::DataCheckNumberOfPartitions(pNumberOfCellsPerAxisValue);
+
     const SizeVec3 numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
                                                 static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
-
-    Result<> result = PU::DataCheckNumberOfPartitions(numberOfPartitionsPerAxis);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(result), {})};
