@@ -111,29 +111,37 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, geometry.getDimensions().toContainer<std::vector<size_t>>());
+  AppendWriteResult(result, groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, geometry.getDimensions().toContainer<std::vector<size_t>>()));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry dimensions for '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry dimensions for '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
-  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, geometry.getOrigin().toContainer<std::vector<float32>>());
+  AppendWriteResult(result, groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, geometry.getOrigin().toContainer<std::vector<float32>>()));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry origin for '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry origin for '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
-  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, geometry.getSpacing().toContainer<std::vector<float32>>());
+  AppendWriteResult(result, groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, geometry.getSpacing().toContainer<std::vector<float32>>()));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry spacing for '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry spacing for '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  AppendWriteResult(result, groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits())));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  return {};
+  return result;
 }
 
 Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
