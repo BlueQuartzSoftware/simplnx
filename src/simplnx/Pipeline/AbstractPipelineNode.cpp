@@ -5,7 +5,11 @@
 #include "simplnx/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
+
+#include <exception>
+#include <new>
 
 #include <algorithm>
 
@@ -65,7 +69,8 @@ const DataStructure& AbstractPipelineNode::getDataStructure() const
 
 void AbstractPipelineNode::setDataStructure(const DataStructure& dataStructure)
 {
-  m_DataStructure = dataStructure;
+  DataStructure candidate(dataStructure);
+  m_DataStructure = std::move(candidate);
 }
 
 void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
@@ -117,6 +122,54 @@ void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
 {
   dataStructure.flush();
   setDataStructure(dataStructure);
+}
+
+bool AbstractPipelineNode::hasCompletionErrors() const
+{
+  return m_HasCompletionErrors;
+}
+
+void AbstractPipelineNode::setHasCompletionErrors(bool value)
+{
+  m_HasCompletionErrors = value;
+}
+
+Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
+{
+  auto result = dataStructure.flushChecked();
+  if(result.invalid() && result.errors().empty())
+  {
+    result.errors().push_back({-6071, fmt::format("Node '{}' checked flush failed without an error diagnostic.", getName())});
+  }
+  ErrorCollection snapshotErrors;
+  try
+  {
+    setDataStructure(dataStructure);
+  } catch(const std::bad_alloc&)
+  {
+    snapshotErrors.push_back({-272, fmt::format("Node '{}' completion snapshot failed because memory allocation failed.", getName())});
+  } catch(const std::exception& exception)
+  {
+    snapshotErrors.push_back({-6071, fmt::format("Node '{}' completion snapshot failed: {}", getName(), exception.what())});
+  } catch(...)
+  {
+    snapshotErrors.push_back({-6071, fmt::format("Node '{}' completion snapshot failed with an unknown exception.", getName())});
+  }
+  if(!snapshotErrors.empty())
+  {
+    if(result.valid())
+    {
+      result.m_Expected = nonstd::make_unexpected(std::move(snapshotErrors));
+    }
+    else
+    {
+      for(auto& error : snapshotErrors)
+      {
+        result.errors().push_back(std::move(error));
+      }
+    }
+  }
+  return result;
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)
