@@ -126,7 +126,7 @@ Result<> ComputeMDF::operator()()
 
     if(kde.totalWeight() <= 0.0)
     {
-      m_MessageHandler(IFilter::Message::Type::Warning, fmt::format("Phase {}: no same-phase feature boundaries found; MDF left as zeros", ensembleIndex));
+      m_MessageHandler.sendWarningMessage(fmt::format("Phase {}: no same-phase feature boundaries found; MDF left as zeros", ensembleIndex));
       mdfArrayRef.fill(0.0);
       // Still emit the angle axis and the Mackenzie (random) reference, with a zero measured density.
       auto curve = kde.computeAngleCurve(static_cast<usize>(m_InputValues->NumCurvePoints));
@@ -139,7 +139,7 @@ Result<> ComputeMDF::operator()()
       continue;
     }
 
-    m_MessageHandler(fmt::format("Phase {}: evaluating MDF on {} bins", ensembleIndex, mdfSize));
+    m_MessageHandler.sendInfoMessage(fmt::format("Phase {}: evaluating MDF on {} bins", ensembleIndex, mdfSize));
     // Evaluate the KDE at every bin center in parallel into a plain std::vector. KDE::evaluate() and
     // binCenter() are const and safe to call concurrently; the DataStore is written serially below
     // (DataArray/DataStore are NOT thread-safe).
@@ -157,7 +157,7 @@ Result<> ComputeMDF::operator()()
       mdfArrayRef[binIndex] = mdfValues[binIndex];
     }
 
-    m_MessageHandler(fmt::format("Phase {}: computing angle distribution curve", ensembleIndex));
+    m_MessageHandler.sendInfoMessage(fmt::format("Phase {}: computing angle distribution curve", ensembleIndex));
     auto curve = kde.computeAngleCurve(static_cast<usize>(m_InputValues->NumCurvePoints));
     for(usize i = 0; i < curve.Angles.size(); i++)
     {

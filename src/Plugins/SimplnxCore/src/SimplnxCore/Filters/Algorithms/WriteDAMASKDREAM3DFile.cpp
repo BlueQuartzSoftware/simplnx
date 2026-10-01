@@ -154,7 +154,7 @@ Result<> WriteDAMASKDREAM3DFile::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing canonical DAMASK DREAM3D file '{}'.", m_InputValues->OutputFile.string()));
+  m_MessageHandler.sendInfoMessage(fmt::format("Writing canonical DAMASK DREAM3D file '{}'.", m_InputValues->OutputFile.string()));
   HDF5::DataStructureWriter::WriteOptions writeOptions;
   writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
   result = DREAM3D::WriteFile(atomicFile.tempFilePath(), outputDataStructure, Pipeline{}, false, writeOptions);
