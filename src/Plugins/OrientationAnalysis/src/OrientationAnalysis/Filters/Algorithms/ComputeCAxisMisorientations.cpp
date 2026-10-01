@@ -63,7 +63,7 @@ Result<> ComputeCAxisMisorientations::operator()()
   const auto avgCAxesBuffer = std::make_unique<float32[]>(chunkTuples * k_CAxisComponents);
   const auto misorientationsBuffer = std::make_unique<float32[]>(chunkTuples);
 
-  m_MessageHandler({IFilter::Message::Type::Info, "Computing C-axis misorientations"});
+  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing C-axis misorientations"});
 
   for(usize tupleOffset = 0; tupleOffset < totalFeatures; tupleOffset += chunkTuples)
   {
@@ -105,7 +105,7 @@ Result<> ComputeCAxisMisorientations::operator()()
     }
   }
 
-  m_MessageHandler({IFilter::Message::Type::Info, "C-axis misorientation computation complete"});
+  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "C-axis misorientation computation complete"});
 
   return {};
 }
