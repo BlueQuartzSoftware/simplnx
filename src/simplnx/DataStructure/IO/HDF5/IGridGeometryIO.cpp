@@ -1,4 +1,5 @@
 #include "IGridGeometryIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
@@ -46,7 +47,7 @@ Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructu
   }
 
   auto groupWriter = parentGroup.createGroup(geometry.getName());
-  Result<> writeResult = WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag);
-  return writeResult;
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag));
+  return result;
 }
 } // namespace nx::core::HDF5

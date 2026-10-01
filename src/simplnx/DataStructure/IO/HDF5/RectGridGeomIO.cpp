@@ -1,4 +1,5 @@
 #include "RectGridGeomIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
@@ -116,37 +117,47 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     dimsVector[i] = dimensions[i];
   }
 
-  result = groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector);
+  AppendWriteResult(result, groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write dimensions for RectGridGeom '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write dimensions for RectGridGeom '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
   // Write the bounds array identifiers.
-  result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write X bounds for RectGridGeom '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write X bounds for RectGridGeom '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  result = WriteDataId(groupWriter, geometry.getYBoundsId(), IOConstants::k_YBoundsTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getYBoundsId(), IOConstants::k_YBoundsTag));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Y bounds for RectGridGeom '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Y bounds for RectGridGeom '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  result = WriteDataId(groupWriter, geometry.getZBoundsId(), IOConstants::k_ZBoundsTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getZBoundsId(), IOConstants::k_ZBoundsTag));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Z bounds for RectGridGeom '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Z bounds for RectGridGeom '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  AppendWriteResult(result, groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits())));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for RectGridGeom '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for RectGridGeom '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  return {};
+  return result;
 }
 
 Result<> RectGridGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const

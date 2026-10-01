@@ -1020,6 +1020,30 @@ foreach(plugin ${SIMPLNX_PLUGIN_LIST})
   simplnx_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
 
+# Register the completion acceptance cases after their real fixture/writer plugins exist.
+if(BUILD_TESTING AND SIMPLNX_BUILD_TESTS AND SIMPLNX_PLUGIN_ENABLE_TestOne AND SIMPLNX_ENABLE_SimplnxCore AND SIMPLNX_PLUGIN_ENABLE_SimplnxCore)
+  foreach(_completion_target IN ITEMS nxrunner TestOne SimplnxCore)
+    if(NOT TARGET ${_completion_target})
+      message(FATAL_ERROR "Completion CLI tests require target '${_completion_target}' after plugin registration")
+    endif()
+  endforeach()
+  add_dependencies(nxrunner TestOne SimplnxCore)
+  foreach(_completion_mode IN ITEMS unarmed flush execute_and_flush allocation snapshot root_snapshot snapshot_allocation)
+    add_test(NAME "nxrunner_pipeline_flush_${_completion_mode}"
+      COMMAND ${CMAKE_COMMAND}
+        "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+        "-DTEST_MODE=${_completion_mode}"
+        "-DSCRATCH_ROOT=${simplnx_BINARY_DIR}/CTestPipelineFlush/${_completion_mode}/$<CONFIG>"
+        -P "${simplnx_SOURCE_DIR}/src/nxrunner/test/PipelineFlushReachesUserTest.cmake"
+    )
+    set_tests_properties("nxrunner_pipeline_flush_${_completion_mode}" PROPERTIES
+      RUN_SERIAL TRUE
+      TIMEOUT 120
+      WORKING_DIRECTORY $<TARGET_FILE_DIR:nxrunner>
+    )
+  endforeach()
+endif()
+
 # Benchmarking utility
 if(SIMPLNX_ENABLE_BENCHMARK_UTILITY)
   add_subdirectory(utilities/benchmark)

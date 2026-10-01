@@ -62,6 +62,7 @@ set(SIMPLNX_TEST_SRCS
   PluginTest.cpp
   ParametersTest.cpp
   PipelineFilterMessagingTest.cpp
+  PipelineFlushTest.cpp
   PipelineSaveTest.cpp
   UuidTest.cpp
   Vec3Test.cpp

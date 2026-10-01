@@ -1,5 +1,6 @@
 #include "EdgeGeomIO.hpp"
 #include "DataStructureReader.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -56,45 +57,49 @@ Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const Dat
 Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
-  INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
-
-  Result<> result = WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag);
+  auto result = INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag));
   if(result.invalid())
   {
     return result;
   }
 
-  return {};
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag));
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  return result;
 }
 
 Result<> EdgeGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
