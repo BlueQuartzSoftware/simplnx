@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
 #include <array>
@@ -322,13 +322,11 @@ Result<> PottsModel::operator()()
   std::uniform_int_distribution<usize> siteDistribution(0, totalCells - 1);
   SpinLattice lattice(imageGeometry, m_InputValues->Temperature, m_InputValues->PeriodicBoundaries, featureIds, mask.get(), generator);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  auto progressHelper = messageHelper.createProgressMessageHelper();
   const usize iterationCount = static_cast<usize>(m_InputValues->Iterations);
   const usize maxTotalProgress = attemptsPerIteration > std::numeric_limits<usize>::max() / iterationCount ? std::numeric_limits<usize>::max() : iterationCount * attemptsPerIteration;
-  progressHelper.setMaxProgresss(maxTotalProgress);
-  auto progressMessenger = progressHelper.createProgressMessenger();
-  // The minimum batch reduces clock reads on typical volumes. The percentage term keeps one-percent granularity on large volumes.
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
+  progressThrottle.reset(maxTotalProgress, "Coarsening");
+  // The minimum batch reduces progress-reporting overhead on typical volumes. The percentage term keeps one-percent granularity on large volumes.
   const usize progressBatchSize = std::max<usize>(1024, attemptsPerIteration / 100);
 
   for(int32 iteration = 0; iteration < m_InputValues->Iterations; iteration++)
@@ -338,11 +336,8 @@ Result<> PottsModel::operator()()
       return {};
     }
 
+    progressThrottle.trySendMessage(fmt::format("Iteration {} of {}, {} total flips so far", iteration + 1, m_InputValues->Iterations, lattice.totalFlips()));
     usize pendingProgress = 0;
-    const auto progressMessage = [&lattice, &iteration, this](usize currentProgress, usize maxProgress) {
-      const usize percentComplete = currentProgress * 100 / maxProgress;
-      return fmt::format("Iteration {} of {} || {}% Completed || {} Total Flips", iteration + 1, m_InputValues->Iterations, percentComplete, lattice.totalFlips());
-    };
 
     for(usize attemptIndex = 0; attemptIndex < attemptsPerIteration; attemptIndex++)
     {
@@ -364,7 +359,7 @@ Result<> PottsModel::operator()()
       pendingProgress++;
       if(pendingProgress == progressBatchSize)
       {
-        progressMessenger.sendProgressMessage(pendingProgress, progressMessage);
+        progressThrottle.incrementPercent(pendingProgress);
         pendingProgress = 0;
         if(m_ShouldCancel)
         {
@@ -375,7 +370,7 @@ Result<> PottsModel::operator()()
 
     if(pendingProgress != 0)
     {
-      progressMessenger.sendProgressMessage(pendingProgress, progressMessage);
+      progressThrottle.incrementPercent(pendingProgress);
     }
   }
 
