@@ -322,15 +322,25 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Progress Feedback", "[SimplnxCore][Pot
   std::mutex progressMutex;
   std::condition_variable progressCondition;
   std::vector<std::string> progressMessages;
+  std::vector<std::string> iterationMessages;
   IFilter::MessageHandler messageHandler{[&](const IFilter::Message& message) {
-    if(message.message.find("Iteration ") == std::string::npos)
+    const bool isProgressMessage = message.message.find("Coarsening: ") != std::string::npos;
+    const bool isIterationMessage = message.message.starts_with("Iteration ");
+    if(!isProgressMessage && !isIterationMessage)
     {
       return;
     }
 
     {
       std::lock_guard lock(progressMutex);
-      progressMessages.push_back(message.message);
+      if(isProgressMessage)
+      {
+        progressMessages.push_back(message.message);
+      }
+      if(isIterationMessage)
+      {
+        iterationMessages.push_back(message.message);
+      }
     }
     progressCondition.notify_one();
   }};
@@ -344,19 +354,27 @@ TEST_CASE("SimplnxCore::PottsModelFilter: Progress Feedback", "[SimplnxCore][Pot
   REQUIRE(executionDuration >= std::chrono::seconds(1));
 
   std::string exampleProgressMessage;
+  std::string exampleIterationMessage;
   {
     std::unique_lock lock(progressMutex);
-    progressCondition.wait_for(lock, std::chrono::seconds(2), [&progressMessages] { return !progressMessages.empty(); });
+    progressCondition.wait_for(lock, std::chrono::seconds(2), [&] { return !progressMessages.empty() && !iterationMessages.empty(); });
     if(!progressMessages.empty())
     {
       exampleProgressMessage = progressMessages.front();
+    }
+    if(!iterationMessages.empty())
+    {
+      exampleIterationMessage = iterationMessages.front();
     }
   }
 
   REQUIRE_FALSE(exampleProgressMessage.empty());
   INFO("Example progress message: " << exampleProgressMessage);
-  REQUIRE(exampleProgressMessage.find("Iteration ") != std::string::npos);
-  REQUIRE(exampleProgressMessage.find(" of ") != std::string::npos);
+  REQUIRE(exampleProgressMessage.find("Coarsening: ") != std::string::npos);
+  REQUIRE(exampleProgressMessage.ends_with("%"));
+  INFO("Example iteration message: " << exampleIterationMessage);
+  REQUIRE(exampleIterationMessage.starts_with("Iteration "));
+  REQUIRE(exampleIterationMessage.find(" of ") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(testData.dataStructure);
 }
 
