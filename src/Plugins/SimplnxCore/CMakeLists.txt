@@ -113,6 +113,7 @@ set(FilterList
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
   ReadHDF5DatasetFilter
+  ReadOnScaleTableFileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadStringDataArrayFilter
@@ -316,6 +317,7 @@ set(AlgorithmList
   ReadDeformKeyFileV12
 #  ReadDREAM3D
   ReadHDF5Dataset
+  ReadOnScaleTableFile
   ReadRawBinary
   ReadStlFile
   ReadStringDataArray

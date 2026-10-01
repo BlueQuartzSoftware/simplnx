@@ -118,6 +118,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RandomizeFeatureIdsTest.cpp
   ReadCSVFileTest.cpp
   ReadHDF5DatasetTest.cpp
+  ReadOnScaleTableFileTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadStringDataArrayTest.cpp
