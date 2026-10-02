@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
@@ -11,6 +12,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIOInternal.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
@@ -90,16 +92,24 @@ std::string MakeKey(const fs::path& filePath)
 /**
  * @brief Imports one metadata-only DataStructure from disk.
  * @param filePath Identifies the DREAM3D file.
- * @return Imported structure or the standard open or import error.
+ * @param neutral Selects local resident metadata policy.
+ * @return Imported structure, source version, and disk diagnostics.
  */
-Result<DataStructure> ReadFromDisk(const fs::path& filePath)
+Result<NeutralMetadataHandout> ReadFromDisk(const fs::path& filePath, bool neutral)
 {
   auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
   if(!fileReader.isValid())
   {
-    return MakeErrorResult<DataStructure>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", filePath.string()));
+    return MakeErrorResult<NeutralMetadataHandout>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", filePath.string()));
   }
-  return ImportDataStructureFromFile(fileReader, true);
+  auto version = GetFileVersion(fileReader);
+  auto result = neutral ? detail::ImportMetadata(fileReader, std::make_shared<InMemoryFormatResolver>()) : ImportDataStructureFromFile(fileReader, true);
+  if(result.invalid())
+  {
+    return ConvertInvalidResult<NeutralMetadataHandout>(std::move(result));
+  }
+  NeutralMetadataHandout handout{std::move(result.value()), std::move(version)};
+  return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(result)), std::move(handout));
 }
 
 /**
@@ -272,23 +282,24 @@ Result<> Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
   return result;
 }
 
-Result<DataStructure> Dream3dPreflightCache::PrepareHandout(DataStructure handout, const fs::path& filePath)
+Result<NeutralMetadataHandout> Dream3dPreflightCache::PrepareHandout(NeutralMetadataHandout handout, const fs::path& filePath)
 {
-  auto refreshResult = RefreshStores(handout);
+  auto refreshResult = RefreshStores(handout.dataStructure);
   if(refreshResult.invalid())
   {
     for(auto& error : refreshResult.errors())
     {
       error.message = fmt::format("Cannot prepare cached metadata handout for file '{}': {}", filePath.string(), error.message);
     }
-    return ConvertInvalidResult<DataStructure>(std::move(refreshResult));
+    return ConvertInvalidResult<NeutralMetadataHandout>(std::move(refreshResult));
   }
-  return ConvertResultTo<DataStructure>(std::move(refreshResult), std::move(handout));
+  return ConvertResultTo<NeutralMetadataHandout>(std::move(refreshResult), std::move(handout));
 }
 
-Result<std::optional<DataStructure>> Dream3dPreflightCache::tryServeFromCache(const std::string& key, uint64 fileSize, const fs::file_time_type& mtime, const fs::path& filePath)
+Result<std::optional<NeutralMetadataHandout>> Dream3dPreflightCache::tryServeFromCache(const CacheKey& key, uint64 fileSize, const fs::file_time_type& mtime, const fs::path& filePath)
 {
-  std::optional<DataStructure> handout;
+  std::optional<NeutralMetadataHandout> handout;
+  std::vector<Warning> diskWarnings;
   {
     const std::lock_guard<std::mutex> lock(m_Mutex);
     auto iter = m_Entries.find(key);
@@ -296,129 +307,113 @@ Result<std::optional<DataStructure>> Dream3dPreflightCache::tryServeFromCache(co
     {
       m_Hits++;
       iter->second.lastUsedTick = ++m_Tick;
-      // Copy while the entry cannot be evicted. Ordinary bulk datasets remain placeholders;
-      // small eager Statistics stores are shared only until handout preparation below.
       handout = iter->second.master;
+      diskWarnings = iter->second.diskWarnings;
     }
   }
-  if(handout.has_value())
+  if(!handout.has_value())
   {
-    // Shared pointers keep source stores alive after the table lock releases.
-    // Masters are immutable, so store isolation needs no table synchronization.
-    auto preparedResult = PrepareHandout(std::move(*handout), filePath);
-    if(preparedResult.invalid())
-    {
-      return ConvertInvalidResult<std::optional<DataStructure>>(std::move(preparedResult));
-    }
-    Result<std::optional<DataStructure>> result{std::optional<DataStructure>{std::move(preparedResult.value())}};
-    result.warnings() = std::move(preparedResult.warnings());
-    return result;
+    return {std::nullopt};
   }
-  return {std::nullopt};
+  // Shared owners keep stores alive after the table lock releases. Isolation never changes the immutable master.
+  auto prepared = PrepareHandout(std::move(*handout), filePath);
+  PrependWarnings(prepared, diskWarnings);
+  if(prepared.invalid())
+  {
+    return ConvertInvalidResult<std::optional<NeutralMetadataHandout>>(std::move(prepared));
+  }
+  std::optional<NeutralMetadataHandout> value{std::move(prepared.value())};
+  return ConvertResultTo<std::optional<NeutralMetadataHandout>>(ConvertResult(std::move(prepared)), std::move(value));
 }
 
 Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
 {
+  auto result = fetchMetadata(filePath, false);
+  if(result.invalid())
+  {
+    return ConvertInvalidResult<DataStructure>(std::move(result));
+  }
+  auto structure = std::move(result.value().dataStructure);
+  return ConvertResultTo<DataStructure>(ConvertResult(std::move(result)), std::move(structure));
+}
+
+Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchNeutralMetadata(const fs::path& filePath)
+{
+  return fetchMetadata(filePath, true);
+}
+
+Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::path& filePath, bool neutral)
+{
   std::error_code metadataError;
   const auto metadata = ReadFileMetadata(filePath, metadataError);
-  if(!metadata.has_value())
+  if(!metadata.has_value() || fs::file_time_type::clock::now() - metadata->mtime < k_MtimeTrustWindow)
   {
-    // A direct serialized read preserves the standard open error. Failed stat
-    // paths never enter the cache, but their stores still receive current handout policy.
+    // Stat failures and recent files bypass both modes without changing their policy or diagnostic contracts.
     m_Misses++;
     const std::lock_guard<std::mutex> readLock(m_ReadMutex);
-    auto diskResult = ReadFromDisk(filePath);
-    if(diskResult.invalid())
+    auto disk = ReadFromDisk(filePath, neutral);
+    if(disk.invalid())
     {
-      return diskResult;
+      return disk;
     }
-    auto diskWarnings = std::move(diskResult.warnings());
-    auto preparedResult = PrepareHandout(std::move(diskResult.value()), filePath);
-    PrependWarnings(preparedResult, diskWarnings);
-    return preparedResult;
-  }
-  const uint64 fileSize = metadata->fileSize;
-  const auto mtime = metadata->mtime;
-
-  // A recent same-size rewrite can hide inside network timestamp rounding.
-  // Bypass the cache during the trust window.
-  if(fs::file_time_type::clock::now() - mtime < k_MtimeTrustWindow)
-  {
-    // Serialize its HDF5 traversal, then apply current handout policy.
-    m_Misses++;
-    const std::lock_guard<std::mutex> readLock(m_ReadMutex);
-    auto diskResult = ReadFromDisk(filePath);
-    if(diskResult.invalid())
-    {
-      return diskResult;
-    }
-    auto diskWarnings = std::move(diskResult.warnings());
-    auto preparedResult = PrepareHandout(std::move(diskResult.value()), filePath);
-    PrependWarnings(preparedResult, diskWarnings);
-    return preparedResult;
-  }
-
-  const std::string key = MakeKey(filePath);
-
-  // A hit uses only the table mutex and does not wait for an unrelated disk read.
-  auto hit = tryServeFromCache(key, fileSize, mtime, filePath);
-  if(hit.invalid())
-  {
-    return ConvertInvalidResult<DataStructure>(std::move(hit));
-  }
-  if(hit.value().has_value())
-  {
-    Result<DataStructure> result{std::move(*hit.value())};
-    result.warnings() = std::move(hit.warnings());
+    auto warnings = std::move(disk.warnings());
+    auto result = PrepareHandout(std::move(disk.value()), filePath);
+    PrependWarnings(result, warnings);
     return result;
   }
 
-  // Serialize the complete HDF5 import. This lock precedes every later table lock.
+  const CacheKey key{MakeKey(filePath), neutral};
+  const auto serve = [&]() { return tryServeFromCache(key, metadata->fileSize, metadata->mtime, filePath); };
+  auto hit = serve();
+  if(hit.invalid())
+  {
+    return ConvertInvalidResult<NeutralMetadataHandout>(std::move(hit));
+  }
+  if(hit.value().has_value())
+  {
+    auto value = std::move(*hit.value());
+    return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(hit)), std::move(value));
+  }
+
+  // The read lock precedes any later table lock. Recheck after waiting for another disk import.
   const std::lock_guard<std::mutex> readLock(m_ReadMutex);
-
-  // Another thread can populate the entry while this thread waits for the read lock.
-  hit = tryServeFromCache(key, fileSize, mtime, filePath);
+  hit = serve();
   if(hit.invalid())
   {
-    return ConvertInvalidResult<DataStructure>(std::move(hit));
+    return ConvertInvalidResult<NeutralMetadataHandout>(std::move(hit));
   }
   if(hit.value().has_value())
   {
-    Result<DataStructure> result{std::move(*hit.value())};
-    result.warnings() = std::move(hit.warnings());
-    return result;
+    auto value = std::move(*hit.value());
+    return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(hit)), std::move(value));
   }
-
   m_Misses++;
-  Result<DataStructure> diskResult = ReadFromDisk(filePath);
-  if(diskResult.invalid())
+  auto disk = ReadFromDisk(filePath, neutral);
+  if(disk.invalid())
   {
-    // A failed import must be retried by the next fetch.
-    return diskResult;
+    return disk;
   }
-  auto diskWarnings = std::move(diskResult.warnings());
-
-  DataStructure handout;
+  auto warnings = std::move(disk.warnings());
+  NeutralMetadataHandout handout;
   {
     const std::lock_guard<std::mutex> lock(m_Mutex);
     Entry& entry = m_Entries[key];
-    entry.master = std::move(diskResult.value());
-    entry.fileSize = fileSize;
-    entry.mtime = mtime;
+    entry.master = std::move(disk.value());
+    // Ordinary warm hits retain their existing behavior. Neutral hits replay only original disk warnings.
+    entry.diskWarnings = neutral ? warnings : std::vector<Warning>{};
+    entry.fileSize = metadata->fileSize;
+    entry.mtime = metadata->mtime;
     entry.lastUsedTick = ++m_Tick;
-
-    // Evict the least-recently-used entry to bound long-session bookkeeping.
     while(m_Entries.size() > k_Capacity)
     {
       auto victim = std::min_element(m_Entries.begin(), m_Entries.end(), [](const auto& a, const auto& b) { return a.second.lastUsedTick < b.second.lastUsedTick; });
       m_Entries.erase(victim);
     }
-
     handout = entry.master;
   }
-  auto preparedResult = PrepareHandout(std::move(handout), filePath);
-  PrependWarnings(preparedResult, diskWarnings);
-  return preparedResult;
+  auto result = PrepareHandout(std::move(handout), filePath);
+  PrependWarnings(result, warnings);
+  return result;
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
@@ -431,7 +426,9 @@ void Dream3dPreflightCache::SetForceFileMetadataFailure(bool forceFailure)
 void Dream3dPreflightCache::invalidate(const fs::path& filePath)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
-  m_Entries.erase(MakeKey(filePath));
+  const auto key = MakeKey(filePath);
+  m_Entries.erase(CacheKey{key, false});
+  m_Entries.erase(CacheKey{key, true});
 }
 
 void Dream3dPreflightCache::clear()

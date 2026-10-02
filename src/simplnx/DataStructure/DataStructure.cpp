@@ -1,5 +1,6 @@
 #include "DataStructure.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -669,6 +670,114 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
 
   auto parentGroup = getDataAs<BaseGroup>(dataPath);
   return insertIntoParent(dataObject, parentGroup);
+}
+
+std::shared_ptr<DataObject> DataStructure::makeImportPublicationCopy(DataObject& source)
+{
+  auto* association = source.m_DataStructure;
+  source.DataObject::setDataStructure(nullptr);
+  const auto restore = MakeScopeGuard([&source, association]() noexcept { source.DataObject::setDataStructure(association); });
+  std::unique_ptr<DataObject> copy(source.shallowCopy());
+  if(copy == nullptr)
+  {
+    return {};
+  }
+  if(auto* group = dynamic_cast<BaseGroup*>(copy.get()); group != nullptr)
+  {
+    group->clear();
+  }
+  copy->DataObject::setDataStructure(nullptr);
+  copy->m_ParentList.clear();
+  return std::shared_ptr<DataObject>(std::move(copy));
+}
+
+bool DataStructure::insertImportedObject(ImportPublicationRecord& record, ImportInsertionStage failAfter, bool rejectBeforeInsert)
+{
+  if(rejectBeforeInsert || record.owner == nullptr || record.owner->getId() != record.id || m_DataObjects.contains(record.id))
+  {
+    return false;
+  }
+  if(record.parent != nullptr && (record.parent->getId() != record.parentId || !record.parent->canInsert(record.owner.get())))
+  {
+    return false;
+  }
+  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
+  if(map.find(record.id) != map.end() || !map.insert(record.owner))
+  {
+    return false;
+  }
+  record.stage = ImportInsertionStage::Hierarchy;
+  if(failAfter == record.stage)
+  {
+    throw std::runtime_error("injected import failure after hierarchy placement");
+  }
+  if(record.parent != nullptr)
+  {
+    record.owner->addParent(record.parent.get());
+  }
+  record.stage = ImportInsertionStage::Parent;
+  if(failAfter == record.stage)
+  {
+    throw std::runtime_error("injected import failure before weak-index registration");
+  }
+  trackDataObject(record.owner);
+  record.stage = ImportInsertionStage::Registered;
+  return true;
+}
+
+DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportPublicationRecord& record) noexcept
+{
+  auto& object = *record.owner;
+  if(object.getId() != record.id || (record.parent != nullptr && record.parent->getId() != record.parentId))
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
+  const auto placement = map.find(record.id);
+  if(placement != map.end() && placement->second.get() != &object)
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  for(const auto parentId : object.m_ParentList)
+  {
+    if(record.parent == nullptr || parentId != record.parentId)
+    {
+      return ImportCleanupStatus::Conflict;
+    }
+  }
+  if(record.parent != nullptr && m_RootGroup.find(record.id) != m_RootGroup.end())
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr && !group->empty())
+  {
+    return ImportCleanupStatus::Children;
+  }
+  const auto indexed = m_DataObjects.find(record.id);
+  if(indexed != m_DataObjects.end() && indexed->second.lock().get() != &object)
+  {
+    // A foreign weak entry must survive. A locally unowned shell must still leave scope without a stale callback.
+    if(placement == map.end() && object.m_ParentList.empty())
+    {
+      object.DataObject::setDataStructure(nullptr);
+    }
+    return ImportCleanupStatus::Conflict;
+  }
+  if(placement != map.end())
+  {
+    map.erase(placement);
+  }
+  if(record.parent != nullptr)
+  {
+    object.m_ParentList.remove(record.parentId);
+  }
+  if(indexed != m_DataObjects.end())
+  {
+    m_DataObjects.erase(indexed);
+  }
+  record.notifyRemoval = object.m_DataStructure == this;
+  object.DataObject::setDataStructure(nullptr);
+  return ImportCleanupStatus::Complete;
 }
 
 DataObject::IdType DataStructure::getNextId() const
