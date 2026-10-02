@@ -408,7 +408,7 @@ add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
 set(PREBUILT_PIPELINE_NAMES
 
   # Example or other test pipelines
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline" # This example depends on the SmallIN100.h5ebsd file
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Align_Sections_Examples/AlignSectionsMutualInformation.d3dpipeline" # This example depends on the SmallIN100.h5ebsd file
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/CI_Histogram.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/EnsembleInfoReader.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Read_EDAX_Ang_File.d3dpipeline"
