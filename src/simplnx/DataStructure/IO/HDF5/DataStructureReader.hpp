@@ -42,6 +42,16 @@ public:
   static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
   /**
+   * @brief Reads a structure with an explicit local storage policy.
+   * @param fileReader Supplies the open source file.
+   * @param useEmptyDataStores Selects metadata placeholders.
+   *
+   * @param resolver Supplies policy before any imported object is created; null retains ordinary policy.
+   * @return Imported structure and read diagnostics.
+   */
+  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver);
+
+  /**
    * @brief Reads a single DataObject from an HDF5 file at the specified path.
    * @param fileReader The HDF5 file reader to read from
    * @param dataPath The path to the DataObject to read
@@ -67,6 +77,15 @@ public:
    * @return Result<DataStructure>
    */
   Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores = false);
+
+  /**
+   * @brief Reads a group with an explicit local storage policy.
+   * @param groupReader Supplies the source DataStructure group.
+   * @param useEmptyDataStores Selects metadata placeholders.
+   * @param resolver Supplies policy after reset and before object creation.
+   * @return Imported structure and read diagnostics.
+   */
+  Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver);
 
   /**
    * @brief Imports a DataObject with the specified name from the target
