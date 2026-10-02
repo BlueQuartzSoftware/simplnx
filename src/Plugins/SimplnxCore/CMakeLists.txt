@@ -148,6 +148,7 @@ set(FilterList
   TriangleNormalFilter
   UncertainRegularGridSampleSurfaceMeshFilter
   VerifyTriangleWindingFilter
+  VoxelizePointCloudFilter
   WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
   WriteAvizoRectilinearCoordinateFilter
@@ -358,6 +359,7 @@ set(AlgorithmList
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
   VerifyTriangleWinding
+  VoxelizePointCloud
   WriteAbaqusHexahedron
   WriteASCIIData
   WriteAvizoRectilinearCoordinate
@@ -424,6 +426,7 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/VtkUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PartitionUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FeatureRemovalUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
