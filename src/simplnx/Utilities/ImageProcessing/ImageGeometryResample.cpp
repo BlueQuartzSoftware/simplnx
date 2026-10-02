@@ -423,7 +423,6 @@ Result<> ResampleImageGeom::operator()()
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  usize arrayIndex = 0;
   usize totalArrays = srcCellDataAM.getSize();
   const SizeVec3 destDims = destImageGeom.getDimensions();
   m_Throttle.reset(totalArrays * destDims[1] * destDims[2], "Resampling cell arrays");
@@ -440,13 +439,12 @@ Result<> ResampleImageGeom::operator()()
       return {};
     }
 
-    arrayIndex++;
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     {
       const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-      m_MessageHandler.sendInfoMessage(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+      m_MessageHandler.sendInfoMessage(fmt::format("Resampling Data Array: '{}'", srcName));
     }
 
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel, taskResult);

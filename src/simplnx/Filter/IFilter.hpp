@@ -146,7 +146,10 @@ public:
 
     /**
      * @brief Sends progress as a count of completed items, rendered as "<label>: <current>/<max>".
-     * Use this when the counts are meaningful to a user, e.g. tuples or slices.
+     * Use this for units a user recognizes, with totals below a few thousand: iterations, phases,
+     * levels, files, scans, slices, arrays, or outputs. For a short outer loop around a large inner
+     * loop, report the outer count; add inner-loop percent progress only when one outer iteration is
+     * slow enough that the progress bar looks stuck.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far
      * @param max Total items
@@ -156,13 +159,14 @@ public:
     void sendProgressCount(std::string label, usize current, usize max, std::string_view detail = {}) const;
 
     /**
-     * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this when the
-     * counts are too large to be readable, where a percentage with a decimal place or two conveys
-     * more than the raw numbers would.
+     * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this for
+     * elements nobody counts by eye, such as tuples, voxels, cells, faces, or features, and for any
+     * total too large to read as a count. Use sendProgressCount() for iterations, files, or slices.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far
      * @param max Total items
      * @param decimals Number of decimal places to display
+     * @param detail Optional note appended in parentheses; an empty string appends nothing.
      */
     void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2, std::string_view detail = {}) const;
 
