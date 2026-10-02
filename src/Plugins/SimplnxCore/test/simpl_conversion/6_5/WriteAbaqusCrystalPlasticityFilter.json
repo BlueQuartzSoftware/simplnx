@@ -1,0 +1,40 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Abaqus Crystal Plasticity Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Abaqus File",
+    "Filter_Name": "CreateAbaqusFile",
+    "Filter_Uuid": "{d702beff-eb02-5ee1-a76a-79d5b56ec730}",
+    "OutputPath": "/test/path",
+    "OutputFilePrefix": "TestPrefix",
+    "JobName": "TestJob",
+    "NumDepvar": 7,
+    "NumUserOutVar": 4,
+    "MatConst": {
+      "Table Data": [
+        [1.0],
+        [2.0],
+        [3.0]
+      ]
+    },
+    "AbqFeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "FeatureIds"
+    },
+    "CellEulerAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "EulerAngles"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Phases"
+    }
+  }
+}
