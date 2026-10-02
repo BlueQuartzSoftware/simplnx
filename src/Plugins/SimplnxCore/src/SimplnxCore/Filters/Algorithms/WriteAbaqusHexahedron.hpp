@@ -84,12 +84,6 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  /**
-   * @brief Forwards an information message to the filter callback.
-   * @param message Message to send.
-   */
-  void sendMessage(const std::string& message);
-
 private:
   DataStructure& m_DataStructure;
   const WriteAbaqusHexahedronInputValues* m_InputValues = nullptr;

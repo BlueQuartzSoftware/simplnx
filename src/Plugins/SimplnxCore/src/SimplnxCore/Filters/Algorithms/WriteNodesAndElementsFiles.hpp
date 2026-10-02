@@ -54,13 +54,10 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void sendMessage(const std::string& message);
-
 private:
   DataStructure& m_DataStructure;
   const WriteNodesAndElementsFilesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
 };
 
 } // namespace nx::core

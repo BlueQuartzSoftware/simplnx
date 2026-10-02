@@ -21,6 +21,7 @@
 #include "simplnx/Utilities/ExternalEquivalence.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <limits>
 #include <memory>
@@ -782,13 +783,15 @@ struct IdentifySampleSliceCCLFunctor
     auto planeBuffer = std::make_unique<T[]>(planeSize);
     auto zBuffer = std::make_unique<T[]>(zSliceSize);
 
+    ThrottledMessageHandler progressThrottle(messageHandler);
+    progressThrottle.reset(fixedDim, "Identifying Sample Slices");
     for(int64 fixed = 0; fixed < fixedDim; fixed++)
     {
       if(shouldCancel)
       {
         return {};
       }
-      messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixed));
+      progressThrottle.updateCount(fixed + 1);
       if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
       {
         auto readResult = store.copyIntoBuffer(static_cast<usize>(fixed) * planeSize, nonstd::span<T>(planeBuffer.get(), planeSize));

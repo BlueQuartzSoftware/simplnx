@@ -75,14 +75,6 @@ public:
    */
   Result<> operator()();
 
-  /**
-   * @brief Sends an information message for compatible worker interfaces.
-   * @param message Message to send.
-   *
-   * The current direct and scanline implementations do not call this method.
-   */
-  void updateProgress(const std::string& message);
-
   const std::atomic_bool& getCancel();
 
 private:
