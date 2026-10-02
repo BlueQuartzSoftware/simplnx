@@ -27,6 +27,8 @@ namespace nx::core
  */
 class SIMPLNX_EXPORT BaseGroup : public DataObject
 {
+  friend class DataStructure;
+
 public:
   using Iterator = typename DataMap::Iterator;
   using ConstIterator = typename DataMap::ConstIterator;

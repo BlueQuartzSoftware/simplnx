@@ -68,6 +68,7 @@ public:
 
   friend class DataMap;
   friend class DataObject;
+  friend class ImportH5ObjectPathsAction;
 
   DataStructure();
 
@@ -683,6 +684,76 @@ protected:
   void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
 
 private:
+  /**
+   * @enum ImportInsertionStage
+   * @brief Identifies the last completed mutation in one import insertion.
+   */
+  enum class ImportInsertionStage : uint8
+  {
+    None,      ///< No hierarchy placement exists.
+    Hierarchy, ///< The hierarchy owns the object; its parent list can still be empty.
+    Parent,    ///< The expected parent list is complete.
+    Registered ///< The weak index and destination association are complete.
+  };
+
+  /**
+   * @enum ImportCleanupStatus
+   * @brief Reports structural cleanup without allocating diagnostics.
+   */
+  enum class ImportCleanupStatus : uint8
+  {
+    Complete, ///< The exact object is detached and disarmed.
+    Conflict, ///< Identity or placement differs from the publication record.
+    Children, ///< A group still owns objects that cleanup must preserve.
+    Refused   ///< A test fault retains the exact recorded placement.
+  };
+
+  /**
+   * @struct ImportPublicationRecord
+   * @brief Keeps exact owners and preallocated diagnostics alive through import rollback.
+   */
+  struct ImportPublicationRecord
+  {
+    std::shared_ptr<DataObject> owner;
+    std::shared_ptr<BaseGroup> parent;
+    DataObject::IdType id = 0;
+    DataObject::IdType parentId = 0;
+    DataPath path;
+    std::shared_ptr<AbstractDataStructureMessage> removalMessage;
+    ImportInsertionStage stage = ImportInsertionStage::None;
+    ImportCleanupStatus cleanup = ImportCleanupStatus::Complete;
+    bool notifyRemoval = false;
+    bool notificationAttempted = false;
+    bool notificationFailed = false;
+  };
+
+  /**
+   * @brief Creates a detached shell whose failed construction cannot notify through the source association.
+   * @param source Supplies one unpublished object with strongly owned children.
+   *
+   * @return Independent object shell sharing only its value store.
+   * @pre The caller excludes concurrent access to the source structure.
+   */
+  static std::shared_ptr<DataObject> makeImportPublicationCopy(DataObject& source);
+
+  /**
+   * @brief Inserts one prechecked import object without ordinary add notifications.
+   * @param record Supplies exact owners and receives the completed mutation stage.
+   * @param failAfter
+   * Selects a private transaction fault, or None for normal insertion.
+   * @param rejectBeforeInsert Selects a returned-failure test boundary before mutation.
+   * @return True when hierarchy placement and registration complete.
+   */
+  bool insertImportedObject(ImportPublicationRecord& record, ImportInsertionStage failAfter, bool rejectBeforeInsert);
+
+  /**
+   * @brief Detaches only the recorded import placement and matching weak entry.
+   * @param record Keeps all owners alive and receives notification eligibility.
+   * @return Structural outcome;
+   * no notification or diagnostic allocation occurs here.
+   */
+  ImportCleanupStatus rollbackImportedObject(ImportPublicationRecord& record) noexcept;
+
   bool insertTopLevel(const std::shared_ptr<DataObject>& obj);
 
   bool removeTopLevel(DataObject* data);
