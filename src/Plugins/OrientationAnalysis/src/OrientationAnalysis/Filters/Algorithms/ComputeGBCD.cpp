@@ -391,7 +391,7 @@ Result<> ComputeGBCD::operator()()
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   std::vector<float64> totalFaceArea(totalPhases, 0.0);
-  messageHandler.sendInfoMessage("1/2 Starting GBCD Calculation and Summation Phase");
+  messageHandler.sendProgressCount("Computing GBCD Phases", 1, 2, "Calculation and Summation");
   ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(totalFaces, "Calculating GBCD");
 
@@ -506,7 +506,7 @@ Result<> ComputeGBCD::operator()()
     progressThrottle.updateCount(std::min(i + triangleChunkSize, totalFaces));
   }
 
-  messageHandler.sendInfoMessage("2/2 Starting GBCD Normalization Phase");
+  messageHandler.sendProgressCount("Computing GBCD Phases", 2, 2, "Normalization");
 
   // Normalize the GBCD histogram to MRD (multiples of random distribution)
   // in the local buffer, then bulk-write the final result to the DataStore.

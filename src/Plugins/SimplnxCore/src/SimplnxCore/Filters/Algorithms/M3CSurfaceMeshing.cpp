@@ -4520,6 +4520,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
   };
 
   auto sweep = [&](bool appendEdges, bool generate) {
+    const std::string progressLabel = fmt::format("Sweeping Z-Slices ({})", generate ? "Pass 2, Generating Triangles" : "Pass 1, Counting");
     winBaseSite = 1;
     int64 eid = 0;
     int64 tidRun = 0;
@@ -4540,7 +4541,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
         const int64 sliceIdx = winBaseSite / numSitesPerPlane;
         if(sliceIdx % progressStep == 0)
         {
-          m_MessageHandler.sendInfoMessage(fmt::format("Sweeping z-slices ({}): slice {} / {}", generate ? "pass 2, generating triangles" : "pass 1, counting", sliceIdx, totalSlices));
+          m_MessageHandler.sendProgressCount(progressLabel, sliceIdx + 1, totalSlices);
         }
         const SiteId newLoSquare = 3 * (winBaseSite + numSitesPerPlane - 1);
         const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * numSitesPerPlane - 1), 3 * numSites);
@@ -4678,6 +4679,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       }
       tidRun = tout;
     }
+    m_MessageHandler.sendProgressCount(progressLabel, totalSlices, totalSlices);
   };
 
   if(!parallel)

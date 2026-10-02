@@ -69,6 +69,7 @@ Result<> RotateSampleRefFrame::operator()()
   ParallelTaskAlgorithm taskRunner;
   const DataPath srcCellDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+  filterProgressCallback.resetProgress(srcCellDataAM.getSize() * static_cast<usize>(rotateArgs.outputDims[2]), "Interpolating Cell Arrays");
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
 

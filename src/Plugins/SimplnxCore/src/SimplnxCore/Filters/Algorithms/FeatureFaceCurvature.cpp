@@ -126,7 +126,6 @@ Result<> FeatureFaceCurvature::operator()()
       g->run(func);
     }
 #else
-    m_MessageHandler.sendInfoMessage(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
     {
       func();
     }
