@@ -4,6 +4,8 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <nonstd/span.hpp>
+
 namespace nx::core::HDF5
 {
 
@@ -60,6 +62,21 @@ struct ChunkShapeOptions
   uint64 targetBytes = k_TargetChunkBytes;
   ChunkShapeRegime regime = ChunkShapeRegime::BundleOuterSlabs;
 };
+
+/**
+ * @brief Computes the chunk policy in caller-owned storage without allocation.
+ * @param dims Supplies tuple or full dataset dimensions.
+ * @param numComponents Supplies the trailing component count.
+ * @param elementByteSize Supplies bytes per scalar.
+ * @param opts Selects the target and regime.
+ * @param chunkShape Receives the first dims.size() chunk extents.
+ * @param suffixBytes Supplies dims.size() scratch elements for BundleOuterSlabs; otherwise it can be empty.
+ * @return False for insufficient storage, before either output changes.
+ * @pre Input and output ranges do not overlap. Scalar parameters are nonzero and intermediate products fit usize.
+ * @note Empty dimensions touch no storage. Unused output and scratch tails remain unchanged.
+ */
+SIMPLNX_EXPORT bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts, nonstd::span<usize> chunkShape,
+                                          nonstd::span<usize> suffixBytes) noexcept;
 
 /**
  * @brief Computes a byte-targeted row-band chunk shape.

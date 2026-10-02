@@ -1,6 +1,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/ChunkShapePolicy.hpp"
 
 #include <algorithm>
+#include <cassert>
 
 namespace
 {
@@ -18,7 +19,7 @@ namespace
  * A row includes the full extent of each dimension from firstRowDim onward.
  * The function does not split a row across chunks.
  */
-nx::core::usize computeRowsForByteTarget(const nx::core::ShapeType& dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
+nx::core::usize computeRowsForByteTarget(nonstd::span<const nx::core::usize> dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
 {
   nx::core::usize rowBytes = unitBytes;
   for(nx::core::usize i = firstRowDim; i < dims.size(); ++i)
@@ -34,12 +35,18 @@ nx::core::usize computeRowsForByteTarget(const nx::core::ShapeType& dims, nx::co
 namespace nx::core::HDF5
 {
 
-ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts)
+bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts, nonstd::span<usize> chunk,
+                           nonstd::span<usize> suffixBytes) noexcept
 {
+  if(chunk.size() < dims.size() || (opts.regime != ChunkShapeRegime::PinSlowestDim && suffixBytes.size() < dims.size()))
+  {
+    return false;
+  }
   if(dims.empty())
   {
-    return {};
+    return true;
   }
+  std::copy(dims.begin(), dims.end(), chunk.begin());
 
   // Fold the full component extent into one tuple so tuple-only dimensions still
   // produce a physical-byte target.
@@ -49,7 +56,6 @@ ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize el
   {
     // Rank three or greater pins the slowest dimension to one and bands the next
     // dimension. Lower ranks band the slowest dimension. Inner dimensions stay full.
-    ShapeType chunk(dims);
     if(dims.size() >= 3)
     {
       chunk[0] = 1;
@@ -59,13 +65,11 @@ ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize el
     {
       chunk[0] = computeRowsForByteTarget(dims, /*firstRowDim=*/1, unitBytes, opts.targetBytes, dims[0]);
     }
-    return chunk;
+    return true;
   }
 
   // suffixBytes[i] is the byte cost of one index step in dimension i.
   // Calculate it from the innermost dimension to support the outermost-first walk.
-  ShapeType chunk(dims);
-  ShapeType suffixBytes(dims.size());
   usize inner = unitBytes;
   for(usize i = dims.size(); i-- > 0;)
   {
@@ -86,6 +90,16 @@ ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize el
     chunk[i] = rows;
     break;
   }
+  return true;
+}
+
+ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts)
+{
+  ShapeType chunk(dims.size());
+  ShapeType scratch(opts.regime != ChunkShapeRegime::PinSlowestDim ? dims.size() : 0);
+  const bool valid = ComputeChunkShapeInto(dims, numComponents, elementByteSize, opts, chunk, scratch);
+  assert(valid);
+  (void)valid;
   return chunk;
 }
 
