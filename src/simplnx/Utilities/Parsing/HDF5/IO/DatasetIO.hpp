@@ -245,7 +245,7 @@ public:
    * @param dims Specifies N-dimensional dataset shape.
    * @return Shape or HDF5 creation error, or success.
    *
-   * OOC writers call this before region-by-region writeSpanHyperslab() transfers.
+   * Use writeSpanHyperslab() to transfer selected regions after creation.
    */
   template <typename T>
   nx::core::Result<> createEmptyDataset(const DimsType& dims);
@@ -253,11 +253,16 @@ public:
   /**
    * @brief Writes one typed hyperslab to an existing dataset.
    * @tparam T Specifies the scalar type.
-   * @param values Provides the selected element count.
-   * @param start Specifies N-dimensional start offsets.
-   * @param count Specifies N-dimensional extents.
-   * @return Selection, shape, or HDF5 write error, or success.
-   * @pre createEmptyDataset() or writeSpan() created the dataset.
+   * @param values Provides at least the selected element count; unused trailing values are ignored.
+   * @param start Specifies one start offset per dataset axis, at or within its extent.
+   * @param count Specifies one extent per axis, within the dimension after its start offset.
+   * @return Success, or a selection, buffer, dataspace, or native HDF5 error.
+   * @pre This wrapper already has an open dataset identifier.
+   *
+   * Both vectors must match the dataset rank. All axes are validated before an empty simple selection succeeds without a transfer.
+   * A start offset can equal its dimension only when that axis has zero count.
+   * Nonempty selections require nonnull storage and representable element and byte counts.
+   * Scalar and null dataspaces do not support hyperslab writes.
    */
   template <typename T>
   nx::core::Result<> writeSpanHyperslab(nonstd::span<const T> values, const std::vector<uint64>& start, const std::vector<uint64>& count);
