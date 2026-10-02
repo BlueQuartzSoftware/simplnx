@@ -23,6 +23,7 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 | Tests today            | *N test cases — one phrase about coverage (e.g., "parameter sweep over (Tolerance, NumberOfNeighbors)", "1 positive + 1 negative + 1 SIMPL backward-compat").* |
 | Exemplar archive       | *`<archive.tar.gz>` — one phrase on what it provides (inputs only, inputs + outputs, retired/replaced).*       |
 | Legacy comparison      | *Run / Not run — one-sentence headline (bit-identical, N deviations). Always framed as SIMPLNX vs DREAM3D 6.5.171; root-cause proof via a patched local build of the legacy source is described without naming a legacy version or commit.* |
+| Defect hunt            | *N confirmed defects; M of M modes value-asserted; K of N mutants killed.* |
 | Bug flags| *None / list of deviation IDs flagged as suspected bugs.*            |
 | V&V phase| *Which phases of the V&V workflow are complete; what is outstanding before status promotion.*    |
 
@@ -58,6 +59,20 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 |-----------|--------|----------------------------|---------------------------|
 | `<FilterName>-D1` | *State the defect and its effect.* | *DREAM.3D 6.5.171; DREAM3D-NX v<first> through v<last>.* | *State how the verified branch fixes the defect.* |
 | `<FilterName>-D2` | *State the defect and its effect.* | *DREAM.3D 6.5.171 only. DREAM3D-NX was not affected.* | *State how the verified branch fixes or prevents the defect.* |
+
+## Defect hunt
+
+*Reviewer:* *<name>* — patterns from [`defect_hunt.md`](../../../../docs/vv_templates/defect_hunt.md) Part 1, with sibling branches compared side by side.
+
+| ID | Pattern | Location | Trigger | Disposition |
+|----|---------|----------|---------|-------------|
+| H1 | *e.g. Copy-paste drift* | *`<Algo>.cpp:<line>`* | *e.g. centroid offset (1, 2, 3)* | *fixed — `<FilterName>-D1`* / *not a defect — <reason>* / *deferred — <issue link>* |
+
+*Mode coverage:* *M of M modes value-asserted. List any gaps.*
+
+*Mutation check:* *K of N mutants killed. List each survivor and its disposition.*
+
+*Metamorphic relations:* *e.g. translation by (1, 2, 3) moves the output by (1, 2, 3)* / *None.*
 
 ## Code path coverage
 

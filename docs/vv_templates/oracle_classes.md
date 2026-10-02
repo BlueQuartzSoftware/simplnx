@@ -118,6 +118,7 @@ The rename was applied 2026-06-10 across all test files, V&V reports, deviations
 - **Sum-to-one:** `Σ phase_fraction[p] == 1.0` for any cell.
 - **Symmetry under transformation:** `Filter(Rotate(input)) == Rotate(Filter(input))` for rotation-equivariant filters.
 - **Idempotence:** `Filter(Filter(input)) == Filter(input)` for filters that should converge in one pass.
+- **Metamorphic relations:** relate the outputs of two runs. Translate the input by (a, b, c) → the output moves by (a, b, c). Exchange X and Y → the output exchanges X and Y. Permute the feature IDs → the per-feature outputs are permuted. Use different values on each axis, or the relation cannot find an axis defect. See [`defect_hunt.md`](./defect_hunt.md) Part 5.
 
 **Strengths:**
 

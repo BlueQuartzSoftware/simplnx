@@ -17,7 +17,7 @@ A section of `src/Plugins/<P>/vv/<FilterName>.md` is "done" when all its gates p
 
 The dashboard a reviewer reads first. Lets a reviewer decide in 30 seconds whether they need to dig into the long-form sections below.
 
-- [ ] All 8 rows present: Algorithm Relationship, Oracle (confirmed), Code paths enumerated, Tests today, Exemplar archive, Legacy comparison, Bug flags, V&V phase
+- [ ] All 9 rows present: Algorithm Relationship, Oracle (confirmed), Code paths enumerated, Tests today, Defect hunt, Exemplar archive, Legacy comparison, Bug flags, V&V phase (reports that reached `READY FOR REVIEW` before 2026-10-02 may omit Defect hunt until their next V&V change)
 - [ ] Each cell is one sentence to one short paragraph — not a single word, not a full subsection. If a row needs more than ~3 sentences, that detail belongs in the long-form section and the dashboard summarizes it
 - [ ] **Algorithm Relationship** row names the legacy equivalent (or "no legacy equivalent") and the classification — must agree with the long-form `## Algorithm Relationship` section
 - [ ] **Oracle (confirmed)** row names the Class number(s) and the encoded test fixture(s). Use "confirmed" only when the oracle has been applied and the test passes; otherwise write "tentative" or "in progress"
@@ -25,6 +25,7 @@ The dashboard a reviewer reads first. Lets a reviewer decide in 30 seconds wheth
 - [ ] **Tests today** row gives the test-case count and a one-phrase shape of coverage (parameter sweep, positive/negative/conversion, etc.)
 - [ ] **Exemplar archive** row names the archive and flags retired/replaced archives (cross-reference the long-form `## Exemplar archive` SHA512)
 - [ ] **Legacy comparison** row is `Run` / `Not run` plus a one-sentence headline. The comparison is always framed as SIMPLNX vs DREAM3D 6.5.171. When a deviation's root cause was proven by surgically patching a local build of the legacy source, describe it exactly that way — the report must NOT name any other legacy version number (the patched build is internal proof tooling, not a shipping comparison target). "Not run" must include a brief reason ("design-by-inspection — pure port", "legacy binary unavailable", "deferred to Phase 9")
+- [ ] **Defect hunt** row gives the number of confirmed defects, `M of M modes value-asserted`, and `K of N mutants killed` — agrees with the long-form `## Defect hunt` section
 - [ ] **Bug flags** row is `None` or a list of deviation IDs flagged as suspected bugs (not all deviations are bugs; only those classified as bug under the root-cause taxonomy)
 - [ ] **V&V phase** row lists which phases of the workflow are complete and what is outstanding — drives the Status field in the header table
 
@@ -57,6 +58,7 @@ For detailed explanations of each class — with examples, strengths and weaknes
 - [ ] One-line description of how oracle was applied
 - [ ] Encoded test reference: `<file>::<TEST_CASE>` exists and is greppable
 - [ ] N fixtures stated; all pass at the verified commit
+- [ ] Fixtures break symmetry: different values per axis and per component, `X ≠ Y ≠ Z` dimensions, a non-zero origin, and two or more features or phases with different values. A fixture that cannot break a symmetry has a stated reason (see [`defect_hunt.md`](./defect_hunt.md) Part 3)
 - [ ] Second-engineer review of oracle design, OR documented skip reason
 
 ## Code path coverage
@@ -70,6 +72,18 @@ For detailed explanations of each class — with examples, strengths and weaknes
 - [ ] If `N < M`: each uncovered path appears as its own table row with `*Not directly tested. <one-line reason>*` in the Test case cell — paths are **never silently omitted**. Acceptable reasons include: low-value loop-guard, exercised implicitly by shipping pipelines (name one), requires cancel-signal injection, deferred to integration test
 - [ ] Each covered path maps to ≥1 named test case (`TEST_CASE` name or `DYNAMIC_SECTION` label as it appears in the test source)
 - [ ] Parameter-dependent paths: every combination of interest represented (don't trust a single test case to cover the parameter cube)
+- [ ] Every `ChoicesParameter` value, output-changing `BoolParameter` state, and dispatched algorithm variant has a row whose test **asserts output values** in that mode. A test that only runs the mode without error does not cover it
+
+## Defect hunt
+
+See [`defect_hunt.md`](./defect_hunt.md).
+
+- [ ] Bug-pattern review done on the algorithm, its helpers, and the filter preflight/execute — reviewer named
+- [ ] Sibling branches (modes, axes, in-core vs. OOC variants) compared side by side
+- [ ] Findings table present. Each row has ID, pattern, `file:line`, trigger, and disposition. Each confirmed defect has a `<FilterName>-D<N>` deviation and a regression test
+- [ ] Mode coverage stated as `M of M modes value-asserted`; gaps also appear in Code path coverage
+- [ ] Mutation check done with at least one mutant per code-path row. Result stated as `K of N mutants killed`. Each survivor has an added assertion or an equivalent-mutant reason
+- [ ] Metamorphic relations listed, or `None`
 
 ## Test inventory
 
