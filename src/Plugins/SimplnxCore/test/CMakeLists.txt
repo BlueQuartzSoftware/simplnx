@@ -90,6 +90,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FlyingEdges3DTest.cpp
+  Hdf5StackReaderTest.cpp
   HierarchicalSmoothTest.cpp
   IdentifyDuplicateVerticesTest.cpp
   IdentifySampleTest.cpp
