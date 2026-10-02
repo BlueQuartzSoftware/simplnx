@@ -13,14 +13,13 @@
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
 
 namespace
 {
 namespace CAxisMisorientationFixtures
 {
 // A flat DataGroup > AttributeMatrix hierarchy is sufficient — this filter requires no geometry.
-const DataPath k_FeatureDataPath = DataPath{{"TestData", "FeatureData"}};
+const auto k_FeatureDataPath = DataPath{{"TestData", "FeatureData"}};
 const DataPath k_AvgCAxesPath = k_FeatureDataPath.createChildPath("AvgCAxes");
 const std::string k_MisorientationsName = "CAxisMisorientations";
 const DataPath k_MisorientationsPath = k_FeatureDataPath.createChildPath(k_MisorientationsName);
@@ -40,9 +39,9 @@ FixtureData CreateScaffold(usize numFeatures)
   FixtureData td;
   td.numFeatures = numFeatures;
 
-  auto* dataGroup = DataGroup::Create(td.ds, "TestData");
-  auto* featureAM = AttributeMatrix::Create(td.ds, "FeatureData", ShapeType{numFeatures}, dataGroup->getId());
-  auto avgCAxesStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_AvgCAxesPath, {numFeatures}, {3});
+  const auto* dataGroup = DataGroup::Create(td.ds, "TestData");
+  const auto* featureAM = AttributeMatrix::Create(td.ds, "FeatureData", ShapeType{numFeatures}, dataGroup->getId());
+  const auto avgCAxesStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_AvgCAxesPath, {numFeatures}, {3});
   td.avgCAxes = Float32Array::Create(td.ds, "AvgCAxes", avgCAxesStore, featureAM->getId());
 
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
@@ -117,7 +116,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisMisorientationsFilter: Class 1 - Ana
   // Shared constants for intermediate angles.
   static const float32 k_Sqrt2Inv = 1.0f / std::sqrt(2.0f);
   static const float32 k_Sqrt3Over2 = std::sqrt(3.0f) / 2.0f;
-  static const float32 k_Half = 0.5f;
+  static constexpr float32 k_Half = 0.5f;
 
   // CreateScaffold and the filter are re-constructed fresh for each SECTION by Catch2.
   auto td = CAxisMisorientationFixtures::CreateScaffold(2);
@@ -245,8 +244,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisMisorientationsFilter: Class 4 - Inv
 
   // Mixed fixture: F0=sentinel(NaN), F1=0°, F2=90°, F3=30°, F4=NaN (non-hex).
   static const float32 k_Sqrt3Over2 = std::sqrt(3.0f) / 2.0f;
-  static const float32 k_Half = 0.5f;
-  constexpr float32 k_CAxisUpperBoundDeg = 90.0f;
+  static constexpr float32 k_Half = 0.5f;
 
   auto td = CAxisMisorientationFixtures::CreateScaffold(5);
   CAxisMisorientationFixtures::SetCAxis(td, 1, 0.0f, 0.0f, 1.0f);
@@ -269,6 +267,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisMisorientationsFilter: Class 4 - Inv
     {
       if(!std::isnan(output[f]))
       {
+        constexpr float32 k_CAxisUpperBoundDeg = 90.0f;
         REQUIRE(output[f] >= 0.0f);
         REQUIRE(output[f] <= k_CAxisUpperBoundDeg);
       }

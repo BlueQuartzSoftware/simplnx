@@ -85,10 +85,10 @@ IFilter::UniquePointer ComputeCAxisMisorientationsFilter::clone() const
 IFilter::PreflightResult ComputeCAxisMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pAvgCAxesArrayPathValue = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
-  auto pMisorientationArrayNameValue = filterArgs.value<std::string>(k_MisorientationArrayName_Key);
+  const auto pAvgCAxesArrayPathValue = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
+  const auto pMisorientationArrayNameValue = filterArgs.value<std::string>(k_MisorientationArrayName_Key);
 
-  auto pReferenceDirValue = filterArgs.value<std::vector<float32>>(k_ReferenceDir_Key);
+  const auto pReferenceDirValue = filterArgs.value<std::vector<float32>>(k_ReferenceDir_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

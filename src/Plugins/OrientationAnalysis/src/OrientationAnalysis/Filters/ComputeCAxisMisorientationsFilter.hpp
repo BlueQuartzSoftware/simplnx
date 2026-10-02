@@ -9,7 +9,13 @@ namespace nx::core
 {
 /**
  * @class ComputeCAxisMisorientationsFilter
- * @brief This filter will ....
+ * @brief Computes the angle between each feature's average C-axis and a
+ *        user-supplied reference direction in the sample reference frame.
+ *
+ * Input C-axes must be produced by ComputeAvgCAxesFilter. Non-hexagonal
+ * features (encoded as NaN by that filter) produce NaN in the output.
+ * Results are always in [0°, 90°] due to C-axis antipodal symmetry.
+ * Preflight rejects a zero-magnitude reference direction.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeCAxisMisorientationsFilter : public IFilter
 {
