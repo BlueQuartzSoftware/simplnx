@@ -59,7 +59,6 @@ result = nx_filter.execute(
     face_labels_array_name=("FaceLabels"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     fix_problem_voxels=False,
-#    generate_triple_lines=False,
     input_grid_geometry_path=nx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
     output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
