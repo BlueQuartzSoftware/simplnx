@@ -52,8 +52,6 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void sendMessage(const std::string& message);
-
 private:
   DataStructure& m_DataStructure;
   const CombineNodeBasedGeometriesInputValues* m_InputValues = nullptr;

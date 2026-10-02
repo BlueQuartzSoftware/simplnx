@@ -26,7 +26,6 @@ RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStruct
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_Throttle(m_MessageHandler)
 {
 }
 
@@ -212,10 +211,4 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
     }
   }
   return {std::move(activeObjects)};
-}
-
-void RequireMinimumSizeFeatures::sendThreadSafeProgressMessage(const std::string& message)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  m_Throttle.trySendMessage(message);
 }
