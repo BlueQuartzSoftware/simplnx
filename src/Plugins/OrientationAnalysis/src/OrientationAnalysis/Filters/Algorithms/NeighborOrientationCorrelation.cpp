@@ -354,9 +354,3 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   return {};
 }
-
-void NeighborOrientationCorrelation::sendThreadSafeProgressMessage(const std::string& message)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  m_Throttle.trySendMessage(message);
-}

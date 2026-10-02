@@ -81,12 +81,11 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
 } // namespace
 
 // -----------------------------------------------------------------------------
-WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel,
                                                        WriteNodesAndElementsFilesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
 {
 }
 
@@ -97,12 +96,6 @@ WriteNodesAndElementsFiles::~WriteNodesAndElementsFiles() noexcept = default;
 const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()
 {
   return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void WriteNodesAndElementsFiles::sendMessage(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
 }
 
 // -----------------------------------------------------------------------------

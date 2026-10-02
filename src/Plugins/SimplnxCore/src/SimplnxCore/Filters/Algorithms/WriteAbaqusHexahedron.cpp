@@ -656,11 +656,6 @@ const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
   return m_ShouldCancel;
 }
 
-void WriteAbaqusHexahedron::sendMessage(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
-
 Result<> WriteAbaqusHexahedron::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
