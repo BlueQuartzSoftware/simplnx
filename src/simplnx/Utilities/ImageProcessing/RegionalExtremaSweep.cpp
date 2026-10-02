@@ -229,7 +229,7 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
         }
       }
 
-      progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
+      ++completedSweepPairs;
     }
     return {};
   }
@@ -412,7 +412,7 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
       }
     }
 
-    progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
+    ++completedSweepPairs;
   }
   return {};
 }
@@ -818,7 +818,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
         }
       }
 
-      progressThrottle.queueMessage("Computing Regional Extrema: {} sweep pairs completed", ++completedSweepPairs);
+      ++completedSweepPairs;
     }
     return {};
   };

@@ -21,7 +21,6 @@
 #include <functional>
 #include <limits>
 #include <memory>
-#include <mutex>
 #include <new>
 #include <optional>
 #include <string>
@@ -405,7 +404,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
         }
       }
 
-      progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed for slice {}", ++completedIterations, z + 1);
+      ++completedIterations;
     }
 
     for(usize i = 0; i < slice; ++i)
@@ -607,12 +606,6 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
   }
 
   progressThrottle.reset(dims[2], "Thinning Binary Slices");
-  std::mutex progressMutex;
-  usize completedPasses = 0;
-  const std::function<void()> sendThreadSafeProgress = [&] {
-    const std::lock_guard<std::mutex> guard(progressMutex);
-    progressThrottle.queueMessage("Thinning Binary Image: {} slice passes completed", ++completedPasses);
-  };
 #ifdef SIMPLNX_ENABLE_MULTICORE
   const usize boundedWorkers = std::min(plan.workerCount, static_cast<usize>(std::numeric_limits<int>::max()));
   tbb::task_arena arena(static_cast<int>(boundedWorkers));
@@ -642,7 +635,7 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
           return;
         }
         ThinBinarySliceInPlace(typedValues.get() + slot * plan.sliceValues, workValues.get() + slot * plan.sliceValues, deletionMarkers.get() + slot * plan.markerWordsPerSlice, dims[0], dims[1],
-                               shouldCancel, sendThreadSafeProgress);
+                               shouldCancel, {});
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
@@ -799,7 +792,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       changed = changed || stepChanged;
     }
 
-    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
+    ++completedIterations;
   }
 
   progressThrottle.reset(volumeValues, "Writing Binary Thinning Output");
@@ -1162,7 +1155,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       std::swap(source, destination);
     }
 
-    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
+    ++completedIterations;
   }
 
   {
