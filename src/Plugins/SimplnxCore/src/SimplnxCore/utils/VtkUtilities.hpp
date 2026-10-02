@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Utilities/OStreamUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <memory>
 
@@ -400,22 +401,17 @@ struct WriteVtkDataFunctor
     else
     {
       const usize k_DefaultElementsPerLine = 10;
-      auto start = std::chrono::steady_clock::now();
       auto numTuples = dataStoreRef.getSize();
       usize currentItemCount = 0;
+      ThrottledMessageHandler progressThrottle(messageHandler);
+      progressThrottle.reset(numTuples, fmt::format("Processing {}", dataArrayRef.getName()));
 
       for(usize idx = 0; idx < numTuples; idx++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        progressThrottle.updatePercent(idx + 1);
+        if(shouldCancel)
         {
-          auto string = fmt::format("Processing {}: {}% completed", dataArrayRef.getName(), static_cast<int32>(100 * static_cast<float32>(idx) / static_cast<float32>(numTuples)));
-          messageHandler.sendMessage(IFilter::Message::Type::Info, string);
-          start = now;
-          if(shouldCancel)
-          {
-            return {};
-          }
+          return {};
         }
 
         if constexpr(std::is_same_v<T, int8> || std::is_same_v<T, uint8>)

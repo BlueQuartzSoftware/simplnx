@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <atomic>
 #include <memory>
@@ -427,13 +428,15 @@ struct IdentifySampleSliceBySliceFunctor
     // Process one XY, XZ, or Bool YZ plane at a time.
     auto sliceBuffer = std::make_unique<T[]>(sliceSize);
 
+    ThrottledMessageHandler progressThrottle(messageHandler);
+    progressThrottle.reset(fixedDim, "Identifying Sample Slices");
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx)
     {
       if(shouldCancel)
       {
         return {};
       }
-      messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
+      progressThrottle.updateCount(fixedIdx + 1);
 
       // Read the plane with bulk transfers where its layout permits them.
       if(stride1 == 1 && stride2 == planeDim1)

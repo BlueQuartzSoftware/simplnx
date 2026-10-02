@@ -398,6 +398,9 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     usize maxTuple = flaggedFeatures->getNumberOfTuples();
     std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
     std::vector<usize> emptyFeatures;
+    const usize featureEnd = std::min(maxTuple, bounds.size() / 6);
+    ThrottledMessageHandler progressThrottle(m_MessageHandler);
+    progressThrottle.reset(featureEnd > 0 ? featureEnd - 1 : 0, "Extracting Features");
     for(usize i = 1; i < maxTuple && 6 * i + 5 < bounds.size(); i++)
     {
       if(m_ShouldCancel)
@@ -405,6 +408,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         return result;
       }
 
+      progressThrottle.updatePercent(i);
       if(!flaggedFeatures->isTrue(i))
       {
         continue;
@@ -422,7 +426,6 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
       DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
-      m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {}", i)});
       taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath, cropTaskResult));
 
       // Stop scheduling crops once one has failed, so the failure is reported instead of

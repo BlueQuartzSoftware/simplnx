@@ -213,7 +213,7 @@ Result<> ReadH5OinaData::operator()()
     }
 
     m_CurrentScanName = orderedScanNames[scanIdx];
-    m_MessageHandler.sendInfoMessage(fmt::format("Reading scan '{}' ({} of {})", m_CurrentScanName, scanIdx + 1, scanCount));
+    m_MessageHandler.sendProgressCount("Reading Scans", scanIdx + 1, scanCount, m_CurrentScanName);
     Result<> readResults = readData(m_CurrentScanName);
     if(readResults.invalid())
     {
@@ -225,7 +225,7 @@ Result<> ReadH5OinaData::operator()()
       return {};
     }
 
-    m_MessageHandler.sendInfoMessage(fmt::format("Copying the cell data of scan '{}' ({} of {})", m_CurrentScanName, scanIdx + 1, scanCount));
+    m_MessageHandler.sendProgressCount("Copying Scan Cell Data", scanIdx + 1, scanCount, m_CurrentScanName);
     Result<> copyDataResults = copyRawEbsdData(static_cast<int>(scanIdx));
     if(copyDataResults.invalid())
     {

@@ -81,7 +81,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   {
     if(m_InputValues->CalcByPhase)
     {
-      m_MessageHandler.sendInfoMessage(fmt::format("Working on Phase {} of {}", iter, numPhases));
+      m_MessageHandler.sendProgressCount("Computing Biased Features Phases", iter, numPhases);
     }
     // reset boundBox for each phase
     const BoundingBox3D<float32> boundingBox = imageGeometry.getBoundingBoxf();
