@@ -70,12 +70,6 @@ IterativeClosestPoint::IterativeClosestPoint(DataStructure& dataStructure, const
 IterativeClosestPoint::~IterativeClosestPoint() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void IterativeClosestPoint::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& IterativeClosestPoint::getCancel()
 {
   return m_ShouldCancel;

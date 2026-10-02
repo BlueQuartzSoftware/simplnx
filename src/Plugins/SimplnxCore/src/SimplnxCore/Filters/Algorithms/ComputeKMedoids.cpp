@@ -21,12 +21,6 @@ ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::Me
 ComputeKMedoids::~ComputeKMedoids() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void ComputeKMedoids::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMedoids::getCancel()
 {
   return m_ShouldCancel;

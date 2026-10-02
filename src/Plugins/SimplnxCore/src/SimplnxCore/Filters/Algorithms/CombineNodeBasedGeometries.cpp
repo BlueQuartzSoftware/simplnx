@@ -398,12 +398,6 @@ const std::atomic_bool& CombineNodeBasedGeometries::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void CombineNodeBasedGeometries::sendMessage(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
-
-// -----------------------------------------------------------------------------
 Result<> CombineNodeBasedGeometries::operator()()
 {
   // Each stage resizes the output arrays before it copies into them, so the first failure

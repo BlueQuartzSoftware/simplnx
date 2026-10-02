@@ -92,14 +92,6 @@ public:
    */
   Result<> operator()();
 
-  /**
-   * @brief Sends an information message for compatible worker interfaces.
-   * @param message Message to send.
-   *
-   * The current rotation operator uses FilterProgressCallback instead.
-   */
-  void updateProgress(const std::string& message);
-
   const std::atomic_bool& getCancel();
 
 private:
