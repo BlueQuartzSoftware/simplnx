@@ -26,7 +26,7 @@ get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG
 include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "OrientationAnalysis")
-set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
 # ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
