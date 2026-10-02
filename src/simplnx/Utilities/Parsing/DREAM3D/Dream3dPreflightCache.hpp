@@ -15,6 +15,16 @@
 namespace nx::core::DREAM3D
 {
 /**
+ * @struct NeutralMetadataHandout
+ * @brief Carries isolated metadata and the version read from its source file.
+ */
+struct SIMPLNX_EXPORT NeutralMetadataHandout
+{
+  DataStructure dataStructure;
+  std::string fileVersion;
+};
+
+/**
  * @class Dream3dPreflightCache
  * @brief Caches metadata-only DataStructures from DREAM3D files.
  *
@@ -22,7 +32,7 @@ namespace nx::core::DREAM3D
  * metadata traversal performs many small reads. Network storage can make that
  * traversal slow. A valid cache hit needs only filesystem metadata checks.
  *
- * A canonical path identifies each entry. File size and modification time form
+ * A canonical path and mode identify each entry. File size and modification time form
  * its validation token. Recently modified files bypass the cache because a
  * network filesystem can round modification times.
  *
@@ -72,7 +82,16 @@ public:
   Result<DataStructure> fetch(const std::filesystem::path& filePath);
 
   /**
-   * @brief Removes one file entry if present.
+   * @brief Gets isolated metadata without consulting process storage policy.
+   * @param filePath Identifies the source DREAM3D file.
+   * @return Metadata, file version, and disk warnings replayed once for this handout.
+   *
+   * Ordinary and neutral modes have separate masters and share the same capacity.
+   */
+  Result<NeutralMetadataHandout> fetchNeutralMetadata(const std::filesystem::path& filePath);
+
+  /**
+   * @brief Removes all cache modes for one file if present.
    * @param filePath Identifies the entry through canonical path resolution.
    *
    * The next fetch reads the file even if its validation token did not change.
@@ -116,6 +135,15 @@ public:
 
 private:
   Dream3dPreflightCache() = default;
+  using CacheKey = std::pair<std::string, bool>;
+
+  /**
+   * @brief Gets one handout through the shared cache mechanics.
+   * @param filePath Identifies the source.
+   * @param neutral Selects local resident metadata policy and disk-warning replay.
+   * @return Isolated handout and diagnostics.
+   */
+  Result<NeutralMetadataHandout> fetchMetadata(const std::filesystem::path& filePath, bool neutral);
 
   /**
    * @brief Replaces each array store with an independent handout store.
@@ -134,7 +162,7 @@ private:
    * @param filePath Identifies the source file for error context.
    * @return Prepared handout or contextual refresh error.
    */
-  static Result<DataStructure> PrepareHandout(DataStructure handout, const std::filesystem::path& filePath);
+  static Result<NeutralMetadataHandout> PrepareHandout(NeutralMetadataHandout handout, const std::filesystem::path& filePath);
 
   /**
    * @brief Serves one valid cached entry and refreshes its recency.
@@ -148,7 +176,7 @@ private:
    * The method copies the master under m_Mutex, then isolates stores after it
    * releases the table lock. Both fast and post-read recheck paths use it.
    */
-  Result<std::optional<DataStructure>> tryServeFromCache(const std::string& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
+  Result<std::optional<NeutralMetadataHandout>> tryServeFromCache(const CacheKey& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
 
   /**
    * @struct Entry
@@ -159,7 +187,8 @@ private:
    */
   struct Entry
   {
-    DataStructure master;
+    NeutralMetadataHandout master;
+    std::vector<Warning> diskWarnings;
     uint64 fileSize = 0;
     std::filesystem::file_time_type mtime;
     uint64 lastUsedTick = 0;
@@ -174,7 +203,7 @@ private:
    */
   std::mutex m_ReadMutex;
   mutable std::mutex m_Mutex;
-  std::map<std::string, Entry> m_Entries;
+  std::map<CacheKey, Entry> m_Entries;
   uint64 m_Tick = 0;
   std::atomic<uint64> m_Hits{0};
   std::atomic<uint64> m_Misses{0};

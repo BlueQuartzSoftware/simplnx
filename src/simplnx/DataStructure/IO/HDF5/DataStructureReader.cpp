@@ -26,13 +26,18 @@ Result<DataStructure> DataStructureReader::ReadFile(const std::filesystem::path&
 }
 Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores)
 {
+  return ReadFile(fileReader, useEmptyDataStores, {});
+}
+
+Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver)
+{
   DataStructureReader dataStructureReader;
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
   // readGroup imports every array -- including geometry connectivity such as vertex/face/edge lists,
   // derived connectivity, and rectilinear-grid bounds -- as an EmptyDataStore carrying only shape and
   // type when useEmptyDataStores is set, keeping preflight metadata-only with no eager bulk reads from
   // disk. A full read (useEmptyDataStores == false) imports the real stores directly in readGroup.
-  return dataStructureReader.readGroup(groupReader, useEmptyDataStores);
+  return dataStructureReader.readGroup(groupReader, useEmptyDataStores, std::move(resolver));
 }
 
 Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
@@ -103,6 +108,11 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
 
 Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores)
 {
+  return readGroup(groupReader, useEmptyDataStores, {});
+}
+
+Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver)
+{
   clearDataStructure();
 
   if(!groupReader.isValid())
@@ -119,6 +129,7 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
   DataObject::IdType objectId = std::move(idResult.value());
 
   m_CurrentStructure = DataStructure();
+  m_CurrentStructure.setFormatResolver(std::move(resolver));
   m_CurrentStructure.setNextId(objectId);
   Result<> result = HDF5::ReadDataMap(*this, m_CurrentStructure.getRootGroup(), groupReader, {}, useEmptyDataStores);
   if(result.invalid())
