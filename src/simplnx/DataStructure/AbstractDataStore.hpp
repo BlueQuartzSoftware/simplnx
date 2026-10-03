@@ -741,6 +741,32 @@ public:
   [[nodiscard]] virtual Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<T> destination) const = 0;
 
   /**
+   * @brief Optionally reads an extent with an explicit backend scratch allowance.
+   *
+   * The destination belongs to the caller and is outside the allowance. True
+   * means that every destination value is valid. A valid false result leaves
+   * the destination unchanged and performs no payload read. An invalid result
+   * can leave a prefix and requires the caller to discard the destination.
+   * The default implementation declines without invoking a payload reader.
+   * Mandatory empty Result controls are caller-funded ABI storage, outside the
+   * backend allowance. Iterator-debug builds can allocate fixed empty-vector
+   * bookkeeping. No payload, preparation or diagnostic text is allowed before
+   * admission. BoundedRead::EmptyResultControlBytes() describes reviewed controls.
+   *
+   * @param extent Supplies tuple-space coordinates in row-major order.
+   * @param destination Receives exactly the selected tuples and all components.
+   * @param scratchBudgetBytes Limits owned backend scratch, including diagnostics.
+   * @return Complete, optional unavailability, or a validation/read error.
+   */
+  [[nodiscard]] virtual Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const
+  {
+    static_cast<void>(extent);
+    static_cast<void>(destination);
+    static_cast<void>(scratchBudgetBytes);
+    return {false};
+  }
+
+  /**
    * @brief Reads related N-dimensional extents into caller-owned storage.
    *
    * All extents and destination sizes are validated before this method writes a
