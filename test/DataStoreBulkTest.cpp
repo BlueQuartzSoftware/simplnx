@@ -2,6 +2,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 
 #include <catch2/catch.hpp>
@@ -272,7 +273,7 @@ TEST_CASE("DataStore extent APIs preserve resident layouts and outside values", 
   const Extent booleanExtent({0, 0, 0}, {0, 1, 3}, {1, 1, 2});
   Result<std::vector<bool>> booleanRead = booleanStore.readExtent(booleanExtent);
   REQUIRE(booleanRead.valid());
-  REQUIRE(booleanRead.value() == std::vector<bool>{true, false, false, false, false, true, true, false});
+  REQUIRE((booleanRead.value() == std::vector<bool>{true, false, false, false, false, true, true, false}));
 
   const Extent booleanContiguousExtent({0, 0, 0}, {0, 0, 1});
   std::array<bool, 4> booleanContiguousValues = {false, false, false, false};
@@ -487,4 +488,137 @@ TEST_CASE("DataArray deepCopy does not insert a destination after a source bulk-
   REQUIRE_FALSE(dataStructure.containsData(copyPath));
   REQUIRE(dataStructure.getDataAs<DataArray<int32>>(copyPath) == nullptr);
   REQUIRE(sourceStore->m_BulkReadCalls == 1);
+}
+
+TEST_CASE("DataStore bounded extent validates before writing", "[DataStore][bounded]")
+{
+  uint64 reviewedVectorBound = 0;
+  REQUIRE(BoundedRead::FreshVectorBytes(8, sizeof(int32), reviewedVectorBound));
+  REQUIRE(reviewedVectorBound >= 8 * sizeof(int32));
+  DataStore<int32> store(ShapeType{2, 3}, ShapeType{2}, 0);
+  for(usize value = 0; value < 12; ++value)
+  {
+    store.setValue(value, static_cast<int32>(value));
+  }
+  const Extent extent({0, 0}, {1, 2}, {1, 2});
+  std::vector<int32> destination(8, -99);
+  SECTION("subminimum allowance leaves the destination unchanged")
+  {
+    const auto result = store.readExtentIntoBufferBounded(extent, destination, BoundedRead::k_DiagnosticBytes - 1);
+    REQUIRE(result.valid());
+    REQUIRE_FALSE(result.value());
+    REQUIRE(result.warnings().empty());
+    REQUIRE(destination == std::vector<int32>(8, -99));
+  }
+  SECTION("strided complete tuples match the independent sequence")
+  {
+    const auto result = store.readExtentIntoBufferBounded(extent, destination, BoundedRead::k_DiagnosticBytes);
+    REQUIRE(result.valid());
+    REQUIRE(result.value());
+    REQUIRE((destination == std::vector<int32>{0, 1, 4, 5, 6, 7, 10, 11}));
+  }
+  SECTION("mismatched extent vectors are rejected before indexing")
+  {
+    Extent malformed = extent;
+    malformed.max.pop_back();
+    const auto result = store.readExtentIntoBufferBounded(malformed, destination, BoundedRead::k_DiagnosticBytes);
+    REQUIRE(result.invalid());
+    REQUIRE(destination == std::vector<int32>(8, -99));
+  }
+  SECTION("short destination is unchanged on validation failure")
+  {
+    const auto result = store.readExtentIntoBufferBounded(extent, nonstd::span<int32>(destination.data(), 7), BoundedRead::k_DiagnosticBytes);
+    REQUIRE(result.invalid());
+    REQUIRE(destination == std::vector<int32>(8, -99));
+  }
+  SECTION("zero stride is rejected before division")
+  {
+    Extent malformed = extent;
+    malformed.stride[1] = 0;
+    const auto result = store.readExtentIntoBufferBounded(malformed, destination, BoundedRead::k_DiagnosticBytes);
+    REQUIRE(result.invalid());
+    REQUIRE(destination == std::vector<int32>(8, -99));
+  }
+}
+
+TEST_CASE("Bounded extent arithmetic rejects shape and byte overflow without allocation", "[DataStore][bounded]")
+{
+  BoundedRead::Diagnostic diagnostic;
+  uint64 selected = 0;
+  const Extent extent({0, 0}, {0, 0});
+  const std::array<uint64, 2> overflowingShape{std::numeric_limits<uint64>::max(), 2};
+  REQUIRE(BoundedRead::ValidateExtent(extent, overflowingShape, 1, 1, selected, diagnostic, sizeof(uint16)) == BoundedRead::Status::Failed);
+  REQUIRE(diagnostic.code == BoundedRead::InvalidExtent);
+  const Extent oneDimension({0}, {0});
+  const std::array<uint64, 1> byteOverflow{std::numeric_limits<uint64>::max()};
+  REQUIRE(BoundedRead::ValidateExtent(oneDimension, byteOverflow, 1, 1, selected, diagnostic, sizeof(uint16)) == BoundedRead::Status::Failed);
+  REQUIRE(diagnostic.code == BoundedRead::InvalidExtent);
+}
+
+TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malformed native units", "[DataStore][bounded]")
+{
+  const std::string supplementary = "\xF0\x9F\x8C\x90";
+  BoundedRead::Diagnostic diagnostic;
+  diagnostic.set(BoundedRead::ReadFailure, "Read failed");
+#ifdef _WIN32
+  const std::filesystem::path path(std::wstring{L'p', wchar_t{0xD83C}, wchar_t{0xDF10}, wchar_t{0xD800}});
+  diagnostic.context(path, "data");
+  const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
+  REQUIRE(result.errors().front().message.find("\\uD800") != std::string::npos);
+  REQUIRE(result.errors().front().message.find("malformed units escaped") != std::string::npos);
+#else
+  const std::filesystem::path path(std::string("p") + supplementary + std::string(1, static_cast<char>(0xFF)));
+  diagnostic.context(path, "data");
+  const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
+  REQUIRE(result.errors().front().message.find("\\xFF") != std::string::npos);
+  REQUIRE(result.errors().front().message.find("invalid UTF-8/control bytes escaped") != std::string::npos);
+#endif
+  REQUIRE(BoundedRead::ResultCapacityBytes(result) <= BoundedRead::k_DiagnosticBytes);
+  BoundedRead::Diagnostic truncated;
+  truncated.set(BoundedRead::ReadFailure, std::string(497, 'a'));
+  truncated.append(supplementary);
+  truncated.append(std::string(40, 'b'));
+  const auto truncatedResult = truncated.finish(BoundedRead::Status::Failed);
+  REQUIRE(truncatedResult.errors().front().message == std::string(497, 'a') + " [truncated]");
+}
+
+TEST_CASE("Default bounded store API declines without an allocating fallback", "[DataStore][bounded]")
+{
+  const auto created = EmptyDataStore<uint16>::Create(ShapeType{1, 2}, ShapeType{1}, "");
+  REQUIRE(created.valid());
+  REQUIRE(created.value() != nullptr);
+  std::array<uint16, 2> destination{77, 88};
+  const auto result = created.value()->readExtentIntoBufferBounded(Extent({0, 0}, {0, 1}), destination, BoundedRead::k_DiagnosticBytes);
+  REQUIRE(result.valid());
+  REQUIRE_FALSE(result.value());
+  REQUIRE(result.warnings().empty());
+  REQUIRE(destination[0] == 77);
+  REQUIRE(destination[1] == 88);
+}
+
+TEST_CASE("Bounded terminal representation requires reviewed native controls", "[DataStore][bounded]")
+{
+  REQUIRE(BoundedRead::DiagnosticRepresentationSupported());
+  REQUIRE(BoundedRead::TerminalDiagnosticBoundBytes() > 0);
+  REQUIRE(BoundedRead::TerminalDiagnosticBoundBytes() <= BoundedRead::k_DiagnosticBytes);
+  // These scopes deliberately keep the named return and its moved-from control alive.
+  // The supported Debug configuration retains its normal empty-vector bookkeeping.
+  BoundedRead::Diagnostic diagnostic;
+  diagnostic.counts(BoundedRead::Insufficient, "Insufficient test allowance", 8192, 4096);
+  auto named = diagnostic.finish(BoundedRead::Status::Unavailable);
+  REQUIRE(named.valid());
+  REQUIRE_FALSE(named.value());
+  REQUIRE(named.warnings().size() == 1);
+  const auto message = named.warnings().front().message;
+  auto received = std::move(named);
+  REQUIRE(received.warnings().front().message == message);
+  REQUIRE(BoundedRead::ResultCapacityBytes(received) <= BoundedRead::TerminalDiagnosticBoundBytes());
+  diagnostic.counts(BoundedRead::InvalidExtent, "Invalid test count", 7, 6);
+  auto failure = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(failure.invalid());
+  REQUIRE(failure.errors().size() == 1);
+  REQUIRE(failure.errors().front().message.find("required=7, available=6") != std::string::npos);
+  REQUIRE(BoundedRead::ResultCapacityBytes(failure) <= BoundedRead::TerminalDiagnosticBoundBytes());
 }
