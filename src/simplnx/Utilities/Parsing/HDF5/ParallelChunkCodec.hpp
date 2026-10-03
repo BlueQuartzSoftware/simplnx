@@ -10,7 +10,9 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <limits>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -76,6 +78,10 @@ enum class CodecIoEventForTesting
   BoundedAcquired,                  ///< Actual owned bytes acquired; input is bytes, output is carrier category.
   BoundedPublished,                 ///< Owned scratch becomes retained store state; input is bytes, output is carrier.
   BoundedReleased,                  ///< Actual owned bytes released; input is bytes, output is carrier category.
+  TypedWriteAttempt,                ///< Typed H5Dwrite attempt; input is selected logical bytes.
+  TypedWriteCompleted,              ///< Successful typed H5Dwrite; input is logical bytes, not stored or device bytes.
+  TypedWriteFailed,                 ///< Failed or throwing typed write; input is selected logical bytes.
+  TypedWriteSizeInvalid,            ///< Unrepresentable logical byte count; invalidates measurement without changing the native call.
   Count                             ///< Supplies the fixed observation-array size.
 };
 
@@ -399,6 +405,68 @@ auto InvokeTypedReadForTesting(const std::filesystem::path& file, std::string_vi
   auto result = function();
   ObserveCodecIoForTesting(file, dataset, result >= 0 ? CodecIoEventForTesting::TypedReadCompleted : CodecIoEventForTesting::TypedReadFailed, bytes, 0);
   return result;
+}
+
+/**
+ * @brief Checks the logical byte count for an observed typed-write selection.
+ * @param dimensions Selected scalar counts, including component dimensions.
+ * @param elementBytes Bytes in one native scalar.
+ * @return Logical bytes, or no value when the count cannot be represented.
+ */
+inline std::optional<uint64> CheckedTypedWriteBytesForTesting(nonstd::span<const hsize_t> dimensions, uint64 elementBytes) noexcept
+{
+  if(elementBytes == 0)
+  {
+    return std::nullopt;
+  }
+  // A zero extent makes the selection empty even when an earlier product would overflow.
+  for(const hsize_t extent : dimensions)
+  {
+    if(extent == 0)
+    {
+      return uint64{0};
+    }
+  }
+  uint64 bytes = elementBytes;
+  for(const hsize_t extent : dimensions)
+  {
+    if(bytes > std::numeric_limits<uint64>::max() / extent)
+    {
+      return std::nullopt;
+    }
+    bytes *= extent;
+  }
+  return bytes;
+}
+
+/**
+ * @brief Runs one typed write and preserves its return value or exception.
+ * @tparam Function Supplies the native write expression.
+ * @param file Borrows the selected file identity.
+ * @param dataset Borrows the selected dataset identity.
+ * @param bytes Supplies checked logical bytes; absence invalidates the measurement only.
+ * @param function Performs the unchanged native call exactly once.
+ * @return The unchanged native status.
+ */
+template <class Function>
+auto InvokeTypedWriteForTesting(const std::filesystem::path& file, std::string_view dataset, std::optional<uint64> bytes, Function&& function) -> decltype(function())
+{
+  if(!bytes)
+  {
+    ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteSizeInvalid, 0, 0);
+    return function();
+  }
+  ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteAttempt, *bytes, 0);
+  try
+  {
+    auto result = function();
+    ObserveCodecIoForTesting(file, dataset, result >= 0 ? CodecIoEventForTesting::TypedWriteCompleted : CodecIoEventForTesting::TypedWriteFailed, *bytes, 0);
+    return result;
+  } catch(...)
+  {
+    ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteFailed, *bytes, 0);
+    throw;
+  }
 }
 #endif
 
@@ -839,4 +907,18 @@ private:
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) (expression)
+#endif
+
+/**
+ * @def SIMPLNX_OBSERVE_TYPED_WRITE
+ * @brief Preserves a typed write and observes its native boundary only in test builds.
+ * @param file Borrows the file identity.
+ * @param dataset Borrows the dataset identity.
+ * @param bytes Supplies checked logical bytes.
+ * @param expression Supplies H5Dwrite, evaluated exactly once.
+ */
+#if SIMPLNX_BUILD_TESTS
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
+#else
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) (expression)
 #endif
