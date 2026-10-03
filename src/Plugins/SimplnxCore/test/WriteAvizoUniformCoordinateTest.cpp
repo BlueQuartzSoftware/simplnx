@@ -1,3 +1,4 @@
+#include "AvizoWriterFailureTestUtilities.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
@@ -114,5 +115,18 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: SIMPL Backwards Compa
       CHECK(args.value<DataPath>(WriteAvizoUniformCoordinateFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(WriteAvizoUniformCoordinateFilter::k_Units_Key) == "TestName");
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Source read failure preserves destination", "[SimplnxCore][WriteAvizoUniformCoordinateFilter][AvizoWriter]")
+{
+  UnitTest::LoadPlugins();
+  const bool writeBinary = GENERATE(false, true);
+  const bool existingDestination = GENERATE(false, true);
+  const bool throwAllocation = GENERATE(false, true);
+  DYNAMIC_SECTION("binary=" << writeBinary << ", existing destination=" << existingDestination << ", allocation failure=" << throwAllocation)
+  {
+    auto store = std::make_shared<UnitTest::AvizoWriterFailure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
+    UnitTest::AvizoWriterFailure::CheckSecondBlockFailure<WriteAvizoUniformCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
   }
 }
