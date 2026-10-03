@@ -178,6 +178,54 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
+add_test(NAME SimplnxCoreIdentifySampleBatchCorrectnessTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleBatchCorrectness]" --reporter compact)
+set_tests_properties(SimplnxCoreIdentifySampleBatchCorrectnessTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleObservationTest.cpp")
+add_test(NAME SimplnxCoreIdentifySampleObservationTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleObservation]" --reporter compact --warn NoTests)
+set_tests_properties(SimplnxCoreIdentifySampleObservationTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleBatchFailureTest.cpp")
+add_test(NAME SimplnxCoreIdentifySampleBatchFailureTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleBatchFailures]" --reporter compact --warn NoTests)
+set_tests_properties(SimplnxCoreIdentifySampleBatchFailureTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+# These headless cases use the normal SimplnxCoreUnitTest runtime and do not require Qt discovery.
+option(SIMPLNX_ENABLE_IDENTIFY_SAMPLE_YZ_RESIDENT_BENCHMARKS "Register explicit resident Identify Sample YZ measurements" OFF)
+if(SIMPLNX_ENABLE_IDENTIFY_SAMPLE_YZ_RESIDENT_BENCHMARKS)
+  target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleYzResidentBenchmark.cpp")
+  if(NOT "${SIMPLNX_TEST_ALGORITHM_PATH}" STREQUAL "1")
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_Bool_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS bool noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_Bool_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_Bool_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS bool holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_Bool_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_UInt8_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS uint8 noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_UInt8_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_UInt8_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS uint8 holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_UInt8_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+  endif()
+  if(NOT "${SIMPLNX_TEST_ALGORITHM_PATH}" STREQUAL "2")
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_Bool_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL bool noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_Bool_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_Bool_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL bool holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_Bool_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_UInt8_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL uint8 noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_UInt8_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_UInt8_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL uint8 holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_UInt8_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+  endif()
+endif()
+
 if(DREAM3DNX_USE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
