@@ -34,6 +34,8 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
@@ -410,6 +412,14 @@ public:
   PreferencesSentinel(nx::core::DataStorageMode mode, int64 largeDataSize);
 
   /**
+   * @brief Applies a temporary threshold without narrowing its JSON integer type.
+   * @param mode Storage mode to use during the sentinel lifetime.
+   * @param largeDataSize Exact JSON integer
+   * threshold in bytes.
+   */
+  PreferencesSentinel(nx::core::DataStorageMode mode, const nlohmann::json& largeDataSize);
+
+  /**
    * @brief Restores the saved storage preferences without writing a preferences file.
    */
   ~PreferencesSentinel();
@@ -420,8 +430,10 @@ public:
   PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;
 
 private:
-  nx::core::DataStorageMode m_OriginalMode;
-  int64 m_OriginalSize;
+  nlohmann::json m_OriginalMode;
+  nlohmann::json m_OriginalSize;
+  bool m_HadMode = false;
+  bool m_HadSize = false;
 };
 
 /**
