@@ -375,6 +375,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/BoundedRead.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Extent.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Filesystem.hpp
@@ -867,6 +868,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ChunkShapePolicy.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/DeflateEligibility.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/ParallelChunkCodec.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/BoundedChunkRead.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
