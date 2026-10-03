@@ -1,3 +1,4 @@
+#include "BenchmarkPreferenceSnapshot.hpp"
 #include "ImageProcessing/Filters/WriteImageFilter.hpp"
 
 #include "simplnx/Common/Result.hpp"
@@ -29,6 +30,7 @@
 #include <fstream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -90,35 +92,6 @@ struct TimingRow
   double minimumMs = 0.0;
   OutputStats output;
   OocCounters counterDelta;
-};
-
-class PreferencesSentinel
-{
-public:
-  explicit PreferencesSentinel(DataStorageMode storageMode)
-  : m_Preferences(Application::Instance()->getPreferences())
-  , m_OriginalMode(m_Preferences->dataStorageMode())
-  , m_OriginalLargeDataSize(m_Preferences->valueAs<int64>(Preferences::k_LargeDataSize_Key))
-  {
-    m_Preferences->setDataStorageMode(storageMode);
-    m_Preferences->setValue(Preferences::k_LargeDataSize_Key, int64{0});
-  }
-
-  ~PreferencesSentinel()
-  {
-    m_Preferences->setDataStorageMode(m_OriginalMode);
-    m_Preferences->setValue(Preferences::k_LargeDataSize_Key, m_OriginalLargeDataSize);
-  }
-
-  PreferencesSentinel(const PreferencesSentinel&) = delete;
-  PreferencesSentinel(PreferencesSentinel&&) = delete;
-  PreferencesSentinel& operator=(const PreferencesSentinel&) = delete;
-  PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;
-
-private:
-  Preferences* m_Preferences = nullptr;
-  DataStorageMode m_OriginalMode = DataStorageMode::Adaptive;
-  int64 m_OriginalLargeDataSize = 0;
 };
 
 std::string FirstError(const Result<>& result)
@@ -275,7 +248,7 @@ Result<> BuildInput(DataStructure& dataStructure, DataStorageMode storageMode)
 
   std::shared_ptr<AbstractDataStore<T>> store;
   {
-    PreferencesSentinel preferences(storageMode);
+    ip_bench::BenchmarkPreferenceSnapshot preferences(*Application::Instance()->getPreferences(), storageMode);
     store = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_InputArrayPath, {k_DimZ, k_DimY, k_DimX}, {1});
   }
   if(store == nullptr)
