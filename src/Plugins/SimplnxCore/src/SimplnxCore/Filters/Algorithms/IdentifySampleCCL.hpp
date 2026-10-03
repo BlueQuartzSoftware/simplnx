@@ -9,7 +9,93 @@
 namespace nx::core
 {
 
+class IDataArray;
 struct IdentifySampleInputValues;
+
+#if SIMPLNX_BUILD_TESTS
+/**
+ * @enum IdentifySampleSliceEventForTesting
+ * @brief Names actual slice-copy and carrier-lifetime observations.
+ * @note Grant, batch, and extra-lifetime events set success true. A zero-byte grant is a valid observation.
+ */
+enum class IdentifySampleSliceEventForTesting
+{
+  ReadBegin,               ///< Starts one logical bulk read.
+  ReadEnd,                 ///< Ends the read, including error or exception exit.
+  WriteBegin,              ///< Starts one logical bulk write.
+  WriteEnd,                ///< Ends the write, including error or exception exit.
+  PlaneAllocated,          ///< The original plane carrier has allocated its values.
+  PlaneReleased,           ///< The original plane carrier has destroyed its values.
+  XyAllocated,             ///< The original XY carrier has allocated its values.
+  XyReleased,              ///< The original XY carrier has destroyed its values.
+  ExtraPlanesAllocated,    ///< Owns extra values; values counts elements of elementBytes bytes.
+  ExtraPlanesReleased,     ///< Destroys extra values before releasing their reservation; units match allocation.
+  ExtraBytesRequested,     ///< Requests extra bytes; values is bytes and elementBytes is one.
+  ExtraBytesGranted,       ///< Receives actual reserved bytes; values is bytes and elementBytes is one.
+  ExtraBytesRetained,      ///< Retains whole-plane bytes after shrinking; values is bytes and elementBytes is one.
+  BatchWidth,              ///< Selects an actual batch; values is planes and elementBytes is one.
+  ExtraReservationReleased ///< Releases the retained token after extra values; values is bytes and elementBytes is one.
+};
+
+/**
+ * @struct IdentifySampleSliceObserverForTesting
+ * @brief Borrows a synchronous callback on the filter execution thread.
+ * @note The callback must not allocate, throw, or reenter storage. Borrowed mask identity lasts through the callback.
+ */
+struct SIMPLNXCORE_EXPORT IdentifySampleSliceObserverForTesting
+{
+  void* context = nullptr;
+  void (*callback)(void*, const IDataArray*, IdentifySampleSliceEventForTesting, usize values, usize elementBytes, bool success) noexcept = nullptr;
+};
+
+/**
+ * @brief Replaces this thread's slice observer.
+ * @param observer Supplies the callback and its borrowed context.
+ * @return Previous observer for scoped restoration.
+ * @pre No observed call or carrier owner is live on this thread.
+ */
+SIMPLNXCORE_EXPORT IdentifySampleSliceObserverForTesting SetIdentifySampleSliceObserverForTesting(IdentifySampleSliceObserverForTesting observer) noexcept;
+
+/**
+ * @struct IdentifySampleExtraAllocationControlForTesting
+ * @brief Borrows a fault callback immediately before a nonzero extra-plane allocation.
+ * @note The callback can throw. It does not change admission or report successful allocation.
+ * @note The borrowed context and mask identity remain valid through the synchronous callback.
+ */
+struct SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting
+{
+  void* context = nullptr;
+  void (*beforeAllocate)(void*, const IDataArray*, usize extraValues) = nullptr;
+};
+
+/**
+ * @brief Replaces this thread's extra-allocation control.
+ * @param control Supplies the callback and borrowed context.
+ * @return Previous control for scoped restoration.
+ * @pre No slice execution or extra owner is live on this thread.
+ */
+SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting SetIdentifySampleExtraAllocationControlForTesting(IdentifySampleExtraAllocationControlForTesting control) noexcept;
+
+/**
+ * @struct IdentifySampleDiagnosticControlForTesting
+ * @brief Borrows a fault callback before guarded dual-failure diagnostic construction.
+ * @note The callback can throw. Both original failure carriers remain intact at this boundary.
+ * @note The borrowed context and mask identity remain valid through the synchronous callback.
+ */
+struct SIMPLNXCORE_EXPORT IdentifySampleDiagnosticControlForTesting
+{
+  void* context = nullptr;
+  void (*beforeAggregate)(void*, const IDataArray*) = nullptr;
+};
+
+/**
+ * @brief Replaces this thread's diagnostic control.
+ * @param control Supplies the callback and borrowed context.
+ * @return Previous control for scoped restoration.
+ * @pre No slice execution is live on this thread.
+ */
+SIMPLNXCORE_EXPORT IdentifySampleDiagnosticControlForTesting SetIdentifySampleDiagnosticControlForTesting(IdentifySampleDiagnosticControlForTesting control) noexcept;
+#endif
 
 /**
  * @class IdentifySampleCCL
@@ -27,7 +113,9 @@ struct IdentifySampleInputValues;
  *
  * Equal-sized components favor the largest provisional root label. Slice mode
  * uses a separate row-streaming CCL implementation. It keeps one plane buffer,
- * one Z-slice buffer, two label rows, and external equivalence records.
+ * two label rows, and external equivalence records. YZ mode also keeps one
+ * Z-slice buffer and admits up to seven extra planes through a working-memory
+ * reservation. Only completed planes are published after a batch stops.
  *
  * Cancellation can stop between scan or replay units and return success. The
  * operation does not restore slices that a prior replay changed. Bulk-I/O and
