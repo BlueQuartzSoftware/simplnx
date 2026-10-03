@@ -76,6 +76,15 @@ public:
    */
   static std::filesystem::path DefaultFilePath(const std::string& applicationName);
 
+  /**
+   * @brief Validates an out-of-core size threshold without changing preferences.
+   * @param name Large Data Size or Large Data Structure Size preference key.
+   * @param value Input JSON.
+   *
+   * @return Exact nonnegative integer in bytes, or a contextual error.
+   */
+  static Result<uint64> ValidateOocSizeValue(const std::string& name, const nlohmann::json& value);
+
   Preferences();
 
   ~Preferences() noexcept;
@@ -121,7 +130,11 @@ public:
    * @param name Preference key to update.
    * @param value New JSON value.
    *
-   * Updating the large-data threshold also recomputes memory defaults.
+   * Both out-of-core size thresholds accept unsigned JSON integers and
+   * nonnegative signed JSON integers. Changing Large Data Size recomputes
+   * memory defaults.
+   * Invalid thresholds throw
+   * std::invalid_argument before mutation.
    */
   void setValue(const std::string& name, const nlohmann::json& value);
 

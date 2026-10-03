@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #if defined(__linux__)
@@ -204,12 +205,19 @@ Result<> Application::loadPreferences()
   const auto filepath = Preferences::DefaultFilePath(applicationName);
 
   auto result = m_Preferences->loadFromFile(filepath);
+  m_PendingPreferenceLoadWarnings.insert(m_PendingPreferenceLoadWarnings.end(), result.warnings().begin(), result.warnings().end());
   if(result.invalid())
   {
     return MakeErrorResult(-1, fmt::format("Could not load preferences from '{}': {}", filepath.string(), result.errors().empty() ? "unknown error" : result.errors()[0].message));
   }
   return result;
 }
+
+WarningCollection Application::takePreferenceLoadWarnings()
+{
+  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollection{});
+}
+
 Result<> Application::savePreferences()
 {
   if(m_Preferences == nullptr)

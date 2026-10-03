@@ -77,6 +77,7 @@ set(SIMPLNX_TEST_SRCS
   StorageFormatPlanTest.cpp
   DataStoreFormatResolverTest.cpp
   DataStorageModeMigrationTest.cpp
+  OocThresholdScopeTest.cpp
   TiffImageIOTest.cpp
 )
 
@@ -134,6 +135,28 @@ target_compile_options(simplnx_test
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 catch_discover_tests(simplnx_test)
+
+add_executable(P1BenchmarkPreferenceSnapshotTest
+  ${simplnx_SOURCE_DIR}/src/Plugins/ImageProcessing/benchmark/BenchmarkPreferenceSnapshotTest.cpp)
+target_link_libraries(P1BenchmarkPreferenceSnapshotTest PRIVATE simplnx::simplnx Catch2::Catch2)
+simplnx_enable_warnings(TARGET P1BenchmarkPreferenceSnapshotTest)
+add_test(NAME "P1 benchmark preference snapshot"
+  COMMAND P1BenchmarkPreferenceSnapshotTest "[Core][Preferences][OocThreshold]" --warn NoTests)
+set_tests_properties("P1 benchmark preference snapshot" PROPERTIES RUN_SERIAL TRUE TIMEOUT 30)
+
+foreach(p1_case IN ITEMS
+  "P1 owned shared sentinel restores exact threshold and presence"
+  "P1 owned public algorithm scope retains maximum threshold"
+  "P1 owned Application retains startup correction through clean reload")
+  string(MAKE_C_IDENTIFIER "${p1_case}" p1_case_id)
+  add_test(NAME "P1_owned_${p1_case_id}"
+    COMMAND ${CMAKE_COMMAND}
+      "-DP1_TEST_EXECUTABLE=$<TARGET_FILE:simplnx_test>"
+      "-DP1_TEST_NAME=${p1_case}"
+      "-DP1_ROOT_BASE=${CMAKE_CURRENT_BINARY_DIR}/P1Owned"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/OwnedP1CatchCase.cmake")
+  set_tests_properties("P1_owned_${p1_case_id}" PROPERTIES RUN_SERIAL TRUE TIMEOUT 150)
+endforeach()
 
 
 
