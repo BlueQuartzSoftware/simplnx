@@ -50,7 +50,7 @@ Both options transfer data from the **Vertex Geometry** onto the **Image Geometr
 
 Use *Arrays to Interpolate* for data values that should be smoothed or blended by the kernel (e.g., measured scalar fields). Use *Arrays to Copy* for categorical or index data where Gaussian weighting would not be meaningful.
 
-All arrays selected for interpolation or copying must be **scalar** (single-component) arrays.
+All arrays selected for interpolation or copying must be **scalar** (single-component) arrays. Boolean arrays cannot be selected for interpolation or copying.
 
 ### Inline Statistics
 

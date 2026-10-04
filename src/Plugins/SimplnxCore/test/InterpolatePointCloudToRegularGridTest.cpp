@@ -318,6 +318,68 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Masked Vertice
   REQUIRE(interpFA[15] == Approx(50.0));
 }
 
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Non-Float64 Interpolated Arrays Output Float64", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure = createTestDataStructure({0, 0, 5}, {10.0, 20.0, 30.0});
+  auto* vertexDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_VertexDataPath);
+  REQUIRE(vertexDataPtr != nullptr);
+
+  auto* float32ArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "F32", {3}, {1}, vertexDataPtr->getId());
+  REQUIRE(float32ArrayPtr != nullptr);
+  (*float32ArrayPtr)[0] = 1.0f;
+  (*float32ArrayPtr)[1] = 2.0f;
+  (*float32ArrayPtr)[2] = 4.0f;
+
+  auto* int32ArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "I32", {3}, {1}, vertexDataPtr->getId());
+  REQUIRE(int32ArrayPtr != nullptr);
+  (*int32ArrayPtr)[0] = 1;
+  (*int32ArrayPtr)[1] = 2;
+  (*int32ArrayPtr)[2] = 4;
+
+  InterpolatePointCloudToRegularGridFilter filter;
+  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key,
+                      std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_VertexDataPath.createChildPath("F32"), k_VertexDataPath.createChildPath("I32")}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  for(const auto* arrayName : {"F32", "I32"})
+  {
+    CAPTURE(arrayName);
+    const auto* outputArrayPtr = dataStructure.getDataAs<Float64Array>(k_InterpGroupPath.createChildPath(arrayName));
+    REQUIRE(outputArrayPtr != nullptr);
+
+    // With no kernel spreading, voxel 0 receives (1 + 2) / 2, voxel 5 receives 4, and voxel 1 receives no contributions.
+    REQUIRE((*outputArrayPtr)[0] == Approx(1.5));
+    REQUIRE((*outputArrayPtr)[5] == Approx(4.0));
+    REQUIRE((*outputArrayPtr)[1] == Approx(0.0));
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Copy Array Is Rejected", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = createTestDataStructure({0, 5}, {10.0, 20.0});
+  InterpolatePointCloudToRegularGridFilter filter;
+  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_CopyArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_MaskPath}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -205);
+}
+
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter Execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
 {
   UnitTest::LoadPlugins();
