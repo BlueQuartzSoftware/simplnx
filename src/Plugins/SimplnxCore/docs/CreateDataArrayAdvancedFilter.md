@@ -17,6 +17,10 @@ The *Initialization Type* parameter selects how the array values are populated:
 - **Random [2]**: Each element is assigned a uniformly random value over the full range of the selected data type. An optional seed can be supplied for reproducibility.
 - **Random With Range [3]**: Each element is assigned a uniformly random value within a user-specified minimum and maximum range. An optional seed can be supplied for reproducibility.
 
+Floating-point Random values are uniform over [−max, max) of the type. With *Use Seed* the output is fully reproducible, and with *Use the Same Seed for Each Component* every component of a tuple is identical.
+
+For Random With Range, each component's start value must be less than or equal to its end value; otherwise preflight reports an error.
+
 ### Step Operation
 
 The *Step Operation* parameter is active when *Initialization Type* is set to **Incremental**. It controls whether each successive value increases or decreases:
@@ -37,6 +41,8 @@ Another example is if you want to create a floating point array where each tuple
 When creating a Data Array within an Attribute matrix, the tuple dimensions will **always** be taken direct from the Attribute Matrix. This means that the *Set Tuple Dimensions* parameter can be unchecked to hide the tuple dimensions entry table.
 
 If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the tuple dimensions themselves.
+
+Tuple and component dimensions must be positive whole numbers.
 
 ### Scalar Type Values
 

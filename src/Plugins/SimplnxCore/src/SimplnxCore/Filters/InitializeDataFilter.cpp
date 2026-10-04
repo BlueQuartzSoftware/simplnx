@@ -247,6 +247,12 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
+    result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, iDataArray.getDataType(), numComp, initStartRange, initEndRange);
+    if(result.outputActions.invalid())
+    {
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+    }
+
     [[fallthrough]];
   }
   case InitializeType::Random: {

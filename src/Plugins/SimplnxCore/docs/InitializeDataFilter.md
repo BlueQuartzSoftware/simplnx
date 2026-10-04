@@ -40,6 +40,10 @@ Both modes draw uniformly. *Random* uses the full data-type range; *Random With 
 - *Use Seed for Random Generation* + *Seed Value* -- supply a fixed integer seed for reproducibility.
 - With the option disabled, a time-based seed is generated; the actual seed used is saved to the *Stored Seed Value Array* so the run can be reproduced later.
 
+Floating-point Random values are uniform over [−max, max) of the type. With *Use Seed* the output is fully reproducible, and with *Use the Same Seed for Each Component* every component of a tuple is identical.
+
+For Random With Range, each component's start value must be less than or equal to its end value; otherwise preflight reports an error.
+
 *Standardize Seed* (Random mode only) controls whether all components in a tuple share the same random draw:
 
 - ON: a single value is drawn per tuple and broadcast to all components: `| 3;3;3 | 9;9;9 | 4;4;4 | ...`
