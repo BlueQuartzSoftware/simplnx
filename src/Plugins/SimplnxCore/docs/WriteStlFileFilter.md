@@ -15,9 +15,11 @@ This **Filter** can generate a single or multiple binary STL (StereoLithography)
 The *File Grouping Type* parameter provides the following choices:
 
 - **Features [0]**: The user must supply a 2-component Int32 array (a **FaceLabels**-style array) where the two values for each triangle are the **Feature** IDs on either side of that triangle. One STL file is written per feature.
-- **Phases and Features [1]**: The same 2-component array as Features, plus a single-component array representing a higher-order grouping such as a phase or part number.
+- **Phases and Features [1]**: The same 2-component Face Labels array as Features. The second array, Cell Phases, is a face-level Int32 array with 2 components, one tuple per triangle: the phase on each side of the triangle, in the same order as the Face Labels. Each file is named `{prefix}Ensemble_{phase}_Feature_{id}.stl`, using the phase on the first triangle where the Feature appears.
 - **Single File [2]**: The entire Triangle Geometry is saved as a single STL file.
 - **Part Index [3]**: The user must supply a single-component Int32 array at the triangle level that indicates which part each triangle belongs to.
+
+The Face Labels, Cell Phases and Part Number arrays must have one tuple per triangle; otherwise preflight fails. Each array is checked when required by the selected File Grouping Type.
 
 This filter supports overflow capabilities for all of the "File Grouping Type"(s) (including single file). This means if you have over the maximum number of triangles for a single STL file (2,147,483,647), the remaining triangles will be written to "overflow files" which will follow the following syntax `{filename}_overflow_{count}`. *Warnings will be emitted during preflight if it is known or a possibility this will occur.* Due to the nature of STL files containing all the vertices relative to the triangles in the file, **duplicate vertices will be written between the files**. For single file overflow, the files will be written in parallel with the number of additional tasks being equivalent to `({number of triangles in Geometry} / 2,147,483,647) + 1`. For multiple files, the existing tasks handling the grouping write out are also responsible for creating/writing any overflow files.
 
