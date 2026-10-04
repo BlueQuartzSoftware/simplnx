@@ -44,13 +44,6 @@ Result<> SliceTriangleGeometry::operator()()
   float zStart = m_InputValues->Zstart;
   float zEnd = m_InputValues->Zend;
 
-  if(m_InputValues->SliceRange == slice_triangle_geometry::constants::k_FullRange)
-  {
-    auto boundingBox = triangle.getBoundingBox();
-    zStart = boundingBox.getMinPoint()[2];
-    zEnd = boundingBox.getMaxPoint()[2];
-  }
-
   // The majority of the algorithm to slice the triangle geometry is in this function
   GeometryUtilities::SliceTriangleReturnType sliceTriangleResult =
       GeometryUtilities::SliceTriangleGeometry(triangle, m_ShouldCancel, m_InputValues->SliceRange, zStart, zEnd, m_InputValues->SliceResolution, triRegionIdPtr);
