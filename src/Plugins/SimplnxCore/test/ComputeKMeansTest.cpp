@@ -14,9 +14,13 @@
 
 #include "SimplnxCore/Filters/ComputeKMeansFilter.hpp"
 
+#include <atomic>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <memory>
+#include <optional>
 #include <vector>
 namespace fs = std::filesystem;
 
@@ -132,6 +136,49 @@ Arguments CreateKMeansMaskParityArguments()
 }
 
 /**
+ * @brief Builds an in-memory fixture from explicit tuple values and an optional Boolean mask.
+ * @tparam T Input element type.
+ * @param dataStructure Receives the geometry and arrays.
+ * @param values Input values in tuple order.
+ * @param comps Number of components per tuple.
+ * @param mask Optional selection flag for each tuple.
+ */
+template <typename T>
+void BuildKMeansFixture(DataStructure& dataStructure, const std::vector<T>& values, usize comps, std::optional<std::vector<bool>> mask = std::nullopt)
+{
+  REQUIRE(comps > 0);
+  REQUIRE_FALSE(values.empty());
+  REQUIRE(values.size() % comps == 0);
+  const usize tupleCount = values.size() / comps;
+  const ShapeType tupleShape = {1, 1, tupleCount};
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({tupleCount, 1, 1});
+  auto* cellData = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+
+  auto inputStore = CreateKMeansStore<T>(dataStructure, k_MaskParityInputPath, tupleShape, {comps}, false);
+  REQUIRE(DataArray<T>::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellData->getId()) != nullptr);
+  auto inputWriteResult = inputStore->copyFromBuffer(0, nonstd::span<const T>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(inputWriteResult);
+
+  if(mask.has_value())
+  {
+    REQUIRE(mask->size() == tupleCount);
+    auto maskStore = CreateKMeansStore<bool>(dataStructure, k_MaskParityMaskPath, tupleShape, {1}, false);
+    REQUIRE(BoolArray::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellData->getId()) != nullptr);
+    auto maskValues = std::make_unique<bool[]>(tupleCount);
+    for(usize tupleIdx = 0; tupleIdx < tupleCount; ++tupleIdx)
+    {
+      maskValues[tupleIdx] = (*mask)[tupleIdx];
+    }
+    auto maskWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const bool>(maskValues.get(), tupleCount));
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+  }
+}
+
+/**
  * @brief Reads all values from one K-means output array.
  * @tparam T Specifies the array element type.
  * @param dataStructure Contains the output array.
@@ -148,7 +195,177 @@ std::vector<T> ReadKMeansValues(const DataStructure& dataStructure, const DataPa
   SIMPLNX_RESULT_REQUIRE_VALID(arrayReadResult);
   return values;
 }
+
+/**
+ * @brief Reads means without requiring one output storage type.
+ * @param dataStructure Contains the output array.
+ * @param path Path to a float32, float64, or uint8 means array.
+ * @return Means converted to float64.
+ */
+std::vector<float64> ReadMeansAsFloat64(const DataStructure& dataStructure, const DataPath& path)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(path));
+  const auto& array = dataStructure.getDataRefAs<IDataArray>(path);
+  switch(array.getDataType())
+  {
+  case DataType::float32: {
+    const auto values = ReadKMeansValues<float32>(dataStructure, path);
+    return std::vector<float64>(values.begin(), values.end());
+  }
+  case DataType::float64:
+    return ReadKMeansValues<float64>(dataStructure, path);
+  case DataType::uint8: {
+    const auto values = ReadKMeansValues<uint8>(dataStructure, path);
+    return std::vector<float64>(values.begin(), values.end());
+  }
+  default:
+    FAIL("Expected float32, float64, or uint8 means.");
+    return {};
+  }
+}
 } // namespace
+
+TEST_CASE("SimplnxCore::ComputeKMeans: Multi-component input iterates to convergence", "[SimplnxCore][ComputeKMeans]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  BuildKMeansFixture<float32>(dataStructure, {21, 42, 63, 1, 2, 3, 22, 44, 66, 2, 4, 6, 23, 46, 69, 3, 6, 9, 24, 48, 72, 4, 8, 12}, 3);
+  ComputeKMeansFilter filter;
+  Arguments args = CreateKMeansMaskParityArguments();
+  args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeKMeansFilter::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto ids = ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath);
+  const auto means = ReadMeansAsFloat64(dataStructure, k_MaskParityMeansPath);
+  REQUIRE(ids.size() == 8);
+  REQUIRE(means.size() == 9);
+  const int32 a = ids[1];
+  const int32 b = ids[0];
+  REQUIRE(a != b);
+  REQUIRE(a >= 1);
+  REQUIRE(a <= 2);
+  REQUIRE(b >= 1);
+  REQUIRE(b <= 2);
+  for(usize tupleIdx = 0; tupleIdx < ids.size(); ++tupleIdx)
+  {
+    CAPTURE(tupleIdx);
+    REQUIRE(ids[tupleIdx] == (tupleIdx % 2 == 1 ? a : b));
+  }
+  // (1 + 2 + 3 + 4) / 4 = 2.5; (21 + 22 + 23 + 24) / 4 = 22.5.
+  // The other components are twice and three times these means. Bucket zero is empty.
+  const std::array<float64, 3> lowMeans = {2.5, 5.0, 7.5};
+  const std::array<float64, 3> highMeans = {22.5, 45.0, 67.5};
+  for(usize compIdx = 0; compIdx < 3; ++compIdx)
+  {
+    REQUIRE(means[compIdx] == 0.0);
+    REQUIRE(means[3 * static_cast<usize>(a) + compIdx] == lowMeans[compIdx]);
+    REQUIRE(means[3 * static_cast<usize>(b) + compIdx] == highMeans[compIdx]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeKMeans: Mask selecting only the final tuple initializes", "[SimplnxCore][ComputeKMeans][ComputeKMeansF2]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
+  // Before the initialization fix, use [ComputeKMeansF2] --section Scanline: Direct cannot cancel its draw loop.
+  DYNAMIC_SECTION((scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore ? "Scanline" : "Direct"))
+  {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    DataStructure dataStructure;
+    BuildKMeansFixture<float32>(dataStructure, {5, 9}, 1, std::vector<bool>{false, true});
+    ComputeKMeansFilter filter;
+    Arguments args = CreateKMeansMaskParityArguments();
+    args.insertOrAssign(ComputeKMeansFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+
+    std::atomic_bool cancel = false;
+    std::promise<void> finished;
+    auto watchdog = std::async(std::launch::async, [&cancel, completion = finished.get_future()]() mutable {
+      if(completion.wait_for(std::chrono::seconds(10)) == std::future_status::timeout)
+      {
+        cancel.store(true);
+      }
+    });
+    auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, IFilter::MessageHandler{}, cancel);
+    finished.set_value();
+    watchdog.get();
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto ids = ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath);
+    const auto means = ReadMeansAsFloat64(dataStructure, k_MaskParityMeansPath);
+    const std::vector<int32> expectedIds = {0, 1};
+    // The excluded value 5 belongs to bucket zero; the selected value 9 belongs to cluster one.
+    const std::vector<float64> expectedMeans = {5.0, 9.0};
+    REQUIRE(ids == expectedIds);
+    REQUIRE(means == expectedMeans);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeKMeans: Integer input means are exact", "[SimplnxCore][ComputeKMeans]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  BuildKMeansFixture<uint8>(dataStructure, {100, 101, 102, 103}, 1);
+  ComputeKMeansFilter filter;
+  Arguments args = CreateKMeansMaskParityArguments();
+  args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeKMeansFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_MaskParityMeansPath));
+  const auto& meansArray = dataStructure.getDataRefAs<IDataArray>(k_MaskParityMeansPath);
+  REQUIRE(meansArray.getDataType() == DataType::float64);
+  const auto ids = ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath);
+  const auto means = ReadMeansAsFloat64(dataStructure, k_MaskParityMeansPath);
+  const std::vector<int32> expectedIds = {1, 1, 1, 1};
+  // The selected sum is 406, so its mean is 406 / 4 = 101.5. Bucket zero is empty.
+  const std::vector<float64> expectedMeans = {0.0, 101.5};
+  REQUIRE(ids == expectedIds);
+  REQUIRE(means == expectedMeans);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeKMeans: Large integer clusters divide by the true count", "[SimplnxCore][ComputeKMeans]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  std::vector<uint8> values(257, 0);
+  values[0] = 255;
+  BuildKMeansFixture<uint8>(dataStructure, values, 1);
+  ComputeKMeansFilter filter;
+  Arguments args = CreateKMeansMaskParityArguments();
+  args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeKMeansFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto ids = ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath);
+  const auto means = ReadMeansAsFloat64(dataStructure, k_MaskParityMeansPath);
+  const std::vector<int32> expectedIds(257, 1);
+  REQUIRE(ids == expectedIds);
+  REQUIRE(means.size() == 2);
+  // One value of 255 and 256 zeros give a sum of 255 across 257 members.
+  REQUIRE(means[1] == Approx(255.0 / 257.0));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][ComputeKMeans]")
 {
@@ -236,7 +453,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
     using MaskT = decltype(maskTag);
 
     std::vector<int32> expectedIds;
-    std::vector<float32> expectedMeans;
+    std::vector<float64> expectedMeans;
     bool hasExpectedValues = false;
     const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
     for(const auto scenario : scenarios)
@@ -253,7 +470,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
       REQUIRE(dataStructure.getData(DataPath({"temp_mask"})) == nullptr);
       const auto ids = ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath);
-      const auto means = ReadKMeansValues<float32>(dataStructure, k_MaskParityMeansPath);
+      const auto means = ReadKMeansValues<float64>(dataStructure, k_MaskParityMeansPath);
       for(usize tupleIndex = 0; tupleIndex < ids.size(); tupleIndex++)
       {
         if(tupleIndex % 5 == 0)

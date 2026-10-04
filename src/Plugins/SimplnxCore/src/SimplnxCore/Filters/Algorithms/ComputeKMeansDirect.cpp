@@ -63,7 +63,7 @@ private:
 /**
  * @class ComputeKMeansTemplate
  * @brief Performs typed Lloyd iterations with direct element access.
- * @tparam T Input and centroid value type.
+ * @tparam T Input value type.
  */
 template <typename T>
 class ComputeKMeansTemplate
@@ -73,7 +73,7 @@ public:
                         usize numClusters, Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStoreT>())
-  , m_Means(meansIDataArray->template getIDataStoreRefAs<AbstractDataStoreT>())
+  , m_Means(meansIDataArray->template getIDataStoreRefAs<AbstractDataStore<float64>>())
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
   , m_FeatureIds(fIds)
@@ -90,9 +90,8 @@ public:
   /**
    * @brief Initializes centroids and runs assignment and mean phases.
    *
-   * Centroid sampling permits duplicates. For multi-tuple input, the legacy
-   * index formula excludes the final tuple. The convergence test reads flat
-   * means indices 1 through K and does not inspect all components.
+   * Initial centroids are sampled uniformly with replacement from selected tuples.
+   * Convergence checks every component of each centroid.
    *
    * Cancellation can stop an inner phase after it changes part of an output.
    */
@@ -101,17 +100,19 @@ public:
     usize numTuples = m_InputArray.getNumberOfTuples();
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
-    const usize rangeMax = numTuples - 1;
-
     std::mt19937_64 gen(m_Seed);
-    std::uniform_real_distribution<float64> dist(0.0, 1.0);
+    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
 
     usize clusterChoices = 0;
     while(clusterChoices < m_NumClusters)
     {
-      usize index = std::floor(dist(gen) * static_cast<float64>(rangeMax));
+      if(m_Filter->getCancel())
+      {
+        return;
+      }
+      const usize index = dist(gen);
       if(m_Mask->isTrue(index))
       {
         clusterIdxs[clusterChoices] = index;
@@ -127,7 +128,8 @@ public:
       }
     }
 
-    std::vector<float64> oldMeans(m_NumClusters);
+    const usize meansSize = (m_NumClusters + 1) * numCompDims;
+    std::vector<float64> oldMeans(meansSize);
     std::vector<float64> differences(m_NumClusters);
     usize iteration = 1;
     usize updateCheck = 0;
@@ -139,9 +141,9 @@ public:
       }
       findClusters(numTuples, numCompDims);
 
-      for(usize i = 0; i < m_NumClusters; i++)
+      for(usize i = numCompDims; i < meansSize; i++)
       {
-        oldMeans[i] = m_Means[i + 1];
+        oldMeans[i] = m_Means[i];
       }
 
       findMeans(numTuples, numCompDims);
@@ -149,11 +151,17 @@ public:
       updateCheck = 0;
       for(usize i = 0; i < m_NumClusters; i++)
       {
-        differences[i] = oldMeans[i] - m_Means[i + 1];
-        if(closeEnough<float64>(differences[i], 0.0))
+        bool same = true;
+        float64 shift = 0.0;
+        for(int32 k = 0; k < numCompDims; k++)
         {
-          updateCheck++;
+          const usize v = numCompDims * (i + 1) + k;
+          const float64 difference = oldMeans[v] - m_Means[v];
+          shift += difference;
+          same = same && closeEnough<float64>(difference, 0.0);
         }
+        differences[i] = shift;
+        updateCheck += same ? 1 : 0;
       }
 
       float64 sum = std::accumulate(std::begin(differences), std::end(differences), 0.0);
@@ -166,7 +174,7 @@ private:
   using AbstractDataStoreT = AbstractDataStore<T>;
   ComputeKMeansDirect* m_Filter;
   const AbstractDataStoreT& m_InputArray;
-  AbstractDataStoreT& m_Means;
+  AbstractDataStore<float64>& m_Means;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   usize m_NumClusters;
   Int32AbstractDataStore& m_FeatureIds;

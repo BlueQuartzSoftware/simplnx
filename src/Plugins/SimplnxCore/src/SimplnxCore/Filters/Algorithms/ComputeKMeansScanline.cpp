@@ -141,7 +141,7 @@ private:
 /**
  * @class ComputeKMeansTemplate
  * @brief Typed Lloyd iteration using chunked assignments and cluster-scale centroid state.
- * @tparam T Input and centroid value type.
+ * @tparam T Input value type.
  *
  * Centroids remain resident because they scale with K and component count. Cell
  * inputs, masks, and feature IDs use fixed pages. One pass accumulates all
@@ -155,7 +155,7 @@ public:
                         const ComputeKMeansInputValues& inputValues)
   : m_Filter(filter)
   , m_Input(inputArray.getIDataStoreRefAs<AbstractDataStore<T>>())
-  , m_Means(meansArray.getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_Means(meansArray.getIDataStoreRefAs<AbstractDataStore<float64>>())
   , m_Mask(maskArray)
   , m_FeatureIds(featureIds)
   , m_InputValues(inputValues)
@@ -166,9 +166,8 @@ public:
    * @brief Selects initial centroids and repeats assignment and mean phases.
    * @return Success, or a shape, overflow, cluster-ID, or bulk-transfer error.
    *
-   * Sampling permits duplicate centroids. For multi-tuple input, the legacy
-   * index formula excludes the final tuple. The convergence test reads flat
-   * means indices 1 through K and does not inspect all components.
+   * Initial centroids are sampled uniformly with replacement from selected tuples.
+   * Convergence checks every component of each centroid.
    *
    * Cancellation returns success. Output pages from earlier phases remain.
    */
@@ -198,17 +197,16 @@ public:
     }
 
     std::mt19937_64 generator(m_InputValues.Seed);
-    std::uniform_real_distribution<float64> distribution(0.0, 1.0);
+    std::uniform_int_distribution<usize> distribution(0, tupleCount - 1);
     std::vector<usize> centroidIndices(clusters);
     usize selected = 0;
-    const usize rangeMax = tupleCount - 1;
     while(selected < clusters)
     {
       if(m_Filter.getCancel())
       {
         return {};
       }
-      const usize index = std::floor(distribution(generator) * static_cast<float64>(rangeMax));
+      const usize index = distribution(generator);
       auto maskResult = maskReader.valueAt(index, tupleCount);
       if(maskResult.invalid())
       {
@@ -221,6 +219,7 @@ public:
     }
 
     auto tupleBuffer = std::make_unique<T[]>(components);
+    std::vector<float64> centroidBuffer(components);
     for(usize cluster = 0; cluster < clusters; cluster++)
     {
       auto result = m_Input.copyIntoBuffer(centroidIndices[cluster] * components, nonstd::span<T>(tupleBuffer.get(), components));
@@ -228,7 +227,11 @@ public:
       {
         return result;
       }
-      result = m_Means.copyFromBuffer((cluster + 1) * components, nonstd::span<const T>(tupleBuffer.get(), components));
+      for(usize component = 0; component < components; component++)
+      {
+        centroidBuffer[component] = static_cast<float64>(tupleBuffer[component]);
+      }
+      result = m_Means.copyFromBuffer((cluster + 1) * components, nonstd::span<const float64>(centroidBuffer.data(), components));
       if(result.invalid())
       {
         return result;
@@ -236,8 +239,8 @@ public:
     }
 
     const usize meansSize = (clusters + 1) * components;
-    std::vector<T> meansSnapshot(meansSize);
-    std::vector<float64> oldMeans(clusters);
+    std::vector<float64> meansSnapshot(meansSize);
+    std::vector<float64> previous(meansSize);
     std::vector<float64> differences(clusters);
     usize updateCheck = 0;
     usize iteration = 1;
@@ -256,14 +259,14 @@ public:
       {
         return {};
       }
-      result = m_Means.copyIntoBuffer(0, nonstd::span<T>(meansSnapshot.data(), meansSize));
+      result = m_Means.copyIntoBuffer(0, nonstd::span<float64>(meansSnapshot.data(), meansSize));
       if(result.invalid())
       {
         return result;
       }
-      for(usize cluster = 0; cluster < clusters; cluster++)
+      for(usize v = components; v < meansSize; v++)
       {
-        oldMeans[cluster] = static_cast<float64>(meansSnapshot[cluster + 1]);
+        previous[v] = meansSnapshot[v];
       }
       result = findMeans(tupleCount, components);
       if(result.invalid())
@@ -274,7 +277,7 @@ public:
       {
         return {};
       }
-      result = m_Means.copyIntoBuffer(0, nonstd::span<T>(meansSnapshot.data(), meansSize));
+      result = m_Means.copyIntoBuffer(0, nonstd::span<float64>(meansSnapshot.data(), meansSize));
       if(result.invalid())
       {
         return result;
@@ -282,11 +285,17 @@ public:
       updateCheck = 0;
       for(usize cluster = 0; cluster < clusters; cluster++)
       {
-        differences[cluster] = oldMeans[cluster] - static_cast<float64>(meansSnapshot[cluster + 1]);
-        if(std::numeric_limits<float64>::epsilon() > std::fabs(differences[cluster]))
+        bool same = true;
+        float64 shift = 0.0;
+        for(usize component = 0; component < components; component++)
         {
-          updateCheck++;
+          const usize v = components * (cluster + 1) + component;
+          const float64 difference = previous[v] - meansSnapshot[v];
+          shift += difference;
+          same = same && std::numeric_limits<float64>::epsilon() > std::fabs(difference);
         }
+        differences[cluster] = shift;
+        updateCheck += same ? 1 : 0;
       }
       m_Filter.updateProgress(fmt::format("Clustering Data || Iteration {} || Total Mean Shift: {}", iteration++, std::accumulate(differences.cbegin(), differences.cend(), 0.0)));
     }
@@ -307,8 +316,8 @@ private:
   Result<> findClusters(usize tupleCount, usize components, ChunkMaskReader& maskReader)
   {
     const usize meansSize = (m_InputValues.InitClusters + 1) * components;
-    std::vector<T> means(meansSize);
-    auto result = m_Means.copyIntoBuffer(0, nonstd::span<T>(means.data(), meansSize));
+    std::vector<float64> means(meansSize);
+    auto result = m_Means.copyIntoBuffer(0, nonstd::span<float64>(means.data(), meansSize));
     if(result.invalid())
     {
       return result;
@@ -367,7 +376,7 @@ private:
   Result<> findMeans(usize tupleCount, usize components)
   {
     const usize meansSize = (m_InputValues.InitClusters + 1) * components;
-    std::vector<T> sums(meansSize, static_cast<T>(0));
+    std::vector<float64> sums(meansSize, 0.0);
     std::vector<usize> counts(m_InputValues.InitClusters + 1, 0);
     const usize tuplesPerChunk = std::max<usize>(1, k_ChunkValues / components);
     auto input = std::make_unique<T[]>(tuplesPerChunk * components);
@@ -391,7 +400,7 @@ private:
           return MakeErrorResult(-54064, "Compute K Means encountered a cluster id outside the configured cluster range.");
         }
         for(usize component = 0; component < components; component++)
-          sums[feature * components + component] += input[local * components + component];
+          sums[feature * components + component] += static_cast<float64>(input[local * components + component]);
         counts[feature]++;
       }
     }
@@ -399,16 +408,16 @@ private:
     {
       for(usize component = 0; component < components; component++)
       {
-        T& value = sums[feature * components + component];
-        value = counts[feature] == 0 ? static_cast<T>(0) : value / static_cast<T>(static_cast<float64>(counts[feature]));
+        float64& value = sums[feature * components + component];
+        value = counts[feature] == 0 ? 0.0 : value / static_cast<float64>(counts[feature]);
       }
     }
-    return m_Means.copyFromBuffer(0, nonstd::span<const T>(sums.data(), meansSize));
+    return m_Means.copyFromBuffer(0, nonstd::span<const float64>(sums.data(), meansSize));
   }
 
   ComputeKMeansScanline& m_Filter;
   const AbstractDataStore<T>& m_Input;
-  AbstractDataStore<T>& m_Means;
+  AbstractDataStore<float64>& m_Means;
   const IDataArray* m_Mask = nullptr;
   Int32AbstractDataStore& m_FeatureIds;
   const ComputeKMeansInputValues& m_InputValues;
@@ -422,7 +431,7 @@ struct ExecuteKMeansFunctor
 {
   /**
    * @brief Constructs and executes one typed K-Means implementation.
-   * @tparam T Input and centroid value type.
+   * @tparam T Input value type.
    * @param filter Supplies messaging and cancellation.
    * @param input Supplies input tuples.
    * @param means Receives cluster centroids.

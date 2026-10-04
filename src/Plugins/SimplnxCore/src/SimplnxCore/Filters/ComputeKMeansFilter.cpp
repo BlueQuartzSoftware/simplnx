@@ -138,7 +138,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(clusterArray->getDataType(), tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
