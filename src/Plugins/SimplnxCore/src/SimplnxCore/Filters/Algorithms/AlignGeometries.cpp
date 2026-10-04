@@ -155,7 +155,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
     const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
     float min[3] = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-    float max[3] = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
+    float max[3] = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
       if(xBounds[i] < min[0])
@@ -189,9 +189,9 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
         max[2] = zBounds[i];
       }
     }
-    centroid[0] = (max[0] - min[0]) / 2.0f;
-    centroid[1] = (max[1] - min[1]) / 2.0f;
-    centroid[2] = (max[2] - min[2]) / 2.0f;
+    centroid[0] = (max[0] + min[0]) / 2.0f;
+    centroid[1] = (max[1] + min[1]) / 2.0f;
+    centroid[2] = (max[2] + min[2]) / 2.0f;
     return centroid;
   }
   case IGeometry::Type::Vertex: {
@@ -291,15 +291,15 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
     auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
     auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < rectGrid.getNumXCells(); i++)
+    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
       xBounds[i] += translation[0];
     }
-    for(size_t i = 0; i < rectGrid.getNumYCells(); i++)
+    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
       yBounds[i] += translation[1];
     }
-    for(size_t i = 0; i < rectGrid.getNumZCells(); i++)
+    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
       zBounds[i] += translation[2];
     }
@@ -412,7 +412,7 @@ Result<> AlignGeometries::operator()()
       return {};
     }
 
-    float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0]};
+    float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[1] - movingCentroid[1], targetCentroid[2] - movingCentroid[2]};
     translateGeometry(moving, translation);
   }
   else
