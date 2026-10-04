@@ -93,6 +93,7 @@ Result<> ReadStringDataArray::operator()()
   usize totalSize = numTuples * scalarNumComp;
   usize lineNum = m_InputValues->skipLineCount;
   usize tupleIndex = 0;
+  Result<> result;
   for(size_t i = 0; i < totalSize; ++i)
   {
     if(m_ShouldCancel)
@@ -113,6 +114,12 @@ Result<> ReadStringDataArray::operator()()
     // Copy the data into the array
     for(const auto& value : tokens)
     {
+      if(tupleIndex == totalSize)
+      {
+        result.warnings().push_back(Warning{
+            -76510, fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
+        break;
+      }
       data[tupleIndex++] = value;
     }
 
@@ -124,7 +131,7 @@ Result<> ReadStringDataArray::operator()()
     }
   }
 
-  return {};
+  return result;
 }
 
 } // namespace nx::core
