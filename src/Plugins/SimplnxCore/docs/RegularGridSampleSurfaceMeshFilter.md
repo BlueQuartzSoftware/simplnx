@@ -42,7 +42,11 @@ The **Face Labels/Part Numbers** input array specifies which **Features** (or pa
 - **2-component arrays**: Each face has two labels identifying the **Features** on either side. When a scanline crosses a face boundary, the algorithm toggles between the two labels. This is the standard format produced by surface meshing filters.
 - **1-component arrays**: Each face has a single part number. When a scanline crosses a face boundary, the voxel is assigned the part number of that face. This format is useful for imported meshes (e.g., STL files) where each face belongs to a single part.
 
-The output *Feature Ids* array will have the same integer data type as the input **Face Labels/Part Numbers** array.
+A Face Label below 0 (the exterior label written by QuickSurfaceMesh and SurfaceNets) is treated as 0.
+
+With **Use Custom Output Type** off, the output *Feature Ids* DataArray has the same integer data type as the input **Face Labels/Part Numbers** DataArray. With this option on, **Output Type for Feature Ids** selects the output integer type.
+
+With Use Custom Output Type on, a Face Label value that does not fit in the chosen type is an error at execute.
 
 ### Origin, Dimension, and Spacing's Effect on the Output
 
