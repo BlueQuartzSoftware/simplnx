@@ -17,6 +17,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <limits>
@@ -258,7 +259,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       if(croppingOptions.cropX)
       {
         const float64 xMin = static_cast<float64>(croppingOptions.xBoundPhysical[0]);
-        const int64 voxelX = static_cast<int64>((xMin - static_cast<float64>(srcOrigin[0])) / static_cast<float64>(srcSpacing[0]));
+        const int64 voxelX = xMin >= srcOrigin[0] ? static_cast<int64>(std::floor((xMin - static_cast<float64>(srcOrigin[0])) / static_cast<float64>(srcSpacing[0]))) : 0;
         if(voxelX < 0 || static_cast<usize>(voxelX) >= stream.srcWidth)
         {
           return MakeErrorResult(-2002, fmt::format("Physical crop X minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", xMin, srcOrigin[0],
@@ -269,7 +270,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       if(croppingOptions.cropY)
       {
         const float64 yMin = static_cast<float64>(croppingOptions.yBoundPhysical[0]);
-        const int64 voxelY = static_cast<int64>((yMin - static_cast<float64>(srcOrigin[1])) / static_cast<float64>(srcSpacing[1]));
+        const int64 voxelY = yMin >= srcOrigin[1] ? static_cast<int64>(std::floor((yMin - static_cast<float64>(srcOrigin[1])) / static_cast<float64>(srcSpacing[1]))) : 0;
         if(voxelY < 0 || static_cast<usize>(voxelY) >= stream.srcHeight)
         {
           return MakeErrorResult(-2003, fmt::format("Physical crop Y minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", yMin, srcOrigin[1],
@@ -280,7 +281,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       if(zCropActive)
       {
         const float64 zMin = static_cast<float64>(croppingOptions.zBoundPhysical[0]);
-        const int64 voxelZ = static_cast<int64>((zMin - static_cast<float64>(srcOrigin[2])) / static_cast<float64>(srcSpacing[2]));
+        const int64 voxelZ = zMin >= srcOrigin[2] ? static_cast<int64>(std::floor((zMin - static_cast<float64>(srcOrigin[2])) / static_cast<float64>(srcSpacing[2]))) : 0;
         if(voxelZ < 0 || static_cast<usize>(voxelZ) >= metadata.numPages)
         {
           return MakeErrorResult(-2004, fmt::format("Physical crop Z minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", zMin, srcOrigin[2],

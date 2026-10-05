@@ -39,7 +39,7 @@ The origin/spacing/data-type override and cropping options below apply to all ba
 
 The user can optionally override the origin and spacing for the imported image. *Spacing* is the physical size of each pixel and *Origin* is the coordinate of the lower-left corner of the geometry; both are expressed in the same physical length units (for example microns). The default values from the input file will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
 
-When setting a custom origin, the user can choose whether to place the origin at the corner of the geometry (default) or at the center of the geometry by enabling the "Put Input Origin at the Center of Geometry" option.
+When **Set Origin** is enabled, the **Center Geometry on (0, 0, 0)** option controls centering. When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.
 
 ### Origin & Spacing Processing
 
@@ -71,6 +71,8 @@ The user can crop the incoming image using the Cropping Options section. The cro
 Both subvolume cropping types have checkboxes to turn on/off cropping in the X, Y, and Z dimensions. For example, if **Physical Subvolume** is selected and only **Crop Y Dimension** is enabled, the image will be cropped in the Y dimension only using physical coordinate bounds. Z cropping only applies to a genuine multi-page/volume input (`Z > 1`); for a 2D image the Z crop flag is ignored.
 
 A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
+
+A physical crop minimum below the Image Geometry's origin is clamped to the first cell when the requested range overlaps the geometry. Preflight reports warning `-50503`, and execution reads the clamped region.
 
 ## Required Input Sources
 

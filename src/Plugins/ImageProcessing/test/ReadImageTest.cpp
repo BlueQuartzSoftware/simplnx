@@ -1359,6 +1359,79 @@ void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t heig
 }
 } // namespace
 
+TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_Clamps", "[ImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path filePath = ReadImageOutputDir() / "physical_min_below_origin.tif";
+  WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
+
+  const DataPath geomPath({"Physical Crop"});
+  const DataPath pixelsPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = true;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {-2.0F, 2.0F};
+  crop.yBoundPhysical = {1.0F, 2.0F};
+  Arguments args;
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::string("Pixels"));
+  args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, crop);
+  ReadImageFilter filter;
+  DataStructure dataStructure;
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto& warnings = preflight.outputActions.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -50503; }));
+  auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions() == SizeVec3{3, 2, 1});
+  REQUIRE(geom.getOrigin() == FloatVec3{0.0F, 1.0F, 0.0F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(pixelsPath));
+  const auto& pixels = dataStructure.getDataRefAs<UInt8Array>(pixelsPath);
+  const std::vector<uint8_t> expected = {10, 11, 12, 20, 21, 22};
+  REQUIRE(pixels.getNumberOfTuples() == expected.size());
+  for(usize tupleIdx = 0; tupleIdx < expected.size(); ++tupleIdx)
+  {
+    REQUIRE(pixels[tupleIdx] == expected[tupleIdx]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputOrigin", "[ImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path filePath = ReadImageOutputDir() / "center_geometry.tif";
+  WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
+
+  const DataPath geomPath({"Centered Image"});
+  Arguments args;
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
+  args.insertOrAssign(ReadImageFilter::k_CenterOrigin_Key, true);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, std::vector<float32>{10.0F, 20.0F, 30.0F});
+  args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, std::vector<float32>{2.0F, 3.0F, 4.0F});
+  ReadImageFilter filter;
+  DataStructure dataStructure;
+  auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions() == SizeVec3{5, 4, 1});
+  REQUIRE(geom.getSpacing() == FloatVec3{2.0F, 3.0F, 4.0F});
+  REQUIRE(geom.getOrigin() == FloatVec3{-5.0F, -6.0F, -2.0F});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
