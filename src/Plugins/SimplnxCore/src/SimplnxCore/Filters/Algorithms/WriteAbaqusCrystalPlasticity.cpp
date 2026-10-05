@@ -14,6 +14,7 @@
 #include <iterator>
 #include <numbers>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -21,6 +22,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr std::string_view k_SeparatorLine = "** ----------------------------------------------------------------\n";
+
 enum class WriteStatus
 {
   Success,
@@ -77,7 +80,7 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
   const auto origin = imageGeom.getOrigin();
   const std::array<usize, 3> nodeDimensions = {dimensions[0] + 1, dimensions[1] + 1, dimensions[2] + 1};
   fmt::memory_buffer buffer;
-  fmt::format_to(std::back_inserter(buffer), "*NODE, NSET=ALLNODES\n");
+  fmt::format_to(std::back_inserter(buffer), "{}**\n*Node\n", k_SeparatorLine);
   progressThrottle.reset(nodeDimensions[2], "Writing Nodes (File 1/5)");
 
   for(usize z = 0; z < nodeDimensions[2]; z++)
@@ -106,6 +109,11 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
     progressThrottle.updateCount(z + 1);
   }
 
+  fmt::format_to(std::back_inserter(buffer), "**\n{}**\n", k_SeparatorLine);
+  if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+  {
+    return WriteStatus::WriteError;
+  }
   return CloseOutput(output);
 }
 
@@ -121,7 +129,7 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
   const usize nodesX = dimensions[0] + 1;
   const usize nodesY = dimensions[1] + 1;
   fmt::memory_buffer buffer;
-  fmt::format_to(std::back_inserter(buffer), "*ELEMENT, TYPE={}, ELSET=ALLELEMENTS\n", useReducedIntegration ? "C3D8R" : "C3D8");
+  fmt::format_to(std::back_inserter(buffer), "{}**\n*Element, type={}\n", k_SeparatorLine, useReducedIntegration ? "C3D8R" : "C3D8");
   progressThrottle.reset(dimensions[2], "Writing Elements (File 2/5)");
 
   for(usize z = 0; z < dimensions[2]; z++)
@@ -156,10 +164,15 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
     progressThrottle.updateCount(z + 1);
   }
 
+  fmt::format_to(std::back_inserter(buffer), "**\n{}**\n", k_SeparatorLine);
+  if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+  {
+    return WriteStatus::WriteError;
+  }
   return CloseOutput(output);
 }
 
-WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainData, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle)
+WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainData, usize cellCount, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
   if(!output.is_open())
@@ -169,6 +182,7 @@ WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainDat
 
   const usize grainCount = grainData.Phases.size() - 1;
   fmt::memory_buffer buffer;
+  fmt::format_to(std::back_inserter(buffer), "{}**\n** The element sets\n*Elset, elset=cube, generate\n1, {}, 1\n**\n** Each Grain is made up of multiple elements\n**\n", k_SeparatorLine, cellCount);
   progressThrottle.reset(grainCount, "Writing Element Sets (File 3/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
@@ -198,6 +212,11 @@ WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainDat
     progressThrottle.updateCount(grainId);
   }
 
+  fmt::format_to(std::back_inserter(buffer), "**\n{}**\n", k_SeparatorLine);
+  if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+  {
+    return WriteStatus::WriteError;
+  }
   return CloseOutput(output);
 }
 
@@ -237,12 +256,12 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
   fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.JobName);
   fmt::format_to(std::back_inserter(buffer), "** Job name : {}\n", inputValues.JobName);
   fmt::format_to(std::back_inserter(buffer), "*Preprint, echo = NO, model = NO, history = NO, contact = NO\n");
-  fmt::format_to(std::back_inserter(buffer), "**\n");
+  fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Geometry----------------------------\n**\n");
   fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_nodes.inp\n", inputValues.FilePrefix);
   fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elems.inp\n", inputValues.FilePrefix);
-  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.FilePrefix);
   fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elset.inp\n", inputValues.FilePrefix);
-  fmt::format_to(std::back_inserter(buffer), "**\n");
+  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.FilePrefix);
+  fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Materials---------------------------\n**\n");
 
   const usize materialConstantCount = inputValues.MaterialConstants.size();
   const usize grainCount = grainData.Phases.size() - 1;
@@ -256,10 +275,10 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
 
     const int32 phaseId = grainData.Phases[grainId];
     const auto& orientation = grainData.Orientations[grainId];
-    fmt::format_to(std::back_inserter(buffer), "*Material, name = Grain{}_Phase{}_mat\n", grainId, phaseId);
+    fmt::format_to(std::back_inserter(buffer), "*Material, name=Grain{}_Phase{}_mat\n", grainId, phaseId);
     fmt::format_to(std::back_inserter(buffer), "*Depvar\n");
     fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.NumDepvar);
-    fmt::format_to(std::back_inserter(buffer), "*User Material, constants = {}\n", materialConstantCount + 5);
+    fmt::format_to(std::back_inserter(buffer), "*User Material, constants={}\n", materialConstantCount + 5);
     fmt::format_to(std::back_inserter(buffer), "{}, {}, {}, {}, {}", grainId, phaseId, orientation[0], orientation[1], orientation[2]);
     WriteMaterialConstants(buffer, inputValues.MaterialConstants);
     fmt::format_to(std::back_inserter(buffer), "\n");
@@ -273,6 +292,11 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
     progressThrottle.updateCount(grainId);
   }
 
+  fmt::format_to(std::back_inserter(buffer), "**\n{}**\n", k_SeparatorLine);
+  if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+  {
+    return WriteStatus::WriteError;
+  }
   return CloseOutput(output);
 }
 
@@ -287,6 +311,7 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
 
   const usize grainCount = grainData.Phases.size() - 1;
   fmt::memory_buffer buffer;
+  fmt::format_to(std::back_inserter(buffer), "{}**\n** Each section is a separate grain\n", k_SeparatorLine);
   progressThrottle.reset(grainCount, "Writing Sections (File 5/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
@@ -296,11 +321,13 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
     }
 
     const int32 phaseId = grainData.Phases[grainId];
+    fmt::format_to(std::back_inserter(buffer), "** Section: Grain{}_Phase{}\n", grainId, phaseId);
     fmt::format_to(std::back_inserter(buffer), "*Solid Section, elset=Grain{}_Phase{}_set, material=Grain{}_Phase{}_mat\n", grainId, phaseId, grainId, phaseId);
     if(useReducedIntegration)
     {
       fmt::format_to(std::back_inserter(buffer), "*Hourglass Stiffness\n{}\n", hourglassStiffness);
     }
+    fmt::format_to(std::back_inserter(buffer), "** --------------------------------------\n");
     if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
     {
       return WriteStatus::WriteError;
@@ -308,6 +335,11 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
     progressThrottle.updateCount(grainId);
   }
 
+  fmt::format_to(std::back_inserter(buffer), "**\n{}**\n", k_SeparatorLine);
+  if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
+  {
+    return WriteStatus::WriteError;
+  }
   return CloseOutput(output);
 }
 
@@ -486,7 +518,8 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     return writeResult;
   }
 
-  writeResult = writeFile(FileIndex::Elset, "Writing Element Sets (File 3/5)...", [&](const fs::path& path) { return WriteElementSets(path, grainData, m_ShouldCancel, progressThrottle); });
+  writeResult = writeFile(FileIndex::Elset, "Writing Element Sets (File 3/5)...",
+                          [&](const fs::path& path) { return WriteElementSets(path, grainData, imageGeom.getNumberOfCells(), m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;

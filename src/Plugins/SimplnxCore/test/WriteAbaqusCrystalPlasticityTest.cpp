@@ -125,6 +125,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain"
   const std::string prefix = "Abaqus_CP_Test";
   const WriteAbaqusCrystalPlasticityFilter filter;
   Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -133,7 +134,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain"
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const std::string expectedNodes = R"(*NODE, NSET=ALLNODES
+  const std::string expectedNodes = R"(** ----------------------------------------------------------------
+**
+*Node
 1, 0.000000, 0.000000, 0.000000
 2, 0.500000, 0.000000, 0.000000
 3, 1.000000, 0.000000, 0.000000
@@ -152,19 +155,38 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain"
 16, 0.000000, 1.000000, 0.500000
 17, 0.500000, 1.000000, 0.500000
 18, 1.000000, 1.000000, 0.500000
+**
+** ----------------------------------------------------------------
+**
 )";
 
-  const std::string expectedElements = R"(*ELEMENT, TYPE=C3D8R, ELSET=ALLELEMENTS
+  const std::string expectedElements = R"(** ----------------------------------------------------------------
+**
+*Element, type=C3D8R
 1, 1, 2, 5, 4, 10, 11, 14, 13
 2, 2, 3, 6, 5, 11, 12, 15, 14
 3, 4, 5, 8, 7, 13, 14, 17, 16
 4, 5, 6, 9, 8, 14, 15, 18, 17
+**
+** ----------------------------------------------------------------
+**
 )";
 
-  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+  const std::string expectedElsets = R"(** ----------------------------------------------------------------
+**
+** The element sets
+*Elset, elset=cube, generate
+1, 4, 1
+**
+** Each Grain is made up of multiple elements
+**
+*Elset, elset=Grain1_Phase1_set
 1, 2
 *Elset, elset=Grain2_Phase2_set
 3, 4
+**
+** ----------------------------------------------------------------
+**
 )";
 
   const std::string expectedMaster = R"(*Heading
@@ -172,33 +194,50 @@ UnitTest
 ** Job name : UnitTest
 *Preprint, echo = NO, model = NO, history = NO, contact = NO
 **
+** ----------------------------Geometry----------------------------
+**
 *Include, Input = Abaqus_CP_Test_nodes.inp
 *Include, Input = Abaqus_CP_Test_elems.inp
-*Include, Input = Abaqus_CP_Test_sects.inp
 *Include, Input = Abaqus_CP_Test_elset.inp
+*Include, Input = Abaqus_CP_Test_sects.inp
 **
-*Material, name = Grain1_Phase1_mat
+** ----------------------------Materials---------------------------
+**
+*Material, name=Grain1_Phase1_mat
 *Depvar
 3
-*User Material, constants = 7
+*User Material, constants=7
 1, 1, 0, 90, 180, 1.5, 2.25
 *User Output Variables
 2
-*Material, name = Grain2_Phase2_mat
+*Material, name=Grain2_Phase2_mat
 *Depvar
 3
-*User Material, constants = 7
+*User Material, constants=7
 2, 2, 45, 30, 60, 1.5, 2.25
 *User Output Variables
 2
+**
+** ----------------------------------------------------------------
+**
 )";
 
-  const std::string expectedSections = R"(*Solid Section, elset=Grain1_Phase1_set, material=Grain1_Phase1_mat
+  const std::string expectedSections = R"(** ----------------------------------------------------------------
+**
+** Each section is a separate grain
+** Section: Grain1_Phase1
+*Solid Section, elset=Grain1_Phase1_set, material=Grain1_Phase1_mat
 *Hourglass Stiffness
 417
+** --------------------------------------
+** Section: Grain2_Phase2
 *Solid Section, elset=Grain2_Phase2_set, material=Grain2_Phase2_mat
 *Hourglass Stiffness
 417
+** --------------------------------------
+**
+** ----------------------------------------------------------------
+**
 )";
 
   REQUIRE(ReadFile(outputPath / fmt::format("{}_nodes.inp", prefix)) == expectedNodes);
@@ -208,6 +247,12 @@ UnitTest
   REQUIRE(ReadFile(outputPath / fmt::format("{}_sects.inp", prefix)) == expectedSections);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Default Integration Is Standard", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  const Arguments args = WriteAbaqusCrystalPlasticityFilter().getDefaultArguments();
+  REQUIRE_FALSE(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
@@ -228,7 +273,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string elements = ReadFile(outputPath / fmt::format("{}_elems.inp", prefix));
-  REQUIRE(elements.starts_with("*ELEMENT, TYPE=C3D8, ELSET=ALLELEMENTS\n"));
+  REQUIRE(elements.find("*Element, type=C3D8\n") != std::string::npos);
   REQUIRE(elements.find("C3D8R") == std::string::npos);
 
   const std::string sections = ReadFile(outputPath / fmt::format("{}_sects.inp", prefix));
@@ -253,9 +298,20 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Wrapping Rules", "[S
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+  const std::string expectedElsets = R"(** ----------------------------------------------------------------
+**
+** The element sets
+*Elset, elset=cube, generate
+1, 32, 1
+**
+** Each Grain is made up of multiple elements
+**
+*Elset, elset=Grain1_Phase1_set
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+**
+** ----------------------------------------------------------------
+**
 )";
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
 
@@ -264,19 +320,26 @@ UnitTest
 ** Job name : UnitTest
 *Preprint, echo = NO, model = NO, history = NO, contact = NO
 **
+** ----------------------------Geometry----------------------------
+**
 *Include, Input = Wrapping_Rules_nodes.inp
 *Include, Input = Wrapping_Rules_elems.inp
-*Include, Input = Wrapping_Rules_sects.inp
 *Include, Input = Wrapping_Rules_elset.inp
+*Include, Input = Wrapping_Rules_sects.inp
 **
-*Material, name = Grain1_Phase1_mat
+** ----------------------------Materials---------------------------
+**
+*Material, name=Grain1_Phase1_mat
 *Depvar
 2
-*User Material, constants = 10
+*User Material, constants=10
 1, 1, 0, 0, 0, 1, 2, 3
 4, 5
 *User Output Variables
 1
+**
+** ----------------------------------------------------------------
+**
 )";
   REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
 
@@ -326,7 +389,15 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Gap In Feature Ids",
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(warningEmitted);
 
-  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+  const std::string expectedElsets = R"(** ----------------------------------------------------------------
+**
+** The element sets
+*Elset, elset=cube, generate
+1, 4, 1
+**
+** Each Grain is made up of multiple elements
+**
+*Elset, elset=Grain1_Phase1_set
 1, 2
 *Elset, elset=Grain2_Phase0_set
 
@@ -336,6 +407,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Gap In Feature Ids",
 
 *Elset, elset=Grain5_Phase2_set
 3, 4
+**
+** ----------------------------------------------------------------
+**
 )";
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
 
@@ -437,15 +511,28 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Feature Id Zero Skip
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const std::string expectedElsets = R"(*Elset, elset=Grain1_Phase1_set
+  const std::string expectedElsets = R"(** ----------------------------------------------------------------
+**
+** The element sets
+*Elset, elset=cube, generate
+1, 3, 1
+**
+** Each Grain is made up of multiple elements
+**
+*Elset, elset=Grain1_Phase1_set
 2, 3
+**
+** ----------------------------------------------------------------
+**
 )";
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
 
   const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
-  REQUIRE(CountOccurrences(master, "*Material, name = ") == 1);
+  REQUIRE(CountOccurrences(master, "*Material, name=") == 1);
   REQUIRE(master.find("Grain1_Phase1_mat") != std::string::npos);
   REQUIRE(master.find("Grain2_") == std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tuple Count Mismatch", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
