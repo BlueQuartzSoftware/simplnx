@@ -207,14 +207,14 @@ UnitTest
 *Depvar
 3
 *User Material, constants=7
-1, 1, 0, 90, 180, 1.5, 2.25
+1, 1, 0, 1.5707964, 3.1415927, 1.5, 2.25
 *User Output Variables
 2
 *Material, name=Grain2_Phase2_mat
 *Depvar
 3
 *User Material, constants=7
-2, 2, 45, 30, 60, 1.5, 2.25
+2, 2, 0.7853982, 0.5235988, 1.0471976, 1.5, 2.25
 *User Output Variables
 2
 **
@@ -245,6 +245,28 @@ UnitTest
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
   REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
   REQUIRE(ReadFile(outputPath / fmt::format("{}_sects.inp", prefix)) == expectedSections);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Angles In Degrees", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr float32 k_Pi = std::numbers::pi_v<float32>;
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, {k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F});
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "EulerDegrees";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Euler_Degrees";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key, std::make_any<bool>(true));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
+  REQUIRE(master.find("1, 1, 45, 30, 60, 1.5, 2.25\n") != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -593,6 +615,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Comp
 
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
+      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key));
       CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key) == 250);
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_OutputPath_Key) == fs::path("/test/path"));
       CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_FilePrefix_Key) == "TestPrefix");
