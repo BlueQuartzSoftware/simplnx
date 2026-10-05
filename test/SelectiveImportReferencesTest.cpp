@@ -726,7 +726,8 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
   REQUIRE(sourceLater != nullptr);
   REQUIRE(sourceLater->getId() == later->getId());
   REQUIRE(sourceHandout.getData(sourceLater->getId()) == sourceLater);
-  REQUIRE(fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow);
+  // Evaluate to bool before Catch2 tries to stream libc++'s 128-bit file-clock duration.
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
   cache.invalidate(file.path);
   cache.resetStats();
   DataStructure warmDestination;
@@ -845,7 +846,8 @@ TEST_CASE("C8 shared group paths retain independent destination groups and child
   REQUIRE(sourceNext == 5);
   REQUIRE(sourceHandout.getAllDataObjectIds().size() == 4);
   REQUIRE(sourceHandout.getAllDataPaths().size() == 6);
-  REQUIRE(fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow);
+  // Evaluate to bool before Catch2 tries to stream libc++'s 128-bit file-clock duration.
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
   cache.invalidate(file.path);
   cache.resetStats();
   DataStructure warmDestination;
