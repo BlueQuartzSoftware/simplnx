@@ -143,7 +143,7 @@ void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
   const auto occupied = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes());
   REQUIRE(occupied.sizeBytes() == budget.maximumWorkingMemoryBytes());
   auto store = std::make_shared<FaultStore<T>>();
-  auto data = IdentifySampleBatchTest::CreateFixture<T>(2, 19, store);
+  DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(2, 19, store);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
   REQUIRE(mask.getDataStore()->getStoreType() == IDataStore::StoreType::InMemory);
@@ -316,7 +316,7 @@ TEST_CASE("IdentifySample positive headroom batches YZ transfers", "[.IdentifySa
     const auto check = [&]<class T>() {
       const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
       const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
-      auto data = IdentifySampleBatchTest::CreateFixture<T>(2);
+      DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(2);
       REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
       auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
       REQUIRE(mask.getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
