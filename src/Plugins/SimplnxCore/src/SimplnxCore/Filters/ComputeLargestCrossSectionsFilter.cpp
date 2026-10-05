@@ -112,6 +112,19 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
     return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
   }
 
+  const auto* cellAM = imageGeom.getCellData();
+  if(cellAM == nullptr)
+  {
+    return MakePreflightErrorResult(-3711, fmt::format("The Image Geometry '{}' has no Cell Data Attribute Matrix.", pImageGeometryPath.toString()));
+  }
+
+  const DataPath cellDataPath = cellAM->getDataPaths().at(0);
+  if(pFeatureIdsArrayPathValue.getParent() != cellDataPath)
+  {
+    return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of the Image Geometry '{}'.",
+                                                       pFeatureIdsArrayPathValue.toString(), cellDataPath.toString(), pImageGeometryPath.toString()));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
