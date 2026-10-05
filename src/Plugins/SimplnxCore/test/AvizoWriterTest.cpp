@@ -186,7 +186,7 @@ public:
   int nativeCloseStatus = EOF;
 
 private:
-  static usize Write(void* context, FILE* stream, const void* data, usize elementSize, usize count)
+  static usize Write(void* context, FILE* stream, const void* data, usize writeElementSize, usize count)
   {
     auto& self = *static_cast<FaultAvizoWriter*>(context);
     ++self.writeCalls;
@@ -197,13 +197,13 @@ private:
     }
     if(self.writeCalls == self.failWriteAt)
     {
-      self.observedElementSize = elementSize;
+      self.observedElementSize = writeElementSize;
       self.observedRequestedElements = count;
-      self.observedWrittenElements = std::fwrite(data, elementSize, count == 0 ? 0 : count - 1, stream);
+      self.observedWrittenElements = std::fwrite(data, writeElementSize, count == 0 ? 0 : count - 1, stream);
       errno = ENOSPC;
       return self.observedWrittenElements;
     }
-    return std::fwrite(data, elementSize, count, stream);
+    return std::fwrite(data, writeElementSize, count, stream);
   }
 
   static int Print(void* context, FILE* stream, const char* format, std::va_list args)
