@@ -1358,3 +1358,67 @@ void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t heig
   TIFFClose(tif);
 }
 } // namespace
+
+TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadImage_physical_max_at_bound.tif";
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(filePath.string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, 5) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, 4) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_BITSPERSAMPLE, 8) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLESPERPIXEL, 1) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 1);
+    REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
+    for(uint32_t y = 0; y < 4; ++y)
+    {
+      std::vector<uint8_t> row(5);
+      for(uint32_t x = 0; x < 5; ++x)
+      {
+        row[x] = static_cast<uint8_t>(10 * y + x);
+      }
+      REQUIRE(TIFFWriteScanline(tiff.get(), row.data(), y, 0) == 1);
+    }
+  }
+
+  const DataPath geomPath({"Physical Crop"});
+  const DataPath pixelsPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = false;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {1.0F, 5.0F};
+  Arguments args;
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::string("Pixels"));
+  args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, crop);
+  ReadImageFilter filter;
+  DataStructure dataStructure;
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions() == SizeVec3{4, 4, 1});
+  REQUIRE(geom.getOrigin()[0] == 1.0F);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(pixelsPath));
+  const auto& pixels = dataStructure.getDataRefAs<UInt8Array>(pixelsPath);
+  REQUIRE(pixels.getNumberOfTuples() == 16);
+  for(usize y = 0; y < 4; ++y)
+  {
+    for(usize x = 0; x < 4; ++x)
+    {
+      REQUIRE(pixels[y * 4 + x] == 10 * y + x + 1);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

@@ -2026,3 +2026,33 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry n
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: PhysicalCrop_MaxAtBound", "[SimplnxCore][CropImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath sourcePath({"Source"});
+  const DataPath croppedPath({"Cropped"});
+  CreateImageGeometryAction geometryAction(sourcePath, {5, 4, 3}, {0.5F, -1.0F, 2.0F}, {1.0F, 2.0F, 0.5F}, "Cell Data");
+  auto geometryResult = geometryAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(geometryResult);
+  CropImageGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, sourcePath);
+  args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, croppedPath);
+  args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, true);
+  args.insertOrAssign(CropImageGeometryFilter::k_MinCoord_Key, std::vector<float64>{1.5, 1.0, 2.5});
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxCoord_Key, std::vector<float64>{5.5, 7.0, 3.5});
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(croppedPath));
+  const auto& croppedGeom = dataStructure.getDataRefAs<ImageGeom>(croppedPath);
+  REQUIRE(croppedGeom.getDimensions() == SizeVec3{4, 3, 2});
+  REQUIRE(croppedGeom.getOrigin() == FloatVec3{1.5F, 1.0F, 2.5F});
+  REQUIRE(croppedGeom.getSpacing() == FloatVec3{1.0F, 2.0F, 0.5F});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
