@@ -134,24 +134,24 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain"
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string expectedNodes = R"(*NODE, NSET=ALLNODES
-1, 0.000, 0.000, 0.000
-2, 0.500, 0.000, 0.000
-3, 1.000, 0.000, 0.000
-4, 0.000, 0.500, 0.000
-5, 0.500, 0.500, 0.000
-6, 1.000, 0.500, 0.000
-7, 0.000, 1.000, 0.000
-8, 0.500, 1.000, 0.000
-9, 1.000, 1.000, 0.000
-10, 0.000, 0.000, 0.500
-11, 0.500, 0.000, 0.500
-12, 1.000, 0.000, 0.500
-13, 0.000, 0.500, 0.500
-14, 0.500, 0.500, 0.500
-15, 1.000, 0.500, 0.500
-16, 0.000, 1.000, 0.500
-17, 0.500, 1.000, 0.500
-18, 1.000, 1.000, 0.500
+1, 0.000000, 0.000000, 0.000000
+2, 0.500000, 0.000000, 0.000000
+3, 1.000000, 0.000000, 0.000000
+4, 0.000000, 0.500000, 0.000000
+5, 0.500000, 0.500000, 0.000000
+6, 1.000000, 0.500000, 0.000000
+7, 0.000000, 1.000000, 0.000000
+8, 0.500000, 1.000000, 0.000000
+9, 1.000000, 1.000000, 0.000000
+10, 0.000000, 0.000000, 0.500000
+11, 0.500000, 0.000000, 0.500000
+12, 1.000000, 0.000000, 0.500000
+13, 0.000000, 0.500000, 0.500000
+14, 0.500000, 0.500000, 0.500000
+15, 1.000000, 0.500000, 0.500000
+16, 0.000000, 1.000000, 0.500000
+17, 0.500000, 1.000000, 0.500000
+18, 1.000000, 1.000000, 0.500000
 )";
 
   const std::string expectedElements = R"(*ELEMENT, TYPE=C3D8R, ELSET=ALLELEMENTS
@@ -181,14 +181,14 @@ UnitTest
 *Depvar
 3
 *User Material, constants = 7
-1, 1, 0.000, 90.000, 180.000, 1.500, 2.250
+1, 1, 0, 90, 180, 1.5, 2.25
 *User Output Variables
 2
 *Material, name = Grain2_Phase2_mat
 *Depvar
 3
 *User Material, constants = 7
-2, 2, 45.000, 30.000, 60.000, 1.500, 2.250
+2, 2, 45, 30, 60, 1.5, 2.25
 *User Output Variables
 2
 )";
@@ -273,12 +273,33 @@ UnitTest
 *Depvar
 2
 *User Material, constants = 10
-1, 1, 0.000, 0.000, 0.000, 1.000, 2.000, 3.000
-4.000, 5.000
+1, 1, 0, 0, 0, 1, 2, 3
+4, 5
 *User Output Variables
 1
 )";
   REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constant Precision", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "ConstantPrecision";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Constant_Precision";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix, {{1.0e-5}, {2.1e11}, {0.123456789012}});
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
+  // Eight values per line: grain, phase, three angles, then the three constants.
+  REQUIRE(master.find("1, 1, 0, 0, 0, 1e-05, 210000000000, 0.123456789012\n") != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
