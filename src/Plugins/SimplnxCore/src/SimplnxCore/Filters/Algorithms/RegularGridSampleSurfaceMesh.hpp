@@ -7,8 +7,12 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <algorithm>
 #include <mutex>
+#include <type_traits>
+#include <vector>
 
 namespace nx::core
 {
@@ -70,21 +74,36 @@ public:
 
   /**
    * @brief Writes one completed Z-slice while holding the output mutex.
-   * @tparam T Specifies the Feature-ID scalar type.
+   * @tparam T Specifies the source Face Label scalar type.
    * @param zSlice Specifies the destination Z index.
    * @param sliceData Provides rasterized Feature IDs.
    * @param count Specifies values in the slice buffer.
    * @return The output-store write result.
-   * @pre operator() initialized the slice size and output path.
+   * @pre operator() initialized the slice size and output path and validated the label range.
    *
    */
   template <typename T>
   Result<> sendThreadSafeSliceUpdate(usize zSlice, const T* sliceData, usize count)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-    usize offset = zSlice * m_CellsPerSlice;
-    return featureIdsRef.copyFromBuffer(offset, nonstd::span<const T>(sliceData, count));
+    auto& featureIdsRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+    const usize offset = zSlice * m_CellsPerSlice;
+    return ExecuteDataFunctionIntType(
+        [&]<typename OutputT>() -> Result<> {
+          auto& outputStore = dynamic_cast<DataArray<OutputT>&>(featureIdsRef).getDataStoreRef();
+          if constexpr(std::is_same_v<T, OutputT>)
+          {
+            return outputStore.copyFromBuffer(offset, nonstd::span<const OutputT>(sliceData, count));
+          }
+          else
+          {
+            // Only custom output types need a converted slice buffer.
+            std::vector<OutputT> convertedSlice(count);
+            std::transform(sliceData, sliceData + count, convertedSlice.begin(), [](T label) { return static_cast<OutputT>(label); });
+            return outputStore.copyFromBuffer(offset, nonstd::span<const OutputT>(convertedSlice.data(), count));
+          }
+        },
+        featureIdsRef.getDataType());
   }
 
 private:
