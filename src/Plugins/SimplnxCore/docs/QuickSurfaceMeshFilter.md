@@ -139,6 +139,10 @@ reject `INT32_MAX`). A rejected value produces an error (code `-56343`) naming t
 its tuple index, and the array's **Data Path**. This is a mitigation for the underlying
 sentinel-collision design (tracked as issue #1705), not a fix for it.
 
+For each selected feature **DataArray**, the number of tuples must be greater than the largest
+**Feature Id**. Feature Ids index these tuples directly, including tuple 0 for background.
+Execution fails with error `-62073` if a Feature Id is outside a selected feature DataArray.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

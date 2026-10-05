@@ -841,7 +841,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
-  // Tuple-transfer feature allocation needs the greatest observed Feature ID.
+  // The largest Feature Id must be a valid tuple index in every selected feature DataArray.
   usize numFeatures = 0;
   usize numTuples = featureIds.getNumberOfTuples();
   for(usize i = 0; i < numTuples; i++)
@@ -850,6 +850,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
     if(featureId > numFeatures)
     {
       numFeatures = static_cast<usize>(featureId);
+    }
+  }
+  for(const auto& featureArrayPath : m_InputValues->SelectedFeatureDataArrayPaths)
+  {
+    const auto& featureArray = m_DataStructure.getDataRefAs<IDataArray>(featureArrayPath);
+    if(numFeatures >= featureArray.getNumberOfTuples())
+    {
+      return MakeErrorResult(
+          -62073, fmt::format("Feature Id {} in DataArray '{}' is outside the selected feature DataArray '{}' with {} tuples. The number of tuples must be greater than the largest Feature Id.",
+                              numFeatures, m_InputValues->FeatureIdsArrayPath.toString(), featureArrayPath.toString(), featureArray.getNumberOfTuples()));
     }
   }
 
