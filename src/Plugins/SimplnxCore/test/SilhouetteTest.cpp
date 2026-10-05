@@ -17,6 +17,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/Silhouette.hpp"
 #include "SimplnxCore/Filters/SilhouetteFilter.hpp"
@@ -310,4 +311,137 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: SIMPL Backwards Compatibility", "[Simp
       // Complex type (DataArrayCreationFilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+namespace
+{
+template <typename T>
+void createRegressionArray(DataStructure& dataStructure, const std::string& name, const std::vector<T>& values, usize componentCount = 1)
+{
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, DataPath({name}), {values.size() / componentCount}, {componentCount});
+  REQUIRE(DataArray<T>::Create(dataStructure, name, store) != nullptr);
+  auto writeResult = store->copyFromBuffer(0, nonstd::span<const T>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+}
+
+Arguments makeRegressionArguments()
+{
+  auto args = SilhouetteFilter().getDefaultArguments();
+  args.insertOrAssign(SilhouetteFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(SilhouetteFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Cluster Ids"})));
+  args.insertOrAssign(SilhouetteFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(SilhouetteFilter::k_SilhouetteArrayPath_Key, std::make_any<DataPath>(DataPath({"Silhouette"})));
+  args.insertOrAssign(SilhouetteFilter::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(SilhouetteFilter::k_UseMask_Key, std::make_any<bool>(false));
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::SilhouetteFilter: Sparse Feature Ids", "[SimplnxCore][SilhouetteFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
+  createRegressionArray<int32>(dataStructure, "Cluster Ids", {3, 3, 7, 7});
+  SilhouetteFilter filter;
+  auto args = makeRegressionArguments();
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"})));
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"}));
+  const std::array<float64, 4> expected = {21.0 / 22.0, 19.0 / 20.0, 17.0 / 19.0, 21.0 / 23.0};
+  for(usize tupleIdx = 0; tupleIdx < expected.size(); tupleIdx++)
+  {
+    CAPTURE(tupleIdx);
+    REQUIRE(output[tupleIdx] == Approx(expected[tupleIdx]).margin(1.0E-12));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SilhouetteFilter: Negative Cluster Ids", "[SimplnxCore][SilhouetteFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
+  createRegressionArray<int32>(dataStructure, "Cluster Ids", {-1, 1, 1, 2});
+  SilhouetteFilter filter;
+  auto args = makeRegressionArguments();
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == -54081);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SilhouetteFilter: Cluster Zero Mean", "[SimplnxCore][SilhouetteFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+  SilhouetteFilter filter;
+  auto args = makeRegressionArguments();
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"})));
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"}));
+  const std::array<float64, 6> expected = {19.0 / 21.0, 15.0 / 17.0, 23.0 / 24.0, 21.0 / 22.0, 15.0 / 19.0, 23.0 / 27.0};
+  for(usize tupleIdx = 0; tupleIdx < expected.size(); tupleIdx++)
+  {
+    CAPTURE(tupleIdx);
+    REQUIRE(output[tupleIdx] == Approx(expected[tupleIdx]).margin(1.0E-12));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SilhouetteFilter: Invalid Mask Tuple Count", "[SimplnxCore][SilhouetteFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+  createRegressionArray<uint8>(dataStructure, "Mask", {1, 1, 1, 1, 1});
+  SilhouetteFilter filter;
+  auto args = makeRegressionArguments();
+  args.insertOrAssign(SilhouetteFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -8977);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SilhouetteFilter: Invalid Component Shapes", "[SimplnxCore][SilhouetteFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  std::string invalidArray;
+  SECTION("Mask Array")
+  {
+    invalidArray = "Mask Array";
+    createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+    createRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(12, 1), 2);
+  }
+  SECTION("Cluster Ids")
+  {
+    invalidArray = "Cluster Ids";
+    createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}, 2);
+    createRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(6, 1));
+  }
+  CAPTURE(invalidArray);
+  SilhouetteFilter filter;
+  auto args = makeRegressionArguments();
+  args.insertOrAssign(SilhouetteFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -208);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
