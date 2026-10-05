@@ -75,9 +75,8 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
                                                  "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
 
   DynamicTableInfo tableInfo;
-  tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, 6, "Constant {}"));
-  // An empty table has zero columns; preflight enforces one column per populated row.
-  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(0, 1, "Values"));
+  tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(1, 6, "Constant {}"));
+  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Values"}));
   const DynamicTableInfo::TableDataType defaultTable(6, DynamicTableInfo::RowType(1, 0.0));
   params.insert(std::make_unique<DynamicTableParameter>(
       k_MaterialConstants_Key, "Material Constants",
@@ -104,8 +103,11 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
 IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() const
 {
-  // Version 3 adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
   return 3;
+
+  // Version 2 adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
+
+  // Version 3 adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
 }
 
 IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
