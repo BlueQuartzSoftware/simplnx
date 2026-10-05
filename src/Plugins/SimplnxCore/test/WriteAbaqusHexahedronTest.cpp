@@ -88,6 +88,12 @@ void CompareUnchangedResults(const std::string& exemplarDir)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Default Omits Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+{
+  const Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
+  REQUIRE_FALSE(args.value<bool>(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key));
+}
+
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
   const WriteAbaqusHexahedronFilter filter;
@@ -267,6 +273,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: SIMPL Backwards Compatibili
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key));
       CHECK_FALSE(args.value<bool>(WriteAbaqusHexahedronFilter::k_UseReducedIntegration_Key));
       CHECK(args.value<int32>(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key) == 5);
       CHECK(args.value<std::string>(WriteAbaqusHexahedronFilter::k_JobName_Key) == "TestName");

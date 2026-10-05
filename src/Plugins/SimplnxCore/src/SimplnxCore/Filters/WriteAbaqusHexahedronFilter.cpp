@@ -56,7 +56,7 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
-      std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", true));
+      std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
                                                                  "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
   params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
@@ -80,11 +80,13 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteAbaqusHexahedronFilter::parametersVersion() const
 {
-  return 3;
+  return 4;
 
   // Version 2 adds k_WriteDummyNode_Key. The default value preserves the legacy dummy node output.
 
   // Version 3 adds k_UseReducedIntegration_Key. The default value writes standard C3D8 elements without hourglass stiffness.
+
+  // Version 4 changes the k_WriteDummyNode_Key default to false. Version 1 pipelines, which lack the key, now omit the dummy node.
 }
 
 //------------------------------------------------------------------------------
@@ -148,6 +150,7 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 Result<Arguments> WriteAbaqusHexahedronFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
+  args.insertOrAssign(k_WriteDummyNode_Key, std::make_any<bool>(true)); // Legacy SIMPL always wrote the dummy node.
 
   std::vector<Result<>> results;
 
