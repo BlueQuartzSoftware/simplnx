@@ -65,13 +65,24 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
   params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
 
+  params.insertSeparator(Parameters::Separator{"Material Constant Layout"});
+  params.insert(std::make_unique<BoolParameter>(k_UseUnsymmetricSolver_Key, "Use Unsymmetric Solver",
+                                                "When true, appends 'unsymm' to each *User Material line so Abaqus uses the unsymmetric equation solver, which is recommended for crystal plasticity.",
+                                                true));
+  params.insert(
+      std::make_unique<BoolParameter>(k_IncludeGrainAndPhaseIds_Key, "Include Grain and Phase IDs as Constants", "When true, the grain ID and phase ID are written as constants 1 and 2.", true));
+  params.insert(std::make_unique<Int32Parameter>(k_EulerAnglesStartIndex_Key, "Euler Angles Start Index",
+                                                 "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
+
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, 6, "Constant {}"));
-  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Values"}));
+  // An empty table has zero columns; preflight enforces one column per populated row.
+  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(0, 1, "Values"));
   const DynamicTableInfo::TableDataType defaultTable(6, DynamicTableInfo::RowType(1, 0.0));
   params.insert(std::make_unique<DynamicTableParameter>(
       k_MaterialConstants_Key, "Material Constants",
-      "The material constants. The filter automatically prepends grain ID, phase ID, Euler 1, Euler 2, and Euler 3 (radians unless Write Euler Angles in Degrees is enabled) before these values.",
+      "The user constants in table order. Grain and phase IDs, when included, occupy constants 1 and 2. The three Euler angles are inserted at Euler Angles Start Index "
+      "(radians unless Write Euler Angles in Degrees is enabled).",
       defaultTable, tableInfo));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
@@ -93,9 +104,8 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
 IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() const
 {
-  return 2;
-
-  // Version 2 adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
+  // Version 3 adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
+  return 3;
 }
 
 IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
@@ -138,6 +148,18 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
     }
   }
 
+  const bool includeGrainAndPhaseIds = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
+  const int32 eulerAnglesStartIndex = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
+  const int64 prefixCount = includeGrainAndPhaseIds ? 2 : 0;
+  const int64 minStartIndex = prefixCount + 1;
+  const int64 maxStartIndex = prefixCount + static_cast<int64>(materialConstants.size()) + 1;
+  if(eulerAnglesStartIndex < minStartIndex || eulerAnglesStartIndex > maxStartIndex)
+  {
+    return MakePreflightErrorResult(-12017, fmt::format("The Euler Angles Start Index ({}) must be between {} and {}. With {} material constants{}, the three Euler angles must start after "
+                                                        "any grain and phase IDs and must not extend past the end of the constant list.",
+                                                        eulerAnglesStartIndex, minStartIndex, maxStartIndex, materialConstants.size(), includeGrainAndPhaseIds ? " and the grain and phase IDs" : ""));
+  }
+
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   const usize cellCount = imageGeom.getNumberOfCells();
@@ -169,6 +191,9 @@ Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStru
   inputValues.WriteEulerAnglesInDegrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
   inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
   inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
+  inputValues.UseUnsymmetricSolver = filterArgs.value<bool>(k_UseUnsymmetricSolver_Key);
+  inputValues.IncludeGrainAndPhaseIds = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
+  inputValues.EulerAnglesStartIndex = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
   inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -201,6 +226,8 @@ Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohma
   args.insertOrAssign(k_UseReducedIntegration_Key, std::make_any<bool>(true));
   // Legacy SimulationIO wrote Euler angles in degrees.
   args.insertOrAssign(k_WriteEulerAnglesInDegrees_Key, std::make_any<bool>(true));
+  // Legacy SimulationIO did not request the unsymmetric solver.
+  args.insertOrAssign(k_UseUnsymmetricSolver_Key, std::make_any<bool>(false));
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));

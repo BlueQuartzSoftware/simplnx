@@ -206,14 +206,14 @@ UnitTest
 *Material, name=Grain1_Phase1_mat
 *Depvar
 3
-*User Material, constants=7
+*User Material, constants=7, unsymm
 1, 1, 0, 1.5707964, 3.1415927, 1.5, 2.25
 *User Output Variables
 2
 *Material, name=Grain2_Phase2_mat
 *Depvar
 3
-*User Material, constants=7
+*User Material, constants=7, unsymm
 2, 2, 0.7853982, 0.5235988, 1.0471976, 1.5, 2.25
 *User Output Variables
 2
@@ -354,7 +354,7 @@ UnitTest
 *Material, name=Grain1_Phase1_mat
 *Depvar
 2
-*User Material, constants=10
+*User Material, constants=10, unsymm
 1, 1, 0, 0, 0, 1, 2, 3
 4, 5
 *User Output Variables
@@ -385,6 +385,79 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constant Pr
   const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
   // Eight values per line: grain, phase, three angles, then the three constants.
   REQUIRE(master.find("1, 1, 0, 0, 0, 1e-05, 210000000000, 0.123456789012\n") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layout", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, {0.25F, 0.5F, 0.75F});
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "CustomLayout";
+  fs::create_directories(outputPath);
+  const WriteAbaqusCrystalPlasticityFilter filter;
+
+  SECTION("Euler angles at 17-19 without grain and phase IDs")
+  {
+    DynamicTableParameter::ValueType constants;
+    for(int32 i = 1; i <= 17; i++)
+    {
+      constants.push_back({static_cast<float64>(i * 10)});
+    }
+    const std::string prefix = "Layout_17";
+    Arguments args = CreateArguments(outputPath, prefix, constants);
+    args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(17));
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
+    REQUIRE(master.find("*User Material, constants=20, unsymm\n"
+                        "10, 20, 30, 40, 50, 60, 70, 80\n"
+                        "90, 100, 110, 120, 130, 140, 150, 160\n"
+                        "0.25, 0.5, 0.75, 170\n") != std::string::npos);
+  }
+
+  SECTION("Euler angles only")
+  {
+    const std::string prefix = "Layout_EulerOnly";
+    Arguments args = CreateArguments(outputPath, prefix, {});
+    args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(1));
+    args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key, std::make_any<bool>(false));
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
+    REQUIRE(master.find("*User Material, constants=3\n0.25, 0.5, 0.75\n") != std::string::npos);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Start Index Out Of Range", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "StartIndexRange";
+  fs::create_directories(outputPath);
+  const WriteAbaqusCrystalPlasticityFilter filter;
+
+  // Two user constants with IDs included: valid range is 3..5.
+  const std::vector<int32> badIndices = {0, 2, 6};
+  for(const int32 badIndex : badIndices)
+  {
+    DYNAMIC_SECTION("Start index " << badIndex)
+    {
+      Arguments args = CreateArguments(outputPath, "Start_Index_Range");
+      args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(badIndex));
+      auto preflightResult = filter.preflight(dataStructure, args);
+      REQUIRE(preflightResult.outputActions.errors().size() == 1);
+      REQUIRE(preflightResult.outputActions.errors()[0].code == -12017);
+    }
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -511,8 +584,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constants R
   Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Material_Constants_Row_Width", {{2.0, 3.0}});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  // The single static table column rejects the two-column row before preflightImpl runs.
   REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -12016);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -616,6 +690,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Comp
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
       CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key));
+      CHECK_FALSE(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key));
+      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key));
+      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key) == 3);
       CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key) == 250);
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_OutputPath_Key) == fs::path("/test/path"));
       CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_FilePrefix_Key) == "TestPrefix");
