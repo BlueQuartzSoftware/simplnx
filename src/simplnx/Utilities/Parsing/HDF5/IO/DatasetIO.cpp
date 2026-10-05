@@ -1428,11 +1428,11 @@ Result<> DatasetIO::writeSpanHyperslab(nonstd::span<const T> values, const std::
   };
 
   uint64 elementLimit = std::numeric_limits<uint64>::max();
-  if constexpr(std::numeric_limits<hsize_t>::digits < std::numeric_limits<uint64>::digits)
+  if constexpr(std::cmp_less(std::numeric_limits<hsize_t>::digits, std::numeric_limits<uint64>::digits))
   {
     elementLimit = static_cast<uint64>(std::numeric_limits<hsize_t>::max());
   }
-  if constexpr(std::numeric_limits<usize>::digits < std::numeric_limits<uint64>::digits)
+  if constexpr(std::cmp_less(std::numeric_limits<usize>::digits, std::numeric_limits<uint64>::digits))
   {
     elementLimit = std::min(elementLimit, static_cast<uint64>(std::numeric_limits<usize>::max()));
   }
