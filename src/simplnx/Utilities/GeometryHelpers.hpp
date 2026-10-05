@@ -1227,7 +1227,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, F
 
     // Third tetrahedron from hexahedron vertices (1, 4, 6, 3);
     subTets[2][0] = hexas[offset + 1];
-    subTets[2][1] = hexas[offset + 3];
+    subTets[2][1] = hexas[offset + 4];
     subTets[2][2] = hexas[offset + 6];
     subTets[2][3] = hexas[offset + 3];
 
