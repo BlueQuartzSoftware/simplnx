@@ -220,26 +220,43 @@ WriteStatus WriteElementSets(const fs::path& filePath, const GrainData& grainDat
   return CloseOutput(output);
 }
 
-void WriteMaterialConstants(fmt::memory_buffer& buffer, const DynamicTableParameter::ValueType& materialConstants)
+std::vector<std::string> BuildUserMaterialConstants(usize grainId, int32 phaseId, const std::array<float32, 3>& orientation, const WriteAbaqusCrystalPlasticityInputValues& inputValues)
 {
-  usize entriesPerLine = 5;
-  for(const auto& row : materialConstants)
+  std::vector<std::string> values;
+  if(inputValues.IncludeGrainAndPhaseIds)
   {
-    if(entriesPerLine != 0)
-    {
-      if(entriesPerLine % 8 != 0)
-      {
-        fmt::format_to(std::back_inserter(buffer), ", ");
-      }
-      else
-      {
-        fmt::format_to(std::back_inserter(buffer), "\n");
-        entriesPerLine = 0;
-      }
-    }
-    fmt::format_to(std::back_inserter(buffer), "{}", row.empty() ? 0.0 : row.front());
-    entriesPerLine++;
+    values.push_back(fmt::format("{}", grainId));
+    values.push_back(fmt::format("{}", phaseId));
   }
+  // Preflight guarantees the start index lands inside or directly after the user constants.
+  const usize eulerInsertPosition = static_cast<usize>(inputValues.EulerAnglesStartIndex) - 1;
+  for(const auto& row : inputValues.MaterialConstants)
+  {
+    if(values.size() == eulerInsertPosition)
+    {
+      std::ranges::transform(orientation, std::back_inserter(values), [](float32 angle) { return fmt::format("{}", angle); });
+    }
+    values.push_back(fmt::format("{}", row.empty() ? 0.0 : row.front()));
+  }
+  if(values.size() == eulerInsertPosition)
+  {
+    std::ranges::transform(orientation, std::back_inserter(values), [](float32 angle) { return fmt::format("{}", angle); });
+  }
+  return values;
+}
+
+void WriteDataLines(fmt::memory_buffer& buffer, const std::vector<std::string>& values)
+{
+  constexpr usize k_ValuesPerLine = 8;
+  for(usize index = 0; index < values.size(); index++)
+  {
+    if(index != 0)
+    {
+      fmt::format_to(std::back_inserter(buffer), "{}", index % k_ValuesPerLine == 0 ? "\n" : ", ");
+    }
+    fmt::format_to(std::back_inserter(buffer), "{}", values[index]);
+  }
+  fmt::format_to(std::back_inserter(buffer), "\n");
 }
 
 WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasticityInputValues& inputValues, const GrainData& grainData, const std::atomic_bool& shouldCancel,
@@ -263,7 +280,6 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
   fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.FilePrefix);
   fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Materials---------------------------\n**\n");
 
-  const usize materialConstantCount = inputValues.MaterialConstants.size();
   const usize grainCount = grainData.Phases.size() - 1;
   progressThrottle.reset(grainCount, "Writing Master File (File 4/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
@@ -275,15 +291,12 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
 
     const int32 phaseId = grainData.Phases[grainId];
     const auto& orientation = grainData.Orientations[grainId];
+    const std::vector<std::string> constants = BuildUserMaterialConstants(grainId, phaseId, orientation, inputValues);
     fmt::format_to(std::back_inserter(buffer), "*Material, name=Grain{}_Phase{}_mat\n", grainId, phaseId);
-    fmt::format_to(std::back_inserter(buffer), "*Depvar\n");
-    fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.NumDepvar);
-    fmt::format_to(std::back_inserter(buffer), "*User Material, constants={}\n", materialConstantCount + 5);
-    fmt::format_to(std::back_inserter(buffer), "{}, {}, {}, {}, {}", grainId, phaseId, orientation[0], orientation[1], orientation[2]);
-    WriteMaterialConstants(buffer, inputValues.MaterialConstants);
-    fmt::format_to(std::back_inserter(buffer), "\n");
-    fmt::format_to(std::back_inserter(buffer), "*User Output Variables\n");
-    fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.NumUserOutVar);
+    fmt::format_to(std::back_inserter(buffer), "*Depvar\n{}\n", inputValues.NumDepvar);
+    fmt::format_to(std::back_inserter(buffer), "*User Material, constants={}{}\n", constants.size(), inputValues.UseUnsymmetricSolver ? ", unsymm" : "");
+    WriteDataLines(buffer, constants);
+    fmt::format_to(std::back_inserter(buffer), "*User Output Variables\n{}\n", inputValues.NumUserOutVar);
 
     if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
     {

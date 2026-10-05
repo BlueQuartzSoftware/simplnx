@@ -33,7 +33,13 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusCrystalPlasticityInputValues
   int32 NumDepvar = 1;
   /** @brief Number of user output variables. */
   int32 NumUserOutVar = 1;
-  /** @brief User constants that follow the five generated constants. */
+  /** @brief True to request the unsymmetric equation solver for each material. */
+  bool UseUnsymmetricSolver = true;
+  /** @brief True to write the grain and phase IDs as constants 1 and 2. */
+  bool IncludeGrainAndPhaseIds = true;
+  /** @brief One-based position of the first of three Euler angles in the constant list. */
+  int32 EulerAnglesStartIndex = 3;
+  /** @brief User constants in table order, with Euler angles inserted at EulerAnglesStartIndex. */
   DynamicTableParameter::ValueType MaterialConstants;
   /** @brief Path to the Image Geometry that defines the voxel mesh. */
   DataPath ImageGeometryPath;

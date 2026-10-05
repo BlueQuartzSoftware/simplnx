@@ -32,6 +32,9 @@ public:
   static constexpr StringLiteral k_WriteEulerAnglesInDegrees_Key = "write_euler_angles_in_degrees";
   static constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
   static constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
+  static constexpr StringLiteral k_UseUnsymmetricSolver_Key = "use_unsymmetric_solver";
+  static constexpr StringLiteral k_IncludeGrainAndPhaseIds_Key = "include_grain_and_phase_ids";
+  static constexpr StringLiteral k_EulerAnglesStartIndex_Key = "euler_angles_start_index";
   static constexpr StringLiteral k_MaterialConstants_Key = "material_constants";
   static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
