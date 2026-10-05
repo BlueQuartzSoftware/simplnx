@@ -95,7 +95,7 @@ WriteStatus WriteNodes(const fs::path& filePath, const ImageGeom& imageGeom, con
         const float32 xCoordinate = origin[0] + static_cast<float32>(x) * spacing[0];
         const float32 yCoordinate = origin[1] + static_cast<float32>(y) * spacing[1];
         const float32 zCoordinate = origin[2] + static_cast<float32>(z) * spacing[2];
-        fmt::format_to(std::back_inserter(buffer), "{}, {:.3f}, {:.3f}, {:.3f}\n", index + 1, xCoordinate, yCoordinate, zCoordinate);
+        fmt::format_to(std::back_inserter(buffer), "{}, {:.6f}, {:.6f}, {:.6f}\n", index + 1, xCoordinate, yCoordinate, zCoordinate);
       }
     }
 
@@ -218,7 +218,7 @@ void WriteMaterialConstants(fmt::memory_buffer& buffer, const DynamicTableParame
         entriesPerLine = 0;
       }
     }
-    fmt::format_to(std::back_inserter(buffer), "{:.3f}", row.empty() ? 0.0 : row.front());
+    fmt::format_to(std::back_inserter(buffer), "{}", row.empty() ? 0.0 : row.front());
     entriesPerLine++;
   }
 }
@@ -260,7 +260,7 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
     fmt::format_to(std::back_inserter(buffer), "*Depvar\n");
     fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.NumDepvar);
     fmt::format_to(std::back_inserter(buffer), "*User Material, constants = {}\n", materialConstantCount + 5);
-    fmt::format_to(std::back_inserter(buffer), "{}, {}, {:.3f}, {:.3f}, {:.3f}", grainId, phaseId, orientation[0], orientation[1], orientation[2]);
+    fmt::format_to(std::back_inserter(buffer), "{}, {}, {}, {}, {}", grainId, phaseId, orientation[0], orientation[1], orientation[2]);
     WriteMaterialConstants(buffer, inputValues.MaterialConstants);
     fmt::format_to(std::back_inserter(buffer), "\n");
     fmt::format_to(std::back_inserter(buffer), "*User Output Variables\n");
