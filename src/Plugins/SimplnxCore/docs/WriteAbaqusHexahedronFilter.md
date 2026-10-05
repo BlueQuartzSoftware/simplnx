@@ -26,7 +26,9 @@ Node coordinates are written in the physical units of the **Image Geometry** (fo
 
 ### Write Dummy Node
 
-When the *Write Dummy Node* parameter is enabled, the filter appends one extra "dummy" node at the end of the `_nodes.inp` file. This node is not attached to any element; it exists only as a reference point that some Abaqus stress/strain workflows require (for example, to apply or read periodic boundary conditions). If the export is not being used for stress/strain curves, this parameter should be disabled, because the unused node can interfere with mesh connectivity tools that expect every node to belong to an element.
+*Write Dummy Node* is disabled by default. When it is enabled, the filter appends one extra "dummy" node at the end of the `_nodes.inp` file. This node is not attached to any element; it exists only as a reference point that some Abaqus stress/strain workflows require (for example, to apply or read periodic boundary conditions). If the export is not being used for stress/strain curves, this parameter should be disabled, because the unused node can interfere with mesh connectivity tools that expect every node to belong to an element.
+
+Legacy SIMPL pipeline conversion explicitly enables *Write Dummy Node* to preserve the legacy output. Saved DREAM3D-NX pipelines with `parameters_version` *1* lack this parameter and now use the default of no dummy node. Pipelines that explicitly store the parameter retain their saved choice.
 
 ### Hourglass Stiffness
 
