@@ -26,6 +26,11 @@ The filter also attempts to repair the triangle **winding** (the order in which 
 
 The *Relaxation Iterations* parameter is a dimensionless count of smoothing passes, and *Max Distance from Voxel Center* is a physical length (same units as the Image Geometry spacing) limiting how far a node may move from its originating voxel center.
 
+Cell Feature Ids and the selected cell arrays must be in the Cell Data Attribute Matrix of the Image Geometry. Max Distance from Voxel Center must be ≥ 0, and Relaxation Iterations ≥ 0.
+The smoothing limits apply only when **Apply smoothing operations** is on.
+
+The number of tuples in each selected feature DataArray must be greater than the largest Feature Id in Cell Feature Ids. Execution returns error `-62073` if this requirement is not met.
+
 ---------------
 
 ![Example SurfaceNets Output](Images/SurfaceNets_Output.png)

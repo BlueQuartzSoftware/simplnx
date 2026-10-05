@@ -24,6 +24,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 using namespace nx::core;
@@ -364,6 +365,137 @@ void RequireLargeTransferValue(AbstractDataStore<int32>& store, const usize offs
   REQUIRE(value == expected);
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 1, 1});
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), {1, 1, 2}, imageGeom->getId());
+  REQUIRE(cellAM != nullptr);
+  imageGeom->setCellData(*cellAM);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, {1, 1, 2}, {1});
+  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 1;
+  (*featureIds)[1] = 2;
+  auto* featureAM = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), {2}, imageGeom->getId());
+  REQUIRE(featureAM != nullptr);
+  auto featureStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, {2}, {3});
+  auto* featureValues = Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureAM->getId());
+  REQUIRE(featureValues != nullptr);
+  featureValues->fill(7.0F);
+
+  SurfaceNetsFilter filter;
+  auto args = SurfaceNetsFixture::ArgumentsFor(false);
+  args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -62073);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data parent validation", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  SurfaceNetsFixture::Create(dataStructure, false);
+  SurfaceNetsFilter filter;
+  auto args = SurfaceNetsFixture::ArgumentsFor(false);
+  int32 expectedCode = -56350;
+
+  SECTION("Cell Feature Ids outside Cell Data")
+  {
+    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", SurfaceNetsFixture::k_CellShape);
+    REQUIRE(otherAM != nullptr);
+    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", SurfaceNetsFixture::k_CellShape, {1}, otherAM->getId());
+    REQUIRE(featureIds != nullptr);
+    featureIds->fill(1);
+    args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Other Cell Data", "Other Feature Ids"})));
+  }
+  SECTION("Selected cell DataArray outside Cell Data")
+  {
+    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", SurfaceNetsFixture::k_CellShape);
+    REQUIRE(otherAM != nullptr);
+    auto* cellValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", SurfaceNetsFixture::k_CellShape, {1}, otherAM->getId());
+    REQUIRE(cellValues != nullptr);
+    cellValues->fill(7);
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key,
+                        std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{k_SmallCellIntPath, DataPath({"Other Cell Data", "Other Cell Values"})}));
+    expectedCode = -56351;
+  }
+  SECTION("Image Geometry has no Cell Data")
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath));
+    dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath).setCellData(std::nullopt);
+  }
+
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+}
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing range validation", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  SurfaceNetsFixture::Create(dataStructure, false);
+  SurfaceNetsFilter filter;
+  auto args = SurfaceNetsFixture::ArgumentsFor(true);
+  int32 expectedCode = -56352;
+
+  SECTION("Negative Max Distance from Voxel Center")
+  {
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(-0.25F));
+  }
+  SECTION("Negative Relaxation Iterations")
+  {
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(-1));
+    expectedCode = -56353;
+  }
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+}
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing validation boundaries", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  SurfaceNetsFixture::Create(dataStructure, false);
+  SurfaceNetsFilter filter;
+  auto args = SurfaceNetsFixture::ArgumentsFor(true);
+
+  SECTION("Zero distance and iterations are valid")
+  {
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(0.0F));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(0));
+  }
+  SECTION("Negative values are ignored when smoothing is off")
+  {
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(-0.25F));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(-1));
+  }
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+}
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: generated direct and scanline parity", "[SimplnxCore][SurfaceNetsFilter]")
 {
