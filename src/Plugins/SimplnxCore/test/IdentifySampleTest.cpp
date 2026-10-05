@@ -520,7 +520,7 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
   constexpr usize k_Y = 11;
   constexpr usize k_Z = 13;
   auto store = std::make_shared<IdentifySampleReportingStore<T>>(ShapeType{k_Z, k_Y, k_X});
-  auto dataStructure = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
+  DataStructure dataStructure = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   scope.requireExpectedStore(dataStructure.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
 

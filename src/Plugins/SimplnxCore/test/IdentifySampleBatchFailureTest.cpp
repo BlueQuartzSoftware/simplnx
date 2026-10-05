@@ -705,7 +705,7 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
   const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
   const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   auto store = std::make_shared<MaskStore<T>>(state);
-  auto data = CreateFailureFixture<T>(store);
+  DataStructure data = CreateFailureFixture<T>(store);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
   state.selected = state.diagnosticMatch ? &mask : nullptr;
@@ -1167,7 +1167,7 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
   const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   FailureState state;
   auto store = std::make_shared<MaskStore<T>>(state);
-  auto data = CreateFailureFixture<T>(store);
+  DataStructure data = CreateFailureFixture<T>(store);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
   auto inputs = Inputs();
@@ -1444,7 +1444,7 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
     state.cancelAt = CancelAt::WithPrimary;
   }
   auto store = std::make_shared<MaskStore<T>>(state);
-  auto data = CreateFailureFixture<T>(store);
+  DataStructure data = CreateFailureFixture<T>(store);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
   scope.requireExpectedStore(mask);
@@ -1577,7 +1577,7 @@ TEST_CASE("IdentifySample orthogonal CCL owns only its used plane carrier", "[.I
   const auto check = [&]<class T>() {
     const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
-    auto data = IdentifySampleBatchTest::CreateFixture<T>(plane);
+    DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(plane);
     REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
     LogicalCounters counts;
     counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
@@ -1623,7 +1623,7 @@ TEST_CASE("IdentifySample filter pre-cancellation stops before algorithm dispatc
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     FailureState state;
     auto store = std::make_shared<MaskStore<T>>(state);
-    auto data = CreateFailureFixture<T>(store);
+    DataStructure data = CreateFailureFixture<T>(store);
     REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
     auto& mask = data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
     LogicalCounters counts;
