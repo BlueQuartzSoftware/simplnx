@@ -112,15 +112,15 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
 
   const AbstractDataStore<float32>& xStore = xBounds->getDataStoreRef();
   float32 maxX = xStore.getValue(xBounds->getNumberOfTuples() - 1);
-  lengthPerPartition.setX(maxX / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
+  lengthPerPartition.setX((maxX - xStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
 
   const AbstractDataStore<float32>& yStore = yBounds->getDataStoreRef();
   float32 maxY = yStore.getValue(yBounds->getNumberOfTuples() - 1);
-  lengthPerPartition.setY(maxY / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
+  lengthPerPartition.setY((maxY - yStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
 
-  const AbstractDataStore<float32>& zStore = yBounds->getDataStoreRef();
+  const AbstractDataStore<float32>& zStore = zBounds->getDataStoreRef();
   float32 maxZ = zStore.getValue(zBounds->getNumberOfTuples() - 1);
-  lengthPerPartition.setZ(maxZ / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
+  lengthPerPartition.setZ((maxZ - zStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
 
   return Result<FloatVec3>{lengthPerPartition};
 }
