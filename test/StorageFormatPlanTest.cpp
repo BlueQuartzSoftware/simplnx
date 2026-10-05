@@ -593,7 +593,7 @@ void WriteImportPolicyFile(const fs::path& path)
     CheckImportPolicyFileArray(fileReader, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues);
   }
   fs::last_write_time(path, fs::file_time_type::clock::now() - std::chrono::seconds(10));
-  REQUIRE(fs::file_time_type::clock::now() - fs::last_write_time(path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow);
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
 }
 
 template <usize Count>
