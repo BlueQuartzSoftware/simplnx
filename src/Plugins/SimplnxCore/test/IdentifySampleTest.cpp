@@ -519,10 +519,14 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
   constexpr usize k_X = 19;
   constexpr usize k_Y = 11;
   constexpr usize k_Z = 13;
-  auto store = std::make_shared<IdentifySampleReportingStore<T>>(ShapeType{k_Z, k_Y, k_X});
+  
+  using IdentifySampleReportingStoreType = IdentifySampleReportingStore<T>;
+  using DataArrayType = DataArray<T>;
+
+  auto store = std::make_shared<IdentifySampleReportingStoreType>(ShapeType{k_Z, k_Y, k_X});
   DataStructure dataStructure = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
 
   auto& budget = CacheMemoryBudgetManager::instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
