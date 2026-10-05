@@ -3,10 +3,13 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
+#include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -22,6 +25,29 @@
 #include "SimplnxCore/Filters/Algorithms/CropEdgeGeometry.hpp"
 
 using namespace nx::core;
+
+namespace
+{
+void CreateCroppedArrayActions(const AttributeMatrix& source, const DataPath& destination, OutputActions& actions)
+{
+  for(const auto& [identifier, object] : source)
+  {
+    const auto path = destination.createChildPath(object->getName());
+    if(const auto* array = dynamic_cast<const IDataArray*>(object.get()); array != nullptr)
+    {
+      actions.appendAction(std::make_unique<CreateArrayAction>(array->getDataType(), ShapeType{1}, array->getIDataStoreRef().getComponentShape(), path));
+    }
+    else if(dynamic_cast<const StringArray*>(object.get()) != nullptr)
+    {
+      actions.appendAction(std::make_unique<CreateStringArrayAction>(ShapeType{1}, path));
+    }
+    else if(const auto* neighbors = dynamic_cast<const INeighborList*>(object.get()); neighbors != nullptr)
+    {
+      actions.appendAction(std::make_unique<CreateNeighborListAction>(neighbors->getDataType(), ShapeType{1}, path));
+    }
+  }
+}
+} // namespace
 
 //------------------------------------------------------------------------------
 CropEdgeGeometryFilter::CropEdgeGeometryFilter()
@@ -175,10 +201,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     destEdgeGeomPath = DataPath({tempPathVector});
   }
 
-  // This section gets the cell attribute matrix for the input Edge Geometry and
-  // then creates new arrays from each array that is in that attribute matrix. We
-  // also push this attribute matrix into the `ignorePaths` variable since we do
-  // not need to manually copy these arrays to the destination edge geometry
+  // Output actions create the Vertex and Edge Attribute Matrices and their arrays.
+  // The ignore paths exclude these objects from the separate child-copy actions.
   {
     // Get the name of the Edge Attribute Matrix, so we can use that in the CreateEdgeGeometryAction
     const auto* srcEdgeGeomPtr = dataStructure.getDataAs<EdgeGeom>(srcEdgeGeomPath);
@@ -202,38 +226,22 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
       ignorePaths.insert(ignorePaths.end(), edgesArrayDataPaths.begin(), edgesArrayDataPaths.end());
     }
 
-    // Now loop over each array in the source edge geometry's cell attribute matrix and create the corresponding arrays
-    // in the destination edge geometry's cell attribute matrix
+    // The output arrays start with one tuple; execution resizes them to the retained number of edges.
     DataPath newEdgeAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedEdgeData.getName());
-    for(const auto& [identifier, object] : selectedEdgeData)
-    {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
-      DataType dataType = srcArray.getDataType();
-      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      DataPath dataArrayPath = newEdgeAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
-    }
+    CreateCroppedArrayActions(selectedEdgeData, newEdgeAttributeMatrixPath, resultOutputActions.value());
 
-    // Now loop over each array in the source edge geometry's vertex attribute matrix and create the corresponding arrays
-    // in the destination edge geometry's vertex attribute matrix
+    // Execution resizes the vertex arrays to include retained vertices and distinct clip points.
     DataPath newVertexAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedVertexData.getName());
 
     auto vertexArraysResult = selectedVertexData.findAllChildrenOfType<IDataArray>();
     if(!vertexArraysResult.empty())
     {
       // Detected at least one vertex array, throw a warning
-      resultOutputActions.warnings().push_back(
-          {-100, "A vertex data array was detected in the selected edge geometry. This filter currently only interpolates vertex positions, associated vertex data values will not be interpolated."});
+      resultOutputActions.warnings().push_back({-100, "A vertex DataArray was detected in the selected Edge Geometry. This filter only interpolates vertex positions. Vertex DataArray values are "
+                                                      "copied from the source vertex, including for duplicated vertices, and are not interpolated."});
     }
 
-    for(const auto& [identifier, object] : selectedVertexData)
-    {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
-      DataType dataType = srcArray.getDataType();
-      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      DataPath dataArrayPath = newVertexAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
-    }
+    CreateCroppedArrayActions(selectedVertexData, newVertexAttributeMatrixPath, resultOutputActions.value());
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
     std::string cropOptionsStr = "This filter will crop the edge geometry in the following dimension(s):  ";

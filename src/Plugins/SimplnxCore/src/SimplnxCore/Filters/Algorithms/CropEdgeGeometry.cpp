@@ -3,9 +3,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+
+#include <map>
 
 using namespace nx::core;
 
@@ -24,17 +29,15 @@ public:
    * @brief Creates one retained-tuple copy task.
    * @param oldCellArray Supplies source tuples.
    * @param newCellArray Receives retained tuples.
-   * @param srcAttrMatrix Supplies the source tuple count.
-   * @param tupleMask Selects retained tuples.
+   * @param sourceIndices Maps each output tuple to its source tuple, including duplicates.
    * @param shouldCancel Stops later tuple copies.
    * @param taskResult Stores the first copy error from all array tasks.
    */
-  CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const AttributeMatrix& srcAttrMatrix, const std::vector<bool>& tupleMask, const std::atomic_bool& shouldCancel,
+  CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const std::vector<usize>& sourceIndices, const std::atomic_bool& shouldCancel,
                     CopyFromArray::ParallelTaskResult& taskResult)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
-  , m_SrcAttrMatrix(srcAttrMatrix)
-  , m_TupleMask(tupleMask)
+  , m_SourceIndices(sourceIndices)
   , m_ShouldCancel(shouldCancel)
   , m_TaskResult(taskResult)
   {
@@ -49,22 +52,17 @@ public:
 
   void operator()() const
   {
-    usize newIndex = 0;
-    for(usize i = 0; i < m_SrcAttrMatrix.getNumberOfTuples(); ++i)
+    for(usize i = 0; i < m_SourceIndices.size(); ++i)
     {
       if(m_ShouldCancel || m_TaskResult.shouldAbort())
       {
         return;
       }
-      else if(m_TupleMask[i])
+      Result<> copyResult = CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, i, m_SourceIndices[i], 1);
+      if(copyResult.invalid())
       {
-        Result<> copyResult = CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, newIndex, i, 1);
-        if(copyResult.invalid())
-        {
-          m_TaskResult.store(std::move(copyResult));
-          return;
-        }
-        newIndex++;
+        m_TaskResult.store(std::move(copyResult));
+        return;
       }
     }
   }
@@ -72,11 +70,77 @@ public:
 private:
   const AbstractDataStore<T>& m_OldCellStore;
   AbstractDataStore<T>& m_NewCellStore;
-  const AttributeMatrix& m_SrcAttrMatrix;
-  const std::vector<bool> m_TupleMask;
+  const std::vector<usize>& m_SourceIndices;
   const std::atomic_bool& m_ShouldCancel;
   CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
+
+struct CopyGatheredNeighborLists
+{
+  template <typename T>
+  void operator()(const INeighborList& input, INeighborList& output, const std::vector<usize>& sourceIndices, const std::atomic_bool& shouldCancel) const
+  {
+    const auto& source = dynamic_cast<const NeighborList<T>&>(input);
+    auto& destination = dynamic_cast<NeighborList<T>&>(output);
+    const auto sourceStore = source.getStore();
+    for(usize i = 0; i < sourceIndices.size(); ++i)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      destination.setValue(i, sourceStore->at(sourceIndices[i]));
+    }
+  }
+};
+
+/**
+ * @brief Copies retained and duplicated tuples for each supported array type.
+ * @param source Supplies the input arrays.
+ * @param destination Receives the output arrays, resized before this call.
+ * @param sourceIndices Maps each output tuple to its source tuple.
+ * @param shouldCancel Stops later tuple copies.
+ * @param messageHandler Receives array progress messages.
+ * @return The first numeric tuple copy error, or success.
+ */
+Result<> CopyAttributeArrays(const AttributeMatrix& source, AttributeMatrix& destination, const std::vector<usize>& sourceIndices, const std::atomic_bool& shouldCancel,
+                             const IFilter::MessageHandler& messageHandler)
+{
+  // The runner joins workers before the result holder or the borrowed gather list can be destroyed.
+  CopyFromArray::ParallelTaskResult taskResult;
+  ParallelTaskAlgorithm taskRunner;
+  for(const auto& [dataId, object] : source)
+  {
+    if(shouldCancel || taskResult.shouldAbort())
+    {
+      break;
+    }
+    auto& output = destination.at(object->getName());
+    messageHandler.sendInfoMessage(fmt::format("Cropping Edge Geometry || Copying Array {}", object->getName()));
+    if(const auto* array = dynamic_cast<const IDataArray*>(object.get()); array != nullptr)
+    {
+      ExecuteParallelFunction<CropEdgeGeomArray>(array->getDataType(), taskRunner, *array, dynamic_cast<IDataArray&>(output), sourceIndices, shouldCancel, taskResult);
+    }
+    else if(const auto* strings = dynamic_cast<const StringArray*>(object.get()); strings != nullptr)
+    {
+      auto& outputStrings = dynamic_cast<StringArray&>(output);
+      for(usize i = 0; i < sourceIndices.size(); ++i)
+      {
+        if(shouldCancel)
+        {
+          break;
+        }
+        outputStrings[i] = (*strings)[sourceIndices[i]];
+      }
+    }
+    else if(const auto* neighbors = dynamic_cast<const INeighborList*>(object.get()); neighbors != nullptr)
+    {
+      ExecuteNeighborFunction(CopyGatheredNeighborLists{}, neighbors->getDataType(), *neighbors, dynamic_cast<INeighborList&>(output), sourceIndices, shouldCancel);
+    }
+  }
+  taskRunner.wait();
+  return taskResult.takeResult();
+}
 
 /**
  * @brief Clips the parameter t_min and t_max based on the provided coordinates and bounds.
@@ -234,31 +298,13 @@ Result<> CropEdgeGeometry::operator()()
 
   auto behavior = static_cast<BoundaryIntersectionBehavior>(m_InputValues->boundaryIntersectionBehavior);
 
-  // Resize vertices, vertex attribute matrix, edges, and edges attribute matrix to the maximum size
-  Result<> resizeResult = destVertices.resizeTuples({numVertices});
-  if(resizeResult.invalid())
-  {
-    return resizeResult;
-  }
-  resizeResult = destVertexAttrMatrix.resizeTuples({numVertices});
-  if(resizeResult.invalid())
-  {
-    return resizeResult;
-  }
-  resizeResult = destEdges.resizeTuples({numEdges});
-  if(resizeResult.invalid())
-  {
-    return resizeResult;
-  }
-  resizeResult = destEdgesAttrMatrix.resizeTuples({numEdges});
-  if(resizeResult.invalid())
-  {
-    return resizeResult;
-  }
-
-  std::vector<bool> edgesMask(numEdges, false);
+  std::vector<usize> edgeSources;
+  std::vector<std::array<uint64, 2>> keptEdges;
   std::vector<bool> vertexReferenced(numVertices, false);
-  std::unordered_map<uint64, std::tuple<float32, float32, float32>> interpolatedValuesMap;
+  using ClipPoint = std::tuple<float32, float32, float32>;
+  std::map<std::pair<uint64, ClipPoint>, uint64> clipVertexMapping;
+  std::unordered_map<uint64, ClipPoint> interpolatedValuesMap;
+  std::vector<usize> duplicateSources;
 
   for(usize i = 0; i < numEdges; ++i)
   {
@@ -299,7 +345,6 @@ Result<> CropEdgeGeometry::operator()()
     if(edgeIntersectingBoundary)
     {
       // Found an edge intersecting the boundary
-      // Calculate the interpolated value for the outside vertex and store it in the interpolatedValuesMap
       uint64 insideVertexIdx = v0;
       uint64 outsideVertexIdx = v1;
       if(v1_inside)
@@ -325,8 +370,30 @@ Result<> CropEdgeGeometry::operator()()
       }
       else if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
       {
-        // Calculate the interpolated value for the outside vertex and store it in the interpolatedValuesMap
-        interpolatedValuesMap[outsideVertexIdx] = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
+        const auto clipPoint = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
+        const auto key = std::make_pair(outsideVertexIdx, clipPoint);
+        auto iter = clipVertexMapping.find(key);
+        if(iter == clipVertexMapping.end())
+        {
+          uint64 clippedVertexIdx = outsideVertexIdx;
+          if(interpolatedValuesMap.contains(outsideVertexIdx))
+          {
+            // Additional crossings follow all original vertices, so retained vertices keep their order.
+            clippedVertexIdx = numVertices + duplicateSources.size();
+            duplicateSources.push_back(outsideVertexIdx);
+            vertexReferenced.push_back(false);
+          }
+          interpolatedValuesMap.emplace(clippedVertexIdx, clipPoint);
+          iter = clipVertexMapping.emplace(key, clippedVertexIdx).first;
+        }
+        if(v0_inside)
+        {
+          v1 = iter->second;
+        }
+        else
+        {
+          v0 = iter->second;
+        }
       }
     }
 
@@ -334,16 +401,17 @@ Result<> CropEdgeGeometry::operator()()
     {
       vertexReferenced[v0] = true;
       vertexReferenced[v1] = true;
-      edgesMask[i] = true;
+      edgeSources.push_back(i);
+      keptEdges.push_back({v0, v1});
     }
   }
 
   // Tally up the number of vertices referenced and edges kept
   usize totalVerticesReferenced = std::count(vertexReferenced.begin(), vertexReferenced.end(), true);
-  usize totalEdgesKept = std::count(edgesMask.begin(), edgesMask.end(), true);
+  usize totalEdgesKept = edgeSources.size();
 
   // Resize to proper sizes
-  resizeResult = destVertices.resizeTuples({totalVerticesReferenced});
+  Result<> resizeResult = destVertices.resizeTuples({totalVerticesReferenced});
   if(resizeResult.invalid())
   {
     return resizeResult;
@@ -365,14 +433,17 @@ Result<> CropEdgeGeometry::operator()()
   }
 
   // Create a mapping from old vertex indices to new indices
-  std::vector<int64> vertexMapping(numVertices, -1);
+  std::vector<int64> vertexMapping(vertexReferenced.size(), -1);
+  std::vector<usize> vertexSources;
+  vertexSources.reserve(totalVerticesReferenced);
 
   int64 newIndex = 0;
-  for(usize i = 0; i < numVertices; ++i)
+  for(usize i = 0; i < vertexReferenced.size(); ++i)
   {
     if(vertexReferenced[i])
     {
       vertexMapping[i] = newIndex;
+      vertexSources.push_back(i < numVertices ? i : duplicateSources[i - numVertices]);
       if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex && interpolatedValuesMap.contains(i))
       {
         destVertices[3 * newIndex + 0] = std::get<0>(interpolatedValuesMap[i]);
@@ -389,82 +460,25 @@ Result<> CropEdgeGeometry::operator()()
     }
   }
 
-  // Crop each vertex data array in parallel
+  Result<> copyResult = CopyAttributeArrays(srcVertexAttrMatrix, destVertexAttrMatrix, vertexSources, m_ShouldCancel, m_MessageHandler);
+  if(copyResult.invalid())
   {
-    // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-    CopyFromArray::ParallelTaskResult taskResult;
-    ParallelTaskAlgorithm taskRunner;
-    for(const auto& [dataId, oldDataObject] : srcVertexAttrMatrix)
-    {
-      if(m_ShouldCancel)
-      {
-        return {};
-      }
-
-      const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-      const std::string srcName = oldDataArray.getName();
-
-      auto& newDataArray = dynamic_cast<IDataArray&>(destVertexAttrMatrix.at(srcName));
-
-      m_MessageHandler.sendInfoMessage(fmt::format("Cropping Volume || Copying Vertex Array {}", srcName));
-      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcVertexAttrMatrix, vertexReferenced, m_ShouldCancel, taskResult);
-    }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-    Result<> copyResult = taskResult.takeResult();
-    if(copyResult.invalid())
-    {
-      return copyResult;
-    }
+    return copyResult;
   }
 
-  // Create final edges with remapped vertex indices
+  // The stored endpoints include distinct clip vertices before compaction.
   newIndex = 0;
-  for(usize i = 0; i < numEdges; ++i)
+  for(const auto& edge : keptEdges)
   {
-    if(edgesMask[i])
+    const int64 newV0 = vertexMapping[edge[0]];
+    const int64 newV1 = vertexMapping[edge[1]];
+    if(newV0 == -1 || newV1 == -1)
     {
-      // Get new vertices via indexing into vertex mapping with the old index from srcEdges
-      int64 new_v0 = vertexMapping[srcEdges[2 * i + 0]];
-      int64 new_v1 = vertexMapping[srcEdges[2 * i + 1]];
-
-      // Validate mapping
-      if(new_v0 == -1 || new_v1 == -1)
-      {
-        return MakeErrorResult(to_underlying(ErrorCodes::InvalidVertexMapping), "Invalid vertex mapping during edge remapping.");
-      }
-
-      destEdges[newIndex++] = static_cast<uint64>(new_v0);
-      destEdges[newIndex++] = static_cast<uint64>(new_v1);
+      return MakeErrorResult(to_underlying(ErrorCodes::InvalidVertexMapping), "Invalid vertex mapping during edge remapping.");
     }
+    destEdges[newIndex++] = static_cast<uint64>(newV0);
+    destEdges[newIndex++] = static_cast<uint64>(newV1);
   }
 
-  // Crop each edge data array in parallel
-  {
-    // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-    CopyFromArray::ParallelTaskResult taskResult;
-    ParallelTaskAlgorithm taskRunner;
-    for(const auto& [dataId, oldDataObject] : srcEdgesAttrMatrix)
-    {
-      if(m_ShouldCancel)
-      {
-        return {};
-      }
-
-      const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-      const std::string srcName = oldDataArray.getName();
-
-      auto& newDataArray = dynamic_cast<IDataArray&>(destEdgesAttrMatrix.at(srcName));
-
-      m_MessageHandler.sendInfoMessage(fmt::format("Cropping Volume || Copying Edge Array {}", srcName));
-      ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcEdgesAttrMatrix, edgesMask, m_ShouldCancel, taskResult);
-    }
-    taskRunner.wait();
-    Result<> copyResult = taskResult.takeResult();
-    if(copyResult.invalid())
-    {
-      return copyResult;
-    }
-  }
-
-  return {};
+  return CopyAttributeArrays(srcEdgesAttrMatrix, destEdgesAttrMatrix, edgeSources, m_ShouldCancel, m_MessageHandler);
 }

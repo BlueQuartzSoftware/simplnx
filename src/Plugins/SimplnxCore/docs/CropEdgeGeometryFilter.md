@@ -24,6 +24,10 @@ The *Boundary Intersection Behavior* parameter provides the following choices:
 
 **NOTE:** When the **Interpolate Outside Vertex** boundary intersection behavior is chosen, this filter DOES NOT interpolate any vertex data, only the vertex position!
 
+When one vertex outside the crop bounds is shared by edges that cross the bounds at different points, the vertex is duplicated, one copy per crossing. Vertex DataArray values are copied from the source vertex to each duplicate.
+
+StringArray and NeighborList data in the Vertex and Edge Attribute Matrices are copied with the kept vertices and edges.
+
 ## Examples
 In the following examples, an edge geometry with bounds (-1, 1), (-1, 1), (0, 1) is being used:
 
