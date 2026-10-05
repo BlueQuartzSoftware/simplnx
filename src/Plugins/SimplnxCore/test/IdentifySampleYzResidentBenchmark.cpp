@@ -39,7 +39,7 @@ void MeasureResident(bool fillHoles, UnitTest::AlgorithmTestScenario requestedSc
 #else
     const usize effectiveThreads = 1;
 #endif
-    auto data = CreateBenchmarkFixture<T>();
+    DataStructure data = CreateBenchmarkFixture<T>();
     REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
     auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
     scope.requireExpectedStore(mask);
