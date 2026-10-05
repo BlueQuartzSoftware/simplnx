@@ -394,7 +394,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
 
   // The contiguous buckets use 8 bytes per positive cell; counts and offsets add 16 bytes per grain.
   std::vector<usize> counts(grainCount + 1, 0);
-  constexpr float64 k_RadiansToDegrees = 180.0 / std::numbers::pi;
+  const float64 angleScale = m_InputValues->WriteEulerAnglesInDegrees ? 180.0 / std::numbers::pi : 1.0;
   progressThrottle.reset(dimensions[2], "Bucketing Elements (Pass 1/2)");
   for(usize z = 0; z < dimensions[2]; z++)
   {
@@ -413,9 +413,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
         const usize grainId = static_cast<usize>(featureId);
         counts[grainId]++;
         grainData.Phases[grainId] = cellPhasesRef[cellIndex];
-        grainData.Orientations[grainId][0] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3] * k_RadiansToDegrees);
-        grainData.Orientations[grainId][1] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3 + 1] * k_RadiansToDegrees);
-        grainData.Orientations[grainId][2] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3 + 2] * k_RadiansToDegrees);
+        grainData.Orientations[grainId][0] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3] * angleScale);
+        grainData.Orientations[grainId][1] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3 + 1] * angleScale);
+        grainData.Orientations[grainId][2] = static_cast<float32>(cellEulerAnglesRef[cellIndex * 3 + 2] * angleScale);
       }
     }
     progressThrottle.updateCount(z + 1);

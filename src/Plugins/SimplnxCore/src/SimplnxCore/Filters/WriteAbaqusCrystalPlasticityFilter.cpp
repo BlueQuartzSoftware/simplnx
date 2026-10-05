@@ -60,6 +60,8 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
                                                                  "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
   params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
+  params.insert(std::make_unique<BoolParameter>(k_WriteEulerAnglesInDegrees_Key, "Write Euler Angles in Degrees",
+                                                "When true, converts the Euler angles from radians to degrees before writing them. When false, writes them in radians.", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
   params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
 
@@ -67,9 +69,10 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, 6, "Constant {}"));
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Values"}));
   const DynamicTableInfo::TableDataType defaultTable(6, DynamicTableInfo::RowType(1, 0.0));
-  params.insert(std::make_unique<DynamicTableParameter>(k_MaterialConstants_Key, "Material Constants",
-                                                        "The material constants. The filter automatically prepends grain ID, phase ID, Euler 1, Euler 2, and Euler 3 in degrees before these values.",
-                                                        defaultTable, tableInfo));
+  params.insert(std::make_unique<DynamicTableParameter>(
+      k_MaterialConstants_Key, "Material Constants",
+      "The material constants. The filter automatically prepends grain ID, phase ID, Euler 1, Euler 2, and Euler 3 (radians unless Write Euler Angles in Degrees is enabled) before these values.",
+      defaultTable, tableInfo));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Selected Image Geometry", "The Image Geometry that defines the voxel mesh.", DataPath{},
@@ -163,6 +166,7 @@ Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStru
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
   inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
+  inputValues.WriteEulerAnglesInDegrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
   inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
   inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
   inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
@@ -195,6 +199,8 @@ Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohma
   Arguments args = WriteAbaqusCrystalPlasticityFilter().getDefaultArguments();
   // Legacy SimulationIO always wrote C3D8R elements.
   args.insertOrAssign(k_UseReducedIntegration_Key, std::make_any<bool>(true));
+  // Legacy SimulationIO wrote Euler angles in degrees.
+  args.insertOrAssign(k_WriteEulerAnglesInDegrees_Key, std::make_any<bool>(true));
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));

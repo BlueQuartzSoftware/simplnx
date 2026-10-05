@@ -29,6 +29,7 @@ public:
   static constexpr StringLiteral k_JobName_Key = "job_name";
   static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
   static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
+  static constexpr StringLiteral k_WriteEulerAnglesInDegrees_Key = "write_euler_angles_in_degrees";
   static constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
   static constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
   static constexpr StringLiteral k_MaterialConstants_Key = "material_constants";

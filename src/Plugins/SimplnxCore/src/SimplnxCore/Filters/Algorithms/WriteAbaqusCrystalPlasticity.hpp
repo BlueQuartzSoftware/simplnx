@@ -27,6 +27,8 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusCrystalPlasticityInputValues
   bool UseReducedIntegration = true;
   /** @brief Hourglass stiffness value for reduced-integration elements. */
   int32 HourglassStiffness = 250;
+  /** @brief True to convert the input Euler angles from radians to degrees. */
+  bool WriteEulerAnglesInDegrees = false;
   /** @brief Number of solution-dependent state variables. */
   int32 NumDepvar = 1;
   /** @brief Number of user output variables. */
