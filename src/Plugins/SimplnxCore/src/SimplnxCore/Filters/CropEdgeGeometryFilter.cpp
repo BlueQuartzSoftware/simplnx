@@ -18,7 +18,6 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/CropEdgeGeometry.hpp"
 
@@ -252,8 +251,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   {
     for(const auto& childPath : childPaths.value())
     {
-      std::string copiedChildName = nx::core::StringUtilities::replace(childPath.toString(), srcEdgeGeomPath.getTargetName(), destEdgeGeomPath.getTargetName());
-      DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+      const DataPath copiedChildPath = childPath.rebase(srcEdgeGeomPath, destEdgeGeomPath).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         std::vector<DataPath> allCreatedPaths = {copiedChildPath};
@@ -262,8 +260,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
-            std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), srcEdgeGeomPath.getTargetName(), destEdgeGeomPath.getTargetName());
-            allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+            allCreatedPaths.push_back(sourcePath.rebase(srcEdgeGeomPath, destEdgeGeomPath).value());
           }
         }
         resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));

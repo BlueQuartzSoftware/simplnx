@@ -3,11 +3,16 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -238,4 +243,77 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: SIMPL Backwards Compatibili
       // Complex type (StringToDataPathFilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Child names containing the geometry name are kept", "[SimplnxCore][RemoveFlaggedVertices]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath srcGeomPath({"Geom"});
+  const DataPath destGeomPath({"Geom Out"});
+  auto* geomPtr = VertexGeom::Create(dataStructure, "Geom");
+  REQUIRE(geomPtr != nullptr);
+  auto* verticesPtr = Float32Array::Create(dataStructure, VertexGeom::k_SharedVertexListName,
+                                           DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath(VertexGeom::k_SharedVertexListName), {3}, {3}),
+                                           geomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  verticesPtr->fill(0.0F);
+  geomPtr->setVertices(*verticesPtr);
+  auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geomPtr->getId());
+  REQUIRE(elementAmPtr != nullptr);
+  geomPtr->setVertexAttributeMatrix(*elementAmPtr);
+  auto* maskPtr =
+      BoolArray::Create(dataStructure, "Mask", DataStoreUtilities::CreateDataStore<bool>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Mask"), {3}, {1}), elementAmPtr->getId());
+  REQUIRE(maskPtr != nullptr);
+  maskPtr->fill(false);
+  (*maskPtr)[0] = true;
+  auto* dataPtr =
+      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                         elementAmPtr->getId());
+  REQUIRE(dataPtr != nullptr);
+  dataPtr->fill(7);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
+                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  valuesPtr->fill(42);
+  RemoveFlaggedVerticesFilter filter;
+  Arguments args;
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key, std::make_any<DataPath>(srcGeomPath.createChildPath("Vertex Data").createChildPath("Mask")));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
+  const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
+  const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
+
+  SECTION("Declared recursive paths keep child names")
+  {
+    const CopyDataObjectAction* copyActionPtr = nullptr;
+    for(const auto& action : preflightResult.outputActions.value().actions)
+    {
+      const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+      if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
+      {
+        copyActionPtr = candidatePtr;
+        break;
+      }
+    }
+    REQUIRE(copyActionPtr != nullptr);
+    const auto createdPaths = copyActionPtr->getAllCreatedPaths();
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedValuesPath) != createdPaths.end());
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), renamedAmPath.createChildPath("Geom Out Values")) == createdPaths.end());
+  }
+  SECTION("Copied objects keep child names")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
+    REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
+    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Vertex Data").createChildPath("Data")) != nullptr);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
