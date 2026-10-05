@@ -237,10 +237,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const std::atomic_bool& s
       }
       const usize ownCluster = featureBuffer[outerIndex] == 0 ? 0 : denseFeatureIds.at(featureBuffer[outerIndex]);
       float64 inClusterDistance = clusterDistances[outerIndex * (clusterCount + 1) + ownCluster];
-      if(ownCluster > 0)
-      {
-        inClusterDistance /= featureCounts[ownCluster];
-      }
+      inClusterDistance /= featureCounts[ownCluster];
       float64 outClusterDistance = 0.0;
       float64 minimumDistance = std::numeric_limits<float64>::max();
       for(usize cluster = 1; cluster <= clusterCount; cluster++)
