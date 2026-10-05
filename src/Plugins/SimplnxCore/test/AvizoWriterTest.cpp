@@ -123,7 +123,7 @@ struct AvizoFixture
   std::filesystem::path outputRoot;
   DataStructure dataStructure;
   std::shared_ptr<ObservedAvizoStore> source;
-  IFilter::MessageHandler handler = [](const IFilter::Message&) {};
+  IFilter::MessageHandler handler{[](const IFilter::Message&) {}};
   std::atomic_bool shouldCancel = false;
   AvizoWriterInputValues values;
 };
