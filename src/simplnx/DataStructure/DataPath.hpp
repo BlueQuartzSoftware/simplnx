@@ -144,6 +144,14 @@ public:
   bool attemptRename(const DataPath& oldPath, const DataPath& newPath);
 
   /**
+   * @brief Returns a new DataPath with a matching prefix replaced. Compares complete path components.
+   * @param oldPrefix The prefix to match at the start of this path.
+   * @param newPrefix The replacement prefix, which can have a different number of components.
+   * @return The replacement prefix followed by the remaining components, or std::nullopt if oldPrefix does not match.
+   */
+  std::optional<DataPath> rebase(const DataPath& oldPrefix, const DataPath& newPrefix) const;
+
+  /**
    * @brief Checks equality between two DataPaths.
    * @param rhs The DataPath to compare against
    * @return True if both DataPaths are equal, false otherwise
