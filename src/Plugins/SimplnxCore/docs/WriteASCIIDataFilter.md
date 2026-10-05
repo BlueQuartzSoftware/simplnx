@@ -21,6 +21,8 @@ When writing to multiple files, the *Maximum Tuples Per Line* parameter controls
 
 Each input data array will be written to its own output file. The name of the file will be the name of the Data Array + the extension from the parameters.
 
+In Multiple Files mode, the selected DataArrays must have different names. Names that differ only by case are rejected because file systems may ignore case.
+
 ![Example of multiple output files](Images/Write_Asci_1.png)
 
 ### Single File

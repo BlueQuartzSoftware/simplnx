@@ -2,12 +2,14 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -226,6 +228,42 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Valid filter execution")
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case
+
+TEST_CASE("SimplnxCore::WriteASCIIData: Reject duplicate output names", "[SimplnxCore][WriteASCIIDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::string secondName = GENERATE("Data", "data");
+  DYNAMIC_SECTION("/A/Data and /B/" << secondName)
+  {
+    DataStructure dataStructure;
+    auto* groupAPtr = DataGroup::Create(dataStructure, "A");
+    auto* groupBPtr = DataGroup::Create(dataStructure, "B");
+    REQUIRE(groupAPtr != nullptr);
+    REQUIRE(groupBPtr != nullptr);
+    const DataPath firstPath({"A", "Data"});
+    const DataPath secondPath({"B", secondName});
+    auto firstStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, firstPath, {1}, {1});
+    auto secondStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, secondPath, {1}, {1});
+    REQUIRE(Int32Array::Create(dataStructure, "Data", firstStore, groupAPtr->getId()) != nullptr);
+    REQUIRE(Int32Array::Create(dataStructure, secondName, secondStore, groupBPtr->getId()) != nullptr);
+
+    WriteASCIIDataFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(k_MultipleFiles));
+    args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "duplicate_ascii_names"));
+    args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({firstPath, secondPath}));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -51003);
+    REQUIRE(preflightResult.outputActions.errors()[0].message.find(firstPath.toString()) != std::string::npos);
+    REQUIRE(preflightResult.outputActions.errors()[0].message.find(secondPath.toString()) != std::string::npos);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
 
 TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteASCIIDataFilter][BackwardsCompatibility]")
 {
