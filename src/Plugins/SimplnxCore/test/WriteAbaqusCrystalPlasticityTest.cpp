@@ -419,10 +419,10 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layo
                         "0.25, 0.5, 0.75, 170\n") != std::string::npos);
   }
 
-  SECTION("Euler angles only")
+  SECTION("Euler angles first without grain and phase IDs")
   {
     const std::string prefix = "Layout_EulerOnly";
-    Arguments args = CreateArguments(outputPath, prefix, {});
+    Arguments args = CreateArguments(outputPath, prefix, {{7.5}});
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key, std::make_any<bool>(false));
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(1));
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key, std::make_any<bool>(false));
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layo
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
-    REQUIRE(master.find("*User Material, constants=3\n0.25, 0.5, 0.75\n") != std::string::npos);
+    REQUIRE(master.find("*User Material, constants=4\n0.25, 0.5, 0.75, 7.5\n") != std::string::npos);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -584,9 +584,10 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constants R
   Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Material_Constants_Row_Width", {{2.0, 3.0}});
 
   auto preflightResult = filter.preflight(dataStructure, args);
+  // The single static table column rejects the two-column row before preflightImpl runs.
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -12016);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -3);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
