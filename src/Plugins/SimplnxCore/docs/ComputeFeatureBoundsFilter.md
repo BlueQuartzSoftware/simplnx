@@ -45,6 +45,8 @@ The intended use case for `unified` is primarily for simplicity of internal calc
 
 ### Edge Geometry Nuances
 
+The edge geometry contains one 12-edge box for each feature with finite bounds. Each edge's Feature Id is the Feature Id of the source feature. Feature tuples beyond the largest Feature Id are written as NaN.
+
 Producing an edge geometry for the bounding boxes has a couple nuances that aren't very intuitive, these will be covered here. Firstly, the output edge geometry may **NOT** contain all features that are in the input geometry. For a feature to be included it must meet two conditions:
 
 - The bounding box must not contain any NANs
@@ -90,7 +92,7 @@ Since edges are the cell level data in edge geometries, the feature ids map to t
 
 ### Required Input Sources
 
-This filter requires a **Cell Feature Ids** array, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or one of the misorientation-based segmentation filters in the OrientationAnalysis plugin. The selected **Feature Data Attribute Matrix** is where the output bounds arrays are created.
+The **Feature Ids** DataArray must have one component. This filter requires a **Cell Feature Ids** array, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or one of the misorientation-based segmentation filters in the OrientationAnalysis plugin. The selected **Feature Data Attribute Matrix** is where the output bounds arrays are created.
 
 % Auto generated parameter table will be inserted here
 

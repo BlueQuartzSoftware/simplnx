@@ -333,7 +333,7 @@ Result<> ComputeFeatureBoundsScanline::operator()()
     return {};
   }
 
-  std::vector<float32> bounds(static_cast<usize>(numFeatures) * 6, std::numeric_limits<float32>::quiet_NaN());
+  std::vector<float32> bounds(featureAM.getNumberOfTuples() * 6, std::numeric_limits<float32>::quiet_NaN());
   Result<> computeResult = ExecuteComputeBounds(geom, featureIds, bounds, featureIdBuffer.get(), m_ShouldCancel);
   if(computeResult.invalid())
   {
@@ -454,12 +454,11 @@ Result<> ComputeFeatureBoundsScanline::operator()()
         vertPair[1] = currentOffset * 8 + (cubeEdges[edgeIdx].second);
 
         edgeGeom.setEdgePointIds(currentOffset * 12 + edgeIdx, vertPair);
-        edgeFeatureIds[currentOffset * 12 + edgeIdx] = currentOffset;
+        edgeFeatureIds[currentOffset * 12 + edgeIdx] = static_cast<int32>(idx);
       }
       currentOffset++;
     }
 
-    currentOffset--;
     resizeResult = edgeGeom.resizeVertexList(currentOffset * 8);
     if(resizeResult.invalid())
     {

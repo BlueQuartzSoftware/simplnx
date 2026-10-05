@@ -88,6 +88,174 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes And Source Ids", "[SimplnxCore][ComputeFeatureBoundsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({4, 3, 2});
+  imageGeom->setOrigin({1, 2, 3});
+  imageGeom->setSpacing({0.5f, 1, 2});
+  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 3, 4}, imageGeom->getId());
+  REQUIRE(cellAm != nullptr);
+  imageGeom->setCellData(*cellAm);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {2, 3, 4}, {1}, cellAm->getId());
+  REQUIRE(featureIds != nullptr);
+  featureIds->fill(-1);
+  (*featureIds)[0] = 1;
+  for(usize cellIdx : {18, 19, 22, 23})
+  {
+    (*featureIds)[cellIdx] = 3;
+  }
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {4}, imageGeom->getId()) != nullptr);
+
+  ComputeFeatureBoundsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Cell Data", "Feature Ids"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Feature Data"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreateEdgeGeometry_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(DataPath({"EdgeGeom"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>("Edge Data"));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreatedFeatureIdsArrayName_Key, std::make_any<std::string>("Edge Feature Ids"));
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"})));
+  const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
+  const auto& vertices = edgeGeom.getVerticesRef();
+  const auto& edges = edgeGeom.getEdgesRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"})));
+  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"}));
+
+  SECTION("Box counts and coordinates")
+  {
+    REQUIRE(vertices.getNumberOfTuples() == 16);
+    REQUIRE(edges.getNumberOfTuples() == 24);
+    const std::array<usize, 4> vertexIndices = {0, 6, 8, 14};
+    const std::array<std::array<float32, 3>, 4> expectedVertices = {{{1, 2, 3}, {1.5f, 3, 5}, {2, 3, 5}, {3, 5, 7}}};
+    for(usize vertexIdx = 0; vertexIdx < vertexIndices.size(); vertexIdx++)
+    {
+      for(usize compIdx = 0; compIdx < 3; compIdx++)
+      {
+        REQUIRE(vertices[vertexIndices[vertexIdx] * 3 + compIdx] == expectedVertices[vertexIdx][compIdx]);
+      }
+    }
+    REQUIRE(edges[12 * 2] == 8);
+    REQUIRE(edges[12 * 2 + 1] == 9);
+    REQUIRE(edges[23 * 2] == 11);
+    REQUIRE(edges[23 * 2 + 1] == 15);
+  }
+  SECTION("Source Feature Ids")
+  {
+    REQUIRE(edgeFeatureIds.getNumberOfTuples() >= 12);
+    for(usize edgeIdx = 0; edgeIdx < 12; edgeIdx++)
+    {
+      REQUIRE(edgeFeatureIds[edgeIdx] == 1);
+    }
+    REQUIRE(edgeFeatureIds.getNumberOfTuples() == 24);
+    for(usize edgeIdx = 12; edgeIdx < 24; edgeIdx++)
+    {
+      REQUIRE(edgeFeatureIds[edgeIdx] == 3);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max Id", "[SimplnxCore][ComputeFeatureBoundsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+
+  auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
+  REQUIRE(vertexGeom != nullptr);
+  auto* vertices = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, vertexGeom->getId());
+  REQUIRE(vertices != nullptr);
+  vertexGeom->setVertices(*vertices);
+  const std::array<float32, 9> coordinates = {-1, 0.5f, 7, 1, 2, 3, 4, 6, 9};
+  for(usize valueIdx = 0; valueIdx < coordinates.size(); valueIdx++)
+  {
+    (*vertices)[valueIdx] = coordinates[valueIdx];
+  }
+  auto* vertexAm = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, vertexGeom->getId());
+  REQUIRE(vertexAm != nullptr);
+  vertexGeom->setVertexAttributeMatrix(*vertexAm);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {3}, {1}, vertexAm->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = 1;
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {5}, vertexGeom->getId()) != nullptr);
+
+  ComputeFeatureBoundsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom", "Vertex Data", "Feature Ids"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"VertexGeom", "Feature Data"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("Bounds"));
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath boundsPath({"VertexGeom", "Feature Data", "Bounds"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(boundsPath));
+  const auto& bounds = dataStructure.getDataRefAs<Float32Array>(boundsPath);
+  REQUIRE(bounds.getNumberOfTuples() == 5);
+  REQUIRE(bounds.getNumberOfComponents() == 6);
+  const std::array<float32, 12> expectedBounds = {-1, 0.5f, 7, -1, 0.5f, 7, 1, 2, 3, 4, 6, 9};
+  for(usize valueIdx = 0; valueIdx < expectedBounds.size(); valueIdx++)
+  {
+    REQUIRE(bounds[valueIdx] == expectedBounds[valueIdx]);
+  }
+  for(usize featureIdx = 2; featureIdx < 5; featureIdx++)
+  {
+    for(usize compIdx = 0; compIdx < 6; compIdx++)
+    {
+      CAPTURE(featureIdx, compIdx, bounds[featureIdx * 6 + compIdx]);
+      REQUIRE(std::isnan(bounds[featureIdx * 6 + compIdx]));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Feature Ids", "[SimplnxCore][ComputeFeatureBoundsFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({1, 1, 1});
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, imageGeom->getId());
+  REQUIRE(cellAm != nullptr);
+  imageGeom->setCellData(*cellAm);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {1, 1, 1}, {2}, cellAm->getId());
+  REQUIRE(featureIds != nullptr);
+  featureIds->fill(0);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {1}, imageGeom->getId()) != nullptr);
+
+  ComputeFeatureBoundsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Cell Data", "Feature Ids"})));
+  args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Feature Data"})));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -208);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Image Geom/Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
