@@ -8,6 +8,8 @@ Generic (Generic)
 
 This **Filter** extends an **Image Geometry** outward by adding cells around the edges. Each added cell is initialized to a user-specified default value. Optionally, the geometry's origin can be updated so that the original data stays in the same physical location after padding.
 
+Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
+
 Padding is the inverse operation of [Crop Geometry (Image)](CropImageGeometryFilter.md). Common use cases are creating a margin around a sample before applying a transformation, or extending a small ROI to a standard size for batch processing.
 
 ### Example

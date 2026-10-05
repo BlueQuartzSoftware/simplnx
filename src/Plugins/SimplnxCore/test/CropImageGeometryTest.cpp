@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -1957,4 +1958,71 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL Backwards Compatibility",
       CHECK(args.value<DataPath>(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry name are kept", "[SimplnxCore][CropImageGeometry]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath srcGeomPath({"Geom"});
+  const DataPath destGeomPath({"Geom Out"});
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({2, 2, 2});
+  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
+  REQUIRE(elementAmPtr != nullptr);
+  geomPtr->setCellData(*elementAmPtr);
+  auto* dataPtr =
+      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                         elementAmPtr->getId());
+  REQUIRE(dataPtr != nullptr);
+  dataPtr->fill(7);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
+                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  valuesPtr->fill(42);
+  CropImageGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{1, 1, 1}));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
+  const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
+  const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
+
+  SECTION("Declared recursive paths keep child names")
+  {
+    const CopyDataObjectAction* copyActionPtr = nullptr;
+    for(const auto& action : preflightResult.outputActions.value().actions)
+    {
+      const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+      if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
+      {
+        copyActionPtr = candidatePtr;
+        break;
+      }
+    }
+    REQUIRE(copyActionPtr != nullptr);
+    const auto createdPaths = copyActionPtr->getAllCreatedPaths();
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedValuesPath) != createdPaths.end());
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), renamedAmPath.createChildPath("Geom Out Values")) == createdPaths.end());
+  }
+  SECTION("Copied objects keep child names")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
+    REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
+    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -11,8 +11,6 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Utilities/StringUtilities.hpp"
-
 namespace nx::core
 {
 
@@ -131,8 +129,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       {
         for(const auto& sourcePath : pathsToBeCopied.value())
         {
-          std::string createdPathName = StringUtilities::replace(sourcePath.toString(), dataArrayPath.getTargetName(), newTargetName);
-          allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+          allCreatedPaths.push_back(sourcePath.rebase(dataArrayPath, newDataPath).value());
         }
       }
     }

@@ -8,6 +8,8 @@ Core (Spatial)
 
 This **Filter** extracts a region of interest (ROI) from an **Image Geometry**, producing a new geometry that contains only the selected cells. Bounds can be specified either in cell indices (voxels) or in physical coordinates. Individual dimensions (X, Y, Z) can be cropped independently.
 
+Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
+
 This is the inverse of [Pad Image Geometry](PadImageGeometryFilter.md). Common uses are isolating a sample from its overscan border, focusing analysis on a single feature, or reducing data size for testing.
 
 ### Bounds Mode

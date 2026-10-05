@@ -3,10 +3,16 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include <simplnx/Parameters/ChoicesParameter.hpp>
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 using namespace nx::core;
@@ -345,5 +351,91 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Invalid Params", "[SimplnxCore]
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == errCode);
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CropEdgeGeometry: Child names containing the geometry name are kept", "[SimplnxCore][CropEdgeGeometry]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath srcGeomPath({"Geom Group", "Geom"});
+  const DataPath destGeomPath({"Group", "Geom Out"});
+  auto* sourceGroupPtr = DataGroup::Create(dataStructure, "Geom Group");
+  REQUIRE(sourceGroupPtr != nullptr);
+  REQUIRE(DataGroup::Create(dataStructure, "Group") != nullptr);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, "Geom", sourceGroupPtr->getId());
+  REQUIRE(geomPtr != nullptr);
+  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices",
+                                           DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Vertices"), {3}, {3}), geomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  verticesPtr->fill(0.0F);
+  (*verticesPtr)[3] = 1.0F;
+  (*verticesPtr)[6] = 2.0F;
+  geomPtr->setVertices(*verticesPtr);
+  auto* edgesPtr =
+      UInt64Array::Create(dataStructure, "Edges", DataStoreUtilities::CreateDataStore<uint64>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Edges"), {2}, {2}), geomPtr->getId());
+  REQUIRE(edgesPtr != nullptr);
+  (*edgesPtr)[0] = 0;
+  (*edgesPtr)[1] = 1;
+  (*edgesPtr)[2] = 1;
+  (*edgesPtr)[3] = 2;
+  geomPtr->setEdgeList(*edgesPtr);
+  auto* vertexAmPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geomPtr->getId());
+  REQUIRE(vertexAmPtr != nullptr);
+  geomPtr->setVertexAttributeMatrix(*vertexAmPtr);
+  auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Edge Data", {2}, geomPtr->getId());
+  REQUIRE(elementAmPtr != nullptr);
+  geomPtr->setEdgeAttributeMatrix(*elementAmPtr);
+  auto* dataPtr =
+      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                         elementAmPtr->getId());
+  REQUIRE(dataPtr != nullptr);
+  dataPtr->fill(7);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
+                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  valuesPtr->fill(42);
+  CropEdgeGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(CropEdgeGeometryFilter::k_SelectedEdgeGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
+  args.insertOrAssign(CropEdgeGeometryFilter::k_CreatedEdgeGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
+  args.insertOrAssign(CropEdgeGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropEdgeGeometryFilter::k_CropXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+  args.insertOrAssign(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(std::vector<float32>{3.0F, 1.0F, 1.0F}));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
+  const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
+  const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
+
+  SECTION("Declared recursive paths keep child names")
+  {
+    const CopyDataObjectAction* copyActionPtr = nullptr;
+    for(const auto& action : preflightResult.outputActions.value().actions)
+    {
+      const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+      if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
+      {
+        copyActionPtr = candidatePtr;
+        break;
+      }
+    }
+    REQUIRE(copyActionPtr != nullptr);
+    const auto createdPaths = copyActionPtr->getAllCreatedPaths();
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedValuesPath) != createdPaths.end());
+    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), renamedAmPath.createChildPath("Geom Out Values")) == createdPaths.end());
+  }
+  SECTION("Copied objects keep child names")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
+    REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
+    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Edge Data").createChildPath("Data")) != nullptr);
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

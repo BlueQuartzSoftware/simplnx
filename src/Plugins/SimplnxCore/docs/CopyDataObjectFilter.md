@@ -8,6 +8,8 @@ Core (Generation)
 
 This **Filter** deep copies one or more DataObjects.
 
+The *Copied Object(s) Suffix* applies only to each selected DataObject. Child names remain unchanged, including names that contain the selected object's name. For example, copying `A/A child/x` with suffix `_copy` creates `A_copy/A child/x`.
+
 **In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as _DataGroup_ or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
 
 Commonly used _BaseGroup_ children:
