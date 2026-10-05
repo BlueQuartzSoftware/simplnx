@@ -137,6 +137,13 @@ std::string FlushFailureFilter::humanName() const
 {
   return "Completion Failure Test Fixture";
 }
+
+//------------------------------------------------------------------------------
+std::vector<std::string> FlushFailureFilter::defaultTags() const
+{
+  return {className(), "Example", "Test"};
+}
+
 IFilter::VersionType FlushFailureFilter::parametersVersion() const
 {
   return 1;

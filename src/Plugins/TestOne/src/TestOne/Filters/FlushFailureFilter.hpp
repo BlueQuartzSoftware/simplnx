@@ -26,6 +26,7 @@ public:
   Uuid uuid() const override;
   std::string humanName() const override;
   VersionType parametersVersion() const override;
+  std::vector<std::string> defaultTags() const override;
 
   /**
    * @brief Declares the bounded test-mode parameter.
