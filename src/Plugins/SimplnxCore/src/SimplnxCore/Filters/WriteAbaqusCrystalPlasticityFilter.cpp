@@ -58,7 +58,7 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for each output file.", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The Abaqus job name.", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
-                                                                 "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", true));
+                                                                 "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
   params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
   params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
@@ -193,6 +193,8 @@ constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteAbaqusCrystalPlasticityFilter().getDefaultArguments();
+  // Legacy SimulationIO always wrote C3D8R elements.
+  args.insertOrAssign(k_UseReducedIntegration_Key, std::make_any<bool>(true));
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
