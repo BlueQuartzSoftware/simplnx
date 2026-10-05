@@ -1,4 +1,5 @@
 #include "ReadImageStack.hpp"
+#include "ReadImageStackCropping.hpp"
 
 #include "ImageProcessing/Filters/ReadImageFilter.hpp"
 
@@ -242,46 +243,18 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
   }
 
   DataPath destImageGeomPath = imageGeomPath;
-  auto& initialImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
 
   Result<> outputResult;
 
-  usize startSlice = 0;
-  usize endSlice = files.size() - 1;
-  if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::ValueType::TypeEnum::VoxelSubvolume)
+  auto zRangeResult = ComputeCroppedZRange(croppingOptions, files.size(), origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
+  if(zRangeResult.invalid())
   {
-    startSlice = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
-    endSlice = static_cast<usize>(croppingOptions.zBoundVoxels[1]);
+    return ConvertResult(std::move(zRangeResult));
   }
-  else if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::ValueType::TypeEnum::PhysicalSubvolume)
-  {
-    SizeVec3 destDims = initialImageGeom.getDimensions();
-    FloatVec3 destOrigin = initialImageGeom.getOrigin();
-
-    // Reject physical crop bounds outside the geometry. A full-range fallback
-    // would silently create the wrong output volume.
-    std::optional<usize> result = initialImageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[0]);
-    if(!result.has_value())
-    {
-      return MakeErrorResult(-64512, fmt::format("Physical Z crop minimum {} is outside the destination image-geometry Z extent", croppingOptions.zBoundPhysical[0]));
-    }
-    startSlice = result.value() / (destDims[0] * destDims[1]);
-
-    result = initialImageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[1]);
-    if(!result.has_value())
-    {
-      return MakeErrorResult(-64513, fmt::format("Physical Z crop maximum {} is outside the destination image-geometry Z extent", croppingOptions.zBoundPhysical[1]));
-    }
-    endSlice = result.value() / (destDims[0] * destDims[1]);
-  }
-
-  if(startSlice > endSlice || endSlice >= files.size())
-  {
-    return MakeErrorResult(-64514, fmt::format("Computed slice range [{}, {}] is invalid for {} input files", startSlice, endSlice, files.size()));
-  }
+  const auto& zRange = zRangeResult.value();
 
   usize slice = 0;
-  for(usize i = startSlice; i <= endSlice; i++)
+  for(usize i = zRange.zMin; i <= zRange.zMax; i++)
   {
     const std::string& filePath = files[i];
     messageHandler.sendInfoMessage(fmt::format("Importing: {}", filePath));
