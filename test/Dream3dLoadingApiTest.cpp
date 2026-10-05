@@ -1667,6 +1667,7 @@ TEST_CASE("ImportH5ObjectPathsAction preserves recovery warnings through merging
   const auto application = Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const int mergeCase = GENERATE(0, 1, 2);
+  CAPTURE(mergeCase);
   const auto source = CreateNonnumericSelectionTestDataStructure();
   const auto fileName = std::string("Dream3dLoadingApiTest_ActionWarning_") + std::to_string(mergeCase) + ".dream3d";
   const auto filePath = WriteTestFile(source, fileName);
@@ -1679,19 +1680,29 @@ TEST_CASE("ImportH5ObjectPathsAction preserves recovery warnings through merging
   {
     REQUIRE(DataGroup::Create(destination, k_NonnumericGroupName) != nullptr);
   }
+  const auto originalPaths = destination.getAllDataPaths();
+  const auto originalIds = destination.getAllDataObjectIds();
+  const auto originalNextId = destination.getNextId();
+  const auto originalGroup = destination.getSharedData(k_NonnumericGroupPath);
   const std::vector<DataPath> paths = mergeCase == 2 ? std::vector<DataPath>{k_NonnumericNumericArrayPath} :
                                                        std::vector<DataPath>{k_NonnumericGroupPath, k_NonnumericAttrMatPath, k_NonnumericNumericArrayPath, k_NonnumericRecoverySiblingPath};
   const ImportH5ObjectPathsAction action(filePath, paths);
   const auto result = action.apply(destination, IDataAction::Mode::Execute);
-  REQUIRE(ContainsWarning(result, -89200));
   if(mergeCase != 0)
   {
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == (mergeCase == 1 ? -6203 : -6202));
+    // Destination validation rejects these imports before the malformed array is read.
+    CHECK_FALSE(ContainsWarning(result, -89200));
+    CHECK(destination.getAllDataPaths() == originalPaths);
+    CHECK(destination.getAllDataObjectIds() == originalIds);
+    CHECK(destination.getNextId() == originalNextId);
+    CHECK(destination.getSharedData(k_NonnumericGroupPath) == originalGroup);
   }
   else
   {
     REQUIRE(result.valid());
+    REQUIRE(ContainsWarning(result, -89200));
     REQUIRE_NOTHROW(destination.getDataRefAs<Int32Array>(k_NonnumericRecoverySiblingPath));
     const auto& sibling = destination.getDataRefAs<Int32Array>(k_NonnumericRecoverySiblingPath);
     CHECK(sibling.getValue(0) == 3);
@@ -1700,6 +1711,7 @@ TEST_CASE("ImportH5ObjectPathsAction preserves recovery warnings through merging
     REQUIRE_NOTHROW(destination.getDataRefAs<Int32Array>(k_NonnumericNumericArrayPath));
     CHECK(destination.getDataRefAs<Int32Array>(k_NonnumericNumericArrayPath).getStoreType() == IDataStore::StoreType::Empty);
   }
+  UnitTest::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("ImportH5ObjectPathsAction avoids excluded materialization", "[simplnx][Dream3dLoadingApi][SelectiveImport]")
