@@ -70,6 +70,8 @@ The user can crop the incoming image using the Cropping Options section. The cro
 
 Both subvolume cropping types have checkboxes to turn on/off cropping in the X, Y, and Z dimensions. For example, if **Physical Subvolume** is selected and only **Crop Y Dimension** is enabled, the image will be cropped in the Y dimension only using physical coordinate bounds. Z cropping only applies to a genuine multi-page/volume input (`Z > 1`); for a 2D image the Z crop flag is ignored.
 
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
+
 ## Required Input Sources
 
 None — this filter reads directly from a single image file on disk.

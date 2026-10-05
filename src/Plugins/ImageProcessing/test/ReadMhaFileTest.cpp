@@ -1091,3 +1091,42 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: apply transformation to geometry 
   // The geometry still exists after the transform resample.
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
 }
+
+TEST_CASE("ImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadMhaFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const DataPath geomPath({"Physical Crop"});
+  const fs::path filePath = ItkMhaInputDir() / "Input" / "2th_cthead1.mha";
+  Arguments args = MakeMhaArgs(filePath, geomPath, "Cell Data", "ImageData");
+
+  ReadMhaFileFilter filter;
+  DataStructure fullDataStructure;
+  auto fullPreflight = filter.preflight(fullDataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.outputActions);
+  auto fullActions = fullPreflight.outputActions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullActions);
+  REQUIRE_NOTHROW(fullDataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& fullGeom = fullDataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto origin = fullGeom.getOrigin();
+  const auto spacing = fullGeom.getSpacing();
+  const auto dims = fullGeom.getDimensions();
+
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = false;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
+  CAPTURE(origin[0], spacing[0], dims[0], crop.xBoundPhysical[1]);
+  args.insertOrAssign(ReadMhaFileFilter::k_CroppingOptions_Key, crop);
+  DataStructure croppedDataStructure;
+  auto croppedPreflight = filter.preflight(croppedDataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.outputActions);
+  auto croppedActions = croppedPreflight.outputActions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedActions);
+  REQUIRE_NOTHROW(croppedDataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& croppedGeom = croppedDataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(croppedGeom.getDimensions() == dims);
+  REQUIRE(croppedGeom.getOrigin() == origin);
+  UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+}

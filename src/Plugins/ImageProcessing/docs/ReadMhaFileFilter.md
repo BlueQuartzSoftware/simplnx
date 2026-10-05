@@ -21,6 +21,10 @@ Supported header features:
 - `ElementSpacing` (or `ElementSize`) and `Offset` / `Position` / `Origin`.
 - 2D images are loaded with `Z = 1`; 3D images load natively.
 
+### Physical Cropping
+
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
+
 ### Transformation Matrix
 
 If **Apply Image Transformation To Geometry** is enabled, the header
