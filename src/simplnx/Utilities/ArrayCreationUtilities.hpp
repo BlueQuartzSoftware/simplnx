@@ -248,14 +248,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(mode == IDataAction::Mode::Execute)
     {
       store->fill(conversionResult.value());
-      {
-        // Only resident DataStore records an initialization value for later resize operations.
-        std::weak_ptr<DataStore<T>> weakDataStorePtr = std::dynamic_pointer_cast<DataStore<T>>(store);
-        if(auto dataStorePtr = weakDataStorePtr.lock(); dataStorePtr != nullptr)
-        {
-          dataStorePtr->setInitValue(conversionResult.value());
-        }
-      }
+      store->setInitValue(conversionResult.value());
     }
   }
 

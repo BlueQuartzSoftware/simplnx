@@ -335,14 +335,6 @@ public:
     {
       return nullptr;
     }
-    // Preserve resident growth initialization when destination policy also selects memory.
-    const auto* sourceStorePtr = dynamic_cast<const DataStore<T>*>(getDataStore());
-    auto* destinationStorePtr = dynamic_cast<DataStore<T>*>(dataStore.get());
-    if(sourceStorePtr != nullptr && destinationStorePtr != nullptr && sourceStorePtr->getStoreType() == IDataStore::StoreType::InMemory &&
-       destinationStorePtr->getStoreType() == IDataStore::StoreType::InMemory)
-    {
-      destinationStorePtr->setInitValue(sourceStorePtr->getInitValue());
-    }
     // Insertion assigns the destination identifier.
     std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), dataStore));
     if(dataStruct.insert(copy, copyPath.getParent()))

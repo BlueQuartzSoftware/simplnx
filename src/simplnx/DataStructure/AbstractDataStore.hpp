@@ -16,6 +16,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -1286,11 +1287,57 @@ public:
    */
   virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
 
+  /**
+   * @brief Returns the value that initializes elements when the store grows.
+   * @return Initialization value, or no value if growth uses the mudflap value.
+   */
+  std::optional<T> getInitValue() const
+  {
+    return m_InitValue;
+  }
+
+  /**
+   * @brief Sets the policy for values added when the store grows.
+   * @param value Initialization value, or no value to use the mudflap value.
+   * @note Existing values do not change. Callers must exclude concurrent policy changes, resize and copying.
+   */
+  void setInitValue(std::optional<T> value)
+  {
+    m_InitValue = value;
+  }
+
+  /**
+   * @brief Sets the value used when the store grows.
+   * @param value Value that initializes new elements.
+   * @note Existing values do not change. Callers must exclude concurrent policy changes, resize and copying.
+   */
+  void setInitValue(T value)
+  {
+    m_InitValue = value;
+  }
+
 protected:
   /**
-   * @brief Creates a data store without values.
+   * @brief Creates base state without allocating values.
+   * @param initValue Growth initializer; nullopt selects the diagnostic value.
    */
-  AbstractDataStore() = default;
+  explicit AbstractDataStore(std::optional<T> initValue = T{})
+  : m_InitValue(initValue)
+  {
+  }
+
+  /**
+   * @brief Resolves the value used for newly added elements.
+   * @return Explicit initializer, or GetMudflap<T>() when the initializer is absent.
+   */
+  T getGrowthInitValue() const
+  {
+    if(m_InitValue.has_value())
+    {
+      return *m_InitValue;
+    }
+    return GetMudflap<T>();
+  }
 
   /**
    * @brief Copies base data-store state.
@@ -1298,6 +1345,7 @@ protected:
    */
   AbstractDataStore(const AbstractDataStore& other)
   : IDataStore(other)
+  , m_InitValue(other.m_InitValue)
   {
   }
 
@@ -1307,8 +1355,12 @@ protected:
    */
   AbstractDataStore(AbstractDataStore&& other)
   : IDataStore(std::move(other))
+  , m_InitValue(std::move(other.m_InitValue))
   {
   }
+
+private:
+  std::optional<T> m_InitValue;
 };
 
 using UInt8AbstractDataStore = AbstractDataStore<uint8>;

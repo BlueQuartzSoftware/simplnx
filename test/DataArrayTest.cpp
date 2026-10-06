@@ -35,6 +35,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -2236,4 +2237,165 @@ TEST_CASE("Large metadata array copies resolve exact logical bytes without alloc
   {
     SUCCEED("A 100 GB logical array exceeds this host's supported usize range");
   }
+}
+
+TEMPLATE_TEST_CASE("DataStore common initialization API changes future values only", "[simplnx][DataStore][GrowthInitialization]", int32, bool)
+{
+  using T = TestType;
+  static_assert(GetMudflap<bool>() == true);
+  DataStore<T> concrete({2}, {2}, static_cast<T>(7));
+  AbstractDataStore<T>& store = concrete;
+  CHECK(store.getInitValue() == std::optional<T>{static_cast<T>(7)});
+  const std::array<T, 4> prefix{T{0}, T{1}, T{1}, T{0}};
+  REQUIRE(store.copyFromBuffer(0, {prefix.data(), prefix.size()}).valid());
+  store.setInitValue(T{0});
+  CHECK(store.getInitValue() == std::optional<T>{T{0}});
+  store.setInitValue(std::optional<T>{T{1}});
+  CHECK(store.getInitValue() == std::optional<T>{T{1}});
+  std::array<T, 4> unchanged{};
+  REQUIRE(store.copyIntoBuffer(0, {unchanged.data(), unchanged.size()}).valid());
+  CHECK(unchanged == prefix);
+  REQUIRE(store.resizeTuples({3}).valid());
+  std::array<T, 6> actual{};
+  REQUIRE(store.copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
+  CHECK(actual == std::array<T, 6>{T{0}, T{1}, T{1}, T{0}, T{1}, T{1}});
+  store.setInitValue(std::nullopt);
+  CHECK_FALSE(store.getInitValue().has_value());
+  REQUIRE(store.resizeTuples({4}).valid());
+  const T diagnostic = [] {
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      return true;
+    }
+    else
+    {
+      return T{-1414812757};
+    }
+  }();
+  std::array<T, 8> grown{};
+  REQUIRE(store.copyIntoBuffer(0, {grown.data(), grown.size()}).valid());
+  CHECK(grown == std::array<T, 8>{T{0}, T{1}, T{1}, T{0}, T{1}, T{1}, diagnostic, diagnostic});
+}
+
+TEST_CASE("DataStore copy and move retain optional initialization", "[simplnx][DataStore][GrowthInitialization]")
+{
+  const bool missingInitializer = GENERATE(false, true);
+  const int operation = GENERATE(0, 1, 2);
+  DYNAMIC_SECTION("missing=" << missingInitializer << " operation=" << operation)
+  {
+    const std::optional<int32> initial = missingInitializer ? std::nullopt : std::optional<int32>{7};
+    DataStore<int32> source({2}, {2}, initial);
+    const std::array<int32, 4> prefix{10, 11, 20, 21};
+    REQUIRE(source.copyFromBuffer(0, {prefix.data(), prefix.size()}).valid());
+    std::unique_ptr<DataStore<int32>> target;
+    if(operation == 0)
+    {
+      target = std::make_unique<DataStore<int32>>(source);
+      target->setValue(0, 99);
+      CHECK(source.getValue(0) == 10);
+      target->setValue(0, 10);
+    }
+    else if(operation == 1)
+    {
+      target = std::make_unique<DataStore<int32>>(std::move(source));
+    }
+    else
+    {
+      target = std::make_unique<DataStore<int32>>(ShapeType{1}, ShapeType{1}, int32{-9});
+      *target = std::move(source);
+    }
+    CHECK(target->getInitValue() == initial);
+    REQUIRE(target->resizeTuples({3}).valid());
+    const int32 tail = missingInitializer ? -1414812757 : 7;
+    std::array<int32, 6> actual{};
+    REQUIRE(target->copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
+    CHECK(actual == std::array<int32, 6>{10, 11, 20, 21, tail, tail});
+  }
+}
+
+TEMPLATE_TEST_CASE("DataStore owned buffers retain an engaged diagnostic initializer", "[simplnx][DataStore][GrowthInitialization]", int32, bool)
+{
+  using T = TestType;
+  auto buffer = std::make_unique<T[]>(2);
+  buffer[0] = T{0};
+  buffer[1] = T{1};
+  DataStore<T> store(std::move(buffer), {2}, {1});
+  const T diagnostic = [] {
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      return true;
+    }
+    else
+    {
+      return T{-1414812757};
+    }
+  }();
+  CHECK(store.getInitValue() == std::optional<T>{diagnostic});
+  REQUIRE(store.resizeTuples({3}).valid());
+  std::array<T, 3> actual{};
+  REQUIRE(store.copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
+  CHECK(actual == std::array<T, 3>{T{0}, T{1}, diagnostic});
+}
+
+TEST_CASE("Numeric placeholders retain initialization through copy and move", "[simplnx][DataStore][GrowthInitialization]")
+{
+  const bool missingInitializer = GENERATE(false, true);
+  const int operation = GENERATE(0, 1, 2);
+  DYNAMIC_SECTION("missing=" << missingInitializer << " operation=" << operation)
+  {
+    auto sourceResult = EmptyDataStore<int32>::Create({8}, {2}, "");
+    REQUIRE(sourceResult.valid());
+    auto source = std::move(sourceResult.value());
+    CHECK(source->getInitValue() == std::optional<int32>{0});
+    const std::optional<int32> initial = missingInitializer ? std::nullopt : std::optional<int32>{7};
+    source->setInitValue(initial);
+    std::unique_ptr<IDataStore> copy;
+    if(operation == 0)
+    {
+      copy = std::make_unique<EmptyDataStore<int32>>(*source);
+    }
+    else if(operation == 1)
+    {
+      copy = std::make_unique<EmptyDataStore<int32>>(std::move(*source));
+    }
+    else
+    {
+      copy = source->deepCopy("");
+    }
+    const auto* typedCopy = dynamic_cast<const EmptyDataStore<int32>*>(copy.get());
+    REQUIRE(typedCopy != nullptr);
+    CHECK(typedCopy->getStoreType() == IDataStore::StoreType::Empty);
+    CHECK(typedCopy->getPlannedStoreType() == IDataStore::StoreType::InMemory);
+    CHECK(typedCopy->getTupleShape() == ShapeType{8});
+    CHECK(typedCopy->getComponentShape() == ShapeType{2});
+    CHECK(typedCopy->getInitValue() == initial);
+    CHECK(typedCopy->getDataFormat().empty());
+  }
+}
+
+TEST_CASE("DataStore resident value copies retain destination initialization", "[simplnx][DataStore][GrowthInitialization]")
+{
+  const int operation = GENERATE(0, 1, 2);
+  DataStore<int32> source({2}, {2}, int32{-1});
+  DataStore<int32> destination({2}, {2}, int32{7});
+  const std::array<int32, 4> prefix{10, 11, 20, 21};
+  REQUIRE(source.copyFromBuffer(0, {prefix.data(), prefix.size()}).valid());
+  if(operation == 0)
+  {
+    REQUIRE(destination.copyFromBuffer(0, {prefix.data(), prefix.size()}).valid());
+  }
+  else if(operation == 1)
+  {
+    REQUIRE(destination.copyFrom(0, source, 0, 2).valid());
+  }
+  else
+  {
+    REQUIRE(destination.copy(source));
+  }
+  CHECK(destination.getInitValue() == std::optional<int32>{7});
+  CHECK(source.getInitValue() == std::optional<int32>{-1});
+  REQUIRE(destination.resizeTuples({3}).valid());
+  std::array<int32, 6> actual{};
+  REQUIRE(destination.copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
+  CHECK(actual == std::array<int32, 6>{10, 11, 20, 21, 7, 7});
 }
