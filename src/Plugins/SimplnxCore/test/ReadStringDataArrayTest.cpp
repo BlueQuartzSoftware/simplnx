@@ -197,7 +197,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Extra values on a line are ig
     expected = {"a", "b", "c"};
   }
 
-  const fs::path inputFilePath = fs::path(unit_test::k_BinaryTestOutputDir) / "ReadStringDataArray_extra_values.csv";
+  const fs::path inputFilePath = fs::path(unit_test::k_BinaryTestOutputDir.str()) / "ReadStringDataArray_extra_values.csv";
   fs::create_directories(inputFilePath.parent_path());
   {
     std::ofstream output(inputFilePath);
