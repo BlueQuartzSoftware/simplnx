@@ -564,6 +564,8 @@ TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malfor
   const std::filesystem::path path(std::wstring{L'p', wchar_t{0xD83C}, wchar_t{0xDF10}, wchar_t{0xD800}});
   diagnostic.context(path, "data");
   const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
   REQUIRE(result.errors().front().message.find("\\uD800") != std::string::npos);
   REQUIRE(result.errors().front().message.find("malformed units escaped") != std::string::npos);
@@ -571,6 +573,8 @@ TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malfor
   const std::filesystem::path path(std::string("p") + supplementary + std::string(1, static_cast<char>(0xFF)));
   diagnostic.context(path, "data");
   const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
   REQUIRE(result.errors().front().message.find("\\xFF") != std::string::npos);
   REQUIRE(result.errors().front().message.find("invalid UTF-8/control bytes escaped") != std::string::npos);
@@ -581,6 +585,8 @@ TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malfor
   truncated.append(supplementary);
   truncated.append(std::string(40, 'b'));
   const auto truncatedResult = truncated.finish(BoundedRead::Status::Failed);
+  REQUIRE(truncatedResult.invalid());
+  REQUIRE(truncatedResult.errors().size() == 1);
   REQUIRE(truncatedResult.errors().front().message == std::string(497, 'a') + " [truncated]");
 }
 

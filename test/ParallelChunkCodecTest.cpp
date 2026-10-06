@@ -2560,6 +2560,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     auto result = codec.readExtentIntoBufferBounded(extent, destination, BoundedRead::k_DiagnosticBytes);
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
+    REQUIRE(result.warnings().size() == 1);
     REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
     REQUIRE(BoundedRead::ResultCapacityBytes(result) <= BoundedRead::k_DiagnosticBytes);
     REQUIRE(observation.queries == 0);
@@ -2608,6 +2609,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       const auto result = codec.readExtentIntoBufferBounded(extent, destination, 32768);
       REQUIRE(result.valid());
       REQUIRE_FALSE(result.value());
+      REQUIRE(result.warnings().size() == 1);
       REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
       REQUIRE(observation.queries > 0);
       REQUIRE(observation.rawReads == 0);
@@ -2686,6 +2688,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   if(fillChoice == 2)
   {
     REQUIRE_FALSE(result.value());
+    REQUIRE(result.warnings().size() == 1);
     REQUIRE(result.warnings().front().code == BoundedRead::UndefinedFill);
     REQUIRE(output == std::vector<uint16>(6, 77));
   }
