@@ -103,11 +103,11 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
 IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() const
 {
-  return 3;
+  // First Port from legacy simpl
+  // - adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
+  // - adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
 
-  // Version 2 adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
-
-  // Version 3 adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
+  return 1;
 }
 
 IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
@@ -119,11 +119,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  if(!fs::exists(outputPath))
-  {
-    return MakePreflightErrorResult(-12000, fmt::format("The output path '{}' does not exist.", outputPath.string()));
-  }
-  if(!fs::is_directory(outputPath))
+  if(fs::exists(outputPath) && !fs::is_directory(outputPath))
   {
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }
@@ -141,14 +137,6 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   }
 
   const auto materialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
-  for(usize rowIndex = 0; rowIndex < materialConstants.size(); rowIndex++)
-  {
-    const usize columnCount = materialConstants[rowIndex].size();
-    if(columnCount != 1)
-    {
-      return MakePreflightErrorResult(-12016, fmt::format("Material Constants row {} has {} columns. Each row must have exactly 1 column.", rowIndex, columnCount));
-    }
-  }
 
   const bool includeGrainAndPhaseIds = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
   const int32 eulerAnglesStartIndex = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
@@ -166,7 +154,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   const usize cellCount = imageGeom.getNumberOfCells();
 
-  const std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
+  constexpr std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
   for(const auto& [arrayKey, errorCode] : arrayKeys)
   {
     const auto arrayPath = filterArgs.value<DataPath>(arrayKey);

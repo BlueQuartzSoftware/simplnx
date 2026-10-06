@@ -643,6 +643,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tuple Count Mismatch
 
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Directory", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
@@ -651,13 +653,55 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Direc
 
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  const fs::path missingPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusCrystalPlasticity_Missing_{}", uniqueSuffix);
+  const fs::path missingPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusCrystalPlasticity_Missing_{}", uniqueSuffix) / "Nested";
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
   REQUIRE_FALSE(fs::exists(missingPath));
 
   const WriteAbaqusCrystalPlasticityFilter filter;
-  Arguments args = CreateArguments(missingPath, "Missing_Output_Directory");
+  const std::string prefix = "Missing_Output_Directory";
+  Arguments args = CreateArguments(missingPath, prefix);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(std::count_if(preflightResult.outputActions.warnings().cbegin(), preflightResult.outputActions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(fs::is_directory(missingPath));
+  for(const auto* suffix : {"_nodes.inp", "_elems.inp", "_sects.inp", "_elset.inp", ".inp"})
+  {
+    REQUIRE(fs::is_regular_file(missingPath / (prefix + suffix)));
+  }
+
+  fs::remove_all(missingPath.parent_path());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Output Path Is A File", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusCrystalPlasticity_File_{}", uniqueSuffix);
+  fs::create_directories(outputPath.parent_path());
+  REQUIRE_FALSE(fs::exists(outputPath));
+  {
+    std::ofstream output(outputPath);
+    REQUIRE(output.is_open());
+    output << "Existing regular file";
+  }
+  REQUIRE(fs::is_regular_file(outputPath));
+
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, "Output_Path_Is_A_File");
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -12001);
+
+  fs::remove(outputPath);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
