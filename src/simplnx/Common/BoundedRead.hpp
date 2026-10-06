@@ -91,6 +91,9 @@ inline bool Add(uint64 first, uint64 second, uint64& result) noexcept
  * @brief Reports reviewed standard-library terminal and counted-container representations.
  * @return True only for source-reviewed compiler-library configurations.
  * @note Native support tests must fail on an unreviewed configuration. This is not a platform opt-out.
+ * Apple's libc++ 180100 (Xcode MacOSX15.2.sdk) was reviewed for exact counted
+ * default-allocator vector allocation, allocation-free empty controls and moves,
+ * and bounded string reserve. Other libc++ 18 releases require their own review.
  */
 inline constexpr bool DiagnosticRepresentationSupported() noexcept
 {
@@ -101,7 +104,7 @@ inline constexpr bool DiagnosticRepresentationSupported() noexcept
 #elif defined(_GLIBCXX_RELEASE)
   return _GLIBCXX_RELEASE == 14 && _GLIBCXX_USE_CXX11_ABI == 1;
 #elif defined(_LIBCPP_VERSION)
-  return _LIBCPP_VERSION >= 190000 && _LIBCPP_VERSION < 200000;
+  return _LIBCPP_VERSION == 180100 || (_LIBCPP_VERSION >= 190000 && _LIBCPP_VERSION < 200000);
 #else
   return false;
 #endif
@@ -161,6 +164,8 @@ inline constexpr uint64 TerminalDiagnosticBoundBytes() noexcept;
  * @param bytes Receives payload and a conservative debug iterator-proxy allowance.
  * @return False for an unreviewed STL or overflow, without changing bytes.
  * @note Native CI must exercise this guard; a toolchain upgrade requires source review.
+ * libc++ 180100 counted construction and fresh reserve request exactly count
+ * elements and have no heap iterator proxy, so the 64-byte allowance is conservative.
  */
 inline bool FreshVectorBytes(uint64 count, uint64 width, uint64& bytes) noexcept
 {
@@ -460,8 +465,11 @@ struct Diagnostic
  * MSVC counted vector reserve is exact. Its string growth rounds the requested
  * capacity and can use geometric growth. The fresh 511-character request fits
  * 2*(511+1)+64 bytes, plus a separately bounded proxy. GCC14 counted reserve is
- * exact and fresh string creation fits that same bound. libc++19 rounds fresh
- * string capacity to its allocation alignment and also fits that bound.
+ * exact and fresh string creation fits that same bound. libc++ 180100 and 19.x
+ * round fresh string capacity to their allocation alignment and also fit that
+ * bound. In Apple's libc++ 180100, reserve(511) requests 512 bytes including the
+ * terminator; subsequent assign does not grow it. Empty vectors and strings have
+ * no heap proxy, and default-allocator moves/swap transfer the existing payload.
  *
  * expected-lite 0.8 assignment builds an expected temporary, then swaps through
  * one local error vector. Together with the local ErrorCollection, unexpected
