@@ -131,6 +131,7 @@ struct CopyNumericFunctor
       {
         throw std::runtime_error(result.errors().front().message);
       }
+      result.value()->setInitValue(typedSource->getInitValue());
       return std::move(result.value());
     }
     auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt, DataStoreInitializationMode::Default);
@@ -162,6 +163,7 @@ struct CopyNumericFunctor
         throw std::runtime_error(message);
       }
     }
+    typedDestination->setInitValue(typedSource->getInitValue());
     return destination;
   }
 };
