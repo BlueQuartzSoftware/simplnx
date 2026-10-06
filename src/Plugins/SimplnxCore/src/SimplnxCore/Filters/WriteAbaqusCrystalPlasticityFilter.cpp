@@ -119,11 +119,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  if(!fs::exists(outputPath))
-  {
-    return MakePreflightErrorResult(-12000, fmt::format("The output path '{}' does not exist.", outputPath.string()));
-  }
-  if(!fs::is_directory(outputPath))
+  if(fs::exists(outputPath) && !fs::is_directory(outputPath))
   {
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }

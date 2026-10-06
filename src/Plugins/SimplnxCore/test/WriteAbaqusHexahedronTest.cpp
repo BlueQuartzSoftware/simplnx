@@ -1,5 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <algorithm>
 #include <catch2/catch.hpp>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 
@@ -87,6 +89,75 @@ void CompareUnchangedResults(const std::string& exemplarDir)
   REQUIRE(readIn(writtenFilePath4) == readIn(exemplarFilePath4));
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Missing Output Directory", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+
+  DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path missingPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusHexahedron_Missing_{}", uniqueSuffix) / "Nested";
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
+  REQUIRE_FALSE(fs::exists(missingPath));
+
+  const WriteAbaqusHexahedronFilter filter;
+  const std::string prefix = "Missing_Output_Directory";
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(missingPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>(prefix));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_TestImageGeometryPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(std::count_if(preflightResult.outputActions.warnings().cbegin(), preflightResult.outputActions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
+
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(fs::is_directory(missingPath));
+  for(const auto* suffix : {"_nodes.inp", "_elems.inp", "_sects.inp", "_elset.inp", ".inp"})
+  {
+    REQUIRE(fs::is_regular_file(missingPath / (prefix + suffix)));
+  }
+
+  fs::remove_all(missingPath.parent_path());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Path Is A File", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusHexahedron_File_{}", uniqueSuffix);
+  fs::create_directories(outputPath.parent_path());
+  REQUIRE_FALSE(fs::exists(outputPath));
+  {
+    std::ofstream output(outputPath);
+    REQUIRE(output.is_open());
+    output << "Existing regular file";
+  }
+  REQUIRE(fs::is_regular_file(outputPath));
+
+  const WriteAbaqusHexahedronFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Output_Path_Is_A_File"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_TestImageGeometryPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -1112);
+
+  fs::remove(outputPath);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Default Omits Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {

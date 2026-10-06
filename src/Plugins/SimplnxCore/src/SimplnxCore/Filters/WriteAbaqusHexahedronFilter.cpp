@@ -102,16 +102,9 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
 
   // Check Output Path
-  if(!fs::exists(pOutputPathValue))
+  if(fs::exists(pOutputPathValue) && !fs::is_directory(pOutputPathValue))
   {
-    return MakePreflightErrorResult(-1111, "The supplied directory path doesn't exist");
-  }
-  else
-  {
-    if(!fs::is_directory(pOutputPathValue))
-    {
-      return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
-    }
+    return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
   }
 
   return {};
