@@ -66,7 +66,7 @@ enum class CodecIoEventForTesting
   SamplerReadRequest,               ///< Bulk request; input is values and output is logical bytes.
   SamplerReadCompleted,             ///< Successful bounded read; input is values, output is logical bytes.
   SamplerReserveRequest,            ///< Allocation request; input is requested bytes and output is category.
-  SamplerWorkingReservation,        ///< Shared working reservation observed outside backend locks.
+  SamplerWorkingReservation,        ///< Shared reservation outside backend locks; input is grant bytes, output is conservative fixed sampler bytes.
   SamplerInvalid,                   ///< Measurement metadata cannot be represented; production flow is unchanged.
   PendingWriteScan,                 ///< Visited resident/parked entries during an optional clean-state proof.
   DiagnosticRequested,              ///< Terminal reserve request; input bytes, output zero vector or one string.
