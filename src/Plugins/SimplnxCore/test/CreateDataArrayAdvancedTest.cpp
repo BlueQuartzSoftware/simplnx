@@ -435,3 +435,26 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Tuple Dimension
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -78603);
 }
+
+TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Component Dimensions Are Rejected", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const float64 compDim = GENERATE(0.5, 2.5, -1.0);
+  CAPTURE(compDim);
+  CreateDataArrayAdvancedFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Data"})));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1}}));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{compDim}}));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -78605);
+}

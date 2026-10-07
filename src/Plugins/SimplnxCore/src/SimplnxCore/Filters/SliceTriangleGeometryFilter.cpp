@@ -140,10 +140,6 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   const auto& triGeom = dataStructure.getDataRefAs<TriangleGeom>(pCADDataContainerNameValue);
-  if(triGeom.getNumberOfFaces() == 0)
-  {
-    return MakePreflightErrorResult(-62105, fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", pCADDataContainerNameValue.toString()));
-  }
 
   // create the edge geometry
   {
@@ -202,7 +198,12 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.SliceIdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceIdArrayName_Key);
   inputValues.SliceAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceAttributeMatrixName_Key);
 
-  return SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.CADDataContainerName).getNumberOfFaces() == 0)
+  {
+    result.warnings().push_back(Warning{-62105, fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
+  }
+  return result;
 }
 
 namespace

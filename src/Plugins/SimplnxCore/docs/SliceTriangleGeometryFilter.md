@@ -10,7 +10,7 @@ This **Filter** slices an input **Triangle Geometry**, producing an **Edge Geome
 
 Edges from neighboring triangles in a slice share their vertices, so each slice outline is a connected polyline. Every slice vertex lies exactly on its slice plane.
 
-Both the *Slice Spacing* and the *User Defined Range* values are specified in the same physical units as the input **Triangle Geometry** coordinates (for example, microns if the mesh is in microns). The computed slice area and perimeter are likewise reported in those physical units (squared, for area). *Slice Spacing* must be finite and greater than zero. The Triangle Geometry must contain at least one triangle.
+Both the *Slice Spacing* and the *User Defined Range* values are specified in the same physical units as the input **Triangle Geometry** coordinates (for example, microns if the mesh is in microns). The computed slice area and perimeter are likewise reported in those physical units (squared, for area). *Slice Spacing* must be finite and greater than zero. A Triangle Geometry with no triangles passes preflight. If it still has no triangles at execution, the filter succeeds with warning -62105 and produces an empty Edge Geometry with zero slices.
 
 Additionally, if the input **Triangle Geometry** is labeled with an identifier array (such as different regions or features), the user may select this array and the resulting edges will inherit these identifiers. The *Region Ids* array must have one value per triangle.
 

@@ -246,7 +246,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice for a 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SliceTriangleGeometryFilter: A triangle geometry with no faces is rejected", "[SimplnxCore][SliceTriangleGeometryFilter]")
+TEST_CASE("SliceTriangleGeometryFilter: An empty geometry produces a warning", "[SimplnxCore][SliceTriangleGeometryFilter]")
 {
   DataStructure dataStructure;
   BuildTriangleGeom(dataStructure, {0.25f, 0.5f, 0.0f, 1.5f, 0.75f, 1000.0f, 0.5f, 2.0f, 1000.0f}, {});
@@ -257,11 +257,24 @@ TEST_CASE("SliceTriangleGeometryFilter: A triangle geometry with no faces is rej
   args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.1f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(false));
 
-  // With no faces, the Full Range bounds are undefined.
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(!preflightResult.outputActions.errors().empty());
-  REQUIRE(preflightResult.outputActions.errors().front().code == -62105);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == 1);
+  REQUIRE(result.result.warnings().front().code == -62105);
+
+  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(k_ComputedEdgeGeometryPath);
+  REQUIRE(edgeGeom != nullptr);
+  REQUIRE(edgeGeom->getNumberOfVertices() == 0);
+  REQUIRE(edgeGeom->getNumberOfEdges() == 0);
+  const auto* sliceData = dataStructure.getDataAs<AttributeMatrix>(k_ComputedEdgeGeometryPath.createChildPath(k_SliceData));
+  REQUIRE(sliceData != nullptr);
+  REQUIRE(sliceData->getNumberOfTuples() == 0);
+  const auto* sliceIds = dataStructure.getDataAs<Int32Array>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
+  REQUIRE(sliceIds != nullptr);
+  REQUIRE(sliceIds->getNumberOfTuples() == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

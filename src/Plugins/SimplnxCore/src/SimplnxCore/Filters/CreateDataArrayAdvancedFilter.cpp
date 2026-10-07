@@ -166,6 +166,15 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   nx::core::Result<OutputActions> resultOutputActions;
 
+  for(size_t idx = 0; idx < compDimsData[0].size(); idx++)
+  {
+    const double dim = compDimsData[0][idx];
+    if(!(dim >= 1.0) || std::floor(dim) != dim)
+    {
+      return MakePreflightErrorResult(-78605, fmt::format("Component dimension at index {} must be a positive whole number, but was {}", idx, dim));
+    }
+  }
+
   ShapeType compDims(compDimsData[0].size());
   std::transform(compDimsData[0].begin(), compDimsData[0].end(), compDims.begin(), [](double val) { return static_cast<usize>(val); });
   usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());

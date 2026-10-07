@@ -71,11 +71,11 @@ Parameters WriteStlFileFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
 
-  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Cell Phases", "The cell phases array to further order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Face Phases", "The face phases array (the phase on each side of each triangle) to further order/index files by",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -167,7 +167,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   {
     if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
     {
-      return MakePreflightErrorResult(-27872, fmt::format("Cell Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
+      return MakePreflightErrorResult(-27872, fmt::format("Face Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
     else if(featurePhases->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
@@ -178,14 +178,14 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
-    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue); featureIds == nullptr)
+    if(auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue); partNumbers == nullptr)
     {
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }
-    else if(featureIds->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    else if(partNumbers->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pPartNumberPathValue.toString(),
-                                                          featureIds->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
+                                                          partNumbers->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
     }
   }
 
