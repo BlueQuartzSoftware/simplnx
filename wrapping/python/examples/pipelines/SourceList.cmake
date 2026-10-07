@@ -96,25 +96,27 @@ set(ImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pip
 AddPythonTest(NAME "PY::ImageProcessing::02_Image_Segmentation" FILE "${ImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 AddPythonTest(NAME "PY::ImageProcessing::03_Porosity_Mesh_Export" FILE "${ImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 
-set(SIMPLNX_PYTHON_TESTS
-  "(05) AM XCT Porosity Segmentation"
-  "(06) AM Powder-Bed Layer Inspection" 
-  "(07) AM Melt-Pool and Track Inspection" 
-  "(08) Powder Particle Watershed Segmentation"
-  "(09) Microstructure Watershed Segmentation" 
-  "(10) Binary Mask Repair and Skeletonization" 
-  "(11) Grayscale Surface-Defect Morphology" 
-  "(12) Pore Distance and Wall-Thickness Metrology" 
-  "(13) Denoising and Edge Detection" 
-  "(14) Projection-Based Quality Summaries" 
-  "(15) Radiography Intensity Calibration" 
-  "(16) Phase and Angle Field Transforms" 
-  "(17) Scientific Volume Interoperability" 
-  "(18) Industrial XCT Format Import" 
-  "(19) Serial-Section Stack Reconstruction" 
-  "(20) Fiji Microscopy Montage Import"
-)
-foreach(test ${SIMPLNX_PYTHON_TESTS})
-  AddPythonTest(NAME "PY::ImageProcessing::${test}" FILE "${ImageProcessingDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-endforeach(test ${})
+if(NOT ImageProcessing_LEAN_AND_MEAN)
 
+  set(SIMPLNX_PYTHON_TESTS
+    "(05) AM XCT Porosity Segmentation"
+    "(06) AM Powder-Bed Layer Inspection" 
+    "(07) AM Melt-Pool and Track Inspection" 
+    "(08) Powder Particle Watershed Segmentation"
+    "(09) Microstructure Watershed Segmentation" 
+    "(10) Binary Mask Repair and Skeletonization" 
+    "(11) Grayscale Surface-Defect Morphology" 
+    "(12) Pore Distance and Wall-Thickness Metrology" 
+    "(13) Denoising and Edge Detection" 
+    "(14) Projection-Based Quality Summaries" 
+    "(15) Radiography Intensity Calibration" 
+    "(16) Phase and Angle Field Transforms" 
+    "(17) Scientific Volume Interoperability" 
+    "(18) Industrial XCT Format Import" 
+    "(19) Serial-Section Stack Reconstruction" 
+    "(20) Fiji Microscopy Montage Import"
+  )
+  foreach(test ${SIMPLNX_PYTHON_TESTS})
+    AddPythonTest(NAME "PY::ImageProcessing::${test}" FILE "${ImageProcessingDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+  endforeach(test ${})
+endif()
