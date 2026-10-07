@@ -156,3 +156,7 @@ foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
 endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
+# VerifyExamplePipelineCitations.py resolves every citation over the network (doi.org and publisher sites),
+# so it depends on external services and on each agent's certificate store. It is not registered with CTest;
+# run it manually when pipeline citations change.
