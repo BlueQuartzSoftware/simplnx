@@ -15,6 +15,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 
 namespace fs = std::filesystem;
@@ -263,6 +264,77 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Reject duplicate output names", "[Simpln
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("SimplnxCore::WriteASCIIData: Reject negative maximum tuples per line", "[SimplnxCore][WriteASCIIDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath arrayPath({"Values"});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {1}, {1});
+  REQUIRE(Int32Array::Create(dataStructure, "Values", store) != nullptr);
+
+  WriteASCIIDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(k_MultipleFiles));
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "negative_ascii_tuple_limit"));
+  args.insertOrAssign(WriteASCIIDataFilter::k_MaxTuplePerLine_Key, std::make_any<int32>(-1));
+  args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({arrayPath}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -51004);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteASCIIData: Reject empty multiple file selection", "[SimplnxCore][WriteASCIIDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  WriteASCIIDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(k_MultipleFiles));
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "empty_ascii_selection"));
+  args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -51002);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteASCIIData: Terminate partial final line", "[SimplnxCore][WriteASCIIDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath arrayPath({"Values"});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {3}, {2});
+  auto* array = Int32Array::Create(dataStructure, "Values", store);
+  REQUIRE(array != nullptr);
+  for(usize index = 0; index < 6; ++index)
+  {
+    array->setValue(index, static_cast<int32>(index + 1));
+  }
+
+  const fs::path outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "partial_ascii_final_line";
+  WriteASCIIDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(k_MultipleFiles));
+  args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(outputDir));
+  args.insertOrAssign(WriteASCIIDataFilter::k_FileExtension_Key, std::make_any<std::string>(".txt"));
+  args.insertOrAssign(WriteASCIIDataFilter::k_MaxTuplePerLine_Key, std::make_any<int32>(2));
+  args.insertOrAssign(WriteASCIIDataFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({arrayPath}));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  std::ifstream file(outputDir / "Values.txt", std::ios::binary);
+  REQUIRE(file.is_open());
+  const std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  REQUIRE(contents == "1,2,3,4\n5,6\n");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteASCIIDataFilter][BackwardsCompatibility]")

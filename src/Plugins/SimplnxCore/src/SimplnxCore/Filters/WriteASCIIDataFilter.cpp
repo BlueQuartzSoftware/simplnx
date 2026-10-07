@@ -25,6 +25,7 @@ namespace
 constexpr nx::core::int32 k_UnmatchingTupleCountError = -51001;
 constexpr nx::core::int32 k_NoArraySelections = -51002;
 constexpr nx::core::int32 k_DuplicateOutputName = -51003;
+constexpr nx::core::int32 k_NegativeMaxTuplesPerLine = -51004;
 } // namespace
 
 namespace nx::core
@@ -112,24 +113,28 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
+  const auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  if(selectedDataArrayPaths.empty())
+  {
+    return MakePreflightErrorResult(k_NoArraySelections, "Select at least one DataArray in **Attribute Arrays to Export**.");
+  }
 
   // A single output file requires the same number of tuples in each DataArray.
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
-    auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-    if(pSelectedDataArrayPathsValue.empty())
-    {
-      return MakePreflightErrorResult(k_NoArraySelections, "At least 1 data array must be selected");
-    }
-
-    if(!CheckArraysHaveSameTupleCount(dataStructure, pSelectedDataArrayPathsValue))
+    if(!CheckArraysHaveSameTupleCount(dataStructure, selectedDataArrayPaths))
     {
       return MakePreflightErrorResult(k_UnmatchingTupleCountError, "Arrays do not all have the same length, a requirement for single file.");
     }
   }
   else if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
   {
-    const auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+    const auto maxTuplesPerLine = filterArgs.value<Int32Parameter::ValueType>(k_MaxTuplePerLine_Key);
+    if(maxTuplesPerLine < 0)
+    {
+      return MakePreflightErrorResult(k_NegativeMaxTuplesPerLine, fmt::format("**Maximum Tuples Per Line** is {}. Enter a nonnegative value; 0 writes one tuple per line.", maxTuplesPerLine));
+    }
+
     std::map<std::string, DataPath> outputNames;
     for(const auto& arrayPath : selectedDataArrayPaths)
     {
