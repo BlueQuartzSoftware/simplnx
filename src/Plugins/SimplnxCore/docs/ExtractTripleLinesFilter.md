@@ -152,10 +152,10 @@ edges, which can still be numerous in a complex mesh. Smaller batches use less m
 input more times.
 
 If no triple lines are found, the **Filter** creates an empty Edge Geometry and returns a warning.
-This can mean that no edge borders three or more Features with the selected exterior option. The
-Triangle Geometry must also share vertices between triangles. Two triangles share an edge only when
-they use the same vertex indices at both ends. A mesh with duplicated vertices, such as an imported
-STL mesh, does not share edges. Merge coincident vertices before using this **Filter**.
+The warning reports the **Include Exterior Triple Lines** setting. No edge borders three or more
+Features with that setting. If the mesh should contain triple lines, check that its triangles share
+vertices. Two triangles share an edge only when they use the same vertex indices at both ends. A mesh
+with duplicated vertices, such as an imported STL, has no shared edges; merge coincident vertices first.
 
 % Auto generated parameter table will be inserted here
 

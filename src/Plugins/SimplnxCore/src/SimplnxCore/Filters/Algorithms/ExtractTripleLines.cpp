@@ -137,6 +137,13 @@ Result<> ExtractTripleLines::operator()()
         for(usize cornerIdx = 0; cornerIdx < 3; cornerIdx++)
         {
           const uint64 vertexIndex = facesRef[triangleIdx * 3 + cornerIdx];
+          if(batchIndex == 0 && vertexIndex >= numVertices)
+          {
+            return MakeErrorResult(
+                -57406,
+                fmt::format("Triangle {} of '{}' references vertex {}, but the geometry has only {} vertices. Fix the face list (for example, rerun the mesher) before extracting triple lines.",
+                            triangleIdx, triangleGeom.getName(), vertexIndex, numVertices));
+          }
           if(vertexIndex < begin || vertexIndex >= end)
           {
             continue;
@@ -293,8 +300,10 @@ Result<> ExtractTripleLines::operator()()
   }
   if(!m_ShouldCancel && numTripleLineEdges == 0)
   {
-    return MakeWarningVoidResult(-57405, "No edge borders three or more Features with the selected exterior option. The Triangle Geometry must share vertices between triangles. "
-                                         "A mesh with duplicated vertices, such as an imported STL, does not share edges. Merge coincident vertices before extracting triple lines.");
+    return MakeWarningVoidResult(
+        -57405, fmt::format("No edge borders three or more Features (Include Exterior Triple Lines: {}). If this mesh should contain triple lines, check that its triangles share vertices. "
+                            "A mesh with duplicated vertices, such as an imported STL, has no shared edges; merge coincident vertices first.",
+                            m_InputValues->IncludeExteriorLines));
   }
   return {};
 }

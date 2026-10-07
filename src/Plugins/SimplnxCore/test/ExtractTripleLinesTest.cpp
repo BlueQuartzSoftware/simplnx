@@ -541,7 +541,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
   }
   triangleGeomPtr->setFaceList(*faceArrayPtr);
 
-  // Every source vertex gets a NodeTypes value. ExtractTripleLinesAlgorithm copies these through to the
+  // Every source vertex gets a NodeTypes value. ExtractTripleLines copies these through to the
   // output vertices; it never reads them to decide which edges are triple lines.
   auto nodeTypeStore = std::make_unique<DataStore<int8>>(std::vector<usize>{vertices.size()}, std::vector<usize>{1}, 0);
   auto* nodeTypeArrayPtr = Int8Array::Create(dataStructure, k_AlgorithmNodeTypesName, std::move(nodeTypeStore), triangleGeomPtr->getId());
@@ -568,7 +568,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
 
 /**
  * @brief Creates an empty EdgeGeom with its attribute matrices, plus a NumFeatures array.
- * ExtractTripleLinesAlgorithm resizes all of them.
+ * ExtractTripleLines resizes all of them.
  * @param dataStructure Receives the geometry and output arrays.
  * @return Geometry, NumFeatures array, and NodeTypes array.
  */
@@ -1112,6 +1112,34 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle", "
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle with out-of-core storage", "[SimplnxCore][ExtractTripleLinesFilter]")
+{
+  UnitTest::LoadPlugins();
+  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+    return;
+  }
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const usize mesher = GENERATE(usize{0}, usize{1}, usize{2});
+  const bool includeExterior = GENERATE(false, true);
+  CAPTURE(mesher, includeExterior);
+  const std::array<void (*)(DataStructure&), 3> meshers = {RunQuickSurfaceMesh, RunSurfaceNets, RunM3CSurfaceMeshing};
+  DataStructure dataStructure;
+  BuildRandomGrainBlock(dataStructure, 104729U);
+  meshers[mesher](dataStructure);
+  const auto expected = BruteForceTripleLines(dataStructure, includeExterior);
+  auto result = RunExtractTripleLines(dataStructure, includeExterior);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(ReadTripleLines(dataStructure, k_TripleLineGeomPath, k_OutNumFeaturesPath) == expected);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
+  REQUIRE(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
+  const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
+  REQUIRE(edgeGeom.getEdges() != nullptr);
+  REQUIRE(edgeGeom.getEdges()->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Warns when no triple lines exist", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1216,6 +1244,25 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Negative labels identify
     }
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Rejects face indices outside the vertex list", "[SimplnxCore][ExtractTripleLinesFilter]")
+{
+  const usize triangleIndex = GENERATE(usize{0}, usize{1});
+  const usize cornerIndex = GENERATE(usize{0}, usize{1}, usize{2});
+  const usize badVertexIndex = GENERATE(usize{4}, usize{9});
+  CAPTURE(triangleIndex, cornerIndex, badVertexIndex);
+  DataStructure dataStructure;
+  const std::vector<std::array<float32, 3>> vertices = {{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}};
+  std::vector<std::array<usize, 3>> triangles = {{0, 1, 2}, {0, 2, 3}};
+  triangles[triangleIndex][cornerIndex] = badVertexIndex;
+  CreateTriangleMesh(dataStructure, vertices, triangles, {{1, 2}, {1, 2}});
+  const std::atomic_bool shouldCancel = false;
+  auto result = RunExtractTripleLinesAlgorithm(dataStructure, false, NodeTypePointers::Both, shouldCancel, 1);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors()[0].code == -57406);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Rejects zero batch size", "[SimplnxCore][ExtractTripleLinesFilter]")
