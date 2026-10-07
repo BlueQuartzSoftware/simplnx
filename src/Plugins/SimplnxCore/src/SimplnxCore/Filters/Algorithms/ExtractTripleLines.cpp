@@ -1,12 +1,11 @@
 #include "ExtractTripleLines.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 

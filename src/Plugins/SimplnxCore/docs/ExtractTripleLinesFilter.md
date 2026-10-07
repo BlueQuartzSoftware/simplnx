@@ -122,8 +122,8 @@ surface mesh. The edges are sorted by their vertex numbers.
 ## Algorithm
 
 The **Filter** first finds candidate vertices. A candidate is a vertex that touches at least three
-regions. It processes the vertices in batches. Each batch contains at most `k_DefaultVertexBatchSize`
-vertices by default: 8,388,608 vertices (8 million).
+regions. It processes the vertices in batches. Each batch contains at most 8,388,608 vertices
+(about 8 million).
 
 1. For one batch, read all input triangles and their Face Labels in order. Record up to three different
    region labels for each vertex in that batch. Set a candidate bit for each vertex with three labels.
