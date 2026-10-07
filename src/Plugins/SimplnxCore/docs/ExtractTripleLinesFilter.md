@@ -24,11 +24,7 @@ different Feature Ids, the edge is a triple line segment.
 An edge where only two Features meet is part of a normal grain boundary. It is not a triple line, even
 when many triangles use that edge.
 
-<!-- FIGURE PENDING: ExtractTripleLines_Definition.png
-     The 2 x 2 x 1 four-grain block (one grain per cell). Show the surface mesh transparent, colored by
-     Feature, with the single quadruple point line through the center drawn as a thick dark line.
-![Fig. 1: Four grains meet at the center of the block. The thick line is the quadruple point line that this Filter extracts.](Images/ExtractTripleLines_Definition.png)
--->
+![Fig. 1: Four grains from the Small IN100 data set meet at one quadruple point. The green lines are the triple lines that this Filter extracts. Each line is where three of the grains meet, and the four lines meet at the quadruple point.](Images/ExtractTripleLines_Definition.png)
 
 ### Where to Use This Filter in a Pipeline
 
@@ -46,14 +42,13 @@ A typical pipeline is:
 If you run this **Filter** before the smoothing step, you get the triple lines of the mesh before
 smoothing.
 
-<!-- FIGURE PENDING: ExtractTripleLines_BeforeAfterSmoothing_1.png / _2.png
-     Small IN100, the same view twice. Left: triple lines extracted from the unsmoothed mesh.
-     Right: triple lines extracted after Laplacian Smoothing. Show the triple lines over a
-     semi-transparent surface so the reader can see that the lines follow each surface.
 | Before smoothing | After smoothing |
 |------------------|-----------------|
-| ![](Images/ExtractTripleLines_BeforeAfterSmoothing_1.png) | ![](Images/ExtractTripleLines_BeforeAfterSmoothing_2.png) |
--->
+| ![Triple lines extracted from the unsmoothed mesh](Images/ExtractTripleLines_BeforeAfterSmoothing_1.png) | ![Triple lines extracted after Laplacian Smoothing](Images/ExtractTripleLines_BeforeAfterSmoothing_2.png) |
+
+Fig. 2: The same 40 x 40 x 40 voxel part of Small IN100, meshed with QuickMesh. Left: the triple lines
+of the unsmoothed mesh follow the voxel steps. Right: the triple lines of the same mesh after
+Laplacian Smoothing follow the smoothed surface.
 
 ### Parameter Guidance
 
@@ -70,13 +65,13 @@ one outside region. All three surface meshing filters listed above write `-1` fo
 Feature 0 counts toward the three regions needed for a triple line, even when this option is off.
 This also applies if your data uses Feature 0 for background or bad data.
 
-<!-- FIGURE PENDING: ExtractTripleLines_ExteriorOff.png / ExtractTripleLines_ExteriorOn.png
-     Small IN100, the same view twice. Left: option off (interior lines only). Right: option on
-     (the extra lines on the outside surface of the volume are visible).
 | Include Exterior Triple Lines: Off | Include Exterior Triple Lines: On |
 |------------------------------------|-----------------------------------|
-| ![](Images/ExtractTripleLines_ExteriorOff.png) | ![](Images/ExtractTripleLines_ExteriorOn.png) |
--->
+| ![Interior triple lines only](Images/ExtractTripleLines_ExteriorOff.png) | ![Triple lines that include the outside surface](Images/ExtractTripleLines_ExteriorOn.png) |
+
+Fig. 3: Left: with the option off, the **Filter** finds only the triple lines inside the volume.
+Right: with the option on, the grain boundaries on the outside surface of the volume are also triple
+lines.
 
 #### Copy Node Types
 
@@ -114,10 +109,7 @@ changed mesh, run this **Filter** again.
 The order of the output is the same on every computer. The vertices are in the same order as in the
 surface mesh. The edges are sorted by their vertex numbers.
 
-<!-- OPTIONAL FIGURE: ExtractTripleLines_NumFeatures.png
-     Small IN100 triple lines colored by Number of Features (3 and 4), to show where quadruple
-     point lines occur.
--->
+![Fig. 4: The triple lines of the smoothed mesh in Fig. 2, colored by Number of Features. Red edges have 3 Features. The short yellow edges have 4 Features. In a voxel-based mesh, these edges occur where four grains meet at a voxel edge.](Images/ExtractTripleLines_NumFeatures.png)
 
 ## Algorithm
 
