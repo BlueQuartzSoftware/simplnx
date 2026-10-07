@@ -1,4 +1,8 @@
-#include "TripleLineUtilities.hpp"
+#include "ExtractTripleLines.hpp"
+
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -57,21 +61,33 @@ constexpr uint64 MakeEdgeKey(uint64 vertex0, uint64 vertex1)
 }
 } // namespace
 
-namespace nx::core::MeshingUtilities
+namespace nx::core
 {
-Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOutputs& outputs, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+ExtractTripleLines::ExtractTripleLines(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ExtractTripleLinesInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(messageHandler)
 {
-  if((inputs.NodeTypes == nullptr) != (outputs.NodeTypes == nullptr))
+}
+
+ExtractTripleLines::~ExtractTripleLines() noexcept = default;
+
+Result<> ExtractTripleLines::operator()()
+{
+  if((m_InputValues->SourceNodeTypes == nullptr) != (m_InputValues->DestinationNodeTypes == nullptr))
   {
     return MakeErrorResult(-57401, fmt::format("Triple line Node Types copy requires both source and destination stores, or neither. Source supplied: {}; destination supplied: {}.",
-                                               inputs.NodeTypes != nullptr, outputs.NodeTypes != nullptr));
+                                               m_InputValues->SourceNodeTypes != nullptr, m_InputValues->DestinationNodeTypes != nullptr));
   }
-  if(shouldCancel)
+  if(m_ShouldCancel)
   {
     return {};
   }
-  const auto& triangleGeom = inputs.TriangleGeometry;
-  auto& tripleLineGeom = outputs.TripleLineGeometry;
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& tripleLineGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->TripleLineGeometryPath);
+  const auto& faceLabelsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStoreRef();
+  auto& numFeaturesRef = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NumFeaturesPath).getDataStoreRef();
   const usize numVertices = triangleGeom.getNumberOfVertices();
   if(numVertices > k_MaxVertexCount)
   {
@@ -81,7 +97,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
 
   const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
   const usize numTriangles = triangleGeom.getNumberOfFaces();
-  ThrottledMessageHandler progressThrottle(messageHandler);
+  ThrottledMessageHandler progressThrottle(m_MessageHandler);
   std::unordered_map<uint64, FeatureSet> edgeMap;
   {
     // Vertex sets reject ordinary boundary edges before they require hash nodes.
@@ -89,17 +105,17 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
     progressThrottle.reset(numTriangles, "Triple Lines: Classifying vertices");
     for(usize triangleIdx = 0; triangleIdx < numTriangles; triangleIdx++)
     {
-      if(shouldCancel)
+      if(m_ShouldCancel)
       {
         return {};
       }
-      const std::array<int32, 2> labels = {inputs.FaceLabels[triangleIdx * 2], inputs.FaceLabels[triangleIdx * 2 + 1]};
+      const std::array<int32, 2> labels = {faceLabelsRef[triangleIdx * 2], faceLabelsRef[triangleIdx * 2 + 1]};
       for(usize cornerIdx = 0; cornerIdx < 3; cornerIdx++)
       {
         auto& featureSet = vertexFeatures[facesRef[triangleIdx * 3 + cornerIdx]];
         for(const int32 label : labels)
         {
-          if(inputs.IncludeExteriorLines || label >= 0)
+          if(m_InputValues->IncludeExteriorLines || label >= 0)
           {
             featureSet.insert(label);
           }
@@ -111,11 +127,11 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
     progressThrottle.reset(numTriangles, "Triple Lines: Classifying candidate edges");
     for(usize triangleIdx = 0; triangleIdx < numTriangles; triangleIdx++)
     {
-      if(shouldCancel)
+      if(m_ShouldCancel)
       {
         return {};
       }
-      const std::array<int32, 2> labels = {inputs.FaceLabels[triangleIdx * 2], inputs.FaceLabels[triangleIdx * 2 + 1]};
+      const std::array<int32, 2> labels = {faceLabelsRef[triangleIdx * 2], faceLabelsRef[triangleIdx * 2 + 1]};
       const std::array<uint64, 3> vertices = {facesRef[triangleIdx * 3], facesRef[triangleIdx * 3 + 1], facesRef[triangleIdx * 3 + 2]};
       for(usize edgeIdx = 0; edgeIdx < 3; edgeIdx++)
       {
@@ -130,7 +146,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
         auto& featureSet = edgeMap[MakeEdgeKey(vertex0, vertex1)];
         for(const int32 label : labels)
         {
-          if(inputs.IncludeExteriorLines || label >= 0)
+          if(m_InputValues->IncludeExteriorLines || label >= 0)
           {
             featureSet.insert(label);
           }
@@ -145,7 +161,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
   usize processedEdges = 0;
   for(const auto& [edgeKey, featureSet] : edgeMap)
   {
-    if(shouldCancel)
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -161,7 +177,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
   compactToOriginal.reserve(keptEdges.size() * 2);
   for(const auto& [edgeKey, count] : keptEdges)
   {
-    if(shouldCancel)
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -170,7 +186,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
   }
   std::sort(compactToOriginal.begin(), compactToOriginal.end());
   compactToOriginal.erase(std::unique(compactToOriginal.begin(), compactToOriginal.end()), compactToOriginal.end());
-  if(shouldCancel)
+  if(m_ShouldCancel)
   {
     return {};
   }
@@ -203,7 +219,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
   auto& destVertsRef = tripleLineGeom.getVertices()->getDataStoreRef();
   for(usize vertexIdx = 0; vertexIdx < numTripleLineVertices; vertexIdx++)
   {
-    if(shouldCancel)
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -212,9 +228,9 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
     {
       destVertsRef[vertexIdx * 3 + compIdx] = sourceVertsRef[originalVertex * 3 + compIdx];
     }
-    if(inputs.NodeTypes != nullptr && outputs.NodeTypes != nullptr)
+    if(m_InputValues->SourceNodeTypes != nullptr && m_InputValues->DestinationNodeTypes != nullptr)
     {
-      (*outputs.NodeTypes)[vertexIdx] = (*inputs.NodeTypes)[originalVertex];
+      (*m_InputValues->DestinationNodeTypes)[vertexIdx] = (*m_InputValues->SourceNodeTypes)[originalVertex];
     }
     progressThrottle.updatePercent(vertexIdx + 1);
   }
@@ -223,7 +239,7 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
   auto& destEdgesRef = tripleLineGeom.getEdges()->getDataStoreRef();
   for(usize edgeIdx = 0; edgeIdx < numTripleLineEdges; edgeIdx++)
   {
-    if(shouldCancel)
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -233,9 +249,9 @@ Result<> GenerateTripleLines(const TripleLineInputs& inputs, const TripleLineOut
     {
       destEdgesRef[edgeIdx * 2 + endpointIdx] = static_cast<uint64>(std::lower_bound(compactToOriginal.begin(), compactToOriginal.end(), endpoints[endpointIdx]) - compactToOriginal.begin());
     }
-    outputs.NumFeatures[edgeIdx] = static_cast<int8>(count);
+    numFeaturesRef[edgeIdx] = static_cast<int8>(count);
     progressThrottle.updatePercent(edgeIdx + 1);
   }
   return {};
 }
-} // namespace nx::core::MeshingUtilities
+} // namespace nx::core

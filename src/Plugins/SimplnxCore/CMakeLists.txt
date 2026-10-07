@@ -273,6 +273,7 @@ set(AlgorithmList
   ExecuteProcess
   ExtractComponentAsArray
   ExtractInternalSurfacesFromTriangleGeometry
+  ExtractTripleLines
   ExtractPipelineToFile
   ExtractVertexGeometry
   FeatureFaceCurvature

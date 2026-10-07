@@ -1,5 +1,6 @@
 #include "ExtractTripleLinesFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ExtractTripleLines.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/Uuid.hpp"
@@ -26,7 +27,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
-#include "simplnx/Utilities/Meshing/TripleLineUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -190,22 +190,18 @@ Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, con
   auto pVertexDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
   auto pEdgeDataName = filterArgs.value<std::string>(k_EdgeDataGroupName_Key);
 
-  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(filterArgs.value<DataPath>(k_TriangleGeometryPath_Key));
-  const auto& faceLabelsRef = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key)).getDataStoreRef();
-
-  auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(pTripleLineGeometryPath);
-  auto& numFeaturesRef =
-      dataStructure.getDataRefAs<Int8Array>(pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key))).getDataStoreRef();
-  const Int8AbstractDataStore* sourceNodeTypesPtr = nullptr;
-  Int8AbstractDataStore* tripleLineNodeTypesPtr = nullptr;
+  ExtractTripleLinesInputValues inputValues;
+  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.FaceLabelsPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.TripleLineGeometryPath = pTripleLineGeometryPath;
+  inputValues.NumFeaturesPath = pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
+  inputValues.IncludeExteriorLines = filterArgs.value<bool>(k_IncludeExteriorTripleLines_Key);
   if(filterArgs.value<bool>(k_CopyNodeTypes_Key))
   {
-    sourceNodeTypesPtr = &dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key)).getDataStoreRef();
-    tripleLineNodeTypesPtr =
+    inputValues.SourceNodeTypes = &dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key)).getDataStoreRef();
+    inputValues.DestinationNodeTypes =
         &dataStructure.getDataRefAs<Int8Array>(pTripleLineGeometryPath.createChildPath(pVertexDataName).createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key))).getDataStoreRef();
   }
-  const MeshingUtilities::TripleLineInputs inputs{triangleGeom, faceLabelsRef, sourceNodeTypesPtr, filterArgs.value<bool>(k_IncludeExteriorTripleLines_Key)};
-  const MeshingUtilities::TripleLineOutputs outputs{tripleLineGeom, numFeaturesRef, tripleLineNodeTypesPtr};
-  return MeshingUtilities::GenerateTripleLines(inputs, outputs, shouldCancel, messageHandler);
+  return ExtractTripleLines(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core
