@@ -34,6 +34,8 @@ For shape analysis on triangle geometry meshes rather than voxelized image geome
 
 % Auto generated parameter table will be inserted here
 
+**Cell Feature Ids** must have 1 component.
+
 ## References
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR FA9550-07-1-0179 Final Report, 20 Dec 2010.
