@@ -51,7 +51,8 @@ def main():
     if specification["output_lifetime"] != "temporary":
         raise RuntimeError("PythonGeneration.yaml must require temporary generated programs")
 
-    pipeline_paths = sorted(PIPELINE_DIR.glob("([0-9][0-9]) */*.d3dpipeline"))
+    # YAML companions identify the 16 tutorials; inherited examples 02-04 have no generation metadata.
+    pipeline_paths = sorted(path.with_suffix(".d3dpipeline") for path in PIPELINE_DIR.glob("[0-9][0-9]_*/*.yaml"))
     if len(pipeline_paths) != 16:
         raise RuntimeError(f"Expected 16 example pipelines, found {len(pipeline_paths)}")
 

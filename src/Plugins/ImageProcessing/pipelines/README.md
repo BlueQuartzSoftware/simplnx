@@ -1,12 +1,12 @@
 # ImageProcessing Real-World Examples
 
-This folder contains 16 independent DREAM3D-NX pipelines. The suite demonstrates all 92 filters in the ImageProcessing plugin.
+This folder contains 16 independent DREAM3D-NX tutorials (05–20) and three inherited examples (02–04). The suite demonstrates all 92 filters in the ImageProcessing plugin.
 
 The examples focus on materials science and additive manufacturing. They include XCT pore analysis, powder-bed inspection, melt-pool segmentation, particle separation, morphology, distance metrology, image projections, calibration, and industrial image formats.
 
 ## Source folders and companion files
 
-Each numbered example has its own source folder. The folder contains three files with the same base name:
+Each numbered example has its own source folder, using underscores instead of spaces (for example, `05_AM_XCT_Porosity_Segmentation`). Tutorials 05–20 contain three files with the same base name; inherited examples 02–04 contain only a `.d3dpipeline`:
 
 - `.d3dpipeline` is the authoritative DREAM3D-NX GUI pipeline.
 - `.yaml` contains structured industry, input, output, filter, parameter, citation, and MCP metadata. It uses the JSON-compatible subset of YAML 1.2 so the existing C++ test code can parse it without a new dependency.
@@ -14,7 +14,7 @@ Each numbered example has its own source folder. The folder contains three files
 
 `PythonGeneration.yaml` is at the suite root. Each pipeline YAML references it. The file tells an LLM, MCP server, developer, or test how to generate temporary Python from the authoritative pipeline. Persistent Python sidecars are not stored.
 
-CMake flattens the three files from all 16 source folders into the runtime and installed `ImageProcessing` directory. This keeps the DREAM3D-NX bookmark list flat.
+The runtime copy preserves the numbered folders under `pipelines/ImageProcessing`. Installation flattens the 19 pipelines, the 16 pairs of tutorial companions, and `PythonGeneration.yaml` into the installed `ImageProcessing` directory.
 
 ## Input data
 
@@ -37,8 +37,10 @@ Each pipeline writes a final `.dream3d` file. Selected pipelines also write TIFF
 Run a pipeline from the application binary directory. This example runs the AM XCT workflow:
 
 ```bash
-./nxrunner --execute "pipelines/ImageProcessing/(05) AM XCT Porosity Segmentation.d3dpipeline"
+./nxrunner --execute "pipelines/ImageProcessing/05_AM_XCT_Porosity_Segmentation/05_AM_XCT_Porosity_Segmentation.d3dpipeline"
 ```
+
+For an installed package, use `pipelines/ImageProcessing/05_AM_XCT_Porosity_Segmentation.d3dpipeline` instead.
 
 The pipelines use relative paths. Start `nxrunner` or DREAM3D-NX from the application binary directory so `Data` resolves to the runtime data folder.
 
@@ -52,15 +54,15 @@ The temporary program uses the same relative input and output paths as the GUI p
 
 DREAM3D-NX scans the runtime `pipelines` folder at launch. The application shows these examples under:
 
-`pipelines -> ImageProcessing`
+`pipelines -> ImageProcessing -> numbered example folder` in a build tree, or `pipelines -> ImageProcessing` in an installed package
 
 ## Coverage
 
-The new examples are numbered `(05)` through `(20)` after the existing `(02)` through `(04)` examples.
+The tutorials are numbered `05` through `20` after the inherited `02` through `04` examples.
 
 `FilterCoverage.json` assigns each registered ImageProcessing filter to one enabled pipeline step. `ExamplePipelineCoverageTest.cpp` compares the manifest with the CMake filter list and the pipeline JSON files.
 
-The same test requires a complete three-file source folder for every example and rejects persistent `.py` sidecars. It compares YAML step order and UUIDs with the pipeline, checks all required narrative sections and workflow-first citations, and validates the suite-level Python-generation reference. Separate tests run the GUI pipelines, generate and execute temporary Python programs, and verify citation metadata through DOI or authoritative paper URLs.
+The same test requires a complete three-file source folder for every tutorial and rejects persistent `.py` sidecars. It compares YAML step order and UUIDs with the pipeline, checks all required narrative sections and workflow-first citations, and validates the suite-level Python-generation reference. Separate tests run the GUI pipelines and registered Python examples and verify citation metadata through DOI or authoritative paper URLs. The `test/GenerateAndRunExamplePipelines.py` helper generates and executes temporary Python for the 16 tutorials; it is not currently registered with CTest.
 
 ## Storage modes
 

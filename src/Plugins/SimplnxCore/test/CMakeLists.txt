@@ -314,15 +314,15 @@ set(PREBUILT_PIPELINE_NAMES
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/SurfaceMeshExamples/ApplyTransformation_Node.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Surface_Mesh_Examples/ApplyTransformation_Node.d3dpipeline"
 
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
 
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Read_Data_Files/Import_CSV_File.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Read_Data_Files/Import_STL_Model.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/SurfaceMeshExamples/Triangle_Face_Data_Demo.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/SurfaceMeshExamples/Remove_Flagged_Triangles.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Surface_Mesh_Examples/Triangle_Face_Data_Demo.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Surface_Mesh_Examples/Remove_Flagged_Triangles.d3dpipeline"
 
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"

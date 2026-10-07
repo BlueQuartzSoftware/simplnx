@@ -154,13 +154,6 @@ set(PREBUILT_PIPELINE_NAMES)
 foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
   list(APPEND PREBUILT_PIPELINE_NAMES "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.d3dpipeline")
 endforeach()
-# The plugin inherited these three pipelines from the removed ITKImageProcessing plugin. They are flat
-# files, so the loop above does not reach them.
-list(APPEND PREBUILT_PIPELINE_NAMES
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(04) Porosity Analysis.d3dpipeline"
-)
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
