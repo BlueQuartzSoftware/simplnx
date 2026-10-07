@@ -2,8 +2,10 @@
 
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <Eigen/Core>
@@ -1626,6 +1628,90 @@ void MeshingUtilities::CalculateNormalsImpl::generate(nx::core::types::usize sta
 void MeshingUtilities::CalculateNormalsImpl::operator()(const nx::core::Range& range) const
 {
   generate(range.min(), range.max());
+}
+
+Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+                                                            Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal)
+{
+  const usize numTriangles = triangles.getNumberOfTuples();
+  if(shouldCancel || numTriangles == 0)
+  {
+    return {};
+  }
+
+  // Connectivity needs random vertex access. Cache 3 * N floats once (O(N) memory), about
+  // one quarter of the connectivity bytes for T ~= 2N and 64-bit vertex indexes.
+  std::vector<float32> vertices(verts.getSize());
+  Result<> result = verts.copyIntoBuffer(0, nonstd::span<float32>(vertices.data(), vertices.size()));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."));
+  }
+
+  // Match ComputeFeatureSizesScanline's 262,144-tuple batches. Connectivity and normals
+  // together use at most 12 MiB of scratch space, independent of the triangle count.
+  constexpr usize k_BlockTriangles = 262144;
+  const usize bufferTriangles = std::min(k_BlockTriangles, numTriangles);
+  std::vector<IGeometry::MeshIndexType> triangleBuffer(bufferTriangles * 3);
+  std::vector<float64> normalBuffer(bufferTriangles * 3);
+  for(usize start = 0; start < numTriangles;)
+  {
+    if(shouldCancel)
+    {
+      return result;
+    }
+    const usize count = std::min(k_BlockTriangles, numTriangles - start);
+    result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+    }
+
+    for(usize triangle = 0; triangle < count; ++triangle)
+    {
+      const usize index = triangle * 3;
+      const auto normal = calculateNormal(vertices.data() + triangleBuffer[index] * 3, vertices.data() + triangleBuffer[index + 1] * 3, vertices.data() + triangleBuffer[index + 2] * 3);
+      normalBuffer[index] = normal[0];
+      normalBuffer[index + 1] = normal[1];
+      normalBuffer[index + 2] = normal[2];
+    }
+
+    result = MergeResults(std::move(result), normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)));
+    }
+    start += count;
+  }
+  return result;
+}
+
+Result<> MeshingUtilities::CalculateNormals(const INodeGeometry2D::SharedFaceList& triangles, const INodeGeometry2D::SharedVertexList& verts, Float64AbstractDataStore& normals,
+                                            const std::atomic_bool& shouldCancel)
+{
+  // The output is a borrowed store rather than a DataArray, so include its residency explicitly.
+  const bool usesOutOfCoreStore = AnyOutOfCore({&triangles, &verts}) || normals.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    return detail::CalculateNormalsInBlocks(triangles.getDataStoreRef(), verts.getDataStoreRef(), normals, shouldCancel,
+                                            [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
+                                              const Eigen::Vector3d vertA = Eigen::Vector3d{a[0], a[1], a[2]};
+                                              const Eigen::Vector3d vertB = Eigen::Vector3d{b[0], b[1], b[2]};
+                                              const Eigen::Vector3d vertC = Eigen::Vector3d{c[0], c[1], c[2]};
+                                              const Eigen::Vector3d vecA = vertB - vertA;
+                                              const Eigen::Vector3d vecB = vertC - vertA;
+                                              Eigen::Vector3d normal = vecA.cross(vecB);
+                                              normal.normalize();
+                                              return {normal[0], normal[1], normal[2]};
+                                            });
+  }
+
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, triangles.getNumberOfTuples());
+  dataAlg.execute(CalculateNormalsImpl(triangles.getDataStoreRef(), verts.getDataStoreRef(), normals, shouldCancel));
+  return {};
 }
 
 Result<> MeshingUtilities::MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices)
