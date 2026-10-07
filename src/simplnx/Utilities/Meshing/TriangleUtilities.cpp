@@ -28,6 +28,10 @@ using namespace nx::core;
 namespace
 {
 using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
+using WindingFace = std::array<IGeometry::MeshIndexType, 3>;
+
+static_assert(std::is_trivially_copyable_v<WindingFace>);
+static_assert(sizeof(WindingFace) == 3 * sizeof(IGeometry::MeshIndexType));
 
 inline constexpr uint64 k_WindingBatchRecords = 4096;
 inline constexpr usize k_WindingCachePages = 8;
@@ -400,7 +404,7 @@ private:
 
 /**
  * @class WindingDataStoreCache
- * @brief Provides bounded LRU tuple access to one DataStore.
+ * @brief Provides bounded read-only LRU tuple access to one DataStore.
  * @tparam T Specifies the scalar type.
  */
 template <typename T>
@@ -415,20 +419,6 @@ public:
    */
   WindingDataStoreCache(const AbstractDataStore<T>& store, uint64 tuplesPerPage, usize maximumPages)
   : m_Store(store)
-  , m_TuplesPerPage(tuplesPerPage)
-  , m_MaximumPages(maximumPages)
-  {
-  }
-
-  /**
-   * @brief Creates a mutable tuple cache.
-   * @param store Provides and receives tuples.
-   * @param tuplesPerPage Specifies page tuple count.
-   * @param maximumPages Limits resident pages.
-   */
-  WindingDataStoreCache(AbstractDataStore<T>& store, uint64 tuplesPerPage, usize maximumPages)
-  : m_Store(store)
-  , m_MutableStore(&store)
   , m_TuplesPerPage(tuplesPerPage)
   , m_MaximumPages(maximumPages)
   {
@@ -457,61 +447,15 @@ public:
     return {};
   }
 
-  /**
-   * @brief Updates one cached tuple and marks its page dirty.
-   * @param tupleIndex Specifies the tuple.
-   * @param tuple Provides all tuple components.
-   * @return Mutability, shape, range, allocation, or source-read error, or success.
-   */
-  Result<> writeTuple(uint64 tupleIndex, nonstd::span<const T> tuple)
-  {
-    if(m_MutableStore == nullptr)
-    {
-      return MakeErrorResult(-65787, "Triangle winding attempted to modify a read-only DataStore cache.");
-    }
-    if(tuple.size() != m_Store.getNumberOfComponents())
-    {
-      return MakeErrorResult(-65786, "Triangle winding DataStore cache received a tuple with the wrong component count.");
-    }
-    auto pageResult = loadPage(tupleIndex);
-    if(pageResult.invalid())
-    {
-      return ConvertResult(std::move(pageResult));
-    }
-    Page& page = pageResult.value().get();
-    const usize localTuple = static_cast<usize>(tupleIndex - page.FirstTuple);
-    std::copy(tuple.begin(), tuple.end(), page.Values.data() + localTuple * tuple.size());
-    page.Dirty = true;
-    return {};
-  }
-
-  /**
-   * @brief Flushes all dirty pages.
-   * @return First destination-write error, or success.
-   */
-  Result<> flush()
-  {
-    for(Page& page : m_Pages)
-    {
-      auto result = flushPage(page);
-      if(result.invalid())
-      {
-        return result;
-      }
-    }
-    return {};
-  }
-
 private:
   /**
    * @struct Page
-   * @brief Stores one tuple page and its dirty state.
+   * @brief Stores one read-only tuple page.
    */
   struct Page
   {
     uint64 FirstTuple = 0;
     uint64 TupleCount = 0;
-    bool Dirty = false;
     std::vector<T> Values;
   };
 
@@ -537,11 +481,6 @@ private:
     }
     if(m_Pages.size() == m_MaximumPages)
     {
-      auto flushResult = flushPage(m_Pages.back());
-      if(flushResult.invalid())
-      {
-        return ConvertInvalidResult<std::reference_wrapper<Page>>(std::move(flushResult));
-      }
       m_Pages.pop_back();
     }
     Page page;
@@ -570,36 +509,57 @@ private:
     return {std::ref(m_Pages.front())};
   }
 
-  /**
-   * @brief Writes one dirty page to the mutable store.
-   * @param page Provides cached values and destination range.
-   * @return Mutability or destination-write error, or success.
-   */
-  Result<> flushPage(Page& page)
-  {
-    if(!page.Dirty)
-    {
-      return {};
-    }
-    if(m_MutableStore == nullptr)
-    {
-      return MakeErrorResult(-65787, "Triangle winding attempted to flush a read-only DataStore cache.");
-    }
-    const usize componentCount = m_Store.getNumberOfComponents();
-    auto result = m_MutableStore->copyFromBuffer(static_cast<usize>(page.FirstTuple) * componentCount, nonstd::span<const T>(page.Values.data(), page.Values.size()));
-    if(result.valid())
-    {
-      page.Dirty = false;
-    }
-    return result;
-  }
-
   const AbstractDataStore<T>& m_Store;
-  AbstractDataStore<T>* m_MutableStore = nullptr;
   uint64 m_TuplesPerPage = 0;
   usize m_MaximumPages = 0;
   std::list<Page> m_Pages;
 };
+
+/**
+ * @brief Copies repaired scratch connectivity back in bounded sequential batches.
+ * @param triangles Receives the repaired connectivity.
+ * @param faceStore Provides the scratch connectivity.
+ * @param faceCache Provides pending scratch writes.
+ * @param buffer Reuses the initial connectivity scan buffer.
+ * @param facesModified Skips destination writes when no triangle was flipped.
+ * @return Scratch flush/read or destination-write error, or success.
+ * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
+ */
+Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFace>& faceCache,
+                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified)
+{
+  if(!facesModified)
+  {
+    return {};
+  }
+  // Like the previous face-cache flush, preserve completed flips even on cancellation.
+  const std::atomic_bool neverCancel = false;
+  auto flushResult = faceCache.flush(neverCancel);
+  if(flushResult.invalid())
+  {
+    return flushResult;
+  }
+  for(uint64 offset = 0; offset < faceStore.recordCount(); offset += k_WindingBatchRecords)
+  {
+    const uint64 count = std::min<uint64>(k_WindingBatchRecords, faceStore.recordCount() - offset);
+    auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(buffer.data()), static_cast<usize>(count * sizeof(WindingFace)));
+    auto readResult = faceStore.read(offset, count, bytes, neverCancel);
+    if(readResult.invalid())
+    {
+      return ConvertResult(std::move(readResult));
+    }
+    if(readResult.value() != count)
+    {
+      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, readResult.value(), count));
+    }
+    auto writeResult = triangles.copyFromBuffer(static_cast<usize>(offset * 3), nonstd::span<const IGeometry::MeshIndexType>(buffer.data(), static_cast<usize>(count * 3)));
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
+  }
+  return {};
+}
 
 /**
  * @brief Finalizes one external winding sort.
@@ -1039,6 +999,16 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   WindingSortAppender<VertexOccurrence> occurrenceAppender(*occurrences, shouldCancel);
   WindingSortAppender<FeatureSeed> seedAppender(*seeds, shouldCancel);
 
+  // Stage connectivity during the existing scan. Dirty page evictions then target
+  // uncompressed scratch records, not HDF5 chunks that the next read must compress
+  // and inflate again. Copy back only when traversal completes or is cancelled.
+  auto faceStoreResult = CreateWindingRecordStore<WindingFace>(triangleCount);
+  if(faceStoreResult.invalid())
+  {
+    return ConvertResult(std::move(faceStoreResult));
+  }
+  std::unique_ptr<ITemporaryRecordStore> faceStore = std::move(faceStoreResult.value());
+
   std::vector<IGeometry::MeshIndexType> faceBuffer;
   std::vector<int32> idBuffer;
   try
@@ -1065,6 +1035,12 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     if(faceReadResult.invalid())
     {
       return faceReadResult;
+    }
+    auto faceStageResult =
+        faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFace))), shouldCancel);
+    if(faceStageResult.invalid())
+    {
+      return faceStageResult;
     }
     auto idReadResult = idsStore.copyIntoBuffer(static_cast<usize>(offset * componentCount), nonstd::span<int32>(idBuffer.data(), static_cast<usize>(count * componentCount)));
     if(idReadResult.invalid())
@@ -1333,7 +1309,10 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     neighborOffset = groupEnd;
   }
 
-  WindingDataStoreCache<IGeometry::MeshIndexType> faceCache(triangles, k_WindingBatchRecords, k_WindingCachePages);
+  BoundedRecordPageCache<WindingFace> faceCache(*faceStore, k_WindingBatchRecords, k_WindingCachePages);
+  // Keep face access non-cancelling, as before; traversal owns cancellation checks.
+  const std::atomic_bool neverCancel = false;
+  bool facesModified = false;
   WindingDataStoreCache<int32> idCache(idsStore, k_WindingBatchRecords, k_WindingCachePages);
   WindingSortReader<FeatureSeed> seedReader(*seeds, shouldCancel);
 
@@ -1348,7 +1327,13 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     return {labels[0] == feature || (componentCount == 2 && labels[1] == feature)};
   };
   const auto readFace = [&](uint64 triangle, std::array<IGeometry::MeshIndexType, 3>& face) -> Result<> {
-    return faceCache.readTuple(triangle, nonstd::span<IGeometry::MeshIndexType>(face.data(), face.size()));
+    auto readResult = faceCache.read(triangle, neverCancel);
+    if(readResult.invalid())
+    {
+      return ConvertResult(std::move(readResult));
+    }
+    face = readResult.value();
+    return {};
   };
 
   uint64 unrepairedCount = 0;
@@ -1359,7 +1344,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   {
     if(shouldCancel)
     {
-      return faceCache.flush();
+      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
     }
     auto seedRecordResult = seedReader.read(seedOffset);
     if(seedRecordResult.invalid())
@@ -1454,7 +1439,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     {
       if(shouldCancel)
       {
-        return faceCache.flush();
+        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
       }
       auto queuedResult = queueCache.read(queueHead, shouldCancel);
       if(queuedResult.invalid())
@@ -1562,11 +1547,12 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
         else
         {
           std::swap(face[0], face[2]);
-          auto faceWriteResult = faceCache.writeTuple(triangle, nonstd::span<const IGeometry::MeshIndexType>(face.data(), face.size()));
+          auto faceWriteResult = faceCache.write(triangle, face, neverCancel);
           if(faceWriteResult.invalid())
           {
             return faceWriteResult;
           }
+          facesModified = true;
         }
       }
     }
@@ -1574,7 +1560,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     seedOffset = nextFeatureOffset;
   }
 
-  auto faceFlushResult = faceCache.flush();
+  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
   if(faceFlushResult.invalid())
   {
     return faceFlushResult;
