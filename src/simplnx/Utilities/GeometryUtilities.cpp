@@ -3,7 +3,9 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 
+#include <cmath>
 #include <cstdio>
+#include <limits>
 
 using namespace nx::core;
 
@@ -139,12 +141,28 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(cons
 {
   auto min = boundingBox.getMinPoint();
   auto max = boundingBox.getMaxPoint();
-  // Calculate the length per partition for each dimension, and set it into the partitioning scheme image geometry
-  float32 lengthX = ((max[0] - min[0]) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
-  float32 lengthY = ((max[1] - min[1]) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
-  float32 lengthZ = ((max[2] - min[2]) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
-  FloatVec3 lengthPerPartition = {lengthX, lengthY, lengthZ};
-  return Result<FloatVec3>{lengthPerPartition};
+
+  // When the padded min and max round to the same float32 value (e.g. a zero-extent
+  // axis at coordinate ≥32, where 1e-6 < half-ULP), hi-lo underflows to 0.  nextafter
+  // guarantees at least 1 ULP of extent regardless of coordinate magnitude, preventing
+  // a zero spacing that would cause division-by-zero downstream.
+  auto safeExtent = [](float32 lo, float32 hi) -> float32 {
+    float32 ext = hi - lo;
+    if(ext <= 0.0f)
+    {
+      ext = std::nextafter(hi, std::numeric_limits<float32>::infinity()) - std::nextafter(lo, -std::numeric_limits<float32>::infinity());
+      if(ext <= 0.0f)
+      {
+        ext = std::numeric_limits<float32>::min();
+      }
+    }
+    return ext;
+  };
+
+  const float32 lengthX = safeExtent(min[0], max[0]) / static_cast<float32>(numberOfPartitionsPerAxis.getX());
+  const float32 lengthY = safeExtent(min[1], max[1]) / static_cast<float32>(numberOfPartitionsPerAxis.getY());
+  const float32 lengthZ = safeExtent(min[2], max[2]) / static_cast<float32>(numberOfPartitionsPerAxis.getZ());
+  return Result<FloatVec3>{FloatVec3(lengthX, lengthY, lengthZ)};
 }
 
 /**
@@ -611,7 +629,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
         }
       }
     } // END TRIANGLE LOOP
-  } // END SLICE LOOP
+  }   // END SLICE LOOP
 
   return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
 }

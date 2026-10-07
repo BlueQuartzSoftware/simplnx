@@ -73,25 +73,6 @@ public:
   PartitionGeometry& operator=(const PartitionGeometry&) = delete;
   PartitionGeometry& operator=(PartitionGeometry&&) noexcept = delete;
 
-  /**
-   * @struct PSGeomInfo
-   * @brief Stores dimensions and spatial metadata for a partition grid.
-   */
-  struct PSGeomInfo
-  {
-    USizeVec3 geometryDims;
-    std::optional<FloatVec3> geometryOrigin;
-    std::optional<FloatVec3> geometrySpacing;
-    IGeometry::LengthUnit geometryUnits;
-  };
-
-  /**
-   * @brief Selects direct or scanline partitioning from dispatch-target storage.
-   * @return Error for an unknown geometry or bulk I/O, or success after cancellation.
-   *
-   * Cancellation or an I/O error can retain partial partition IDs. Created
-   * partition-grid Feature IDs can also remain partial.
-   */
   Result<> operator()();
 
 private:
