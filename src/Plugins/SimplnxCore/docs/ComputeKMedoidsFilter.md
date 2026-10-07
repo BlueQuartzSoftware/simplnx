@@ -66,6 +66,8 @@ The filter creates a *cluster Ids* array (one dimensionless integer cluster labe
 
 **Mask Array** must have 1 component.
 
+When masking is enabled, **Mask Array** must have the same number of tuples as **Attribute Array to Cluster**.
+
 ## Algorithm
 
 This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
