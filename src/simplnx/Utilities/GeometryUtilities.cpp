@@ -2,6 +2,8 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <cstdio>
 
@@ -245,6 +247,21 @@ private:
 
 Result<> GeometryUtilities::ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
 {
+  const bool usesOutOfCoreStore = AnyOutOfCore({triangleGeom->getFaces(), triangleGeom->getVertices()}) || normals.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    // Preserve this utility's float arithmetic, which differs from the Eigen double path.
+    return MeshingUtilities::detail::CalculateNormalsInBlocks(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel,
+                                                              [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
+                                                                const std::array<Point3Df, 3> vertCoords = {Point3Df{a[0], a[1], a[2]}, Point3Df{b[0], b[1], b[2]}, Point3Df{c[0], c[1], c[2]}};
+                                                                auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
+                                                                normal = normal / normal.magnitude();
+                                                                return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
+                                                              });
+  }
+
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));

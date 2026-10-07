@@ -211,10 +211,7 @@ Result<> VerifyTriangleWinding::operator()()
     m_MessageHandler.sendInfoMessage("Recalculating normals");
     auto& normals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsPath)->getDataStoreRef();
 
-    // Parallel algorithm to calculate normals
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0ULL, static_cast<usize>(triGeom.getNumberOfFaces()));
-    dataAlg.execute(MeshingUtilities::CalculateNormalsImpl(triangles, triGeom.getVertices()->getDataStoreRef(), normals, m_ShouldCancel));
+    windingResult = MergeResults(std::move(windingResult), MeshingUtilities::CalculateNormals(*triGeom.getFaces(), *triGeom.getVertices(), normals, m_ShouldCancel));
   }
 
   return windingResult;
