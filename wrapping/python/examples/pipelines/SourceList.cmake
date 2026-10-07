@@ -74,6 +74,7 @@ set(SIMPLNX_PYTHON_TESTS
   ComputeBiasedFeatures # Depends 05_Small_IN100_Crystallographic_Statistics
   01_Small_IN100_Quick_Mesh
   02_Small_IN100_Smooth_Mesh
+  10_Small_IN100_Triple_Lines # Must run before Mesh Statistics deletes the smoothed mesh
   03_Small_IN100_Mesh_Statistics
 
   ComputeGBCD-GBPDMetricBased # Depends 03_Small_IN100_Mesh_Statistics

@@ -30,7 +30,7 @@ when many triangles use that edge.
 ![Fig. 1: Four grains meet at the center of the block. The thick line is the quadruple point line that this Filter extracts.](Images/ExtractTripleLines_Definition.png)
 -->
 
-### Why Is This a Separate Filter?
+### Where to Use This Filter in a Pipeline
 
 The **Filter** uses the **Triangle Geometry** that you give it. The triple lines are always exactly on
 that mesh. If you smooth the mesh first, the triple lines follow the smoothed surface.
@@ -59,16 +59,16 @@ smoothing.
 
 #### Include Exterior Triple Lines
 
-The space outside the volume has the value `-1` in **Face Labels**. All three surface meshing filters
-listed above use this value.
+Any negative **Face Label** means the space outside the volume. All negative values count as
+one outside region. All three surface meshing filters listed above write `-1` for this region.
 
-- **Off (default):** the **Filter** ignores `-1`. You get only the triple lines inside the volume.
+- **Off (default):** the **Filter** ignores all negative labels. You get only the triple lines inside the volume.
 - **On:** the **Filter** treats the outside as one more region. A grain boundary that touches the
   outside surface of the volume then becomes a triple line. You get many more segments.
 
-**Feature Id 0** is treated as a normal Feature. Only negative values mean "outside". If your data uses
-Feature Id 0 for background or bad data, a grain that touches Feature 0 makes a triple line, even when
-this option is off.
+**Feature Id 0** is treated as a normal Feature. Only negative values mean "outside".
+Feature 0 counts toward the three regions needed for a triple line, even when this option is off.
+This also applies if your data uses Feature 0 for background or bad data.
 
 <!-- FIGURE PENDING: ExtractTripleLines_ExteriorOff.png / ExtractTripleLines_ExteriorOn.png
      Small IN100, the same view twice. Left: option off (interior lines only). Right: option on
@@ -121,20 +121,47 @@ surface mesh. The edges are sorted by their vertex numbers.
 
 ## Algorithm
 
-The **Filter** reads the triangles two times.
+The **Filter** first finds candidate vertices. A candidate is a vertex that touches at least three
+regions. It processes the vertices in batches. Each batch contains at most `k_DefaultVertexBatchSize`
+vertices by default: 8,388,608 vertices (8 million).
 
-1. For each vertex, it records the different Feature Ids of the triangles that use that vertex.
-2. An edge can be a triple line only if both of its vertices touch three or more Feature Ids. For these
-   edges only, the **Filter** collects the Feature Ids of the triangles that use the edge, and keeps the
-   edge when it has three or more.
+1. For one batch, read all input triangles and their Face Labels in order. Record up to three different
+   region labels for each vertex in that batch. Set a candidate bit for each vertex with three labels.
+2. Repeat for the next batch. The input triangles and labels are read once per batch.
+3. Read the triangles once more. Collect up to four different region labels for each edge whose two
+   endpoints are candidates. Keep the edge if it borders at least three regions.
+4. Sort the selected edges. Copy only their vertices into the output geometry. Copy Node Types when
+   requested. Store the region count for each edge, with counts above four stored as `4`.
 
-Because of the first step, the **Filter** stores Feature Id information for the edges that can be triple
-lines, not for every edge of the mesh. The working memory is about 17 bytes for each mesh vertex, plus a
-small amount for each candidate edge.
+Every triangle that uses an edge also uses both endpoints. The regions bordering an edge therefore
+also touch both endpoints. The candidate check cannot remove a triple line.
+
+The working memory contains:
+
+- 1 bit per input mesh vertex for the candidate flags.
+- About 12 bytes per vertex in one batch. The default maximum is about 96 MiB (101 MB).
+  The batch label sets are released before the next batch is allocated.
+- One hash-map entry for each candidate edge, roughly 50 bytes per entry. The exact size depends on
+  the platform and the hash-map allocation overhead.
+- 16 bytes per selected output edge for its source indices and region count, plus vector capacity
+  overhead. Vertex compaction reserves a further 16 bytes per output edge for source vertex indices.
+
+These amounts exclude the input and output data arrays. Only the candidate bits scale with all input
+vertices. The label sets are limited to one batch. The edge tables scale with candidate or selected
+edges, which can still be numerous in a complex mesh. Smaller batches use less memory but read the
+input more times.
+
+If no triple lines are found, the **Filter** creates an empty Edge Geometry and returns a warning.
+This can mean that no edge borders three or more Features with the selected exterior option. The
+Triangle Geometry must also share vertices between triangles. Two triangles share an edge only when
+they use the same vertex indices at both ends. A mesh with duplicated vertices, such as an imported
+STL mesh, does not share edges. Merge coincident vertices before using this **Filter**.
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
+
+- (10) Small IN100 Triple Lines
 
 ## License & Copyright
 

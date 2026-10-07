@@ -375,6 +375,13 @@ add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(10) Small IN100 Triple Lines.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
+  INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
+  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_TripleLines.dream3d" "Data/Output/SurfaceMesh/SmallIN100_TripleLines.xdmf")
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(07) Small IN100 Mesh Statistics.d3dpipeline"
   TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
