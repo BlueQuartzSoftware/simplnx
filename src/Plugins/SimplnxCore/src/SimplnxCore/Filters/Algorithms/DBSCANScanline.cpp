@@ -321,19 +321,7 @@ public:
     {
       return MakeErrorResult(-54061, "DBSCAN out-of-core execution requires registered external-sort and temporary-record-store providers.");
     }
-    if(m_Dimensions != 2 && m_Dimensions != 3)
-    {
-      return MakeErrorResult(-54060, "Input components invalid. Only 2 or 3 accepted.");
-    }
     const usize tupleCount = m_InputStore.getNumberOfTuples();
-    if(m_InputStore.getNumberOfComponents() != m_Dimensions)
-    {
-      return MakeErrorResult(-54060, "DBSCAN input component count does not match the selected dimensionality.");
-    }
-    if(m_MaskStore != nullptr && (m_MaskStore->getNumberOfTuples() != tupleCount || m_MaskStore->getNumberOfComponents() != 1))
-    {
-      return MakeErrorResult(-54062, "DBSCAN mask tuple count does not match the clustering array or the mask is not scalar.");
-    }
     if(m_InputValues.MinPoints < 0)
     {
       return MakeErrorResult(-54063, "DBSCAN Minimum Points cannot be negative.");
