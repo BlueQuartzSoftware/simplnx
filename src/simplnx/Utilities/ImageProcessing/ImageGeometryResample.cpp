@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -339,6 +340,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
       return IFilter::MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAttributeMatrixPath.toString()));
     }
 
+    std::string warningMessage;
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
     const auto tupleDimensions = srcCellFeatureData->getShape();
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, tupleDimensions));
@@ -351,9 +353,19 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
         const DataPath dataArrayPath = destCellFeatureAttributeMatrixPath.createChildPath(srcArray->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDimensions, std::move(componentShape), dataArrayPath));
       }
+      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      {
+        warningMessage += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArray->getName();
+      }
     }
-
-    AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, inputValues.FeatureIdsArrayPath, preflightUpdatedValues);
+    if(!warningMessage.empty())
+    {
+      preflightUpdatedValues.push_back(
+          {"Invalidated NeighborLists",
+           fmt::format(
+               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               inputValues.FeatureIdsArrayPath.toString(), warningMessage)});
+    }
   }
 
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
@@ -381,8 +393,6 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
       }
     }
   }
-
-  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   if(inputValues.RemoveOriginalImageGeom)
   {
