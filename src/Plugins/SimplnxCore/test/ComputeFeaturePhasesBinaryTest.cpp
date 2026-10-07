@@ -1,4 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -99,4 +100,31 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: SIMPL Backwards Compat
       CHECK(args.value<DataPath>(ComputeFeaturePhasesBinaryFilter::k_CellDataAMPath_Key) == DataPath({"DataContainer", "CellData"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Cell Feature Ids requires 1 component", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
+  REQUIRE(cellData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Ids", {2}, {2}, cellData->getId());
+  (*featureIds)[0] = 1;
+  (*featureIds)[1] = 0;
+  (*featureIds)[2] = 2;
+  (*featureIds)[3] = 0;
+  auto* mask = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {2}, {1}, cellData->getId());
+  mask->fill(true);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {3}) != nullptr);
+
+  ComputeFeaturePhasesBinaryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Feature Ids"})));
+  args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Mask"})));
+  args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_CellDataAMPath_Key, std::make_any<DataPath>(DataPath({"Feature Data"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

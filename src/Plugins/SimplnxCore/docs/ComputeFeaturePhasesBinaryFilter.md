@@ -16,6 +16,8 @@ This **Filter** is generally useful any time data has already been reduced to a 
 
 % Auto generated parameter table will be inserted here
 
+**Cell Feature Ids** must have 1 component.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
