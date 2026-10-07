@@ -115,6 +115,20 @@ inline static constexpr usize k_22 = 8;
  * @return Signed volume contribution.
  */
 SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
+
+using TriangleNormalCalculator = std::array<float64, 3> (*)(const float32* vertA, const float32* vertB, const float32* vertC);
+
+/**
+ * @brief Computes normals with serial block I/O and a resident vertex buffer.
+ * @param triangles Provides three vertex indexes per triangle.
+ * @param verts Provides XYZ coordinates, cached once using O(number of vertices) memory.
+ * @param normals Receives three normal components per triangle.
+ * @param shouldCancel Stops before loading vertices or processing the next block.
+ * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.
+ * @return Accumulated I/O warnings and errors, or success after cancellation.
+ */
+SIMPLNX_EXPORT Result<> CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+                                                 Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal);
 } // namespace detail
 
 /**
@@ -189,6 +203,17 @@ private:
   Float64AbstractDataStore& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
 };
+
+/**
+ * @brief Computes Eigen double-precision normals, using block I/O when any store is out of core.
+ * @param triangles Provides triangle connectivity.
+ * @param verts Provides vertex coordinates.
+ * @param normals Receives three values per triangle.
+ * @param shouldCancel Stops before later triangles or OOC blocks.
+ * @return Accumulated I/O warnings and errors, or success after cancellation.
+ */
+SIMPLNX_EXPORT Result<> CalculateNormals(const INodeGeometry2D::SharedFaceList& triangles, const INodeGeometry2D::SharedVertexList& verts, Float64AbstractDataStore& normals,
+                                         const std::atomic_bool& shouldCancel);
 
 /**
  * @brief Accumulates signed triangle volume contributions by feature ID.
