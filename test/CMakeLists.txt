@@ -130,6 +130,7 @@ target_compile_definitions(simplnx_test
   PRIVATE
     SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
     SIMPLNX_PLUGIN_COUNT=${SIMPLNX_PLUGIN_COUNT}
+    SIMPLNX_TEST_ALL_OPTIONAL_PLUGINS_ENABLED=$<AND:$<BOOL:${SIMPLNX_ENABLE_OrientationAnalysis}>,$<BOOL:${SIMPLNX_ENABLE_ImageProcessing}>>
 )
 
 target_compile_options(simplnx_test
