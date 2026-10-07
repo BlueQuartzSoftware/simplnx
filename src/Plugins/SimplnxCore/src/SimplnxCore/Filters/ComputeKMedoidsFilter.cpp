@@ -16,6 +16,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -129,6 +130,18 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
      static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArray->getNumberOfComponents())
   {
     return MakePreflightErrorResult(-7586, "The medoids output dimensions overflow the supported address range.");
+  }
+
+  if(filterArgs.value<bool>(k_UseMask_Key))
+  {
+    const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+    if(!CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, maskPath}))
+    {
+      const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskPath);
+      return MakePreflightErrorResult(
+          -7589, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
+                             pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+    }
   }
 
   {
