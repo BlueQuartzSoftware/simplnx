@@ -304,12 +304,13 @@ Result<> QuickSurfaceMeshDirect::operator()()
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
-                                                    triangleGeom.getNumberOfVertices());
+      return MergeResults(std::move(windingResult),
+                          MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                                 triangleGeom.getNumberOfVertices()));
     }
     if(suppressedFaceCount == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+      return MergeResults(std::move(windingResult), MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath));
     }
   }
 

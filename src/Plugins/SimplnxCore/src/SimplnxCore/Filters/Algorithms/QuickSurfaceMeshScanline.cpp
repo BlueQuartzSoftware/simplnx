@@ -80,7 +80,7 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateNodeRecordStore(uint64 node
 {
   if(nodeCount == 0)
   {
-    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-56342, "QuickSurfaceMesh cannot create node state for an empty mesh.");
+    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-56346, "QuickSurfaceMesh cannot create node state for an empty mesh.");
   }
   TemporaryRecordStoreConfig config;
   config.recordSize = sizeof(QuickSurfaceNodeRecord);
@@ -102,7 +102,7 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateNodeRecordStore(uint64 node
   }
   if(result.value() == nullptr)
   {
-    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-56343, "QuickSurfaceMesh temporary-record provider returned a null node-state store.");
+    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-56347, "QuickSurfaceMesh temporary-record provider returned a null node-state store.");
   }
   const QuickSurfaceNodeRecord emptyRecord;
   auto fillResult = result.value()->fill(0, nodeCount, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(&emptyRecord), sizeof(emptyRecord)), shouldCancel);
@@ -531,12 +531,13 @@ Result<> QuickSurfaceMeshScanline::operator()()
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
-                                                    triangleGeom.getNumberOfVertices());
+      return MergeResults(std::move(windingResult),
+                          MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+                                                                 triangleGeom.getNumberOfVertices()));
     }
     if(suppressedFaceCount == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+      return MergeResults(std::move(windingResult), MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath));
     }
   }
 
@@ -1774,7 +1775,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
     }
     if(readResult.value() != recordCount)
     {
-      return MakeErrorResult(-56344, "QuickSurfaceMesh received a short read from its node-state store.");
+      return MakeErrorResult(-56348, "QuickSurfaceMesh received a short read from its node-state store.");
     }
     // Match QuickSurfaceMeshDirect node types: capped owner count plus 10 for exterior contact.
     for(usize local = 0; local < recordCount; local++)
