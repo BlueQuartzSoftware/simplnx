@@ -1,11 +1,13 @@
 #include "OrientationAnalysis/Filters/ComputeShapesTriangleGeomFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 #include <filesystem>
@@ -93,4 +95,43 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom", "[OrientationAnalysi
                                    k_FaceFeatureAttributeMatrixPath.createChildPath(k_ExemplarAspectRatiosArrayName));
 
   UnitTest::CheckArraysInheritTupleDims(exemplarDataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroids requires 3 components", "[OrientationAnalysis][ComputeShapesTriangleGeom][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeom != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeom->getId());
+  triangleGeom->setVertices(*vertices);
+  triangleGeom->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  triangleGeom->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
+  triangleGeom->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
+  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeom->getId());
+  (*faces)[0] = 0;
+  (*faces)[1] = 1;
+  (*faces)[2] = 2;
+  triangleGeom->setFaceList(*faces);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeom->getId());
+  REQUIRE(faceData != nullptr);
+  triangleGeom->setFaceAttributeMatrix(*faceData);
+  auto* labels = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {1}, {2}, faceData->getId());
+  (*labels)[0] = 1;
+  (*labels)[1] = 0;
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, triangleGeom->getId());
+  REQUIRE(featureData != nullptr);
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {1}, featureData->getId());
+
+  ComputeShapesTriangleGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Triangles"})));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Face Data", "Face Labels"})));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Feature Data"})));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Feature Data", "Centroids"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
