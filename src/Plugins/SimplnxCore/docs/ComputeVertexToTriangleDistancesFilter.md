@@ -20,6 +20,8 @@ The sign of each distance depends on the **Triangle Normals**. For the sign to b
 
 % Auto generated parameter table will be inserted here
 
+**Triangle Normals** must have 3 components.
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
