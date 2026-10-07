@@ -1,4 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <cmath>
 #include <filesystem>
@@ -473,4 +474,33 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
       CHECK(args.value<std::string>(ComputeKMedoidsFilter::k_MedoidsArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
+  REQUIRE(cellData != nullptr);
+  auto* input = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellData->getId());
+  (*input)[0] = 0.0F;
+  (*input)[1] = 1.0F;
+  auto* mask = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellData->getId());
+  (*mask)[0] = 1;
+  (*mask)[1] = 0;
+  (*mask)[2] = 1;
+  (*mask)[3] = 1;
+
+  ComputeKMedoidsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Mask"})));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Input"})));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
