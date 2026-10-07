@@ -7,10 +7,23 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace nx::core
 {
+
+/**
+ * @brief Converts a physical Z minimum to a slice index, clamping below-origin values to zero.
+ * @param zMinPhys Physical minimum of a validated, overlapping crop range.
+ * @param originZ Z origin before cropping.
+ * @param spacingZ Positive Z spacing before cropping.
+ * @return Index of the first retained slice.
+ */
+inline usize ComputePhysicalZMinimumIndex(float64 zMinPhys, float64 originZ, float64 spacingZ)
+{
+  return zMinPhys >= originZ ? static_cast<usize>(std::floor((zMinPhys - originZ) / spacingZ)) : 0;
+}
 
 /**
  * @brief Computes the Z dimension an image stack has once its Z cropping is applied.
@@ -32,7 +45,7 @@ namespace nx::core
  * @param shouldChangeOrigin Whether the filter was asked to override the origin
  * @param shouldChangeSpacing Whether the filter was asked to override the spacing
  * @param originSpacingProcessing Whether overrides apply before or after cropping
- * @return Cropped Z dimension, or an error describing why the configured Z range is unusable
+ * @return Cropped Z dimension with -50503 warnings when physical Z bounds are clamped, or an error describing why the configured Z range is unusable
  */
 template <class VectorT>
 Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& croppingOptions, usize zDim, const VectorT& origin, const VectorT& spacing, bool shouldChangeOrigin,
@@ -73,33 +86,39 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
       return MakeErrorResult<usize>(-23521, fmt::format("Invalid Z spacing ({}). The Z spacing must be greater than zero to apply physical cropping.", spacingZ));
     }
 
-    if(zMinPhys < originZ || zMinPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
+    const float64 upperBoundZ = static_cast<float64>(zDim) * spacingZ + originZ;
+    if(zMinPhys > upperBoundZ)
     {
-      return MakeErrorResult<usize>(-23522, fmt::format("The minimum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMinPhys, originZ,
-                                                        (static_cast<float32>(zDim) * spacingZ + originZ)));
+      return MakeErrorResult<usize>(-23522,
+                                    fmt::format("The minimum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMinPhys, originZ, upperBoundZ));
     }
 
-    if(zMaxPhys < originZ || zMaxPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
+    if(zMaxPhys < originZ)
     {
-      return MakeErrorResult<usize>(-23523, fmt::format("The maximum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMaxPhys, originZ,
-                                                        (static_cast<float32>(zDim) * spacingZ + originZ)));
+      return MakeErrorResult<usize>(-23523,
+                                    fmt::format("The maximum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMaxPhys, originZ, upperBoundZ));
     }
 
-    const auto zMinIndex = static_cast<usize>(std::floor((zMinPhys - originZ) / spacingZ));
+    const auto zMinIndex = ComputePhysicalZMinimumIndex(zMinPhys, originZ, spacingZ);
     if(zMinIndex >= zDim)
     {
       return MakeErrorResult<usize>(
           -23524, fmt::format("The minimum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMinPhys, zMinIndex, (zDim > 0 ? zDim - 1 : 0)));
     }
 
-    const auto zMaxIndex = static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ));
-    if(zMaxIndex >= zDim)
+    const auto zMaxIndex = zMaxPhys < upperBoundZ ? std::min(static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ)), zDim - 1) : zDim - 1;
+    Result<usize> result{zMaxIndex - zMinIndex + 1};
+    if(zMinPhys < originZ)
     {
-      return MakeErrorResult<usize>(
-          -23525, fmt::format("The maximum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMaxPhys, zMaxIndex, (zDim > 0 ? zDim - 1 : 0)));
+      result.warnings().push_back(
+          {-50503, fmt::format("The Z minimum crop value {} is less than the Z minimum bounds value of {}. The filter will use the minimum bounds value instead.", zMinPhys, originZ)});
     }
-
-    zDim = zMaxIndex - zMinIndex + 1;
+    if(zMaxPhys > upperBoundZ)
+    {
+      result.warnings().push_back(
+          {-50503, fmt::format("The Z maximum crop value {} is greater than the Z maximum bounds value of {}. The filter will use the maximum bounds value instead.", zMaxPhys, upperBoundZ)});
+    }
+    return result;
   }
 
   return {zDim};

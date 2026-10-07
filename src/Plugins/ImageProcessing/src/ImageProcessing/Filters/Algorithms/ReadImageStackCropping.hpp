@@ -37,29 +37,31 @@ inline nx::core::Result<ZRange> ComputeCroppedZRange(const nx::core::CropGeometr
   }
 
   ZRange range{0, zDim - 1};
+  std::vector<Warning> warnings;
   if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
   {
     range = {static_cast<usize>(croppingOptions.zBoundVoxels[0]), static_cast<usize>(croppingOptions.zBoundVoxels[1])};
   }
   else if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
   {
-    const auto dimensionResult = ComputeCroppedZDimension(croppingOptions, zDim, origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
+    auto dimensionResult = ComputeCroppedZDimension(croppingOptions, zDim, origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
     if(dimensionResult.invalid())
     {
-      return {nonstd::make_unexpected(dimensionResult.errors())};
+      return ConvertInvalidResult<ZRange>(std::move(dimensionResult));
     }
 
     // Physical bounds refer to the full stack before cropping or deferred spatial overrides.
     const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? origin[2] : 0;
     const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? spacing[2] : 1;
-    range.zMin = static_cast<usize>(std::floor((croppingOptions.zBoundPhysical[0] - originZ) / spacingZ));
+    range.zMin = ComputePhysicalZMinimumIndex(croppingOptions.zBoundPhysical[0], originZ, spacingZ);
     range.zMax = range.zMin + dimensionResult.value() - 1;
+    warnings = std::move(dimensionResult.warnings());
   }
 
   if(range.zMin > range.zMax || range.zMax >= zDim)
   {
     return MakeErrorResult<ZRange>(-64514, fmt::format("Computed Z slice range [{}, {}] is invalid for {} input files.", range.zMin, range.zMax, zDim));
   }
-  return {range};
+  return {range, std::move(warnings)};
 }
 } // namespace

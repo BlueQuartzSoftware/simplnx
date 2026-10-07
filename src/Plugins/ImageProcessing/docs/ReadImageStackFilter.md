@@ -88,6 +88,8 @@ The user can crop the incoming image geometry using the Cropping Options section
 
 Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions. A Z crop moves the Z origin to the first kept slice. A postprocessed origin override replaces this shifted origin after cropping.
 
+Physical Z cropping includes the final slice when its maximum equals the upper stack bound (`origin.z + number of files × spacing.z`), without a warning. For a crop that overlaps the stack, a minimum below the origin or a maximum above the upper bound is clamped to the first or last slice with warning `-50503`. Preflight also reports warnings from the per-image read and resampling operations.
+
 ### Image Operations
 
 The user can select to flip the images about the X or Y axis during import.

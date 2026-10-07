@@ -239,6 +239,8 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     return imageReaderResult;
   }
 
+  resultOutputActions.warnings() = imageReaderResult.outputActions.warnings();
+
   const auto* createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(imageReaderResult.outputActions.value().actions);
   if(createImageGeomActionPtr == nullptr)
   {
@@ -256,6 +258,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
       const Error& zRangeError = zRangeResult.errors().front();
       return MakePreflightErrorResult(zRangeError.code, zRangeError.message);
     }
+    resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), zRangeResult.warnings().begin(), zRangeResult.warnings().end());
     const auto& zRange = zRangeResult.value();
     outputDims.back() = zRange.zMax - zRange.zMin + 1;
     outputOrigin.back() += static_cast<float32>(zRange.zMin) * outputSpacing.back();
@@ -301,6 +304,8 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     {
       return resampleImageResult;
     }
+
+    resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), resampleImageResult.outputActions.warnings().begin(), resampleImageResult.outputActions.warnings().end());
 
     createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(resampleImageResult.outputActions.value().actions);
     if(createImageGeomActionPtr == nullptr)
