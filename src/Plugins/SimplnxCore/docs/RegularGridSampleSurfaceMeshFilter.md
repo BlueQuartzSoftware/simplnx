@@ -17,6 +17,8 @@ The *Use existing geometry* parameter controls how the target **Image Geometry**
 - **Create geometry [0]**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
 - **Use existing geometry [1]**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
 
+When creating a new Image Geometry, every component of **Spacing** must be greater than zero.
+
 ## Algorithm
 
 The sampling is performed using the following scanline rasterization approach:
@@ -41,6 +43,8 @@ The **Face Labels/Part Numbers** input array specifies which **Features** (or pa
 
 - **2-component arrays**: Each face has two labels identifying the **Features** on either side. When a scanline crosses a face boundary, the algorithm toggles between the two labels. This is the standard format produced by surface meshing filters.
 - **1-component arrays**: Each face has a single part number. When a scanline crosses a face boundary, the voxel is assigned the part number of that face. This format is useful for imported meshes (e.g., STL files) where each face belongs to a single part.
+
+The **Triangle Geometry** must have a Face Data Attribute Matrix, and the **Face Labels/Part Numbers** DataArray must belong to that Attribute Matrix.
 
 A Face Label below 0 (the exterior label written by QuickSurfaceMesh and SurfaceNets) is treated as 0.
 

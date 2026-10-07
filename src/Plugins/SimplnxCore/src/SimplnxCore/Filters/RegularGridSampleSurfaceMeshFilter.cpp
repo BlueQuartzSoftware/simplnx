@@ -6,6 +6,7 @@
 #include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -18,9 +19,11 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cmath>
 #include <sstream>
 
 using namespace nx::core;
@@ -153,6 +156,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  auto pTriangleGeometryPathValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -171,8 +175,24 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   DataPath cellAttributeMatrixPath;
   ShapeType tupleDims;
 
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryPathValue);
+  const auto* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
+  if(faceAttributeMatrix == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrix))
+  {
+    return {MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
+                                                               "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
+                                                               pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
+  }
+
   if(geometryOptionIndex == GeometryOption::Create)
   {
+    if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
+    {
+      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be greater than zero on every axis when creating an Image Geometry. "
+                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a positive value.",
+                                                                 pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+    }
+
     DataStructure junk;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(junk, "junk", {0});
     srcImageGeomPtr->setDimensions({static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])});
