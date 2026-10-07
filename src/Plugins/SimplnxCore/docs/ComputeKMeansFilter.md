@@ -14,6 +14,8 @@ Each cluster is summarized by its **centroid**, which is the arithmetic mean (th
 
 **Cell Mask Array** must have 1 component.
 
+When masking is enabled, **Cell Mask Array** must have the same number of tuples as **Attribute Array to Cluster**.
+
 ## Algorithm
 
 Initial centroids are drawn uniformly, with replacement, from all selected tuples. A seed gives different initial centroids than in earlier DREAM3D-NX versions.
