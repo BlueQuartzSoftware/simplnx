@@ -206,7 +206,7 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 
 ## Example Pipelines
 
-* Pipelines/SimplnxCore/M3C_Demo.d3dpipeline
+* Pipelines/SimplnxCore/Surface_Mesh_Examples/M3C_Demo.d3dpipeline
 
 ## License & Copyright
 

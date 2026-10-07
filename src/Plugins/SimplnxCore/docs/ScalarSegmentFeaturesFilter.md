@@ -93,7 +93,7 @@ If the input data represents a **periodic** structure (i.e., features are allowe
 
 ## Example Pipelines
 
-+ (09) Image Segmentation
++ 02_Image_Segmentation (ImageProcessing)
 
 ## License & Copyright
 

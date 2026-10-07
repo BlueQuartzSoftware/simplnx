@@ -101,9 +101,9 @@ represents the 4x4 matrix:
 
 ## Example Pipelines
 
-- Pipelines/SimplnxCore/Examples/apply_transformation_basic.d3dpipeline
-- Pipelines/SimplnxCore/Examples/apply_transformation_image.d3dpipeline
-- Pipelines/SimplnxCore/Examples/apply_transformation_node.d3dpipeline
+- Pipelines/SimplnxCore/ApplyTransformation_Demo.d3dpipeline
+- Pipelines/SimplnxCore/ApplyTransformation_Image.d3dpipeline
+- Pipelines/SimplnxCore/Surface_Mesh_Examples/ApplyTransformation_Node.d3dpipeline
 
 ## License & Copyright
 

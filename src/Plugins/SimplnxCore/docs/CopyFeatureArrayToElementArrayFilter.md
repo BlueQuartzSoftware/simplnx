@@ -36,8 +36,8 @@ The output is always the same data type and component shape as the source Featur
 
 ## Example Pipelines
 
-- (02) Image Segmentation (ImageProcessing)
-- (04) Porosity Analysis (ImageProcessing)
+- 02_Image_Segmentation (ImageProcessing)
+- 04_Porosity_Analysis (ImageProcessing)
 
 ## License & Copyright
 

@@ -78,7 +78,7 @@ This filter operates on a grain-boundary surface mesh and requires the following
 
 ## Example Pipelines
 
-`(05) SmallIN100 GBCD Metric.d3dpipeline`
+`Pipelines/OrientationAnalysis/Small_IN100_Processing/(09) Small IN100 GBCD Metric.d3dpipeline`
 
 This pipeline depends on previous pipelines in the Small IN100 reconstruction pipeline series.
 

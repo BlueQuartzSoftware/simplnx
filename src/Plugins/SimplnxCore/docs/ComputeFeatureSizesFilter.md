@@ -95,7 +95,7 @@ To illustrate why this is think about an image geometry with the dimensions of `
 + (02) Small IN100 Full Reconstruction
 + InsertTransformationPhase
 + (06) SmallIN100 Synthetic
-+ (09) Image Segmentation
++ 02_Image_Segmentation (ImageProcessing)
 
 ## License & Copyright
 
