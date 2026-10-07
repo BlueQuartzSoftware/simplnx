@@ -12,6 +12,8 @@ This **Filter** applies the k means algorithm to an **Attribute Array**.  K mean
 
 Each cluster is summarized by its **centroid**, which is the arithmetic mean (the average position) of all the points assigned to that cluster.  A k means partitioning is a *Voronoi tessellation*: every point is assigned to the cluster whose centroid is closest to it, so the data space is carved into regions where each region contains all the points nearer to one centroid than to any other.  An optimal solution to the k means problem is one in which each point is associated with the cluster that has the closest mean.  This partitioning minimizes the **within-cluster variance**, that is, the sum over all clusters of the squared distances from each point to its cluster centroid; minimizing it makes the points within each cluster as tightly grouped as possible.  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
 
+**Cell Mask Array** must have 1 component.
+
 ## Algorithm
 
 ### In-Core Path
