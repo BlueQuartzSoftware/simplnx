@@ -24,6 +24,22 @@ Read every line of the algorithm, its helpers, and the filter's `preflightImpl()
 | **Wrong object** | The wrong array, variable, or path among similar names. A parameter that the code reads but does not use. A result written to the wrong output. |
 | **Discarded results** | A `Result<>` or warning that the code ignores. An error code that two different failures use. |
 | **Mode gating** | A parameter that has no effect in a mode where it must have an effect. A mode branch that no test executes. |
+| **Component shape not declared** | The algorithm reads an input DataArray with a fixed number of components (`a[2*i+1]`, `a[3*i+k]`, `getComponent(i, 2)`), but the `ArraySelectionParameter` or `MultiArraySelectionParameter` that selects it declares no `AllowedComponentShapes`, or declares a different one. The fix belongs in the parameter (`AllowedComponentShapes{{N}}`), because parameter validation then rejects other shapes (−208) before preflight runs. When N depends on another parameter or has variable dimensions, preflight must check `getComponentShape()` instead. Example: WriteStlFile's phases parameter declared `{{1}}` while the algorithm read 2 components. |
+| **Parent Attribute Matrix not checked** | An element-level input DataArray (one value per cell, vertex, edge or face) is not checked to be a child of the geometry's element Attribute Matrix. A selection parameter accepts a DataPath into **any** Attribute Matrix, so a DataArray with the wrong number of tuples is a reachable input, not corrupt data. The fix is a preflight check with `IsChildOfAttributeMatrix` against `getCellData()` (Image or Rectilinear Grid Geometry) or the Vertex, Edge, Face or Polyhedra Attribute Matrix of a node geometry. `AttributeMatrix` only accepts children whose tuple count matches its own. Use the accessors that return a pointer; the `*Ref()` accessors and `getCellDataPath()` throw when the Attribute Matrix is missing. |
+| **Feature-level bound** | A Feature Attribute Matrix has largest Feature Id + 1 tuples, because id 0 is reserved. The largest Feature Id depends on the array values, so preflight cannot check it: execute must check it, or size internal buffers from the Feature Attribute Matrix tuple count. Look for buffers sized by the largest Feature Id but read by the Feature Attribute Matrix tuple count, and the reverse. Also look for sparse or negative ids used directly as indices. |
+
+**Where each check belongs.** Structure (component shape, DataType) goes in the parameter: parameter validation runs before the filter's preflight, so a repeated check in preflight or execute is dead code, and an existing one is removed. Relationships between inputs (tuple count against a sibling DataArray, parent Attribute Matrix) go in preflight. Only value-dependent bounds go in execute.
+
+### SIMPLNX vocabulary for findings
+
+State every finding in SIMPLNX terms, so that the reader can see how the input is reachable.
+
+- **Attribute Matrix kinds:** *element* Attribute Matrices (*Vertex Data*, *Edge Data*, *Face Data*, *Cell Data*), whose tuple count equals the number of those elements; *Feature* Attribute Matrices (for example *Cell Feature Data*), with largest Feature Id + 1 tuples; *Ensemble* Attribute Matrices (for example *Cell Ensemble Data*).
+- **Data objects:** DataArray, StringArray, NeighborList, DataPath. Say "number of tuples", "tuple shape", "number of components", "component shape" and DataType.
+- **Geometries:** Image, Rectilinear Grid, Vertex, Edge, Triangle, Quad, Tetrahedral and Hexahedral Geometry. Say "number of cells" or "number of faces".
+- **Parameters:** name a parameter by its display name in bold, for example **Create Bounding Box Geometries**, and say whether the failure is at parameter validation, preflight or execute.
+
+Write "The Feature Ids DataArray is not checked to be a child of the Image Geometry's Cell Data Attribute Matrix, so its number of tuples can differ from the number of cells". Do not write "Feature Ids may not have one value per cell".
 
 For each suspected defect, record `file:line`, the input that triggers it, and the expected and actual results. A suspicion is not a finding. Confirm it with a failing test or a hand calculation, or discard it. Every confirmed defect becomes a `<FilterName>-D<N>` deviation entry and a regression test. A defect is a deviation even when 6.5.171 has the same defect.
 
