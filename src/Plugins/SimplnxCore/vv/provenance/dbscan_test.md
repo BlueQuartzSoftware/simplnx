@@ -103,7 +103,7 @@ This archive has **not** been regenerated. Regeneration is not needed because th
 Script: `dbscan_vv/phase9_ab_test.py`
 Results: `dbscan_vv/phase9_comparison_results.json`
 
-DREAM3D 6.5.172 (traditional DBSCAN, via `DREAM3DReview` plugin UUID `c2d4f1e8`) was run against the same 6 sklearn datasets. Three-way comparison (legacy 6.5.172 vs. sklearn 1.7.1 vs. SIMPLNX):
+The historical local legacy proof build (traditional DBSCAN, via `DREAM3DReview` plugin UUID `c2d4f1e8`) was run against the same 6 sklearn datasets. Three-way comparison (the local legacy proof build vs. sklearn 1.7.1 vs. SIMPLNX):
 
 | Dataset | Legacy n_clusters | sklearn n_clusters | SIMPLNX n_clusters | Match |
 |---|---|---|---|---|

@@ -25,7 +25,7 @@
 
 ## Summary
 
-`FillBadDataFilter` fills voxels with `FeatureId == 0` ("bad data") by assigning them to the most-common positive-feature neighbor. Connected regions below `minAllowedDefectSize` are filled; larger regions are preserved (optionally relabeled as a new phase). SIMPLNX uses a four-phase CCL+Union-Find architecture to support OOC datasets — a structural departure from legacy DREAM3D 6.5.171. Output equivalence is confirmed by two independent comparisons: the `FillBadData_SmallIN100` unit test (passes against `6_5_exemplar.dream3d`) and a manual A/B run on a custom dataset across three binaries (6.5.171, 6.5.172, NX). One bug surfaced during V&V (B1 — dead error-return path for `minAllowedDefectSize < 1`) has been fixed and is now covered by a dedicated test.
+`FillBadDataFilter` fills voxels with `FeatureId == 0` ("bad data") by assigning them to the most-common positive-feature neighbor. Connected regions below `minAllowedDefectSize` are filled; larger regions are preserved (optionally relabeled as a new phase). SIMPLNX uses a four-phase CCL+Union-Find architecture to support OOC datasets — a structural departure from legacy DREAM3D 6.5.171. Output equivalence is supported by the `FillBadData_SmallIN100` unit test (passes against `6_5_exemplar.dream3d`). A previously cited manual A/B run on a custom dataset across DREAM3D 6.5.171, a locally patched legacy build, and DREAM3D-NX is withdrawn because its working files are unrecoverable (see deviations). One bug surfaced during V&V (B1 — dead error-return path for `minAllowedDefectSize < 1`) has been fixed and is now covered by a dedicated test.
 
 ## Algorithm Relationship
 

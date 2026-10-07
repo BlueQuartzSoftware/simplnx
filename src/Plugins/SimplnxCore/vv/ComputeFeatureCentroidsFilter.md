@@ -152,7 +152,7 @@ WriteAbaqusHexahedron tests — not an orphan).
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison by source inspection of 6.5.171/6.5.172 `FindFeatureCentroids.cpp` vs SIMPLNX, backed by the Class 1
+Comparison by source inspection of `FindFeatureCentroids.cpp` in DREAM3D 6.5.171 and a locally patched legacy build vs SIMPLNX, backed by the Class 1
 analytical fixtures that verify SIMPLNX independently. Full entries in
 `vv/deviations/ComputeFeatureCentroidsFilter.md`:
 

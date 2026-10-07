@@ -72,7 +72,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
   // Class 1 (Analytical) — exact-value checks for F0..F6.
   // Closed-form expected values derived in
   // src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md and verified
-  // bit-identical against the DREAM3D 6.5.172 custom backport
+  // bit-identical against a locally patched legacy build containing the custom backport
   // (vv/comparisons/ComputeAvgCAxesFilter/results/three_way_comparison.txt).
   // ---------------------------------------------------------------------------
   constexpr float32 k_Tol = 1.0e-5f;

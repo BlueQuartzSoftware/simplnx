@@ -8,7 +8,7 @@ Entries use stable IDs (`FillBadDataFilter-D<N>` for legacy deviations, `FillBad
 
 The legacy comparison is the **SmallIN100 in-unit-test check**: `FillBadData_SmallIN100` compares SIMPLNX output against `6_5_exemplar.dream3d` (generated from a DREAM3D 6.5.x pipeline) with `MinAllowedDefectSize=1000`, `StoreAsNewPhase=false`. It passes — no differences. Correctness of the individual code paths is pinned independently by the Class 1 analytical fixtures (Tests 01–07, 11, 13).
 
-> **Note — retired Test 08 A/B.** An earlier revision of this file cited a separate 7×7×3 three-way binary A/B run (DREAM3D 6.5.171 / 6.5.172 / DREAM3D-NX, `test_08_input.dream3d` + `fill_bad_data_vv/comparison_report.md`). Those working files were **not preserved and are unrecoverable**, so that comparison is **withdrawn** rather than left as an unverifiable citation. The SmallIN100 comparison above plus the analytical oracle fixtures are the standing evidence; if a second independent binary A/B is wanted for the record, it must be regenerated from scratch.
+> **Note — retired Test 08 A/B.** An earlier revision of this file cited a separate 7×7×3 three-way binary A/B run (DREAM3D 6.5.171 / a locally patched legacy build / DREAM3D-NX, `test_08_input.dream3d` + `fill_bad_data_vv/comparison_report.md`). Those working files were **not preserved and are unrecoverable**, so that comparison is **withdrawn** rather than left as an unverifiable citation. The SmallIN100 comparison above plus the analytical oracle fixtures are the standing evidence; if a second independent binary A/B is wanted for the record, it must be regenerated from scratch.
 
 ## Comparison method
 

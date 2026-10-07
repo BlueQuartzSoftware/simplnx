@@ -21,13 +21,13 @@ Entries are referenced by stable ID (`ComputeFaceIPFColoringFilter-D<N>`) from t
 - *Mixed-phase faces:* `ops[m_CrystalStructures[phase1]]` applies Phase 1's symmetry operators to Phase 2's orientation — the output stays inside the IPF triangle so it looks valid but is materially wrong.
 - *`feature1`-invalid boundary faces:* `phase1 = 0`, so the guard reads `m_CrystalStructures[0]` (the `UnknownCrystalStructure` sentinel, 999), which is `≥ LaueGroupEnd`; the guard fails and the second color is never written, leaving it black. This affects **even single-phase datasets** — which is why the legacy Small IN100 GBCD exemplar changed when the fix was applied.
 
-The fix (`phase1`→`phase2`) is confirmed against the Class 1 analytical oracle and matches the legacy 6.5.172 backport `1c96b3b8e`.
+The fix (`phase1`→`phase2`) is confirmed against the Class 1 analytical oracle and matches the backport in a locally patched legacy build `1c96b3b8e`.
 
 **Empirical evidence — legacy binary A/B (hand-built mixed cubic/hex mesh).** On a legacy-native
 4-face fixture (authored with the `legacy_dream3d` writer; generators + pipelines archived on OneDrive under `vv_work/face_ipf/`), DREAM3D
 6.5.171 reproduces the hand-derived *buggy* oracle exactly: the mixed-phase face's Phase-2 color
 is cubic red `(255,0,0)` (Phase-1's operator on a hex feature) and the `feature1`-invalid boundary
-face's Phase-2 color is black `(0,0,0)`. DREAM3D 6.5.172 and SIMPLNX both apply the hex operator on
+face's Phase-2 color is black `(0,0,0)`. A locally patched legacy build and SIMPLNX both apply the hex operator on
 those two faces (the fix). The two faces are exactly the ones predicted; cubic-side colors and the
 cubic|cubic control face are identical across all three.
 
@@ -42,7 +42,7 @@ analytical oracle, so this real-data figure is corroborating.
 
 **Affected users:** (a) Anyone coloring surface meshes of **multi-phase** microstructures where adjacent phases use different Laue groups — alpha/beta titanium, dual-phase steels, IN625 with inclusions. (b) **All** users (including single-phase) on exterior/boundary faces where the mesh ordered the exterior side as `feature1`; those faces' second color was silently black in 6.5.171. Users who only inspect the first color, or whose meshes order the real feature as `feature1`, are unaffected.
 
-**Recommendation:** **Trust SIMPLNX.** The 6.5.171 output was mathematically incorrect on the Phase-2 side; SIMPLNX applies each phase's own symmetry operators to its own orientation. DREAM3D 6.5.172 contains the same fix (`1c96b3b8e`); SIMPLNX and 6.5.172 agree on *which* operator to apply (the residual hex hue difference between them is a separate library deviation, `-D2` below).
+**Recommendation:** **Trust SIMPLNX.** The 6.5.171 output was mathematically incorrect on the Phase-2 side; SIMPLNX applies each phase's own symmetry operators to its own orientation. A locally patched legacy build contains the same fix (`1c96b3b8e`); SIMPLNX and that patched build agree on *which* operator to apply (the residual hex hue difference between them is a separate library deviation, `-D2` below).
 
 ---
 
@@ -54,9 +54,9 @@ analytical oracle, so this real-data figure is corroborating.
 | **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
 | **Status** | active |
 
-**Symptom:** For a **hexagonal** feature, the IPF color of a basal-plane reference direction differs between SIMPLNX and legacy DREAM3D (both 6.5.171 and 6.5.172): SIMPLNX produces **green `(0,255,0)`** where legacy produces **blue `(0,0,255)`** (and vice-versa for the other basal corner). Cubic coloring is identical. This is unrelated to the `-D1` wrong-phase bug — it shows up on every hex IPF color, in this filter and in the sibling cell-level `ComputeIPFColors`.
+**Symptom:** For a **hexagonal** feature, the IPF color of a basal-plane reference direction differs between SIMPLNX and legacy DREAM3D (both 6.5.171 and a locally patched legacy build): SIMPLNX produces **green `(0,255,0)`** where legacy produces **blue `(0,0,255)`** (and vice-versa for the other basal corner). Cubic coloring is identical. This is unrelated to the `-D1` wrong-phase bug — it shows up on every hex IPF color, in this filter and in the sibling cell-level `ComputeIPFColors`.
 
-**Root cause:** **Library.** SIMPLNX links EbsdLib 3.x; legacy DREAM3D links an older EbsdLib. The hexagonal Laue ops' assignment of the two basal standard-triangle corners (`[2-1-10]` vs `[10-10]`) to green/blue differs between those EbsdLib generations (equivalently, the cartesian a-axis convention / fundamental-sector reduction differs). Both assignments keep the direction in-gamut and give red-channel 0 (a basal direction is never the red c-axis corner); only the green↔blue hue assignment flips. Surfaced during the legacy A/B on the hand-built cubic/hex fixture (`vv_work/face_ipf/`): on the mixed-phase face, 6.5.171 = `(255,0,0)` (wrong phase), 6.5.172 = `(0,0,255)` (hex, legacy hue), SIMPLNX = `(0,255,0)` (hex, EbsdLib 3.x hue). Confirmed identical (`(0,255,0)`) under **both EbsdLib 3.0.0 and EbsdLib 3.1.0** — the Class 1 oracle test passes unchanged on a from-source 3.1.0 build (`NX-Com-Qt69-Vtk95-Rel-EbsdLib`).
+**Root cause:** **Library.** SIMPLNX links EbsdLib 3.x; legacy DREAM3D links an older EbsdLib. The hexagonal Laue ops' assignment of the two basal standard-triangle corners (`[2-1-10]` vs `[10-10]`) to green/blue differs between those EbsdLib generations (equivalently, the cartesian a-axis convention / fundamental-sector reduction differs). Both assignments keep the direction in-gamut and give red-channel 0 (a basal direction is never the red c-axis corner); only the green↔blue hue assignment flips. Surfaced during the legacy A/B on the hand-built cubic/hex fixture (`vv_work/face_ipf/`): on the mixed-phase face, 6.5.171 = `(255,0,0)` (wrong phase), the locally patched legacy build = `(0,0,255)` (hex, legacy hue), SIMPLNX = `(0,255,0)` (hex, EbsdLib 3.x hue). Confirmed identical (`(0,255,0)`) under **both EbsdLib 3.0.0 and EbsdLib 3.1.0** — the Class 1 oracle test passes unchanged on a from-source 3.1.0 build (`NX-Com-Qt69-Vtk95-Rel-EbsdLib`).
 
 **Affected users:** Anyone comparing **hexagonal**-phase IPF colors between DREAM3D-NX and any legacy DREAM3D — face IPF colors and cell IPF colors alike. Cubic-only datasets are unaffected.
 

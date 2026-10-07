@@ -48,7 +48,7 @@ Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `Find
 
 **Recommendation:** Trust SIMPLNX. The legacy `findSizesUnstructured` accumulated unnecessary floating-point error that grew with feature size and grid non-uniformity. The SIMPLNX result is strictly more accurate. Users migrating pipelines should expect small positive or negative shifts in per-feature volumes. The `EquivalentDiameters` array is affected both by this volume shift **and** by a separate ESD-evaluation deviation — see `ComputeFeatureSizes-D2`.
 
-**A/B verification (2026-06-27):** A direct comparison was run, not just source inspection. The exact RectGrid unit-test fixture was authored as a shared legacy `.dream3d` and run through stock DREAM3D 6.5.171, DREAM3D-NX, and a 6.5.172 proof-patch build. Stock 6.5.171 `Volumes` differed from SIMPLNX (≈1 float32 ULP on this small fixture; grows with N). Applying **only** the float64 + Kahan summation change to legacy `findSizesUnstructured` made `Volumes` **bit-identical** to SIMPLNX, confirming summation precision as the sole root cause of the `Volumes` deviation.
+**A/B verification (2026-06-27):** A direct comparison was run, not just source inspection. The exact RectGrid unit-test fixture was authored as a shared legacy `.dream3d` and run through stock DREAM3D 6.5.171, DREAM3D-NX, and a locally patched legacy build. Stock 6.5.171 `Volumes` differed from SIMPLNX (≈1 float32 ULP on this small fixture; grows with N). Applying **only** the float64 + Kahan summation change to legacy `findSizesUnstructured` made `Volumes` **bit-identical** to SIMPLNX, confirming summation precision as the sole root cause of the `Volumes` deviation.
 
 ---
 

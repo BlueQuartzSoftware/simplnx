@@ -15,6 +15,6 @@ A/B run confirmed **bit-identical output** between SIMPLNX and DREAM3D 6.5.171 o
 |-----------|------------|--------|
 | LessThan (index=0), threshold=0.5, loop=true   | 6.5.171 vs NX    | Bit-identical (125/125 voxels, ConfidenceIndex + Marker) |
 | GreaterThan (index=1), threshold=0.5, loop=true | 6.5.171 vs NX   | Bit-identical (125/125 voxels, ConfidenceIndex + Marker) |
-| LessThan, threshold=0.5, loop=true              | 6.5.171 vs 6.5.172 | Bit-identical (125/125 voxels) |
+| LessThan, threshold=0.5, loop=true              | Locally patched legacy build vs 6.5.171 | Bit-identical (125/125 voxels) |
 
 The NX implementation is a direct port. The refactor changed internal mechanics only — output is invariant to those changes for float32 arrays.
