@@ -16,6 +16,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -124,6 +125,18 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   if(clusterArray == nullptr)
   {
     return MakePreflightErrorResult(-7585, "Array to Cluster MUST be a valid DataPath.");
+  }
+
+  if(filterArgs.value<bool>(k_UseMask_Key))
+  {
+    const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+    if(!CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, maskPath}))
+    {
+      const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskPath);
+      return MakePreflightErrorResult(
+          -7588, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Cell Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
+                             pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+    }
   }
 
   {
