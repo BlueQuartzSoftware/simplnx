@@ -71,8 +71,9 @@ Parameters SurfaceNetsFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
-  params.insert(
-      std::make_unique<Float32Parameter>(k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center", "The maximum allowable distance that a node can move from the voxel center", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(
+      k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center",
+      "The maximum distance in voxel units that a node may move along each axis from its originating voxel center before conversion to physical coordinates using the Image Geometry spacing.", 1.0F));
   params.insert(std::make_unique<Float32Parameter>(k_RelaxationFactor_Key, "Relaxation Factor", "The factor used to determine how far a node can move in each smoothing iteration", 0.5F));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
