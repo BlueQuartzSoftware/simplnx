@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -119,7 +120,7 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
   }
 
   const DataPath cellDataPath = cellAM->getDataPaths().at(0);
-  if(pFeatureIdsArrayPathValue.getParent() != cellDataPath)
+  if(!IsChildOfAttributeMatrix(dataStructure, pFeatureIdsArrayPathValue, *cellAM))
   {
     return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of the Image Geometry '{}'.",
                                                        pFeatureIdsArrayPathValue.toString(), cellDataPath.toString(), pImageGeometryPath.toString()));

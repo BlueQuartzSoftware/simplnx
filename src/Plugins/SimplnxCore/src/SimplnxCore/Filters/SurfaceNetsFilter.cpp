@@ -18,6 +18,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 using namespace nx::core;
@@ -158,14 +159,14 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
                                     fmt::format("Image Geometry '{}' has no Cell Data Attribute Matrix. Cell Feature Ids must be in its Cell Data Attribute Matrix.", pGridGeomDataPath.toString()));
   }
   const DataPath cellDataPath = cellAM->getDataPaths().at(0);
-  if(pFeatureIdsArrayPathValue.getParent() != cellDataPath)
+  if(!IsChildOfAttributeMatrix(dataStructure, pFeatureIdsArrayPathValue, *cellAM))
   {
     return MakePreflightErrorResult(-56350, fmt::format("Cell Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", pFeatureIdsArrayPathValue.toString(),
                                                         cellDataPath.toString(), pGridGeomDataPath.toString()));
   }
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
-    if(selectedDataPath.getParent() != cellDataPath)
+    if(!IsChildOfAttributeMatrix(dataStructure, selectedDataPath, *cellAM))
     {
       return MakePreflightErrorResult(-56351, fmt::format("Selected cell DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", selectedDataPath.toString(),
                                                           cellDataPath.toString(), pGridGeomDataPath.toString()));

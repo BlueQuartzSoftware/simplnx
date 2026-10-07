@@ -48,6 +48,13 @@
 namespace nx::core
 {
 /**
+ * @brief Compares the id of arrayPath's parent with the Attribute Matrix id.
+ * Supports Attribute Matrices with more than one parent path. Does not check whether the leaf object exists.
+ * @return false when arrayPath has fewer than two components, its parent does not exist, or the parent id does not match.
+ */
+SIMPLNX_EXPORT bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix);
+
+/**
  * @brief Replaces tuples selected by a mask.
  * @tparam T Input array value type.
  * @tparam ConditionalType Mask array value type.
