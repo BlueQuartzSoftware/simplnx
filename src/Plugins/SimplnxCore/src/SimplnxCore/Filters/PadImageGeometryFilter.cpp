@@ -19,7 +19,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
@@ -271,7 +270,6 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
       }
     }
   }
-  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   if(pPerformInPlace)
   {
