@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -10,6 +11,7 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <vector>
 
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
@@ -169,6 +171,115 @@ public:
   }
 };
 
+namespace
+{
+Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& structures, Float32Array& misorientations,
+                                              const std::atomic_bool& shouldCancel)
+{
+  const usize numTriangles = faceLabels.getNumberOfTuples();
+  if(shouldCancel || numTriangles == 0)
+  {
+    return {};
+  }
+  Result<> result;
+  // Cache feature and ensemble lookup tables once; stream the per-face arrays.
+  std::vector<int32> featurePhases(phases.getSize());
+  result = MergeResults(std::move(result), phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(featurePhases.data(), featurePhases.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-98420, "Error reading feature phases for face misorientation."));
+  }
+  std::vector<float32> featureAvgQuats(quats.getSize());
+  result = MergeResults(std::move(result), quats.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(featureAvgQuats.data(), featureAvgQuats.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-98421, "Error reading feature average quaternions for face misorientation."));
+  }
+  std::vector<uint32> crystalStructures(structures.getSize());
+  result = MergeResults(std::move(result), structures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-98422, "Error reading crystal structures for face misorientation."));
+  }
+
+  const LaueOpsContainer orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  // Two labels and one scalar result per triangle use at most 3 MiB.
+  constexpr usize k_BlockTriangles = 262144;
+  const usize bufferTriangles = std::min(k_BlockTriangles, numTriangles);
+  std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
+  std::vector<float32> misorientationsBuffer(bufferTriangles);
+  for(usize start = 0; start < numTriangles;)
+  {
+    if(shouldCancel)
+    {
+      return result;
+    }
+    const usize count = std::min(k_BlockTriangles, numTriangles - start);
+    result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-98423, fmt::format("Error reading face labels for face misorientation at triangle {} ({} triangles).", start, count)));
+    }
+
+    // Keep the in-core quaternion construction, Laue operation and float conversion.
+    int32 frontFeatureIdx = 0;
+    int32 backFeatureIdx = 0;
+    int32 frontPhaseIdx = 0;
+    int32 backPhaseIdx = 0;
+
+    for(usize triangleIdx = 0; triangleIdx < count; triangleIdx++)
+    {
+      frontFeatureIdx = faceLabelsBuffer[2 * triangleIdx];
+      backFeatureIdx = faceLabelsBuffer[2 * triangleIdx + 1];
+      if(frontFeatureIdx > 0)
+      {
+        frontPhaseIdx = featurePhases[frontFeatureIdx];
+      }
+      else
+      {
+        frontPhaseIdx = 0;
+      }
+      if(backFeatureIdx > 0)
+      {
+        backPhaseIdx = featurePhases[backFeatureIdx];
+      }
+      else
+      {
+        backPhaseIdx = 0;
+      }
+      if(frontPhaseIdx > 0 && frontPhaseIdx == backPhaseIdx)
+      {
+        const uint32 currentLaueIndex = crystalStructures[frontPhaseIdx];
+        if(currentLaueIndex < orientationOps.size())
+        {
+          float32 quat0 = featureAvgQuats[frontFeatureIdx * 4];
+          float32 quat1 = featureAvgQuats[frontFeatureIdx * 4 + 1];
+          float32 quat2 = featureAvgQuats[frontFeatureIdx * 4 + 2];
+          float32 quat3 = featureAvgQuats[frontFeatureIdx * 4 + 3];
+          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
+          quat0 = featureAvgQuats[backFeatureIdx * 4];
+          quat1 = featureAvgQuats[backFeatureIdx * 4 + 1];
+          quat2 = featureAvgQuats[backFeatureIdx * 4 + 2];
+          quat3 = featureAvgQuats[backFeatureIdx * 4 + 3];
+          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+          ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
+          misorientationsBuffer[triangleIdx] = static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD);
+          continue;
+        }
+      }
+      misorientationsBuffer[triangleIdx] = static_cast<float>(std::nan("0"));
+    }
+    result = MergeResults(std::move(result), misorientations.getDataStoreRef().copyFromBuffer(start, nonstd::span<const float32>(misorientationsBuffer.data(), count)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-98424, fmt::format("Error writing face misorientations at triangle {} ({} triangles).", start, count)));
+    }
+    start += count;
+  }
+  return result;
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 ComputeFeatureFaceMisorientation::ComputeFeatureFaceMisorientation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                    ComputeFeatureFaceMisorientationInputValues* inputValues)
@@ -195,6 +306,14 @@ Result<> ComputeFeatureFaceMisorientation::operator()()
   if(Result<> validationResult = ValidateParticipatingFeaturePhases(faceLabelsArrayRef, featurePhasesArrayRef, crystalStructuresArrayRef, *m_InputValues); validationResult.invalid())
   {
     return validationResult;
+  }
+
+  const bool usesOutOfCoreStore = AnyOutOfCore({&faceLabelsArrayRef, &avgQuatsArrayRef, &featurePhasesArrayRef, &crystalStructuresArrayRef, &misorientationsArrayRef});
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    return ComputeFeatureMisorientationInBlocks(faceLabelsArrayRef, featurePhasesArrayRef, avgQuatsArrayRef, crystalStructuresArrayRef, misorientationsArrayRef, m_ShouldCancel);
   }
 
   ParallelDataAlgorithm parallelTask;
