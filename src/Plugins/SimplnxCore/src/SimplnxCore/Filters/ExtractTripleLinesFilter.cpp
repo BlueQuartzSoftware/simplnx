@@ -159,8 +159,6 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
     }
   }
 
-  const std::string dataStoreFormat = faceLabels.getDataFormat();
-
   // Edge and vertex counts depend on the mesh scan. Create an empty geometry and resize it during execution.
   {
     auto createGeometryAction =
@@ -169,13 +167,13 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
   }
   {
     auto createNumFeaturesAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{0}, std::vector<usize>{1},
-                                                                       pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(pNumFeaturesName), dataStoreFormat);
+                                                                       pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(pNumFeaturesName));
     resultOutputActions.value().appendAction(std::move(createNumFeaturesAction));
   }
   if(copyNodeTypes)
   {
     auto createNodeTypesAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{0}, std::vector<usize>{1},
-                                                                     pTripleLineGeometryPath.createChildPath(pVertexDataName).createChildPath(pNodeTypesName), dataStoreFormat);
+                                                                     pTripleLineGeometryPath.createChildPath(pVertexDataName).createChildPath(pNodeTypesName));
     resultOutputActions.value().appendAction(std::move(createNodeTypesAction));
   }
 

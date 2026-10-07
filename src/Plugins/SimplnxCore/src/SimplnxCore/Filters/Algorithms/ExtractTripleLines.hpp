@@ -16,6 +16,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ExtractTripleLinesInputValues
 {
+  static constexpr usize k_DefaultVertexBatchSize = 8 * 1024 * 1024;
+
+  usize VertexBatchSize = k_DefaultVertexBatchSize;
   DataPath TriangleGeometryPath;
   DataPath FaceLabelsPath;
   DataPath TripleLineGeometryPath;
@@ -33,6 +36,8 @@ struct SIMPLNXCORE_EXPORT ExtractTripleLinesInputValues
  * Edge selection counts unique Feature Ids, not triangles: at a non-manifold junction several
  * sheets can share an edge while bordering only two Features.
  * NumFeatures saturates at 4, which means four or more unique Features.
+ * Vertex classification uses one candidate bit per mesh vertex and three labels per vertex
+ * in one bounded batch. Each batch scans all triangles. Edge sets store at most four labels.
  * Output vertices ascend by source index. Edges ascend by (lower, higher) source vertex index.
  */
 class SIMPLNXCORE_EXPORT ExtractTripleLines
@@ -57,7 +62,8 @@ public:
 
   /**
    * @brief Selects edges, compacts vertices, and resizes both output attribute matrices.
-   * @return Errors for excessive source vertices, unpaired Node Types stores, or resize failures.
+   * @return A warning when no edges qualify; errors for zero batch size, excessive source vertices,
+   * unpaired Node Types stores, or resize failures.
    * Cancellation returns a valid result and can leave resized, partially written output.
    */
   Result<> operator()();

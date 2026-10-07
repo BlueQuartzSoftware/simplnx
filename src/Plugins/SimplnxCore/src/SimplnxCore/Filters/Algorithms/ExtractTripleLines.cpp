@@ -24,36 +24,51 @@ using namespace nx::core;
 
 namespace
 {
-constexpr uint8 k_MaxFeatures = 4;
 // Each half of an edge key holds one 32-bit source vertex index.
 constexpr uint64 k_MaxVertexCount = std::numeric_limits<uint32>::max();
 constexpr uint64 k_VertexIndexMask = k_MaxVertexCount;
+constexpr int32 k_EmptyLabel = std::numeric_limits<int32>::min();
 
 /**
- * @brief Stores at most four unique Feature Ids without per-Feature allocations.
+ * @brief Stores a bounded number of unique normalized Feature Ids without per-Feature allocations.
  */
+template <usize Capacity>
 struct FeatureSet
 {
-  std::array<int32, k_MaxFeatures> Features{};
-  uint8 Count = 0;
+  std::array<int32, Capacity> Features;
+
+  FeatureSet()
+  {
+    Features.fill(k_EmptyLabel);
+  }
 
   void insert(int32 featureId)
   {
-    for(uint8 featureIdx = 0; featureIdx < Count; featureIdx++)
+    for(auto& storedLabel : Features)
     {
-      if(Features[featureIdx] == featureId)
+      if(storedLabel == featureId)
       {
         return;
       }
-    }
-    // Four or more Features have the same output classification.
-    if(Count < k_MaxFeatures)
-    {
-      Features[Count] = featureId;
-      Count++;
+      if(storedLabel == k_EmptyLabel)
+      {
+        storedLabel = featureId;
+        return;
+      }
     }
   }
+
+  uint8 count() const
+  {
+    return static_cast<uint8>(std::count_if(Features.begin(), Features.end(), [](int32 label) { return label != k_EmptyLabel; }));
+  }
 };
+static_assert(sizeof(FeatureSet<3>) == 12);
+
+constexpr int32 NormalizeLabel(int32 label)
+{
+  return label < 0 ? -1 : label;
+}
 
 constexpr uint64 MakeEdgeKey(uint64 vertex0, uint64 vertex1)
 {
@@ -80,6 +95,10 @@ Result<> ExtractTripleLines::operator()()
     return MakeErrorResult(-57401, fmt::format("Triple line Node Types copy requires both source and destination stores, or neither. Source supplied: {}; destination supplied: {}.",
                                                m_InputValues->SourceNodeTypes != nullptr, m_InputValues->DestinationNodeTypes != nullptr));
   }
+  if(m_InputValues->VertexBatchSize == 0)
+  {
+    return MakeErrorResult(-57404, "Triple line vertex batch size must be greater than zero. Set VertexBatchSize to a positive vertex count.");
+  }
   if(m_ShouldCancel)
   {
     return {};
@@ -98,30 +117,51 @@ Result<> ExtractTripleLines::operator()()
   const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
   const usize numTriangles = triangleGeom.getNumberOfFaces();
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  std::unordered_map<uint64, FeatureSet> edgeMap;
+  std::unordered_map<uint64, FeatureSet<4>> edgeMap;
   {
-    // Vertex sets reject ordinary boundary edges before they require hash nodes.
-    std::vector<FeatureSet> vertexFeatures(numVertices);
-    progressThrottle.reset(numTriangles, "Triple Lines: Classifying vertices");
-    for(usize triangleIdx = 0; triangleIdx < numTriangles; triangleIdx++)
+    // Vertex candidates reject ordinary boundary edges before they require hash nodes.
+    std::vector<bool> candidateVertices(numVertices, false);
+    const usize batchSize = m_InputValues->VertexBatchSize;
+    const usize numBatches = numVertices / batchSize + (numVertices % batchSize != 0 ? 1 : 0);
+    for(usize begin = 0, batchIndex = 0; begin < numVertices; batchIndex++)
     {
-      if(m_ShouldCancel)
+      const usize end = begin + std::min(batchSize, numVertices - begin);
+      std::vector<FeatureSet<3>> vertexFeatures(end - begin);
+      progressThrottle.reset(numTriangles, fmt::format("Triple Lines: Classifying vertices (batch {}/{})", batchIndex + 1, numBatches));
+      for(usize triangleIdx = 0; triangleIdx < numTriangles; triangleIdx++)
       {
-        return {};
-      }
-      const std::array<int32, 2> labels = {faceLabelsRef[triangleIdx * 2], faceLabelsRef[triangleIdx * 2 + 1]};
-      for(usize cornerIdx = 0; cornerIdx < 3; cornerIdx++)
-      {
-        auto& featureSet = vertexFeatures[facesRef[triangleIdx * 3 + cornerIdx]];
-        for(const int32 label : labels)
+        if(m_ShouldCancel)
         {
-          if(m_InputValues->IncludeExteriorLines || label >= 0)
+          return {};
+        }
+        const std::array<int32, 2> labels = {NormalizeLabel(faceLabelsRef[triangleIdx * 2]), NormalizeLabel(faceLabelsRef[triangleIdx * 2 + 1])};
+        for(usize cornerIdx = 0; cornerIdx < 3; cornerIdx++)
+        {
+          const uint64 vertexIndex = facesRef[triangleIdx * 3 + cornerIdx];
+          if(vertexIndex < begin || vertexIndex >= end)
           {
-            featureSet.insert(label);
+            continue;
+          }
+          auto& featureSet = vertexFeatures[vertexIndex - begin];
+          for(const int32 label : labels)
+          {
+            if(m_InputValues->IncludeExteriorLines || label >= 0)
+            {
+              featureSet.insert(label);
+            }
           }
         }
+        progressThrottle.updatePercent(triangleIdx + 1);
       }
-      progressThrottle.updatePercent(triangleIdx + 1);
+      for(usize vertexIndex = begin; vertexIndex < end; vertexIndex++)
+      {
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+        candidateVertices[vertexIndex] = vertexFeatures[vertexIndex - begin].count() == 3;
+      }
+      begin = end;
     }
 
     progressThrottle.reset(numTriangles, "Triple Lines: Classifying candidate edges");
@@ -131,15 +171,15 @@ Result<> ExtractTripleLines::operator()()
       {
         return {};
       }
-      const std::array<int32, 2> labels = {faceLabelsRef[triangleIdx * 2], faceLabelsRef[triangleIdx * 2 + 1]};
+      const std::array<int32, 2> labels = {NormalizeLabel(faceLabelsRef[triangleIdx * 2]), NormalizeLabel(faceLabelsRef[triangleIdx * 2 + 1])};
       const std::array<uint64, 3> vertices = {facesRef[triangleIdx * 3], facesRef[triangleIdx * 3 + 1], facesRef[triangleIdx * 3 + 2]};
       for(usize edgeIdx = 0; edgeIdx < 3; edgeIdx++)
       {
         const uint64 vertex0 = vertices[edgeIdx];
         const uint64 vertex1 = vertices[(edgeIdx + 1) % 3];
         // Every triangle containing an edge contains both endpoints. The edge label set is a subset of each endpoint's set.
-        // Thus edge count >= 3 implies both endpoint counts >= 3, including when the sets saturate at 4.
-        if(vertexFeatures[vertex0].Count < 3 || vertexFeatures[vertex1].Count < 3)
+        // Thus edge count >= 3 implies both endpoint counts >= 3, even though the batched vertex sets saturate at 3.
+        if(!candidateVertices[vertex0] || !candidateVertices[vertex1])
         {
           continue;
         }
@@ -165,9 +205,9 @@ Result<> ExtractTripleLines::operator()()
     {
       return {};
     }
-    if(featureSet.Count >= 3)
+    if(featureSet.count() >= 3)
     {
-      keptEdges.emplace_back(edgeKey, featureSet.Count);
+      keptEdges.emplace_back(edgeKey, featureSet.count());
     }
     progressThrottle.updatePercent(++processedEdges);
   }
@@ -251,6 +291,11 @@ Result<> ExtractTripleLines::operator()()
     }
     numFeaturesRef[edgeIdx] = static_cast<int8>(count);
     progressThrottle.updatePercent(edgeIdx + 1);
+  }
+  if(!m_ShouldCancel && numTripleLineEdges == 0)
+  {
+    return MakeWarningVoidResult(-57405, "No edge borders three or more Features with the selected exterior option. The Triangle Geometry must share vertices between triangles. "
+                                         "A mesh with duplicated vertices, such as an imported STL, does not share edges. Merge coincident vertices before extracting triple lines.");
   }
   return {};
 }
