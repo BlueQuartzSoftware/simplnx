@@ -5,7 +5,6 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp"
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
@@ -13,21 +12,16 @@
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "simplnx/DataStructure/Observers/AbstractDataStructureObserver.hpp"
-#include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 
 #include <fmt/core.h>
 
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 
 namespace
 {
-const std::string k_Delimiter = "|--";
-
 /**
  * @brief Returns the lazy process-wide storage-format resolver.
  * @return Mutable reference to the default resolver pointer.
@@ -41,7 +35,6 @@ std::shared_ptr<const nx::core::IDataStoreFormatResolver>& DefaultFormatResolver
   return s_Default;
 }
 } // namespace
-
 namespace nx::core
 {
 DataStructure::DataStructure()
@@ -896,83 +889,6 @@ void DataStructure::resetIds(DataObject::IdType startingId)
     }
   }
   m_RootGroup.updateIds(updatedIdsMap);
-}
-
-void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
-{
-  outputStream << "digraph DataGraph {\n"
-               << "\tlabelloc =\"t\"\n"
-               << "\trankdir=LR;\n"
-               << "\tlabel=\"DataStructure Hierarchy\"\n"
-               << "\tlabelloc=\"t\"\n"
-               << "\tfontcolor=\"#FFFFFA\"\n"
-               << "\tfontsize=12\n"
-               << "\tgraph [splines=true bgcolor=\"#242627\"]\n"
-               << "\tnode [shape=record style=\"filled\" fillcolor=\"#1D7ECD\" fontsize=12 fontcolor=\"#FFFFFA\"]\n"
-               << "\tedge [dir=front arrowtail=empty style=\"\" color=\"#FFFFFA\"]\n\n";
-  for(const auto* object : getTopLevelData())
-  {
-    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
-    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
-    outputStream << "\n/* Top level DataObject: " << topLevelPath.getTargetName() << " */\n\"" << topLevelPath.getTargetName() << "\";\n";
-
-    if(optionalDataPaths.has_value() && !optionalDataPaths.value().empty())
-    {
-      recurseHierarchyToGraphViz(outputStream, optionalDataPaths.value(), topLevelPath.getTargetName());
-    }
-  }
-
-  outputStream << "}\n";
-}
-
-void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
-{
-  for(const auto* object : getTopLevelData())
-  {
-    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
-    outputStream << k_Delimiter << topLevelPath.getTargetName() << "\n";
-    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
-
-    if(optionalDataPaths.has_value() && !optionalDataPaths.value().empty())
-    {
-      recurseHierarchyToText(outputStream, optionalDataPaths.value(), "");
-    }
-  }
-}
-
-void DataStructure::recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const
-{
-  for(const auto& path : paths)
-  {
-    outputStream << "\"" << parent << "\" -> \"" << path.getTargetName() << "\"\n";
-
-    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
-    if(!optionalChildPaths.has_value() || optionalChildPaths.value().empty())
-    {
-      continue;
-    }
-
-    recurseHierarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
-  }
-  // outputStream << "\n"; // for readability
-}
-
-void DataStructure::recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const
-{
-  indent += "  ";
-
-  for(const auto& path : paths)
-  {
-    outputStream << indent << k_Delimiter << path.getTargetName() << "\n";
-
-    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
-    if(!optionalChildPaths.has_value() || optionalChildPaths.value().empty())
-    {
-      continue;
-    }
-
-    recurseHierarchyToText(outputStream, optionalChildPaths.value(), indent);
-  }
 }
 
 void DataStructure::flush() const
