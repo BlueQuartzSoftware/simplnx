@@ -104,6 +104,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   KeepRemoveRankedFeaturesTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  LaplacianSmoothingNumericalTest.cpp
   M3CSurfaceMeshingTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
