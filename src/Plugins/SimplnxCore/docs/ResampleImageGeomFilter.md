@@ -47,13 +47,38 @@ Same starting image.
 
 A new regular grid is overlaid on the old one. For each new cell, the filter finds the old cell whose center is closest and copies that old cell's attributes (Feature Ids, phases, orientations, etc.) into the new cell. There is **no interpolation** -- this is the right behavior for label data (Feature Ids), but it does mean that small features can disappear during downsampling.
 
-### Renumber Features
+## Feature Data
 
-When downsampling produces a result in which some Features no longer have any cells, those Features become invalid. Enable *Renumber Features* to detect this case, resize the Cell Feature Attribute Matrix to drop the empty features, and renumber the remaining features so that Feature IDs remain contiguous starting at 1.
+A **Feature** is a group of cells with the same Feature Id. A **Feature Attribute Matrix** stores one row of values for each Feature Id. Resampling changes the cell membership and cell count of features, even when no feature disappears. Feature sizes, shapes, centroids, neighbors, surface status, and average values can change. Treat every feature value computed before the resample as invalid for the resampled geometry.
 
-## WARNING: NeighborList Removal
+Renumbering alone does not correct these values. It compacts Feature Ids. It does not recompute feature values.
 
-When *Renumber Features* is enabled and the Cell Feature Attribute Matrix contains any *NeighborList* arrays, those arrays are **removed** because they refer to the old (pre-renumber) Feature IDs. Re-run [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) afterward to rebuild them.
+*Clear Feature Attribute Matrix* is on by default. It recreates the selected matrix in the resampled geometry with no arrays. This removes numeric arrays, string arrays, and **NeighborLists** (lists of neighboring features). Recompute any arrays needed by later filters. A later filter that selects a cleared array fails preflight until that array is created again.
+
+### Clearing and Renumbering Modes
+
+| Clear Feature Attribute Matrix | Renumber Features | Result |
+|---|---|---|
+| On | On | Dense matrix with no arrays. Remaining Feature Ids become 1 through N, where N is the number of remaining features. The matrix has N+1 rows, including row 0. |
+| On | Off (default) | Sparse matrix with no arrays. It keeps the source tuple shape and original Feature Ids. Rows for removed features are unused. Use this mode to track features between the original and resampled volumes. |
+| Off | Hidden and ignored | All Attribute Matrices other than the Cell Attribute Matrix are copied unchanged. Feature Ids keep their original labels. Use this mode for raw data without features, or for debugging. Copied feature values still describe the original volume. |
+
+*Feature Attribute Matrix*, *Renumber Features*, and *Cell Feature Ids* are shown only when *Clear Feature Attribute Matrix* is on. *Renumber Features* is off by default. Both selection paths are required when Clear is on, even when Renumber is off. Select an `int32` array with one component for *Cell Feature Ids*. When Clear is off, the filter ignores both selections and any saved Renumber setting.
+
+Other Attribute Matrices, including the **Ensemble Attribute Matrix** (data for each phase), are copied unchanged in every mode.
+
+### Keep the Original Values for Debugging
+
+Turn *Perform In Place* off and set *Created Image Geometry* to a new path. The source geometry keeps its original feature values. The new geometry contains the resampled cells and follows the selected clearing mode. When *Perform In Place* is on, the resampled geometry replaces the source and keeps its name.
+
+### Preflight Information and Errors
+
+The preflight value **Cleared Feature Data** lists the full paths of all children of the selected Feature Attribute Matrix. Use this list to decide what to recompute after Resample. For example, run [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) again if later filters need neighbor lists. When Renumber is on, this value also explains that Feature Ids will be renumbered and the matrix resized. When Clear is off, **Feature Data Not Cleared** explains that copied feature values describe the original geometry. These values are information, not warnings.
+
+When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. It must not be that geometry's Cell Attribute Matrix.
+
+- **-55503**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select a Feature Attribute Matrix directly under that geometry.
+- **-55504**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds feature data, or turn Clear off for data without features.
 
 ### Required Input Sources
 

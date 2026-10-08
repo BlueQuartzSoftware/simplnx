@@ -6,8 +6,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
-#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -330,42 +328,52 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   preflightUpdatedValues.push_back(
       {"Resampled Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(geometryDimensions, resolvedValues.Spacing, srcOrigin, srcImageGeom.getUnits())});
 
-  if(inputValues.RenumberFeatures)
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(inputValues.ClearFeatureAttributeMatrix)
   {
     const DataPath& cellFeatureAttributeMatrixPath = inputValues.CellFeatureAttributeMatrix;
-    ignorePaths.push_back(cellFeatureAttributeMatrixPath);
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
     if(srcCellFeatureData == nullptr)
     {
       return IFilter::MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAttributeMatrixPath.toString()));
     }
+    if(cellFeatureAttributeMatrixPath.getParent() != srcImagePath)
+    {
+      return IFilter::MakePreflightErrorResult(
+          -55503, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
+    if(selectedCellData == srcCellFeatureData)
+    {
+      return IFilter::MakePreflightErrorResult(
+          -55504,
+          fmt::format("The Feature Attribute Matrix '{}' is the Cell Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn off 'Clear Feature Attribute Matrix'.",
+                      cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
 
-    std::string warningMessage;
+    ignorePaths.push_back(cellFeatureAttributeMatrixPath);
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
-    const auto tupleDimensions = srcCellFeatureData->getShape();
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, tupleDimensions));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+
+    std::string clearedList;
     for(const auto& [identifier, object] : *srcCellFeatureData)
     {
-      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
-      {
-        const DataType dataType = srcArray->getDataType();
-        ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
-        const DataPath dataArrayPath = destCellFeatureAttributeMatrixPath.createChildPath(srcArray->getName());
-        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDimensions, std::move(componentShape), dataArrayPath));
-      }
-      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
-      {
-        warningMessage += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArray->getName();
-      }
+      clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }
-    if(!warningMessage.empty())
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the resampled geometry with no arrays.", cellFeatureAttributeMatrixPath.toString());
+    if(!clearedList.empty())
     {
-      preflightUpdatedValues.push_back(
-          {"Invalidated NeighborLists",
-           fmt::format(
-               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-               inputValues.FeatureIdsArrayPath.toString(), warningMessage)});
+      message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
     }
+    if(inputValues.RenumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else if(inputValues.ReportUnclearedFeatureData)
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the resampled geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the original geometry and are not valid for the resampled geometry."});
   }
 
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
@@ -470,12 +478,12 @@ Result<> ResampleImageGeom::operator()()
     return {};
   }
 
-  // Feature renumbering needs independent arrays because compaction resizes them.
+  // Validate Feature Ids against the source AM before compacting the resampled data.
   DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
   auto destImagePath = m_InputValues->CreatedImageGeometryPath;
   DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
 
-  if(m_InputValues->RenumberFeatures)
+  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
@@ -484,42 +492,8 @@ Result<> ResampleImageGeom::operator()()
       return validateNumFeatResult;
     }
 
-    std::vector<DataPath> sourceFeatureDataPaths;
-    auto childPathsResult = GetAllChildArrayDataPaths(m_DataStructure, cellFeatureAMPath);
-    if(childPathsResult.has_value())
-    {
-      sourceFeatureDataPaths = childPathsResult.value();
-    }
-    std::vector<DataPath> destFeatureDataPaths = sourceFeatureDataPaths;
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
-
-    for(auto& dataPath : destFeatureDataPaths)
-    {
-      dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
-    }
-
-    // Replace preflight placeholders with deep copies before feature compaction.
-    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
-    {
-      DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
-      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
-      {
-        auto result = DeepCopy<IDataArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
-      {
-        auto result = DeepCopy<StringArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-    }
-
+    // Renumber resampled Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
     return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }

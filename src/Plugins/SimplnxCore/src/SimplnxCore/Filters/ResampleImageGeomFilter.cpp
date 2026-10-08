@@ -86,12 +86,18 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Optional Renumber Features"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+      "Recreates the selected Feature Attribute Matrix in the resampled geometry with no arrays. Resampling changes which cells belong to each feature, so every feature value computed before this "
+      "filter is invalid. Recompute any feature data needed later in the pipeline.",
+      true));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Cell Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the resampled geometry", DataPath()));
@@ -100,8 +106,9 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.linkParameters(k_ResamplingMode_Key, k_Spacing_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
   params.linkParameters(k_ResamplingMode_Key, k_Scaling_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
   params.linkParameters(k_ResamplingMode_Key, k_ExactDimensions_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
-  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
-  params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrix_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
 
   return params;
@@ -110,7 +117,7 @@ Parameters ResampleImageGeomFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ResampleImageGeomFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -130,10 +137,12 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   inputValues.ExactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
   inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  inputValues.RenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.ReportUnclearedFeatureData = true;
   return PreflightImageGeometryResample(dataStructure, inputValues);
 }
 
@@ -148,7 +157,8 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.ExactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
   inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  inputValues.RenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
