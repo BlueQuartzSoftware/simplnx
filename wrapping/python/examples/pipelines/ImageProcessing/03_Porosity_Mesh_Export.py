@@ -93,7 +93,6 @@ result = nx_filter.execute(
     face_labels_array_name="FaceLabels",
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     fix_problem_voxels=True,
-#    generate_triple_lines=False,
     input_grid_geometry_path=nx.DataPath("ImageDataContainer"),
     node_types_array_name="NodeTypes",
     input_data_array_paths=[],

@@ -5,6 +5,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -1972,6 +1973,7 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, cons
   REQUIRE(amPathsOpt.has_value());
   for(const auto& amPath : amPathsOpt.value())
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(amPath));
     const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
     std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildArrayDataPaths(dataStructure, amPath, ignoredPaths);
     REQUIRE(daPathsOpt.has_value());

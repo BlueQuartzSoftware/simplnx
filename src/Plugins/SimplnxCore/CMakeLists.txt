@@ -105,6 +105,7 @@ set(FilterList
   PadImageGeometryFilter
   PartitionGeometryFilter
   ExtractFeatureBoundaries2DFilter
+  ExtractTripleLinesFilter
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
@@ -272,6 +273,7 @@ set(AlgorithmList
   ExecuteProcess
   ExtractComponentAsArray
   ExtractInternalSurfacesFromTriangleGeometry
+  ExtractTripleLines
   ExtractPipelineToFile
   ExtractVertexGeometry
   FeatureFaceCurvature
