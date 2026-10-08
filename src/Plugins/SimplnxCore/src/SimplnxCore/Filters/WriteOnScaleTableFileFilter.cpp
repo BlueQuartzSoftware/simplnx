@@ -89,11 +89,7 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
 {
   Result<OutputActions> resultOutputActions;
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  if(!fs::exists(outputPath))
-  {
-    return MakePreflightErrorResult(-12022, fmt::format("The output path '{}' does not exist.", outputPath.string()));
-  }
-  if(!fs::is_directory(outputPath))
+  if(fs::exists(outputPath) && !fs::is_directory(outputPath))
   {
     return MakePreflightErrorResult(-12023, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }
