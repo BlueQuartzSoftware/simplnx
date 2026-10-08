@@ -16,11 +16,11 @@ Simple directory listing (for Mac/Linux users)
 
 Simple command with arguments (for Windows users)
 
-> C:/Applications/DREAM3D-6.6.332/nxrunner.exe C:/Applications/DREAM3D/DREAM3D-6.6.332/Data/MyPipeline.json
+> C:/Applications/DREAM3D-NX/nxrunner.exe --execute C:/Applications/DREAM3D-NX/Data/MyPipeline.d3dpipeline
 
 For a command with spaces in the path
 
-> "C:/Program Files/DREAM3D-6.6.332/nxrunner.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
+> "C:/Program Files/DREAM3D-NX/nxrunner.exe" --execute "C:/Program Files/DREAM3D-NX/pipelines/OrientationAnalysis/Small_IN100_Processing/(01) Small IN100 Archive.d3dpipeline"
 
 The path to the executable should be given as an **absolute path**; relative paths and shell built-ins that are resolved by a particular shell are not reliable across platforms.
 

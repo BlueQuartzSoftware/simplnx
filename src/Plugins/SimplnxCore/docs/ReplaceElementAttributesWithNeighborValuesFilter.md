@@ -110,7 +110,7 @@ This algorithm is optimized for both in-memory and out-of-core (OOC) data stores
 
 ## Example Pipelines
 
-The example pipeline (pipelines/Examples/ReplaceElementAttributesWithNeighbor.d3dpipeline) will give output similar to the following images.
+The example pipeline (pipelines/SimplnxCore/ReplaceElementAttributesWithNeighbor.d3dpipeline) will give output similar to the following images.
 
 |  Before Filter | After Filter |
 |--|--|

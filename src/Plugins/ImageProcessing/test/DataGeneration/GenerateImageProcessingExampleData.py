@@ -23,19 +23,19 @@ TARGETS_PATH = Path(__file__).with_name("PaperInputTargets.json")
 
 
 PIPELINE_FILES = {
-    "(05) AM XCT Porosity Segmentation": "(05) AM XCT Porosity Segmentation.d3dpipeline",
-    "(06) AM Powder-Bed Layer Inspection": "(06) AM Powder-Bed Layer Inspection.d3dpipeline",
-    "(07) AM Melt-Pool and Track Inspection": "(07) AM Melt-Pool and Track Inspection.d3dpipeline",
-    "(08) Powder Particle Watershed Segmentation": "(08) Powder Particle Watershed Segmentation.d3dpipeline",
-    "(09) Microstructure Watershed Segmentation": "(09) Microstructure Watershed Segmentation.d3dpipeline",
-    "(10) Binary Mask Repair and Skeletonization": "(10) Binary Mask Repair and Skeletonization.d3dpipeline",
-    "(11) Grayscale Surface-Defect Morphology": "(11) Grayscale Surface-Defect Morphology.d3dpipeline",
-    "(12) Pore Distance and Wall-Thickness Metrology": "(12) Pore Distance and Wall-Thickness Metrology.d3dpipeline",
-    "(13) Denoising and Edge Detection": "(13) Denoising and Edge Detection.d3dpipeline",
-    "(14) Projection-Based Quality Summaries": "(14) Projection-Based Quality Summaries.d3dpipeline",
-    "(15) Radiography Intensity Calibration": "(15) Radiography Intensity Calibration.d3dpipeline",
-    "(16) Phase and Angle Field Transforms": "(16) Phase and Angle Field Transforms.d3dpipeline",
-    "(19) Serial-Section Stack Reconstruction": "(19) Serial-Section Stack Reconstruction.d3dpipeline",
+    "05_AM_XCT_Porosity_Segmentation": "05_AM_XCT_Porosity_Segmentation.d3dpipeline",
+    "06_AM_Powder-Bed_Layer_Inspection": "06_AM_Powder-Bed_Layer_Inspection.d3dpipeline",
+    "07_AM_Melt-Pool_and_Track_Inspection": "07_AM_Melt-Pool_and_Track_Inspection.d3dpipeline",
+    "08_Powder_Particle_Watershed_Segmentation": "08_Powder_Particle_Watershed_Segmentation.d3dpipeline",
+    "09_Microstructure_Watershed_Segmentation": "09_Microstructure_Watershed_Segmentation.d3dpipeline",
+    "10_Binary_Mask_Repair_and_Skeletonization": "10_Binary_Mask_Repair_and_Skeletonization.d3dpipeline",
+    "11_Grayscale_Surface-Defect_Morphology": "11_Grayscale_Surface-Defect_Morphology.d3dpipeline",
+    "12_Pore_Distance_and_Wall-Thickness_Metrology": "12_Pore_Distance_and_Wall-Thickness_Metrology.d3dpipeline",
+    "13_Denoising_and_Edge_Detection": "13_Denoising_and_Edge_Detection.d3dpipeline",
+    "14_Projection-Based_Quality_Summaries": "14_Projection-Based_Quality_Summaries.d3dpipeline",
+    "15_Radiography_Intensity_Calibration": "15_Radiography_Intensity_Calibration.d3dpipeline",
+    "16_Phase_and_Angle_Field_Transforms": "16_Phase_and_Angle_Field_Transforms.d3dpipeline",
+    "19_Serial-Section_Stack_Reconstruction": "19_Serial-Section_Stack_Reconstruction.d3dpipeline",
 }
 
 

@@ -112,7 +112,7 @@ def verify_non_doi_url(citation, context):
 
 
 def main():
-    yaml_paths = sorted(PIPELINE_DIR.glob("([0-9][0-9]) */*.yaml"))
+    yaml_paths = sorted(PIPELINE_DIR.glob("[0-9][0-9]_*/*.yaml"))
     if len(yaml_paths) != 16:
         raise RuntimeError(f"Expected 16 pipeline YAML files, found {len(yaml_paths)}")
 

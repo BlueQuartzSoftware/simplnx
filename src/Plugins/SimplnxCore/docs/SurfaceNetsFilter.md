@@ -200,7 +200,7 @@ as issue #1705), not a fix for it.
 
 ## Example Pipelines
 
-Pipelines/SimplnxCore/SurfaceNets_Demo.d3dpipeline
+Pipelines/SimplnxCore/Surface_Mesh_Examples/SurfaceNets_Demo.d3dpipeline
 
 ## Citations
 

@@ -153,42 +153,45 @@ target_include_directories(${PLUGIN_NAME} PRIVATE "${${PLUGIN_NAME}_SOURCE_DIR}/
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${OLESS_SOURCES})
 
+set(${PLUGIN_NAME}_TUTORIAL_PIPELINE_NAMES
+  "05_AM_XCT_Porosity_Segmentation"
+  "06_AM_Powder-Bed_Layer_Inspection"
+  "07_AM_Melt-Pool_and_Track_Inspection"
+  "08_Powder_Particle_Watershed_Segmentation"
+  "09_Microstructure_Watershed_Segmentation"
+  "10_Binary_Mask_Repair_and_Skeletonization"
+  "11_Grayscale_Surface-Defect_Morphology"
+  "12_Pore_Distance_and_Wall-Thickness_Metrology"
+  "13_Denoising_and_Edge_Detection"
+  "14_Projection-Based_Quality_Summaries"
+  "15_Radiography_Intensity_Calibration"
+  "16_Phase_and_Angle_Field_Transforms"
+  "17_Scientific_Volume_Interoperability"
+  "18_Industrial_XCT_Format_Import"
+  "19_Serial-Section_Stack_Reconstruction"
+  "20_Fiji_Microscopy_Montage_Import"
+)
+
+# The inherited examples have no Markdown/YAML companions; all pipelines share the same folder layout.
 set(${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES
-  "(05) AM XCT Porosity Segmentation"
-  "(06) AM Powder-Bed Layer Inspection"
-  "(07) AM Melt-Pool and Track Inspection"
-  "(08) Powder Particle Watershed Segmentation"
-  "(09) Microstructure Watershed Segmentation"
-  "(10) Binary Mask Repair and Skeletonization"
-  "(11) Grayscale Surface-Defect Morphology"
-  "(12) Pore Distance and Wall-Thickness Metrology"
-  "(13) Denoising and Edge Detection"
-  "(14) Projection-Based Quality Summaries"
-  "(15) Radiography Intensity Calibration"
-  "(16) Phase and Angle Field Transforms"
-  "(17) Scientific Volume Interoperability"
-  "(18) Industrial XCT Format Import"
-  "(19) Serial-Section Stack Reconstruction"
-  "(20) Fiji Microscopy Montage Import"
+  "02_Image_Segmentation"
+  "03_Porosity_Mesh_Export"
+  "04_Porosity_Analysis"
+  ${${PLUGIN_NAME}_TUTORIAL_PIPELINE_NAMES}
 )
 
 set(${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/PythonGeneration.yaml")
 foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
   list(APPEND ${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.d3dpipeline"
+  )
+endforeach()
+foreach(example_name IN LISTS ${PLUGIN_NAME}_TUTORIAL_PIPELINE_NAMES)
+  list(APPEND ${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.yaml"
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/${example_name}/${example_name}.md"
   )
 endforeach()
-
-# The plugin inherited these pipelines from the removed ITKImageProcessing plugin. They are flat
-# .d3dpipeline files, so they have no .yaml or .md companion yet. List them directly until someone
-# writes the companions and moves them into the directory layout above.
-list(APPEND ${PLUGIN_NAME}_EXAMPLE_PIPELINE_FILES
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(04) Porosity Analysis.d3dpipeline"
-)
 
 if(SIMPLNX_BUILD_TESTS)
   enable_testing()

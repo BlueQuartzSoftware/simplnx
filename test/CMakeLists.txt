@@ -8,6 +8,14 @@ include("${CMAKE_CURRENT_LIST_DIR}/DownloadTestData.cmake")
 
 set(SIMPLNX_TEST_DIRS_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/unit_test/simplnx_test_dirs.hpp)
 
+#------------------------------------------------------------------------------
+# Populate with all plugin source dirs
+set (SIMPLNX_PLUGIN_SOURCE_DIRS "const std::vector<fs::path> k_PluginSourceDirs = {")
+foreach(d3dPlugin ${SIMPLNX_PLUGIN_LIST})
+    set (SIMPLNX_PLUGIN_SOURCE_DIRS "${SIMPLNX_PLUGIN_SOURCE_DIRS}\n  fs::path(\"${${d3dPlugin}_SOURCE_DIR}\"),")
+endforeach()
+set (SIMPLNX_PLUGIN_SOURCE_DIRS "${SIMPLNX_PLUGIN_SOURCE_DIRS}\n};\n")
+
 configure_file(${simplnx_SOURCE_DIR}/test/simplnx_test_dirs.hpp.in ${SIMPLNX_TEST_DIRS_HEADER} @ONLY)
 file(MAKE_DIRECTORY "${simplnx_BINARY_DIR}/simplnx/test_output")
 
@@ -61,6 +69,7 @@ set(SIMPLNX_TEST_SRCS
   ParametersTest.cpp
   PipelineFilterMessagingTest.cpp
   PipelineSaveTest.cpp
+  PrebuiltPipelineTest.cpp
   UuidTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
@@ -121,6 +130,7 @@ target_compile_definitions(simplnx_test
   PRIVATE
     SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
     SIMPLNX_PLUGIN_COUNT=${SIMPLNX_PLUGIN_COUNT}
+    SIMPLNX_TEST_ALL_OPTIONAL_PLUGINS_ENABLED=$<AND:$<BOOL:${SIMPLNX_ENABLE_OrientationAnalysis}>,$<BOOL:${SIMPLNX_ENABLE_ImageProcessing}>>
 )
 
 target_compile_options(simplnx_test

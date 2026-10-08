@@ -28,7 +28,7 @@ The *Array Handling* parameter controls how the selected cell arrays are transfe
 
 ## Example Pipelines
 
-PrebuiltPipelines/Examples/Extract Vertex Geometry.json
+Pipelines/SimplnxCore/ExtractVertexGeometry.d3dpipeline
 
 ## License & Copyright
 
