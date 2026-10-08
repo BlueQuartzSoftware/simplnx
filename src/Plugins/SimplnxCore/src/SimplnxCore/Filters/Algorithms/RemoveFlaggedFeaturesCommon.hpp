@@ -11,6 +11,7 @@
 
 #include <any>
 #include <atomic>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -42,16 +43,18 @@ public:
    * @param minVoxelVector Specifies inclusive minimum voxel indexes.
    * @param maxVoxelVector Specifies inclusive maximum voxel indexes.
    * @param createdImgGeomPath Identifies the cropped ImageGeom.
+   * @param featureAttributeMatrixName Identifies the Feature Attribute Matrix to remove from the crop.
    * @param taskResult Receives the delegated preflight or execute failure.
    */
   RunCropImageGeometryImpl(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const DataPath& imageGeometryPath, const std::vector<uint64>& minVoxelVector,
-                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, CopyFromArray::ParallelTaskResult& taskResult)
+                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, const std::string& featureAttributeMatrixName, CopyFromArray::ParallelTaskResult& taskResult)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_ImageGeometryPath(imageGeometryPath)
   , m_MinVoxelVector(minVoxelVector)
   , m_MaxVoxelVector(maxVoxelVector)
   , m_CreatedImgGeomPath(createdImgGeomPath)
+  , m_FeatureAttributeMatrixName(featureAttributeMatrixName)
   , m_TaskResult(taskResult)
   {
   }
@@ -76,7 +79,7 @@ public:
 
     args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
-    // Extracted per-feature geometries keep their source Feature data (behavior unchanged).
+    // Remove the copied Feature AM after the crop. Keep Clear=false to avoid creating an empty AM only to delete it.
     args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
@@ -106,7 +109,10 @@ public:
     {
       m_TaskResult.store(MakeErrorResult(-53904, fmt::format("The crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
                                                              m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors()))));
+      return;
     }
+
+    m_DataStructure.removeData(m_CreatedImgGeomPath.createChildPath(m_FeatureAttributeMatrixName));
   }
 
 private:
@@ -116,6 +122,7 @@ private:
   const std::vector<uint64>& m_MinVoxelVector;
   const std::vector<uint64>& m_MaxVoxelVector;
   const DataPath& m_CreatedImgGeomPath;
+  const std::string m_FeatureAttributeMatrixName;
   CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
 
