@@ -519,7 +519,7 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
   constexpr usize k_X = 19;
   constexpr usize k_Y = 11;
   constexpr usize k_Z = 13;
-  
+
   using IdentifySampleReportingStoreType = IdentifySampleReportingStore<T>;
   using DataArrayType = DataArray<T>;
 
