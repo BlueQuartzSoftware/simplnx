@@ -9,16 +9,19 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/SliceTriangleGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -275,6 +278,82 @@ TEST_CASE("SliceTriangleGeometryFilter: An empty geometry produces a warning", "
   const auto* sliceIds = dataStructure.getDataAs<Int32Array>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
   REQUIRE(sliceIds != nullptr);
   REQUIRE(sliceIds->getNumberOfTuples() == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SliceTriangleGeometryFilter: Slices a QuickSurfaceMesh output in a pipeline", "[SimplnxCore][SliceTriangleGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  const DataPath imageGeomPath({"Image Geometry"});
+  const DataPath cellDataPath = imageGeomPath.createChildPath("Cell Data");
+  const DataPath featureIdsPath = cellDataPath.createChildPath("FeatureIds");
+  auto* imageGeom = ImageGeom::Create(dataStructure, imageGeomPath.getTargetName());
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({4, 4, 4});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  auto* cellData = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {4, 4, 4}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, featureIdsPath.getTargetName(), {4, 4, 4}, {1}, cellData->getId());
+  REQUIRE(featureIds != nullptr);
+  // Split the voxels along x into two features with a vertical interface.
+  for(usize voxelIdx = 0; voxelIdx < featureIds->getNumberOfTuples(); voxelIdx++)
+  {
+    (*featureIds)[voxelIdx] = voxelIdx % 4 < 2 ? 1 : 2;
+  }
+
+  QuickSurfaceMeshFilter meshFilter;
+  Arguments meshArgs = meshFilter.getDefaultArguments();
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(imageGeomPath));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_InputTriangleGeometryPath));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("VertexData"));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>("NodeTypes"));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>("FaceData"));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>("FaceLabels"));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
+  meshArgs.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
+
+  const SliceTriangleGeometryFilter sliceFilter;
+  Arguments sliceArgs = CreateSliceArguments(sliceFilter);
+  sliceArgs.insertOrAssign(SliceTriangleGeometryFilter::k_SliceRange_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  sliceArgs.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.5f));
+  sliceArgs.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(false));
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::make_unique<QuickSurfaceMeshFilter>(), meshArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<SliceTriangleGeometryFilter>(), sliceArgs));
+
+  // Preflight creates placeholder output geometries; execute starts with the original input.
+  DataStructure preflightDataStructure = dataStructure;
+  REQUIRE(pipeline.preflight(preflightDataStructure, false));
+  const auto* preflightTriangleGeom = preflightDataStructure.getDataAs<TriangleGeom>(k_InputTriangleGeometryPath);
+  REQUIRE(preflightTriangleGeom != nullptr);
+  REQUIRE(preflightTriangleGeom->getNumberOfFaces() == 0);
+
+  REQUIRE(pipeline.execute(dataStructure, false));
+  const auto* sliceNode = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+  REQUIRE(sliceNode != nullptr);
+  for(const auto& warning : sliceNode->getWarnings())
+  {
+    INFO(warning.message);
+    REQUIRE(warning.code != -62105);
+  }
+
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(k_InputTriangleGeometryPath);
+  REQUIRE(triangleGeom != nullptr);
+  REQUIRE(triangleGeom->getNumberOfFaces() > 0);
+  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(k_ComputedEdgeGeometryPath);
+  REQUIRE(edgeGeom != nullptr);
+  REQUIRE(edgeGeom->getNumberOfEdges() > 0);
+  const auto* sliceData = dataStructure.getDataAs<AttributeMatrix>(k_ComputedEdgeGeometryPath.createChildPath(k_SliceData));
+  REQUIRE(sliceData != nullptr);
+  REQUIRE(sliceData->getNumberOfTuples() > 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
