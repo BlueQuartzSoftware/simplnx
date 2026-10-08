@@ -105,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   LaplacianSmoothingNumericalTest.cpp
+  LaplacianSmoothingTransferTest.cpp
   M3CSurfaceMeshingTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
