@@ -15,7 +15,7 @@ namespace nx::core
 
 /**
  * @struct ResampleImageGeomInputValues
- * @brief Stores source, destination, and optional feature-renumber selections.
+ * @brief Stores source, destination, and optional feature clearing and renumbering selections.
  *
  * Spacing, CellDataGroupPath, and RemoveOriginalImageGeom are filter workflow values.
  * The executor uses the preflight-created destination geometry instead.
@@ -30,6 +30,10 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
   DataPath CellDataGroupPath;
   bool RemoveOriginalImageGeom;
   DataPath CreatedImageGeometryPath;
+  // Recreate the Feature AM with no arrays; required for RenumberFeatures.
+  bool ClearFeatureAttributeMatrix = false;
+  // Report unchanged Feature data only for callers that request this information.
+  bool ReportUnclearedFeatureData = false;
   bool RenumberFeatures;
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrix;
@@ -45,7 +49,7 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
  * Cell arrays run as independent parallel tasks. Each task checks cancellation between destination Z slices.
  * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O results are discarded.
  *
- * Optional feature renumbering starts after all cell tasks finish. The algorithm deep-copies feature arrays before compaction can resize them.
+ * Optional feature renumbering starts after all cell tasks finish. It compacts Feature Ids and resizes the empty destination Feature Attribute Matrix.
  */
 class SIMPLNX_EXPORT ResampleImageGeom
 {
@@ -71,8 +75,8 @@ public:
   ResampleImageGeom& operator=(ResampleImageGeom&&) noexcept = delete;
 
   /**
-   * @brief Resamples cell arrays and optionally renumbers feature data.
-   * @return Feature validation, deep-copy, or renumber result.
+   * @brief Resamples cell arrays and optionally renumbers Feature Ids and resizes the cleared Feature Attribute Matrix.
+   * @return Feature validation or renumber result.
    *
    * The method cannot report cell-array bulk-I/O failures. Cancellation can leave partial destination arrays.
    */
