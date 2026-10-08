@@ -1,5 +1,6 @@
 #include "OrientationAnalysis/Filters/ComputeShapesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -7,6 +8,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 #include <filesystem>
@@ -136,4 +138,43 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: SIMPL Backwards Compatibili
       CHECK(args.value<std::string>(ComputeShapesFilter::k_VolumesArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Cell Feature Ids requires 1 component", "[OrientationAnalysis][ComputeShapesFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 1, 1});
+  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Ids", {1, 1, 2}, {2}, cellData->getId());
+  (*featureIds)[0] = 1;
+  (*featureIds)[1] = 0;
+  (*featureIds)[2] = 2;
+  (*featureIds)[3] = 0;
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", {3}, imageGeom->getId());
+  REQUIRE(featureData != nullptr);
+  auto* centroids = UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {3}, {3}, featureData->getId());
+  (*centroids)[3] = 0.5F;
+  (*centroids)[4] = 0.5F;
+  (*centroids)[5] = 0.5F;
+  (*centroids)[6] = 1.5F;
+  (*centroids)[7] = 0.5F;
+  (*centroids)[8] = 0.5F;
+
+  ComputeShapesFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeShapesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(ComputeShapesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "Feature Ids"})));
+  args.insertOrAssign(ComputeShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Feature Data", "Centroids"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

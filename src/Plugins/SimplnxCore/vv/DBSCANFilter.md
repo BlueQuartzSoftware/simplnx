@@ -16,8 +16,8 @@
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Rewrite** — SIMPLNX implements GDCF (Grid-based DBSCAN, Boonchoo et al. 2019, DOI 10.1016/j.patcog.2019.01.034) in place of the traditional point-by-point DBSCAN in legacy DREAM3D. UUID changed from `c2d4f1e8` to `763dad44` (legacy UUID retained via SIMPL mapper). |
 | Oracle (confirmed)     | **Class 2 (Reference — scikit-learn 1.7.1 DBSCAN) primary + Class 4 (Invariant) companion.** Input data independently generated from deterministic sklearn scripts in `dbscan_vv/dbscan_data_proj/`. Phase 6 reconciliation complete: 4/6 datasets exact match; 2 deviations (ansio, varied) fully explained by DBSCAN-D1 (GDCF vs. traditional DBSCAN). See Phase 5 + Phase 6. |
-| Code paths enumerated | 18 of 21 enumerated paths exercised. The untested invalid-component, unvisited-border, and empty-forest paths remain identified below. |
-| Tests today | 12 registered tests in this file plus 1 hidden HDF5 batch-tail test. The OOC build also registers seven external-storage tests. Existing analytical and regression assertions are preserved. |
+| Code paths enumerated | 20 of 23 enumerated paths exercised. The untested invalid-component, unvisited-border, and empty-forest paths remain identified below. |
+| Tests today | 14 registered tests in this file plus 1 hidden HDF5 batch-tail test. The OOC build also registers seven external-storage tests. Existing analytical and regression assertions are preserved. |
 | Exemplar archive       | **`dbscan_test.tar.gz` — promoted to regression fixtures (Phase 6/10).** Originally circular oracle; independently verified via Class 2 sklearn oracle (Phase 6). LDF arrays now pin verified-correct SIMPLNX output. See provenance sidecar. |
 | Legacy comparison | Historical comparison used a local legacy proof build and the sklearn oracle. It supports the documented GDCF-versus-traditional DBSCAN differences. This OOC recertification does not establish a new stock DREAM3D 6.5.171 binary comparison. |
 | Bug flags              | ✅ Circular oracle resolved (Phase 6) — `dbscan_test.tar.gz` LDF arrays promoted to regression fixtures; Class 2 sklearn oracle confirms correctness. 2 expected GDCF deviations (ansio, varied) documented as DBSCAN-D1. **1 SIMPLNX bug found and fixed during V&V:** `ParseOrder::Random` fed the user-supplied seed to the shuffle instead of the documented time-based seed, making "Random" a silent duplicate of "Seeded Random" (see Phase 7). **1 robustness defect found and fixed:** an all-false mask left the grid bounds NaN and those NaNs were cast to `usize` while computing grid dimensions (undefined behavior). |
@@ -84,7 +84,7 @@ The prior Random-seed and all-false-mask fixes are described in Phase 7. They ha
 
 ## Code path coverage
 
-18 of 21 enumerated paths exercised.
+20 of 23 enumerated paths exercised.
 
 
 Source: `Algorithms/DBSCAN.cpp` (34 lines), `DBSCANDirect.cpp` (1,274 lines), and `DBSCANScanline.cpp` (3,655 lines). Scanline selects ExternalGDCF when a routed array is on disk; forced Scanline on resident arrays uses its resident fallback.
@@ -114,6 +114,8 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | 18 | External I/O | A 65,536-point input batch and a two-point partial tail | `genuine HDF5 65536-batch tail oracle` |
 | 19 | External clustering | Adjacent core grids merge across the input-batch boundary | `genuine HDF5 65536-batch tail oracle` — four active points form one cluster and every other label is zero |
 | 20 | Preflight | No-mask mode avoids a cell-sized temporary mask | `No-mask preflight does not create a cell-sized temporary mask` |
+| 21 | Preflight | Enabled mask has component shape other than `{1}` → error `-208` | `Reject multi-component mask in preflight` |
+| 22 | Preflight | Enabled mask and input array have unequal tuple counts → error `-7587` | `Reject short mask in preflight` |
 
 
 ## Test inventory
@@ -131,6 +133,8 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | `SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning` | new-for-V&V | Class 1 oracle. 4 corner points, ε=0.1, minPts=5. Covers code path #5 (warning -85640). Self-contained inline data. |
 | `SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion` | new-for-V&V | Class 1 oracle. 3 points, P2 masked. Covers code path #4 (mask=true). Self-contained inline data. |
 | `SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked` | new-for-V&V | Class 1 oracle. Same 3 points as F2 with every point masked off. Covers code path #4b and pins the all-false-mask contract (warning `-85640`, all IDs 0, AM 1 tuple) that the NaN-bounds guard makes architecture-independent. Self-contained inline data. |
+| `SimplnxCore::DBSCAN: Reject multi-component mask in preflight` | new-for-CS-13 | Four coordinate tuples and four mask tuples with component shape `{2}`; preflight rejects with `-208` when the mask is enabled and accepts when disabled. See DBSCAN-D6. |
+| `SimplnxCore::DBSCAN: Reject short mask in preflight` | new-for-CS-13 | Four coordinate tuples and three scalar mask tuples; preflight rejects with `-7587` when the mask is enabled and accepts when disabled. See DBSCAN-D6. |
 | Class 4 invariant assertions | new-for-V&V | `CheckClusterInvariants()` hooked into `LDFTestCase2D` and `RandomTestCase2D` — covers all 18 2D test runs — and into F1/F2/F3. 3D test has inline AM tuple check but not the full helper. |
 | `SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-sized temporary mask` | kept | Checks action allocation in no-mask mode. |
 | `SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle` | new-for-V&V | 65,538 points, of which five are active. Four points form two adjacent core grids spanning the batch boundary; the fifth is distant noise. All labels and the feature count are checked. |
@@ -154,6 +158,7 @@ OOC recertification, 2026-09-18: serial CTest passed 12/12 in `NX-Com-Qt69-Vtk96
 - `DBSCAN-D3` — `use_precaching` parameter removed; old pipelines silently ignore it — see `vv/deviations/DBSCANFilter.md`
 - `DBSCAN-D4` — Parameter key renamed `init_type_index` → `parse_order_index`; `upgradeParametersImpl` not implemented — early SIMPLNX pipelines silently default to `LowDensityFirst` — see `vv/deviations/DBSCANFilter.md`
 - `DBSCAN-D5` — `SeededRandom` shuffle replaced with `std::shuffle`; same seed now produces a different (correct, unbiased) permutation compared to pre-PR builds — see `vv/deviations/DBSCANFilter.md`
+- `DBSCAN-D6` — Multi-component masks and unequal mask/input tuple counts now fail preflight before Direct or Scanline execution — see `vv/deviations/DBSCANFilter.md`
 
 ---
 
@@ -415,7 +420,7 @@ Code paths newly covered: path #4 (mask=true), path #5 (no core grids warning).
 
 **Status: Complete (2026-08-05).**
 
-The `dbscan_test.tar.gz` LDF exemplar arrays have been promoted from "circular oracle" to "regression fixtures" — the Class 2 sklearn oracle (Phase 6) independently confirmed SIMPLNX correctness for 4/6 datasets, and the legacy 6.5.172 comparison (Phase 9) corroborated the DBSCAN-D1 classification for the remaining 2 datasets. No archive regeneration is required; no new exemplar archive was created.
+The `dbscan_test.tar.gz` LDF exemplar arrays have been promoted from "circular oracle" to "regression fixtures" — the Class 2 sklearn oracle (Phase 6) independently confirmed SIMPLNX correctness for 4/6 datasets, and the historical local legacy proof build comparison (Phase 9) corroborated the DBSCAN-D1 classification for the remaining 2 datasets. No archive regeneration is required; no new exemplar archive was created.
 
 Provenance sidecar updated at `src/Plugins/SimplnxCore/vv/provenance/dbscan_test.md` with both Phase 6 and Phase 9 entries.
 
@@ -448,11 +453,11 @@ All V&V working artifacts are stored in the `dbscan_vv/` working folder outside 
 | `oracle_results.json` | Sklearn oracle results — cluster counts + sizes per dataset (Phase 5) |
 | `compare_exemplar_vs_oracle.py` | Phase 6 three-way comparison: exemplar vs. sklearn (Phase 6) |
 | `phase6_comparison_results.json` | Phase 6 comparison results — SIMPLNX vs. sklearn (Phase 6) |
-| `phase9_ab_test.py` | A/B test script: creates 6.5 HDF5 input, runs legacy 6.5.172, three-way comparison (Phase 9) |
+| `phase9_ab_test.py` | A/B test script: creates 6.5 HDF5 input, runs the historical local legacy proof build, three-way comparison (Phase 9) |
 | `6_5_input.dream3d` | HDF5 input file in DREAM3D 6.5 format used by legacy PipelineRunner (Phase 9) |
 | `dbscan_6_5_pipeline.json` | DREAM3D 6.5 pipeline JSON: DataContainerReader + 6×DBSCAN + DataContainerWriter (Phase 9) |
 | `6_5_output.dream3d` | Output from the local legacy proof build PipelineRunner containing legacy cluster IDs (Phase 9) |
-| `phase9_comparison_results.json` | Phase 9 three-way comparison results (legacy 6.5.172 vs. sklearn vs. SIMPLNX) (Phase 9) |
+| `phase9_comparison_results.json` | Phase 9 three-way comparison results (historical local legacy proof build vs. sklearn vs. SIMPLNX) (Phase 9) |
 
 No SBIR submission packaging required at this stage. Artifacts are on-disk in the development environment; all scripts are self-contained and reproducible.
 

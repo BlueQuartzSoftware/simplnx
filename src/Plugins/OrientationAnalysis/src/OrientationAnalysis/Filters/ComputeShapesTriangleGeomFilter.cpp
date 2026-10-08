@@ -60,7 +60,8 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
                                                                     DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
-                                                          DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "The name of the DataArray that holds the calculated Omega3 values", "Omega3s"));

@@ -17,6 +17,9 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/ranges.h>
+
+#include <algorithm>
 #include <filesystem>
 
 using namespace nx::core;
@@ -108,6 +111,14 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
+
+  const auto componentShape = gbcd.getComponentShape();
+  if(componentShape.size() != 6 || componentShape[5] != 2 || std::any_of(componentShape.begin(), componentShape.end(), [](usize dimension) { return dimension == 0; }))
+  {
+    return {MakeErrorResult<OutputActions>(-34645, fmt::format("The DataArray '{}' selected for **Input GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 "
+                                                               "positive bin dimensions followed by a final dimension of 2 (hemispheres).",
+                                                               pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
+  }
 
   auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)

@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/ComputeVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -8,6 +9,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 namespace fs = std::filesystem;
@@ -115,4 +117,47 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards 
       CHECK(args.value<std::string>(ComputeVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key) == "ClosestTriangleId");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals requires 3 components", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeom != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeom->getId());
+  triangleGeom->setVertices(*vertices);
+  triangleGeom->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  triangleGeom->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
+  triangleGeom->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
+  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeom->getId());
+  (*faces)[0] = 0;
+  (*faces)[1] = 1;
+  (*faces)[2] = 2;
+  triangleGeom->setFaceList(*faces);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeom->getId());
+  REQUIRE(faceData != nullptr);
+  triangleGeom->setFaceAttributeMatrix(*faceData);
+  UnitTest::CreateTestDataArray<float64>(dataStructure, "Normals", {1}, {1}, faceData->getId());
+  auto* vertexGeom = VertexGeom::Create(dataStructure, "Query Points");
+  REQUIRE(vertexGeom != nullptr);
+  auto* queryVertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {1}, {3}, vertexGeom->getId());
+  vertexGeom->setVertices(*queryVertices);
+  vertexGeom->setVertexCoordinate(0, {0.25F, 0.25F, 1.0F});
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {1}, vertexGeom->getId());
+  REQUIRE(vertexData != nullptr);
+  vertexGeom->setVertexAttributeMatrix(*vertexData);
+
+  ComputeVertexToTriangleDistancesFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(DataPath({"Query Points"})));
+  args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({"Triangles"})));
+  args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Face Data", "Normals"})));
+  args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_DistancesArrayName_Key, std::make_any<std::string>("Distances"));
+  args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key, std::make_any<std::string>("Closest Triangle Ids"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

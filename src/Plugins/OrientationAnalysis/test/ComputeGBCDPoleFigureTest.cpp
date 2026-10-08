@@ -263,3 +263,29 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Phase and Laue Inde
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Component Shape", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter][ComponentShape]")
+{
+  const auto componentShape = GENERATE(ShapeType{1}, ShapeType{2, 2, 2, 2, 2, 1}, ShapeType{0, 2, 2, 2, 2, 2}, ShapeType{2, 0, 2, 2, 2, 2}, ShapeType{2, 2, 0, 2, 2, 2}, ShapeType{2, 2, 2, 0, 2, 2},
+                                       ShapeType{2, 2, 2, 2, 0, 2});
+  CAPTURE(componentShape);
+
+  DataStructure dataStructure;
+  const DataPath gbcdPath({"Malformed GBCD"});
+  const DataPath crystalStructuresPath({"Crystal Structures"});
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
+  REQUIRE(gbcd != nullptr);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
+  REQUIRE(crystalStructures != nullptr);
+
+  ComputeGBCDPoleFigureFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(gbcdPath));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -34645);
+}

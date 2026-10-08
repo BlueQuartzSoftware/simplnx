@@ -47,6 +47,8 @@ but any shape with clear sharp corners may be affected.
 
 % Auto generated parameter table will be inserted here
 
+**Face Feature Centroids** must have 3 components.
+
 ## References
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR
