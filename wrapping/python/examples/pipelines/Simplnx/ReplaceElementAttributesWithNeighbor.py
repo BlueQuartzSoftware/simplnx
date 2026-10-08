@@ -103,6 +103,7 @@ result = nx_filter.execute(
     max_voxel=[160, 175, 0],
     min_voxel=[25, 25, 0],
     remove_original_geometry=True,
+    clear_feature_attribute_matrix=False,
     renumber_features=False,
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_physical_bounds=False
