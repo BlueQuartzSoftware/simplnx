@@ -76,6 +76,8 @@ public:
 
     args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
+    // Extracted per-feature geometries keep their source Feature data (behavior unchanged).
+    args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
 
