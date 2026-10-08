@@ -606,6 +606,33 @@ TEST_CASE("Default bounded store API declines without an allocating fallback", "
 
 TEST_CASE("Bounded terminal representation requires reviewed native controls", "[DataStore][bounded]")
 {
+#if defined(_MSVC_STL_VERSION)
+  INFO("MSVC STL release=" << _MSVC_STL_VERSION);
+#if defined(_MSVC_STL_UPDATE)
+  INFO("MSVC STL update=" << _MSVC_STL_UPDATE);
+#endif
+#elif defined(_GLIBCXX_RELEASE)
+  INFO("libstdc++ release=" << _GLIBCXX_RELEASE);
+#if defined(__GLIBCXX__)
+  INFO("libstdc++ date=" << __GLIBCXX__);
+#endif
+#if defined(_GLIBCXX_USE_CXX11_ABI)
+  INFO("libstdc++ CXX11 ABI=" << _GLIBCXX_USE_CXX11_ABI);
+#endif
+#elif defined(_LIBCPP_VERSION)
+  INFO("libc++ version=" << _LIBCPP_VERSION);
+#if defined(_LIBCPP_ABI_VERSION)
+  INFO("libc++ ABI=" << _LIBCPP_ABI_VERSION);
+#endif
+#endif
+#if defined(expected_lite_MAJOR) && defined(expected_lite_MINOR) && defined(expected_lite_PATCH)
+  INFO("expected-lite version=" << expected_lite_MAJOR << '.' << expected_lite_MINOR << '.' << expected_lite_PATCH);
+#else
+  INFO("expected-lite version macros are unavailable");
+#endif
+#if defined(nsel_USES_STD_EXPECTED)
+  INFO("nsel_USES_STD_EXPECTED=" << nsel_USES_STD_EXPECTED);
+#endif
   REQUIRE(BoundedRead::DiagnosticRepresentationSupported());
   REQUIRE(BoundedRead::TerminalDiagnosticBoundBytes() > 0);
   REQUIRE(BoundedRead::TerminalDiagnosticBoundBytes() <= BoundedRead::k_DiagnosticBytes);
