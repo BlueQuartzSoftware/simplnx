@@ -94,6 +94,9 @@ inline bool Add(uint64 first, uint64 second, uint64& result) noexcept
  * Apple's libc++ 180100 (Xcode MacOSX15.2.sdk) was reviewed for exact counted
  * default-allocator vector allocation, allocation-free empty controls and moves,
  * and bounded string reserve. Other libc++ 18 releases require their own review.
+ * Captured Apple libc++ 210106 headers (Xcode 26.6, macOS 26.5 SDK)
+ * satisfy these bounds with ABI 1, C++20 and ordinary new.
+ * Typed new and other libc++ 21 releases require separate source review.
  * GCC 11.4 libstdc++ (__GLIBCXX__ == 20230528, CXX11 ABI) satisfies the same
  * bounds as GCC 14. The review covers bits/stl_vector.h, bits/vector.tcc,
  * bits/basic_string.h, bits/basic_string.tcc and expected-lite 0.8.0.
@@ -110,6 +113,8 @@ inline constexpr bool DiagnosticRepresentationSupported() noexcept
   return _MSVC_STL_VERSION == 143 && _MSVC_STL_UPDATE == 202503L;
 #elif defined(_GLIBCXX_RELEASE)
   return (_GLIBCXX_RELEASE == 11 || _GLIBCXX_RELEASE == 13 || _GLIBCXX_RELEASE == 14) && _GLIBCXX_USE_CXX11_ABI == 1;
+#elif defined(__APPLE__) && defined(__clang__) && defined(_LIBCPP_VERSION) && _LIBCPP_VERSION == 210106 && defined(_LIBCPP_ABI_VERSION)
+  return _LIBCPP_ABI_VERSION == 1 && __cplusplus == 202002L && !__has_feature(typed_cxx_new_delete);
 #elif defined(_LIBCPP_VERSION)
   return _LIBCPP_VERSION == 180100 || (_LIBCPP_VERSION >= 190000 && _LIBCPP_VERSION < 200000);
 #else
@@ -120,7 +125,7 @@ inline constexpr bool DiagnosticRepresentationSupported() noexcept
 /**
  * @brief Bounds the fixed empty-vector proxy in the reviewed configuration.
  * @return Two pointers for MSVC iterator debugging, otherwise zero.
- * @note GCC 11.4/13.3/14 libstdc++ and libc++ 180100/19.x have no heap iterator proxy.
+ * @note GCC 11.4/13.3/14, libc++ 180100/19.x and reviewed Apple libc++ 210106 have no heap iterator proxy.
  */
 inline constexpr uint64 EmptyVectorProxyBytes() noexcept
 {
@@ -172,9 +177,9 @@ inline constexpr uint64 TerminalDiagnosticBoundBytes() noexcept;
  * @param bytes Receives payload and a conservative debug iterator-proxy allowance.
  * @return False for an unreviewed STL or overflow, without changing bytes.
  * @note Native CI must exercise this guard; a toolchain upgrade requires source review.
- * GCC 11.4/13.3/14 libstdc++ and libc++ 180100 counted construction and fresh reserve
- * request exactly count elements. They have no heap iterator proxy, so the
- * 64-byte allowance is conservative.
+ * GCC 11.4/13.3/14 and libc++ 180100 counted construction and fresh reserve request exactly count elements.
+ * The reviewed Apple libc++ 210106 configuration has the same allocation behavior.
+ * These implementations have no heap iterator proxy, so the 64-byte allowance is conservative.
  */
 inline bool FreshVectorBytes(uint64 count, uint64 width, uint64& bytes) noexcept
 {
@@ -481,6 +486,8 @@ struct Diagnostic
  * libc++ 180100 and 19.x round fresh string capacity to their allocation alignment
  * and also fit that bound. In Apple's libc++ 180100, reserve(511) requests 512 bytes
  * including the terminator; subsequent assign does not grow it.
+ * The reviewed Apple libc++ 210106 configuration also requests 512 bytes for reserve(511).
+ * Assigning at most 511 characters does not grow its message buffer.
  * These GNU and libc++ implementations
  * have no empty-vector/string heap proxy. Default-allocator moves/swap transfer
  * the existing payload without allocation.
