@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -399,7 +398,7 @@ Result<> CropImageGeometry::operator()()
     return {};
   }
 
-  // Copy feature arrays before renumbering so each tuple supplies initial data.
+  // Validate Feature Ids against the source AM before compacting the cropped data.
   if(shouldRenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
@@ -408,44 +407,8 @@ Result<> CropImageGeometry::operator()()
     {
       return validateNumFeatResult;
     }
-    std::vector<DataPath> sourceFeatureDataPaths;
-    auto childPathsResult = GetAllChildArrayDataPaths(m_DataStructure, cellFeatureAMPath);
-    if(childPathsResult.has_value())
-    {
-      sourceFeatureDataPaths = childPathsResult.value();
-    }
-
-    std::vector<DataPath> destFeatureDataPaths = sourceFeatureDataPaths;
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
-
-    for(auto& dataPath : destFeatureDataPaths)
-    {
-      dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
-    }
-
-    // DeepCopy replaces preflight outputs before renumbering resizes feature data.
-    for(usize index = 0; index < sourceFeatureDataPaths.size(); index++)
-    {
-      DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
-      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
-      {
-        auto result = DeepCopy<IDataArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
-      {
-        auto result = DeepCopy<StringArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-    }
-
-    // Renumber copied feature data and cropped cell Feature IDs together.
+    // Renumber cropped Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
     return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
