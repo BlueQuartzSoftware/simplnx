@@ -75,6 +75,10 @@
           "value": "DataContainer/Cell Feature Data",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": true,
+          "version": 1
+        },
         "crop_x_dim": {
           "value": true,
           "version": 1
@@ -131,7 +135,7 @@
           "value": "DataContainer",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "remove_original_geometry": {
           "value": true,
           "version": 1
