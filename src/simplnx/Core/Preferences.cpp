@@ -6,7 +6,16 @@
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 
+#include <fmt/format.h>
+
+#include <array>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
+#include <limits>
+#include <stdexcept>
+#include <string_view>
+#include <utility>
 
 #ifdef _WIN32
 #include <stdio.h>
@@ -33,11 +42,184 @@ constexpr int32 k_FailedToCreateDirectory_Code = -585;
 constexpr int32 k_FileDoesNotExist_Code = -586;
 constexpr int32 k_FileCouldNotOpen_Code = -587;
 constexpr int32 k_JsonParseError_Code = -588;
+constexpr int32 k_InvalidRoot_Code = -589;
+constexpr int32 k_InvalidOocSize_Code = -590;
+constexpr int32 k_RepairedOocSize_Warning = -591;
 
 constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
 constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
 constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
 constexpr StringLiteral k_JsonParseError_Message = "Parsing the JSON Preferences file failed.";
+
+std::string_view oocSizeLabel(const std::string& name)
+{
+  if(name == Preferences::k_LargeDataSize_Key)
+  {
+    return "Large Data Size";
+  }
+  if(name == Preferences::k_LargeDataStructureSize_Key)
+  {
+    return "Large Data Structure Size";
+  }
+  return {};
+}
+
+std::string_view jsonTypeName(const nlohmann::json& value)
+{
+  if(value.is_number_unsigned())
+  {
+    return "number_unsigned";
+  }
+  if(value.is_number_integer())
+  {
+    return "number_integer";
+  }
+  if(value.is_number_float())
+  {
+    return "number_float";
+  }
+  return value.type_name();
+}
+
+bool canRenderExact(const nlohmann::json& value, std::size_t& remaining, int depth)
+{
+  if(depth > 3 || remaining < 32)
+  {
+    return false;
+  }
+  if(value.is_string())
+  {
+    const auto& contents = value.get_ref<const std::string&>();
+    if(contents.size() > (remaining - 2) / 6)
+    {
+      return false;
+    }
+    remaining -= 2 + 6 * contents.size();
+    return true;
+  }
+  if(value.is_array() || value.is_object())
+  {
+    if(value.size() > 8 || remaining < 2 + 2 * value.size())
+    {
+      return false;
+    }
+    remaining -= 2 + 2 * value.size();
+    for(auto iter = value.begin(); iter != value.end(); ++iter)
+    {
+      if(value.is_object())
+      {
+        if(iter.key().size() > remaining / 6)
+        {
+          return false;
+        }
+        remaining -= 6 * iter.key().size();
+      }
+      if(!canRenderExact(iter.value(), remaining, depth + 1))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+  if(value.is_binary())
+  {
+    return false;
+  }
+  if(value.is_number_float() && !std::isfinite(value.get<double>()))
+  {
+    return false;
+  }
+  remaining -= 32;
+  return true;
+}
+
+std::string boundedPreview(const nlohmann::json& value, int depth)
+{
+  if(value.is_number_float())
+  {
+    const double number = value.get<double>();
+    if(std::isnan(number))
+    {
+      return "NaN";
+    }
+    if(std::isinf(number))
+    {
+      return std::signbit(number) ? "-Infinity" : "+Infinity";
+    }
+  }
+  if(value.is_string())
+  {
+    const auto& contents = value.get_ref<const std::string&>();
+    std::string preview = nlohmann::json(contents.substr(0, 24)).dump(-1, ' ', true, nlohmann::json::error_handler_t::replace);
+    if(contents.size() > 24)
+    {
+      preview += "...";
+    }
+    return preview;
+  }
+  if(value.is_array() || value.is_object())
+  {
+    if(depth >= 2)
+    {
+      return fmt::format("[{} with {} entries]", jsonTypeName(value), value.size());
+    }
+    std::string preview = value.is_object() ? "{" : "[";
+    std::size_t shown = 0;
+    for(auto iter = value.begin(); iter != value.end() && shown < 2; ++iter, ++shown)
+    {
+      if(shown != 0)
+      {
+        preview += ",";
+      }
+      if(value.is_object())
+      {
+        const auto& key = iter.key();
+        preview += nlohmann::json(key.substr(0, 24)).dump(-1, ' ', true, nlohmann::json::error_handler_t::replace);
+        if(key.size() > 24)
+        {
+          preview += "...";
+        }
+        preview += ":";
+      }
+      preview += boundedPreview(iter.value(), depth + 1);
+    }
+    if(value.size() > shown)
+    {
+      preview += ",...";
+    }
+    preview += value.is_object() ? "}" : "]";
+    if(preview.size() > 256)
+    {
+      preview.resize(253);
+      preview += "...";
+    }
+    return preview;
+  }
+  if(value.is_binary())
+  {
+    return "[binary value]";
+  }
+  return value.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+}
+
+std::string boundedJsonValue(const nlohmann::json& value)
+{
+  std::size_t remaining = 256;
+  if(canRenderExact(value, remaining, 0))
+  {
+    return value.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+  }
+  if(value.is_string())
+  {
+    const auto& contents = value.get_ref<const std::string&>();
+    return nlohmann::json(contents.substr(0, 64)).dump(-1, ' ', false, nlohmann::json::error_handler_t::replace) + "...";
+  }
+  if(value.is_array() || value.is_object())
+  {
+    return fmt::format("{} with {} entries; preview {} [truncated]", jsonTypeName(value), value.size(), boundedPreview(value, 0));
+  }
+  return boundedPreview(value, 0);
+}
 
 /**
  * @brief Returns the current user's home directory.
@@ -67,6 +249,29 @@ std::filesystem::path Preferences::DefaultFilePath(const std::string& applicatio
 #else
   return getHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
 #endif
+}
+
+Result<uint64> Preferences::ValidateOocSizeValue(const std::string& name, const nlohmann::json& value)
+{
+  const std::string_view label = oocSizeLabel(name);
+  if(label.empty())
+  {
+    return MakeErrorResult<uint64>(k_InvalidOocSize_Code, fmt::format("Preferences size key '{}' is not supported for value {} (JSON type {}).", name, boundedJsonValue(value), jsonTypeName(value)));
+  }
+  if(value.is_number_unsigned())
+  {
+    return {value.get<uint64>()};
+  }
+  if(value.is_number_integer())
+  {
+    const int64 signedValue = value.get<int64>();
+    if(signedValue >= 0)
+    {
+      return {static_cast<uint64>(signedValue)};
+    }
+  }
+  return MakeErrorResult<uint64>(k_InvalidOocSize_Code, fmt::format("Preferences {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes.", label, name, boundedJsonValue(value),
+                                                                    jsonTypeName(value), std::numeric_limits<uint64>::max()));
 }
 
 Preferences::Preferences()
@@ -167,9 +372,17 @@ nlohmann::json Preferences::defaultValue(const std::string& name) const
 
 void Preferences::setValue(const std::string& name, const nlohmann::json& value)
 {
+  if(name == k_LargeDataSize_Key || name == k_LargeDataStructureSize_Key)
+  {
+    const auto validation = ValidateOocSizeValue(name, value);
+    if(validation.invalid())
+    {
+      throw std::invalid_argument(validation.errors().front().message);
+    }
+  }
   m_Values[name] = value;
 
-  // The single-array threshold determines the whole-data-structure default.
+  // The default whole-data-structure threshold uses the default array threshold.
   if(name == k_LargeDataSize_Key)
   {
     updateMemoryDefaults();
@@ -240,7 +453,34 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
     return MakeErrorResult(k_JsonParseError_Code, k_JsonParseError_Message);
   }
 
-  m_Values = parsedResult;
+  if(!parsedResult.is_object())
+  {
+    return MakeErrorResult(k_InvalidRoot_Code, fmt::format("Preferences file '{}' has a JSON {} root. Expected a JSON object.", filepath.string(), jsonTypeName(parsedResult)));
+  }
+
+  Result<> result;
+  const std::array<std::string, 2> thresholdKeys = {std::string(k_LargeDataSize_Key), std::string(k_LargeDataStructureSize_Key)};
+  for(const auto& key : thresholdKeys)
+  {
+    if(!parsedResult.contains(key))
+    {
+      continue;
+    }
+    const auto validation = ValidateOocSizeValue(key, parsedResult.at(key));
+    if(validation.valid())
+    {
+      continue;
+    }
+    const uint64 replacementBytes = defaultValueAs<uint64>(key);
+    result.warnings().push_back(
+        Warning{k_RepairedOocSize_Warning,
+                fmt::format("Preferences: saved {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes. Using the default: {} bytes. Review this value in "
+                            "Preferences > Out of Core.",
+                            oocSizeLabel(key), key, boundedJsonValue(parsedResult.at(key)), jsonTypeName(parsedResult.at(key)), std::numeric_limits<uint64>::max(), replacementBytes)});
+    parsedResult.erase(key);
+  }
+
+  m_Values = std::move(parsedResult);
 
   // Preserve a canonical value when both keys exist. Remove the legacy key so
   // later saves retain only the cache-specific preference.
@@ -262,7 +502,7 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
   }
 
   updateMemoryDefaults();
-  return {};
+  return result;
 }
 
 bool Preferences::useOocData() const

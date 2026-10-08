@@ -11,7 +11,11 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Pipeline/PlaceholderFilter.hpp"
 
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
+
+#include <exception>
+#include <new>
 
 #include <algorithm>
 #include <fstream>
@@ -316,6 +320,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   {
     return false;
   }
+  setHasCompletionErrors(false);
   bool returnValue = true;
   // Send notification that the pipeline is executing
   sendPipelineRunStateMessage(RunState::Executing);
@@ -345,15 +350,21 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
     }
 
     bool success = filter->execute(dataStructure, shouldCancel);
-    // Check if the filter was cancelled, and send out signal if it was.
+    setHasWarnings(hasWarnings() || filter->hasWarnings());
+    if(filter->hasCompletionErrors())
+    {
+      setHasCompletionErrors(true);
+      setHasErrors();
+      returnValue = false;
+    }
+    // Execute-stage cancellation keeps its existing outcome; checked completion failure must survive it.
     if(shouldCancel)
     {
       sendCancelledMessage();
       break;
     }
 
-    setHasWarnings(filter->hasWarnings());
-    if(!success)
+    if(!success || filter->hasCompletionErrors())
     {
       setHasErrors();
       returnValue = false;
@@ -362,7 +373,27 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   }
 
   // checkDataStructureSize(dataStructure);
-  setDataStructure(dataStructure);
+  ErrorCollection snapshotErrors;
+  try
+  {
+    setDataStructure(dataStructure);
+  } catch(const std::bad_alloc&)
+  {
+    snapshotErrors.push_back({-272, fmt::format("Pipeline '{}' final completion snapshot failed because memory allocation failed.", getName())});
+  } catch(const std::exception& exception)
+  {
+    snapshotErrors.push_back({-6071, fmt::format("Pipeline '{}' final completion snapshot failed: {}", getName(), exception.what())});
+  } catch(...)
+  {
+    snapshotErrors.push_back({-6071, fmt::format("Pipeline '{}' final completion snapshot failed with an unknown exception.", getName())});
+  }
+  if(!snapshotErrors.empty())
+  {
+    setHasCompletionErrors(true);
+    setHasErrors();
+    returnValue = false;
+    sendFilterFaultDetailMessage(-1, {}, snapshotErrors);
+  }
 
   sendPipelineFaultMessage(m_FaultState);
   sendPipelineRunStateMessage(RunState::Idle);

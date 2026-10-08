@@ -38,13 +38,14 @@ public:
 
   /**
    * @brief Executes K-Means with direct element access.
-   * @return Success, or an invalid-mask or empty-mask error.
+   * @return Success, or an invalid mask, empty mask, or zero cluster count error.
    * @pre The input has at least one tuple. Its component count is positive and fits in Int32.
-   * @pre The cluster count is positive, fits in Int32, and output shapes are compatible.
+   * @pre A positive cluster count fits in Int32, and output shapes are compatible.
    *
-   * This path does not validate these shape preconditions. It does not check
-   * cancellation during centroid selection. Later cancellation returns success
-   * and can leave partial assignments or centroids.
+   * This path rejects zero clusters. Other limits remain preconditions.
+   * The selection loop does not check
+   * cancellation.
+   * Later cancellation returns success. Assignments or centroids can be partial.
    */
   Result<> operator()();
 

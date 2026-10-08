@@ -6,6 +6,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -14,6 +15,8 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <new>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -739,6 +742,32 @@ public:
   [[nodiscard]] virtual Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<T> destination) const = 0;
 
   /**
+   * @brief Optionally reads an extent with an explicit backend scratch allowance.
+   *
+   * The destination belongs to the caller and is outside the allowance. True
+   * means that every destination value is valid. A valid false result leaves
+   * the destination unchanged and performs no payload read. An invalid result
+   * can leave a prefix and requires the caller to discard the destination.
+   * The default implementation declines without invoking a payload reader.
+   * Mandatory empty Result controls are caller-funded ABI storage, outside the
+   * backend allowance. Iterator-debug builds can allocate fixed empty-vector
+   * bookkeeping. No payload, preparation or diagnostic text is allowed before
+   * admission. BoundedRead::EmptyResultControlBytes() describes reviewed controls.
+   *
+   * @param extent Supplies tuple-space coordinates in row-major order.
+   * @param destination Receives exactly the selected tuples and all components.
+   * @param scratchBudgetBytes Limits owned backend scratch, including diagnostics.
+   * @return Complete, optional unavailability, or a validation/read error.
+   */
+  [[nodiscard]] virtual Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const
+  {
+    static_cast<void>(extent);
+    static_cast<void>(destination);
+    static_cast<void>(scratchBudgetBytes);
+    return {false};
+  }
+
+  /**
    * @brief Reads related N-dimensional extents into caller-owned storage.
    *
    * All extents and destination sizes are validated before this method writes a
@@ -1212,6 +1241,30 @@ public:
   }
 
   /**
+   * @brief Flushes storage through the legacy operation and reports failures.
+   * @return Success, error -272 for allocation failure, or -6070 for another exception.
+   *
+   * @note Diagnostic allocation can still throw std::bad_alloc.
+   */
+  [[nodiscard]] virtual Result<> flushChecked() const
+  {
+    try
+    {
+      flush();
+      return {};
+    } catch(const std::bad_alloc& error)
+    {
+      return MakeErrorResult(-272, fmt::format("Cannot flush numeric storage: memory allocation failed: {}", error.what()));
+    } catch(const std::exception& error)
+    {
+      return MakeErrorResult(-6070, fmt::format("Cannot flush numeric storage: {}", error.what()));
+    } catch(...)
+    {
+      return MakeErrorResult(-6070, "Cannot flush numeric storage: unknown storage failure.");
+    }
+  }
+
+  /**
    * @brief Returns the approximate memory usage in bytes.
    * @return Approximate memory usage in bytes.
    */
@@ -1234,11 +1287,57 @@ public:
    */
   virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
 
+  /**
+   * @brief Returns the value that initializes elements when the store grows.
+   * @return Initialization value, or no value if growth uses the mudflap value.
+   */
+  std::optional<T> getInitValue() const
+  {
+    return m_InitValue;
+  }
+
+  /**
+   * @brief Sets the policy for values added when the store grows.
+   * @param value Initialization value, or no value to use the mudflap value.
+   * @note Existing values do not change. Callers must exclude concurrent policy changes, resize and copying.
+   */
+  void setInitValue(std::optional<T> value)
+  {
+    m_InitValue = value;
+  }
+
+  /**
+   * @brief Sets the value used when the store grows.
+   * @param value Value that initializes new elements.
+   * @note Existing values do not change. Callers must exclude concurrent policy changes, resize and copying.
+   */
+  void setInitValue(T value)
+  {
+    m_InitValue = value;
+  }
+
 protected:
   /**
-   * @brief Creates a data store without values.
+   * @brief Creates base state without allocating values.
+   * @param initValue Growth initializer; nullopt selects the diagnostic value.
    */
-  AbstractDataStore() = default;
+  explicit AbstractDataStore(std::optional<T> initValue = T{})
+  : m_InitValue(initValue)
+  {
+  }
+
+  /**
+   * @brief Resolves the value used for newly added elements.
+   * @return Explicit initializer, or GetMudflap<T>() when the initializer is absent.
+   */
+  T getGrowthInitValue() const
+  {
+    if(m_InitValue.has_value())
+    {
+      return *m_InitValue;
+    }
+    return GetMudflap<T>();
+  }
 
   /**
    * @brief Copies base data-store state.
@@ -1246,6 +1345,7 @@ protected:
    */
   AbstractDataStore(const AbstractDataStore& other)
   : IDataStore(other)
+  , m_InitValue(other.m_InitValue)
   {
   }
 
@@ -1255,8 +1355,12 @@ protected:
    */
   AbstractDataStore(AbstractDataStore&& other)
   : IDataStore(std::move(other))
+  , m_InitValue(std::move(other.m_InitValue))
   {
   }
+
+private:
+  std::optional<T> m_InitValue;
 };
 
 using UInt8AbstractDataStore = AbstractDataStore<uint8>;

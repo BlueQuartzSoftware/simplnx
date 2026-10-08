@@ -8,6 +8,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   ErrorWarningFilter
+  FlushFailureFilter
   ExampleFilter1Filter
   ExampleFilter2Filter
   # CreateOutOfCoreArray

@@ -52,20 +52,56 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   IGeometry::MeshIndexType numberOfVertices = nodeGeom1DRef.getNumberOfVertices();
 
   // Generate the Lambda Array
-  std::vector<float> lambdas = generateLambdaArray();
+  std::vector<float> lambdas;
+  Result<> result = generateLambdaArray(lambdas);
+  if(result.invalid())
+  {
+    return result;
+  }
 
   auto inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
   if(nullptr != inode2DPtr)
   {
     //  Generate the Unique Edges
-    if(Result<> result = inode2DPtr->findEdges(false); result.invalid())
+    result = MergeResults(std::move(result), inode2DPtr->findEdges(false));
+    if(result.invalid())
     {
       return result;
     }
   }
 
-  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edges = nodeGeom1DRef.getEdges()->getDataStoreRef();
-  IGeometry::MeshIndexType numEdges = edges.getNumberOfTuples();
+  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edgeDataStore = nodeGeom1DRef.getEdges()->getDataStoreRef();
+  IGeometry::MeshIndexType numEdges = edgeDataStore.getNumberOfTuples();
+
+  // Cache coordinates and edges once to avoid per-element OOC I/O in every iteration.
+  // The edge list adds 2 * numEdges * sizeof(MeshIndexType) bytes; scratch memory remains O(mesh size), like the existing vertex arrays.
+  std::vector<float> vertices(numberOfVertices * 3);
+  result = MergeResults(std::move(result), vertDataStoreRef.copyIntoBuffer(0, nonstd::span<float>(vertices.data(), vertices.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-561, fmt::format("Error reading vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+  }
+
+  std::vector<IGeometry::MeshIndexType> edges(numEdges * 2);
+  result = MergeResults(std::move(result), edgeDataStore.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(edges.data(), edges.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-562, fmt::format("Error reading edges for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+  }
+
+  bool verticesModified = false;
+  // Persist completed passes on cancellation, at the same checkpoints as the original algorithm.
+  const auto writeVertices = [&]() -> Result<> {
+    if(verticesModified)
+    {
+      result = MergeResults(std::move(result), vertDataStoreRef.copyFromBuffer(0, nonstd::span<const float>(vertices.data(), vertices.size())));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-563, fmt::format("Error writing smoothed vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+      }
+    }
+    return std::move(result);
+  };
 
   std::vector<int32> numConnections(numberOfVertices, 0);
 
@@ -76,7 +112,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return writeVertices();
     }
     m_MessageHandler.sendInfoMessage(fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
@@ -91,7 +127,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
         Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-        dlta = static_cast<double>(vertDataStoreRef[3 * in2 + j] - vertDataStoreRef[3 * in1 + j]);
+        dlta = static_cast<double>(vertices[3 * in2 + j] - vertices[3 * in1 + j]);
         deltaArray[3 * in1 + j] += dlta;
         deltaArray[3 * in2 + j] += -1.0 * dlta;
       }
@@ -108,11 +144,13 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         dlta = deltaArray[in0] / numConnections[i];
 
         float ll = lambdas[i];
-        vertDataStoreRef[3 * i + j] += ll * dlta;
+        // ValueProxy::operator+= converts the displacement to float before the addition.
+        vertices[3 * i + j] += static_cast<float>(ll * dlta);
         deltaArray[in0] = 0.0; // reset for next iteration
       }
       numConnections[i] = 0; // reset for next iteration
     }
+    verticesModified = true;
 
     // Now optionally apply a negative lambda based on the mu Factor value.
     // This is from Taubin's paper on smoothing without shrinkage. This effectively
@@ -122,7 +160,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
       if(m_ShouldCancel)
       {
-        return {};
+        return writeVertices();
       }
       m_MessageHandler.sendInfoMessage(fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
@@ -137,7 +175,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
           Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-          dlta = vertDataStoreRef[3 * in2 + j] - vertDataStoreRef[3 * in1 + j];
+          dlta = vertices[3 * in2 + j] - vertices[3 * in1 + j];
           deltaArray[3 * in1 + j] += dlta;
           deltaArray[3 * in2 + j] += -1.0 * dlta;
         }
@@ -154,7 +192,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           dlta = deltaArray[in0] / numConnections[i];
 
           float ll = lambdas[i] * m_InputValues->pMuFactor;
-          vertDataStoreRef[3 * i + j] += ll * dlta;
+          vertices[3 * i + j] += static_cast<float>(ll * dlta);
           deltaArray[in0] = 0.0; // reset for next iteration
         }
         numConnections[i] = 0; // reset for next iteration
@@ -162,21 +200,28 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
   }
 
-  return {};
+  return writeVertices();
 }
 
 // -----------------------------------------------------------------------------
-std::vector<float> LaplacianSmoothing::generateLambdaArray() const
+Result<> LaplacianSmoothing::generateLambdaArray(std::vector<float>& lambdas) const
 {
   auto& surfaceMeshNode = m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)->getDataStoreRef();
 
   size_t numNodes = surfaceMeshNode.getNumberOfTuples();
 
-  std::vector<float> lambdas(numNodes, 0.0f);
+  std::vector<int8> nodeTypes(numNodes);
+  Result<> result = surfaceMeshNode.copyIntoBuffer(0, nonstd::span<int8>(nodeTypes.data(), nodeTypes.size()));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-560, fmt::format("Error reading node types at path '{}'.", m_InputValues->pSurfaceMeshNodeTypeArrayPath.toString())));
+  }
+
+  lambdas.assign(numNodes, 0.0f);
 
   for(size_t i = 0; i < numNodes; ++i)
   {
-    switch(surfaceMeshNode[i])
+    switch(nodeTypes[i])
     {
     case nx::core::NodeType::Unused:
       break;
@@ -203,7 +248,7 @@ std::vector<float> LaplacianSmoothing::generateLambdaArray() const
     }
   }
 
-  return lambdas;
+  return result;
 }
 
 // -----------------------------------------------------------------------------

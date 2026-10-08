@@ -66,7 +66,7 @@ AlgorithmTestScope::AlgorithmTestScope(AlgorithmTestScenario scenario)
 : m_Scenario(scenario)
 {
   auto* preferences = Application::GetOrCreateInstance()->getPreferences();
-  const int64 originalLargeDataSize = preferences->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  const nlohmann::json originalLargeDataSize = preferences->value(Preferences::k_LargeDataSize_Key);
   m_PreferencesSentinel = std::make_unique<PreferencesSentinel>(DataStorageMode::ForceInCore, originalLargeDataSize);
 }
 

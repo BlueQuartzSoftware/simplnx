@@ -397,6 +397,12 @@ public:
   const IListStore* getIListStore() const override;
 
   /**
+   * @brief Flushes the list store and preserves its diagnostics.
+   * @return Store diagnostics, or error -6070 for missing storage or a failure without an error diagnostic.
+   */
+  [[nodiscard]] Result<> flushChecked() const override;
+
+  /**
    * @brief Returns a shared_ptr to the underlying list store.
    * @return std::shared_ptr<store_type>
    */

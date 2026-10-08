@@ -423,7 +423,8 @@ Result<> ExecutePipeline(const Argument& arg)
   }
   if(!loadPipelineResult.m_Warnings.empty())
   {
-    cliOut << "Input Pipeline Warnings" << "\n";
+    cliOut << "Input Pipeline Warnings"
+           << "\n";
     for(const auto& warning : loadPipelineResult.m_Warnings)
     {
       cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
@@ -467,7 +468,8 @@ Result<> PreflightPipeline(const Argument& arg)
   }
   if(!loadPipelineResult.m_Warnings.empty())
   {
-    cliOut << "Preflight Pipeline: Input Pipeline Warnings" << "\n";
+    cliOut << "Preflight Pipeline: Input Pipeline Warnings"
+           << "\n";
     for(const auto& warning : loadPipelineResult.m_Warnings)
     {
       cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
@@ -771,6 +773,10 @@ int main(int argc, char* argv[])
 
   // Create the Application before the temporary preference override.
   auto app = nx::core::Application::GetOrCreateInstance();
+  for(const auto& warning : app->takePreferenceLoadWarnings())
+  {
+    fmt::print(stderr, "Warning {}: {}\n", warning.code, warning.message);
+  }
 
   /**
    * @struct PreferencesCacheBudgetRestorer

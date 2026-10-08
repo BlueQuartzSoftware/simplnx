@@ -254,6 +254,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 // -----------------------------------------------------------------------------
 bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
+  setHasCompletionErrors(false);
   this->sendFilterRunStateMessage(m_Index, nx::core::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "Begin");
 
@@ -284,9 +285,26 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
     m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
+  auto completionResult = endExecutionChecked(dataStructure);
+  setHasCompletionErrors(completionResult.invalid());
+  for(auto& warning : completionResult.warnings())
+  {
+    m_Warnings.push_back(std::move(warning));
+  }
+  if(completionResult.invalid())
+  {
+    if(completionResult.errors().empty())
+    {
+      completionResult.errors().push_back({-6071, fmt::format("Node '{}' checked completion failed without an error diagnostic.", getName())});
+    }
+    for(auto& error : completionResult.errors())
+    {
+      m_Errors.push_back(std::move(error));
+    }
+  }
+  const bool succeeded = result.result.valid() && completionResult.valid() && m_Filter != nullptr;
   setHasWarnings(!m_Warnings.empty());
-  setHasErrors(!m_Errors.empty());
-  endExecution(dataStructure);
+  setHasErrors(!succeeded);
 
   if(!m_Warnings.empty() || !m_Errors.empty())
   {
@@ -296,7 +314,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   this->sendFilterRunStateMessage(m_Index, nx::core::RunState::Idle);
   this->sendFilterUpdateMessage(m_Index, "End");
 
-  return result.result.valid() && m_Filter != nullptr;
+  return succeeded;
 }
 
 std::vector<DataPath> PipelineFilter::getCreatedPaths() const

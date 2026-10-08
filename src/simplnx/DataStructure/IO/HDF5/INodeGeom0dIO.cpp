@@ -1,4 +1,5 @@
 #include "INodeGeom0dIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
@@ -71,7 +72,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
 
   DataObject::OptionalId vertexListId = geometry.getVertexListId();
 
-  result = WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag));
   if(result.invalid())
   {
     return result;
@@ -87,25 +88,31 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     {
       indices[i] = i;
     }
-    result = datasetWriter.writeSpan(nx::core::HDF5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
+    AppendWriteResult(result, datasetWriter.writeSpan(nx::core::HDF5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices}));
     if(result.invalid())
     {
-      return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex indices for geometry '{}'", geometry.getName()));
+      auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex indices for geometry '{}'", geometry.getName()));
+      errorResult.warnings() = std::move(result.warnings());
+      return errorResult;
     }
   }
 
-  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  AppendWriteResult(result, groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits())));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  result = WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex attribute matrix for geometry '{}'", geometry.getName()));
+    auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex attribute matrix for geometry '{}'", geometry.getName()));
+    errorResult.warnings() = std::move(result.warnings());
+    return errorResult;
   }
 
-  return {};
+  return result;
 }
 } // namespace nx::core::HDF5

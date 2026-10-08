@@ -1,4 +1,5 @@
 #include "INodeGeom2dIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
@@ -49,24 +50,24 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  result = WriteDataId(groupWriter, geometry.getFaceListId(), IOConstants::k_FaceListTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceListId(), IOConstants::k_FaceListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), IOConstants::k_FaceDataTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), IOConstants::k_FaceDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), IOConstants::k_UnsharedEdgeListTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), IOConstants::k_UnsharedEdgeListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  return {};
+  return result;
 }
 } // namespace nx::core::HDF5

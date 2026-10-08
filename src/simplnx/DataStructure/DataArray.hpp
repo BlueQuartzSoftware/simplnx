@@ -335,14 +335,6 @@ public:
     {
       return nullptr;
     }
-    // Preserve resident growth initialization when destination policy also selects memory.
-    const auto* sourceStorePtr = dynamic_cast<const DataStore<T>*>(getDataStore());
-    auto* destinationStorePtr = dynamic_cast<DataStore<T>*>(dataStore.get());
-    if(sourceStorePtr != nullptr && destinationStorePtr != nullptr && sourceStorePtr->getStoreType() == IDataStore::StoreType::InMemory &&
-       destinationStorePtr->getStoreType() == IDataStore::StoreType::InMemory)
-    {
-      destinationStorePtr->setInitValue(sourceStorePtr->getInitValue());
-    }
     // Insertion assigns the destination identifier.
     std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), dataStore));
     if(dataStruct.insert(copy, copyPath.getParent()))
@@ -825,6 +817,24 @@ public:
   void flush() const override
   {
     m_DataStore->flush();
+  }
+
+  /**
+   * @brief Flushes the backing store and preserves its diagnostics.
+   * @return Store diagnostics, or error -6070 for missing storage or a failure without an error diagnostic.
+   */
+  [[nodiscard]] Result<> flushChecked() const override
+  {
+    if(m_DataStore == nullptr)
+    {
+      return MakeErrorResult(-6070, fmt::format("Cannot flush numeric array '{}': its data store is null.", getName()));
+    }
+    auto result = m_DataStore->flushChecked();
+    if(result.invalid() && result.errors().empty())
+    {
+      result.errors().push_back({-6070, fmt::format("Cannot flush numeric array '{}': its data store failed without an error diagnostic.", getName())});
+    }
+    return result;
   }
 
   /**

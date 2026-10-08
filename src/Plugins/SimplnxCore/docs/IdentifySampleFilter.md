@@ -46,6 +46,10 @@ When *Process Data Slice-By-Slice* is enabled, the *Slice-By-Slice Plane* parame
 - **XZ [1]**: Processes the volume slice by slice along the Y axis, scanning each XZ plane independently.
 - **YZ [2]**: Processes the volume slice by slice along the X axis, scanning each YZ plane independently.
 
+### Out-of-Core YZ Transfers
+
+For YZ slices, the out-of-core algorithm groups up to eight adjacent slices to reduce repeated reads and writes. Each slice still uses the same classification and hole-filling rules. The group size depends on the memory available for up to seven extra slice buffers. If that memory is unavailable, the algorithm processes one slice at a time. This limit applies to the extra slice buffers, not to all memory used by the filter.
+
 ### Required Input Sources
 
 - **Good Voxels Mask** -- a boolean array marking cells as *good* or *bad*, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to EBSD confidence index, image quality, or a similar scalar.

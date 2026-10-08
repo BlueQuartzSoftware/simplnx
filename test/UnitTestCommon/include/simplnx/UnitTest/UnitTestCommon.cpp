@@ -5,6 +5,7 @@
 #include <array>
 #include <cstring>
 #include <fstream>
+#include <stdexcept>
 
 namespace nx::core::UnitTest
 {
@@ -288,12 +289,25 @@ std::error_code TestFileSentinel::decompress()
 }
 
 PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, int64 largeDataSize)
+: PreferencesSentinel(mode, nlohmann::json(largeDataSize))
+{
+}
+
+PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, const nlohmann::json& largeDataSize)
 {
   auto* prefs = nx::core::Application::Instance()->getPreferences();
 
+  const auto validation = nx::core::Preferences::ValidateOocSizeValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
+  if(validation.invalid())
+  {
+    throw std::invalid_argument(validation.errors().front().message);
+  }
+
   // Save both values before this sentinel changes the process-wide preferences.
-  m_OriginalMode = prefs->dataStorageMode();
-  m_OriginalSize = prefs->valueAs<int64>(nx::core::Preferences::k_LargeDataSize_Key);
+  m_HadMode = prefs->contains(nx::core::Preferences::k_DataStorageMode_Key);
+  m_OriginalMode = prefs->value(nx::core::Preferences::k_DataStorageMode_Key);
+  m_HadSize = prefs->contains(nx::core::Preferences::k_LargeDataSize_Key);
+  m_OriginalSize = prefs->value(nx::core::Preferences::k_LargeDataSize_Key);
 
   // Apply the test values only after the complete prior state is available.
   prefs->setDataStorageMode(mode);
@@ -307,8 +321,22 @@ PreferencesSentinel::~PreferencesSentinel()
   // Restore only the in-memory values. Unit tests must not write the developer's preferences file.
   // A concurrent save or a terminated test could persist a temporary storage mode.
   // Later test processes would then inherit that incorrect mode.
-  prefs->setDataStorageMode(m_OriginalMode);
-  prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
+  if(m_HadSize)
+  {
+    prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
+  }
+  else
+  {
+    prefs->removeValue(nx::core::Preferences::k_LargeDataSize_Key);
+  }
+  if(m_HadMode)
+  {
+    prefs->setValue(nx::core::Preferences::k_DataStorageMode_Key, m_OriginalMode);
+  }
+  else
+  {
+    prefs->removeValue(nx::core::Preferences::k_DataStorageMode_Key);
+  }
 }
 
 } // namespace nx::core::UnitTest

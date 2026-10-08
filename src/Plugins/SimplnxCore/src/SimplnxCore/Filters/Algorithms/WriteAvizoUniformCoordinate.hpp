@@ -14,10 +14,10 @@ namespace nx::core
  * endianness and identifies it in the header. ASCII output inserts a newline
  * after 21 Feature IDs.
  *
- * DataStore read results and C stdio return values are not inspected. A source
- * or file-write failure can produce stale or partial output while returning
- * success. Cancellation is checked between Feature ID chunks and closes the
- * partial file with a success result.
+ * The writer checks source reads and each output operation. A failure stops
+ * later reads and returns an error. Cancellation is checked between Feature ID
+ * windows. The filter wrapper rejects
+ * publication after cancellation.
  */
 class SIMPLNXCORE_EXPORT WriteAvizoUniformCoordinate : public AvizoWriter
 {
@@ -43,9 +43,7 @@ public:
 
   /**
    * @brief Creates the output path and writes the Avizo file.
-   * @return Directory or file-open result from AvizoWriter.
-   *
-   * Cancellation and data-write failures are not distinguishable from success.
+   * @return Directory, source-read, output, or close status from AvizoWriter.
    */
   Result<> operator()();
 
@@ -53,7 +51,7 @@ protected:
   /**
    * @brief Writes the uniform-coordinate Avizo header.
    * @param outputFile Open binary-mode output stream.
-   * @return Success. C stdio failures are not inspected.
+   * @return Error if a header output operation fails.
    * @pre outputFile is not null.
    */
   Result<> generateHeader(FILE* outputFile) const override;
@@ -61,7 +59,7 @@ protected:
   /**
    * @brief Writes Feature IDs in binary or ASCII form.
    * @param outputFile Open binary-mode output stream.
-   * @return Success after completion or cancellation.
+   * @return Source warnings and any read or output error. Cancellation ends the current output.
    * @pre outputFile is not null.
    */
   Result<> writeData(FILE* outputFile) const override;

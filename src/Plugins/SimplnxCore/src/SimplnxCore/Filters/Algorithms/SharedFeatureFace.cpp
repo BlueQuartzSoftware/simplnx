@@ -2,9 +2,13 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <algorithm>
 #include <map>
 #include <random>
 #include <vector>
@@ -114,6 +118,189 @@ void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, In
   }
 }
 
+Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const SharedFeatureFaceInputValues& inputValues, usize totalPoints, const Int32Array& faceLabels, Int32Array& featureFaceIds,
+                                           const std::atomic_bool& shouldCancel)
+{
+  Result<> result;
+  std::map<uint64, int32> faceSizeMap;
+  std::map<uint64, int32> faceIdMap;
+  int32 index = 1;
+  std::vector<std::pair<int32, int32>> faceLabelVector;
+  faceLabelVector.emplace_back(0, 0);
+
+  // Two labels and one ID per triangle use at most 3 MiB of transfer buffers.
+  constexpr usize k_BlockTriangles = 262144;
+  const usize bufferTriangles = std::min(k_BlockTriangles, totalPoints);
+  std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
+  std::vector<int32> faceIdsBuffer(bufferTriangles);
+  auto& faceIdsStore = featureFaceIds.getDataStoreRef();
+  for(usize start = 0; start < totalPoints;)
+  {
+    const usize count = std::min(k_BlockTriangles, totalPoints - start);
+    result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12910, fmt::format("Error reading face labels for shared feature faces at triangle {} ({} triangles).", start, count)));
+    }
+
+    // Keep signed label ordering, unsigned key conversion and first-encounter IDs.
+    for(usize t = 0; t < count; ++t)
+    {
+      uint32 high = 0;
+      uint32 low = 0;
+      int32 fl0 = faceLabelsBuffer[t * 2];
+      int32 fl1 = faceLabelsBuffer[t * 2 + 1];
+      if(fl0 < fl1)
+      {
+        high = fl0;
+        low = fl1;
+      }
+      else
+      {
+        high = fl1;
+        low = fl0;
+      }
+      uint64 faceId64 = ConvertToUInt64(high, low);
+      if(faceSizeMap.find(faceId64) == faceSizeMap.end())
+      {
+        faceSizeMap[faceId64] = 1;
+        faceIdMap[faceId64] = index;
+        faceIdsBuffer[t] = index;
+        faceLabelVector.emplace_back(high, low);
+        ++index;
+      }
+      else
+      {
+        faceSizeMap[faceId64]++;
+        faceIdsBuffer[t] = faceIdMap[faceId64];
+      }
+    }
+    // Every ID in this span is assigned; any suffix beyond the geometry is untouched.
+    result = MergeResults(std::move(result), faceIdsStore.copyFromBuffer(start, nonstd::span<const int32>(faceIdsBuffer.data(), count)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12911, fmt::format("Error writing shared feature face IDs at triangle {} ({} triangles).", start, count)));
+    }
+    start += count;
+  }
+  // Match the in-core cancellation point after assigning every triangle ID.
+  if(shouldCancel)
+  {
+    return result;
+  }
+
+  auto& faceFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(inputValues.GrainBoundaryAttributeMatrixPath);
+  ShapeType tDims = {static_cast<usize>(index)};
+  // Preserve the in-core resize sequence and its GCC false-positive suppression.
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+  result = MergeResults(std::move(result), faceFeatureAttrMat.resizeTuples(tDims));
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
+#pragma GCC diagnostic pop
+#endif
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  auto& featureFaceLabels = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureFaceLabelsArrayPath).getDataStoreRef();
+  auto& featureFaceNumTriangles = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureFaceNumTrianglesArrayPath).getDataStoreRef();
+  result = MergeResults(std::move(result), featureFaceLabels.resizeTuples(tDims));
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = MergeResults(std::move(result), featureFaceNumTriangles.resizeTuples(tDims));
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  {
+    // Cache only the per-feature outputs (12 bytes per feature face). Preserve any
+    // values left unwritten by the existing parallel functor when cancellation occurs.
+    DataStore<int32> featureLabelsBuffer(tDims, {2}, std::nullopt);
+    DataStore<int32> featureCountsBuffer(tDims, {1}, std::nullopt);
+    result = MergeResults(std::move(result), featureFaceLabels.copyIntoBuffer(0, featureLabelsBuffer.createSpan()));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12912, "Error reading shared feature face labels before updating them."));
+    }
+    result = MergeResults(std::move(result), featureFaceNumTriangles.copyIntoBuffer(0, featureCountsBuffer.createSpan()));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12913, "Error reading shared feature face triangle counts before updating them."));
+    }
+
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setParallelizationEnabled(true);
+    dataAlg.setRange(0, index);
+    dataAlg.execute(SharedFeatureFaceImpl(faceLabelVector, featureLabelsBuffer, featureCountsBuffer, faceSizeMap, shouldCancel));
+
+    result = MergeResults(std::move(result), featureFaceLabels.copyFromBuffer(0, nonstd::span<const int32>(featureLabelsBuffer.data(), featureLabelsBuffer.getSize())));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12914, "Error writing shared feature face labels."));
+    }
+    result = MergeResults(std::move(result), featureFaceNumTriangles.copyFromBuffer(0, nonstd::span<const int32>(featureCountsBuffer.data(), featureCountsBuffer.getSize())));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-12915, "Error writing shared feature face triangle counts."));
+    }
+  }
+
+  if(inputValues.ShouldRandomizeFeatureIds)
+  {
+    // Match RandomizeFaceIds' seed, int64 distribution and swap order exactly.
+    const uint64 totalFeatures = index;
+    Int64Distribution distribution;
+    auto generator = initializeStaticVoxelSeedGenerator(distribution, 1, totalFeatures - 1);
+    std::vector<int64> rndNumbers(totalFeatures);
+    for(int64 i = 0; i < totalFeatures; ++i)
+    {
+      rndNumbers[i] = i;
+    }
+    for(int64 i = 1; i < totalFeatures; ++i)
+    {
+      const int64 r = distribution(generator);
+      if(r >= totalFeatures)
+      {
+        continue;
+      }
+      const int64 temp = rndNumbers[i];
+      rndNumbers[i] = rndNumbers[r];
+      rndNumbers[r] = temp;
+    }
+
+    // The original randomization visits the entire ID array, even if it has more
+    // tuples than the geometry. Read each block before applying the permutation.
+    const usize totalIds = featureFaceIds.getNumberOfTuples();
+    faceIdsBuffer.resize(std::min(k_BlockTriangles, totalIds));
+    for(usize start = 0; start < totalIds;)
+    {
+      const usize count = std::min(k_BlockTriangles, totalIds - start);
+      result = MergeResults(std::move(result), faceIdsStore.copyIntoBuffer(start, nonstd::span<int32>(faceIdsBuffer.data(), count)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12916, fmt::format("Error reading shared feature face IDs for randomization at tuple {} ({} tuples).", start, count)));
+      }
+      for(usize i = 0; i < count; ++i)
+      {
+        faceIdsBuffer[i] = rndNumbers[faceIdsBuffer[i]];
+      }
+      result = MergeResults(std::move(result), faceIdsStore.copyFromBuffer(start, nonstd::span<const int32>(faceIdsBuffer.data(), count)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12917, fmt::format("Error writing randomized shared feature face IDs at tuple {} ({} tuples).", start, count)));
+      }
+      start += count;
+    }
+  }
+  return result;
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -144,6 +331,15 @@ Result<> SharedFeatureFace::operator()()
   const Int32Array& surfaceMeshFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath);
 
   auto& surfaceMeshFeatureFaceIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureFaceIdsArrayPath);
+
+  const bool usesOutOfCoreStore = AnyOutOfCore({&surfaceMeshFaceLabels, &surfaceMeshFeatureFaceIds, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath),
+                                                m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath)});
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    return ComputeSharedFeatureFacesInBlocks(m_DataStructure, *m_InputValues, totalPoints, surfaceMeshFaceLabels, surfaceMeshFeatureFaceIds, m_ShouldCancel);
+  }
 
   std::map<uint64, int32> faceSizeMap;
   std::map<uint64, int32> faceIdMap; // This maps a unique 64-bit integer to an increasing 32-bit integer

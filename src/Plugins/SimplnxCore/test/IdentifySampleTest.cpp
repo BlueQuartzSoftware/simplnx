@@ -1,10 +1,15 @@
+#include "IdentifySampleBatchControlUtilities.hpp"
+
+#include "IdentifySampleBatchTestUtilities.hpp"
 
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -12,12 +17,16 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <filesystem>
+#include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 
 using namespace nx::core;
@@ -335,4 +344,324 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty X Non-Square {1,3,4}", "[
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{1, 3, 4});
   scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
+}
+
+namespace
+{
+/**
+ * @class IdentifySampleBudgetGuard
+ * @brief Restores the live manager budget without changing the saved preference.
+ * @note The caller must release all tokens before this guard is destroyed.
+ */
+class IdentifySampleBudgetGuard
+{
+public:
+  /** @brief Captures the current manager budget. */
+  IdentifySampleBudgetGuard()
+  : m_PreviousBudget(CacheMemoryBudgetManager::instance().budgetBytes())
+  {
+  }
+
+  /** @brief Restores the captured budget after the test releases its tokens. */
+  ~IdentifySampleBudgetGuard()
+  {
+    CacheMemoryBudgetManager::instance().setBudgetBytes(m_PreviousBudget);
+  }
+
+  IdentifySampleBudgetGuard(const IdentifySampleBudgetGuard&) = delete;
+  IdentifySampleBudgetGuard& operator=(const IdentifySampleBudgetGuard&) = delete;
+
+private:
+  uint64 m_PreviousBudget;
+};
+
+/**
+ * @struct IdentifySampleTransferCounts
+ * @brief Records logical bulk calls and live working reservations during target execution.
+ */
+struct IdentifySampleTransferCounts
+{
+  usize readCalls = 0;
+  usize writeCalls = 0;
+  usize successfulReads = 0;
+  usize successfulWrites = 0;
+  usize requestedReadValues = 0;
+  usize requestedWriteValues = 0;
+  usize maximumSpan = 0;
+  usize activeCalls = 0;
+  usize maximumConcurrentCalls = 0;
+  uint64 minimumReservedBytes = std::numeric_limits<uint64>::max();
+  uint64 maximumReservedBytes = 0;
+};
+
+/**
+ * @class IdentifySampleReportingStore
+ * @brief Observes real resident bulk transfers only while a witnessed filter call is active.
+ * @tparam T Bool or UInt8 mask element type.
+ * @note Counters measure logical calls. They do not measure disk traffic or backend worker concurrency.
+ */
+template <class T>
+class IdentifySampleReportingStore : public DataStore<T>
+{
+public:
+  /**
+   * @brief Creates a real resident store with observation disabled.
+   * @param tupleShape Mask tuple dimensions in Z, Y, X order.
+   */
+  explicit IdentifySampleReportingStore(const ShapeType& tupleShape)
+  : DataStore<T>(tupleShape, ShapeType{1}, std::optional<T>{})
+  {
+  }
+
+  /**
+   * @brief Observes one bulk read and delegates the transfer to the resident store exactly once.
+   * @param startIndex First flat source value index.
+   * @param buffer Receives the source values.
+   * @return The resident store transfer result.
+   */
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    if(!m_Armed)
+    {
+      return DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    }
+    beginTransfer(true, buffer.size());
+    const auto completion = MakeScopeGuard([this]() noexcept { endTransfer(); });
+    auto result = DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    if(result.valid())
+    {
+      const std::lock_guard<std::mutex> lock(m_CountMutex);
+      m_Counts.successfulReads++;
+    }
+    return result;
+  }
+
+  /**
+   * @brief Observes one bulk write and delegates the transfer to the resident store exactly once.
+   * @param startIndex First flat destination value index.
+   * @param buffer Supplies the new values.
+   * @return The resident store transfer result.
+   */
+  Result<> copyFromBuffer(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    if(!m_Armed)
+    {
+      return DataStore<T>::copyFromBuffer(startIndex, buffer);
+    }
+    beginTransfer(false, buffer.size());
+    const auto completion = MakeScopeGuard([this]() noexcept { endTransfer(); });
+    auto result = DataStore<T>::copyFromBuffer(startIndex, buffer);
+    if(result.valid())
+    {
+      const std::lock_guard<std::mutex> lock(m_CountMutex);
+      m_Counts.successfulWrites++;
+    }
+    return result;
+  }
+
+  /**
+   * @brief Enables or disables observation between transfers.
+   * @param armed True to count subsequent calls.
+   * @pre No transfer is active.
+   */
+  void setArmed(bool armed) noexcept
+  {
+    m_Armed = armed;
+  }
+
+  IdentifySampleTransferCounts counts() const
+  {
+    const std::lock_guard<std::mutex> lock(m_CountMutex);
+    return m_Counts;
+  }
+
+private:
+  void beginTransfer(bool isRead, usize values) const
+  {
+    const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+    const std::lock_guard<std::mutex> lock(m_CountMutex);
+    if(isRead)
+    {
+      m_Counts.readCalls++;
+      m_Counts.requestedReadValues += values;
+    }
+    else
+    {
+      m_Counts.writeCalls++;
+      m_Counts.requestedWriteValues += values;
+    }
+    m_Counts.maximumSpan = std::max(m_Counts.maximumSpan, values);
+    m_Counts.maximumConcurrentCalls = std::max(m_Counts.maximumConcurrentCalls, ++m_Counts.activeCalls);
+    m_Counts.minimumReservedBytes = std::min(m_Counts.minimumReservedBytes, reserved);
+    m_Counts.maximumReservedBytes = std::max(m_Counts.maximumReservedBytes, reserved);
+  }
+
+  void endTransfer() const noexcept
+  {
+    const std::lock_guard<std::mutex> lock(m_CountMutex);
+    m_Counts.activeCalls--;
+  }
+
+  bool m_Armed = false;
+  mutable std::mutex m_CountMutex;
+  mutable IdentifySampleTransferCounts m_Counts;
+};
+
+/**
+ * @brief Verifies exact output and the CCL one-plane schedule with no available working reservation.
+ * @tparam T Bool or UInt8 mask element type.
+ * @param scope Selects and witnesses the resident algorithm scenario.
+ * @param fillHoles Selects hole filling.
+ */
+template <class T>
+void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& scope, bool fillHoles)
+{
+  constexpr usize k_X = 19;
+  constexpr usize k_Y = 11;
+  constexpr usize k_Z = 13;
+
+  using IdentifySampleReportingStoreType = IdentifySampleReportingStore<T>;
+  using DataArrayType = DataArray<T>;
+
+  auto store = std::make_shared<IdentifySampleReportingStoreType>(ShapeType{k_Z, k_Y, k_X});
+  DataStructure dataStructure = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
+
+  auto& budget = CacheMemoryBudgetManager::instance();
+  REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
+  const uint64 originalBudget = budget.budgetBytes();
+  {
+    const IdentifySampleBudgetGuard budgetGuard;
+    REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
+    REQUIRE(budget.budgetBytes() == 4ULL * 1024 * 1024);
+    const uint64 capacity = budget.maximumWorkingMemoryBytes();
+    REQUIRE(capacity == 1024ULL * 1024);
+    const auto occupied = budget.reserveWorkingMemory(capacity);
+    REQUIRE(occupied.sizeBytes() == capacity);
+    REQUIRE(budget.reservedWorkingMemoryBytes() == capacity);
+    const auto refused = budget.reserveWorkingMemory(1);
+    REQUIRE(refused.sizeBytes() == 0);
+
+    IdentifySampleFilter filter;
+    const auto args = IdentifySampleBatchTest::ArgumentsFor(2, fillHoles);
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    {
+      store->setArmed(true);
+      const auto disarm = MakeScopeGuard([&store]() noexcept { store->setArmed(false); });
+      const auto executeResult = scope.executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    if(scope.scenario() == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    {
+      // With no headroom, CCL retains the one-plane transfer schedule and full XY spans.
+      const auto counts = store->counts();
+      REQUIRE(counts.readCalls == 2 * k_X * k_Z);
+      REQUIRE(counts.writeCalls == k_X * k_Z);
+      REQUIRE(counts.successfulReads == counts.readCalls);
+      REQUIRE(counts.successfulWrites == counts.writeCalls);
+      REQUIRE(counts.requestedReadValues == counts.readCalls * k_X * k_Y);
+      REQUIRE(counts.requestedWriteValues == counts.writeCalls * k_X * k_Y);
+      REQUIRE(counts.maximumSpan == k_X * k_Y);
+      REQUIRE(counts.maximumConcurrentCalls == 1);
+      REQUIRE(counts.activeCalls == 0);
+      REQUIRE(counts.minimumReservedBytes == capacity);
+      REQUIRE(counts.maximumReservedBytes == capacity);
+    }
+    REQUIRE(budget.reservedWorkingMemoryBytes() == capacity);
+  }
+  REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
+  REQUIRE(budget.budgetBytes() == originalBudget);
+  IdentifySampleBatchTest::RequireOutput<T>(dataStructure, 2, fillHoles, k_X);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: orthogonal literal masks", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2});
+  const bool fillHoles = GENERATE(false, true);
+  const bool useBool = GENERATE(false, true);
+  CAPTURE(scenario, plane, fillHoles, useBool);
+  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
+  UnitTest::AlgorithmTestScope scope(scenario);
+  if(useBool)
+  {
+    auto dataStructure = IdentifySampleBatchTest::CreateFixture<bool>(plane);
+    IdentifySampleBatchTest::ExecuteAndRequire<bool>(scope, dataStructure, plane, fillHoles);
+  }
+  else
+  {
+    auto dataStructure = IdentifySampleBatchTest::CreateFixture<uint8>(plane);
+    IdentifySampleBatchTest::ExecuteAndRequire<uint8>(scope, dataStructure, plane, fillHoles);
+  }
+}
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ literal tail masks", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const usize fixedCount = GENERATE(usize{1}, usize{7}, usize{8}, usize{9}, usize{16}, usize{17}, usize{19});
+  const bool fillHoles = GENERATE(false, true);
+  const bool useBool = GENERATE(false, true);
+  CAPTURE(scenario, fixedCount, fillHoles, useBool);
+  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
+  UnitTest::AlgorithmTestScope scope(scenario);
+  if(useBool)
+  {
+    auto dataStructure = IdentifySampleBatchTest::CreateFixture<bool>(2, fixedCount);
+    IdentifySampleBatchControlTest::CheckGrant<bool>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  }
+  else
+  {
+    auto dataStructure = IdentifySampleBatchTest::CreateFixture<uint8>(2, fixedCount);
+    IdentifySampleBatchControlTest::CheckGrant<uint8>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  }
+}
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ without working headroom", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool fillHoles = GENERATE(false, true);
+  const bool useBool = GENERATE(false, true);
+  CAPTURE(scenario, fillHoles, useBool);
+  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
+  UnitTest::AlgorithmTestScope scope(scenario);
+  if(useBool)
+  {
+    CheckIdentifySampleWithoutWorkingHeadroom<bool>(scope, fillHoles);
+  }
+  else
+  {
+    CheckIdentifySampleWithoutWorkingHeadroom<uint8>(scope, fillHoles);
+  }
+}
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ real reservation widths", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const usize width = GENERATE(usize{1}, usize{2}, usize{3}, usize{8});
+  const usize partial = GENERATE(usize{0}, usize{17});
+  const bool fillHoles = GENERATE(false, true);
+  const bool useBool = GENERATE(false, true);
+  DYNAMIC_SECTION("scenario=" << scenario << " width=" << width << " remainder=" << partial << " Bool=" << useBool << " fill=" << fillHoles)
+  {
+    const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
+    UnitTest::AlgorithmTestScope scope(scenario);
+    if(useBool)
+    {
+      auto data = IdentifySampleBatchTest::CreateFixture<bool>(2);
+      IdentifySampleBatchControlTest::CheckGrant<bool>(scope, data, width, partial, fillHoles, 19, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+    }
+    else
+    {
+      auto data = IdentifySampleBatchTest::CreateFixture<uint8>(2);
+      IdentifySampleBatchControlTest::CheckGrant<uint8>(scope, data, width, partial, fillHoles, 19, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+    }
+  }
 }

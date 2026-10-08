@@ -1,4 +1,5 @@
 #include "BenchmarkRunner.hpp"
+#include "BenchmarkPreferenceSnapshot.hpp"
 
 #include "BenchmarkTiling.hpp"
 
@@ -37,37 +38,6 @@ std::string FirstErrorMessage(const std::vector<Error>& errors)
 {
   return errors.empty() ? "(no message)" : errors.front().message;
 }
-
-// RAII sentinel that mirrors UnitTest::PreferencesSentinel (save mode + large_data_size, apply, restore on
-// destruction). Re-implemented locally because this standalone tool deliberately does NOT link the UnitTestCommon
-// .cpp that defines PreferencesSentinel's ctor/dtor (see benchmark/CMakeLists.txt). This one restores in-memory only
-// -- it never writes the preferences file to disk.
-class BenchPreferencesSentinel
-{
-public:
-  BenchPreferencesSentinel(DataStorageMode mode, int64 largeDataSize)
-  {
-    auto* prefs = Application::Instance()->getPreferences();
-    m_OriginalMode = prefs->dataStorageMode();
-    m_OriginalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-    prefs->setDataStorageMode(mode);
-    prefs->setValue(Preferences::k_LargeDataSize_Key, largeDataSize);
-  }
-  ~BenchPreferencesSentinel()
-  {
-    auto* prefs = Application::Instance()->getPreferences();
-    prefs->setDataStorageMode(m_OriginalMode);
-    prefs->setValue(Preferences::k_LargeDataSize_Key, m_OriginalSize);
-  }
-  BenchPreferencesSentinel(const BenchPreferencesSentinel&) = delete;
-  BenchPreferencesSentinel(BenchPreferencesSentinel&&) = delete;
-  BenchPreferencesSentinel& operator=(const BenchPreferencesSentinel&) = delete;
-  BenchPreferencesSentinel& operator=(BenchPreferencesSentinel&&) = delete;
-
-private:
-  DataStorageMode m_OriginalMode;
-  int64 m_OriginalSize;
-};
 
 // Removes every DataObject NOT present in @p baseline (the set of IDs snapshotted right after the tiled input was
 // built). Handles both in-place-output filters (an array under the shared cell AM) and new-geometry-output filters
@@ -397,7 +367,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   DataStructure dsInCore;
   DataPath inputPath;
   {
-    const BenchPreferencesSentinel sentinel(DataStorageMode::ForceInCore, 0);
+    const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
     Result<DataPath> r = PrepareBenchmarkInput(dsInCore, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceInCore);
     if(r.invalid())
     {
@@ -418,7 +388,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   // --- new-in-core ---
   if(!opts.oocOnly)
   {
-    const BenchPreferencesSentinel sentinel(DataStorageMode::ForceInCore, 0);
+    const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
     std::string note;
     row.newIncoreMs = RunConfig(filterList, spec.newFilterUuid, dsInCore, baseInCore, spec, geom, inputPath, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
     if(!note.empty())
@@ -435,7 +405,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
     DataPath oocInput;
     bool built = false;
     {
-      const BenchPreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, opts.oocThreshold);
+      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
       Result<DataPath> r = PrepareBenchmarkInput(dsOoc, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceOutOfCore);
       if(r.invalid())
       {
@@ -450,7 +420,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
     if(built)
     {
       const std::unordered_set<DataObject::IdType> baseOoc = SnapshotIds(dsOoc);
-      const BenchPreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, opts.oocThreshold);
+      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
       std::string note;
       row.newOocMs = RunConfig(filterList, spec.newFilterUuid, dsOoc, baseOoc, spec, geom, oocInput, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
       if(!note.empty())
