@@ -13,6 +13,8 @@
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -256,6 +258,75 @@ DataStructure CreateDataStructure()
   Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellDataDims, {1}, cellDataPtr->getId());
 
   return dataStructure;
+}
+
+/**
+ * @brief Creates four columns of features and independent Feature and Ensemble data.
+ * @return Image geometry with FeatureId x + 1 at each cell (x, y, 0).
+ */
+DataStructure CreateFeatureCropFixture()
+{
+  DataStructure dataStructure;
+  dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({4, 4, 1});
+  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellData->getShape(), {1}, cellData->getId());
+  REQUIRE(featureIds != nullptr);
+  for(usize y = 0; y < 4; ++y)
+  {
+    for(usize x = 0; x < 4; ++x)
+    {
+      (*featureIds)[y * 4 + x] = static_cast<int32>(x + 1);
+    }
+  }
+
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Cell Feature Data", ShapeType{5}, imageGeom->getId());
+  REQUIRE(featureData != nullptr);
+  auto* numElements = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureData->getId());
+  REQUIRE(numElements != nullptr);
+  numElements->fill(4);
+  (*numElements)[0] = 0;
+  auto* neighbors = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureData->getId());
+  REQUIRE(neighbors != nullptr);
+  neighbors->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureData->getId()) != nullptr);
+
+  auto* ensembleData = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", ShapeType{2}, imageGeom->getId());
+  REQUIRE(ensembleData != nullptr);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleData->getId());
+  REQUIRE(crystalStructures != nullptr);
+  (*crystalStructures)[0] = 999;
+  (*crystalStructures)[1] = 1;
+  return dataStructure;
+}
+
+/**
+ * @brief Selects the last two columns of the feature fixture using inclusive voxel bounds.
+ * @param clear Whether to clear the destination Feature Attribute Matrix.
+ * @param renumber Stored renumber setting, effective only when clear is true.
+ * @return Arguments that preserve the source and create the Cropped geometry.
+ */
+Arguments MakeFeatureCropArgs(bool clear, bool renumber)
+{
+  Arguments args;
+  args.insert(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{2, 0, 0}));
+  args.insert(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{3, 3, 0}));
+  args.insert(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Cropped"})));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(clear));
+  args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(renumber));
+  args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Feature Data"})));
+  args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  return args;
 }
 } // namespace
 
@@ -612,6 +683,225 @@ TEST_CASE("SimplnxCore::CropImageGeometry: real OOC stores preserve cropped valu
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF preflight", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(it != result.outputValues.end());
+  CHECK(it->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
+  CHECK(it->value.find("Image/Cell Feature Data/NeighborList") != std::string::npos);
+  CHECK(it->value.find("Image/Cell Feature Data/Names") != std::string::npos);
+  CHECK(it->value.find("Ensemble") == std::string::npos);
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF preflight", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF ignores stored renumber", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  Arguments args = MakeFeatureCropArgs(false, true);
+  args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "DoesNotExist"})));
+  args.insertOrAssign(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON Feature AM errors", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  // An Attribute Matrix that is not a child of "Image".
+  REQUIRE(AttributeMatrix::Create(ds, "Elsewhere", std::vector<usize>{5}) != nullptr);
+  CropImageGeometryFilter filter;
+
+  Arguments args = MakeFeatureCropArgs(true, false);
+  args.insertOrAssign(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
+  auto notChild = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
+  REQUIRE(notChild.outputActions.errors().size() == 1);
+  CHECK(notChild.outputActions.errors().front().code == -50561);
+
+  args.insertOrAssign(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data"})));
+  auto isCellAm = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.outputActions);
+  REQUIRE(isCellAm.outputActions.errors().size() == 1);
+  CHECK(isCellAm.outputActions.errors().front().code == -50562);
+
+  args.insertOrAssign(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Image", "Missing"})));
+  auto missing = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(missing.outputActions);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF execute", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  auto result = filter.execute(ds, MakeFeatureCropArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"}));
+  CHECK(am.getShape() == std::vector<usize>{5});
+  CHECK(am.getSize() == 0);
+  // The cell FeatureIds keep their original values (3 and 4 for x = 2 and 3).
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 8);
+  const std::array<int32, 8> expectedIds = {3, 4, 3, 4, 3, 4, 3, 4};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  // The Ensemble AM is copied unchanged.
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  // The source geometry is untouched (debugging route).
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
+  CHECK(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})).getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber ON execute", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  auto result = filter.execute(ds, MakeFeatureCropArgs(true, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"}));
+  CHECK(am.getShape() == std::vector<usize>{3}); // features 3 and 4 remain, plus row 0
+  CHECK(am.getSize() == 0);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 8);
+  const std::array<int32, 8> expectedIds = {1, 2, 1, 2, 1, 2, 1, 2};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  const bool renumber = GENERATE(false, true);
+  CAPTURE(renumber);
+  auto result = filter.execute(ds, MakeFeatureCropArgs(false, renumber));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Feature Data", "NumElements"})));
+  const auto& numElements = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Feature Data", "NumElements"}));
+  REQUIRE(numElements.getNumberOfTuples() == 5);
+  const std::array<int32, 5> expectedNumElements = {0, 4, 4, 4, 4};
+  for(usize i = 0; i < expectedNumElements.size(); ++i)
+  {
+    CHECK(numElements[i] == expectedNumElements[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Cell Feature Data"}));
+  CHECK(am.getShape() == std::vector<usize>{5});
+  CHECK(am.getSize() == 3);
+  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Cell Feature Data", "NeighborList"})));
+  const auto& neighbors = ds.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Cell Feature Data", "NeighborList"}));
+  const std::vector<std::vector<int32>> expectedNeighbors = {{}, {2}, {1, 3}, {2, 4}, {3}};
+  REQUIRE(neighbors.getNumberOfTuples() == expectedNeighbors.size());
+  for(usize i = 0; i < expectedNeighbors.size(); ++i)
+  {
+    CHECK(neighbors.getList(static_cast<int32>(i)) == expectedNeighbors[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<StringArray>(DataPath({"Cropped", "Cell Feature Data", "Names"})));
+  const auto& names = ds.getDataRefAs<StringArray>(DataPath({"Cropped", "Cell Feature Data", "Names"}));
+  const std::array<std::string, 5> expectedNames = {"Background", "One", "Two", "Three", "Four"};
+  REQUIRE(names.getNumberOfTuples() == expectedNames.size());
+  for(usize i = 0; i < expectedNames.size(); ++i)
+  {
+    CHECK(names[i] == expectedNames[i]);
+  }
+  // The stored renumber=true is ignored.
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 8);
+  const std::array<int32, 8> expectedIds = {3, 4, 3, 4, 3, 4, 3, 4};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON in place", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  CropImageGeometryFilter filter;
+  Arguments args = MakeFeatureCropArgs(true, true);
+  args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"}));
+  CHECK(am.getSize() == 0);
+  CHECK(am.getShape() == std::vector<usize>{3});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  const auto& imageGeom = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  CHECK(imageGeom.getDimensions() == SizeVec3(2, 4, 1));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 8);
+  const std::array<int32, 8> expectedIds = {1, 2, 1, 2, 1, 2, 1, 2};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  CHECK(ds.getData(DataPath({"Cropped"})) == nullptr);
+  CHECK(ds.getData(DataPath({".Image"})) == nullptr);
+  CHECK(ds.getData(DataPath({".cropped_image_geometry"})) == nullptr);
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("SimplnxCore::CropImageGeometryFilter(Instantiate)", "[SimplnxCore][CropImageGeometryFilter]")
 {
   UnitTest::LoadPlugins();
@@ -634,6 +924,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Instantiate)", "[SimplnxCore][Cr
   // args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
@@ -671,6 +962,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter Invalid Params", "[SimplnxCore][
   // args.insertOrAssign(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
@@ -760,6 +1052,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore]
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -802,14 +1095,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore]
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -843,6 +1134,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XY", "[Simplnx
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -888,14 +1180,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XY", "[Simplnx
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -929,6 +1219,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XZ", "[Simplnx
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -972,14 +1263,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XZ", "[Simplnx
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1013,6 +1302,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - YZ", "[Simplnx
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1056,14 +1346,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - YZ", "[Simplnx
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1097,6 +1385,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - X", "[SimplnxC
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1141,14 +1430,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - X", "[SimplnxC
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1182,6 +1469,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Y", "[SimplnxC
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1226,14 +1514,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Y", "[SimplnxC
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1267,6 +1553,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Z", "[SimplnxC
   //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1311,14 +1598,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Z", "[SimplnxC
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1351,6 +1636,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[Simpln
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1393,14 +1679,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[Simpln
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1479,6 +1763,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[Sim
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1523,14 +1808,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[Sim
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1563,6 +1846,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XZ Physical Bounds", "[Sim
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1611,14 +1895,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XZ Physical Bounds", "[Sim
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1651,6 +1933,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop YZ Physical Bounds", "[Sim
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1695,14 +1978,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop YZ Physical Bounds", "[Sim
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1735,6 +2016,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop X Physical Bounds", "[Simp
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1780,14 +2062,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop X Physical Bounds", "[Simp
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1820,6 +2100,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Y Physical Bounds", "[Simp
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1865,14 +2146,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Y Physical Bounds", "[Simp
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1905,6 +2184,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Z Physical Bounds", "[Simp
   args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
   args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
@@ -1950,14 +2230,12 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Z Physical Bounds", "[Simp
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
-  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
-  {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
-    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
-  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath));
+  const auto& exemplarFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  const auto& calculatedFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DestCellFeatureDataPath);
+  CHECK(calculatedFeatureAM.getNumberOfTuples() == exemplarFeatureAM.getNumberOfTuples());
+  CHECK(calculatedFeatureAM.getSize() == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1999,6 +2277,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL Backwards Compatibility",
       // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<bool>(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key) == false);
       CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<bool>(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key) == true);
       CHECK(args.value<bool>(CropImageGeometryFilter::k_RenumberFeatures_Key) == true);
       CHECK(args.value<DataPath>(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
