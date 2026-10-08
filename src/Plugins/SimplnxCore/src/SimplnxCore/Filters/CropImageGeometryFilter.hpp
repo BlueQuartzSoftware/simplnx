@@ -32,6 +32,7 @@ public:
   // static constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
   static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
   static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";

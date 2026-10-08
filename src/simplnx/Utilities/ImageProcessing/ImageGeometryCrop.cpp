@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -40,7 +39,6 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
 {
   const DataPath& srcImagePath = options.inputImageGeometryPath;
   DataPath destImagePath = options.outputImageGeometryPath;
-  const DataPath& featureIdsArrayPath = options.featureIdsPath;
   const std::vector<uint64>& minVoxels = options.minVoxel;
   const std::vector<uint64>& maxVoxels = options.maxVoxel;
   const bool shouldRenumberFeatures = options.renumberFeatures;
@@ -295,38 +293,47 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
         {"Cropped Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin,
                                                                                                      srcImageGeomPtr->getUnits())});
   }
-  // If feature renumbering is enabled, create the destination feature arrays.
-  if(shouldRenumberFeatures)
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(options.clearFeatureAttributeMatrix)
   {
+    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+    if(srcCellFeatureData == nullptr || cellFeatureAmPath.getParent() != srcImagePath)
+    {
+      return {MakeErrorResult<OutputActions>(
+                  -50561, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAmPath.toString(), srcImagePath.toString())),
+              preflightUpdatedValues};
+    }
+    if(srcImageGeomPtr->getCellData() == srcCellFeatureData)
+    {
+      return {MakeErrorResult<OutputActions>(-50562, fmt::format("The Feature Attribute Matrix '{}' is the Cell Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
+                                                                 "off 'Clear Feature Attribute Matrix'.",
+                                                                 cellFeatureAmPath.toString(), srcImagePath.toString())),
+              preflightUpdatedValues};
+    }
     ignorePaths.push_back(cellFeatureAmPath);
+    const DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, srcCellFeatureData->getShape()));
 
-    const auto& srcCellFeatureData = dataStructure.getDataRefAs<AttributeMatrix>(cellFeatureAmPath);
-    std::string warningMsg;
-    DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
-    auto tDims = srcCellFeatureData.getShape();
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
-    for(const auto& [identifier, object] : srcCellFeatureData)
+    std::string clearedList;
+    for(const auto& [identifier, object] : *srcCellFeatureData)
     {
-      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
-      {
-        DataType dataType = srcArray->getDataType();
-        ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
-        DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
-        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
-      }
-      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
-      {
-        warningMsg += "\n" + cellFeatureAmPath.toString() + "/" + srcNeighborListArray->getName();
-      }
+      clearedList += "\n" + cellFeatureAmPath.createChildPath(object->getName()).toString();
     }
-    if(!warningMsg.empty())
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the cropped geometry with no arrays.", cellFeatureAmPath.toString());
+    if(!clearedList.empty())
     {
-      preflightUpdatedValues.push_back(
-          {"Invalidated NeighborLists",
-           fmt::format(
-               "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-               featureIdsArrayPath.toString(), warningMsg)});
+      message += fmt::format(" Its values describe the uncropped geometry and are not copied. Recompute any of the following that later filters need:{}", clearedList);
     }
+    if(shouldRenumberFeatures)
+    {
+      message += "\nFeature Ids are renumbered; the Attribute Matrix is resized to the number of features remaining after the crop.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else if(options.reportUnclearedFeatureData)
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the cropped geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the uncropped geometry and are not valid for the cropped geometry."});
   }
 
   // This section covers copying the other Attribute Matrix objects from the source geometry
