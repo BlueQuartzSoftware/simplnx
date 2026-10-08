@@ -322,11 +322,11 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the cropped geometry with no arrays.", cellFeatureAmPath.toString());
     if(!clearedList.empty())
     {
-      message += fmt::format(" Its values describe the uncropped geometry and are not copied. Recompute any of the following that later filters need:{}", clearedList);
+      message += fmt::format(" Its values describe the uncropped geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
     }
     if(shouldRenumberFeatures)
     {
-      message += "\nFeature Ids are renumbered; the Attribute Matrix is resized to the number of features remaining after the crop.";
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the crop.";
     }
     preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
   }

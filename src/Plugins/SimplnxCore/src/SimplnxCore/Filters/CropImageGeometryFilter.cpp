@@ -4,13 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
-#include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -18,7 +12,6 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryCrop.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -40,8 +33,6 @@ struct CropImageGeometryFilterCache
 
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, CropImageGeometryFilterCache> s_HeaderCache;
-
-const std::string k_TempGeometryName = ".cropped_image_geometry";
 
 /**
  * @brief
@@ -129,7 +120,7 @@ Parameters CropImageGeometryFilter::parameters() const
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
       "Recreates the selected Feature Attribute Matrix in the cropped geometry with no arrays. Cropping changes which cells belong to each feature, so every feature value computed before this "
