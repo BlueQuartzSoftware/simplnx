@@ -124,10 +124,10 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** An extracted geometry is named `<Created Image Geometry Prefix>-<id>` with the id zero-padded to the width of the feature count (for example `Extracted_Feature-03` when there are 12 feature tuples) and carries a copy of the source feature Attribute Matrix; DREAM3D 6.5.171 names it `Feature_<id>` with no padding and copies only the cell Attribute Matrix. The geometry's dimensions, origin, spacing and cell arrays are identical in both.
+**Symptom:** An extracted geometry is named `<Created Image Geometry Prefix>-<id>` with the id zero-padded to the width of the feature count (for example `Extracted_Feature-03` when there are 12 feature tuples). It contains no Feature Attribute Matrix. Other non-cell Attribute Matrices, such as Ensemble data, are still copied. DREAM3D 6.5.171 names it `Feature_<id>` with no padding and copies only the cell Attribute Matrix. Removing the Feature Attribute Matrix brings SIMPLNX closer to 6.5.171. Naming and any other copied non-cell Attribute Matrices remain different. The geometry's dimensions, origin, spacing and cell arrays are identical in both.
 
-**Root cause:** `algorithmic choice`. SIMPLNX exposes the prefix as a parameter and pads so that geometries sort in id order; it reuses `CropImageGeometryFilter` with feature renumbering off, which copies the feature Attribute Matrix so feature-level attributes stay available in the extracted geometry.
+**Root cause:** `algorithmic choice`. SIMPLNX exposes the prefix as a parameter and pads so that geometries sort in id order. It reuses `CropImageGeometryFilter` with *Clear Feature Attribute Matrix* off, which copies every non-Cell Attribute Matrix. After each successful crop, SIMPLNX removes the Feature Attribute Matrix identified by the parent of the flagged-features array. All other copied Attribute Matrices remain.
 
-**Affected users:** Pipelines or scripts that reference extracted geometries by the legacy `Feature_<id>` name, and users who expect the extracted geometry to contain only cell data.
+**Affected users:** Pipelines or scripts that reference extracted geometries by the legacy `Feature_<id>` name, and users who expect only cell data when other non-feature Attribute Matrices are present. Users who relied on feature attributes inside the extracted geometries must now recompute them on the extracted geometry.
 
-**Recommendation:** `trust SIMPLNX`. Set the prefix to `Feature_` for a closer match; note that the id is still zero-padded and the feature Attribute Matrix is still carried.
+**Recommendation:** `trust SIMPLNX`. Update geometry paths for the chosen prefix, the inserted hyphen and zero-padding. Recompute required feature attributes on each extracted geometry. Other non-cell, non-feature Attribute Matrices are still copied.
