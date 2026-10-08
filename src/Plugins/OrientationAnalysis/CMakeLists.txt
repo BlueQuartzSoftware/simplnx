@@ -32,6 +32,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # OrientationAnalysis/src/OrientationAnalysis/Filters/ directory.
 set(FilterList
+  BlendImageFilter
   AlignSectionsMisorientationFilter
   AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
@@ -172,6 +173,7 @@ endif()
 # This should be integrated with the `create_simplnx_plugin` function call
 # ------------------------------------------------------------------------------
 set(filter_algorithms
+  BlendImage
   AlignSectionsMisorientation
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
