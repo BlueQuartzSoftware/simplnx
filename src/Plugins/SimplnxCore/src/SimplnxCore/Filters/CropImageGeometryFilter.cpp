@@ -129,12 +129,18 @@ Parameters CropImageGeometryFilter::parameters() const
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Optional Renumber Features"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Feature Data"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+      "Recreates the selected Feature Attribute Matrix in the cropped geometry with no arrays. Cropping changes which cells belong to each feature, so every feature value computed before this "
+      "filter is invalid. Recompute any feature data needed later in the pipeline.",
+      true));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Cell Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after cropping", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
@@ -146,8 +152,9 @@ Parameters CropImageGeometryFilter::parameters() const
   params.linkParameters(k_UsePhysicalBounds_Key, k_MinCoord_Key, true);
   params.linkParameters(k_UsePhysicalBounds_Key, k_MaxCoord_Key, true);
 
-  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
-  params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrixPath_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrixPath_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometryPath_Key, false);
 
   return params;
@@ -156,7 +163,7 @@ Parameters CropImageGeometryFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType CropImageGeometryFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 IFilter::UniquePointer CropImageGeometryFilter::clone() const
@@ -175,7 +182,9 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   options.maxVoxel = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MaxVoxel_Key);
   options.minCoordinate = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MinCoord_Key);
   options.maxCoordinate = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MaxCoord_Key);
-  options.renumberFeatures = filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  options.clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  options.reportUnclearedFeatureData = true;
+  options.renumberFeatures = options.clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
   options.removeOriginalGeometry = filterArgs.value<BoolParameter::ValueType>(k_RemoveOriginalGeometry_Key);
   options.usePhysicalBounds = filterArgs.value<BoolParameter::ValueType>(k_UsePhysicalBounds_Key);
   options.cropX = filterArgs.value<BoolParameter::ValueType>(k_CropXDim_Key);
@@ -198,7 +207,8 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.MinVoxel = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MinVoxel_Key);
   inputValues.MaxVoxel = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MaxVoxel_Key);
-  inputValues.RenumberFeatures = filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
   inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   inputValues.RemoveOriginalGeometry = filterArgs.value<BoolParameter::ValueType>(k_RemoveOriginalGeometry_Key);
   inputValues.CropXDim = filterArgs.value<BoolParameter::ValueType>(k_CropXDim_Key);
