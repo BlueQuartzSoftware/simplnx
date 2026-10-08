@@ -32,6 +32,7 @@ result = nx_filter.execute(
     max_voxel=[140, 140, 99],
     min_voxel=[41, 41, 0],
     remove_original_geometry=True,
+    clear_feature_attribute_matrix=True,
     renumber_features=True,
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_physical_bounds=False
@@ -39,6 +40,35 @@ result = nx_filter.execute(
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
+# Instantiate Filter
+nx_filter = nx.ComputeFeaturePhasesFilter()
+# Execute Filter with Parameters
+result = nx_filter.execute(
+    data_structure=data_structure,
+    cell_features_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+    feature_phases_array_name="Phases"
+)
+nxtest.check_filter_result(nx_filter, result)
+
+# Filter 4
+# Instantiate Filter
+nx_filter = nxor.ComputeAvgOrientationsFilter()
+# Execute Filter with Parameters
+result = nx_filter.execute(
+    data_structure=data_structure,
+    avg_euler_angles_array_name="AvgEulerAngles",
+    avg_quats_array_name="AvgQuats",
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    cell_feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures")
+)
+nxtest.check_filter_result(nx_filter, result)
+
+# Filter 5
 # Instantiate Filter
 #nx_filter = nx.MoveDataFilter()
 # Execute Filter with Parameters
@@ -49,7 +79,7 @@ nxtest.check_filter_result(nx_filter, result)
 # )
 # nxtest.check_filter_result(nx_filter, result)
 
-# Filter 4
+# Filter 6
 # Instantiate Filter
 nx_filter = nx.QuickSurfaceMeshFilter()
 # Execute Filter with Parameters
@@ -66,7 +96,7 @@ result = nx_filter.execute(
 )
 nxtest.check_filter_result(nx_filter, result)
 
-# Filter 5
+# Filter 7
 # Set Output File Path
 output_file_path = nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
 # Instantiate Filter

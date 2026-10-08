@@ -320,6 +320,10 @@
           "value": "Cell Feature Data",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": false,
+          "version": 1
+        },
         "crop_x_dim": {
           "value": true,
           "version": 1
@@ -376,7 +380,7 @@
           "value": "CroppedBottomHalf",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "remove_original_geometry": {
           "value": false,
           "version": 1
@@ -401,6 +405,10 @@
       "args": {
         "cell_feature_attribute_matrix_path": {
           "value": "Cell Feature Data",
+          "version": 1
+        },
+        "clear_feature_attribute_matrix": {
+          "value": false,
           "version": 1
         },
         "crop_x_dim": {
@@ -459,7 +467,7 @@
           "value": "CroppedTopHalf",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "remove_original_geometry": {
           "value": false,
           "version": 1
