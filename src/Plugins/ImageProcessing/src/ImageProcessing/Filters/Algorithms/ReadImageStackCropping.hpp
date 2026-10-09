@@ -1,9 +1,14 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageIO/ImageStackCropping.hpp"
 
-namespace
+#include <fmt/format.h>
+
+#include <cmath>
+
+namespace nx::core
 {
 /**
  * @struct ZRange
@@ -11,8 +16,8 @@ namespace
  */
 struct ZRange
 {
-  nx::core::usize zMin;
-  nx::core::usize zMax;
+  usize zMin;
+  usize zMax;
 };
 
 /**
@@ -26,11 +31,9 @@ struct ZRange
  * @param originSpacingProcessing Selects whether overrides apply before cropping.
  * @return Inclusive slice indices, or an error for an invalid crop range.
  */
-inline nx::core::Result<ZRange> ComputeCroppedZRange(const nx::core::CropGeometryParameter::CropValues& croppingOptions, nx::core::usize zDim,
-                                                     const nx::core::VectorFloat32Parameter::ValueType& origin, const nx::core::VectorFloat32Parameter::ValueType& spacing, bool shouldChangeOrigin,
-                                                     bool shouldChangeSpacing, nx::core::OriginSpacingProcessing originSpacingProcessing)
+inline Result<ZRange> ComputeCroppedZRange(const CropGeometryParameter::CropValues& croppingOptions, usize zDim, const VectorFloat32Parameter::ValueType& origin,
+                                           const VectorFloat32Parameter::ValueType& spacing, bool shouldChangeOrigin, bool shouldChangeSpacing, OriginSpacingProcessing originSpacingProcessing)
 {
-  using namespace nx::core;
   if(zDim == 0)
   {
     return MakeErrorResult<ZRange>(-64511, "Input file list is empty; nothing to read.");
@@ -62,4 +65,4 @@ inline nx::core::Result<ZRange> ComputeCroppedZRange(const nx::core::CropGeometr
   }
   return {range};
 }
-} // namespace
+} // namespace nx::core
