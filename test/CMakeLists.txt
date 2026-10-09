@@ -28,6 +28,7 @@ add_subdirectory(ConversionTest)
 
 set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
+  ProfileIsolationContract.cpp
   AppTest.cpp
   ArraySelectionParameterTest.cpp
   ArgumentsTest.cpp
@@ -145,6 +146,24 @@ target_compile_options(simplnx_test
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 catch_discover_tests(simplnx_test)
+
+add_test(NAME "simplnx_test_profile_isolation"
+  COMMAND ${CMAKE_COMMAND}
+    "-DPROFILE_TEST_EXECUTABLE=$<TARGET_FILE:simplnx_test>"
+    "-DPROFILE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/ProfileIsolation"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/VerifyTestProfileIsolation.cmake")
+set_tests_properties("simplnx_test_profile_isolation" PROPERTIES RUN_SERIAL TRUE TIMEOUT 150)
+
+add_executable(ProfileIsolationLifecycleProbe ProfileIsolationLifecycleProbe.cpp)
+target_link_libraries(ProfileIsolationLifecycleProbe PRIVATE simplnx::TestProfile)
+simplnx_enable_warnings(TARGET ProfileIsolationLifecycleProbe)
+add_test(NAME "simplnx_test_profile_lifecycle"
+  COMMAND ${CMAKE_COMMAND}
+    "-DPROFILE_TEST_EXECUTABLE=$<TARGET_FILE:simplnx_test>"
+    "-DPROFILE_PROBE_EXECUTABLE=$<TARGET_FILE:ProfileIsolationLifecycleProbe>"
+    "-DPROFILE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/ProfileIsolation"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/VerifyTestProfileLifecycle.cmake")
+set_tests_properties("simplnx_test_profile_lifecycle" PROPERTIES RUN_SERIAL TRUE TIMEOUT 150)
 
 add_executable(P1BenchmarkPreferenceSnapshotTest
   ${simplnx_SOURCE_DIR}/src/Plugins/ImageProcessing/benchmark/BenchmarkPreferenceSnapshotTest.cpp)
