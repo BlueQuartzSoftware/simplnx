@@ -13,6 +13,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -213,6 +214,77 @@ using SharedFileSentinelType = std::shared_ptr<FileSentinelType>;
 // One shared sentinel keeps the extracted geometry fixtures available across each parameterized loop.
 SharedFileSentinelType s_FileSentinel;
 } // namespace
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic RectGrid bounds", "[Plugins][PartitionGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  std::vector<float32> xBounds;
+  std::vector<float32> yBounds;
+  std::vector<float32> zBounds;
+  SECTION("Z spacing uses Z bounds with zero origins")
+  {
+    xBounds = {0, 1, 3, 6};
+    yBounds = {0, 1, 2, 3, 5};
+    zBounds = {0, 4, 10};
+  }
+  SECTION("Spacing uses extents with nonzero origins")
+  {
+    xBounds = {1, 2, 4, 7};
+    yBounds = {-2, -1, 0, 1, 3};
+    zBounds = {10, 14, 20};
+  }
+
+  DataStructure dataStructure;
+  const DataPath geomPath({"RectGrid"});
+  const DataPath cellDataPath = geomPath.createChildPath("Cell Data");
+  const DataPath partitionGridPath({"Partition Grid"});
+  auto* rectGeom = RectGridGeom::Create(dataStructure, "RectGrid");
+  REQUIRE(rectGeom != nullptr);
+  rectGeom->setDimensions({3, 4, 2});
+  auto* xArray = UnitTest::CreateTestDataArray<float32>(dataStructure, "X Bounds", {xBounds.size()}, {1}, rectGeom->getId());
+  auto* yArray = UnitTest::CreateTestDataArray<float32>(dataStructure, "Y Bounds", {yBounds.size()}, {1}, rectGeom->getId());
+  auto* zArray = UnitTest::CreateTestDataArray<float32>(dataStructure, "Z Bounds", {zBounds.size()}, {1}, rectGeom->getId());
+  REQUIRE(xArray != nullptr);
+  REQUIRE(yArray != nullptr);
+  REQUIRE(zArray != nullptr);
+  std::copy(xBounds.begin(), xBounds.end(), xArray->begin());
+  std::copy(yBounds.begin(), yBounds.end(), yArray->begin());
+  std::copy(zBounds.begin(), zBounds.end(), zArray->begin());
+  const auto boundsResult = rectGeom->setBounds(xArray, yArray, zArray);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 4, 3}, rectGeom->getId());
+  REQUIRE(cellData != nullptr);
+  rectGeom->setCellData(*cellData);
+
+  auto args = createBasicPartitionGeometryArguments(geomPath, cellDataPath, "Partition Ids", {3, 5, 2}, std::nullopt);
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridGeometry_Key, partitionGridPath);
+  const PartitionGeometryFilter filter;
+  const auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(partitionGridPath));
+  const auto& partitionGeom = dataStructure.getDataRefAs<ImageGeom>(partitionGridPath);
+  REQUIRE(partitionGeom.getDimensions() == SizeVec3{3, 5, 2});
+  REQUIRE(partitionGeom.getOrigin() == FloatVec3{xBounds.front(), yBounds.front(), zBounds.front()});
+  const auto spacing = partitionGeom.getSpacing();
+  REQUIRE(spacing[0] == Approx(2.0f).margin(1.0e-5f));
+  REQUIRE(spacing[1] == Approx(1.0f).margin(1.0e-5f));
+  REQUIRE(spacing[2] == Approx(5.0f).margin(1.0e-5f));
+
+  const auto partitionIdsPath = cellDataPath.createChildPath("Partition Ids");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(partitionIdsPath));
+  const auto& partitionIds = dataStructure.getDataRefAs<Int32Array>(partitionIdsPath);
+  // Cell centers map to partition coordinates (0,0,0), (1,1,0), and (2,4,1).
+  // With starting ID 1, the partition ID is 1 + x + 3*y + 15*z.
+  REQUIRE(partitionIds[0] == 1);
+  REQUIRE(partitionIds[4] == 5);
+  REQUIRE(partitionIds[23] == 30);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeometryFilter]")
 {
