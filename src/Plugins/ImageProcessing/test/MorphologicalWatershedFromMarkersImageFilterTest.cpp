@@ -1,11 +1,13 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "WatershedPreflightTestUtils.hpp"
 
 #include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
@@ -381,4 +383,129 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK re
   REQUIRE(ourMd5 == "c32759ecb10cbff555c750b8b7a8d32e");
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight rejects missing temporary provider", "[ImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto application = Application::GetOrCreateInstance();
+  auto& collection = application->getIOCollection();
+  const DataIOCollection::map_type originalManagers(collection.begin(), collection.end());
+  const bool originalTemporaryCapability = collection.hasTemporaryRecordStoreCapability();
+  const bool originalSortCapability = collection.hasExternalSortCapability();
+  const bool originalImportCapability = collection.anyManagerFinalizesImport();
+  const auto originalNumericFormats = collection.getFormatNames();
+  const auto originalDisplayNames = collection.getFormatDisplayNames();
+  const std::string plannedFormat = "HDF5";
+  REQUIRE(collection.getManager(plannedFormat) != nullptr);
+  const auto originalInMemoryManager = collection.getManager(Preferences::k_InMemoryFormat.str());
+  REQUIRE(originalInMemoryManager != nullptr);
+
+  SECTION("planned grayscale reaches the missing-provider guard")
+  {
+    watershed_preflight_test::ScopedMissingTemporaryProvider guard(collection);
+    REQUIRE_FALSE(collection.hasTemporaryRecordStoreCapability());
+    REQUIRE(collection.getManager(Preferences::k_InMemoryFormat.str()) == originalInMemoryManager);
+    REQUIRE(collection.hasDataStoreCreationFunction(plannedFormat));
+
+    DataStructure dataStructure;
+    const DataPath geomPath({"Planned Image"});
+    const auto cellPath = geomPath.createChildPath("CellData");
+    const auto inputPath = cellPath.createChildPath("Grayscale");
+    const auto markerPath = cellPath.createChildPath("Markers");
+    const auto outputPath = cellPath.createChildPath("Output");
+    const ShapeType tupleShape{1, 2, 3};
+    const ShapeType componentShape{1};
+    auto* imageGeom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+    REQUIRE(imageGeom != nullptr);
+    imageGeom->setDimensions({3, 2, 1});
+    imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+    imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+    auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imageGeom->getId());
+    REQUIRE(cellData != nullptr);
+    imageGeom->setCellData(*cellData);
+
+    // HDF5 identifies a registered metadata-only format here. Neither input contains HDF5 values.
+    auto inputStoreResult = EmptyDataStore<int16>::Create(tupleShape, componentShape, plannedFormat);
+    SIMPLNX_RESULT_REQUIRE_VALID(inputStoreResult);
+    const auto* inputStore = inputStoreResult.value().get();
+    auto* inputArray = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellData->getId());
+    REQUIRE(inputArray != nullptr);
+    auto markerStoreResult = EmptyDataStore<uint32>::Create(tupleShape, componentShape, "");
+    SIMPLNX_RESULT_REQUIRE_VALID(markerStoreResult);
+    const auto* markerStore = markerStoreResult.value().get();
+    auto* markerArray = UInt32Array::Create(dataStructure, markerPath.getTargetName(), std::move(markerStoreResult.value()), cellData->getId());
+    REQUIRE(markerArray != nullptr);
+
+    const auto checkInputs = [&] {
+      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArray);
+      REQUIRE(inputArray->getIDataStore() == inputStore);
+      REQUIRE(inputArray->getDataType() == DataType::int16);
+      REQUIRE(inputArray->getTupleShape() == tupleShape);
+      REQUIRE(inputArray->getComponentShape() == componentShape);
+      REQUIRE(inputArray->getStoreType() == IDataStore::StoreType::Empty);
+      REQUIRE(inputStore->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
+      REQUIRE(inputArray->getDataFormat() == plannedFormat);
+      REQUIRE(dataStructure.getDataAs<UInt32Array>(markerPath) == markerArray);
+      REQUIRE(markerArray->getIDataStore() == markerStore);
+      REQUIRE(markerArray->getDataType() == DataType::uint32);
+      REQUIRE(markerArray->getTupleShape() == tupleShape);
+      REQUIRE(markerArray->getComponentShape() == componentShape);
+      REQUIRE(markerArray->getStoreType() == IDataStore::StoreType::Empty);
+      REQUIRE(markerStore->getPlannedStoreType() == IDataStore::StoreType::InMemory);
+      REQUIRE(markerArray->getDataFormat().empty());
+    };
+    checkInputs();
+    REQUIRE(dataStructure.getData(outputPath) == nullptr);
+    const auto originalIds = dataStructure.getAllDataObjectIds();
+
+    WSFilter filter;
+    Arguments args;
+    args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(WSFilter::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markerPath));
+    args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
+    const auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors().front().code == -79047);
+    REQUIRE(result.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(result.outputActions.warnings().empty());
+    REQUIRE(dataStructure.getData(outputPath) == nullptr);
+    REQUIRE(dataStructure.getAllDataObjectIds() == originalIds);
+    checkInputs();
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("manager slots restore after a controlled throw")
+  {
+    struct ControlledUnwind
+    {
+    };
+    bool reachedGuardedBody = false;
+    bool caughtControlledThrow = false;
+    try
+    {
+      watershed_preflight_test::ScopedMissingTemporaryProvider guard(collection);
+      REQUIRE_FALSE(collection.hasTemporaryRecordStoreCapability());
+      REQUIRE(collection.getManager(Preferences::k_InMemoryFormat.str()) == originalInMemoryManager);
+      reachedGuardedBody = true;
+      throw ControlledUnwind{};
+    } catch(const ControlledUnwind&)
+    {
+      caughtControlledThrow = true;
+    }
+    REQUIRE(reachedGuardedBody);
+    REQUIRE(caughtControlledThrow);
+  }
+
+  const DataIOCollection::map_type restoredManagers(collection.begin(), collection.end());
+  REQUIRE(restoredManagers == originalManagers);
+  REQUIRE(collection.hasTemporaryRecordStoreCapability() == originalTemporaryCapability);
+  REQUIRE(collection.hasExternalSortCapability() == originalSortCapability);
+  REQUIRE(collection.anyManagerFinalizesImport() == originalImportCapability);
+  REQUIRE(collection.getFormatNames() == originalNumericFormats);
+  REQUIRE(collection.getFormatDisplayNames() == originalDisplayNames);
 }
