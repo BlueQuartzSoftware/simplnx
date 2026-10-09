@@ -30,6 +30,9 @@ constexpr float64 k_max_difference = 0.0001;
 TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
@@ -70,6 +73,12 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
     std::string triangleNormalsName = "Face Normals (computed)";
 
     DataPath geometryPath = DataPath({triangleGeometryName});
+    const DataPath verticesPath = geometryPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+    const DataPath facesPath = geometryPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(verticesPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(facesPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(verticesPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(facesPath));
 
     // Create default Parameters for the filter.
     args.insertOrAssign(TriangleNormalFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
@@ -80,7 +89,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // Write the DataStructure out to the file system
@@ -89,6 +98,8 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
 #endif
 
     DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(triangleNormalsDataPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(triangleNormalsDataPath));
 
     // Let's compare the normals.
     DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
