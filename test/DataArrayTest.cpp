@@ -2303,8 +2303,18 @@ TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without valu
 TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures", "[simplnx][DataArray][StorageFormatPlan]")
 {
   const std::string format = "value-helper-invalid-factory";
-  const auto failure = GENERATE(0, 1);
+  const auto failure = GENERATE(0, 1, 2);
+  CAPTURE(failure);
   auto selectedFactoryCalls = std::make_shared<usize>(0);
+  auto fallbackMemoryFactoryCalls = std::make_shared<usize>(0);
+
+  auto& collection = Application::GetOrCreateInstance()->getIOCollection();
+  auto memoryEntry = std::find_if(collection.begin(), collection.end(), [](const auto& entry) { return entry.first == Preferences::k_InMemoryFormat.str(); });
+  REQUIRE(memoryEntry != collection.end());
+  const auto savedMemoryManager = memoryEntry->second;
+  auto restoreMemoryManager = MakeScopeGuard([memoryEntry, savedMemoryManager]() noexcept { memoryEntry->second = savedMemoryManager; });
+  memoryEntry->second = std::make_shared<CountingMemoryManager>(savedMemoryManager, fallbackMemoryFactoryCalls);
+
   auto manager = std::make_shared<CopyTestManager>(
       format,
       [failure, selectedFactoryCalls](DataType, const ShapeType& tuples, const ShapeType& components, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
@@ -2313,9 +2323,13 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
         {
           return nullptr;
         }
-        return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
+        if(failure == 1)
+        {
+          return std::make_unique<DataStore<float32>>(tuples, components, 0.0F);
+        }
+        return std::make_unique<DataStore<int32>>(tuples, components, 0);
       });
-  auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
+  auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
   DataStructure ds;
@@ -2328,6 +2342,7 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
 
   REQUIRE(store == nullptr);
   REQUIRE(*selectedFactoryCalls == 1);
+  REQUIRE(*fallbackMemoryFactoryCalls == 0);
 }
 
 TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[simplnx][DataArray][StorageFormatPlan]")
