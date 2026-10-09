@@ -8,9 +8,13 @@ IO (Output)
 
 This filter will write the selected **Data Array**s to either individual files or as a single CSV style of file. The inputs are any existing **Data Array**s (numeric or string) that the user selects to export.
 
+Select at least one DataArray in **Attribute Arrays to Export** for either output mode.
+
 ### Maximum Tuples Per Line
 
 When writing to multiple files, the *Maximum Tuples Per Line* parameter controls how many tuples are printed on each row of an output file (units: tuples per row). For example, with a value of *1* each tuple is written on its own line; with a value of *10* up to ten tuples are written per line before a new line begins. This makes it possible to reshape long single-column output into a more compact block. The parameter does not apply to string arrays.
+
+**Maximum Tuples Per Line** must be nonnegative; *0* writes one tuple per line. A partial final row ends with a newline and has no trailing delimiter.
 
 ## String Data Array Caveats
 
@@ -20,6 +24,8 @@ When writing to multiple files, the *Maximum Tuples Per Line* parameter controls
 ### Multiple Files
 
 Each input data array will be written to its own output file. The name of the file will be the name of the Data Array + the extension from the parameters.
+
+In Multiple Files mode, the selected DataArrays must have different names. Names that differ only by case are rejected because file systems may ignore case.
 
 ![Example of multiple output files](Images/Write_Asci_1.png)
 

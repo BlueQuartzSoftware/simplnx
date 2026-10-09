@@ -68,7 +68,7 @@ The user can optionally resample each image as it is read in. The *Resample Imag
 
 ### Grayscale Conversion
 
-When *Convert To GrayScale* is enabled, RGB image data is converted to a scalar grayscale array using the luminosity algorithm. The luminosity algorithm computes each gray value as a weighted sum of the red, green, and blue channels (gray = wR·R + wG·G + wB·B), where the weights come from the supplied *Color Weighting* values (dimensionless). This produces a perceptually weighted brightness rather than a simple channel average. Only uint8 input data is supported for grayscale conversion.
+When *Convert To GrayScale* is enabled, RGB image data is converted to a scalar grayscale array using the luminosity algorithm. The luminosity algorithm computes each gray value as a weighted sum of the red, green, and blue channels (gray = wR·R + wG·G + wB·B), where the weights come from the supplied *Color Weighting* values (dimensionless). This produces a perceptually weighted brightness rather than a simple channel average. Only uint8 input DataArrays with at least 3 components are supported for grayscale conversion. Scalar input is rejected during preflight.
 
 ### Output Data Type
 
@@ -86,7 +86,9 @@ The user can crop the incoming image geometry using the Cropping Options section
 - **Voxel Subvolume**: Read a subvolume into an image geometry using voxel coordinates
 - **Physical Subvolume**: Read a subvolume into an image geometry using physical coordinates
 
-Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions.
+Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions. A Z crop moves the Z origin to the first kept slice. A postprocessed origin override replaces this shifted origin after cropping.
+
+Physical Z cropping includes the final slice when its maximum equals the upper stack bound (`origin.z + number of files × spacing.z`), without a warning. For a crop that overlaps the stack, a minimum below the origin or a maximum above the upper bound is clamped to the first or last slice with warning `-50503`. Preflight also reports warnings from the per-image read and resampling operations.
 
 ### Image Operations
 

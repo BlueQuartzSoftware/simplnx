@@ -1,6 +1,7 @@
 #include "ReadImageStackFilter.hpp"
 
 #include "ImageProcessing/Filters/Algorithms/ReadImageStack.hpp"
+#include "ImageProcessing/Filters/Algorithms/ReadImageStackCropping.hpp"
 #include "ImageProcessing/Filters/ReadImageFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
@@ -22,7 +23,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
-#include "simplnx/Utilities/ImageIO/ImageStackCropping.hpp"
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -239,6 +239,8 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     return imageReaderResult;
   }
 
+  resultOutputActions.warnings() = imageReaderResult.outputActions.warnings();
+
   const auto* createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(imageReaderResult.outputActions.value().actions);
   if(createImageGeomActionPtr == nullptr)
   {
@@ -250,22 +252,19 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     outputOrigin = createImageGeomActionPtr->origin();
     outputUnits = createImageGeomActionPtr->units();
 
-    // Compute Z dimension, taking into account possible Z cropping
-    usize zDim = files.size();
-
-    auto zDimResult = ComputeCroppedZDimension(croppingOptions, zDim, origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
-    if(zDimResult.invalid())
+    const auto zRangeResult = ComputeCroppedZRange(croppingOptions, files.size(), origin, spacing, shouldChangeOrigin, shouldChangeSpacing, originSpacingProcessing);
+    if(zRangeResult.invalid())
     {
-      const Error& zDimError = zDimResult.errors().front();
-      return MakePreflightErrorResult(zDimError.code, zDimError.message);
+      const Error& zRangeError = zRangeResult.errors().front();
+      return MakePreflightErrorResult(zRangeError.code, zRangeError.message);
     }
-    zDim = zDimResult.value();
+    resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), zRangeResult.warnings().begin(), zRangeResult.warnings().end());
+    const auto& zRange = zRangeResult.value();
+    outputDims.back() = zRange.zMax - zRange.zMin + 1;
+    outputOrigin.back() += static_cast<float32>(zRange.zMin) * outputSpacing.back();
 
-    outputDims.back() = zDim;
-
-    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
-                                                                                         createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
-                                                                                         createImageGeomActionPtr->units()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, outputOrigin, outputSpacing,
+                                                                                         createImageGeomActionPtr->cellAttributeMatrixName(), createImageGeomActionPtr->units()));
     const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(imageReaderResult.outputActions.value().actions);
     if(createArrayActionPtr == nullptr)
     {
@@ -305,6 +304,8 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     {
       return resampleImageResult;
     }
+
+    resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), resampleImageResult.outputActions.warnings().begin(), resampleImageResult.outputActions.warnings().end());
 
     createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(resampleImageResult.outputActions.value().actions);
     if(createImageGeomActionPtr == nullptr)
@@ -350,6 +351,13 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     {
       return MakePreflightErrorResult(-23504, fmt::format("The input DataType is {} which cannot be converted to grayscale. Please turn off the 'Convert To Grayscale' option.",
                                                           nx::core::DataTypeToString(imageData.getDataType())));
+    }
+
+    if(imageData.getNumberOfComponents() < 3)
+    {
+      return MakePreflightErrorResult(
+          -23507, fmt::format("'Convert To GrayScale' requires at least 3 components. DataArray '{}' has {} components. Turn off 'Convert To GrayScale' or select RGB input images.",
+                              imageDataPath.toString(), imageData.getNumberOfComponents()));
     }
 
     ConvertColorToGrayScaleInputValues grayscaleInputValues;

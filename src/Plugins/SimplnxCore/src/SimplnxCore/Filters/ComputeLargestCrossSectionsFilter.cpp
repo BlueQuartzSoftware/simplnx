@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -110,6 +111,19 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
   if(dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1)
   {
     return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
+  }
+
+  const auto* cellAM = imageGeom.getCellData();
+  if(cellAM == nullptr)
+  {
+    return MakePreflightErrorResult(-3711, fmt::format("The Image Geometry '{}' has no Cell Data Attribute Matrix.", pImageGeometryPath.toString()));
+  }
+
+  const DataPath cellDataPath = cellAM->getDataPaths().at(0);
+  if(!IsChildOfAttributeMatrix(dataStructure, pFeatureIdsArrayPathValue, *cellAM))
+  {
+    return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of the Image Geometry '{}'.",
+                                                       pFeatureIdsArrayPathValue.toString(), cellDataPath.toString(), pImageGeometryPath.toString()));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

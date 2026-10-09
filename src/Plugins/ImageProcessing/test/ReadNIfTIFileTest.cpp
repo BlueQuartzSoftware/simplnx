@@ -1441,3 +1441,49 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: header cache is reused across p
   const auto freshPreflight = freshFilter.preflight(dataStructure3, args);
   REQUIRE(freshPreflight.outputActions.invalid());
 }
+
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const DataPath geomPath({"Physical Crop"});
+  // Recreate the existing physical-crop fixture so this test runs independently.
+  SyntheticNiftiParams params;
+  params.dims = {6, 5, 4};
+  params.spacing = {0.5F, 1.0F, 2.0F};
+  std::vector<uint8> voxels(6 * 5 * 4);
+  std::iota(voxels.begin(), voxels.end(), uint8{0});
+  const fs::path filePath = OutputDir() / "uint8_crop_physical_max_at_bound.nii";
+  WriteNiftiFile(filePath, MakeHeader(params), ToBytes(voxels), false);
+  Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+
+  ReadNIfTIFileFilter filter;
+  DataStructure fullDataStructure;
+  auto fullPreflight = filter.preflight(fullDataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.outputActions);
+  auto fullActions = fullPreflight.outputActions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullActions);
+  REQUIRE_NOTHROW(fullDataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& fullGeom = fullDataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto origin = fullGeom.getOrigin();
+  const auto spacing = fullGeom.getSpacing();
+  const auto dims = fullGeom.getDimensions();
+
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = false;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
+  CAPTURE(origin[0], spacing[0], dims[0], crop.xBoundPhysical[1]);
+  args.insertOrAssign(ReadNIfTIFileFilter::k_CroppingOptions_Key, crop);
+  DataStructure croppedDataStructure;
+  auto croppedPreflight = filter.preflight(croppedDataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.outputActions);
+  auto croppedActions = croppedPreflight.outputActions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedActions);
+  REQUIRE_NOTHROW(croppedDataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& croppedGeom = croppedDataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(croppedGeom.getDimensions() == dims);
+  REQUIRE(croppedGeom.getOrigin() == origin);
+  UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+}

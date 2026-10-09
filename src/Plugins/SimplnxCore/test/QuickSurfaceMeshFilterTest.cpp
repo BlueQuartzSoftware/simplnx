@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "SurfaceMeshingTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -15,6 +16,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <array>
 #include <catch2/catch.hpp>
@@ -27,6 +29,80 @@ using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
 namespace fs = std::filesystem;
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning warnings", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  // All wall voxels have positive Feature Ids, so Background-Backed mode cannot prune any faces.
+  // The multi-feature junctions also produce a winding-repair warning, verified with the mode off.
+  const auto runMesh = [&scope](DataStructure& dataStructure, ChoicesParameter::ValueType mode) {
+    return SurfaceMeshingTest::RunMesherRaw<QuickSurfaceMeshFilter>(
+        dataStructure, DataPath({"QuickMesh"}), mode, [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); }, true, &scope);
+  };
+  auto fullDataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+  auto fullResult = runMesh(fullDataStructure, BoundingBoxSkinMode::k_Off);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullResult);
+  REQUIRE(fullResult.warnings().size() == 1);
+  REQUIRE(fullResult.warnings()[0].code == -56730);
+
+  auto backgroundBackedDataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+  auto backgroundBackedResult = runMesh(backgroundBackedDataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+  SIMPLNX_RESULT_REQUIRE_VALID(backgroundBackedResult);
+  REQUIRE(backgroundBackedResult.warnings().size() == 2);
+  REQUIRE(backgroundBackedResult.warnings()[0].code == -56730);
+  REQUIRE(backgroundBackedResult.warnings()[1].code == MeshingUtilities::k_NoFacesPrunedWarning);
+  UnitTest::CheckArraysInheritTupleDims(fullDataStructure);
+  UnitTest::CheckArraysInheritTupleDims(backgroundBackedDataStructure);
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Feature DataArray tuple bounds", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({3, 1, 1});
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 3}, imageGeom->getId());
+  REQUIRE(cellAM != nullptr);
+  imageGeom->setCellData(cellAM->getId());
+  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {1, 1, 3}, {1}, cellAM->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = 2;
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, imageGeom->getId());
+  REQUIRE(featureAM != nullptr);
+  auto* featureValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {2}, {1}, featureAM->getId());
+  REQUIRE(featureValues != nullptr);
+  featureValues->fill(7);
+
+  QuickSurfaceMeshFilter filter;
+  Arguments args;
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "Cell Data", "Feature Ids"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedFeatureDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({"Image Geometry", "Feature Data", "Feature Values"})}));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -62073);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {

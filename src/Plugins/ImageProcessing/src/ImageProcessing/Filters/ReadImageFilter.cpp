@@ -225,8 +225,8 @@ Parameters ReadImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Origin & Spacing Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
-  params.insert(
-      std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
+  params.insert(std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Center Geometry on (0, 0, 0)",
+                                                "When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0F, 0.0F, 0.0F},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
@@ -358,6 +358,8 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     {
       return cropImageResult;
     }
+    const auto& cropWarnings = cropImageResult.outputActions.warnings();
+    resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), cropWarnings.begin(), cropWarnings.end());
 
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())

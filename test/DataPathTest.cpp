@@ -65,3 +65,24 @@ TEST_CASE("Simplnx::Invalid DataPath Creation", "[Simplnx][DataPath]")
   DataPath fromInvalidVector({"", "", ""});
   REQUIRE(fromInvalidVector.toString().empty());
 }
+
+TEST_CASE("DataPath::rebase")
+{
+  const DataPath child({"Edge Geometry", "Vertex Data", "Edge Geometry Ids"});
+  REQUIRE(child.rebase(DataPath({"Edge Geometry"}), DataPath({"Cropped"})) == DataPath({"Cropped", "Vertex Data", "Edge Geometry Ids"}));
+  REQUIRE(child.rebase(DataPath({"Edge Geometry"}), DataPath({"Group", "Out"})) == DataPath({"Group", "Out", "Vertex Data", "Edge Geometry Ids"}));
+  REQUIRE(DataPath({"Group", "Geom", "A"}).rebase(DataPath({"Group", "Geom"}), DataPath({"G2"})) == DataPath({"G2", "A"}));
+  REQUIRE_FALSE(DataPath({"Edge Geometry Ids"}).rebase(DataPath({"Edge Geometry"}), DataPath({"X"})).has_value());
+  REQUIRE_FALSE(DataPath({"A"}).rebase(DataPath({"A", "B"}), DataPath({"X"})).has_value());
+}
+
+TEST_CASE("DataPath::attemptRename with prefixes of different depth")
+{
+  DataPath longer({"Geom", "Cell Data", "Ids"});
+  REQUIRE(longer.attemptRename(DataPath({"Geom"}), DataPath({"Group", "Out"})));
+  INFO("Renamed path: " << longer.toString());
+  REQUIRE(longer == DataPath({"Group", "Out", "Cell Data", "Ids"}));
+  DataPath shorter({"Group", "Geom", "Ids"});
+  REQUIRE(shorter.attemptRename(DataPath({"Group", "Geom"}), DataPath({"Out"})));
+  REQUIRE(shorter == DataPath({"Out", "Ids"}));
+}

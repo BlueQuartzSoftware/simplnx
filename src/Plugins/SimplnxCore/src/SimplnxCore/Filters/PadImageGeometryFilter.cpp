@@ -23,7 +23,6 @@
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
 
@@ -252,8 +251,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   {
     for(const auto& childPath : childPaths.value())
     {
-      std::string copiedChildName = nx::core::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-      DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+      const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         std::vector<DataPath> allCreatedPaths = {copiedChildPath};
@@ -262,8 +260,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
-            std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-            allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+            allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
           }
         }
         resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));

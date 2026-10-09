@@ -8,6 +8,8 @@ Core (Spatial)
 
 This **Filter** extracts a region of interest (ROI) from an **Image Geometry**, producing a new geometry that contains only the selected cells. Bounds can be specified either in cell indices (voxels) or in physical coordinates. Individual dimensions (X, Y, Z) can be cropped independently.
 
+Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
+
 This is the inverse of [Pad Image Geometry](PadImageGeometryFilter.md). Common uses are isolating a sample from its overscan border, focusing analysis on a single feature, or reducing data size for testing.
 
 ### Bounds Mode
@@ -18,6 +20,8 @@ The *Use Physical Bounds* parameter selects how the crop bounds are interpreted:
 - **Use Physical Bounds = true**: bounds are **physical coordinates** in the geometry's units. The filter computes which cells fall inside the box defined by those coordinates, taking the geometry's origin and spacing into account.
 
 If any bound exceeds the geometry's extent on that axis, the filter clamps to the geometry's actual extent. The filter fails in preflight only when **all** of the requested bounds fall outside the geometry.
+
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
 
 ### Per-Axis Cropping
 
@@ -64,7 +68,7 @@ Result:
     Zmin = 0 microns,  Zmax = 65 microns
     Use Physical Bounds = true
 
-The Zmax of 65 microns exceeds the geometry's 1-micron Z extent and is silently clamped. The crop still succeeds because at least part of the requested box lies inside the geometry.
+The Zmax of 65 microns exceeds the geometry's 1-micron Z extent and is clamped with a warning. The crop still succeeds because at least part of the requested box lies inside the geometry.
 
 ![Cropped image using voxels as the bounds](Images/CropImageGeometry_4.png)
 

@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -61,12 +62,12 @@ Parameters SilhouetteFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Silhouette", "The DataPath to the input DataArray", DataPath{}, nx::core::GetAllNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cluster Ids", "The DataPath to the DataArray that specifies which cluster each point belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SilhouetteArrayPath_Key, "Silhouette", "The DataPath to the calculated output Silhouette array values", DataPath{}));
@@ -106,6 +107,15 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   {
     return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArray->getName(), clusterArray->getNumberOfTuples(),
                                                        clusterIds->getName(), clusterIds->getNumberOfTuples()));
+  }
+
+  if(pUseMaskValue && !CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, pMaskArrayPathValue, pFeatureIdsArrayPathValue}))
+  {
+    const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(pMaskArrayPathValue);
+    return MakePreflightErrorResult(-8977, fmt::format("Attribute Array to Silhouette DataArray '{}' ({} tuples), Mask Array DataArray '{}' ({} tuples), and Cluster Ids DataArray '{}' ({} tuples) "
+                                                       "must have the same number of tuples.",
+                                                       pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), pMaskArrayPathValue.toString(), maskArray.getNumberOfTuples(),
+                                                       pFeatureIdsArrayPathValue.toString(), clusterIds->getNumberOfTuples()));
   }
 
   {

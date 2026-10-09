@@ -208,9 +208,9 @@ struct PrintDataArray
             outputStrm << delimiter;
           }
         }
-        // A tuple group ends with a newline. Other tuples end with the delimiter.
+        // Complete groups and the final tuple end with a newline.
         tuplesWritten++;
-        if(tuplesWritten == tuplesPerLine)
+        if(tuplesWritten == tuplesPerLine || tupleOffset + localTuple + 1 == numTuples)
         {
           outputStrm << '\n';
           tuplesWritten = 0;

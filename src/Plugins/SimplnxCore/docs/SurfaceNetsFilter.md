@@ -24,7 +24,12 @@ The filter writes a **Face Labels** array on each triangle: a 2-component value 
 
 The filter also attempts to repair the triangle **winding** (the order in which a triangle's three vertices are listed, which determines the direction its normal points). A fully consistent winding may not be achievable because of how meshes are stored in the software; see [Verify Triangle Winding](VerifyTriangleWindingFilter.md) for a detailed breakdown of the nuances.
 
-The *Relaxation Iterations* parameter is a dimensionless count of smoothing passes, and *Max Distance from Voxel Center* is a physical length (same units as the Image Geometry spacing) limiting how far a node may move from its originating voxel center.
+The **Relaxation Iterations** parameter is a dimensionless count of smoothing passes, and **Max Distance from Voxel Center** is in voxel units, limiting how far a node may move along each axis from its originating voxel center before conversion to physical coordinates using the Image Geometry spacing.
+
+Cell Feature Ids and the selected cell arrays must be in the Cell Data Attribute Matrix of the Image Geometry. Max Distance from Voxel Center must be ≥ 0, and Relaxation Iterations ≥ 0.
+The smoothing limits apply only when **Apply smoothing operations** is on.
+
+The number of tuples in each selected feature DataArray must be greater than the largest Feature Id in Cell Feature Ids. Execution returns error `-62073` if this requirement is not met.
 
 ---------------
 
@@ -73,13 +78,13 @@ The algorithm proceeds in six phases:
 
 1. **Build Surface Net**: The MMSurfaceNet library constructs a padded grid (dimX+2, dimY+2, dimZ+2) and classifies every cell by examining its 8 corner labels. Cells where not all corners have the same FeatureId are "surface cells" and receive a mesh vertex at the cell center. This reads the entire FeatureIds array via direct element access.
 
-2. **Smoothing** (optional): Iterative Laplacian-like relaxation moves each vertex toward the average of its face-connected neighbors, clamped to stay within `MaxDistanceFromVoxel` of the cell center. The `RelaxationFactor` controls the blending between current and average position.
+2. **Smoothing** (optional): Iterative Laplacian-like relaxation moves each vertex toward the average of its face-connected neighbors, clamped along each axis to stay within **Max Distance from Voxel Center** in voxel units of the cell center. The `RelaxationFactor` controls the blending between current and average position.
 
 3. **Vertex Transformation**: Converts cell-local coordinates (where 0.5 = cell center) to world coordinates using the ImageGeom origin and spacing.
 
 4. **Triangle Counting**: First pass over surface vertices, checking 3 edges per cell (BackBottom, LeftBottom, LeftBack) for feature boundary crossings. Each crossing produces a quad (4 vertices) that becomes 2 triangles.
 
-5. **Triangle Generation**: Second pass that writes triangle connectivity and face labels. Quads are triangulated using the diagonal that minimizes total triangle area, reducing self-intersections.
+5. **Triangle Generation**: Second pass that writes triangle connectivity and face labels. Each quad is always split along its first diagonal, joining vertices 0 and 2, to form two triangles. The Scanline implementation uses the same split.
 
 6. **Winding Repair** (optional): Fixes inconsistent triangle orientations.
 

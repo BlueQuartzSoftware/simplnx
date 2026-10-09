@@ -1329,3 +1329,202 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile", "
   const bool hasMultiPageWarning = std::any_of(warnings.cbegin(), warnings.cend(), [](const Warning& w) { return w.message.find("reading only the first page") != std::string::npos; });
   REQUIRE(hasMultiPageWarning);
 }
+
+namespace
+{
+/**
+ * @brief Writes four scalar slices with pixel values 10 * file index + pixel index.
+ * @param name Selects a separate directory for each regression test.
+ * @return Arguments that read the complete 3 by 2 by 4 stack.
+ */
+Arguments CreateZCropStackArgs(const std::string& name)
+{
+  const fs::path inputDir = fs::path(std::string(unit_test::k_BinaryTestOutputDir.view())) / name;
+  fs::create_directories(inputDir);
+  for(usize fileIdx = 0; fileIdx < 4; ++fileIdx)
+  {
+    std::vector<uint8_t> pixels(6);
+    for(usize pixelIdx = 0; pixelIdx < pixels.size(); ++pixelIdx)
+    {
+      pixels[pixelIdx] = static_cast<uint8_t>(10 * fileIdx + pixelIdx);
+    }
+    WriteMultiPageTiff(inputDir / fmt::format("slice_{}.tif", fileIdx), 3, 2, {pixels});
+  }
+
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = inputDir.string();
+  fileList.filePrefix = "slice_";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = ".tif";
+  fileList.startIndex = 0;
+  fileList.endIndex = 3;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 1;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+  Arguments args;
+  args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  return args;
+}
+} // namespace
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalZNonZeroStart");
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+  crop.zBoundPhysical = {1.0f, 2.5f};
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  VerifyGeometryDimensions(ds, k_ImageGeomPath, 3, 2, 2);
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(k_ImageDataPath));
+  const auto& store = ds.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  for(usize sliceIdx = 0; sliceIdx < 2; ++sliceIdx)
+  {
+    for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
+    {
+      REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + 1) + pixelIdx);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  const bool useOverrides = GENERATE(false, true);
+  DYNAMIC_SECTION("Spatial overrides: " << useOverrides)
+  {
+    DataStructure ds;
+    ReadImageStackFilter filter;
+    auto args = CreateZCropStackArgs("ReadImageStackZShiftsOrigin");
+    auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
+    crop.zBoundVoxels = {1, 2};
+    args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+    args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(ReadImageStackFilter::k_ChangeOrigin_Key, useOverrides);
+    args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, useOverrides);
+    args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{5, 6, 7}));
+    args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{2, 3, 4}));
+
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    VerifyGeometryDimensions(ds, k_ImageGeomPath, 3, 2, 2);
+    VerifyOriginSpacing(ds, k_ImageGeomPath, useOverrides ? FloatVec3{5, 6, 11} : FloatVec3{0, 0, 1}, useOverrides ? FloatVec3{2, 3, 4} : FloatVec3{1, 1, 1});
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_ScalarInput_Rejected", "[ImageProcessing][ReadImageStackFilter][Grayscale]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackGrayscaleScalarInput");
+  args.insertOrAssign(ReadImageStackFilter::k_ConvertToGrayScale_Key, true);
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -23507);
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalZUpperBound");
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+  // Four slices at Z = 7, 11, 15, 19 have an upper physical bound of 23.
+  crop.zBoundPhysical = {11.0f, 23.0f};
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+  args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeOrigin_Key, true);
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, true);
+  args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0, 0, 7}));
+  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 4}));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.warnings().empty());
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  VerifyGeometryDimensions(ds, k_ImageGeomPath, 3, 2, 3);
+  VerifyOriginSpacing(ds, k_ImageGeomPath, {0, 0, 11}, {1, 1, 4});
+  const auto& store = ds.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  for(usize sliceIdx = 0; sliceIdx < 3; ++sliceIdx)
+  {
+    for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
+    {
+      REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + 1) + pixelIdx);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalZClamped");
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+  usize firstSlice = 0;
+  usize expectedSlices = 3;
+  SECTION("Minimum below origin")
+  {
+    crop.zBoundPhysical = {-1.0f, 2.5f};
+  }
+  SECTION("Maximum above upper bound")
+  {
+    crop.zBoundPhysical = {1.0f, 5.0f};
+    firstSlice = 1;
+  }
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  VerifyGeometryDimensions(ds, k_ImageGeomPath, 3, 2, expectedSlices);
+  VerifyOriginSpacing(ds, k_ImageGeomPath, {0, 0, static_cast<float32>(firstSlice)}, {1, 1, 1});
+  const auto& store = ds.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  for(usize sliceIdx = 0; sliceIdx < expectedSlices; ++sliceIdx)
+  {
+    for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
+    {
+      REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + firstSlice) + pixelIdx);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWarning", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  const ChoicesParameter::ValueType resampleMode = GENERATE(0ULL, 2ULL);
+  CAPTURE(resampleMode);
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalXPreflightWarning");
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, true, false, false);
+  crop.xBoundPhysical = {-1.0f, 2.0f};
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(resampleMode));
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<nx::core::uint64>{3, 2}));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
+}

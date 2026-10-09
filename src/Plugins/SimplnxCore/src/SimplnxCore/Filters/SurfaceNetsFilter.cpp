@@ -18,6 +18,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 using namespace nx::core;
@@ -70,8 +71,9 @@ Parameters SurfaceNetsFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
-  params.insert(
-      std::make_unique<Float32Parameter>(k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center", "The maximum allowable distance that a node can move from the voxel center", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(
+      k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center",
+      "The maximum distance in voxel units that a node may move along each axis from its originating voxel center before conversion to physical coordinates using the Image Geometry spacing.", 1.0F));
   params.insert(std::make_unique<Float32Parameter>(k_RelaxationFactor_Key, "Relaxation Factor", "The factor used to determine how far a node can move in each smoothing iteration", 0.5F));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
@@ -151,6 +153,39 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  const auto* cellAM = gridGeom.getCellData();
+  if(cellAM == nullptr)
+  {
+    return MakePreflightErrorResult(-56350,
+                                    fmt::format("Image Geometry '{}' has no Cell Data Attribute Matrix. Cell Feature Ids must be in its Cell Data Attribute Matrix.", pGridGeomDataPath.toString()));
+  }
+  const DataPath cellDataPath = cellAM->getDataPaths().at(0);
+  if(!IsChildOfAttributeMatrix(dataStructure, pFeatureIdsArrayPathValue, *cellAM))
+  {
+    return MakePreflightErrorResult(-56350, fmt::format("Cell Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", pFeatureIdsArrayPathValue.toString(),
+                                                        cellDataPath.toString(), pGridGeomDataPath.toString()));
+  }
+  for(const auto& selectedDataPath : pSelectedDataArrayPaths)
+  {
+    if(!IsChildOfAttributeMatrix(dataStructure, selectedDataPath, *cellAM))
+    {
+      return MakePreflightErrorResult(-56351, fmt::format("Selected cell DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", selectedDataPath.toString(),
+                                                          cellDataPath.toString(), pGridGeomDataPath.toString()));
+    }
+  }
+  if(filterArgs.value<bool>(k_ApplySmoothing_Key))
+  {
+    const auto maxDistance = filterArgs.value<float32>(k_MaxDistanceFromVoxelCenter_Key);
+    if(maxDistance < 0.0F)
+    {
+      return MakePreflightErrorResult(-56352, fmt::format("Max Distance from Voxel Center must be >= 0 when Apply smoothing operations is on. Current value: {}.", maxDistance));
+    }
+    const auto smoothingIterations = filterArgs.value<int32>(k_SmoothingIterations_Key);
+    if(smoothingIterations < 0)
+    {
+      return MakePreflightErrorResult(-56353, fmt::format("Relaxation Iterations must be >= 0 when Apply smoothing operations is on. Current value: {}.", smoothingIterations));
+    }
+  }
   constexpr usize numElements = 0;
 
   // Create the Triangle Geometry action and store it
@@ -187,8 +222,6 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   {
     for(const DataPath& selectedDataPath : pFeatureDataPaths)
     {
-      // Check that the feature array has the correct tuple count to avoid crashing in execute.
-      const IDataArray* featureArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
       DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
       const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
       auto compShape = iDataArray.getComponentShape();

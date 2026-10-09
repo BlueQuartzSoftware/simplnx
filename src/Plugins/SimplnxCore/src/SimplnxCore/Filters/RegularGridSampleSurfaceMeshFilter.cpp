@@ -6,6 +6,7 @@
 #include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -18,9 +19,11 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cmath>
 #include <sstream>
 
 using namespace nx::core;
@@ -90,8 +93,6 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
                                                    IGeometry::GetAllLengthUnitStrings()));
-  params.insert(std::make_unique<BoolParameter>(k_UseCustomOutputType_Key, "Use Custom Output Type",
-                                                "If true user will be prompted for desired output type, else Face Labels/Part Numbers type will be used", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
@@ -107,9 +108,13 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Attribute Matrix", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomOutputType_Key, "Use Custom Output Type",
+                                                                 "If true user will be prompted for desired output type, else Face Labels/Part Numbers type will be used", false));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Type for Feature Ids", "The data type for the `Feature Ids` array",
                                                    static_cast<ChoicesParameter::ValueType>(to_underlying(DataType::int32)), GetIntegerDataTypesAsHumanStrings()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
+
+  params.linkParameters(k_UseCustomOutputType_Key, k_OutputType_Key, true);
 
   params.linkParameters(k_UseExistingGeometry_Key, k_Dimensions_Key, to_underlying(GeometryOption::Create));
   params.linkParameters(k_UseExistingGeometry_Key, k_Origin_Key, to_underlying(GeometryOption::Create));
@@ -151,6 +156,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  auto pTriangleGeometryPathValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -169,8 +175,24 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   DataPath cellAttributeMatrixPath;
   ShapeType tupleDims;
 
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryPathValue);
+  const auto* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
+  if(faceAttributeMatrix == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrix))
+  {
+    return {MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
+                                                               "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
+                                                               pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
+  }
+
   if(geometryOptionIndex == GeometryOption::Create)
   {
+    if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
+    {
+      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be greater than zero on every axis when creating an Image Geometry. "
+                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a positive value.",
+                                                                 pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+    }
+
     DataStructure junk;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(junk, "junk", {0});
     srcImageGeomPtr->setDimensions({static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])});
