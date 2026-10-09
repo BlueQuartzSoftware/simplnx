@@ -9,11 +9,15 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <memory>
 #include <set>
 #include <string>
@@ -533,5 +537,87 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
     }
   }
   CHECK_FALSE(geometryPtr->getElementSizesId().has_value());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "[simplnx][GeometryBulkContracts][GeometryUtilities]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool preCancelled = GENERATE(false, true);
+  CAPTURE(scenario, preCancelled);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+
+  const DataPath geometryPath({"NormalMesh"});
+  const DataPath verticesPath = geometryPath.createChildPath("Vertices");
+  const DataPath facesPath = geometryPath.createChildPath("Faces");
+  const DataPath normalsPath = geometryPath.createChildPath("Normals");
+  DataStructure dataStructure;
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(triangleGeomPtr != nullptr);
+
+  auto verticesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {6}, {3});
+  auto facesStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {4}, {3});
+  auto normalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, normalsPath, {4}, {3});
+  REQUIRE(verticesStore != nullptr);
+  REQUIRE(facesStore != nullptr);
+  REQUIRE(normalsStore != nullptr);
+  auto* verticesPtr = Float32Array::Create(dataStructure, verticesPath.getTargetName(), verticesStore, triangleGeomPtr->getId());
+  auto* facesPtr = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, facesPath.getTargetName(), facesStore, triangleGeomPtr->getId());
+  auto* normalsPtr = Float64Array::Create(dataStructure, normalsPath.getTargetName(), normalsStore, triangleGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  REQUIRE(normalsPtr != nullptr);
+  triangleGeomPtr->setVertices(*verticesPtr);
+  triangleGeomPtr->setFaceList(*facesPtr);
+
+  algorithmTestScope.requireExpectedStore(*verticesPtr);
+  algorithmTestScope.requireExpectedStore(*facesPtr);
+  algorithmTestScope.requireExpectedStore(*normalsPtr);
+
+  const std::array<float32, 18> originalVertices = {0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 3.0F, 0.0F, 1.0F, 0.0F, 2.0F, 1.0F};
+  const std::array<IGeometry::MeshIndexType, 12> originalFaces = {0, 1, 2, 0, 2, 1, 0, 2, 3, 0, 4, 5};
+  auto verticesWriteResult = verticesStore->copyFromBuffer(0, nonstd::span<const float32>(originalVertices.data(), originalVertices.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(verticesWriteResult);
+  auto facesWriteResult = facesStore->copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(originalFaces.data(), originalFaces.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(facesWriteResult);
+  constexpr float64 k_OutputSentinel = -37.0;
+  normalsStore->fill(k_OutputSentinel);
+
+  const std::atomic_bool shouldCancel{preCancelled};
+  auto result = algorithmTestScope.execute([&] { return GeometryUtilities::ComputeTriangleNormals(triangleGeomPtr, *normalsStore, shouldCancel); });
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  REQUIRE(triangleGeomPtr->getVertices() == verticesPtr);
+  REQUIRE(triangleGeomPtr->getFaces() == facesPtr);
+  REQUIRE(verticesPtr->getTupleShape() == ShapeType{6});
+  REQUIRE(verticesPtr->getComponentShape() == ShapeType{3});
+  REQUIRE(facesPtr->getTupleShape() == ShapeType{4});
+  REQUIRE(facesPtr->getComponentShape() == ShapeType{3});
+  REQUIRE(normalsPtr->getTupleShape() == ShapeType{4});
+  REQUIRE(normalsPtr->getComponentShape() == ShapeType{3});
+
+  std::array<float32, 18> actualVertices = {};
+  std::array<IGeometry::MeshIndexType, 12> actualFaces = {};
+  std::array<float64, 12> actualNormals = {};
+  auto verticesReadResult = verticesStore->copyIntoBuffer(0, nonstd::span<float32>(actualVertices.data(), actualVertices.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(verticesReadResult);
+  auto facesReadResult = facesStore->copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(actualFaces.data(), actualFaces.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(facesReadResult);
+  auto normalsReadResult = normalsStore->copyIntoBuffer(0, nonstd::span<float64>(actualNormals.data(), actualNormals.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(normalsReadResult);
+  CHECK(actualVertices == originalVertices);
+  CHECK(actualFaces == originalFaces);
+
+  // The first three faces point along +Z, -Z, and +X.
+  // The sloped face has cross product (-2, -3, 6), with exact length 7.
+  // These literals preserve float-rounded components stored as double, which differ from double normalization.
+  const std::array<float64, 12> expectedNormals = {0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, -0.2857142984867095947265625, -0.4285714328289031982421875, 0.857142865657806396484375};
+  for(usize valueIndex = 0; valueIndex < actualNormals.size(); ++valueIndex)
+  {
+    CAPTURE(valueIndex);
+    CHECK(actualNormals[valueIndex] == (preCancelled ? k_OutputSentinel : expectedNormals[valueIndex]));
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
