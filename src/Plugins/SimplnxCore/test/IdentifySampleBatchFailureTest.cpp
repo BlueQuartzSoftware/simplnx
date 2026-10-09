@@ -1672,3 +1672,376 @@ TEST_CASE("IdentifySample filter pre-cancellation stops before algorithm dispatc
     check.template operator()<uint8>();
   }
 }
+
+namespace
+{
+/**
+ * @enum OrthogonalStop
+ * @brief Selects a real XY or XZ transfer or message boundary on the second plane.
+ */
+enum class OrthogonalStop
+{
+  ReadFailure,   ///< Refuses the selected read before any values are copied.
+  WriteFailure,  ///< Refuses the selected write before any values are changed.
+  ReadCancel,    ///< Sets cancellation after the selected successful read.
+  MessageCancel, ///< Sets cancellation in the second plane's Slice message.
+  WriteCancel    ///< Sets cancellation after the second plane's first successful write.
+};
+
+/**
+ * @struct OrthogonalTransfer
+ * @brief Records one actual resident bulk call, including an incomplete call that throws.
+ */
+struct OrthogonalTransfer
+{
+  bool write = false;
+  usize start = 0;
+  usize count = 0;
+  bool success = false;
+};
+
+/**
+ * @struct OrthogonalTransferState
+ * @brief Arms deterministic controls after fixture setup and keeps a bounded call trace.
+ * @note The state outlives the reporting store and all callbacks. Tests execute serially.
+ */
+struct OrthogonalTransferState
+{
+  OrthogonalStop stop = OrthogonalStop::ReadFailure;
+  FaultKind fault = FaultKind::None;
+  usize triggerCopy = 0;
+  bool armed = false;
+  bool fired = false;
+  usize reads = 0;
+  usize writes = 0;
+  usize transferCount = 0;
+  usize sliceMessages = 0;
+  bool sliceOrderMatches = true;
+  std::atomic_bool cancel = false;
+  // Two XZ planes require thirteen read rows and thirteen write rows each.
+  std::array<OrthogonalTransfer, 2 * 13 * 2> transfers{};
+
+  /**
+   * @brief Records the actual requested range before the selected operation can fail.
+   * @param write True for a mask write, false for a mask read.
+   * @param start First flat value in the store.
+   * @param count Number of requested values.
+   * @return Trace entry whose success flag the real copy result sets.
+   */
+  OrthogonalTransfer& beginTransfer(bool write, usize start, usize count)
+  {
+    REQUIRE(transferCount < transfers.size());
+    auto& transfer = transfers[transferCount++];
+    transfer = {write, start, count, false};
+    return transfer;
+  }
+};
+
+/**
+ * @class OrthogonalMaskStore
+ * @brief Reports real resident copies and injects a fault or cancellation at one selected call.
+ * @tparam T Bool or UInt8 mask element type.
+ */
+template <class T>
+class OrthogonalMaskStore : public DataStore<T>
+{
+public:
+  /**
+   * @brief Creates a resident store with the requested fixture shape.
+   * @param tupleShape Matches the image dimensions in Z, Y, X order.
+   * @param state Supplies controls and receives actual transfers; outlives this store.
+   */
+  OrthogonalMaskStore(const ShapeType& tupleShape, OrthogonalTransferState& state)
+  : DataStore<T>(tupleShape, ShapeType{1}, std::optional<T>{})
+  , m_State(state)
+  {
+  }
+
+  /**
+   * @brief Copies source values unless the selected read refuses the transfer.
+   * @param start First flat mask value.
+   * @param values Receives the requested mask values.
+   * @return Real copy Result or the selected error and warning.
+   * @throws PlaneFailure For a selected standard failure.
+   * @throws AllocationFailure For a selected allocation failure.
+   * @throws NonstandardFailure For a selected nonstandard failure.
+   */
+  Result<> copyIntoBuffer(usize start, nonstd::span<T> values) const override
+  {
+    if(!m_State.armed)
+    {
+      return DataStore<T>::copyIntoBuffer(start, values);
+    }
+    auto& transfer = m_State.beginTransfer(false, start, values.size());
+    const usize call = ++m_State.reads;
+    if(m_State.stop == OrthogonalStop::ReadFailure && call == m_State.triggerCopy)
+    {
+      m_State.fired = true;
+      return RaiseFault(m_State.fault, false);
+    }
+    auto result = DataStore<T>::copyIntoBuffer(start, values);
+    transfer.success = result.valid();
+    if(result.valid() && m_State.stop == OrthogonalStop::ReadCancel && call == m_State.triggerCopy)
+    {
+      m_State.fired = true;
+      m_State.cancel = true;
+    }
+    return result;
+  }
+
+  /**
+   * @brief Copies output values unless the selected write refuses the transfer.
+   * @param start First flat mask value.
+   * @param values Supplies replacement mask values.
+   * @return Real copy Result or the selected error and warning.
+   * @throws PlaneFailure For a selected standard failure.
+   * @throws AllocationFailure For a selected allocation failure.
+   * @throws NonstandardFailure For a selected nonstandard failure.
+   */
+  Result<> copyFromBuffer(usize start, nonstd::span<const T> values) override
+  {
+    if(!m_State.armed)
+    {
+      return DataStore<T>::copyFromBuffer(start, values);
+    }
+    auto& transfer = m_State.beginTransfer(true, start, values.size());
+    const usize call = ++m_State.writes;
+    if(m_State.stop == OrthogonalStop::WriteFailure && call == m_State.triggerCopy)
+    {
+      m_State.fired = true;
+      return RaiseFault(m_State.fault, false);
+    }
+    auto result = DataStore<T>::copyFromBuffer(start, values);
+    transfer.success = result.valid();
+    if(result.valid() && m_State.stop == OrthogonalStop::WriteCancel && call == m_State.triggerCopy)
+    {
+      m_State.fired = true;
+      m_State.cancel = true;
+    }
+    return result;
+  }
+
+private:
+  OrthogonalTransferState& m_State;
+};
+
+/**
+ * @brief Checks all mask values against independent initial and processed plane predicates.
+ * @tparam T Bool or UInt8 mask element type.
+ * @param data Contains the mask after instrumentation is disarmed.
+ * @param plane XY=0 or XZ=1.
+ * @param completedPlanes Number of complete output planes before the partial plane.
+ * @param partialRows Number of successfully written rows in the next XZ plane.
+ */
+template <class T>
+void RequireOrthogonalPrefix(const DataStructure& data, ChoicesParameter::ValueType plane, usize completedPlanes, usize partialRows)
+{
+  const auto dimensions = IdentifySampleBatchTest::Dimensions(plane);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
+  const auto& store = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath).getDataStoreRef();
+  const usize xyValues = dimensions[0] * dimensions[1];
+  auto xy = std::make_unique<T[]>(xyValues);
+  for(usize z = 0; z < dimensions[2]; ++z)
+  {
+    const auto result = store.copyIntoBuffer(z * xyValues, nonstd::span<T>(xy.get(), xyValues));
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    for(usize y = 0; y < dimensions[1]; ++y)
+    {
+      for(usize x = 0; x < dimensions[0]; ++x)
+      {
+        const auto coordinates = IdentifySampleBatchTest::PlaneCoordinates(plane, x, y, z);
+        const usize u = coordinates[0];
+        const usize v = coordinates[1];
+        const usize fixed = coordinates[2];
+        const bool processed = fixed < completedPlanes || (plane == 1 && fixed == completedPlanes && v < partialRows);
+        const bool initial = IdentifySampleBatchTest::InputValue(u, v, fixed) || (u == 0 && v == 0);
+        const bool expected = processed ? IdentifySampleBatchTest::ExpectedValue(u, v, fixed, false) : initial;
+        INFO("plane=" << plane << " xyz=" << x << ',' << y << ',' << z << " complete=" << completedPlanes << " partial rows=" << partialRows);
+        REQUIRE(xy[y * dimensions[0] + x] == static_cast<T>(expected));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(data);
+}
+
+/**
+ * @brief Runs one direct CCL case and checks its complete transfer trace and output.
+ * @tparam T Bool or UInt8 mask element type.
+ * @param plane XY=0 or XZ=1.
+ * @param stop Chooses the second plane's failure or cancellation boundary.
+ * @param fault Result or exception carrier for a transfer failure; None for cancellation.
+ * @return Original Result or concrete exception payload.
+ */
+template <class T>
+Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop stop, FaultKind fault)
+{
+  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
+  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const auto dimensions = IdentifySampleBatchTest::Dimensions(plane);
+  const usize copiesPerPlane = plane == 0 ? 1 : dimensions[2];
+  OrthogonalTransferState state;
+  state.stop = stop;
+  state.fault = fault;
+  state.triggerCopy = copiesPerPlane + (plane == 1 && stop != OrthogonalStop::WriteCancel ? 2 : 1);
+  auto store = std::make_shared<OrthogonalMaskStore<T>>(ShapeType{dimensions[2], dimensions[1], dimensions[0]}, state);
+  DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(plane, 19, store);
+  // The early isolated cell makes a successful first-row write distinguishable from unchanged input.
+  for(usize fixed = 0; fixed < 19; ++fixed)
+  {
+    const usize offset = plane == 0 ? fixed * dimensions[0] * dimensions[1] : fixed * dimensions[0];
+    store->setValue(offset, static_cast<T>(true));
+  }
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
+  const auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE(mask.getIDataStore() == store.get());
+  REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE_FALSE(store->getChunkShape().has_value());
+  auto inputs = Inputs();
+  inputs.SliceBySlicePlaneIndex = plane;
+  const IFilter::MessageHandler messages{[&state](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info && message.message.rfind("Slice ", 0) == 0)
+    {
+      state.sliceOrderMatches = state.sliceOrderMatches && message.message == fmt::format("Slice {}", state.sliceMessages);
+      ++state.sliceMessages;
+      if(state.stop == OrthogonalStop::MessageCancel && message.message == "Slice 1")
+      {
+        state.fired = true;
+        state.cancel = true;
+      }
+    }
+  }};
+  IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
+  LogicalCounters counts;
+  counts.selected = &mask;
+  FailureState recordState;
+  auto& collection = DataStoreUtilities::GetIOCollection();
+  REQUIRE(collection.begin() != collection.end());
+  const auto originalManager = collection.begin()->second;
+  const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+  Outcome outcome;
+  std::string exceptionMessage;
+  {
+    const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
+    const ScopedRecordManager overrideManager(recordState);
+    REQUIRE(overrideManager.selected());
+    state.armed = true;
+    const auto disarm = MakeScopeGuard([&]() noexcept { state.armed = false; });
+    outcome = CaptureOutcome([&] {
+      try
+      {
+        return algorithm();
+      } catch(const PlaneFailure& error)
+      {
+        exceptionMessage = error.what();
+        throw;
+      }
+    });
+  }
+  REQUIRE_FALSE(state.armed);
+  REQUIRE(collection.begin()->second == originalManager);
+  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == reserved);
+  REQUIRE(recordState.liveRecords == 0);
+  REQUIRE(state.fired);
+  REQUIRE(state.sliceOrderMatches);
+  REQUIRE(state.sliceMessages == 2);
+  const bool readFailure = stop == OrthogonalStop::ReadFailure;
+  const bool writeFailure = stop == OrthogonalStop::WriteFailure;
+  const bool writeCancel = stop == OrthogonalStop::WriteCancel;
+  REQUIRE(state.cancel.load() == (!readFailure && !writeFailure));
+  REQUIRE(recordState.recordFactories == (writeFailure || writeCancel ? 2 : 1));
+  if(fault == FaultKind::Standard)
+  {
+    REQUIRE(exceptionMessage == "secondary copy payload 202");
+  }
+
+  const usize secondReadCount = readFailure ? (plane == 0 ? 1 : 2) : copiesPerPlane;
+  const usize secondWriteCount = writeFailure ? (plane == 0 ? 1 : 2) : (writeCancel ? copiesPerPlane : 0);
+  REQUIRE(state.reads == copiesPerPlane + secondReadCount);
+  REQUIRE(state.writes == copiesPerPlane + secondWriteCount);
+  REQUIRE(state.transferCount == state.reads + state.writes);
+  usize transferIdx = 0;
+  for(usize fixed = 0; fixed < 2; ++fixed)
+  {
+    for(const bool write : {false, true})
+    {
+      const usize copyCount = fixed == 0 ? copiesPerPlane : (write ? secondWriteCount : secondReadCount);
+      for(usize row = 0; row < copyCount; ++row)
+      {
+        REQUIRE(transferIdx < state.transferCount);
+        const auto& transfer = state.transfers[transferIdx++];
+        const usize expectedStart = plane == 0 ? fixed * dimensions[0] * dimensions[1] : row * dimensions[0] * dimensions[1] + fixed * dimensions[0];
+        const usize expectedCount = plane == 0 ? dimensions[0] * dimensions[1] : dimensions[0];
+        const bool refused = fixed == 1 && row + 1 == copyCount && (write ? writeFailure : readFailure);
+        CAPTURE(fixed, write, row);
+        REQUIRE(transfer.write == write);
+        REQUIRE(transfer.start == expectedStart);
+        REQUIRE(transfer.count == expectedCount);
+        REQUIRE(transfer.success == !refused);
+      }
+    }
+  }
+  REQUIRE(transferIdx == state.transferCount);
+  RequireReleased(counts);
+  REQUIRE(counts.allocationEvents == 1);
+  REQUIRE(counts.namedCarrierPeak == 11 * 13 * sizeof(T));
+  REQUIRE(counts.extraRequestCount == 0);
+  REQUIRE(counts.batchCount == 0);
+  REQUIRE(counts.reads == state.reads);
+  REQUIRE(counts.writes == state.writes);
+  REQUIRE(counts.readSuccess == state.reads - static_cast<usize>(readFailure));
+  REQUIRE(counts.writeSuccess == state.writes - static_cast<usize>(writeFailure));
+  // A failed XZ write retains the first row. Write cancellation lets every row of that plane finish.
+  RequireOrthogonalPrefix<T>(data, plane, writeCancel ? 2 : 1, writeFailure && plane == 1 ? 1 : 0);
+  return outcome;
+}
+} // namespace
+
+TEST_CASE("IdentifySample orthogonal transfer failures preserve exact completed values", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
+{
+  UnitTest::LoadPlugins();
+  const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const auto stop = GENERATE(OrthogonalStop::ReadFailure, OrthogonalStop::WriteFailure);
+  const auto fault = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
+  const bool useBool = GENERATE(false, true);
+  DYNAMIC_SECTION("plane=" << plane << " stop=" << static_cast<int>(stop) << " fault=" << static_cast<int>(fault) << " Bool=" << useBool)
+  {
+    const auto outcome = useBool ? RunOrthogonalTransfer<bool>(plane, stop, fault) : RunOrthogonalTransfer<uint8>(plane, stop, fault);
+    if(fault == FaultKind::Result)
+    {
+      REQUIRE(outcome.thrown == FaultKind::None);
+      REQUIRE(outcome.result.has_value());
+      const auto& result = outcome.result.value();
+      SIMPLNX_RESULT_REQUIRE_INVALID(result);
+      REQUIRE(result.errors().size() == 1);
+      REQUIRE(result.errors()[0].code == k_SecondaryCode);
+      REQUIRE(result.errors()[0].message == "secondary copy Result");
+      REQUIRE(result.warnings().size() == 1);
+      REQUIRE(result.warnings()[0].code == k_SecondaryWarning);
+      REQUIRE(result.warnings()[0].message == "secondary warning");
+    }
+    else
+    {
+      REQUIRE_FALSE(outcome.result.has_value());
+      REQUIRE(outcome.thrown == fault);
+      REQUIRE(outcome.payload == 202);
+    }
+  }
+}
+
+TEST_CASE("IdentifySample orthogonal cancellation preserves per-plane publication", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
+{
+  UnitTest::LoadPlugins();
+  const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const auto stop = GENERATE(OrthogonalStop::ReadCancel, OrthogonalStop::MessageCancel, OrthogonalStop::WriteCancel);
+  const bool useBool = GENERATE(false, true);
+  DYNAMIC_SECTION("plane=" << plane << " stop=" << static_cast<int>(stop) << " Bool=" << useBool)
+  {
+    const auto outcome = useBool ? RunOrthogonalTransfer<bool>(plane, stop, FaultKind::None) : RunOrthogonalTransfer<uint8>(plane, stop, FaultKind::None);
+    REQUIRE(outcome.thrown == FaultKind::None);
+    REQUIRE(outcome.result.has_value());
+    const auto& result = outcome.result.value();
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(result.warnings().empty());
+  }
+}
