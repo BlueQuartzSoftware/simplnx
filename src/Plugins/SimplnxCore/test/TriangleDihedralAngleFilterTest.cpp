@@ -50,6 +50,9 @@ static const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const Da
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCore][TriangleDihedralAngleFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
@@ -89,6 +92,12 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
 
   DataPath geometryPath = dataStructure.getDataPathsForId(acuteTriangle.getId())[0];
   DataPath triangleDihedralAnglesDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName).createChildPath(triangleDihedralAnglesName);
+  const auto* verticesArray = acuteTriangle.getVertices();
+  const auto* facesArray = acuteTriangle.getFaces();
+  REQUIRE(verticesArray != nullptr);
+  REQUIRE(facesArray != nullptr);
+  scope.requireExpectedStore(*verticesArray);
+  scope.requireExpectedStore(*facesArray);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
@@ -99,8 +108,11 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(triangleDihedralAnglesDataPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(triangleDihedralAnglesDataPath));
 
   std::vector<float64> officialDihedralAngleMinimums = {53.1301002502441, 18.4349555969238, 0.0, 0.0};
   Float64Array& calculatedDihedralAngleMinimums = dataStructure.getDataRefAs<Float64Array>(triangleDihedralAnglesDataPath);
