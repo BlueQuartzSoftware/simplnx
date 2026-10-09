@@ -13,10 +13,10 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -186,9 +186,12 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     yMin = (pCropYDim && minCropCoord[1] >= srcOrigin[1]) ? static_cast<uint64>(std::floor((minCropCoord[1] - srcOrigin[1]) / spacing[1])) : 0;
     zMin = (pCropZDim && minCropCoord[2] >= srcOrigin[2]) ? static_cast<uint64>(std::floor((minCropCoord[2] - srcOrigin[2]) / spacing[2])) : 0;
 
-    xMax = (pCropXDim && maxCropCoord[0] <= maxPoint[0]) ? static_cast<uint64>(std::floor((maxCropCoord[0] - srcOrigin[0]) / spacing[0])) : srcImageGeomPtr->getNumXCells() - 1;
-    yMax = (pCropYDim && maxCropCoord[1] <= maxPoint[1]) ? static_cast<uint64>(std::floor((maxCropCoord[1] - srcOrigin[1]) / spacing[1])) : srcImageGeomPtr->getNumYCells() - 1;
-    zMax = (pCropZDim && maxCropCoord[2] <= maxPoint[2]) ? static_cast<uint64>(std::floor((maxCropCoord[2] - srcOrigin[2]) / spacing[2])) : srcImageGeomPtr->getNumZCells() - 1;
+    xMax = (pCropXDim && maxCropCoord[0] <= maxPoint[0]) ? std::min<uint64>(static_cast<uint64>(std::floor((maxCropCoord[0] - srcOrigin[0]) / spacing[0])), srcImageGeomPtr->getNumXCells() - 1) :
+                                                           srcImageGeomPtr->getNumXCells() - 1;
+    yMax = (pCropYDim && maxCropCoord[1] <= maxPoint[1]) ? std::min<uint64>(static_cast<uint64>(std::floor((maxCropCoord[1] - srcOrigin[1]) / spacing[1])), srcImageGeomPtr->getNumYCells() - 1) :
+                                                           srcImageGeomPtr->getNumYCells() - 1;
+    zMax = (pCropZDim && maxCropCoord[2] <= maxPoint[2]) ? std::min<uint64>(static_cast<uint64>(std::floor((maxCropCoord[2] - srcOrigin[2]) / spacing[2])), srcImageGeomPtr->getNumZCells() - 1) :
+                                                           srcImageGeomPtr->getNumZCells() - 1;
   }
 
   if(pCropXDim && xMax > srcImageGeomPtr->getNumXCells() - 1)
@@ -311,8 +314,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
   {
     for(const auto& childPath : childPaths.value())
     {
-      std::string copiedChildName = nx::core::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-      DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+      const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         std::vector<DataPath> allCreatedPaths = {copiedChildPath};
@@ -321,8 +323,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
-            std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-            allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+            allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
           }
         }
         resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));

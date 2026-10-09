@@ -10,7 +10,9 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <limits>
 #include <memory>
+#include <type_traits>
 
 using namespace nx::core;
 
@@ -255,6 +257,13 @@ public:
             label1 = T{0};
           }
 
+          // Surface meshers use negative labels for the exterior region.
+          if constexpr(std::is_signed_v<T>)
+          {
+            label0 = std::max(label0, T{0});
+            label1 = std::max(label1, T{0});
+          }
+
           // Matching labels toggle entry, exit, and adjacent-feature transitions.
           if(currentFeature == label0)
           {
@@ -322,7 +331,7 @@ struct ZSliceFunctor
 {
   /**
    * @brief Runs typed scanline rasterization.
-   * @tparam T Specifies the Feature-ID scalar type.
+   * @tparam T Specifies the source Face Label scalar type.
    * @param algorithm Owns the mutex-protected output method.
    * @param dataStructure Provides source and output arrays.
    * @param shouldCancel Stops later preprocessing or worker scheduling when true.
@@ -330,12 +339,13 @@ struct ZSliceFunctor
    * @param imageGeom Defines the output grid.
    * @param triangleGeom Provides mesh connectivity and vertices.
    * @param faceLabelsArrayPath Identifies source face labels.
+   * @param outputType Specifies the Feature Ids DataType.
    *
-   * @return The first mesh-input bulk-read error.
+   * @return The first bulk-I/O error or an error if a Face Label exceeds the output type range.
    */
   template <typename T>
   Result<> operator()(RegularGridSampleSurfaceMesh* algorithm, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                      const ImageGeom& imageGeom, const TriangleGeom& triangleGeom, const DataPath& faceLabelsArrayPath)
+                      const ImageGeom& imageGeom, const TriangleGeom& triangleGeom, const DataPath& faceLabelsArrayPath, DataType outputType)
   {
     SizeVec3 dims = imageGeom.getDimensions();
     FloatVec3 origin = imageGeom.getOrigin();
@@ -382,6 +392,42 @@ struct ZSliceFunctor
     if(shouldCancel)
     {
       return {};
+    }
+
+    // Validate before scheduling workers so no slice contains a truncated Feature Id.
+    uint64 minLabel = std::numeric_limits<uint64>::max();
+    uint64 maxLabel = 0;
+    bool hasNonnegativeLabel = false;
+    for(usize valueIdx = 0; valueIdx < faceLabelsCount; ++valueIdx)
+    {
+      const T label = faceLabelsBuffer[valueIdx];
+      if constexpr(std::is_signed_v<T>)
+      {
+        if(label < 0)
+        {
+          continue;
+        }
+      }
+      const auto value = static_cast<uint64>(label);
+      minLabel = std::min(minLabel, value);
+      maxLabel = std::max(maxLabel, value);
+      hasNonnegativeLabel = true;
+    }
+    auto rangeResult = ExecuteDataFunctionIntType(
+        [&]<typename OutputT>() -> Result<> {
+          const auto outputMax = static_cast<uint64>(std::numeric_limits<OutputT>::max());
+          if(hasNonnegativeLabel && maxLabel > outputMax)
+          {
+            return MakeErrorResult(-11801, fmt::format("Face Labels/Part Numbers DataArray '{}' has nonnegative values from {} to {}, which do not fit in Output Type for Feature Ids '{}'. "
+                                                       "Select an output type that supports this range.",
+                                                       faceLabelsArrayPath.toString(), minLabel, maxLabel, DataTypeToString(outputType)));
+          }
+          return {};
+        },
+        outputType);
+    if(rangeResult.invalid())
+    {
+      return rangeResult;
     }
 
     // Precompute Z bounds so each worker rejects nonintersecting triangles quickly.
@@ -450,5 +496,6 @@ Result<> RegularGridSampleSurfaceMesh::operator()()
   m_CellsPerSlice = dims[0] * dims[1];
 
   return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), this, m_DataStructure, m_ShouldCancel,
-                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath);
+                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath,
+                                    m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath).getDataType());
 }

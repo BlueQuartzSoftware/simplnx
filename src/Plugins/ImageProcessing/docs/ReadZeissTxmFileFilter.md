@@ -12,6 +12,8 @@ The volume is read into a new **Image Geometry**. The geometry's spacing and ori
 
 The cropping type options in the Cropping Options section are `No Cropping` to read the full volume into an image geometry, `Voxel Subvolume` to read a subvolume into an image geometry using voxel coordinates, and `Physical Subvolume` to read a subvolume into an image geometry using physical coordinates.  Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions.  So for example, if the cropping type `Physical Subvolume` is selected, `Crop Y Dimension` is turned on, and `Crop X Dimension` and `Crop Z Dimension` are turned off, then the incoming volume will be cropped in the Y dimension only and the cropping bounds will be in physical units.
 
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
+
 ## WARNING
 
 Be aware of how large of data you are reading into DREAM3D-NX as these files can become quite large and will overwhelm the visualization system.

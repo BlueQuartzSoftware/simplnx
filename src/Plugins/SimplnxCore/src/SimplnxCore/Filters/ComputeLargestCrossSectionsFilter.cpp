@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeLargestCrossSections.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -110,6 +111,14 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
   if(dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1)
   {
     return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
+  }
+
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numCells = imageGeom.getNumberOfCells();
+  if(featureIds.getNumberOfTuples() != numCells)
+  {
+    return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                       pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPath.toString(), numCells));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

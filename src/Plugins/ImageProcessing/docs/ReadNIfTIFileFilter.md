@@ -90,8 +90,9 @@ Two cropping modes are supported:
   axis. The filter builds a temporary axis-aligned ImageGeom from the
   source file's origin and spacing (the same values the Orientation
   section would use) and converts the requested bounds to voxel indices
-  via `ImageGeom::getIndex()`. Bounds that fall outside the volume
-  produce a descriptive error rather than silently clamping.
+  using the Image Geometry's origin and spacing.
+
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
 
 Each axis can be toggled on or off independently via the *Crop X / Y / Z*
 flags. An axis whose flag is off is *not* cropped — its full extent from
@@ -156,9 +157,8 @@ large compressed files read faster.
 * Cropping saves memory, not wall-clock read time. A `.nii.gz` file must
   still be fully decompressed regardless of how small the cropped region
   is; plain `.nii` files are also read linearly in this version.
-* Physical-subvolume crop bounds must map to voxels inside the source
-  volume. Bounds outside the extent produce an error rather than
-  silently clamping.
+* A physical crop maximum at the upper boundary includes the final cell.
+  A range wholly outside the source volume is rejected.
 * `start <= end` is required on each cropped axis; reversed ranges are
   rejected at parameter-validation time.
 

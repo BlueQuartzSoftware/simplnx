@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/SurfaceNets.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
@@ -151,6 +152,35 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numCells = gridGeom.getNumberOfCells();
+  if(featureIds.getNumberOfTuples() != numCells)
+  {
+    return MakePreflightErrorResult(-56350, fmt::format("Cell Feature Ids DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                        pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pGridGeomDataPath.toString(), numCells));
+  }
+  for(const auto& selectedDataPath : pSelectedDataArrayPaths)
+  {
+    const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    if(cellArray.getNumberOfTuples() != numCells)
+    {
+      return MakePreflightErrorResult(-56351, fmt::format("Selected cell DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                          selectedDataPath.toString(), cellArray.getNumberOfTuples(), pGridGeomDataPath.toString(), numCells));
+    }
+  }
+  if(filterArgs.value<bool>(k_ApplySmoothing_Key))
+  {
+    const auto maxDistance = filterArgs.value<float32>(k_MaxDistanceFromVoxelCenter_Key);
+    if(maxDistance < 0.0F)
+    {
+      return MakePreflightErrorResult(-56352, fmt::format("Max Distance from Voxel Center must be >= 0 when Apply smoothing operations is on. Current value: {}.", maxDistance));
+    }
+    const auto smoothingIterations = filterArgs.value<int32>(k_SmoothingIterations_Key);
+    if(smoothingIterations < 0)
+    {
+      return MakePreflightErrorResult(-56353, fmt::format("Relaxation Iterations must be >= 0 when Apply smoothing operations is on. Current value: {}.", smoothingIterations));
+    }
+  }
   constexpr usize numElements = 0;
 
   // Create the Triangle Geometry action and store it
@@ -187,8 +217,6 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   {
     for(const DataPath& selectedDataPath : pFeatureDataPaths)
     {
-      // Check that the feature array has the correct tuple count to avoid crashing in execute.
-      const IDataArray* featureArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
       DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
       const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
       auto compShape = iDataArray.getComponentShape();

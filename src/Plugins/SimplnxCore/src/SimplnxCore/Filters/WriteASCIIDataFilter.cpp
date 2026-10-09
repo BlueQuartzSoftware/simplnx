@@ -11,8 +11,10 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
+#include <map>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -22,6 +24,7 @@ namespace
 // Error Code constants
 constexpr nx::core::int32 k_UnmatchingTupleCountError = -51001;
 constexpr nx::core::int32 k_NoArraySelections = -51002;
+constexpr nx::core::int32 k_DuplicateOutputName = -51003;
 } // namespace
 
 namespace nx::core
@@ -110,8 +113,7 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
 
-  /////////////////////////////////////////////////////////////////////////////
-  // VALIDATE THAT ALL DATA ARRAYS HAVE THE SAME NUMBER OF TUPLES.
+  // A single output file requires the same number of tuples in each DataArray.
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
     auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -123,6 +125,22 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
     if(!CheckArraysHaveSameTupleCount(dataStructure, pSelectedDataArrayPathsValue))
     {
       return MakePreflightErrorResult(k_UnmatchingTupleCountError, "Arrays do not all have the same length, a requirement for single file.");
+    }
+  }
+  else if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
+  {
+    const auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+    std::map<std::string, DataPath> outputNames;
+    for(const auto& arrayPath : selectedDataArrayPaths)
+    {
+      // Some file systems treat names that differ only by case as the same file.
+      const auto [iter, inserted] = outputNames.emplace(StringUtilities::toLower(arrayPath.getTargetName()), arrayPath);
+      if(!inserted)
+      {
+        return MakePreflightErrorResult(k_DuplicateOutputName,
+                                        fmt::format("In Multiple Files mode, DataArrays '{}' and '{}' have the same output name when case is ignored. Select DataArrays with different names.",
+                                                    iter->second.toString(), arrayPath.toString()));
+      }
     }
   }
 

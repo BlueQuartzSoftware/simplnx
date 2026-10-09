@@ -124,8 +124,8 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
 
   const FloatVec3 spacing = imageGeom.getSpacing();
   const FloatVec3 origin = imageGeom.getOrigin();
-  result.bounds.resize(static_cast<usize>(result.numFeatures) * 6, std::numeric_limits<float32>::quiet_NaN());
-  for(usize featureId = 0; featureId < static_cast<usize>(result.numFeatures); featureId++)
+  result.bounds.resize(featureTupleCount * 6, std::numeric_limits<float32>::quiet_NaN());
+  for(usize featureId = 0; featureId < featureTupleCount; featureId++)
   {
     const ImageFeatureIndexBounds& featureBounds = indexBounds[featureId];
     if(featureBounds.minIndices[0] == k_InvalidIndex)
@@ -381,7 +381,7 @@ Result<> ComputeFeatureBoundsDirect::operator()()
 
   if(bounds.empty())
   {
-    bounds = ExecuteComputeBounds(geom, featureIds, numFeatures);
+    bounds = ExecuteComputeBounds(geom, featureIds, featureAM.getNumberOfTuples());
   }
   if(bounds.empty())
   {
@@ -492,12 +492,11 @@ Result<> ComputeFeatureBoundsDirect::operator()()
         vertPair[1] = currentOffset * 8 + k_CubeEdges[edgeIdx].second;
 
         edgeGeom.setEdgePointIds(currentOffset * 12 + edgeIdx, vertPair);
-        edgeFeatureIds[currentOffset * 12 + edgeIdx] = currentOffset;
+        edgeFeatureIds[currentOffset * 12 + edgeIdx] = static_cast<int32>(idx);
       }
       currentOffset++;
     }
 
-    currentOffset--;
     resizeResult = edgeGeom.resizeVertexList(currentOffset * 8);
     if(resizeResult.invalid())
     {

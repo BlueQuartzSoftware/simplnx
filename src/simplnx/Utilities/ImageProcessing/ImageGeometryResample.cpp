@@ -20,7 +20,6 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -361,8 +360,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   {
     for(const auto& childPath : childPaths.value())
     {
-      const std::string copiedChildName = StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-      const DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+      const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         std::vector<DataPath> allCreatedPaths = {copiedChildPath};
@@ -371,8 +369,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
-            const std::string createdPathName = StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-            allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+            allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
           }
         }
         resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));

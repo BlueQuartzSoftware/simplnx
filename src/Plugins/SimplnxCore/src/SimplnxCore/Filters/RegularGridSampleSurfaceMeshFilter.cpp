@@ -90,8 +90,6 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
                                                    IGeometry::GetAllLengthUnitStrings()));
-  params.insert(std::make_unique<BoolParameter>(k_UseCustomOutputType_Key, "Use Custom Output Type",
-                                                "If true user will be prompted for desired output type, else Face Labels/Part Numbers type will be used", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
@@ -107,9 +105,13 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Attribute Matrix", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomOutputType_Key, "Use Custom Output Type",
+                                                                 "If true user will be prompted for desired output type, else Face Labels/Part Numbers type will be used", false));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Type for Feature Ids", "The data type for the `Feature Ids` array",
                                                    static_cast<ChoicesParameter::ValueType>(to_underlying(DataType::int32)), GetIntegerDataTypesAsHumanStrings()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
+
+  params.linkParameters(k_UseCustomOutputType_Key, k_OutputType_Key, true);
 
   params.linkParameters(k_UseExistingGeometry_Key, k_Dimensions_Key, to_underlying(GeometryOption::Create));
   params.linkParameters(k_UseExistingGeometry_Key, k_Origin_Key, to_underlying(GeometryOption::Create));

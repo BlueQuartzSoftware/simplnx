@@ -10,7 +10,11 @@ This **Filter** computes the silhouette for a clustered **Attribute Array**.  Th
 
 $$ s_{i} = \frac{b_{i} - a_{i}}{\max\{a_{i},b_{i}\}} $$
 
-where $a$ is the average distance between point $i$ and all other points in the cluster point $i$ belongs to, $b$ is the *next closest* average distance among all other clusters, and $s$ is the silhouette value.  Using this definition, $s$ exists on the interval $[-1, 1]$ (dimensionless), where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
+where $a$ is the average distance between point $i$ and all points in its own cluster, including itself, $b$ is the *next closest* average distance among all other clusters, and $s$ is the silhouette value.  Using this definition, $s$ exists on the interval $[-1, 1]$ (dimensionless), where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
+
+Points in cluster 0 are scored like points in other clusters. Cluster Ids do not need to be contiguous. Cluster Ids must be nonnegative.
+
+When **Use Mask Array** is enabled, the **Mask Array**, **Attribute Array to Silhouette**, and **Cluster Ids** DataArrays must have the same number of tuples. The **Mask Array** and **Cluster Ids** DataArrays must each have one component.
 
 The filter writes one float silhouette value per input point into the created silhouette array, located alongside the input array. Each value lies in the range $[-1, 1]$ (dimensionless).
 
@@ -18,7 +22,7 @@ The silhouette can be used to determine how well a particular clustering has per
 
 ## Algorithm
 
-For in-memory arrays, the filter retains the original direct pairwise implementation. For out-of-core or mixed-storage inputs, it dispatches to a bounded Scanline implementation. The Scanline path reads clustering values, feature IDs, and the optional Bool or UInt8 mask in fixed tuple tiles with bulk `copyIntoBuffer()` calls. It densifies sparse positive feature IDs into feature-scale state, accumulates exact pair distances for one bounded outer tile against bounded inner tiles, and bulk-writes the resulting silhouette tile. It never creates an all-true cell mask or resident cell-sized membership, distance, or output scratch arrays. Feature-zero, self-distance, denominator, and distance-metric behavior follow the direct implementation.
+For in-memory arrays, the filter uses a direct pairwise implementation with dense indices for sparse Cluster Ids. For out-of-core or mixed-storage inputs, it dispatches to a bounded Scanline implementation. The Scanline path reads clustering values, feature IDs, and the optional Bool or UInt8 mask in fixed tuple tiles with bulk `copyIntoBuffer()` calls. It densifies sparse positive feature IDs into feature-scale state, accumulates exact pair distances for one bounded outer tile against bounded inner tiles, and bulk-writes the resulting silhouette tile. It never creates an all-true cell mask or resident cell-sized membership, distance, or output scratch arrays. Both implementations include self-distance in the mean for the point's own cluster, including cluster 0. Cluster 0 does not supply a competing-cluster mean. Both implementations use the same denominator and distance metrics.
 
 ### Distance Metric
 

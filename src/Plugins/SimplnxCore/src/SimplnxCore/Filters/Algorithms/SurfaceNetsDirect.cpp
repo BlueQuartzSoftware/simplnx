@@ -22,6 +22,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <limits>
 
 using namespace nx::core;
@@ -137,6 +138,28 @@ Result<> SurfaceNetsDirect::operator()()
   if(sentinelCheck.invalid())
   {
     return sentinelCheck;
+  }
+
+  if(!m_InputValues->SelectedFeatureDataArrayPaths.empty())
+  {
+    // Feature Ids are tuple indices in each selected feature DataArray.
+    int32 largestFeatureId = 0;
+    for(usize tupleIdx = 0; tupleIdx < featureIdsStore.getNumberOfTuples(); ++tupleIdx)
+    {
+      largestFeatureId = std::max(largestFeatureId, featureIdsStore[tupleIdx]);
+    }
+    for(const auto& featureArrayPath : m_InputValues->SelectedFeatureDataArrayPaths)
+    {
+      const auto& featureArray = m_DataStructure.getDataRefAs<IDataArray>(featureArrayPath);
+      if(static_cast<usize>(largestFeatureId) >= featureArray.getNumberOfTuples())
+      {
+        return MakeErrorResult(
+            -62073,
+            fmt::format(
+                "Feature Id {} in Cell Feature Ids DataArray '{}' is outside the selected feature DataArray '{}' with {} tuples. The number of tuples must be greater than the largest Feature Id.",
+                largestFeatureId, m_InputValues->FeatureIdsArrayPath.toString(), featureArrayPath.toString(), featureArray.getNumberOfTuples()));
+      }
+    }
   }
 
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);

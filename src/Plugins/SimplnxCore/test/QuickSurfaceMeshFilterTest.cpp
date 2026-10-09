@@ -28,6 +28,51 @@ using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
 namespace fs = std::filesystem;
 
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Feature DataArray tuple bounds", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({3, 1, 1});
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 3}, imageGeom->getId());
+  REQUIRE(cellAM != nullptr);
+  imageGeom->setCellData(cellAM->getId());
+  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {1, 1, 3}, {1}, cellAM->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = 2;
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, imageGeom->getId());
+  REQUIRE(featureAM != nullptr);
+  auto* featureValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {2}, {1}, featureAM->getId());
+  REQUIRE(featureValues != nullptr);
+  featureValues->fill(7);
+
+  QuickSurfaceMeshFilter filter;
+  Arguments args;
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "Cell Data", "Feature Ids"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedFeatureDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({"Image Geometry", "Feature Data", "Feature Values"})}));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -62073);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();

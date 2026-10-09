@@ -194,8 +194,6 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   {
     for(const DataPath& selectedDataPath : pFeatureDataPaths)
     {
-      // Check that the feature array has the correct tuple count to avoid crashing in execute.
-      const IDataArray* featureArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
       DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
       const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
       auto compShape = iDataArray.getComponentShape();

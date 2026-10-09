@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 using namespace nx::core;
@@ -35,13 +35,13 @@ public:
    * @param outputDataArray Receives silhouette scores.
    * @param maskDataArray Supplies an optional mask comparator.
    * @param useMask True to apply maskDataArray.
-   * @param numClusters Number of distinct Feature IDs.
-   * @param featureIds Supplies one cluster ID per tuple.
+   * @param numClusters Number of distinct positive Cluster Ids.
+   * @param featureIds Supplies one dense cluster index per tuple. Index zero represents Cluster Id zero.
    * @param distMetric Selects the tuple distance function.
    * @pre All arguments outlive this calculation.
    */
   SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, bool useMask,
-                     usize numClusters, const Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric distMetric)
+                     usize numClusters, const std::vector<usize>& featureIds, ClusterUtilities::DistanceMetric distMetric)
   : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
   , m_OutputData(outputDataArray)
   , m_FeatureIds(featureIds)
@@ -55,8 +55,8 @@ public:
   /**
    * @brief Builds the distance table and writes each score.
    *
-   * The own-cluster mean includes self-distance. Empty cluster columns divide by
-   * zero but cannot win a finite minimum. A zero score denominator produces NaN.
+   * The own-cluster mean includes self-distance. Empty clusters cannot supply the competing mean.
+   * Cluster zero receives scores but cannot supply the competing mean. A zero score denominator produces NaN.
    */
   void operator()()
   {
@@ -94,9 +94,12 @@ public:
     {
       if(!m_UseMask || m_Mask->isTrue(i))
       {
-        for(usize j = 1; j < totalClusters; j++)
+        for(usize j = 0; j < totalClusters; j++)
         {
-          clusterDist[i][j] /= numTuplesPerFeature[j];
+          if(numTuplesPerFeature[j] > 0.0)
+          {
+            clusterDist[i][j] /= numTuplesPerFeature[j];
+          }
         }
       }
     }
@@ -105,13 +108,13 @@ public:
     {
       if(!m_UseMask || m_Mask->isTrue(i))
       {
-        const int32 cluster = m_FeatureIds[i];
+        const usize cluster = m_FeatureIds[i];
         inClusterDist[i] = clusterDist[i][cluster];
 
         float64 minDist = std::numeric_limits<float64>::max();
         for(usize j = 1; j < totalClusters; j++)
         {
-          if(cluster != j)
+          if(cluster != j && numTuplesPerFeature[j] > 0.0)
           {
             const float64 dist = clusterDist[i][j];
             if(dist < minDist)
@@ -141,7 +144,7 @@ private:
   using AbstractDataStoreT = AbstractDataStore<T>;
   const AbstractDataStoreT& m_InputData;
   Float64AbstractDataStore& m_OutputData;
-  const Int32AbstractDataStore& m_FeatureIds;
+  const std::vector<usize>& m_FeatureIds;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   bool m_UseMask = false;
   usize m_NumClusters;
@@ -159,12 +162,23 @@ SilhouetteDirect::~SilhouetteDirect() noexcept = default;
 
 Result<> SilhouetteDirect::operator()()
 {
-  // Distinct-ID count sizes the direct distance table. IDs still index it directly.
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  std::unordered_set<int32> uniqueIds;
-  for(usize i = 0; i < featureIds.getNumberOfTuples(); i++)
+  // Dense indices keep sparse Cluster Ids within the distance table. Cluster zero retains index zero.
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  std::unordered_map<int32, usize> clusterIndices;
+  std::vector<usize> denseFeatureIds(featureIds.getNumberOfTuples(), 0);
+  for(usize tupleIdx = 0; tupleIdx < featureIds.getNumberOfTuples(); tupleIdx++)
   {
-    uniqueIds.insert(featureIds[i]);
+    const int32 clusterId = featureIds[tupleIdx];
+    if(clusterId < 0)
+    {
+      return MakeErrorResult(-54081, fmt::format("Cluster Ids DataArray '{}' contains negative value {} at tuple {}. Cluster Ids must be nonnegative.", m_InputValues->FeatureIdsArrayPath.toString(),
+                                                 clusterId, tupleIdx));
+    }
+    if(clusterId > 0)
+    {
+      const auto [iter, inserted] = clusterIndices.try_emplace(clusterId, clusterIndices.size() + 1);
+      denseFeatureIds[tupleIdx] = iter->second;
+    }
   }
 
   // Avoid a cell-sized synthetic all-true mask when masking is disabled.
@@ -182,7 +196,7 @@ Result<> SilhouetteDirect::operator()()
 
   const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& outputStore = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SilhouetteArrayPath).getDataStoreRef();
-  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, outputStore, maskCompare, m_InputValues->UseMask, uniqueIds.size(), featureIds,
+  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, outputStore, maskCompare, m_InputValues->UseMask, clusterIndices.size(), denseFeatureIds,
                                                              m_InputValues->DistanceMetric);
   return {};
 }

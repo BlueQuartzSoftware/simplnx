@@ -8,6 +8,8 @@ Core (Conversion)
 
 The **Crop Geometry (Edge) Filter** allows users to crop a region of interest (ROI) from an **Edge Geometry**. This filter is essential for isolating specific portions of edge-based data structures. For cropping voxel-based data instead, see [Crop Geometry (Image)](CropImageGeometryFilter.md).
 
+Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`. The output uses the complete destination path, including its parent DataGroup.
+
 Users can selectively crop specific dimensions of the **Edge Geometry** by toggling **Crop X Dimension**, **Crop Y Dimension**, and **Crop Z Dimension** ON or OFF. Only dimensions that are turned ON will be cropped.
 
 The **Min Coordinate** and **Max Coordinate** values define the ROI bounds and are specified in the **Edge Geometry's** physical coordinate units (the same units as the vertex positions), *not* as cell or vertex indices.
@@ -21,6 +23,10 @@ The *Boundary Intersection Behavior* parameter provides the following choices:
 - **Filter Error [2]**: Throws an error if any edge intersects the cropping boundary, ensuring strict adherence to the ROI.
 
 **NOTE:** When the **Interpolate Outside Vertex** boundary intersection behavior is chosen, this filter DOES NOT interpolate any vertex data, only the vertex position!
+
+When one vertex outside the crop bounds is shared by edges that cross the bounds at different points, the vertex is duplicated, one copy per crossing. Vertex DataArray values are copied from the source vertex to each duplicate.
+
+StringArray and NeighborList data in the Vertex and Edge Attribute Matrices are copied with the kept vertices and edges.
 
 ## Examples
 In the following examples, an edge geometry with bounds (-1, 1), (-1, 1), (0, 1) is being used:

@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <stdexcept>
 
 using namespace nx::core;
@@ -129,25 +130,25 @@ DataPath DataPath::replace(std::string_view symbol, std::string_view targetName)
   return {(std::move(newPath))};
 }
 
+std::optional<DataPath> DataPath::rebase(const DataPath& oldPrefix, const DataPath& newPrefix) const
+{
+  if(oldPrefix.getLength() > getLength() || !std::equal(oldPrefix.m_Path.cbegin(), oldPrefix.m_Path.cend(), m_Path.cbegin()))
+  {
+    return std::nullopt;
+  }
+  std::vector<std::string> rebased = newPrefix.m_Path;
+  rebased.insert(rebased.end(), m_Path.cbegin() + static_cast<std::ptrdiff_t>(oldPrefix.getLength()), m_Path.cend());
+  return DataPath(std::move(rebased));
+}
+
 bool DataPath::attemptRename(const DataPath& oldPath, const DataPath& newPath)
 {
-  if(oldPath.getLength() > getLength())
+  std::optional<DataPath> rebased = rebase(oldPath, newPath);
+  if(!rebased.has_value())
   {
     return false;
   }
-
-  for(usize i = 0; i < oldPath.getLength(); i++)
-  {
-    if(oldPath.m_Path[i] != m_Path[i])
-    {
-      return false;
-    }
-  }
-
-  for(usize i = 0; i < oldPath.getLength(); i++)
-  {
-    m_Path[i] = newPath.m_Path[i];
-  }
+  *this = std::move(rebased.value());
   return true;
 }
 
