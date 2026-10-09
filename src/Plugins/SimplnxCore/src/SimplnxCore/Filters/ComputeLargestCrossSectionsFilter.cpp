@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeLargestCrossSections.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -112,17 +113,12 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
     return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
   }
 
-  const auto* cellAM = imageGeom.getCellData();
-  if(cellAM == nullptr)
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numCells = imageGeom.getNumberOfCells();
+  if(featureIds.getNumberOfTuples() != numCells)
   {
-    return MakePreflightErrorResult(-3711, fmt::format("The Image Geometry '{}' has no Cell Data Attribute Matrix.", pImageGeometryPath.toString()));
-  }
-
-  const DataPath cellDataPath = cellAM->getDataPaths().at(0);
-  if(pFeatureIdsArrayPathValue.getParent() != cellDataPath)
-  {
-    return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of the Image Geometry '{}'.",
-                                                       pFeatureIdsArrayPathValue.toString(), cellDataPath.toString(), pImageGeometryPath.toString()));
+    return MakePreflightErrorResult(-3711, fmt::format("The Feature Ids DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                       pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPath.toString(), numCells));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

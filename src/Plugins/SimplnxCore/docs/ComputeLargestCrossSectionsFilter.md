@@ -22,9 +22,9 @@ The *Plane of Interest* parameter selects the plane along which cross-sections a
 
 This filter requires a **Cell Feature Ids** array, typically produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or one of the misorientation-based segmentation filters in the OrientationAnalysis plugin.
 
-Feature Ids must be in the Cell Data Attribute Matrix of the selected Image Geometry.
+Feature Ids must have one tuple for each cell in the selected Image Geometry. The array can be in a different Attribute Matrix.
 
-Preflight returns error -3711 if the selected Image Geometry has no Cell Data Attribute Matrix assigned.
+Preflight returns error -3711 if the tuple count does not equal the cell count. The Image Geometry does not need an assigned Cell Data Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

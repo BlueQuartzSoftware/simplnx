@@ -406,7 +406,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[Si
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data parent validation", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
@@ -415,37 +415,82 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data parent validation", "[Simpl
   auto args = SurfaceNetsFixture::ArgumentsFor(false);
   int32 expectedCode = -56350;
 
-  SECTION("Cell Feature Ids outside Cell Data")
+  SECTION("Cell Feature Ids have too few tuples")
   {
-    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", SurfaceNetsFixture::k_CellShape);
+    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
     REQUIRE(otherAM != nullptr);
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", SurfaceNetsFixture::k_CellShape, {1}, otherAM->getId());
+    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", ShapeType{12}, {1}, otherAM->getId());
     REQUIRE(featureIds != nullptr);
     featureIds->fill(1);
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Other Cell Data", "Other Feature Ids"})));
   }
-  SECTION("Selected cell DataArray outside Cell Data")
+  SECTION("Selected cell DataArray has too few tuples")
   {
-    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", SurfaceNetsFixture::k_CellShape);
+    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
     REQUIRE(otherAM != nullptr);
-    auto* cellValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", SurfaceNetsFixture::k_CellShape, {1}, otherAM->getId());
+    auto* cellValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", ShapeType{12}, {1}, otherAM->getId());
     REQUIRE(cellValues != nullptr);
     cellValues->fill(7);
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key,
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{k_SmallCellIntPath, DataPath({"Other Cell Data", "Other Cell Values"})}));
     expectedCode = -56351;
   }
-  SECTION("Image Geometry has no Cell Data")
-  {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath));
-    dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath).setCellData(std::nullopt);
-  }
-
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("12 tuples") != std::string::npos);
+  REQUIRE(preflightResult.outputActions.errors()[0].message.find("24 cells") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matrix", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool assignCellData = GENERATE(false, true);
+  CAPTURE(assignCellData);
+
+  DataStructure dataStructure;
+  SurfaceNetsFixture::Create(dataStructure, true);
+  if(!assignCellData)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath));
+    dataStructure.getDataRefAs<ImageGeom>(k_SmallGeomPath).setCellData(std::nullopt);
+  }
+  const DataPath otherDataPath({"Other Cell Data"});
+  const DataPath featureIdsPath = otherDataPath.createChildPath("Other Feature Ids");
+  const DataPath cellValuesPath = otherDataPath.createChildPath("Other Cell Values");
+  auto* otherAM = AttributeMatrix::Create(dataStructure, otherDataPath.getTargetName(), SurfaceNetsFixture::k_CellShape);
+  REQUIRE(otherAM != nullptr);
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, SurfaceNetsFixture::k_CellShape, {1});
+  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, otherAM->getId());
+  REQUIRE(featureIds != nullptr);
+  featureIds->fill(1);
+  auto cellValuesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellValuesPath, SurfaceNetsFixture::k_CellShape, {1});
+  auto* cellValues = Int32Array::Create(dataStructure, cellValuesPath.getTargetName(), cellValuesStore, otherAM->getId());
+  REQUIRE(cellValues != nullptr);
+  cellValues->fill(7);
+
+  SurfaceNetsFilter filter;
+  auto args = SurfaceNetsFixture::ArgumentsFor(false);
+  args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{cellValuesPath}));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(k_SmallOutputPath);
+  REQUIRE(triangleGeom != nullptr);
+  REQUIRE(triangleGeom->getNumberOfFaces() > 0);
+  const auto* copiedValues = dataStructure.getDataAs<Int32Array>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName).createChildPath(cellValuesPath.getTargetName()));
+  REQUIRE(copiedValues != nullptr);
+  REQUIRE(copiedValues->getNumberOfTuples() == triangleGeom->getNumberOfFaces());
+  REQUIRE(copiedValues->getNumberOfComponents() == 2);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing range validation", "[SimplnxCore][SurfaceNetsFilter]")

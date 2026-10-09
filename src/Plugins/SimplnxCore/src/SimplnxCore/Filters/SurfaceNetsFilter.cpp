@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/SurfaceNets.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
@@ -151,24 +152,20 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
-  const auto* cellAM = gridGeom.getCellData();
-  if(cellAM == nullptr)
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numCells = gridGeom.getNumberOfCells();
+  if(featureIds.getNumberOfTuples() != numCells)
   {
-    return MakePreflightErrorResult(-56350,
-                                    fmt::format("Image Geometry '{}' has no Cell Data Attribute Matrix. Cell Feature Ids must be in its Cell Data Attribute Matrix.", pGridGeomDataPath.toString()));
-  }
-  const DataPath cellDataPath = cellAM->getDataPaths().at(0);
-  if(pFeatureIdsArrayPathValue.getParent() != cellDataPath)
-  {
-    return MakePreflightErrorResult(-56350, fmt::format("Cell Feature Ids DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", pFeatureIdsArrayPathValue.toString(),
-                                                        cellDataPath.toString(), pGridGeomDataPath.toString()));
+    return MakePreflightErrorResult(-56350, fmt::format("Cell Feature Ids DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                        pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pGridGeomDataPath.toString(), numCells));
   }
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
-    if(selectedDataPath.getParent() != cellDataPath)
+    const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    if(cellArray.getNumberOfTuples() != numCells)
     {
-      return MakePreflightErrorResult(-56351, fmt::format("Selected cell DataArray '{}' must be in the Cell Data Attribute Matrix '{}' of Image Geometry '{}'.", selectedDataPath.toString(),
-                                                          cellDataPath.toString(), pGridGeomDataPath.toString()));
+      return MakePreflightErrorResult(-56351, fmt::format("Selected cell DataArray '{}' has {} tuples, but Image Geometry '{}' has {} cells. The tuple count must equal the cell count.",
+                                                          selectedDataPath.toString(), cellArray.getNumberOfTuples(), pGridGeomDataPath.toString(), numCells));
     }
   }
   if(filterArgs.value<bool>(k_ApplySmoothing_Key))
