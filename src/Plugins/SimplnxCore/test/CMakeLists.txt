@@ -388,3 +388,13 @@ set(PREBUILT_PIPELINE_NAMES
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 )
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${simplnx_SOURCE_DIR}/test/ProfileIsolationContract.cpp")
+
+add_test(NAME "${PLUGIN_NAME}_test_profile_isolation"
+  COMMAND ${CMAKE_COMMAND}
+    "-DPROFILE_TEST_EXECUTABLE=$<TARGET_FILE:${PLUGIN_NAME}UnitTest>"
+    "-DPROFILE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/ProfileIsolation"
+    -DPROFILE_RUNNER_ONLY=TRUE
+    -P "${simplnx_SOURCE_DIR}/test/VerifyTestProfileLifecycle.cmake")
+set_tests_properties("${PLUGIN_NAME}_test_profile_isolation" PROPERTIES RUN_SERIAL TRUE TIMEOUT 60)
