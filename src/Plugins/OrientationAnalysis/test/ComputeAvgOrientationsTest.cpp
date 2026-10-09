@@ -760,6 +760,9 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering Independence", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   const std::vector<float32> quatIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
   const std::vector<float32> quatRz90 = {0.0f, 0.0f, k_Rz90_z, k_Rz90_z};
@@ -778,6 +781,15 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quats, crystalStructures);
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_QuatsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(k_QuatsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
+
     ComputeAvgOrientationsFilter filter;
     Arguments args;
     SetInputArgs(args);
@@ -795,12 +807,16 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
     const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+    scope.requireExpectedStore(avgQuats);
     CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz45_z, k_Rz45_w, 1.0e-6f);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
