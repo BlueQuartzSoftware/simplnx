@@ -35,12 +35,17 @@ using namespace SharedFeatureFaceFilterTest;
 TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFaceFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_FaceLabelsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_FaceLabelsPath));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -61,7 +66,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -73,6 +78,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
 
     const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    scope.requireExpectedStore(kNxArray);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
@@ -83,6 +89,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
 
     const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    scope.requireExpectedStore(kNxArray);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
@@ -93,6 +100,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
 
     const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    scope.requireExpectedStore(kNxArray);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
