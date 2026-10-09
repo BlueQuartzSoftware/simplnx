@@ -416,7 +416,7 @@ struct ZSliceFunctor
     auto rangeResult = ExecuteDataFunctionIntType(
         [&]<typename OutputT>() -> Result<> {
           const auto outputMax = static_cast<uint64>(std::numeric_limits<OutputT>::max());
-          if(hasNonnegativeLabel && (minLabel > outputMax || maxLabel > outputMax))
+          if(hasNonnegativeLabel && maxLabel > outputMax)
           {
             return MakeErrorResult(-11801, fmt::format("Face Labels/Part Numbers DataArray '{}' has nonnegative values from {} to {}, which do not fit in Output Type for Feature Ids '{}'. "
                                                        "Select an output type that supports this range.",
