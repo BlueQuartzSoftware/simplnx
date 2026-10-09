@@ -2,13 +2,13 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
+#include "simplnx/UnitTest/CatchSessionRunner.hpp"
 #include "simplnx/UnitTest/ProcessTestProfile.hpp"
-
-#include <catch2/catch.hpp>
+#include "simplnx/UnitTest/TestApplicationCleanup.hpp"
 
 #include <cstdio>
+#include <exception>
 #include <iostream>
-#include <memory>
 #include <string>
 
 namespace nx::core::UnitTest
@@ -23,8 +23,7 @@ inline int RunOwnedCatchSession(int argc, char* argv[])
 {
   ProcessTestProfile profile;
   std::string error;
-  int result = 1;
-  bool successful = false;
+  CatchSessionResult result;
   try
   {
     if(Application::Instance() != nullptr)
@@ -43,78 +42,28 @@ inline int RunOwnedCatchSession(int argc, char* argv[])
     }
     else
     {
-      // Session destruction releases listeners before Application saves and profile cleanup.
-      Catch::Session session;
-      result = session.applyCommandLine(argc, argv);
-      if(result == 0)
-      {
-        const auto& data = session.configData();
-        const bool listing = data.listTests || data.listTestNamesOnly || data.listTags || data.listReporters;
-        if(listing && !data.showHelp && !data.libIdentify)
-        {
-          // Catch::Session maps listing exceptions and a successful count of 255 to the same status.
-          // Use Catch's listing API inside this exception boundary to distinguish those outcomes.
-          if((data.waitForKeypress & Catch::WaitForKeypress::BeforeStart) != 0)
-          {
-            Catch::cout() << "...waiting for enter/ return before starting" << std::endl;
-            static_cast<void>(std::getchar());
-          }
-          auto config = std::make_shared<Catch::Config>(data);
-          Catch::seedRng(*config);
-          if(data.filenamesAsTags)
-          {
-            Catch::applyFilenamesAsTags(*config);
-          }
-          result = static_cast<int>(*Catch::list(config));
-          if((data.waitForKeypress & Catch::WaitForKeypress::BeforeExit) != 0)
-          {
-            Catch::cout() << "...waiting for enter/ return before exiting, with code: " << result << std::endl;
-            static_cast<void>(std::getchar());
-          }
-          successful = true;
-        }
-        else
-        {
-          result = session.run();
-          successful = result == 0;
-        }
-      }
-    }
-
-    std::weak_ptr<Application> application;
-    if(auto app = Application::Instance())
-    {
-      application = app;
-      const auto saveResult = app->savePreferences();
-      if(saveResult.invalid())
-      {
-        result = 1;
-        successful = false;
-        for(const auto& saveError : saveResult.errors())
-        {
-          std::cerr << "Test Application save failed: " << saveError.message << '\n';
-        }
-      }
-    }
-    // DeleteInstance and the destructor report additional save failures through logging only.
-    Application::DeleteInstance();
-    if(!application.expired())
-    {
-      std::cerr << "Application owner remains after test framework teardown\n";
-      result = 1;
-      successful = false;
+      result = RunCatchSession(argc, argv);
     }
   } catch(const std::exception& exception)
   {
     std::cerr << "Test runner failed: " << exception.what() << '\n';
-    result = 255;
-    successful = false;
+    result = {255, false};
+  } catch(...)
+  {
+    std::fputs("Test runner failed with an unknown exception\n", stderr);
+    result = {255, false};
   }
-  result = profile.finishExitCode(result, successful, error);
+
+  // RunCatchSession destroys Session and its listeners before checked Application teardown.
+  if(!FinishTestApplication())
+  {
+    result = {1, false};
+  }
+  const int exitCode = profile.finishExitCode(result.exitCode, result.successful, error);
   if(!error.empty())
   {
     std::cerr << error << '\n';
   }
-  return result;
+  return exitCode;
 }
 } // namespace nx::core::UnitTest
