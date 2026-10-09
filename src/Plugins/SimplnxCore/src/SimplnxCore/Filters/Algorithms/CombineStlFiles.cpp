@@ -117,7 +117,7 @@ Result<> CombineStlFiles::operator()()
 
     fileListStrArray[currentIndex] = stlFilePath;
     activeArray[currentIndex] = 1;
-    m_MessageHandler.sendInfoMessage(fmt::format("({}/{}) Reading {}", currentIndex, paths.size(), stlFilePath));
+    m_MessageHandler.sendProgressCount("Reading STL Files", currentIndex, paths.size(), stlFilePath);
     currentIndex++;
 
     ReadStlFileFilter stlFileReader;

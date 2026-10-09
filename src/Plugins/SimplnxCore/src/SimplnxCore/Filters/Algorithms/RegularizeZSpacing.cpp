@@ -163,7 +163,6 @@ Result<> RegularizeZSpacing::operator()()
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  usize arrayIndex = 0;
   const usize totalArrays = srcCellDataAM.getSize();
 
   m_Throttle.reset(totalArrays * newZDim, "Copying Cell Data");
@@ -178,7 +177,6 @@ Result<> RegularizeZSpacing::operator()()
       return {};
     }
 
-    arrayIndex++;
     // Preflight rejects non-DataArray members (error -5561); guard here as well so a direct
     // invocation of the algorithm cannot throw std::bad_cast.
     const auto* oldDataArrayPtr = dynamic_cast<const IDataArray*>(oldDataObject.get());
@@ -190,7 +188,7 @@ Result<> RegularizeZSpacing::operator()()
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     {
       std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-      m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+      m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}'", srcName));
     }
 
     ExecuteParallelFunction<RegularizeZSpacingArrayImpl>(oldDataArrayPtr->getDataType(), taskRunner, this, *oldDataArrayPtr, newDataArray, newToOldZPlane, sliceSize, m_ShouldCancel);

@@ -143,6 +143,7 @@ public:
   /**
    * @brief Sends free-form throttled status text. The format string is checked at compile time and
    * the arguments are only formatted when a message is due.
+   * The message uses Type::Info without progress; use updateCount(), updatePercent(), or increment*() for a fraction of a known total.
    * @param format A compile-time checked format string
    * @param args Format arguments
    */
@@ -161,6 +162,7 @@ public:
    * its arguments on every call and only defers the formatting; use this one when assembling the
    * message is itself expensive or has a side effect, since the functor runs only when a message is
    * due.
+   * The message uses Type::Info without progress; use updateCount(), updatePercent(), or increment*() for a fraction of a known total.
    * @param functor Callable of the form std::string func()
    */
   template <class CallableT>
@@ -177,6 +179,7 @@ public:
   /**
    * @brief Sends already-formatted throttled status text. Prefer queueMessage() where possible, so
    * the string is not built on iterations that will be dropped.
+   * The message uses Type::Info without progress; use updateCount(), updatePercent(), or increment*() for a fraction of a known total.
    * @param message The message text
    */
   void trySendMessage(std::string message);
