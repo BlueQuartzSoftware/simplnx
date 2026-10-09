@@ -1397,6 +1397,39 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart",
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalZMaxAtBound");
+  auto fileList = args.value<GeneratedFileListParameter::ValueType>(ReadImageStackFilter::k_InputFileListInfo_Key);
+  fileList.endIndex = 2;
+  args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  const usize firstSlice = GENERATE(0, 1);
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+  crop.zBoundPhysical = {static_cast<float32>(firstSlice), 3.0f};
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  VerifyGeometryDimensions(ds, k_ImageGeomPath, 3, 2, 3 - firstSlice);
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(k_ImageDataPath));
+  const auto& store = ds.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  REQUIRE(store.getNumberOfTuples() == 6 * (3 - firstSlice));
+  for(usize sliceIdx = 0; sliceIdx < 3 - firstSlice; ++sliceIdx)
+  {
+    for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
+    {
+      REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + firstSlice) + pixelIdx);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[ImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();

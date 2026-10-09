@@ -7,6 +7,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace nx::core
@@ -92,12 +93,7 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
           -23524, fmt::format("The minimum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMinPhys, zMinIndex, (zDim > 0 ? zDim - 1 : 0)));
     }
 
-    const auto zMaxIndex = static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ));
-    if(zMaxIndex >= zDim)
-    {
-      return MakeErrorResult<usize>(
-          -23525, fmt::format("The maximum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMaxPhys, zMaxIndex, (zDim > 0 ? zDim - 1 : 0)));
-    }
+    const auto zMaxIndex = std::min(static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ)), zDim - 1);
 
     zDim = zMaxIndex - zMinIndex + 1;
   }
