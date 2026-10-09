@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 namespace fs = std::filesystem;
@@ -23,6 +24,11 @@ const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
@@ -102,13 +108,37 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(true));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FaceNormals)));
 
+    const DataPath labelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
+    const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(triangleGeom.getVertices() != nullptr);
+    REQUIRE(triangleGeom.getFaces() != nullptr);
+    scope.requireExpectedStore(*triangleGeom.getVertices());
+    scope.requireExpectedStore(*triangleGeom.getFaces());
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     REQUIRE(executeResult.result.valid());
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& repairedTriangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(repairedTriangleGeom.getVertices() != nullptr);
+    REQUIRE(repairedTriangleGeom.getFaces() != nullptr);
+    scope.requireExpectedStore(*repairedTriangleGeom.getVertices());
+    scope.requireExpectedStore(*repairedTriangleGeom.getFaces());
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(normalsPath));
   }
 
   DataStructure exemplarDataStructure = {};
@@ -145,6 +175,11 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
@@ -215,13 +250,37 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(true));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FaceNormals)));
 
+    const DataPath labelsPath = k_FaceDataPath.createChildPath(Constants::k_FeatureIds);
+    const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(triangleGeom.getVertices() != nullptr);
+    REQUIRE(triangleGeom.getFaces() != nullptr);
+    scope.requireExpectedStore(*triangleGeom.getVertices());
+    scope.requireExpectedStore(*triangleGeom.getFaces());
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     REQUIRE(executeResult.result.valid());
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& repairedTriangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    REQUIRE(repairedTriangleGeom.getVertices() != nullptr);
+    REQUIRE(repairedTriangleGeom.getFaces() != nullptr);
+    scope.requireExpectedStore(*repairedTriangleGeom.getVertices());
+    scope.requireExpectedStore(*repairedTriangleGeom.getFaces());
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(normalsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(labelsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(normalsPath));
   }
 
   DataStructure exemplarDataStructure = {};
@@ -290,7 +349,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", 
     constexpr usize currentVert = 3;
     constexpr usize prevVert = 0;
 
-    // replace vert with a duplicate point (doesn't matter that it invalidates faces)
+    // Replace the vertex with a duplicate point. This test can invalidate faces.
     vertexList[currentVert] = vertexList[prevVert];
     vertexList[currentVert + 1] = vertexList[prevVert + 1];
     vertexList[currentVert + 2] = vertexList[prevVert + 2];
