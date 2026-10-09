@@ -11,6 +11,7 @@ endif()
 string(RANDOM LENGTH 12 ALPHABET 0123456789abcdef nonce)
 set(case_root "${P1_ROOT_BASE}/p1-${nonce}")
 file(MAKE_DIRECTORY "${case_root}/temp" "${case_root}/AppData/Local" "${case_root}/Library/Preferences" "${case_root}/.config")
+file(REAL_PATH "${case_root}" case_root)
 
 # This CMake process is the CTest child. Its environment changes do not affect the developer process.
 set(ENV{HOME} "${case_root}")
@@ -20,6 +21,9 @@ set(ENV{APPDATA} "${case_root}/AppData/Roaming")
 set(ENV{TEMP} "${case_root}/temp")
 set(ENV{TMP} "${case_root}/temp")
 set(ENV{TMPDIR} "${case_root}/temp")
+file(WRITE "${case_root}/.simplnx-test-profile" "${nonce}")
+set(ENV{SIMPLNX_TEST_PROFILE_DIR} "${case_root}")
+set(ENV{SIMPLNX_TEST_PROFILE_TOKEN} "${nonce}")
 set(ENV{SIMPLNX_P1_OWNED_ROOT} "${case_root}")
 unset(ENV{SIMPLNX_OOC_FAULT_INJECT})
 
