@@ -36,19 +36,18 @@ enum StepType : uint64
 };
 
 /**
- * @brief Formats integer component values for a preflight preview.
+ * @brief Formats numeric component values for a preflight preview.
  * @param componentValues Supplies one or all component values.
  * @param numComps Number of represented components.
  * @return Comma-delimited preview. More than 10 components show first and last values.
  */
-std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize numComps);
+std::string CreateCompValsStr(const std::vector<float64>& componentValues, usize numComps);
 
 /**
  * @brief Converts string component values and formats a preflight preview.
- * @param componentValuesStrs Supplies Boolean text or integer text.
+ * @param componentValuesStrs Supplies Boolean or numeric text.
  * @param numComps Number of represented components.
  * @return Comma-delimited preview.
- * @pre Every non-Boolean string converts through std::stoll().
  */
 std::string CreateCompValsStr(const std::vector<std::string>& componentValuesStrs, usize numComps);
 
@@ -165,6 +164,39 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
 };
 
 /**
+ * @struct ValidateRangeOrderFunctor
+ * @brief Validates the order of random range bounds for each component.
+ */
+struct SIMPLNXCORE_EXPORT ValidateRangeOrderFunctor
+{
+  /**
+   * @brief Rejects a start value that exceeds its component's end value.
+   * @tparam T Specifies the array scalar type for comparison.
+   * @param numComponents Number of components per tuple.
+   * @param startRange Semicolon-delimited lower bounds.
+   * @param endRange Semicolon-delimited upper bounds.
+   * @return Success, or a preflight error that identifies the reversed range.
+   * @pre Both lists pass ValidateMultiInputFunctor with one or numComponents values.
+   */
+  template <typename T>
+  IFilter::PreflightResult operator()(usize numComponents, const std::string& startRange, const std::string& endRange)
+  {
+    const auto startValues = StringUtilities::split(StringUtilities::trimmed(startRange), k_DelimiterChar);
+    const auto endValues = StringUtilities::split(StringUtilities::trimmed(endRange), k_DelimiterChar);
+    for(usize compIdx = 0; compIdx < numComponents; compIdx++)
+    {
+      const auto& start = startValues[startValues.size() == 1 ? 0 : compIdx];
+      const auto& end = endValues[endValues.size() == 1 ? 0 : compIdx];
+      if(StringInterpretationUtilities::Convert<T>(start).value() > StringInterpretationUtilities::Convert<T>(end).value())
+      {
+        return IFilter::MakePreflightErrorResult(-11615, fmt::format("Component {}: start range value '{}' is greater than end range value '{}'.", compIdx, start, end));
+      }
+    }
+    return {};
+  }
+};
+
+/**
  * @class InitializeData
  * @brief Initializes a complete DataArray through generated tuple chunks.
  *
@@ -180,8 +212,8 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
  * Preflight must validate all conversion strings. Runtime conversion Results are
  * dereferenced without an error check. Signed incremental arithmetic must remain
  * representable. Integral random distributions use int64 bounds and cannot
- * represent the full UInt64 range. Unranged floating generation uses global
- * rand() state for signs, so its output is not controlled only by seed.
+ * represent the full UInt64 range. Unranged floating generation uses seeded
+ * uniform draws in [-1, 1), scaled by the type maximum.
  */
 class InitializeData
 {

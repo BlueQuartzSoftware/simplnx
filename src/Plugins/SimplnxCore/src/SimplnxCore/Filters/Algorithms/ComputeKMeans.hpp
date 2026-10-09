@@ -64,14 +64,11 @@ public:
    * @pre InitClusters is positive and fits in Int32.
    * @pre Input and output arrays have compatible tuple and component shapes.
    *
-   * Initial centroids are sampled with replacement. For more than one tuple,
-   * the legacy index formula does not select the final tuple. Initialization
-   * cannot finish when only that tuple is selected by the mask. The direct path
-   * does not check cancellation during this selection loop.
+   * Initial centroids are sampled uniformly with replacement from selected tuples.
+   * Both paths check cancellation during selection.
    *
-   * Convergence reads flat means indices 1 through K instead of all centroid
-   * components. There is no iteration limit. Centroid arithmetic uses the input
-   * type, so integral input can overflow or truncate means.
+   * Convergence checks every component of each centroid. There is no iteration
+   * limit. Centroid storage and arithmetic use float64 for all input types.
    *
    * Cancellation returns success. Assignments and centroids written before the
    * cancellation checkpoint remain in the output arrays.

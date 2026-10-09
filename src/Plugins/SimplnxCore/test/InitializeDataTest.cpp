@@ -857,3 +857,54 @@ TEST_CASE("SimplnxCore::InitializeDataFilter: Bounded Multi-Component Incrementa
     REQUIRE(values[tuple * k_BulkComponentCount + 2] == -5 + static_cast<int32>(tuple) * 4);
   }
 }
+
+TEST_CASE("SimplnxCore::InitializeDataFilter: Boolean Incremental Text Does Not Throw In Preflight", "[SimplnxCore][InitializeDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  InitializeDataFilter filter;
+  DataStructure dataStructure;
+  const DataPath arrayPath({"Data"});
+  auto store = DataStoreUtilities::CreateDataStore<bool>(dataStructure, arrayPath, {2}, {1});
+  REQUIRE(store != nullptr);
+  REQUIRE(BoolArray::Create(dataStructure, arrayPath.getTargetName(), store) != nullptr);
+
+  // CreateDataArrayAdvancedFilter has no boolean NumericType; boolean steps use uint8 text.
+  auto args = CreateIncrementalArguments(arrayPath, "false", "1");
+  REQUIRE_NOTHROW(static_cast<void>(filter.preflight(dataStructure, args)));
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(arrayPath));
+  const auto& array = dataStructure.getDataRefAs<BoolArray>(arrayPath);
+  REQUIRE(array.getSize() == 2);
+  REQUIRE(array[0] == false);
+  REQUIRE(array[1] == true);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::InitializeDataFilter: Random Range Start Greater Than End Is Rejected", "[SimplnxCore][InitializeDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  InitializeDataFilter filter;
+  DataStructure dataStructure;
+  const DataPath arrayPath({"Data"});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {3}, {1});
+  REQUIRE(store != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, arrayPath.getTargetName(), store) != nullptr);
+
+  SECTION("int32 reversed range")
+  {
+    Arguments args;
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(arrayPath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("10"));
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("0"));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("SeedArray"));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -11615);
+  }
+}

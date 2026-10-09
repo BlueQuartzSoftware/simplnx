@@ -326,6 +326,26 @@ SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* trian
  */
 SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel);
 
+/**
+ * @brief Determines the Z bounds and slice count for a triangle mesh.
+ *
+ * Full Range uses only vertices referenced by triangles. Unused vertices do not affect the bounds.
+ * User Defined Range replaces the bounds with zStart and zEnd without restricting them to the mesh bounds.
+ * The count uses float64 arithmetic and a relative tolerance to include the end plane for whole multiples of the spacing.
+ *
+ * @param minDim Receives the minimum Z bound. For Full Range, initialize to the largest finite float32 value.
+ * @param maxDim Receives the maximum Z bound. For Full Range, initialize to the negative of the largest finite float32 value.
+ * @param numTris Number of triangles to read from tris.
+ * @param tris Triangle connectivity with three vertex indices per triangle.
+ * @param triVerts Vertex coordinates in XYZ order.
+ * @param sliceRange One selects User Defined Range. Other values select Full Range.
+ * @param zStart User-range start in the geometry's coordinate units.
+ * @param zEnd User-range end in the geometry's coordinate units.
+ * @param sliceResolution Slice spacing in the geometry's coordinate units.
+ * @pre Connectivity indices must refer to valid vertices. Referenced coordinates and user bounds must be finite.
+ * @pre sliceResolution must be finite and greater than zero. The computed slice count must fit in usize.
+ * @return Zero if numTris is zero or maxDim is not greater than or equal to minDim; otherwise, the slice count.
+ */
 SIMPLNX_EXPORT usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>& tris,
                                                  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd, float32 sliceResolution);
 
@@ -345,15 +365,22 @@ struct SliceTriangleReturnType
  *
  * Each vertex pair defines one EdgeGeom edge. Slice IDs identify the Z slice for each edge.
  * The function packs vertex XYZ coordinates in SliceVerts. Thus, SliceVerts contains three values for each vertex.
+ * Full Range uses only vertices referenced by triangles and ignores unused vertices.
+ * Plane heights use float64 arithmetic, are clamped to the range end, and are converted to float32.
+ * Each output vertex has its Z coordinate set to the slice plane height.
  *
  * @param triangleGeom Triangle geometry to slice.
- * @param shouldCancel Cancellation flag.
- * @param sliceRange Zero selects the complete Z range. One selects the user range.
- * @param zStart User-range start on the Z axis.
- * @param zEnd User-range end on the Z axis.
- * @param sliceSpacing Physical distance between slices.
- * @param triRegionIdPtr Optional triangle region IDs.
- * @return Packed edge vertices, slice IDs, optional region IDs, and slice count.
+ * @param shouldCancel Cancellation flag checked before each slice plane.
+ * @param sliceRange One selects User Defined Range. Other values select Full Range.
+ * @param zStart User-range start on the Z axis in the geometry's coordinate units.
+ * @param zEnd User-range end on the Z axis in the geometry's coordinate units.
+ * @param sliceSpacing Physical distance between slices in the geometry's coordinate units.
+ * @param triRegionIdPtr Optional region ID store with one value per triangle, or nullptr to omit region IDs.
+ * @pre The geometry must have face and vertex arrays with valid connectivity and finite referenced coordinates.
+ * @pre User bounds must be finite. Positive sliceSpacing must be finite; positive infinity is not rejected by this utility.
+ * @pre The slice count must fit in usize, and each slice ID must fit in int32.
+ * @return Packed edge vertices, slice IDs, optional region IDs, and the planned slice count, even if cancellation stops slicing.
+ * Returns empty vectors and zero slices for nonpositive spacing, NaN spacing, an empty mesh, or reversed bounds.
  */
 SIMPLNX_EXPORT SliceTriangleReturnType SliceTriangleGeometry(nx::core::TriangleGeom& triangleGeom, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart, float32 zEnd,
                                                              float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr);

@@ -44,6 +44,8 @@ The example data below has 10 Tuples. The AttributeMatrix would need to have dim
 
 If the input file has a single string per line then the delimiter does not matter.
 
+If the file holds more values than the array size (tuples × components), the extra values on the line where the array fills are ignored and a warning is reported.
+
 ### Delimiter
 
 The *Delimiter* parameter provides the following choices:

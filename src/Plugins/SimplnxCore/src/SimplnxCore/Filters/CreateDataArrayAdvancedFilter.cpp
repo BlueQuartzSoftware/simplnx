@@ -16,6 +16,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cmath>
 #include <stdexcept>
 
 using namespace nx::core;
@@ -165,6 +166,15 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   nx::core::Result<OutputActions> resultOutputActions;
 
+  for(size_t idx = 0; idx < compDimsData[0].size(); idx++)
+  {
+    const double dim = compDimsData[0][idx];
+    if(!(dim >= 1.0) || std::floor(dim) != dim)
+    {
+      return MakePreflightErrorResult(-78605, fmt::format("Component dimension at index {} must be a positive whole number, but was {}", idx, dim));
+    }
+  }
+
   ShapeType compDims(compDimsData[0].size());
   std::transform(compDimsData[0].begin(), compDimsData[0].end(), compDims.begin(), [](double val) { return static_cast<usize>(val); });
   usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
@@ -193,11 +203,12 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
       tupleDims.reserve(rowData.size());
       for(size_t idx = 0; idx < rowData.size(); idx++)
       {
-        if(rowData[idx] == 0)
+        const double dim = rowData[idx];
+        if(!(dim >= 1.0) || std::floor(dim) != dim)
         {
-          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} cannot be 0", idx));
+          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} must be a positive whole number, but was {}", idx, dim));
         }
-        tupleDims.push_back(static_cast<usize>(rowData[idx]));
+        tupleDims.push_back(static_cast<usize>(dim));
       }
     }
   }
@@ -265,6 +276,12 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitEndRange_Key), 1);
+    if(result.outputActions.invalid())
+    {
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+    }
+
+    result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, arrayDataType, numComponents, initStartRange, initEndRange);
     if(result.outputActions.invalid())
     {
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};

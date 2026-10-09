@@ -3,7 +3,10 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <utility>
 
 using namespace nx::core;
 
@@ -358,7 +361,7 @@ struct PointInfo
 
 // ----------------------------------------------------------------------------
 // Function to compute the intersection between a triangle and a plane
-Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane)
+Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
 {
   PointInfo p0{plane.signedDistance(v0)};
   PointInfo p1{plane.signedDistance(v1)};
@@ -386,10 +389,19 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   intersectionEdge.negativeCount = negativeCount;
   intersectionEdge.zeroCount = zeroCount;
 
-  // Helper lambda to compute intersection point
-  auto computeIntersection = [](const Edge& e, float _dist1, float _dist2) -> Point3Df {
-    float t = _dist1 / (_dist1 - _dist2);   // Compute interpolation parameter
-    return e.start + (e.end - e.start) * t; // Return the interpolated point
+  // Interpolate from the lower-z endpoint so shared edges produce identical points.
+  auto computeIntersection = [](const Edge& e, float d1, float d2, float planeZ) -> Point3Df {
+    Point3Df s = e.start;
+    Point3Df en = e.end;
+    if(s[2] > en[2])
+    {
+      std::swap(s, en);
+      std::swap(d1, d2);
+    }
+    const float t = d1 / (d1 - d2);
+    Point3Df p = s + (en - s) * t;
+    p[2] = planeZ;
+    return p;
   };
 
   // Handle cases where only one intersection point is found (vertex lies on plane)
@@ -410,18 +422,19 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     if(p0.onPlane())
     {
       e.start = v0;
-      e.end = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
+      e.end = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
     }
     else if(p1.onPlane())
     {
       e.start = v1;
-      e.end = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance);
+      e.end = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
     }
     else if(p2.onPlane())
     {
       e.start = v2;
-      e.end = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
+      e.end = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
     }
+    e.start[2] = zPlane;
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
@@ -433,6 +446,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   if(p0.onPlane() && p1.onPlane() && zeroCount == 2)
   {
     Edge e{v0, v1};
+    e.start[2] = zPlane;
+    e.end[2] = zPlane;
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
@@ -441,6 +456,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   if(p1.onPlane() && p2.onPlane() && zeroCount == 2)
   {
     Edge e{v1, v2};
+    e.start[2] = zPlane;
+    e.end[2] = zPlane;
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
@@ -449,6 +466,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   if(p0.onPlane() && p2.onPlane() && zeroCount == 2)
   {
     Edge e{v0, v2};
+    e.start[2] = zPlane;
+    e.end[2] = zPlane;
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
@@ -457,8 +476,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
-    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
 
     Edge e{intersectionPoint0, intersectionPoint1};
     e.positiveCount = positiveCount;
@@ -469,8 +488,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
 
   if(p0.planeSplitsEdge(p1) && p1.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
-    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
@@ -480,8 +499,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
 
   if(p1.planeSplitsEdge(p2) && p2.planeSplitsEdge(p0))
   {
-    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
-    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.SignedDistance, p0.SignedDistance);
+    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.SignedDistance, p0.SignedDistance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
@@ -526,7 +545,17 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
     minDim = zStart;
     maxDim = zEnd;
   }
-  return static_cast<usize>((maxDim - minDim) / sliceResolution) + 1;
+  // Empty geometry or invalid bounds cannot produce a valid slice count.
+  if(numTris == 0 || !(maxDim >= minDim))
+  {
+    return 0;
+  }
+
+  const float64 span = static_cast<float64>(maxDim) - static_cast<float64>(minDim);
+  const float64 ratio = span / static_cast<float64>(sliceResolution);
+  // Scale the tolerance to include the end plane for whole multiples of the spacing.
+  const float64 tolerance = std::max(1.0E-5, ratio * 1.0E-6);
+  return static_cast<usize>(std::floor(ratio + tolerance)) + 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -548,6 +577,11 @@ inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, Ve
 GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeometry(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
                                                                                     float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
 {
+  if(!(sliceSpacing > 0.0f))
+  {
+    return {};
+  }
+
   // Get the Abstract Data Store Classes
   TriStore& triEdgeStore = triangle.getFaces()->getDataStoreRef();
   VertsStore& triVertStore = triangle.getVertices()->getDataStoreRef();
@@ -565,13 +599,14 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
 
   int32 sliceIndex = -1;
   // Loop over each slice plane
-  for(float zValue = zStart; zValue <= zEnd; zValue = zValue + sliceSpacing)
+  for(usize sliceIdx = 0; sliceIdx < numberOfSlices; sliceIdx++)
   {
     if(shouldCancel)
     {
       break;
     }
-    sliceIndex++;
+    const auto zValue = static_cast<float32>(std::min(static_cast<float64>(minZValue) + static_cast<float64>(sliceIdx) * static_cast<float64>(sliceSpacing), static_cast<float64>(maxZValue)));
+    sliceIndex = static_cast<int32>(sliceIdx);
     d = zValue;
 
     // Define a plane with a normal vector and a point on the plane
@@ -593,7 +628,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
       std::array<nx::core::Point3Df, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
 
       // Compute the intersection
-      slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane);
+      slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane, zValue);
       if(intersectionEdge.valid)
       {
         slicedVerts.push_back(intersectionEdge.start[0]);

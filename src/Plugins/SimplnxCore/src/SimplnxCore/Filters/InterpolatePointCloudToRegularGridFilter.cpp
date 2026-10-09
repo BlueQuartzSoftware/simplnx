@@ -78,7 +78,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes(),
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -190,17 +190,20 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     dataArrays.push_back(interpolatePath);
 
     auto srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(interpolatePath);
+    if(srcDataArrayPtr->getDataType() == DataType::boolean)
+    {
+      return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for interpolation. Select a numeric array.", interpolatePath.toString()));
+    }
     if(srcDataArrayPtr->getNumberOfComponents() != 1)
     {
       return MakePreflightErrorResult(-11002, fmt::format("Attribute Arrays selected for interpolation must be scalar arrays"));
     }
-    auto dataType = srcDataArrayPtr->getDataType();
     const std::string& destArrayName = srcDataArrayPtr->getName();
 
     // Create the interpolated (weighted average) output array as float64
     {
       auto arrayPath = interpolatedGroupPath.createChildPath(destArrayName);
-      auto createAction = std::make_unique<CreateArrayAction>(dataType, tupleDims, srcDataArrayPtr->getComponentShape(), arrayPath);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupleDims, ShapeType{1}, arrayPath);
       actions.appendAction(std::move(createAction));
     }
 
@@ -249,6 +252,10 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     dataArrays.push_back(copyPath);
 
     auto srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(copyPath);
+    if(srcDataArrayPtr->getDataType() == DataType::boolean)
+    {
+      return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for copying. Select a numeric array.", copyPath.toString()));
+    }
     if(srcDataArrayPtr->getNumberOfComponents() != 1)
     {
       return MakePreflightErrorResult(-11002, fmt::format("Attribute Arrays selected for copying must be scalar arrays"));

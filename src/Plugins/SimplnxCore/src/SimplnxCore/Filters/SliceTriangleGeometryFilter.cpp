@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/SliceTriangleGeometry.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
@@ -14,6 +15,8 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <cmath>
 
 using namespace nx::core;
 
@@ -130,6 +133,14 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
     }
   }
 
+  const auto pSliceResolutionValue = filterArgs.value<float32>(k_SliceResolution_Key);
+  if(!std::isfinite(pSliceResolutionValue) || pSliceResolutionValue <= 0.0f)
+  {
+    return MakePreflightErrorResult(-62103, fmt::format("Slice Spacing must be a finite value greater than 0. Value given: {}", pSliceResolutionValue));
+  }
+
+  const auto& triGeom = dataStructure.getDataRefAs<TriangleGeom>(pCADDataContainerNameValue);
+
   // create the edge geometry
   {
     auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
@@ -147,6 +158,13 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
 
   if(pHaveRegionIdsValue)
   {
+    const auto& regionIds = dataStructure.getDataRefAs<Int32Array>(pRegionIdArrayPathValue);
+    if(regionIds.getNumberOfTuples() != triGeom.getNumberOfFaces())
+    {
+      return MakePreflightErrorResult(-62104, fmt::format("Region Ids '{}' has {} tuples but the Triangle Geometry '{}' has {} faces. Select a face (triangle) array.",
+                                                          pRegionIdArrayPathValue.toString(), regionIds.getNumberOfTuples(), pCADDataContainerNameValue.toString(), triGeom.getNumberOfFaces()));
+    }
+
     DataPath path = pSliceDataContainerNameValue.createChildPath(pEdgeAttributeMatrixNameValue).createChildPath(pRegionIdArrayPathValue.getTargetName());
     auto createArray = std::make_unique<CreateArrayAction>(DataType::int32, tDims, compDims, path);
     resultOutputActions.value().appendAction(std::move(createArray));
@@ -180,7 +198,12 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.SliceIdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceIdArrayName_Key);
   inputValues.SliceAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceAttributeMatrixName_Key);
 
-  return SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.CADDataContainerName).getNumberOfFaces() == 0)
+  {
+    result.warnings().push_back(Warning{-62105, fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
+  }
+  return result;
 }
 
 namespace

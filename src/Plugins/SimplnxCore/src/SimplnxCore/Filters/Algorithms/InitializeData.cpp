@@ -182,8 +182,8 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
  * @param shouldCancel Stops before later chunks when true.
  * @return Error from bulk write, or success after cancellation.
  *
- * Unranged floating output uses global rand() state to choose signs. The supplied
- * seed controls magnitude engines but does not fully determine that output.
+ * Unranged floating output scales uniform draws in [-1, 1) by the type maximum.
+ * Each component engine controls both the sign and magnitude.
  */
 template <typename T, bool Ranged, class DistributionT>
 Result<> RandomFill(std::vector<DistributionT>& distributions, AbstractDataStore<T>& dataStore, const uint64 seed, const bool standardizeSeed, const std::atomic_bool& shouldCancel)
@@ -206,13 +206,9 @@ Result<> RandomFill(std::vector<DistributionT>& distributions, AbstractDataStore
           {
             return static_cast<T>(distributions[component](generators[component]));
           }
-          else if constexpr(std::is_signed_v<T>)
-          {
-            return static_cast<T>(distributions[component](generators[component]) * (std::numeric_limits<T>::max() - 1) * (((rand() & 1) == 0) ? 1 : -1));
-          }
           else
           {
-            return static_cast<T>(distributions[component](generators[component]) * std::numeric_limits<T>::max());
+            return static_cast<T>(distributions[component](generators[component]) * static_cast<float64>(std::numeric_limits<T>::max()));
           }
         }
         else
@@ -285,7 +281,7 @@ Result<> FillRandomForwarder(const std::vector<T>& range, usize numComponents, A
     std::vector<std::uniform_real_distribution<float64>> distributions;
     for(usize component = 0; component < numComponents * 2; component += 2)
     {
-      distributions.emplace_back(Ranged ? static_cast<float64>(range.at(component)) : 0.0, Ranged ? static_cast<float64>(range.at(component + 1)) : 1.0);
+      distributions.emplace_back(Ranged ? static_cast<float64>(range.at(component)) : -1.0, Ranged ? static_cast<float64>(range.at(component + 1)) : 1.0);
     }
     return ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(distributions, std::forward<ArgsT>(args)...);
   }
@@ -384,13 +380,45 @@ struct FillArrayFunctor
 };
 
 /**
- * @brief Converts Boolean text or integer text for a preflight preview.
+ * @brief Converts Boolean or numeric text for a preflight preview.
  * @param s Value text.
- * @return One for true, zero for false, or the std::stoll result.
+ * @return Converted value, or zero if numeric conversion fails.
  */
-int64 CreateCompValFromStr(const std::string& s)
+float64 CreateCompValFromStr(const std::string& s)
 {
-  return (StringUtilities::toLower(s) == "true") ? 1 : (StringUtilities::toLower(s) == "false") ? 0 : std::stoll(s);
+  const std::string lower = StringUtilities::toLower(StringUtilities::trimmed(s));
+  if(lower == "true")
+  {
+    return 1.0;
+  }
+  if(lower == "false")
+  {
+    return 0.0;
+  }
+  Result<float64> result = StringInterpretationUtilities::Convert<float64>(s);
+  return result.valid() ? result.value() : 0.0;
+}
+
+/**
+ * @brief Converts preview values and expands a single value to all components.
+ * @param tokens Supplies one or all component values.
+ * @param numComps Number of represented components.
+ * @return One preview value per component.
+ * @pre The token count is one or numComps.
+ */
+std::vector<float64> PreviewValues(const std::vector<std::string>& tokens, usize numComps)
+{
+  std::vector<float64> values;
+  values.reserve(tokens.size());
+  for(const auto& token : tokens)
+  {
+    values.push_back(CreateCompValFromStr(token));
+  }
+  if(values.size() == 1)
+  {
+    values.assign(numComps, values[0]);
+  }
+  return values;
 }
 } // namespace
 
@@ -398,7 +426,7 @@ namespace nx
 {
 namespace core
 {
-std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize numComps)
+std::string CreateCompValsStr(const std::vector<float64>& componentValues, usize numComps)
 {
   const usize compValueVisibilityThresholdCount = 10;
   const usize startEndEllipseValueCount = compValueVisibilityThresholdCount / 2;
@@ -407,7 +435,7 @@ std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize n
   auto cValueTokens = componentValues;
   if(cValueTokens.size() == 1)
   {
-    cValueTokens = std::vector<int64>(numComps, cValueTokens[0]);
+    cValueTokens = std::vector<float64>(numComps, cValueTokens[0]);
   }
 
   if(numComps <= compValueVisibilityThresholdCount)
@@ -427,10 +455,7 @@ std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize n
 
 std::string CreateCompValsStr(const std::vector<std::string>& componentValuesStrs, usize numComps)
 {
-  std::vector<int64> componentValues;
-  componentValues.reserve(componentValues.size());
-  std::transform(componentValuesStrs.begin(), componentValuesStrs.end(), std::back_inserter(componentValues), CreateCompValFromStr);
-  return CreateCompValsStr(componentValues, numComps);
+  return CreateCompValsStr(PreviewValues(componentValuesStrs, numComps), numComps);
 }
 
 void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
@@ -497,12 +522,8 @@ void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize s
     ss << fmt::format("\nThe single component tuples will decrement by {}.", stepValueTokens[0]);
   }
 
-  std::vector<int64> initFillValues;
-  initFillValues.reserve(initFillTokens.size());
-  std::transform(initFillTokens.begin(), initFillTokens.end(), std::back_inserter(initFillValues), [](const std::string& s) -> int64 { return std::stoll(s); });
-  std::vector<int64> stepValues;
-  stepValues.reserve(stepValueTokens.size());
-  std::transform(stepValueTokens.begin(), stepValueTokens.end(), std::back_inserter(stepValues), [](const std::string& s) -> int64 { return std::stoll(s); });
+  auto initFillValues = PreviewValues(initFillTokens, numComps);
+  auto stepValues = PreviewValues(stepValueTokens, numComps);
 
   ss << "\n\nTuples Preview:\n";
   const usize maxIterations = 3;
@@ -511,7 +532,7 @@ void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize s
   {
     ss << fmt::format("{}\n", CreateCompValsStr(initFillValues, numComps));
     std::transform(initFillValues.begin(), initFillValues.end(), stepValues.begin(), initFillValues.begin(),
-                   [stepOperation](int64 a, int64 b) { return (stepOperation == StepType::Addition) ? (a + b) : (a - b); });
+                   [stepOperation](float64 a, float64 b) { return (stepOperation == StepType::Addition) ? (a + b) : (a - b); });
   }
   if(numTuples > maxIterations)
   {
@@ -549,7 +570,8 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     }
     else if(initType == InitializeType::RangedRandom)
     {
-      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, std::stoll(initStartRange), std::stoll(initEndRange));
+      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, StringUtilities::trimmed(initStartRange),
+                        StringUtilities::trimmed(initEndRange));
     }
 
     if(standardizeSeed)

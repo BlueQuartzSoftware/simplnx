@@ -14,6 +14,10 @@ Each cluster is summarized by its **centroid**, which is the arithmetic mean (th
 
 ## Algorithm
 
+Initial centroids are drawn uniformly, with replacement, from all selected tuples. A seed gives different initial centroids than in earlier DREAM3D-NX versions.
+
+The cluster Means array is always stored as 64-bit floating point. Sums and divisions use double precision whatever the input type.
+
 ### In-Core Path
 
 When the selected array, mask, cluster IDs, and means are in memory, the **Filter** uses the direct Lloyd iteration. It selects the initial centroids from the seeded random sequence, assigns every selected tuple to the first centroid with the strictly smallest distance, and recomputes the means until they stop changing.
