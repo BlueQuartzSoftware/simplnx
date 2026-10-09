@@ -222,3 +222,53 @@ TEST_CASE("SimplnxCore::CopyDataObject: Child names containing the geometry name
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::CopyDataObject: Recursive paths use the new parent", "[SimplnxCore][CopyDataObject]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* oldParentPtr = DataGroup::Create(dataStructure, "OldParent");
+  REQUIRE(oldParentPtr != nullptr);
+  auto* groupPtr = DataGroup::Create(dataStructure, "A", oldParentPtr->getId());
+  REQUIRE(groupPtr != nullptr);
+  auto* childPtr = DataGroup::Create(dataStructure, "child", groupPtr->getId());
+  REQUIRE(childPtr != nullptr);
+  auto* newParentPtr = DataGroup::Create(dataStructure, "NewParent");
+  REQUIRE(newParentPtr != nullptr);
+
+  const DataPath sourcePath({"OldParent", "A"});
+  const DataPath copiedPath({"NewParent", "A_copy"});
+  const DataPath copiedChildPath = copiedPath.createChildPath("child");
+  CopyDataObjectFilter filter;
+  Arguments args;
+  args.insertOrAssign(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>(MultiPathSelectionParameter::ValueType{sourcePath}));
+  args.insertOrAssign(CopyDataObjectFilter::k_UseNewParent_Key, true);
+  args.insertOrAssign(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(DataPath({"NewParent"})));
+  args.insertOrAssign(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_copy"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
+  const auto* copyActionPtr = dynamic_cast<const CopyDataObjectAction*>(preflightResult.outputActions.value().actions.front().get());
+  REQUIRE(copyActionPtr != nullptr);
+  REQUIRE(copyActionPtr->path() == sourcePath);
+  REQUIRE(copyActionPtr->newPath() == copiedPath);
+  const auto createdPaths = copyActionPtr->getAllCreatedPaths();
+  REQUIRE(createdPaths.size() == 2);
+  REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedPath) != createdPaths.end());
+  REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedChildPath) != createdPaths.end());
+  REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), DataPath({"OldParent", "A_copy", "child"})) == createdPaths.end());
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto* copiedGroupPtr = dataStructure.getDataAs<DataGroup>(copiedPath);
+  const auto* copiedChildPtr = dataStructure.getDataAs<DataGroup>(copiedChildPath);
+  REQUIRE(copiedGroupPtr != nullptr);
+  REQUIRE(copiedChildPtr != nullptr);
+  REQUIRE(copiedGroupPtr->getId() != groupPtr->getId());
+  REQUIRE(copiedChildPtr->getId() != childPtr->getId());
+  REQUIRE(dataStructure.getDataAs<DataGroup>(DataPath({"OldParent", "A_copy"})) == nullptr);
+  REQUIRE(dataStructure.getDataAs<DataGroup>(DataPath({"OldParent", "A_copy", "child"})) == nullptr);
+  REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath) == groupPtr);
+  REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath.createChildPath("child")) == childPtr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
