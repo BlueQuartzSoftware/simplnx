@@ -1,3 +1,5 @@
+#include "WriteVtkStructuredPointsTestUtilities.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/WriteVtkStructuredPointsFilter.hpp"
@@ -197,4 +199,13 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: cancellation leaves the 
   REQUIRE(inputStream.is_open());
   const std::string contents((std::istreambuf_iterator<char>(inputStream)), std::istreambuf_iterator<char>());
   REQUIRE(contents == sentinel);
+}
+
+TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: ASCII correctness", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  WriteVtkStructuredPointsTest::CheckAsciiOutput(scope, "");
 }
