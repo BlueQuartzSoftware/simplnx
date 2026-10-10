@@ -6,12 +6,20 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+
+#include <array>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -20,6 +28,61 @@ namespace
 {
 const DataPath k_TriangleGeomPath = DataPath({Constants::k_DataContainer});
 const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data);
+
+/**
+ * @brief Creates four resident tuples without consulting storage preferences.
+ * @tparam T Value type of the fixture array.
+ * @param dataStructure Owns the new array and its existing parent.
+ * @param path Identifies the array below an existing geometry or attribute matrix.
+ * @param componentCount Number of values per tuple.
+ * @param values Supplies all four tuples.
+ * @return Array owned by dataStructure.
+ */
+template <typename T>
+DataArray<T>* CreateDisabledNormalsArray(DataStructure& dataStructure, const DataPath& path, usize componentCount, nonstd::span<const T> values)
+{
+  REQUIRE(values.size() == 4 * componentCount);
+  const auto* parentPtr = dataStructure.getData(path.getParent());
+  REQUIRE(parentPtr != nullptr);
+  auto store = std::make_shared<DataStore<T>>(ShapeType{4}, ShapeType{componentCount}, T{});
+  auto writeResult = store->copyFromBuffer(0, values);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), store, parentPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
+  return arrayPtr;
+}
+
+/**
+ * @brief Checks every value, shape, and identity while the DataStructure owns the array.
+ * @tparam T Value type of the fixture array.
+ * @param dataStructure Owns the array under test.
+ * @param path Identifies the original array location.
+ * @param expectedId Original DataObject ID.
+ * @param expectedStorePtr Original store address, used only for comparison.
+ * @param componentCount Expected values per tuple.
+ * @param expectedValues Independent expected values for all four tuples.
+ */
+template <typename T>
+void CheckDisabledNormalsArray(const DataStructure& dataStructure, const DataPath& path, DataObject::IdType expectedId, const AbstractDataStore<T>* expectedStorePtr, usize componentCount,
+                               nonstd::span<const T> expectedValues)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(path));
+  const auto& array = dataStructure.getDataRefAs<DataArray<T>>(path);
+  REQUIRE(array.getId() == expectedId);
+  REQUIRE(array.getDataStore() == expectedStorePtr);
+  REQUIRE(array.getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(array.getTupleShape() == ShapeType{4});
+  REQUIRE(array.getComponentShape() == ShapeType{componentCount});
+  REQUIRE(array.getSize() == expectedValues.size());
+  std::vector<T> actualValues(expectedValues.size(), T{});
+  auto readResult = array.getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(actualValues.data(), actualValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+  {
+    CAPTURE(path.toString(), valueIndex);
+    CHECK(actualValues[valueIndex] == expectedValues[valueIndex]);
+  }
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
@@ -413,5 +476,104 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
       const Arguments args = pipelineFilter->getArguments();
       CHECK(args.value<DataPath>(VerifyTriangleWindingFilter::k_LabelsPath_Key) == DataPath({"DataContainer", "FaceData", "FaceLabels"}));
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves disabled normals", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool useFaceLabels = GENERATE(false, true);
+  const bool hasNormals = GENERATE(false, true);
+  DYNAMIC_SECTION("Face labels: " << useFaceLabels << ", existing normals: " << hasNormals)
+  {
+    const DataPath geometryPath({"DisabledNormalsTetrahedron"});
+    const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
+    const DataPath vertexDataPath = geometryPath.createChildPath("VertexData");
+    const DataPath facesPath = geometryPath.createChildPath("Faces");
+    const DataPath verticesPath = geometryPath.createChildPath("Vertices");
+    const DataPath idsPath = faceDataPath.createChildPath("Ids");
+    const DataPath normalsPath = faceDataPath.createChildPath("Normals");
+    const usize idComponentCount = useFaceLabels ? 2 : 1;
+    const std::vector<int32> expectedIds = useFaceLabels ? std::vector<int32>{0, 1, 0, 1, 0, 1, 0, 1} : std::vector<int32>{1, 1, 1, 1};
+    constexpr std::array<float32, 12> vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
+    // Each expected edge has an opposite edge on its neighboring face. These faces enclose a unit tetrahedron with outward normals.
+    constexpr std::array<IGeometry::MeshIndexType, 12> expectedFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+    // Faces 1 and 3 start reversed; face 0 retains the outward seed orientation.
+    constexpr std::array<IGeometry::MeshIndexType, 12> inputFaces = {0, 2, 1, 3, 1, 0, 0, 3, 2, 3, 2, 1};
+    constexpr std::array<float64, 12> sentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
+    REQUIRE(inputFaces != expectedFaces);
+
+    DataStructure dataStructure;
+    auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+    REQUIRE(triangleGeomPtr != nullptr);
+    const auto geometryId = triangleGeomPtr->getId();
+    auto* faceDataPtr = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {4}, geometryId);
+    auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, vertexDataPath.getTargetName(), {4}, geometryId);
+    REQUIRE(faceDataPtr != nullptr);
+    REQUIRE(vertexDataPtr != nullptr);
+    triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+    triangleGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+
+    auto* verticesPtr = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, nonstd::span<const float32>(vertices.data(), vertices.size()));
+    auto* facesPtr = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, nonstd::span<const IGeometry::MeshIndexType>(inputFaces.data(), inputFaces.size()));
+    auto* idsPtr = CreateDisabledNormalsArray<int32>(dataStructure, idsPath, idComponentCount, nonstd::span<const int32>(expectedIds.data(), expectedIds.size()));
+    triangleGeomPtr->setVertices(*verticesPtr);
+    triangleGeomPtr->setFaceList(*facesPtr);
+    const auto verticesId = verticesPtr->getId();
+    const auto facesId = facesPtr->getId();
+    const auto idsId = idsPtr->getId();
+    const auto* verticesStorePtr = verticesPtr->getDataStore();
+    const auto* facesStorePtr = facesPtr->getDataStore();
+    const auto* idsStorePtr = idsPtr->getDataStore();
+    std::optional<DataObject::IdType> normalsId;
+    const AbstractDataStore<float64>* normalsStorePtr = nullptr;
+    if(hasNormals)
+    {
+      auto* normalsPtr = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, nonstd::span<const float64>(sentinelNormals.data(), sentinelNormals.size()));
+      normalsId = normalsPtr->getId();
+      normalsStorePtr = normalsPtr->getDataStore();
+    }
+
+    const auto checkUnchangedInputs = [&]() {
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(geometryPath));
+      const auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
+      REQUIRE(geometry.getId() == geometryId);
+      REQUIRE(geometry.getVertices() == verticesPtr);
+      REQUIRE(geometry.getFaces() == facesPtr);
+      REQUIRE(geometry.getFaceAttributeMatrix() == faceDataPtr);
+      REQUIRE(geometry.getVertexAttributeMatrix() == vertexDataPtr);
+      REQUIRE(dataStructure.getData(faceDataPath) == faceDataPtr);
+      REQUIRE(dataStructure.getData(vertexDataPath) == vertexDataPtr);
+      REQUIRE(geometry.getFaceAttributeMatrix()->getShape() == ShapeType{4});
+      REQUIRE(geometry.getVertexAttributeMatrix()->getShape() == ShapeType{4});
+      CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, verticesId, verticesStorePtr, 3, nonstd::span<const float32>(vertices.data(), vertices.size()));
+      CheckDisabledNormalsArray<int32>(dataStructure, idsPath, idsId, idsStorePtr, idComponentCount, nonstd::span<const int32>(expectedIds.data(), expectedIds.size()));
+      if(hasNormals)
+      {
+        REQUIRE(normalsId.has_value());
+        CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId.value(), normalsStorePtr, 3, nonstd::span<const float64>(sentinelNormals.data(), sentinelNormals.size()));
+      }
+      else
+      {
+        REQUIRE(dataStructure.getData(normalsPath) == nullptr);
+      }
+    };
+    checkUnchangedInputs();
+    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(inputFaces.data(), inputFaces.size()));
+
+    VerifyTriangleWindingFilter filter;
+    Arguments args;
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(idsPath));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(false));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    // Normal repair owns the algorithm selector. This disabled branch uses the shared winding implementation.
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    checkUnchangedInputs();
+    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(expectedFaces.data(), expectedFaces.size()));
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
