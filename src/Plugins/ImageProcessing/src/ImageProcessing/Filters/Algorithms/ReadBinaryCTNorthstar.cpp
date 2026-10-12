@@ -142,10 +142,10 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         return {};
       }
 
-      progressThrottle.updateCount(z + 1);
       if(inputValues->ImportSubvolume && (z < inputValues->StartVoxelCoord[2] || z > inputValues->EndVoxelCoord[2]))
       {
         fileZSlice++;
+        progressThrottle.updateCount(z + 1);
         continue;
       }
       for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
@@ -177,6 +177,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         }
       }
       fileZSlice++;
+      progressThrottle.updateCount(z + 1);
     }
     zShift += dataFileInput.second;
     // fileIndex++;

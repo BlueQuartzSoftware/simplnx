@@ -791,7 +791,6 @@ struct IdentifySampleSliceCCLFunctor
       {
         return {};
       }
-      progressThrottle.updateCount(fixed + 1);
       if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
       {
         auto readResult = store.copyIntoBuffer(static_cast<usize>(fixed) * planeSize, nonstd::span<T>(planeBuffer.get(), planeSize));
@@ -877,6 +876,7 @@ struct IdentifySampleSliceCCLFunctor
           }
         }
       }
+      progressThrottle.updateCount(fixed + 1);
     }
     return {};
   }

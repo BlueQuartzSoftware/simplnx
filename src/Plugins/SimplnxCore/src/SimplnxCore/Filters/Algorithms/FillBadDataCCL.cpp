@@ -880,24 +880,38 @@ Result<> FillBadDataCCL::operator()()
   }
 
   // Phase 1 writes provisional labels for root resolution and classification.
-  m_MessageHandler.sendProgressCount("Filling Bad Data", 1, 4, "Labeling connected components");
+  m_MessageHandler.sendProgressCount("Filling Bad Data", 0, 3, "Labeling connected components");
   auto phaseOneResult = phaseOneCCL(featureIdsStore, *equivalencesResult.value(), nextLabel, dims);
   if(phaseOneResult.invalid())
   {
     return phaseOneResult;
   }
 
-  // Phase 3: Relabeling based on region size classification
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+  m_MessageHandler.sendProgressCount("Filling Bad Data", 1, 3, "Labeling connected components");
+
+  // Phase 2: Relabeling based on region size classification
   // Reads provisional labels from featureIds store (written during Phase 1)
-  m_MessageHandler.sendProgressCount("Filling Bad Data", 3, 4, "Classifying region sizes");
   auto phaseThreeResult = phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, startLabel, nextLabel, *equivalencesResult.value(), maxPhase);
   if(phaseThreeResult.invalid())
   {
     return phaseThreeResult;
   }
 
-  // Phase 4: Iterative morphological fill
-  m_MessageHandler.sendProgressCount("Filling Bad Data", 4, 4, "Filling small defects");
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+  m_MessageHandler.sendProgressCount("Filling Bad Data", 2, 3, "Classifying region sizes");
+
+  // Phase 3: Iterative morphological fill
   auto result = phaseFourIterativeFill(featureIdsStore, dims, numFeatures, allowInMemoryFallback);
+  if(result.valid() && !m_ShouldCancel)
+  {
+    m_MessageHandler.sendProgressCount("Filling Bad Data", 3, 3, "Filling small defects");
+  }
   return result;
 }

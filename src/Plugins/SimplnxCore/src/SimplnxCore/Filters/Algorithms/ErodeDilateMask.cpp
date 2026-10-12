@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ProgressEstimator.hpp"
 
 using namespace nx::core;
 
@@ -101,10 +102,11 @@ Result<> ErodeDilateMask::operator()()
   const std::string progMessageOpType = m_InputValues->Operation == detail::k_DilateIndex ? "Dilate" : "Erode";
 
   // ---- Main iteration loop ----
+  ProgressEstimator progressEstimator;
+  progressEstimator.restart();
+  m_MessageHandler.sendProgressCount(fmt::format("{} Iterations", progMessageOpType), 0, m_InputValues->NumIterations);
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
-    m_MessageHandler.sendProgressCount(fmt::format("{} Iterations", progMessageOpType), iteration + 1, m_InputValues->NumIterations);
-
     // Re-initialize rolling window from the (potentially modified) store.
     // z=0 -> slot 1 (current), z=1 -> slot 2 (next).
     Result<> ioResult = readMaskSlice(0, 1);
@@ -242,6 +244,8 @@ Result<> ErodeDilateMask::operator()()
         return ioResult;
       }
     }
+    m_MessageHandler.sendProgressCount(fmt::format("{} Iterations", progMessageOpType), iteration + 1, m_InputValues->NumIterations,
+                                       progressEstimator.estimate(iteration + 1, m_InputValues->NumIterations));
   }
 
   return {};
