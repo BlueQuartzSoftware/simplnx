@@ -17,7 +17,7 @@ endforeach()
 set (SIMPLNX_PLUGIN_SOURCE_DIRS "${SIMPLNX_PLUGIN_SOURCE_DIRS}\n};\n")
 
 configure_file(${simplnx_SOURCE_DIR}/test/simplnx_test_dirs.hpp.in ${SIMPLNX_TEST_DIRS_HEADER} @ONLY)
-file(MAKE_DIRECTORY "${simplnx_BINARY_DIR}/simplnx/test_output")
+file(MAKE_DIRECTORY "${SIMPLNX_TEST_OUTPUT_DIR}")
 
 find_package(Catch2 CONFIG REQUIRED)
 
@@ -30,6 +30,7 @@ set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   AppTest.cpp
   ArgumentsTest.cpp
+  AtomicFileTest.cpp
   BitTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
@@ -65,6 +66,7 @@ set(SIMPLNX_TEST_SRCS
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
   ParallelChunkCodecTest.cpp
+  NxInfoTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
   PipelineFilterMessagingTest.cpp
@@ -99,6 +101,7 @@ source_group("Generated" FILES ${SIMPLNX_TEST_DIRS_HEADER})
 target_link_libraries(simplnx_test
   PRIVATE
     simplnx
+    nxinfo_core
     Catch2::Catch2
     simplnx::UnitTestCommon
 )
