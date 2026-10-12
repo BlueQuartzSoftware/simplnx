@@ -8,6 +8,7 @@
 
 #include <nonstd/span.hpp>
 
+#include <algorithm>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -102,13 +103,35 @@ Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
   {
     return MakeErrorResult(-4006, fmt::format("RectGridGeom: {} bounds array must contain at least 2 values to define at least 1 cell, but {} value(s) provided.", axis, size));
   }
-  for(usize i = 1; i < size; ++i)
+  const auto& store = bounds->getDataStoreRef();
+  if(store.getStoreType() == IDataStore::StoreType::Empty)
   {
-    if((*bounds)[i - 1] >= (*bounds)[i])
+    // Preflight stores contain metadata only; their bounds values are not available yet.
+    return {};
+  }
+
+  std::vector<float32> buffer(4096);
+  float32 previousValue = 0.0f;
+  for(usize offset = 0; offset < size;)
+  {
+    const usize count = std::min(buffer.size(), size - offset);
+    const auto readResult = store.copyIntoBuffer(offset, nonstd::span<float32>(buffer.data(), count));
+    if(readResult.invalid())
     {
-      return MakeErrorResult(
-          -4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}", axis, i, i - 1, (*bounds)[i - 1], i, (*bounds)[i]));
+      return readResult;
     }
+    for(usize j = 0; j < count; ++j)
+    {
+      const usize i = offset + j;
+      const float32 currentValue = buffer[j];
+      if(i > 0 && previousValue >= currentValue)
+      {
+        return MakeErrorResult(
+            -4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}", axis, i, i - 1, previousValue, i, currentValue));
+      }
+      previousValue = currentValue;
+    }
+    offset += count;
   }
   return {};
 }
