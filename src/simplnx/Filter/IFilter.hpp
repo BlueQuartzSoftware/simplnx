@@ -151,7 +151,7 @@ public:
      * loop, report the outer count; add inner-loop percent progress only when one outer iteration is
      * slow enough that the progress bar looks stuck.
      * @param label Describes the work being done, with no trailing punctuation
-     * @param current Items completed so far
+     * @param current Items completed so far. Send k + 1 after unit k finishes, never at its start.
      * @param max Total items
      * @param detail Optional note appended in parentheses, such as an estimate of the time
      * remaining. nx::core::ProgressEstimator produces one. An empty string appends nothing.

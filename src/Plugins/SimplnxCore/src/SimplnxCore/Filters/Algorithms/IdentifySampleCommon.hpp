@@ -436,7 +436,6 @@ struct IdentifySampleSliceBySliceFunctor
       {
         return {};
       }
-      progressThrottle.updateCount(fixedIdx + 1);
 
       // Read the plane with bulk transfers where its layout permits them.
       if(stride1 == 1 && stride2 == planeDim1)
@@ -508,6 +507,10 @@ struct IdentifySampleSliceBySliceFunctor
             goodVoxels.setValue(static_cast<usize>(fixedIdx * fixedStride + p2 * stride2 + p1 * stride1), sliceBuffer[static_cast<usize>(p2 * planeDim1 + p1)]);
           }
         }
+      }
+      if(!shouldCancel)
+      {
+        progressThrottle.updateCount(fixedIdx + 1);
       }
     }
     return {};

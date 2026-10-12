@@ -7,12 +7,14 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <vector>
 
@@ -44,7 +46,7 @@ usize CalculateProduct(const ShapeType& shape, usize first, usize last)
  * @param inputArrayPath Identifies the source array.
  * @param outputArrayPaths Identifies ordered output blocks.
  * @param splitDimension Selects the partitioned tuple dimension.
- * @param messageHandler Receives one message per output.
+ * @param messageHandler Receives throttled progress for completed outer scanlines.
  * @param shouldCancel Signals cancellation between chunks.
  * @return Component-count or bulk-I/O result.
  * @pre Output extents form an ordered partition of the source dimension.
@@ -168,9 +170,11 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
     }
   }
 
+  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
+  usize completedOutputs = 0;
+  std::mutex progressMutex;
   ParallelTaskAlgorithm taskRunner;
   usize splitStart = 0;
-  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
   for(usize outputIndex = 0; outputIndex < outputArrayPaths.size(); outputIndex++)
   {
     if(shouldCancel)
@@ -178,13 +182,20 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
       break;
     }
 
-    messageHandler.sendProgressCount(progressLabel, outputIndex + 1, outputArrayPaths.size());
     auto& outputArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPaths[outputIndex]);
     auto& outputStore = dynamic_cast<DataStore<T>&>(outputArray.getDataStoreRef());
     const usize outputSplitCount = outputArray.getTupleShape()[splitDimension];
     const usize outputScanlineTuples = outputSplitCount * innerTuples;
-    taskRunner.execute(
-        CopySplitDataArrayDirectTask<T>(inputStore->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel));
+    const auto task =
+        CopySplitDataArrayDirectTask<T>(inputStore->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel);
+    taskRunner.execute([&, task] {
+      task();
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      if(!shouldCancel)
+      {
+        messageHandler.sendProgressCount(progressLabel, ++completedOutputs, outputArrayPaths.size());
+      }
+    });
     splitStart += outputSplitCount;
   }
   taskRunner.wait();
@@ -225,10 +236,8 @@ Result<> SplitDataArraysScanlineTyped(DataStructure& dataStructure, const DataPa
   auto buffer = std::make_unique<T[]>(bufferValues);
 
   const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
-  for(usize outputIndex = 0; outputIndex < outputArrayPaths.size(); outputIndex++)
-  {
-    messageHandler.sendProgressCount(progressLabel, outputIndex + 1, outputArrayPaths.size());
-  }
+  ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(outerCount, progressLabel);
 
   // Outer-first traversal keeps source reads in ascending row-major order.
   for(usize outerIndex = 0; outerIndex < outerCount; outerIndex++)
@@ -266,6 +275,7 @@ Result<> SplitDataArraysScanlineTyped(DataStructure& dataStructure, const DataPa
       }
       splitStart += outputSplitCount;
     }
+    progressThrottle.updatePercent(outerIndex + 1);
   }
 
   return {};
@@ -601,11 +611,13 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
   // Independent output blocks run as separate tasks.
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
   CopyFromArray::ParallelTaskResult taskResult;
+  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
+  usize completedOutputs = 0;
+  std::mutex progressMutex;
   ParallelTaskAlgorithm taskRunner;
   auto& inputArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
   auto inputTupleShape = inputArray.getTupleShape();
   std::vector<usize> inputTupleShapeOffset(inputTupleShape.size(), 0);
-  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
   for(usize i = 0; i < outputArrayPaths.size(); ++i)
   {
     if(shouldCancel)
@@ -615,9 +627,15 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
 
     auto& outputArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPaths[i]);
 
-    messageHandler.sendProgressCount(progressLabel, i + 1, outputArrayPaths.size());
-
-    taskRunner.execute(SplitDataArrayByTupleImpl<ArrayType>(inputArray, outputArray, inputTupleShapeOffset, shouldCancel, taskResult));
+    const auto task = SplitDataArrayByTupleImpl<ArrayType>(inputArray, outputArray, inputTupleShapeOffset, shouldCancel, taskResult);
+    taskRunner.execute([&, task] {
+      task();
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      if(!shouldCancel && !taskResult.shouldAbort())
+      {
+        messageHandler.sendProgressCount(progressLabel, ++completedOutputs, outputArrayPaths.size());
+      }
+    });
 
     inputTupleShapeOffset[splitDimension] += outputArray.getTupleShape()[splitDimension];
   }
@@ -644,11 +662,13 @@ Result<> SplitNeighborListsByTupleImpl(DataStructure& dataStructure, const DataP
 {
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
   CopyFromArray::ParallelTaskResult taskResult;
+  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
+  usize completedOutputs = 0;
+  std::mutex progressMutex;
   ParallelTaskAlgorithm taskRunner;
   auto& inputNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(inputArrayPath);
 
   usize inputTupleOffset = 0;
-  const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
   for(usize i = 0; i < outputArrayPaths.size(); ++i)
   {
     if(shouldCancel)
@@ -656,10 +676,16 @@ Result<> SplitNeighborListsByTupleImpl(DataStructure& dataStructure, const DataP
       return {};
     }
 
-    messageHandler.sendProgressCount(progressLabel, i + 1, outputArrayPaths.size());
-
     auto& outputNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(outputArrayPaths[i]);
-    taskRunner.execute(SplitNeighborListByTupleImpl(inputNeighborList, outputNeighborList, inputTupleOffset, shouldCancel, taskResult));
+    const auto task = SplitNeighborListByTupleImpl(inputNeighborList, outputNeighborList, inputTupleOffset, shouldCancel, taskResult);
+    taskRunner.execute([&, task] {
+      task();
+      const std::lock_guard<std::mutex> guard(progressMutex);
+      if(!shouldCancel && !taskResult.shouldAbort())
+      {
+        messageHandler.sendProgressCount(progressLabel, ++completedOutputs, outputArrayPaths.size());
+      }
+    });
     inputTupleOffset += outputNeighborList.getNumberOfTuples();
   }
 

@@ -117,8 +117,6 @@ Result<> CombineStlFiles::operator()()
 
     fileListStrArray[currentIndex] = stlFilePath;
     activeArray[currentIndex] = 1;
-    m_MessageHandler.sendProgressCount("Reading STL Files", currentIndex, paths.size(), stlFilePath);
-    currentIndex++;
 
     ReadStlFileFilter stlFileReader;
     Arguments args;
@@ -129,6 +127,8 @@ Result<> CombineStlFiles::operator()()
     {
       return executeResult.result;
     }
+    m_MessageHandler.sendProgressCount("Reading STL Files", currentIndex, paths.size(), stlFilePath);
+    currentIndex++;
   }
 
   usize totalTriangles = 0;

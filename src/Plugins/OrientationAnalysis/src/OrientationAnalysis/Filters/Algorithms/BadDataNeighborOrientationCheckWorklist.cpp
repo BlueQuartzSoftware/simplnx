@@ -163,7 +163,6 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       return {};
     }
 
-    m_MessageHandler.sendProgressCount("Propagating Levels", (startLevel - currentLevel) + 1, totalLevels);
     std::deque<usize> worklist;
     for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
@@ -250,6 +249,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
         }
       }
     }
+    m_MessageHandler.sendProgressCount("Propagating Levels", (startLevel - currentLevel) + 1, totalLevels);
   }
 
   return {};

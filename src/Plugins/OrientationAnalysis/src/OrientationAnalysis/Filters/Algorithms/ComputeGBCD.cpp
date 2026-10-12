@@ -391,9 +391,8 @@ Result<> ComputeGBCD::operator()()
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   std::vector<float64> totalFaceArea(totalPhases, 0.0);
-  messageHandler.sendProgressCount("Computing GBCD Phases", 1, 2, "Calculation and Summation");
   ThrottledMessageHandler progressThrottle(messageHandler);
-  progressThrottle.reset(totalFaces, "Calculating GBCD");
+  progressThrottle.reset(totalFaces, "Calculating GBCD (Phase 1/2)");
 
   // Pre-allocate chunk buffers for triangle-level arrays (reused each iteration)
   const auto& labelsStore = faceLabels.getDataStoreRef();
@@ -503,10 +502,10 @@ Result<> ComputeGBCD::operator()()
         }
       }
     }
-    progressThrottle.updateCount(std::min(i + triangleChunkSize, totalFaces));
+    progressThrottle.updatePercent(std::min(i + triangleChunkSize, totalFaces));
   }
 
-  messageHandler.sendProgressCount("Computing GBCD Phases", 2, 2, "Normalization");
+  progressThrottle.reset(gbcdTotalElements, "Normalizing GBCD (Phase 2/2)");
 
   // Normalize the GBCD histogram to MRD (multiples of random distribution)
   // in the local buffer, then bulk-write the final result to the DataStore.
@@ -518,6 +517,10 @@ Result<> ComputeGBCD::operator()()
     {
       gbcdBuf[k_PhaseShift + j] *= k_MrdFactor;
     }
+    if(i + 1 < totalPhases)
+    {
+      progressThrottle.updatePercent((i + 1) * static_cast<usize>(totalGBCDBins));
+    }
   }
   // Single bulk-write of the normalized GBCD histogram to the output DataStore
   if(Result<> ioResult = gbcd.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(gbcdBuf.data(), gbcdTotalElements)); ioResult.invalid())
@@ -525,5 +528,6 @@ Result<> ComputeGBCD::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
+  progressThrottle.updatePercent(gbcdTotalElements);
   return {};
 }
