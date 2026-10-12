@@ -1,13 +1,13 @@
 #include "ReadH5OinaData.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
-
-#include <EbsdLib/Math/EbsdLibMath.h>
 
 #include <algorithm>
 #include <array>
@@ -19,15 +19,6 @@ using namespace nx::core;
 
 namespace
 {
-// The EDAX/TSL convention aligns the hexagonal crystal x-axis with [2-1-10] while
-// Oxford Instruments aligns it with [10-10]; converting between them is a 30 degree
-// rotation about [0001] applied to phi2. An H5OINA file stores its Euler angles in
-// RADIANS (unlike a .ctf file, which stores degrees), so the value added here is 30
-// degrees expressed in radians -- 30 * (pi/180), i.e. pi/6 -- and not the literal 30.
-// The addition runs on a double intermediate so the stored float32 is the correctly
-// rounded result, matching how the .ctf importer applies the same correction.
-constexpr float64 k_HexagonalAlignmentRadians = 30.0 * ebsdlib::constants::k_PiOver180D;
-
 // The nine datasets H5OINAReader reads out of a scan's Data group, paired with the
 // number of components each one carries per scan point.
 const std::vector<std::pair<std::string, usize>> k_RequiredDataSets = {
@@ -162,10 +153,10 @@ Result<> convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize to
     for(usize index = 0; index < count; index++)
     {
       const usize phase = static_cast<usize>(phases[index]);
-      if(crystalStructures[phase] == ebsdlib::CrystalStructure::Hexagonal_High)
+      if(EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
       {
         const auto phi2 = static_cast<float64>(eulers[index * 3 + 2]);
-        eulers[index * 3 + 2] = static_cast<float32>(phi2 + k_HexagonalAlignmentRadians);
+        eulers[index * 3 + 2] = static_cast<float32>(phi2 + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
       }
     }
     result = eulerDataStoreRef.copyFromBuffer((tupleOffset + localOffset) * 3, nonstd::span<const float32>(eulers.data(), count * 3));

@@ -13,6 +13,7 @@
 #include <EbsdLib/IO/TSL/H5AngVolumeReader.h>
 #include <EbsdLib/IO/TSL/H5OIMReader.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Math/EbsdLibMath.h>
 
 #include <concepts>
 #include <functional>
@@ -24,6 +25,21 @@ using namespace nx::core;
 
 namespace EbsdReaderUtilities
 {
+/**
+ * @brief Rotation about the crystal c-axis, in radians, that moves an Oxford/HKL (x || a*) hexagonal frame onto the EDAX/TSL (x || a) frame.
+ */
+template <typename T>
+inline constexpr T k_HexagonalAlignmentRadians = static_cast<T>(30.0) * ebsdlib::constants::k_PiOver180<T>;
+inline constexpr float32 k_HexagonalAlignmentRadiansF = k_HexagonalAlignmentRadians<float32>;
+inline constexpr float64 k_HexagonalAlignmentRadiansD = k_HexagonalAlignmentRadians<float64>;
+inline constexpr float64 k_HexagonalAlignmentDegrees = 30.0;
+
+// The Oxford-to-EDAX x-axis correction applies to both hexagonal Laue classes.
+inline constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
+{
+  return crystalStructure == ebsdlib::CrystalStructure::Hexagonal_Low || crystalStructure == ebsdlib::CrystalStructure::Hexagonal_High;
+}
+
 // 1. Base template (empty)
 template <typename ReaderType>
 struct ReaderTraits;
