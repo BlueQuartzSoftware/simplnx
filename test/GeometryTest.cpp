@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -13,6 +14,8 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
+
+#include <array>
 
 using namespace nx::core;
 
@@ -537,6 +540,61 @@ TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
     REQUIRE(geom->getYBounds() == nullptr);
     REQUIRE(geom->getZBounds() == nullptr);
   }
+}
+
+TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
+{
+  const usize size = GENERATE(usize{0}, usize{1}, usize{2}, usize{3});
+  const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+  CAPTURE(size, axis);
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  std::array<Float32Array*, 3> bounds = {};
+  const std::array<std::string, 3> names = {"X", "Y", "Z"};
+  for(usize i = 0; i < bounds.size(); ++i)
+  {
+    auto storeResult = EmptyDataStore<float32>::Create(ShapeType{i == axis ? size : 3}, ShapeType{1}, "");
+    SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
+    bounds[i] = Float32Array::Create(ds, names[i], std::move(storeResult.value()), geom->getId());
+    REQUIRE(bounds[i] != nullptr);
+    REQUIRE(bounds[i]->getDataStoreRef().getStoreType() == IDataStore::StoreType::Empty);
+  }
+  const auto result = geom->setBounds(bounds[0], bounds[1], bounds[2]);
+  if(size < 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -4006);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(geom->getXBounds() == bounds[0]);
+    REQUIRE(geom->getYBounds() == bounds[1]);
+    REQUIRE(geom->getZBounds() == bounds[2]);
+  }
+}
+
+TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  std::vector<float32> values(8193);
+  for(usize i = 0; i < values.size(); ++i)
+  {
+    values[i] = static_cast<float32>(i);
+  }
+  auto* x = makeBoundsAxis(ds, geom, "X", values);
+  auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
+  auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
+  const auto validResult = geom->setBounds(x, y, z);
+  SIMPLNX_RESULT_REQUIRE_VALID(validResult);
+
+  // The first value of the second 4096-value chunk decreases from the preceding chunk.
+  x->setValue(4096, 4094.0f);
+  const auto result = geom->setBounds(x, y, z);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -4007);
+  REQUIRE(result.errors().front().message == "RectGridGeom: X bounds array is not strictly monotonically increasing at index 4096: bounds[4095]=4095 >= bounds[4096]=4094");
 }
 
 TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")

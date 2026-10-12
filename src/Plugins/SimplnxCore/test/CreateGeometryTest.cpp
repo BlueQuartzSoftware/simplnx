@@ -2,6 +2,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
@@ -9,6 +10,7 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -3078,6 +3080,56 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   }
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CreateGeometry: RectGrid preflight with EmptyDataStore bounds", "[SimplnxCore][CreateGeometry]")
+{
+  const auto arrayHandling = GENERATE(CreateGeometryFilter::k_CopyArray, CreateGeometryFilter::k_MoveArray, CreateGeometryFilter::k_ReferenceArray);
+  CAPTURE(arrayHandling);
+  DataStructure dataStructure;
+  const auto* inputGroup = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(inputGroup != nullptr);
+  for(const auto* name : {"X", "Y", "Z"})
+  {
+    auto storeResult = EmptyDataStore<float32>::Create(ShapeType{3}, ShapeType{1}, "");
+    SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
+    const auto* bounds = Float32Array::Create(dataStructure, name, std::move(storeResult.value()), inputGroup->getId());
+    REQUIRE(bounds != nullptr);
+    REQUIRE(bounds->getDataStoreRef().getStoreType() == IDataStore::StoreType::Empty);
+  }
+
+  const CreateGeometryFilter filter;
+  Arguments args;
+  const DataPath geometryPath({"RectGrid"});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_RectGridGeometry));
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+  args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath({"Input", "X"})));
+  args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath({"Input", "Y"})));
+  args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath({"Input", "Z"})));
+  args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Cell Data"));
+
+  Result<> actionsResult;
+  if(arrayHandling == CreateGeometryFilter::k_ReferenceArray)
+  {
+    // Reference is supported by the action but is not an enabled filter parameter choice.
+    const CreateRectGridGeometryAction action(geometryPath, DataPath({"Input", "X"}), DataPath({"Input", "Y"}), DataPath({"Input", "Z"}), "Cell Data", ArrayHandlingType::Reference);
+    REQUIRE_NOTHROW(actionsResult = action.apply(dataStructure, IDataAction::Mode::Preflight));
+  }
+  else
+  {
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE_NOTHROW(actionsResult = preflightResult.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight));
+  }
+  SIMPLNX_RESULT_REQUIRE_VALID(actionsResult);
+  const auto* geometry = dataStructure.getDataAs<RectGridGeom>(geometryPath);
+  REQUIRE(geometry != nullptr);
+  REQUIRE(geometry->getDimensions() == SizeVec3{2, 2, 2});
+  REQUIRE(geometry->getXBounds() != nullptr);
+  REQUIRE(geometry->getYBounds() != nullptr);
+  REQUIRE(geometry->getZBounds() != nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
