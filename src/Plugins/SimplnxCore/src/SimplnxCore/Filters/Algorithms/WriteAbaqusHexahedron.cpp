@@ -370,7 +370,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendInfoMessage("Writing Abaqus Files: 1/5 (Nodes)");
+  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 1, 5, "Nodes");
 
   err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration);
   if(err < 0)
