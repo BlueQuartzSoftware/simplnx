@@ -891,7 +891,7 @@ Result<> FillBadDataCCL::operator()()
   {
     return {};
   }
-  m_MessageHandler.sendProgressCount("Filling Bad Data", 1, 3, "Labeling connected components");
+  m_MessageHandler.sendProgressCount("Filling Bad Data", 1, 3, "Classifying region sizes");
 
   // Phase 2: Relabeling based on region size classification
   // Reads provisional labels from featureIds store (written during Phase 1)
@@ -905,13 +905,13 @@ Result<> FillBadDataCCL::operator()()
   {
     return {};
   }
-  m_MessageHandler.sendProgressCount("Filling Bad Data", 2, 3, "Classifying region sizes");
+  m_MessageHandler.sendProgressCount("Filling Bad Data", 2, 3, "Filling small defects");
 
   // Phase 3: Iterative morphological fill
   auto result = phaseFourIterativeFill(featureIdsStore, dims, numFeatures, allowInMemoryFallback);
   if(result.valid() && !m_ShouldCancel)
   {
-    m_MessageHandler.sendProgressCount("Filling Bad Data", 3, 3, "Filling small defects");
+    m_MessageHandler.sendProgressCount("Filling Bad Data", 3, 3);
   }
   return result;
 }

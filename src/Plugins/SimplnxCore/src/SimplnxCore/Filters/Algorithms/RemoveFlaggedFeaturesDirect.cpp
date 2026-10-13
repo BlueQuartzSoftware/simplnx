@@ -408,7 +408,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         return result;
       }
 
-      progressThrottle.updatePercent(i);
+      progressThrottle.updatePercent(i - 1);
       if(!flaggedFeatures->isTrue(i))
       {
         continue;
@@ -459,6 +459,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return MergeResults(std::move(result), std::move(cropResult));
     }
 
+    progressThrottle.updatePercent(featureEnd > 0 ? featureEnd - 1 : 0);
     m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }
 
