@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <mutex>
+#include <string>
 
 namespace nx::core
 {
@@ -57,6 +58,13 @@ public:
    * @param counter Items completed since the previous call
    */
   void sendThreadSafeProgressMessage(usize counter);
+
+  /**
+   * @brief Thread-safe status text. Takes the same mutex as the per-feature-face workers, so the
+   * driver thread can send while workers are running.
+   * @param message Status text
+   */
+  void sendThreadSafeStatusMessage(const std::string& message);
 
 private:
   DataStructure& m_DataStructure;

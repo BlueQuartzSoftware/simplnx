@@ -350,6 +350,9 @@ Result<> NeighborOrientationCorrelation::operator()()
     {
       return {};
     }
+    // Every voxel of this level is processed, so the level ends at 100% instead of the last multiple of 10000.
+    progressThrottle.updatePercent(totalVoxels);
+    progressThrottle.flush();
   }
 
   return {};
