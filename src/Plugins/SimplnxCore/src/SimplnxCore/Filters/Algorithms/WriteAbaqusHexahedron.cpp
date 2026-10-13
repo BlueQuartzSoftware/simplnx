@@ -419,7 +419,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendInfoMessage("Writing Abaqus Files: 5/5 (Master)");
+  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 5, 5, "Master");
 
   // Commits are atomic per file but are not one transaction for the file set.
   for(auto& file : fileList)
