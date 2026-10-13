@@ -146,10 +146,10 @@ public:
 
     /**
      * @brief Sends progress as a count of completed items, rendered as "<label>: <current>/<max>".
-     * Use this for units a user recognizes, with totals below a few thousand: iterations, phases,
-     * levels, files, scans, slices, arrays, or outputs. For a short outer loop around a large inner
-     * loop, report the outer count; add inner-loop percent progress only when one outer iteration is
-     * slow enough that the progress bar looks stuck.
+     * Use this for units a user recognizes, such as iterations, phases, levels, files, scans,
+     * slices, arrays, or outputs. Keep the total below a few thousand. For a short outer loop around
+     * a large inner loop, report the outer count. Add inner-loop percent progress only when one
+     * outer iteration is slow enough to make the progress bar look stuck.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far. Send k + 1 after unit k finishes, never at its start.
      * @param max Total items
@@ -160,8 +160,9 @@ public:
 
     /**
      * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this for
-     * elements nobody counts by eye, such as tuples, voxels, cells, faces, or features, and for any
-     * total too large to read as a count. Use sendProgressCount() for iterations, files, or slices.
+     * elements nobody counts by eye, such as tuples, voxels, cells, faces, or features. Also use it
+     * for any total too large to read as a count. Use sendProgressCount() for iterations, files, or
+     * slices.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far
      * @param max Total items

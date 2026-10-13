@@ -75,7 +75,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
   ProgressEstimator progressEstimator;
   progressEstimator.restart();
-  m_MessageHandler.sendProgressCount("Smoothing Iterations", 0, m_InputValues->pIterationSteps);
+  const usize iterationCount = m_InputValues->pIterationSteps > 0 ? static_cast<usize>(m_InputValues->pIterationSteps) : 0;
+  m_MessageHandler.sendProgressCount("Smoothing Iterations", 0, iterationCount);
   for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
   {
     if(m_ShouldCancel)
@@ -162,7 +163,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         numConnections[i] = 0; // reset for next iteration
       }
     }
-    m_MessageHandler.sendProgressCount("Smoothing Iterations", q + 1, m_InputValues->pIterationSteps, progressEstimator.estimate(q + 1, m_InputValues->pIterationSteps));
+    m_MessageHandler.sendProgressCount("Smoothing Iterations", static_cast<usize>(q) + 1, iterationCount, progressEstimator.estimate(static_cast<usize>(q) + 1, iterationCount));
   }
 
   return {};
