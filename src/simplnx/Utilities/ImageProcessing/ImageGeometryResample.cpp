@@ -1,5 +1,6 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 
+#include "simplnx/Common/ScratchBuffer.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -135,8 +136,12 @@ public:
     const usize srcRowLength = srcDims[0] * numComponents;
 
     // Reuse row buffers so working memory is independent of the total cell count.
-    auto destRowBuffer = std::make_unique<T[]>(destRowLength);
-    auto srcRowBuffer = std::make_unique<T[]>(srcRowLength);
+    ScratchBuffer<T> destRowBuffer(destRowLength);
+    ScratchBuffer<T> srcRowBuffer(srcRowLength);
+
+    // When every destination column maps to a source column the gather below overwrites the whole row,
+    // so the row only needs to be zeroed when some column (or the whole row) has no source.
+    const bool anyUnmappedX = std::find(xIndices.begin(), xIndices.end(), k_InvalidAxisIndex) != xIndices.end();
 
     bool haveCachedSrcRow = false;
     usize cachedYIndex = k_InvalidAxisIndex;
@@ -159,13 +164,19 @@ public:
         const usize yIndex = yIndices[y];
         const bool rowHasSource = (zIndex != k_InvalidAxisIndex) && (yIndex != k_InvalidAxisIndex);
 
+        if(!rowHasSource || anyUnmappedX)
+        {
+          // Matches the original per-voxel fillTuple(0) fallback for an out-of-bounds source lookup.
+          std::fill_n(destRowBuffer.data(), destRowLength, static_cast<T>(0));
+        }
+
         if(rowHasSource)
         {
           // Reuse the cached source row when upsampling maps consecutive destination rows to it.
           if(!haveCachedSrcRow || yIndex != cachedYIndex || zIndex != cachedZIndex)
           {
             const usize srcRowStart = ((srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex)) * numComponents;
-            Result<> readResult = srcDataStore.copyIntoBuffer(srcRowStart, nonstd::span<T>(srcRowBuffer.get(), srcRowLength));
+            Result<> readResult = srcDataStore.copyIntoBuffer(srcRowStart, nonstd::span<T>(srcRowBuffer.data(), srcRowLength));
             if(readResult.invalid())
             {
               m_TaskResult.store(std::move(readResult));
@@ -180,28 +191,18 @@ public:
           for(usize x = 0; x < destDims[0]; x++)
           {
             const usize xIndex = xIndices[x];
-            T* destTuple = destRowBuffer.get() + (x * numComponents);
+            T* destTuple = destRowBuffer.data() + (x * numComponents);
             if(xIndex != k_InvalidAxisIndex)
             {
-              const T* srcTuple = srcRowBuffer.get() + (xIndex * numComponents);
+              const T* srcTuple = srcRowBuffer.data() + (xIndex * numComponents);
               std::copy_n(srcTuple, numComponents, destTuple);
             }
-            else
-            {
-              std::fill_n(destTuple, numComponents, static_cast<T>(0));
-            }
           }
-        }
-        else
-        {
-          // The whole row falls outside the source geometry along y or z - matches the original
-          // per-voxel fillTuple(0) fallback for an out-of-bounds source lookup.
-          std::fill_n(destRowBuffer.get(), destRowLength, static_cast<T>(0));
         }
 
         // Bulk-write the fully assembled destination row in a single store access.
         const usize destRowStart = ((z * destDims[1] * destDims[0]) + (y * destDims[0])) * numComponents;
-        Result<> writeResult = destDataStore.copyFromBuffer(destRowStart, nonstd::span<const T>(destRowBuffer.get(), destRowLength));
+        Result<> writeResult = destDataStore.copyFromBuffer(destRowStart, nonstd::span<const T>(destRowBuffer.data(), destRowLength));
         if(writeResult.invalid())
         {
           m_TaskResult.store(std::move(writeResult));

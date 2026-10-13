@@ -5,6 +5,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/ScratchBuffer.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -2114,10 +2115,8 @@ private:
     const usize destRowLength = m_ImageGeomDims[0] * numComponents;
     const usize srcRowLength = m_RectGridDims[0] * numComponents;
 
-    // NOLINTNEXTLINE(modernize-avoid-c-arrays) -- Runtime-sized row; std::array cannot represent this extent.
-    auto destRowBuffer = std::make_unique<T[]>(destRowLength);
-    // NOLINTNEXTLINE(modernize-avoid-c-arrays) -- Runtime-sized row; std::array cannot represent this extent.
-    auto srcRowBuffer = std::make_unique<T[]>(srcRowLength);
+    ScratchBuffer<T> destRowBuffer(destRowLength);
+    ScratchBuffer<T> srcRowBuffer(srcRowLength);
 
     bool haveCachedSrcRow = false;
     usize cachedYIndex = 0;
@@ -2138,7 +2137,7 @@ private:
         if(!haveCachedSrcRow || yIndex != cachedYIndex || zIndex != cachedZIndex)
         {
           const usize srcRowStart = ((m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex)) * numComponents;
-          auto readResult = srcStore.copyIntoBuffer(srcRowStart, nonstd::span<T>(srcRowBuffer.get(), srcRowLength));
+          auto readResult = srcStore.copyIntoBuffer(srcRowStart, nonstd::span<T>(srcRowBuffer.data(), srcRowLength));
           if(readResult.invalid())
           {
             return readResult;
@@ -2148,24 +2147,22 @@ private:
           haveCachedSrcRow = true;
         }
 
+        // Zero the row once, then copy only the tuples that have a source. Keeps the fill out of the
+        // per-tuple loop.
+        std::fill_n(destRowBuffer.data(), destRowLength, static_cast<T>(0));
         for(usize x = 0; x < m_ImageGeomDims[0]; x++)
         {
           const usize xIndex = xIndices[x];
           const int64 rectGridIndex = static_cast<int64>((m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex) + xIndex);
-          T* destTuple = destRowBuffer.get() + (x * numComponents);
           if(rectGridIndex >= 0)
           {
-            const T* srcTuple = srcRowBuffer.get() + (xIndex * numComponents);
-            std::copy_n(srcTuple, numComponents, destTuple);
-          }
-          else
-          {
-            std::fill_n(destTuple, numComponents, static_cast<T>(0));
+            const T* srcTuple = srcRowBuffer.data() + (xIndex * numComponents);
+            std::copy_n(srcTuple, numComponents, destRowBuffer.data() + (x * numComponents));
           }
         }
 
         const usize destRowStart = ((z * m_ImageGeomDims[1] * m_ImageGeomDims[0]) + (y * m_ImageGeomDims[0])) * numComponents;
-        auto writeResult = destStore.copyFromBuffer(destRowStart, nonstd::span<const T>(destRowBuffer.get(), destRowLength));
+        auto writeResult = destStore.copyFromBuffer(destRowStart, nonstd::span<const T>(destRowBuffer.data(), destRowLength));
         if(writeResult.invalid())
         {
           return writeResult;

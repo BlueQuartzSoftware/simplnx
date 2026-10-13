@@ -25,6 +25,9 @@ target_link_libraries(NxPythonEmbed
 
 pybind11_add_module(simplnxpy "${SimplnxCore_SOURCE_DIR}/wrapping/python/simplnxpy.cpp")
 
+# Keep LTO enabled while avoiding GCC's serial LTRANS compilation warning.
+target_link_options(simplnxpy PRIVATE $<$<CXX_COMPILER_ID:GNU>:-flto=auto>)
+
 target_compile_definitions(simplnxpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
 
 # we want the CMake target name to be "simplnxpy", but the Python module to be "simplnx"
@@ -237,6 +240,9 @@ function(simplnx_add_python_plugin)
   set(PYTHON_WRAPPING_DIR "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/wrapping/python")
 
   pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.cpp)
+
+  # Keep LTO enabled while avoiding GCC's serial LTRANS compilation warning.
+  target_link_options(${PYTHON_MODULE_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU>:-flto=auto>)
 
   get_property(FILTER_LIST TARGET ${ARGS_PLUGIN_NAME} PROPERTY SIMPLNX_FILTER_LIST)
 
