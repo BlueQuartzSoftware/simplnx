@@ -41,6 +41,13 @@ void FeatureFaceCurvature::sendThreadSafeProgressMessage(usize counter)
 }
 
 // -----------------------------------------------------------------------------
+void FeatureFaceCurvature::sendThreadSafeStatusMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_MessageHandler.sendInfoMessage(message);
+}
+
+// -----------------------------------------------------------------------------
 Result<> FeatureFaceCurvature::operator()()
 {
 
@@ -107,7 +114,7 @@ Result<> FeatureFaceCurvature::operator()()
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  m_MessageHandler.sendInfoMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
+  sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
 
   m_Throttle.reset(sharedFeatureFaces.size(), "Calculating Curvatures");
@@ -133,9 +140,12 @@ Result<> FeatureFaceCurvature::operator()()
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  m_MessageHandler.sendInfoMessage("Waiting on computations to complete.");
+  sendThreadSafeStatusMessage("Waiting on computations to complete.");
   g->wait(); // Wait for all the threads to complete before moving on.
 #endif
+
+  // All workers have joined, so the throttle can send its final value before the cleanup step.
+  m_Throttle.flush();
 
   // Remove elements containing vertices, because Element neighbors created it quietly under the covers
   triangleGeomPtr->deleteElementsContainingVert();
