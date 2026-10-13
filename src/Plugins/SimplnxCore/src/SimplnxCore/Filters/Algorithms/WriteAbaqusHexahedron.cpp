@@ -394,7 +394,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendInfoMessage("Writing Abaqus Files: 3/5 (Sections)");
+  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 3, 5, "Sections");
 
   Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIdsRef, maxGrainId, useOocAlgorithm, getCancel());
   if(elsetResult.invalid())
