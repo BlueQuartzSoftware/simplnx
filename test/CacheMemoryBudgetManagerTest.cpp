@@ -776,3 +776,181 @@ TEST_CASE("CacheMemoryBudgetManager cache eviction accounts for active working m
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
   mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
 }
+
+TEST_CASE("CacheMemoryBudgetManager exact working reservations require registered headroom and quota", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(0).sizeBytes() == 0);
+  auto [cacheHandle, evictions] = mgr.allocate("exact-working", "entry", 750, []() {});
+  REQUIRE(evictions.empty());
+
+  auto exact = mgr.tryReserveWorkingMemoryWithoutEviction(250);
+  REQUIRE(exact.sizeBytes() == 250);
+  CHECK(mgr.usedBytes() == 750);
+  CHECK(mgr.reservedWorkingMemoryBytes() == 250);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(1).sizeBytes() == 0);
+
+  exact.shrinkTo(100);
+  CHECK(mgr.reservedWorkingMemoryBytes() == 100);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(151).sizeBytes() == 0);
+  auto second = mgr.tryReserveWorkingMemoryWithoutEviction(150);
+  REQUIRE(second.sizeBytes() == 150);
+  auto moved = std::move(second);
+  CHECK(second.sizeBytes() == 0);
+  CHECK(moved.sizeBytes() == 150);
+  moved.shrinkTo(0);
+  CHECK(mgr.reservedWorkingMemoryBytes() == 100);
+  mgr.release(cacheHandle);
+  mgr.clear();
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager exact working reservations never request eviction", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  int callbackCalls = 0;
+  int handlerCalls = 0;
+  auto [directHandle, directEvictions] = mgr.allocate("exact-direct", "entry", 500, [&callbackCalls]() { callbackCalls++; });
+  REQUIRE(directEvictions.empty());
+  mgr.registerSubsystem("exact-delegated", [&handlerCalls](uint64) { handlerCalls++; });
+  auto [delegatedHandle, delegatedEvictions] = mgr.allocate("exact-delegated", "entry", 300, []() {});
+  REQUIRE(delegatedEvictions.empty());
+
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(201).sizeBytes() == 0);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(251).sizeBytes() == 0);
+  CHECK(callbackCalls == 0);
+  CHECK(handlerCalls == 0);
+  CHECK(mgr.usedBytes() == 800);
+
+  auto fit = mgr.tryReserveWorkingMemoryWithoutEviction(200);
+  REQUIRE(fit.sizeBytes() == 200);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(51).sizeBytes() == 0);
+  CHECK(callbackCalls == 0);
+  CHECK(handlerCalls == 0);
+
+  mgr.release(directHandle);
+  mgr.release(delegatedHandle);
+  mgr.registerSubsystem("exact-delegated", [](uint64) {});
+  mgr.clear();
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager exact working reservations count pinned and pending entries", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  CacheMemoryBudgetManager::AllocationOptions options;
+  options.initiallyPinned = true;
+  int callbackCalls = 0;
+  auto [pinnedHandle, pinnedEvictions] = mgr.allocate("exact-pinned", "entry", 900, [&callbackCalls]() { callbackCalls++; }, options);
+  REQUIRE(pinnedEvictions.empty());
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(101).sizeBytes() == 0);
+  auto fit = mgr.tryReserveWorkingMemoryWithoutEviction(100);
+  REQUIRE(fit.sizeBytes() == 100);
+  mgr.setBudgetBytes(800);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(1).sizeBytes() == 0);
+  CHECK(callbackCalls == 0);
+  fit.shrinkTo(0);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(1).sizeBytes() == 0);
+  mgr.release(pinnedHandle);
+
+  mgr.setBudgetBytes(1000);
+  int handlerCalls = 0;
+  mgr.registerSubsystem("exact-pending", [&handlerCalls](uint64) { handlerCalls++; });
+  auto [firstHandle, firstEvictions] = mgr.allocate("exact-pending", "first", 600, []() {});
+  REQUIRE(firstEvictions.empty());
+  auto [secondHandle, secondEvictions] = mgr.allocate("exact-pending", "second", 600, []() {});
+  REQUIRE(secondEvictions.empty());
+  REQUIRE(handlerCalls == 1);
+  CHECK(mgr.usedBytes() == 1200);
+  CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(1).sizeBytes() == 0);
+  CHECK(handlerCalls == 1);
+  mgr.release(firstHandle);
+  auto afterRelease = mgr.tryReserveWorkingMemoryWithoutEviction(250);
+  CHECK(afterRelease.sizeBytes() == 250);
+  mgr.release(secondHandle);
+  mgr.registerSubsystem("exact-pending", [](uint64) {});
+  mgr.clear();
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager exact working reservations recover after budget shrink", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  mgr.clear();
+  mgr.setBudgetBytes(1000);
+
+  {
+    auto existing = mgr.reserveWorkingMemory(250);
+    REQUIRE(existing.sizeBytes() == 250);
+    REQUIRE(mgr.usedBytes() == 0);
+    mgr.setBudgetBytes(800);
+    REQUIRE(mgr.maximumWorkingMemoryBytes() == 200);
+    CHECK(mgr.tryReserveWorkingMemoryWithoutEviction(1).sizeBytes() == 0);
+    CHECK(mgr.reservedWorkingMemoryBytes() == 250);
+
+    existing.shrinkTo(199);
+    auto remaining = mgr.tryReserveWorkingMemoryWithoutEviction(1);
+    REQUIRE(remaining.sizeBytes() == 1);
+    CHECK(mgr.reservedWorkingMemoryBytes() == 200);
+  }
+
+  CHECK(mgr.reservedWorkingMemoryBytes() == 0);
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}
+
+TEST_CASE("CacheMemoryBudgetManager concurrent exact working reservations cannot over-admit", "[CacheMemoryBudgetManager]")
+{
+  auto& mgr = CacheMemoryBudgetManager::instance();
+  for(const uint64 cacheBytes : std::array<uint64, 2>{0, 850})
+  {
+    mgr.clear();
+    mgr.setBudgetBytes(1000);
+    CacheMemoryBudgetManager::AllocationHandle cacheHandle = 0;
+    if(cacheBytes != 0)
+    {
+      auto [handle, evictions] = mgr.allocate("exact-concurrent", "entry", cacheBytes, []() {});
+      REQUIRE(evictions.empty());
+      cacheHandle = handle;
+    }
+
+    const uint64 requestBytes = cacheBytes == 0 ? 200 : 100;
+    std::barrier phaseBarrier(3);
+    std::array<uint64, 2> grants = {};
+    std::array<std::thread, 2> workers;
+    for(usize threadIndex = 0; threadIndex < workers.size(); threadIndex++)
+    {
+      workers[threadIndex] = std::thread([&, threadIndex]() {
+        phaseBarrier.arrive_and_wait();
+        auto reservation = mgr.tryReserveWorkingMemoryWithoutEviction(requestBytes);
+        grants[threadIndex] = reservation.sizeBytes();
+        phaseBarrier.arrive_and_wait();
+        phaseBarrier.arrive_and_wait();
+      });
+    }
+    phaseBarrier.arrive_and_wait();
+    phaseBarrier.arrive_and_wait();
+    CHECK(grants[0] + grants[1] == requestBytes);
+    CHECK(mgr.reservedWorkingMemoryBytes() == requestBytes);
+    phaseBarrier.arrive_and_wait();
+    for(auto& worker : workers)
+    {
+      worker.join();
+    }
+    CHECK(mgr.reservedWorkingMemoryBytes() == 0);
+    if(cacheBytes != 0)
+    {
+      mgr.release(cacheHandle);
+    }
+  }
+  mgr.clear();
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+}

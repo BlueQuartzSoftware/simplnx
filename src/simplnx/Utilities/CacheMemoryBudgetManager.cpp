@@ -290,6 +290,23 @@ CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::res
   return WorkingMemoryReservation(WorkingMemoryReservationKey{}, this, grantedBytes);
 }
 
+CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::tryReserveWorkingMemoryWithoutEviction(uint64 requestedBytes)
+{
+  std::lock_guard<std::mutex> lock(m_Mutex);
+  const uint64 maximumWorkingBytes = m_BudgetBytes / 4;
+  if(requestedBytes == 0 || m_ReservedWorkingMemoryBytes > maximumWorkingBytes || requestedBytes > maximumWorkingBytes - m_ReservedWorkingMemoryBytes)
+  {
+    return {};
+  }
+  if(m_UsedBytes > m_BudgetBytes || m_ReservedWorkingMemoryBytes > m_BudgetBytes - m_UsedBytes || requestedBytes > m_BudgetBytes - m_UsedBytes - m_ReservedWorkingMemoryBytes)
+  {
+    return {};
+  }
+
+  m_ReservedWorkingMemoryBytes += requestedBytes;
+  return WorkingMemoryReservation(WorkingMemoryReservationKey{}, this, requestedBytes);
+}
+
 bool CacheMemoryBudgetManager::setBudgetBytes(uint64 bytes)
 {
   // Clamp only the upper bound. Calculate the machine limit before acquiring m_Mutex.
