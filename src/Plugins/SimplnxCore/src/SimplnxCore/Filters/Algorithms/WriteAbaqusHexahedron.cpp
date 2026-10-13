@@ -719,7 +719,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendInfoMessage("Writing Abaqus Files: 2/5 (Elements)");
+  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 2, 5, "Elements");
 
   err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->HourglassStiffness);
   if(err < 0)
