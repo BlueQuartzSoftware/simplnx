@@ -407,7 +407,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendInfoMessage("Writing Abaqus Files: 4/5 (Element Sets)");
+  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 4, 5, "Element Sets");
 
   err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
   if(err < 0)
