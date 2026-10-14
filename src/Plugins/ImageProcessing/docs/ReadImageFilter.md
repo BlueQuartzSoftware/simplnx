@@ -72,7 +72,7 @@ Both subvolume cropping types have checkboxes to turn on/off cropping in the X, 
 
 A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
 
-A physical crop minimum below the Image Geometry's origin is clamped to the first cell when the requested range overlaps the geometry. Preflight reports warning `-50503`, and execution reads the clamped region.
+A physical crop minimum below the Image Geometry's origin is clamped to the first cell when the requested range overlaps the geometry. Preflight reports warning `-50503`, and execution reads the clamped region. A physical crop bound that is NaN fails preflight with error `-50561`.
 
 ## Required Input Sources
 

@@ -40,6 +40,57 @@
 
 using namespace nx::core;
 
+TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUtilities]")
+{
+  DataStructure dataStructure;
+  auto* firstParentPtr = DataGroup::Create(dataStructure, "First Parent");
+  auto* secondParentPtr = DataGroup::Create(dataStructure, "Second Parent");
+  REQUIRE(firstParentPtr != nullptr);
+  REQUIRE(secondParentPtr != nullptr);
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1}, firstParentPtr->getId());
+  REQUIRE(attributeMatrixPtr != nullptr);
+  auto* childPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), attributeMatrixPtr->getId());
+  REQUIRE(childPtr != nullptr);
+  const DataPath childPath({"First Parent", "Cell Data", "Values"});
+
+  SECTION("Direct child")
+  {
+    REQUIRE(IsChildOfAttributeMatrix(dataStructure, childPath, *attributeMatrixPtr));
+  }
+
+  SECTION("DataArray in a sibling Attribute Matrix")
+  {
+    auto* siblingPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{1}, firstParentPtr->getId());
+    REQUIRE(siblingPtr != nullptr);
+    auto* siblingChildPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), siblingPtr->getId());
+    REQUIRE(siblingChildPtr != nullptr);
+    REQUIRE_FALSE(IsChildOfAttributeMatrix(dataStructure, DataPath({"First Parent", "Other Data", "Values"}), *attributeMatrixPtr));
+  }
+
+  SECTION("Top-level DataArray")
+  {
+    auto* topLevelPtr = Int32Array::Create(dataStructure, "Top Level Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
+    REQUIRE(topLevelPtr != nullptr);
+    REQUIRE_FALSE(IsChildOfAttributeMatrix(dataStructure, DataPath({"Top Level Values"}), *attributeMatrixPtr));
+  }
+
+  SECTION("Attribute Matrix reached through two parent paths")
+  {
+    REQUIRE(dataStructure.setAdditionalParent(attributeMatrixPtr->getId(), secondParentPtr->getId()));
+    const DataPath alternateChildPath({"Second Parent", "Cell Data", "Values"});
+    REQUIRE(dataStructure.getDataAs<Int32Array>(childPath) == childPtr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(alternateChildPath) == childPtr);
+    SECTION("First parent path")
+    {
+      REQUIRE(IsChildOfAttributeMatrix(dataStructure, childPath, *attributeMatrixPtr));
+    }
+    SECTION("Second parent path")
+    {
+      REQUIRE(IsChildOfAttributeMatrix(dataStructure, alternateChildPath, *attributeMatrixPtr));
+    }
+  }
+}
+
 namespace
 {
 /**

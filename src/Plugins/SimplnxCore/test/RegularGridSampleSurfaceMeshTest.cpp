@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -18,6 +19,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -111,6 +113,85 @@ void RequireSmallGridFeatureIds(const DataStructure& dataStructure)
 }
 
 } // namespace
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive or nonfinite spacing when creating geometry", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto axis = GENERATE(usize{0}, usize{1}, usize{2});
+  const auto invalidSpacing = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, invalidSpacing);
+  DataStructure dataStructure;
+  BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = MakeSmallGridArguments();
+  auto validResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(validResult.outputActions);
+
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Existing Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({5, 1, 1});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, ShapeType{1, 1, 5}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+
+  VectorFloat32Parameter::ValueType spacing{1.0F, 1.0F, 1.0F};
+  spacing[axis] = invalidSpacing;
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, spacing);
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key,
+                      std::make_any<ChoicesParameter::ValueType>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting)));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ExistingImageGeomPath_Key, DataPath({"Existing Image Geometry"}));
+  auto existingResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(existingResult.outputActions);
+
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key,
+                      std::make_any<ChoicesParameter::ValueType>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -11802);
+}
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject Face Labels outside Face Attribute Matrix", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
+  auto* otherFaceDataPtr = AttributeMatrix::Create(dataStructure, "Other Face Data", ShapeType{4});
+  REQUIRE(otherFaceDataPtr != nullptr);
+  const DataPath otherLabelsPath({"Other Face Data", "Face Labels"});
+  auto* otherLabelsPtr = Int32Array::Create(dataStructure, "Face Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, otherLabelsPath, {4}, {2}), otherFaceDataPtr->getId());
+  REQUIRE(otherLabelsPtr != nullptr);
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = MakeSmallGridArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, otherLabelsPath);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -11803);
+}
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject missing Face Attribute Matrix without throwing", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Without Face Data");
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* sourceGeomPtr = dataStructure.getDataAs<TriangleGeom>(k_TriGeomPath);
+  REQUIRE(sourceGeomPtr != nullptr);
+  triangleGeomPtr->setVertices(*sourceGeomPtr->getVertices());
+  triangleGeomPtr->setFaceList(*sourceGeomPtr->getFaces());
+  REQUIRE(triangleGeomPtr->getFaceAttributeMatrix() == nullptr);
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = MakeSmallGridArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Without Face Data"}));
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -11803);
+}
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {

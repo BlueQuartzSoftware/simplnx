@@ -141,6 +141,16 @@ struct CreateDefaultValueNeighborListFunctor
 
 namespace nx::core
 {
+bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix)
+{
+  if(arrayPath.getLength() < 2)
+  {
+    return false;
+  }
+  const auto parentId = dataStructure.getId(arrayPath.getParent());
+  return parentId.has_value() && parentId.value() == attributeMatrix.getId();
+}
+
 bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
 {
   std::set<nx::core::DataType> types;

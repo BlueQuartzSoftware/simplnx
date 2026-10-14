@@ -12,6 +12,8 @@ Copied child objects retain their names, including Attribute Matrix and DataArra
 
 Users can selectively crop specific dimensions of the **Edge Geometry** by toggling **Crop X Dimension**, **Crop Y Dimension**, and **Crop Z Dimension** ON or OFF. Only dimensions that are turned ON will be cropped.
 
+A vertex inside the crop bounds that no kept edge uses is not copied to the created **Edge Geometry**.
+
 The **Min Coordinate** and **Max Coordinate** values define the ROI bounds and are specified in the **Edge Geometry's** physical coordinate units (the same units as the vertex positions), *not* as cell or vertex indices.
 
 ### Boundary Intersection Behavior
