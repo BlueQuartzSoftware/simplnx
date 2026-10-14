@@ -2,13 +2,10 @@
 
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
-#include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
-
-#include <EbsdLib/Core/Orientation.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -202,19 +199,32 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
     }
   }
 
+  const auto* rawPhase = reinterpret_cast<const uint8*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
+  const auto* rawPhi2 = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
+  std::vector<uint32> crystalStructures;
   if(m_InputValues->EdaxHexagonalAlignment)
   {
     const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
     const auto& crystalStructuresRef = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
-    std::vector<uint32> crystalStructures(crystalStructuresRef.getSize());
+    crystalStructures.resize(crystalStructuresRef.getSize());
     if(Result<> ioResult = crystalStructuresRef.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size())); ioResult.invalid())
     {
       return ioResult;
     }
+  }
 
-    const auto& rawPhaseStoreRef = m_DataStructure.getDataRefAs<UInt8Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Phase)).getDataStoreRef();
+  const auto alignedPhi2 = [this, &crystalStructures](uint8 phase, float32 phi2) -> float32 {
+    if(m_InputValues->EdaxHexagonalAlignment && phase < crystalStructures.size() && EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
+    {
+      // Channel 5 Euler angles are already in radians; retain the unwrapped result.
+      return static_cast<float32>(static_cast<float64>(phi2) + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
+    }
+    return phi2;
+  };
+
+  if(m_InputValues->EdaxHexagonalAlignment)
+  {
     auto& phi2StoreRef = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi2)).getDataStoreRef();
-    std::vector<uint8> phaseBuffer(k_ChunkTuples);
     std::vector<float32> phi2Buffer(k_ChunkTuples);
 
     for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
@@ -225,22 +235,9 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       }
 
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
-      if(Result<> ioResult = rawPhaseStoreRef.copyIntoBuffer(offset, nonstd::span<uint8>(phaseBuffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
-      if(Result<> ioResult = phi2StoreRef.copyIntoBuffer(offset, nonstd::span<float32>(phi2Buffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
       for(usize i = 0; i < count; i++)
       {
-        const usize phase = phaseBuffer[i];
-        if(phase < crystalStructures.size() && EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
-        {
-          // Channel 5 Euler angles are already in radians; retain the unwrapped result.
-          phi2Buffer[i] = static_cast<float32>(static_cast<float64>(phi2Buffer[i]) + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
-        }
+        phi2Buffer[i] = alignedPhi2(rawPhase[offset + i], rawPhi2[offset + i]);
       }
       if(Result<> ioResult = phi2StoreRef.copyFromBuffer(offset, nonstd::span<const float32>(phi2Buffer.data(), count)); ioResult.invalid())
       {
@@ -253,8 +250,6 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
   {
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
     auto& phaseStore = targetArray.getDataStoreRef();
-    const auto& rawPhaseStoreRef = m_DataStructure.getDataRefAs<UInt8Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Phase)).getDataStoreRef();
-    std::vector<uint8> rawPhaseBuffer(k_ChunkTuples);
     std::vector<int32> phaseBuffer(k_ChunkTuples);
 
     for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
@@ -265,13 +260,9 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       }
 
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
-      if(Result<> ioResult = rawPhaseStoreRef.copyIntoBuffer(offset, nonstd::span<uint8>(rawPhaseBuffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
       for(usize i = 0; i < count; i++)
       {
-        phaseBuffer[i] = rawPhaseBuffer[i];
+        phaseBuffer[i] = rawPhase[offset + i];
       }
       if(Result<> ioResult = phaseStore.copyFromBuffer(offset, nonstd::span<const int32>(phaseBuffer.data(), count)); ioResult.invalid())
       {
@@ -282,12 +273,8 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
 
   if(m_InputValues->CreateCompatibleArrays)
   {
-    const auto& phi1StoreRef = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi1)).getDataStoreRef();
-    const auto& phiStoreRef = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Phi)).getDataStoreRef();
-    const auto& phi2StoreRef = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi2)).getDataStoreRef();
-    std::vector<float32> phi1Buffer(k_ChunkTuples);
-    std::vector<float32> phiBuffer(k_ChunkTuples);
-    std::vector<float32> phi2Buffer(k_ChunkTuples);
+    const auto* rawPhi1 = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
+    const auto* rawPhi = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
@@ -301,23 +288,11 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       }
 
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
-      if(Result<> ioResult = phi1StoreRef.copyIntoBuffer(offset, nonstd::span<float32>(phi1Buffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
-      if(Result<> ioResult = phiStoreRef.copyIntoBuffer(offset, nonstd::span<float32>(phiBuffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
-      if(Result<> ioResult = phi2StoreRef.copyIntoBuffer(offset, nonstd::span<float32>(phi2Buffer.data(), count)); ioResult.invalid())
-      {
-        return ioResult;
-      }
       for(usize i = 0; i < count; i++)
       {
-        eulerBuffer[3 * i] = phi1Buffer[i];
-        eulerBuffer[3 * i + 1] = phiBuffer[i];
-        eulerBuffer[3 * i + 2] = phi2Buffer[i];
+        eulerBuffer[3 * i] = rawPhi1[offset + i];
+        eulerBuffer[3 * i + 1] = rawPhi[offset + i];
+        eulerBuffer[3 * i + 2] = alignedPhi2(rawPhase[offset + i], rawPhi2[offset + i]);
       }
       if(Result<> ioResult = eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuffer.data(), count * 3)); ioResult.invalid())
       {

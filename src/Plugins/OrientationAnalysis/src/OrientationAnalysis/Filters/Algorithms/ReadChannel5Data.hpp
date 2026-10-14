@@ -70,8 +70,7 @@ public:
  * @brief Reads an Oxford Channel 5 .cpr/.crc pair into an Image Geometry.
  *
  * EbsdLib owns full reader buffers. Simplnx transfers fields in bounded chunks
- * and does not add a second cell-sized staging buffer. Destination bulk-write
- * Result values are not inspected.
+ * and does not add a second cell-sized staging buffer. The algorithm propagates reader failures and bulk transfer errors.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadChannel5Data
 {
@@ -98,7 +97,7 @@ public:
 
   /**
    * @brief Reads Channel 5 data into output arrays.
-   * @return Success, or an EbsdLib reader error.
+   * @return Valid result after completion or cancellation; otherwise a reader or store I/O error.
    *
    * When a cancellation checkpoint observes the signal, the function returns success. Data copied before that checkpoint remains in the output arrays. Later data is not copied.
    */
@@ -120,7 +119,7 @@ private:
   /**
    * @brief Transfers parsed cell data through bounded bulk I/O.
    * @param reader Provides parsed Channel 5 data.
-   * @return Success, cancellation, or the first store write error.
+   * @return Valid result after completion or cancellation; otherwise the first store I/O error.
    */
   Result<> copyRawEbsdData(ebsdlib::CprReader* reader) const;
 };

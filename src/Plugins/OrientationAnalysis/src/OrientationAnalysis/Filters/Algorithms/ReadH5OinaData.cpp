@@ -107,8 +107,15 @@ Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, Data
 }
 
 /**
- * @brief Applies the EDAX hexagonal x-axis alignment to the phi2 of every hexagonal
- * point of one scan's tuple slab.
+ * @brief Adds the EDAX phi2 correction to hexagonal points in one scan.
+ * @tparam T Phase-array value type: int32 or uint8.
+ * @param inputValues Provides cell and ensemble paths.
+ * @param totalPoints Number of tuples in the scan.
+ * @param tupleOffset First scan tuple in the stacked geometry.
+ * @param dataStructure Contains the phase and Euler arrays.
+ * @param shouldCancel Requests cancellation between batches.
+ * @return Valid result after completion or cancellation; otherwise the first store I/O error.
+ * @pre Phase indices are validated against the ensemble array.
  */
 template <typename T>
 Result<> convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalPoints, usize tupleOffset, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
@@ -156,6 +163,7 @@ Result<> convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize to
       if(EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
       {
         const auto phi2 = static_cast<float64>(eulers[index * 3 + 2]);
+        // H5OINA stores radians. The float64 intermediate preserves correct rounding when the shifted value is stored as float32.
         eulers[index * 3 + 2] = static_cast<float32>(phi2 + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
       }
     }
