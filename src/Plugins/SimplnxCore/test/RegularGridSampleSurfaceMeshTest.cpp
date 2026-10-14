@@ -127,13 +127,13 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive o
   auto validResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(validResult.outputActions);
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Existing Image Geometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({5, 1, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellData = AttributeMatrix::Create(dataStructure, Constants::k_CellData, ShapeType{1, 1, 5}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Existing Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({5, 1, 1});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, ShapeType{1, 1, 5}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   VectorFloat32Parameter::ValueType spacing{1.0F, 1.0F, 1.0F};
   spacing[axis] = invalidSpacing;
@@ -157,11 +157,11 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject Face Labels o
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
-  auto* otherFaceData = AttributeMatrix::Create(dataStructure, "Other Face Data", ShapeType{4});
-  REQUIRE(otherFaceData != nullptr);
+  auto* otherFaceDataPtr = AttributeMatrix::Create(dataStructure, "Other Face Data", ShapeType{4});
+  REQUIRE(otherFaceDataPtr != nullptr);
   const DataPath otherLabelsPath({"Other Face Data", "Face Labels"});
-  auto* otherLabels = Int32Array::Create(dataStructure, "Face Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, otherLabelsPath, {4}, {2}), otherFaceData->getId());
-  REQUIRE(otherLabels != nullptr);
+  auto* otherLabelsPtr = Int32Array::Create(dataStructure, "Face Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, otherLabelsPath, {4}, {2}), otherFaceDataPtr->getId());
+  REQUIRE(otherLabelsPtr != nullptr);
   RegularGridSampleSurfaceMeshFilter filter;
   auto args = MakeSmallGridArguments();
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, otherLabelsPath);
@@ -176,13 +176,13 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject missing Face 
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
-  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Without Face Data");
-  REQUIRE(triangleGeom != nullptr);
-  auto* sourceGeom = dataStructure.getDataAs<TriangleGeom>(k_TriGeomPath);
-  REQUIRE(sourceGeom != nullptr);
-  triangleGeom->setVertices(*sourceGeom->getVertices());
-  triangleGeom->setFaceList(*sourceGeom->getFaces());
-  REQUIRE(triangleGeom->getFaceAttributeMatrix() == nullptr);
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Without Face Data");
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* sourceGeomPtr = dataStructure.getDataAs<TriangleGeom>(k_TriGeomPath);
+  REQUIRE(sourceGeomPtr != nullptr);
+  triangleGeomPtr->setVertices(*sourceGeomPtr->getVertices());
+  triangleGeomPtr->setFaceList(*sourceGeomPtr->getFaces());
+  REQUIRE(triangleGeomPtr->getFaceAttributeMatrix() == nullptr);
   RegularGridSampleSurfaceMeshFilter filter;
   auto args = MakeSmallGridArguments();
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Without Face Data"}));

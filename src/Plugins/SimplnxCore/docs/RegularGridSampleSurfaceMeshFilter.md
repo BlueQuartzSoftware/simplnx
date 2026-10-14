@@ -17,7 +17,7 @@ The *Use existing geometry* parameter controls how the target **Image Geometry**
 - **Create geometry [0]**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
 - **Use existing geometry [1]**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
 
-When creating a new Image Geometry, every component of **Spacing** must be greater than zero.
+When creating a new Image Geometry, every component of **Spacing** must be finite and greater than zero.
 
 ## Algorithm
 

@@ -176,8 +176,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   ShapeType tupleDims;
 
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryPathValue);
-  const auto* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
-  if(faceAttributeMatrix == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrix))
+  const auto* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
+  if(faceAttributeMatrixPtr == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrixPtr))
   {
     return {MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
                                                                "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
@@ -188,8 +188,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   {
     if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
     {
-      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be greater than zero on every axis when creating an Image Geometry. "
-                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a positive value.",
+      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
+                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
                                                                  pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
     }
 
