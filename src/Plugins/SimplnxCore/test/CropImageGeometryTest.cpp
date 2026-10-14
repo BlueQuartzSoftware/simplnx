@@ -28,6 +28,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -1402,6 +1403,52 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[Simpln
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Reject NaN Physical Bounds", "[SimplnxCore][CropImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const usize axis = GENERATE(0, 1, 2);
+  CAPTURE(axis);
+  std::vector<float64> minCoord{-5, 57.5, 30};
+  std::vector<float64> maxCoord{20, 70, 55};
+  SECTION("NaN minimum")
+  {
+    minCoord[axis] = std::numeric_limits<float64>::quiet_NaN();
+  }
+  SECTION("NaN maximum")
+  {
+    maxCoord[axis] = std::numeric_limits<float64>::quiet_NaN();
+  }
+
+  const DataPath imageGeomPath({k_DataContainer});
+  const DataPath newImageGeomPath({"7_0_Cropped_ImageGeom"});
+  const DataPath featureIdsPath({k_DataContainer, Constants::k_CellData, Constants::k_FeatureIds});
+  const DataPath cellFeatureAMPath({k_DataContainer, Constants::k_CellFeatureData});
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
+  const auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  Arguments args;
+  args.insert(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float64>>(minCoord));
+  args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(maxCoord));
+  args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
+  args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(newImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(cellFeatureAMPath));
+  args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_CropXDim_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_CropYDim_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_CropZDim_Key, std::make_any<bool>(true));
+
+  CropImageGeometryFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  const auto& errors = preflightResult.outputActions.errors();
+  REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == -50561; }));
 }
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[SimplnxCore][CropImageGeometryFilter]")

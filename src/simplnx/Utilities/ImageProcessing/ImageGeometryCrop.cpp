@@ -17,6 +17,7 @@
 #include <fmt/ranges.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -115,6 +116,18 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     const std::vector<float64>& maxCropCoord = options.maxCoordinate;
     const std::vector<float64>& minCropCoord = options.minCoordinate;
 
+    const std::array<std::string, 3> errLabels = {"X", "Y", "Z"};
+    const std::array<bool, 3> dimEnabled = {pCropXDim, pCropYDim, pCropZDim};
+    for(uint8 i = 0; i < 3; i++)
+    {
+      if(dimEnabled[i] && (std::isnan(minCropCoord[i]) || std::isnan(maxCropCoord[i])))
+      {
+        return {MakeErrorResult<OutputActions>(
+                    -50561, fmt::format("The {} crop values [{} to {}] contain a NaN value. Set both {} crop values to finite numbers.", errLabels[i], minCropCoord[i], maxCropCoord[i], errLabels[i])),
+                preflightUpdatedValues};
+      }
+    }
+
     // Validate basic information about the coordinates
     bool equalCoords = true;
     if(pCropXDim && minCropCoord[0] != maxCropCoord[0])
@@ -139,8 +152,6 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     const Point3Df& minPoint = boundingBox.getMinPoint();
     const Point3Df& maxPoint = boundingBox.getMaxPoint();
 
-    std::vector<std::string> errLabels = {"X", "Y", "Z"};
-    std::vector<bool> dimEnabled = {pCropXDim, pCropYDim, pCropZDim};
     for(uint8 i = 0; i < 3; i++)
     {
       if(dimEnabled[i] && maxCropCoord[i] < minCropCoord[i])

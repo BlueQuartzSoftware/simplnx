@@ -92,7 +92,7 @@ Two cropping modes are supported:
   section would use) and converts the requested bounds to voxel indices
   using the Image Geometry's origin and spacing.
 
-A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
+A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry. A physical crop bound that is NaN fails preflight with error `-50561`.
 
 Each axis can be toggled on or off independently via the *Crop X / Y / Z*
 flags. An axis whose flag is off is *not* cropped — its full extent from

@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <system_error>
@@ -1403,6 +1404,45 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_
     REQUIRE(pixels[tupleIdx] == expected[tupleIdx]);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected", "[ImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path filePath = ReadImageOutputDir() / "physical_nan_rejected.tif";
+  WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
+
+  const DataPath geomPath({"Physical Crop"});
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = true;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {-2.0F, 2.0F};
+  crop.yBoundPhysical = {1.0F, 2.0F};
+  SECTION("NaN minimum")
+  {
+    crop.xBoundPhysical = {std::numeric_limits<float32>::quiet_NaN(), 2.0F};
+  }
+  SECTION("NaN maximum")
+  {
+    crop.yBoundPhysical = {1.0F, std::numeric_limits<float32>::quiet_NaN()};
+  }
+
+  Arguments args;
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::string("Pixels"));
+  args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, crop);
+  ReadImageFilter filter;
+  DataStructure dataStructure;
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  const auto& errors = preflight.outputActions.errors();
+  REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == -50561; }));
 }
 
 TEST_CASE("ImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputOrigin", "[ImageProcessing][ReadImageFilter]")
