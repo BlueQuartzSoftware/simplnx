@@ -513,6 +513,32 @@ TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadDat
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification Warning", "[Core][FillBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  BuildFillBadDataTestData(dataStructure, 2, 2, 2, 1);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.valid());
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
+  const auto& outputValues = preflightResult.outputValues;
+  REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", "[Core][FillBadDataFilter]")
 {
   DataStructure dataStructure;
