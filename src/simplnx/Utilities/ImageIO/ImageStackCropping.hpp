@@ -28,14 +28,10 @@ inline usize ComputePhysicalZMinimumIndex(float64 zMinPhys, float64 originZ, flo
 /**
  * @brief Computes the Z dimension an image stack has once its Z cropping is applied.
  *
- * Voxel cropping treats the configured Z bounds as inclusive slice indices. Physical cropping
- * converts the configured Z bounds to slice indices using the Z origin and spacing that apply
- * before cropping, which are the filter's overrides only when the user asked for overrides and
- * chose to have them applied first; otherwise an origin of 0 and a spacing of 1 are assumed.
- *
- * The origin and spacing containers are templated because the image-stack filters expose these
- * parameters at different precisions. Each filter therefore keeps the arithmetic precision of its
- * own parameters rather than being silently widened or narrowed by this helper.
+ * Voxel bounds are inclusive slice indices. Physical bounds use the full-stack origin and spacing before cropping.
+ * Enabled overrides apply only in Preprocessed mode. Otherwise, the helper uses origin 0 and spacing 1. The
+ * templated containers preserve each filter's origin and spacing values without narrowing. The calculations use
+ * float64.
  *
  * @tparam VectorT Container of the origin and spacing components, indexable and at least 3 long
  * @param croppingOptions Cropping configuration taken from the filter's arguments
@@ -45,7 +41,7 @@ inline usize ComputePhysicalZMinimumIndex(float64 zMinPhys, float64 originZ, flo
  * @param shouldChangeOrigin Whether the filter was asked to override the origin
  * @param shouldChangeSpacing Whether the filter was asked to override the spacing
  * @param originSpacingProcessing Whether overrides apply before or after cropping
- * @return Cropped Z dimension with -50503 warnings when physical Z bounds are clamped, or an error describing why the configured Z range is unusable
+ * @return Cropped Z dimension and bounds-clamping warnings, or crop-validation errors.
  */
 template <class VectorT>
 Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& croppingOptions, usize zDim, const VectorT& origin, const VectorT& spacing, bool shouldChangeOrigin,
@@ -72,6 +68,11 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
   {
     const float64 zMinPhys = croppingOptions.zBoundPhysical[0];
     const float64 zMaxPhys = croppingOptions.zBoundPhysical[1];
+    if(std::isnan(zMinPhys) || std::isnan(zMaxPhys))
+    {
+      return MakeErrorResult<usize>(-23526,
+                                    fmt::format("Invalid Z cropping range: the physical Z bounds [{} to {}] contain a NaN value. Set both Z crop values to finite numbers.", zMinPhys, zMaxPhys));
+    }
 
     const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? origin[2] : 0;
     const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? spacing[2] : 1;
@@ -81,7 +82,7 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
       return MakeErrorResult<usize>(-23520, "Invalid Z cropping range: the maximum physical Z value is smaller than the minimum. Please ensure the start Z is less than or equal to the end Z.");
     }
 
-    if(spacingZ <= 0)
+    if(!(spacingZ > 0))
     {
       return MakeErrorResult<usize>(-23521, fmt::format("Invalid Z spacing ({}). The Z spacing must be greater than zero to apply physical cropping.", spacingZ));
     }

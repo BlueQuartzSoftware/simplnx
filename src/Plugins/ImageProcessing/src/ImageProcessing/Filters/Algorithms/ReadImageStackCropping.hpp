@@ -29,7 +29,7 @@ struct ZRange
  * @param shouldChangeOrigin Enables the origin override.
  * @param shouldChangeSpacing Enables the spacing override.
  * @param originSpacingProcessing Selects whether overrides apply before cropping.
- * @return Inclusive slice indices, or an error for an invalid crop range.
+ * @return Inclusive slice indices and bounds-clamping warnings, or an error for an invalid crop.
  */
 inline Result<ZRange> ComputeCroppedZRange(const CropGeometryParameter::CropValues& croppingOptions, usize zDim, const VectorFloat32Parameter::ValueType& origin,
                                            const VectorFloat32Parameter::ValueType& spacing, bool shouldChangeOrigin, bool shouldChangeSpacing, OriginSpacingProcessing originSpacingProcessing)

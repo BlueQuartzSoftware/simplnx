@@ -17,6 +17,7 @@
 #include <tiffio.h>
 
 #include <algorithm>
+#include <limits>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -1540,6 +1541,29 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[Im
     }
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NaN", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+  ReadImageStackFilter filter;
+  auto args = CreateZCropStackArgs("ReadImageStackPhysicalZNaN");
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+  SECTION("NaN minimum")
+  {
+    crop.zBoundPhysical = {std::numeric_limits<float32>::quiet_NaN(), 2.5f};
+  }
+  SECTION("NaN maximum")
+  {
+    crop.zBoundPhysical = {1.0f, std::numeric_limits<float32>::quiet_NaN()};
+  }
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  const auto& errors = preflightResult.outputActions.errors();
+  REQUIRE(std::any_of(errors.begin(), errors.end(), [](const Error& error) { return error.code == -23526; }));
 }
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWarning", "[ImageProcessing][ReadImageStackFilter][Cropping]")
