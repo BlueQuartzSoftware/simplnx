@@ -35,7 +35,12 @@ INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedFaceList>(m_FaceListId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedFaceList>(m_FaceListId);
 }
 
 const INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces() const
@@ -44,7 +49,12 @@ const INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedFaceList>(m_FaceListId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedFaceList>(m_FaceListId);
 }
 
 INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef()
@@ -54,7 +64,13 @@ INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared face list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedFaceList>(m_FaceListId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_FaceListId.value());
 }
 
 const INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef() const
@@ -64,7 +80,13 @@ const INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared face list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedFaceList>(m_FaceListId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_FaceListId.value());
 }
 
 void INodeGeometry2D::setFaceList(const SharedFaceList& faces)
@@ -144,7 +166,12 @@ void INodeGeometry2D::setUnsharedEdgesId(const OptionalId& unsharedEdgesId)
 
 const INodeGeometry2D::SharedEdgeList* INodeGeometry2D::getUnsharedEdges() const
 {
-  return getDataStructureRef().getDataAs<SharedEdgeList>(m_UnsharedEdgeListId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedEdgeList>(m_UnsharedEdgeListId);
 }
 
 void INodeGeometry2D::deleteUnsharedEdges()
@@ -169,7 +196,12 @@ AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix() const
@@ -178,7 +210,12 @@ const AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef()
@@ -188,7 +225,13 @@ AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a face attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef() const
@@ -198,7 +241,13 @@ const AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a face attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry2D::getFaceAttributeMatrixDataPath() const

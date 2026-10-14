@@ -25,7 +25,12 @@ INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
@@ -34,7 +39,12 @@ const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
@@ -44,7 +54,13 @@ INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared edge list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
 const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
@@ -54,7 +70,13 @@ const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared edge list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
 void INodeGeometry1D::setEdgeList(const SharedEdgeList& edges)
@@ -131,7 +153,12 @@ void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> co
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementsContainingVert() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementsContainingVert()
@@ -142,7 +169,12 @@ void INodeGeometry1D::deleteElementsContainingVert()
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementNeighbors() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementNeighbors()
@@ -156,7 +188,12 @@ void INodeGeometry1D::deleteElementNeighbors()
 
 const Float32Array* INodeGeometry1D::getElementCentroids() const
 {
-  return getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementCentroids()
@@ -176,7 +213,12 @@ AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix() const
@@ -185,7 +227,12 @@ const AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef()
@@ -195,7 +242,13 @@ AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have an edge attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef() const
@@ -205,7 +258,13 @@ const AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have an edge attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry1D::getEdgeAttributeMatrixDataPath() const

@@ -25,7 +25,12 @@ AttributeMatrix* IGridGeometry::getCellData()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_CellDataId);
 }
 
 const AttributeMatrix* IGridGeometry::getCellData() const
@@ -34,7 +39,12 @@ const AttributeMatrix* IGridGeometry::getCellData() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_CellDataId);
 }
 
 AttributeMatrix& IGridGeometry::getCellDataRef()
@@ -45,7 +55,13 @@ AttributeMatrix& IGridGeometry::getCellDataRef()
         fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a cell attribute matrix assigned.\n  {}:{}", __func__,
                     getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}",
+                                         __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_CellDataId.value());
 }
 
 const AttributeMatrix& IGridGeometry::getCellDataRef() const
@@ -56,7 +72,13 @@ const AttributeMatrix& IGridGeometry::getCellDataRef() const
         fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a cell attribute matrix assigned.\n  {}:{}", __func__,
                     getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}",
+                                         __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_CellDataId.value());
 }
 
 DataPath IGridGeometry::getCellDataPath() const

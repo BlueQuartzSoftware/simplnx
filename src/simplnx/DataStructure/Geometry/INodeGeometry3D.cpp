@@ -30,7 +30,12 @@ INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedFaceList>(m_PolyhedronListId);
 }
 
 const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra() const
@@ -39,7 +44,12 @@ const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedFaceList>(m_PolyhedronListId);
 }
 
 INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
@@ -49,7 +59,13 @@ INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared polyhedra list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
 const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
@@ -59,7 +75,13 @@ const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared polyhedra list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
 INodeGeometry3D::OptionalId INodeGeometry3D::getPolyhedraDataId() const
@@ -147,7 +169,12 @@ void INodeGeometry3D::setUnsharedFacedId(const OptionalId& id)
 
 const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getUnsharedFaces() const
 {
-  return getDataStructureRef().getDataAs<SharedFaceList>(m_UnsharedFaceListId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedFaceList>(m_UnsharedFaceListId);
 }
 
 void INodeGeometry3D::deleteUnsharedFaces()
@@ -172,7 +199,12 @@ AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix() const
@@ -181,7 +213,12 @@ const AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef()
@@ -191,7 +228,13 @@ AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a polyhedra attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef() const
@@ -201,7 +244,13 @@ const AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a polyhedra attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry3D::getPolyhedronAttributeMatrixDataPath() const
