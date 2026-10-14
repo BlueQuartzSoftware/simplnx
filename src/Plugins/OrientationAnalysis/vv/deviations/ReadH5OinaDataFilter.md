@@ -4,7 +4,7 @@
 
 This file therefore records, in the same structured form, every difference between the behavior DREAM3D-NX shipped and the correct behavior. Entries are referenced by stable ID (`ReadH5OinaDataFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every released version from 7.0.0 through 7.4.1. D5, D6, D7, D10, D11, and D12 are corrections to EbsdLib's `H5OINAReader` and require EbsdLib 3.1.2.
+The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every released version from 7.0.0 through 7.4.1. D5, D6, D7, D10, D11, and D12 are corrections to EbsdLib's `H5OINAReader` and require EbsdLib 3.1.2. D14 affects every released version from 7.0.0 through 7.4.2 and is resolved on `develop` by PR #1781.
 
 ---
 
@@ -15,7 +15,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D1` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** With "Convert Hexagonal X-Axis to EDAX Standard" on — its shipped default — every scan point whose phase maps to `Hexagonal_High` had 30.0 added to its φ2. The file's Euler angles are radians, so this added **thirty radians**, not thirty degrees. Thirty radians is 4.867 radians modulo 2π, so the resulting orientation bears no relation to either convention: the correction is 57.3 times the intended one (the ratio is exactly 180/π) and lands at an arbitrary angle. Every downstream product of those orientations — pole figures, IPF colors, misorientations, grain segmentation — was wrong for every hexagonal point of every H5OINA file imported at default settings. Cubic and unindexed points were unaffected.
 
@@ -36,7 +36,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D2` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** When two or more scans were selected and stacked into one Image Geometry, the `Euler` array of every scan after the first landed at the wrong place. Scan *k* occupies the tuple slab starting at *k*·X·Y, so its Euler block belongs at element 3·*k*·X·Y; it was written at element *k*·X·Y instead — one third of the correct offset, because the offset was counted in tuples rather than in elements. Scan 2's Euler block therefore overwrote the last two thirds of scan 1's Euler data, and the last two thirds of scan 2's own slab were left at their zero-initialized values. Every other cell array was placed correctly, so the corruption was confined to orientations and was silent: no error, no warning, and an output whose array sizes and geometry were all correct. Single-scan imports were unaffected, because the offset is zero.
 
@@ -57,7 +57,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D3` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** In a multi-scan import with the hexagonal alignment on, the alignment loop always walked scan-point indices 0 through X·Y — the first scan's tuples — regardless of which scan was being copied. In an *S*-scan stack, the first scan's hexagonal points therefore received the shift *S* times over, and no point of any later scan received it at all. Single-scan imports were unaffected.
 
@@ -99,7 +99,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D5` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** The `LatticeConstants` ensemble array reported each phase's γ angle as a copy of its β angle. The file's third lattice angle was never read. For a cubic phase, where α = β = γ, the error is invisible; for a hexagonal phase, whose angles are 90/90/120, the reported γ was 90 instead of 120, and the same applies to any monoclinic, triclinic, trigonal or rhombohedral cell whose γ differs from its β.
 
@@ -120,7 +120,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D6` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 | **Breaking change** | **Yes.** The value of a published output array changes for every H5OINA import. |
 
 **Symptom:** The three angle slots of `LatticeConstants` were reported in radians for H5OINA imports and in degrees for every other EBSD importer. A cubic phase imported from an `.h5oina` file reported `1.5707964, 1.5707964, 1.5707964`, while the same phase imported from a `.ctf` or `.ang` file reported `90, 90, 90`. The array's meaning therefore depended on which file format the phase happened to come from, with nothing in the data to say which.
@@ -144,7 +144,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D7` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** An `.h5oina` file whose phase group was missing its `Lattice Dimensions` or `Lattice Angles` dataset **crashed the process**. This is empirically demonstrated, not inferred: running the fixture against a build with the corrected filter sources but the pre-correction `H5OINAReader` reports the regression test as `OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough - Missing Lattice Angles (-9582) (SEGFAULT)` rather than as a failure. The suite log recording that run is listed in `vv/provenance/ReadH5OinaDataFilter.md`.
 
@@ -165,7 +165,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D8` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** A later scan with a phase index above the first scan's phase count wrote past the ensemble arrays and could crash the process. Scans with the same indices but different phase definitions silently used one shared definition for all scan slices.
 
@@ -186,7 +186,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D9` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** The **Stacking Order** setting carried by the scan selection had no effect. Choosing *High To Low* produced exactly the same output as *Low To High*, with no error and no warning, so the Z order of a multi-scan stack could not be changed from the parameter that appears to control it.
 
@@ -207,7 +207,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D10` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** Every failure reported out of `H5OINAReader` reached the user with a blank `Message:` field. A malformed `.h5oina` produced an error code and an empty explanation, so nothing in the message said which dataset, phase or scan was at fault.
 
@@ -228,7 +228,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D11` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** Two defects in one code path. A scan whose header declared zero rows was rejected with error code `-90301` recorded on the reader but `-301` handed back as the return value, so a caller reporting the return value and a caller reading `getErrorCode()` disagreed about what had happened. A scan whose header declared a **negative** column count was not rejected at all: the count was widened to `size_t`, producing an enormous allocation request.
 
@@ -249,7 +249,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D12` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved in EbsdLib — requires EbsdLib 3.1.2 — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** A non-numeric or noncanonical phase-group name caused `std::stoi()` to throw during preflight. The exception stopped the import and left the opened HDF5 phase group unclosed.
 
@@ -270,7 +270,7 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 | **Deviation ID** | `ReadH5OinaDataFilter-D13` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
 | **Affected releases** | 7.0.0 through 7.4.1 |
-| **Status** | Fixed in DREAM3D-NX **7.4.2** via EbsdLib v3.1.2 |
+| **Status** | resolved — fixed in DREAM3D-NX **7.4.2** |
 
 **Symptom:** The filter accepted non-positive or non-finite X, Y, or Z spacing and created an invalid Image Geometry.
 
@@ -290,11 +290,12 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 |---|---|
 | **Deviation ID** | `ReadH5OinaDataFilter-D14` |
 | **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
-| **Status** | Fixed in DREAM3D-NX **7.4.3** |
+| **Affected releases** | 7.0.0 through 7.4.2 |
+| **Status** | resolved in PR #1781 (2026-10-14) |
 
-**Symptom:** Earlier simplnx code applied EDAX hexagonal alignment only to 6/mmm phases; it now also shifts 6/m phases. Legacy DREAM3D 6.5 likewise shifted only 6/mmm in its CTF reader; it had no H5OINA reader equivalent.
+**Symptom:** With "Convert Hexagonal X-Axis to EDAX Standard" on, only scan points whose phase mapped to `Hexagonal_High` (6/mmm) received the pi/6 shift on phi2. Points whose phase mapped to `Hexagonal_Low` (6/m) were left unshifted, so a 6/m phase imported from an `.h5oina` file stayed in the Oxford/HKL x-axis convention while every 6/mmm phase in the same file was moved to the EDAX/TSL convention. Legacy DREAM3D 6.5 had no H5OINA reader, so there is no legacy comparison; its `.ctf` reader had the same 6/mmm-only limitation (see `ReadCtfDataFilter-D5`).
 
-**Root cause:** The Oxford/HKL versus EDAX/TSL x-axis convention depends on the hexagonal lattice, so the correction also applies to `Hexagonal_Low` (6/m).
+**Root cause:** The Oxford/HKL versus EDAX/TSL x-axis convention depends on the hexagonal lattice, not on the Laue class, so the correction also applies to `Hexagonal_Low` (6/m).
 
 **Affected users:** Users importing 6/m phases with EDAX hexagonal alignment enabled.
 

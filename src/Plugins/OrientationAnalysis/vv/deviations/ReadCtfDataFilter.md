@@ -94,7 +94,8 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 |---|---|
 | **Deviation ID** | `ReadCtfDataFilter-D5` |
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
-| **Status** | active |
+| **Affected releases** | none through 7.4.2 — those releases matched 6.5.171 (6/mmm only) |
+| **Status** | active — intentional correction introduced by PR #1781 (2026-10-14) |
 
 **Symptom:** With EDAX hexagonal alignment enabled, simplnx adds 30 degrees to phi2 for both 6/m and 6/mmm phases; legacy DREAM3D 6.5 shifted only 6/mmm phases.
 
