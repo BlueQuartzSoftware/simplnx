@@ -8,6 +8,8 @@ IO (Input)
 
 This filter reads a single `.ctf` file (the EBSD scan format written by Oxford Instruments / HKL Channel 5 software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
 
+For single-slice files, each measurement is placed at the grid cell computed from its own `X` and `Y` values and the step sizes, so files whose rows are not stored in grid order are still imported correctly; a file that lists the same cell twice is rejected with an error.
+
 The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample).
 
 The user should be aware that simply reading the file and then performing operations that depend on a correct crystal reference frame (the axes fixed to the crystal lattice) and sample reference frame (the axes fixed to the physical specimen) will be **undefined, inaccurate and/or wrong**. To bring the crystal and sample reference frames into coincidence, rotations may need to be applied to the data. An excellent reference for this is the following PDF file:
