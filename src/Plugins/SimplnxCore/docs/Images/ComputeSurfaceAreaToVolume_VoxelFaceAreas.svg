@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="650" viewBox="0 0 1080 650">
+<rect width="1080" height="650" fill="#F0F2F5"/>
+<rect x="16" y="16" width="1048" height="618" rx="10" fill="#FFFFFF"/>
+<style>text{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;fill:#2C3E50} .title{font-size:18px;font-weight:700}.head{font-size:14px;font-weight:600}.body{font-size:13px;fill:#555555}.note{font-size:11px;font-style:italic;fill:#888888}.face{font-size:16px;font-weight:700}.formula{font-size:15px;fill:#8E44AD}</style>
+
+<text x="40" y="52" class="title" text-anchor="start">Voxel face areas: the face normal determines the two side lengths</text>
+<text x="40" y="78" class="note" text-anchor="start">Generated schematic • opposite views expose all six faces • lengths are illustrative</text>
+<text x="70" y="117" class="head" text-anchor="start">View toward the +X, +Y and +Z faces</text>
+<text x="570" y="117" class="head" text-anchor="start">Opposite view: −X, −Y and −Z faces</text>
+<polygon points="210,276 330,198 330,288 210,366" fill="#2874A6" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="270" y="293" class="face" text-anchor="middle" style="fill:#FFFFFF">+X</text>
+<polygon points="90,228 210,276 210,366 90,318" fill="#AED6F1" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="150" y="297" class="face" text-anchor="middle" style="fill:#2C3E50">+Y</text>
+<polygon points="210,150 330,198 210,276 90,228" fill="#E8ECF0" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="210" y="223" class="face" text-anchor="middle" style="fill:#2C3E50">+Z</text>
+<text x="280" y="172" class="formula" text-anchor="start">dx</text>
+<text x="110" y="182" class="formula" text-anchor="start">dy</text>
+<text x="62" y="280" class="formula" text-anchor="start">dz</text>
+<polygon points="710,276 590,198 590,288 710,366" fill="#2874A6" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="650" y="293" class="face" text-anchor="middle" style="fill:#FFFFFF">−X</text>
+<polygon points="830,228 710,276 710,366 830,318" fill="#AED6F1" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="770" y="297" class="face" text-anchor="middle" style="fill:#2C3E50">−Y</text>
+<polygon points="710,150 590,198 710,276 830,228" fill="#E8ECF0" stroke="#5D6D7E" stroke-width="1.6"/>
+<text x="710" y="223" class="face" text-anchor="middle" style="fill:#2C3E50">−Z</text>
+<text x="640" y="172" class="formula" text-anchor="start">dx</text>
+<text x="810" y="182" class="formula" text-anchor="start">dy</text>
+<text x="858" y="280" class="formula" text-anchor="start">dz</text>
+<rect x="40" y="400" width="1000" height="40" rx="4" fill="#2874A6"/>
+<text x="62" y="426" font-size="14" font-weight="600" style="fill:#FFFFFF">Face normal</text>
+<text x="280" y="426" font-size="14" font-weight="600" style="fill:#FFFFFF">Face area</text>
+<text x="570" y="426" font-size="14" font-weight="600" style="fill:#FFFFFF">Demonstration spacing (µm)</text>
+<text x="846" y="426" font-size="14" font-weight="600" style="fill:#FFFFFF">Area (µm²)</text>
+<rect x="40" y="447" width="1000" height="34" fill="#EBF5FB"/>
+<rect x="52" y="456" width="12" height="12" fill="#2874A6" stroke="#5D6D7E"/>
+<text x="76" y="469" class="body" text-anchor="start">−X and +X</text>
+<text x="280" y="469" class="formula" text-anchor="start">dy × dz</text>
+<text x="570" y="469" class="body" text-anchor="start">0.50 × 0.25</text>
+<text x="846" y="469" class="body" text-anchor="start">0.125</text>
+<rect x="40" y="487" width="1000" height="34" fill="#EBF5FB"/>
+<rect x="52" y="496" width="12" height="12" fill="#AED6F1" stroke="#5D6D7E"/>
+<text x="76" y="509" class="body" text-anchor="start">−Y and +Y</text>
+<text x="280" y="509" class="formula" text-anchor="start">dx × dz</text>
+<text x="570" y="509" class="body" text-anchor="start">0.25 × 0.25</text>
+<text x="846" y="509" class="body" text-anchor="start">0.0625</text>
+<rect x="40" y="527" width="1000" height="34" fill="#EBF5FB"/>
+<rect x="52" y="536" width="12" height="12" fill="#E8ECF0" stroke="#5D6D7E"/>
+<text x="76" y="549" class="body" text-anchor="start">−Z and +Z</text>
+<text x="280" y="549" class="formula" text-anchor="start">dx × dy</text>
+<text x="570" y="549" class="body" text-anchor="start">0.25 × 0.50</text>
+<text x="846" y="549" class="body" text-anchor="start">0.125</text>
+<text x="40" y="592" class="body" text-anchor="start">Count a face when its in-bounds neighbor has a different Feature Id. Out-of-image faces are excluded.</text>
+<text x="40" y="615" class="note" text-anchor="start">Anisotropic Small IN100 demonstration: dx = 0.25, dy = 0.50, dz = 0.25 µm. Original data spacing remains unchanged.</text>
+</svg>

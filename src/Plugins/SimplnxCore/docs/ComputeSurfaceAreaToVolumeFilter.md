@@ -31,9 +31,11 @@ For cell spacing `(dx, dy, dz)`, the area of a face uses the two spacing compone
 - Y-normal face: `dx * dz`.
 - Z-normal face: `dx * dy`.
 
+![Fig. 1: Generated schematic showing all six voxel faces and the two spacing components used for each face area.](Images/ComputeSurfaceAreaToVolume_VoxelFaceAreas.png)
+
 The filter calculates each feature's volume as `V = Number of Cells * dx * dy * dz`. It uses the supplied cell count without recounting the labels or checking that the count matches them. The surface-area-to-volume ratio is `S / V`, where `S` is the accumulated face area. Area has units of length squared, and volume has units of length cubed.
 
-When *Calculate Sphericity* is enabled, the filter also calculates `Psi = pi^(1/3) * (6 * V)^(2/3) / S`. Psi is dimensionless. For a complete closed surface and consistent positive volume, a sphere has sphericity 1. Both output arrays use 32-bit floating-point values; face areas, accumulated areas, and metric calculations use 64-bit floating-point values.
+When *Calculate Sphericity* is enabled, the filter also calculates `Psi = pi^(1/3) * (6 * V)^(2/3) / S`. Psi is dimensionless. A mathematical sphere with a complete closed surface and consistent positive volume has sphericity 1. For a voxelized sphere with a complete counted surface and consistent positive volume, the stair-stepped surface has more area than an equal-volume smooth sphere, so its sphericity is below 1. Both output arrays use 32-bit floating-point values; face areas, accumulated areas, and metric calculations use 64-bit floating-point values.
 
 ### Algorithm selection
 
@@ -49,7 +51,15 @@ Scanline reads labels in sequential slices and keeps three adjacent XY slices in
 
 ### Compatibility with earlier results
 
-Corrected X/Y face weights can change results when X and Y spacings differ. That weight correction alone leaves isotropic face products unchanged. The improved numerical precision and sphericity calculation can also change isotropic results.
+Corrected X/Y face weights can change results when `dx` differs from `dy`. The face-weight correction does not change the measured area when `dx = dy`, including when `dz` differs. Changes to numerical precision and the sphericity exponents can still change results, including isotropic results.
+
+### Small IN100 comparison
+
+The generated views below use segmented Small IN100 feature labels in a separate demonstration copy. The original spacing is `(0.25, 0.25, 0.25)` micrometers. The demonstration changes the spacing to `(0.25, 0.50, 0.25)` micrometers so that X-normal and Y-normal faces have different areas. The original dataset is unchanged, and the labels are reused without resampling. Both calculations use identical labels, cell counts derived from those labels, and demonstration spacing.
+
+The earlier Direct implementation and the current filter each calculate sphericity over the complete three-dimensional volume. The views display those three-dimensional feature values on the same central XY slice, at zero-based Z index 58. Both views use the same color scale and physical aspect ratio. The comparison includes corrections to numerical precision and sphericity exponents as well as the X/Y face weights. Features cut by the image boundary can have incomplete counted surfaces, as described below.
+
+![Fig. 2: Generated before-and-after views of full-volume Small IN100 feature sphericity on a central XY slice. Spacing was altered from 0.25/0.25/0.25 to 0.25/0.50/0.25 micrometers for demonstration; both panels share one color scale and physical aspect ratio.](Images/ComputeSurfaceAreaToVolume_SmallIN100_Sphericity.png)
 
 ### WARNING - Aliasing
 
