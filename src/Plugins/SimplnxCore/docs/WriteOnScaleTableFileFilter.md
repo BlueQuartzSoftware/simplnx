@@ -68,7 +68,7 @@ This behavior and file layout mirror the DREAM.3D 6.6 `ExportOnScaleTableFile` f
 
 - **Image Geometry** or **Rectilinear Grid Geometry**, the grid to export.
 - **Cell Feature Ids**, a scalar signed or unsigned integer **Data Array** with one tuple for each grid **Cell**.
-- **Phase Names**, a `StringArray` that contains the name for each positive feature ID. [Create Ensemble Info](../../OrientationAnalysis/docs/CreateEnsembleInfoFilter.md) can produce this array.
+- **Phase Names**, a `StringArray` that contains the name for each positive feature ID. [Create Ensemble Info](../OrientationAnalysis/CreateEnsembleInfoFilter.md) can produce this array.
 
 % Auto generated parameter table will be inserted here
 
