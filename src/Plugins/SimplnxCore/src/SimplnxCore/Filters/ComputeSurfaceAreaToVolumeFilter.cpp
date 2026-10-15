@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -104,11 +105,10 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   {
     return MakePreflightErrorResult(-12804, fmt::format("The selected Feature Ids object '{}' is not an int32 DataArray. Select a scalar int32 DataArray.", pFeatureIdsArrayPathValue.toString()));
   }
-  if(featureIds->getNumberOfTuples() != imageGeom.getNumberOfCells())
+  auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIds->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12803);
+  if(tupleCountResult.invalid())
   {
-    return MakePreflightErrorResult(
-        -12803, fmt::format("The Feature Ids array '{}' has {} tuples, but the selected Image Geometry '{}' has {} cells. Select a Feature Ids array with one tuple per geometry cell.",
-                            pFeatureIdsArrayPathValue.toString(), featureIds->getNumberOfTuples(), pImageGeometryPathValue.toString(), imageGeom.getNumberOfCells()));
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   PreflightResult preflightResult;
