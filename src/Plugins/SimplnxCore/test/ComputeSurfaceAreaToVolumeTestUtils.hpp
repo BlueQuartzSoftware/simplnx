@@ -19,7 +19,8 @@ namespace SurfaceAreaToVolumeTest
 {
 // A wrong X/Y face weight changes the physical area of this interior box.
 template <class ScopeT>
-void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity, const nx::core::SizeVec3& dimensions = {5, 5, 5})
+std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity,
+                                                                 const nx::core::SizeVec3& dimensions = {5, 5, 5}, nx::core::int32 suppliedPairCount = 2)
 {
   using namespace nx::core;
   DataStructure dataStructure;
@@ -64,7 +65,7 @@ void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, co
   second[pairAxis]++;
   labels[(first[2] * dimensions[1] + first[1]) * dimensions[0] + first[0]] = static_cast<int32>(pairFeature);
   labels[(second[2] * dimensions[1] + second[1]) * dimensions[0] + second[0]] = static_cast<int32>(pairFeature);
-  const std::array<int32, 3> counts = singleSlice ? std::array<int32, 3>{0, 23, 2} : std::array<int32, 3>{0, 123, 2};
+  const std::array<int32, 3> counts = {0, singleSlice ? 23 : 123, suppliedPairCount};
   auto idsWrite = idsStore->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
   auto countsWrite = countsStore->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
@@ -99,9 +100,10 @@ void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, co
   const double area = 2.0 * ((singleSlice ? 0.0 : sides[0] * sides[1]) + sides[0] * sides[2] + sides[1] * sides[2]);
   const double voxelVolume = static_cast<double>(spacing[0]) * spacing[1] * spacing[2];
   std::array<double, 3> volumes = {0.0, 0.0, 0.0};
-  volumes[pairFeature] = sides[0] * sides[1] * sides[2];
+  volumes[pairFeature] = suppliedPairCount * voxelVolume;
   volumes[enclosingFeature] = (singleSlice ? 23.0 : 123.0) * voxelVolume;
-  CAPTURE(pairAxis, spacing[0], spacing[1], spacing[2], calculateSphericity, singleSlice, area);
+  CAPTURE(pairAxis, spacing[0], spacing[1], spacing[2], calculateSphericity, singleSlice, suppliedPairCount, area);
+  REQUIRE(area > 0.0);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
   const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);
@@ -115,8 +117,17 @@ void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, co
   for(usize feature = 1; feature < 3; feature++)
   {
     CAPTURE(feature);
-    CHECK(ratioValues[feature] == Approx(area / volumes[feature]).epsilon(1.0e-6));
+    if(volumes[feature] == 0.0)
+    {
+      CHECK(std::isinf(ratioValues[feature]));
+      CHECK(ratioValues[feature] > 0.0f);
+    }
+    else
+    {
+      CHECK(ratioValues[feature] == Approx(area / volumes[feature]).epsilon(1.0e-6));
+    }
   }
+  std::array<float32, 3> sphericityValues = {};
   if(calculateSphericity)
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sphericityPath));
@@ -124,16 +135,28 @@ void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, co
     scope.requireExpectedStore(sphericity);
     CHECK(sphericity.getTupleShape() == featureShape);
     CHECK(sphericity.getComponentShape() == componentShape);
-    std::array<float32, 3> values;
-    auto sphericityRead = sphericity.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values.data(), values.size()));
+    auto sphericityRead = sphericity.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(sphericityValues.data(), sphericityValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(sphericityRead);
-    CHECK(values[0] == 0.0f);
+    CHECK(sphericityValues[0] == 0.0f);
     for(usize feature = 1; feature < 3; feature++)
     {
       CAPTURE(feature);
-      const double expected = std::cbrt(std::acos(-1.0)) * std::pow(6.0 * volumes[feature], 2.0 / 3.0) / area;
-      // This tolerance accommodates the existing truncated exponents, intentionally preserved by this correction.
-      CHECK(values[feature] == Approx(expected).epsilon(1.0e-4));
+      if(volumes[feature] < 0.0)
+      {
+        CHECK(std::isnan(sphericityValues[feature]));
+      }
+      else if(volumes[feature] == 0.0)
+      {
+        CHECK(sphericityValues[feature] == 0.0f);
+      }
+      else
+      {
+        // Derive the equal-volume sphere's area from its radius independently of the implementation formula.
+        const double pi = std::acos(-1.0);
+        const double sphereRadius = std::cbrt(3.0 * volumes[feature] / (4.0 * pi));
+        const double expected = 4.0 * pi * sphereRadius * sphereRadius / area;
+        CHECK(sphericityValues[feature] == Approx(expected).epsilon(1.0e-6));
+      }
     }
   }
   else
@@ -167,6 +190,26 @@ void CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, co
   CHECK(cellAM->getShape() == cellShape);
   CHECK(featureAM->getShape() == featureShape);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  return sphericityValues;
+}
+
+template <class ScopeT>
+void CheckScaleInvariantSphericity(ScopeT& scope)
+{
+  using namespace nx::core;
+  const auto reference = CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3{2.0f, 3.0f, 5.0f}, true);
+  for(const int exponent : {-20, 20})
+  {
+    CAPTURE(exponent);
+    const FloatVec3 spacing = {std::ldexp(2.0f, exponent), std::ldexp(3.0f, exponent), std::ldexp(5.0f, exponent)};
+    // The pair helper independently checks each scale against the equal-volume sphere oracle.
+    const auto scaled = CheckInteriorPairSurfaceMetrics(scope, 0, spacing, true);
+    for(usize feature = 1; feature < reference.size(); feature++)
+    {
+      CAPTURE(feature);
+      CHECK(scaled[feature] == Approx(reference[feature]).epsilon(1.0e-6));
+    }
+  }
 }
 // A connected plate with long, separated teeth exposes repeated decimal-area accumulation.
 template <class ScopeT>
@@ -290,8 +333,7 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
     SIMPLNX_RESULT_REQUIRE_VALID(sphericityRead);
     CHECK(values[0] == 0.0f);
     const double expected = std::cbrt(std::acos(-1.0)) * std::pow(6.0 * volume, 2.0 / 3.0) / area;
-    // Allow the existing truncated sphericity exponents until their separate correction.
-    CHECK(values[1] == Approx(expected).epsilon(1.0e-4));
+    CHECK(values[1] == Approx(expected).epsilon(1.0e-6));
   }
   else
   {

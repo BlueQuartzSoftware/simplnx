@@ -137,7 +137,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     }
   }
 
-  const float64 thirdRootPi = std::pow(nx::core::Constants::k_PiD, 0.333333f);
+  const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
   for(usize i = 1; i < numFeatures; i++)
   {
     const float64 featureVolume = voxelVol * numCells[i];
@@ -153,7 +153,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {
       const float64 featureVolume = voxelVol * numCells[i];
-      sphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 0.66666f)) / featureSurfaceArea[i]);
+      sphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[i]);
     }
   }
 

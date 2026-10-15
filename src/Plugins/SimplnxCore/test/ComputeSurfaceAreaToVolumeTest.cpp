@@ -192,6 +192,25 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: decimal connected comb
   SurfaceAreaToVolumeTest::CheckConnectedCombSurfaceMetrics(scope, spacing, calculateSphericity);
 }
 
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: scale-invariant sphericity", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckScaleInvariantSphericity(scope);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: nonpositive supplied pair counts", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto suppliedPairCount = GENERATE(int32{0}, int32{-2});
+  CAPTURE(scenario, suppliedPairCount);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3{2.0f, 3.0f, 5.0f}, true, SizeVec3{5, 5, 5}, suppliedPairCount);
+}
+
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfaceAreaToVolume]")
 {
   UnitTest::LoadPlugins();
