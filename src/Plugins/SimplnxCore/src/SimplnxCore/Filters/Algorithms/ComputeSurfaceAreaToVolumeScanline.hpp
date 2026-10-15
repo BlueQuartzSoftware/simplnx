@@ -46,10 +46,10 @@ public:
 
   /**
    * @brief Calculates surface metrics with bulk I/O.
-   * @return Error from Feature Id validation, or success after cancellation.
+   * @return Error from Feature Id validation or bulk I/O; success on completion or cancellation.
    *
-   * Cancellation during the cell scan leaves metric outputs unchanged. Current
-   * bulk-I/O Result values are not inspected.
+   * Cancellation during the cell scan leaves metric outputs unchanged. A bulk-I/O
+   * error stops processing. An output write error can leave partial metric outputs.
    */
   Result<> operator()();
 
