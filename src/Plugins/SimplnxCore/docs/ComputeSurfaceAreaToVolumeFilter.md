@@ -57,9 +57,9 @@ Corrected X/Y face weights can change results when `dx` differs from `dy`. The f
 
 The generated views below use segmented Small IN100 feature labels in a separate demonstration copy. The original spacing is `(0.25, 0.25, 0.25)` micrometers. The demonstration changes the spacing to `(0.25, 0.50, 0.25)` micrometers so that X-normal and Y-normal faces have different areas. The original dataset is unchanged, and the labels are reused without resampling. Both calculations use identical labels, cell counts derived from those labels, and demonstration spacing.
 
-The earlier Direct implementation and the current filter each calculate sphericity over the complete three-dimensional volume. The views display those three-dimensional feature values on the same central XY slice, at zero-based Z index 58. Both views use the same color scale and physical aspect ratio. The comparison includes corrections to numerical precision and sphericity exponents as well as the X/Y face weights. Features cut by the image boundary can have incomplete counted surfaces, as described below.
+The earlier Direct implementation and the current filter each calculate sphericity over the complete three-dimensional volume. The views display those three-dimensional feature values on the same central XY slice, at zero-based Z index 58. Both views use the same dimensionless 0–1 Viridis color scale and physical aspect ratio. The comparison includes corrections to numerical precision and sphericity exponents as well as the X/Y face weights. Features cut by the image boundary can have incomplete counted surfaces, as described below.
 
-![Fig. 2: Generated before-and-after views of full-volume Small IN100 feature sphericity on a central XY slice. Spacing was altered from 0.25/0.25/0.25 to 0.25/0.50/0.25 micrometers for demonstration; both panels share one color scale and physical aspect ratio.](Images/ComputeSurfaceAreaToVolume_SmallIN100_Sphericity.png)
+![Fig. 2: Generated before-and-after views of full-volume Small IN100 feature sphericity on a central XY slice. Spacing was altered from 0.25/0.25/0.25 to 0.25/0.50/0.25 micrometers for demonstration; both panels share the 0–1 Viridis color scale and physical aspect ratio.](Images/ComputeSurfaceAreaToVolume_SmallIN100_Sphericity.png)
 
 ### WARNING - Aliasing
 
