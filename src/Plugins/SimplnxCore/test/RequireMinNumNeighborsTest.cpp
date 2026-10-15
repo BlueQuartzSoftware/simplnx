@@ -17,11 +17,14 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <any>
 #include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -639,32 +642,59 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
   REQUIRE(preflightResult.outputActions.errors()[0].code == -252);
 }
 
-TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
   UnitTest::LoadPlugins();
+  const usize tupleCount = GENERATE(usize{3}, usize{4}, usize{5});
+  CAPTURE(tupleCount);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({5, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* selectedGroup = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedGroup != nullptr);
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry", selectedGroup->getId());
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 2, 1});
+  auto* storageGroup = DataGroup::Create(dataStructure, "Storage");
+  REQUIRE(storageGroup != nullptr);
+  // Equal counts are valid even when the selected array is stored separately
+  // and its tuple shape differs from the geometry's {1, 2, 2} shape.
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {tupleCount}, storageGroup->getId());
+  REQUIRE(cellAM != nullptr);
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAM->getId());
+  REQUIRE(featureAM != nullptr);
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {tupleCount}, {1}, cellAM->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  const DataPath geometryPath({"Selected", "ImageGeometry"});
+  const DataPath featureIdsPath({"Storage", "CellData", "FeatureIds"});
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(0));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
-  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
-  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
-  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(geometryPath.createChildPath("FeatureData").createChildPath("NumNeighbors")));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -55571);
+  if(tupleCount == 4)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    const auto& error = preflightResult.outputActions.errors()[0];
+    CHECK(error.code == -55571);
+    CHECK(error.message.find(featureIdsPath.toString()) != std::string::npos);
+    CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
+    CHECK(error.message.find(fmt::format("has {} tuples", tupleCount)) != std::string::npos);
+    CHECK(error.message.find("has 4 cells") != std::string::npos);
+    CHECK(error.message.find("one tuple per geometry cell") != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
