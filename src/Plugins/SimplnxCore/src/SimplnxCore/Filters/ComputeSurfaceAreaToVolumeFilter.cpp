@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -95,6 +96,16 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNumCellsArrayPathValue = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
   auto pCalculateSphericityValue = filterArgs.value<bool>(k_CalculateSphericity_Key);
+  auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  {
+    return MakePreflightErrorResult(
+        -12803, fmt::format("The Feature Ids array '{}' has {} tuples, but the selected Image Geometry '{}' has {} cells. Select a Feature Ids array with one tuple per geometry cell.",
+                            pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPathValue.toString(), imageGeom.getNumberOfCells()));
+  }
 
   PreflightResult preflightResult;
 
