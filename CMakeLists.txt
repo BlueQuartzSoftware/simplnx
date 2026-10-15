@@ -388,6 +388,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Result.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/ScopeGuard.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/ScratchBuffer.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/StringLiteral.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/StringLiteralFormatting.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/TypeTraits.hpp

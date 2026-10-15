@@ -161,7 +161,7 @@ TEST_CASE("ImageProcessing::AbsImageFilter: Preflight rejects an array whose tup
   // AttributeMatrix (NOT wired as the geometry's cell data), so the array's tuple count and the geometry's cell
   // count differ and the shared PreflightImageFilter geometry check is the sole violation.
   const ShapeType mismatchedShape = {8};
-  auto* am = AttributeMatrix::Create(ds, "Data", mismatchedShape);
+  auto* am = AttributeMatrix::Create(ds, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
   const DataPath inputPath({"Data", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, mismatchedShape, {1});
   DataArray<float32>::Create(ds, "Input", store, am->getId());

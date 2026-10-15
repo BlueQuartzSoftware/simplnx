@@ -1269,16 +1269,16 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[Orienta
     stackingOrder = RefFrameZDir::k_LowtoHigh;
     expectedEuler = k_Scan1Euler;
     expectedEuler.insert(expectedEuler.end(), k_Scan2Euler.cbegin(), k_Scan2Euler.cend());
-    expectedBandContrast = {10, 11, 12, 13, 110, 111, 112, 113};
-    expectedPhase = {1, 1, 1, 1, 1, 0, 1, 0};
+    expectedBandContrast = std::vector<uint8>{10, 11, 12, 13, 110, 111, 112, 113};
+    expectedPhase = std::vector<int32>{1, 1, 1, 1, 1, 0, 1, 0};
   }
   SECTION("High to Low stacks the scans in reverse list order")
   {
     stackingOrder = RefFrameZDir::k_HightoLow;
     expectedEuler = k_Scan2Euler;
     expectedEuler.insert(expectedEuler.end(), k_Scan1Euler.cbegin(), k_Scan1Euler.cend());
-    expectedBandContrast = {110, 111, 112, 113, 10, 11, 12, 13};
-    expectedPhase = {1, 0, 1, 0, 1, 1, 1, 1};
+    expectedBandContrast = std::vector<uint8>{110, 111, 112, 113, 10, 11, 12, 13};
+    expectedPhase = std::vector<int32>{1, 0, 1, 0, 1, 1, 1, 1};
   }
 
   ReadH5OinaDataFilter filter;

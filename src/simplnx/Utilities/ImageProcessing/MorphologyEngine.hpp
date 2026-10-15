@@ -3827,12 +3827,12 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
                                               StringUtilities::formatDimensions3D(dims), stagingPlanes, outputSliceValues));
   }
 
-  auto inputStagingBuffer = std::make_unique<T[]>(stagingBufferElements);
+  std::vector<T> inputStagingBuffer(stagingBufferElements);
   usize inputStagingBase = 0;     // originalZ of the first plane currently resident in inputStagingBuffer
   usize inputStagingCount = 0;    // number of valid planes currently resident
   usize inputStagingConsumed = 0; // planes already scattered into the ring from the current load
 
-  auto outputStagingBuffer = std::make_unique<T[]>(stagingBufferElements);
+  std::vector<T> outputStagingBuffer(stagingBufferElements);
   usize outputStagingBase = 0;  // outputZ of the first plane pending flush
   usize outputStagingCount = 0; // number of valid planes pending flush
 
@@ -3866,7 +3866,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
     }
     const usize flushedPlanes = outputStagingCount;
     outputStagingCount = 0;
-    return output.copyFromBuffer(outputStagingBase * outputSliceValues, nonstd::span<const T>(outputStagingBuffer.get(), flushedPlanes * outputSliceValues));
+    return output.copyFromBuffer(outputStagingBase * outputSliceValues, nonstd::span<const T>(outputStagingBuffer.data(), flushedPlanes * outputSliceValues));
   };
 
   const auto appendInputPlane = [&](usize paddedZ) -> Result<> {
@@ -3888,7 +3888,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
         // previous load left off: a fresh batch never needs to re-read or skip a plane.
         assert(originalZ == inputStagingBase + inputStagingCount && "input staging batch must continue contiguously from the previous load");
         const usize batchPlanes = std::min(stagingPlanes, dims[2] - originalZ);
-        if(Result<> result = input.copyIntoBuffer(originalZ * outputSliceValues, nonstd::span<T>(inputStagingBuffer.get(), batchPlanes * outputSliceValues)); result.invalid())
+        if(Result<> result = input.copyIntoBuffer(originalZ * outputSliceValues, nonstd::span<T>(inputStagingBuffer.data(), batchPlanes * outputSliceValues)); result.invalid())
         {
           return result;
         }
@@ -3896,7 +3896,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
         inputStagingCount = batchPlanes;
         inputStagingConsumed = 0;
       }
-      const T* sourcePlane = inputStagingBuffer.get() + inputStagingConsumed * outputSliceValues;
+      const T* sourcePlane = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
       ++inputStagingConsumed;
       for(usize y = 0; y < dims[1]; ++y)
       {
@@ -3983,7 +3983,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
     {
       outputStagingBase = outputZ;
     }
-    T* outputPlane = outputStagingBuffer.get() + outputStagingCount * outputSliceValues;
+    T* outputPlane = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
     if(se.offsets.empty())
     {
       const T* sourcePlane = firstRing.get() + (sourceCenterZ - firstZLo) * paddedSliceValues;
@@ -5611,12 +5611,12 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
                                               StringUtilities::formatDimensions3D(dims), stagingPlanes, outputSliceValues));
   }
 
-  auto inputStagingBuffer = std::make_unique<T[]>(stagingBufferElements);
+  std::vector<T> inputStagingBuffer(stagingBufferElements);
   usize inputStagingBase = 0;     // originalZ of the first plane currently resident in inputStagingBuffer
   usize inputStagingCount = 0;    // number of valid planes currently resident
   usize inputStagingConsumed = 0; // planes already scattered into the ring from the current load
 
-  auto outputStagingBuffer = std::make_unique<T[]>(stagingBufferElements);
+  std::vector<T> outputStagingBuffer(stagingBufferElements);
   usize outputStagingBase = 0;  // outputZ of the first plane pending flush
   usize outputStagingCount = 0; // number of valid planes pending flush
 
@@ -5650,7 +5650,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     }
     const usize flushedPlanes = outputStagingCount;
     outputStagingCount = 0;
-    return output.copyFromBuffer(outputStagingBase * outputSliceValues, nonstd::span<const T>(outputStagingBuffer.get(), flushedPlanes * outputSliceValues));
+    return output.copyFromBuffer(outputStagingBase * outputSliceValues, nonstd::span<const T>(outputStagingBuffer.data(), flushedPlanes * outputSliceValues));
   };
 
   const auto appendInputPlane = [&](usize paddedZ) -> Result<> {
@@ -5677,7 +5677,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
         // previous load left off: a fresh batch never needs to re-read or skip a plane.
         assert(originalZ == inputStagingBase + inputStagingCount && "input staging batch must continue contiguously from the previous load");
         const usize batchPlanes = std::min(stagingPlanes, dims[2] - originalZ);
-        if(Result<> result = input.copyIntoBuffer(originalZ * outputSliceValues, nonstd::span<T>(inputStagingBuffer.get(), batchPlanes * outputSliceValues)); result.invalid())
+        if(Result<> result = input.copyIntoBuffer(originalZ * outputSliceValues, nonstd::span<T>(inputStagingBuffer.data(), batchPlanes * outputSliceValues)); result.invalid())
         {
           return result;
         }
@@ -5685,7 +5685,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
         inputStagingCount = batchPlanes;
         inputStagingConsumed = 0;
       }
-      sourcePlane = inputStagingBuffer.get() + inputStagingConsumed * outputSliceValues;
+      sourcePlane = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
       ++inputStagingConsumed;
       if(!usePackedComposite)
       {
@@ -5805,7 +5805,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     {
       outputStagingBase = outputZ;
     }
-    T* outputPlane = outputStagingBuffer.get() + outputStagingCount * outputSliceValues;
+    T* outputPlane = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
     if(usePackedComposite)
     {
       const SizeVec3 outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};

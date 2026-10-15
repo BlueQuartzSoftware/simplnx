@@ -660,9 +660,8 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>) const;
-#ifdef _WIN32
-extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>) const;
-#endif
+template <>
+SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>) const;
 
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
@@ -674,9 +673,8 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-#ifdef _WIN32
-extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-#endif
+template <>
+SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 
 #if 0
 extern template nx::core::Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const usize>, nonstd::span<const usize>) const;

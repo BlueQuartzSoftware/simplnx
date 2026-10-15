@@ -407,7 +407,6 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
     }
 
     const usize runBytes = runTuples * compBytes;
-    const std::vector<uint64> outerDims(clampedTupleDims.begin(), clampedTupleDims.begin() + firstRunDim);
     usize numRuns = 1;
     for(usize d = 0; d < firstRunDim; ++d)
     {
@@ -415,22 +414,27 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
     }
 
     std::vector<uint64> globalCoords(tupleDims);
-    for(usize d = firstRunDim; d < tupleDims; ++d)
+    for(usize d = 0; d < tupleDims; ++d)
     {
       globalCoords[d] = bounds.min[d];
     }
     for(usize runIdx = 0; runIdx < numRuns; ++runIdx)
     {
-      if(firstRunDim > 0)
-      {
-        const std::vector<uint64> outerNd = flatToNd(static_cast<uint64>(runIdx), outerDims);
-        for(usize d = 0; d < firstRunDim; ++d)
-        {
-          globalCoords[d] = bounds.min[d] + outerNd[d];
-        }
-      }
       const usize globalFlat = static_cast<usize>(ndToFlat(globalCoords, m_TupleShape));
       std::memcpy(out.data() + globalFlat * compBytes, clamped.data() + runIdx * runBytes, runBytes);
+
+      // Advance the outer coordinates in row-major order, last dimension fastest.
+      for(usize d = firstRunDim; d > 0; --d)
+      {
+        const usize i = d - 1;
+        const uint64 localCoord = globalCoords[i] - bounds.min[i] + 1;
+        if(localCoord < clampedTupleDims[i])
+        {
+          globalCoords[i] = bounds.min[i] + localCoord;
+          break;
+        }
+        globalCoords[i] = bounds.min[i];
+      }
     }
   };
 
@@ -563,7 +567,6 @@ std::vector<std::byte> ParallelChunkCodec::gatherChunkBytes(uint64 flatChunkInde
   }
 
   const usize runBytes = runTuples * compBytes;
-  const std::vector<uint64> outerDims(clampedTupleDims.begin(), clampedTupleDims.begin() + firstRunDim);
   uint64 numRuns = 1;
   for(usize d = 0; d < firstRunDim; ++d)
   {
@@ -572,24 +575,29 @@ std::vector<std::byte> ParallelChunkCodec::gatherChunkBytes(uint64 flatChunkInde
 
   std::vector<uint64> localNd(tupleDims, 0);
   std::vector<uint64> globalNd(tupleDims, 0);
-  for(usize d = firstRunDim; d < tupleDims; ++d)
+  for(usize d = 0; d < tupleDims; ++d)
   {
     globalNd[d] = bounds.min[d];
   }
   for(uint64 runIdx = 0; runIdx < numRuns; ++runIdx)
   {
-    if(firstRunDim > 0)
-    {
-      const std::vector<uint64> outerNd = flatToNd(runIdx, outerDims);
-      for(usize d = 0; d < firstRunDim; ++d)
-      {
-        localNd[d] = outerNd[d];
-        globalNd[d] = bounds.min[d] + outerNd[d];
-      }
-    }
     const usize srcOffset = static_cast<usize>(ndToFlat(globalNd, m_TupleShape) - sourceStartTuple) * compBytes;
     const usize dstOffset = static_cast<usize>(ndToFlat(localNd, m_ChunkShape)) * compBytes;
     std::memcpy(nominal.data() + dstOffset, source.data() + srcOffset, runBytes);
+
+    // Advance the outer coordinates in row-major order, last dimension fastest.
+    for(usize d = firstRunDim; d > 0; --d)
+    {
+      const usize i = d - 1;
+      ++localNd[i];
+      if(localNd[i] < clampedTupleDims[i])
+      {
+        globalNd[i] = bounds.min[i] + localNd[i];
+        break;
+      }
+      localNd[i] = 0;
+      globalNd[i] = bounds.min[i];
+    }
   }
   return nominal;
 }
