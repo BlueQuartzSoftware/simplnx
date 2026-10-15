@@ -1088,12 +1088,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Scan Spacing rejec
 }
 
 //------------------------------------------------------------------------------
-// Value-add guard: EbsdLib sizes its data buffers to the ACTUAL dataset extent
-// while the geometry is sized from the header's cell counts. A file whose Data
-// datasets are shorter than X Cells * Y Cells is rejected before the copy spans
-// past the end of those buffers.
+// H5OINAReader::applyRasterOrder() checks every dataset length against
+// X Cells * Y Cells and rejects these short datasets with -101100 on Band
+// Contrast first. IEbsdOemReader wraps the reader's code and message in -8970.
+// The reader rejects the file before validateDataSetExtents() runs; that
+// simplnx extent check remains as a backstop.
 //------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch rejected (-34971)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch rejected (-8970)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1122,7 +1123,9 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch re
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors()[0].code == -34971);
+  REQUIRE(executeResult.result.errors()[0].code == -8970);
+  REQUIRE(executeResult.result.errors()[0].message.find("-101100") != std::string::npos);
+  REQUIRE(executeResult.result.errors()[0].message.find("Band Contrast") != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -8,6 +8,8 @@ IO (Input)
 
 This filter reads data from a single `.h5oina` file (the HDF5-based export from Oxford Instruments' AZtec software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
 
+Each measurement is placed at the grid cell computed from its own `X` and `Y` values and the step sizes, so files whose rows are not stored in grid order are still imported correctly; a file that lists the same cell twice is rejected with an error.
+
 ### What This Filter Produces
 
 The file is EBSD (Electron Backscatter Diffraction) scan data. The most important imported arrays are:

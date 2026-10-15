@@ -8,6 +8,8 @@ IO (Input)
 
 This filter reads a single `.h5` file (the HDF5-based EBSD export from Bruker Nano's Esprit software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
 
+Each measurement is placed at the grid cell named by its own `X BEAM` and `Y BEAM` values, not at its position in the file. Esprit can store measurements in acquisition order, which differs from grid order for a few percent of the points. If the beam coordinates do not cover every cell of the `NCOLS` x `NROWS` grid exactly once, the filter stops with an error that names the first offending point.
+
 The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample).
 
 | User interface before entering a proper "Z Spacing" value and selecting which scans to include. |

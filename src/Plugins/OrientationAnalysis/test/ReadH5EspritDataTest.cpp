@@ -13,6 +13,8 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
+#include "EbsdLib/IO/BrukerNano/EspritConstants.h"
+
 #include <EbsdLib/IO/TSL/AngFields.h>
 
 #include <filesystem>
@@ -33,17 +35,17 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v2.tar.gz", "7_read_oem_ebsd_h5_files_v2");
 
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/7_read_oem_ebsd_h5_files.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/7_read_oem_ebsd_h5_files_v2.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5EspritDataFilter filter;
   Arguments args;
 
-  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
 
   // Create default Parameters for the filter.
@@ -65,9 +67,12 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath exemplarImageGeomPath = DataPath({"Bruker_Single_Scan"});
+  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
 
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath));
   const auto& exemplarImageGeom = dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath);
 
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
@@ -75,9 +80,34 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+  // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
+  {
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
+    const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
+    const auto& yBeam = dataStructure.getDataRefAs<Int32Array>(yBeamPath);
+    REQUIRE(xBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    REQUIRE(yBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    const SizeVec3 dims = imageGeom.getDimensions();
+    const usize numCols = dims[0];
+    const usize tuplesPerSlice = dims[0] * dims[1];
+    usize misplaced = 0;
+    for(usize i = 0; i < xBeam.getNumberOfTuples(); i++)
+    {
+      const usize sliceIndex = i % tuplesPerSlice;
+      if(xBeam[i] != static_cast<int32>(sliceIndex % numCols) || yBeam[i] != static_cast<int32>(sliceIndex / numCols))
+      {
+        misplaced++;
+      }
+    }
+    REQUIRE(misplaced == 0);
+  }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -86,17 +116,17 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v2.tar.gz", "7_read_oem_ebsd_h5_files_v2");
 
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/7_read_oem_ebsd_h5_files.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/7_read_oem_ebsd_h5_files_v2.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5EspritDataFilter filter;
   Arguments args;
 
-  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435, k_ScanName_436, k_ScanName_437}};
 
   // Create default Parameters for the filter.
@@ -118,9 +148,12 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath exemplarImageGeomPath = DataPath({"Bruker_Multi_Scan"});
+  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
 
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath));
   const auto& exemplarImageGeom = dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath);
 
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
@@ -128,9 +161,34 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+  // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
+  {
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
+    const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
+    const auto& yBeam = dataStructure.getDataRefAs<Int32Array>(yBeamPath);
+    REQUIRE(xBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    REQUIRE(yBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    const SizeVec3 dims = imageGeom.getDimensions();
+    const usize numCols = dims[0];
+    const usize tuplesPerSlice = dims[0] * dims[1];
+    usize misplaced = 0;
+    for(usize i = 0; i < xBeam.getNumberOfTuples(); i++)
+    {
+      const usize sliceIndex = i % tuplesPerSlice;
+      if(xBeam[i] != static_cast<int32>(sliceIndex % numCols) || yBeam[i] != static_cast<int32>(sliceIndex / numCols))
+      {
+        misplaced++;
+      }
+    }
+    REQUIRE(misplaced == 0);
+  }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -139,7 +197,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v2.tar.gz", "7_read_oem_ebsd_h5_files_v2");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5EspritDataFilter filter;
@@ -151,7 +209,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
-  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+  auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
 
   SECTION("Invalid Z Spacing")
@@ -169,7 +227,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   }
   SECTION("Invalid h5 file type (incompatible manufacturer)")
   {
-    h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/EdaxOIMData.h5", unit_test::k_TestFilesDir));
+    h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v2/EdaxOIMData.h5", unit_test::k_TestFilesDir));
     scanSelections.inputFilePath = h5TestFile;
     args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
     args.insertOrAssign(ReadH5EspritDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
