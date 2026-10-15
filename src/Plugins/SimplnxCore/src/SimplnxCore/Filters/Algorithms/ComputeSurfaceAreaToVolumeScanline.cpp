@@ -175,18 +175,18 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     return ioResult;
   }
 
-  std::vector<float32> localSurfaceAreaVolumeRatio(numFeaturesUSize, 0.0f);
-
-  const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
-  for(usize i = 1; i < numFeaturesUSize; i++)
   {
-    const float64 featureVolume = voxelVol * localNumCells[i];
-    localSurfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
-  }
-  ioResult = surfaceAreaVolumeRatio.copyFromBuffer(0, nonstd::span<const float32>(localSurfaceAreaVolumeRatio.data(), numFeaturesUSize));
-  if(ioResult.invalid())
-  {
-    return ioResult;
+    std::vector<float32> localSurfaceAreaVolumeRatio(numFeaturesUSize, 0.0f);
+    for(usize i = 1; i < numFeaturesUSize; i++)
+    {
+      const float64 featureVolume = voxelVol * localNumCells[i];
+      localSurfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
+    }
+    ioResult = surfaceAreaVolumeRatio.copyFromBuffer(0, nonstd::span<const float32>(localSurfaceAreaVolumeRatio.data(), numFeaturesUSize));
+    if(ioResult.invalid())
+    {
+      return ioResult;
+    }
   }
 
   if(m_InputValues->CalculateSphericity)
@@ -194,6 +194,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
+    const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.
     std::vector<float32> localSphericity(numFeaturesUSize, 0.0f);
     for(usize i = 1; i < numFeaturesUSize; i++)
