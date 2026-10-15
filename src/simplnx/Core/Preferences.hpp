@@ -41,6 +41,11 @@ class SIMPLNX_EXPORT Preferences
   friend class AbstractPlugin;
 
 public:
+  static inline constexpr int32 k_FailedToCreateDirectory_Code = -585;
+  static inline constexpr int32 k_FileDoesNotExist_Code = -586;
+  static inline constexpr int32 k_FileCouldNotOpen_Code = -587;
+  static inline constexpr int32 k_JsonParseError_Code = -588;
+
   static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
 
   // Migration reads this legacy key. The core does not write it.

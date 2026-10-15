@@ -196,16 +196,23 @@ std::filesystem::path Application::getCurrentDir() const
 
 Result<> Application::loadPreferences()
 {
+  return loadPreferences(Preferences::DefaultFilePath(getApplicationName(this)));
+}
+
+Result<> Application::loadPreferences(const std::filesystem::path& filepath)
+{
   if(m_Preferences == nullptr)
   {
     m_Preferences = std::make_unique<Preferences>();
   }
-  std::string applicationName = getApplicationName(this);
-  const auto filepath = Preferences::DefaultFilePath(applicationName);
-
   auto result = m_Preferences->loadFromFile(filepath);
   if(result.invalid())
   {
+    if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExist_Code)
+    {
+      // On the first run, defaults are used and the preferences file is written on shutdown.
+      return {};
+    }
     return MakeErrorResult(-1, fmt::format("Could not load preferences from '{}': {}", filepath.string(), result.errors().empty() ? "unknown error" : result.errors()[0].message));
   }
   return result;

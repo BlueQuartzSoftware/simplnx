@@ -114,9 +114,20 @@ public:
 
   /**
    * @brief Loads preferences from the default file path.
-   * @return Error when the file cannot load or parse.
+   * @return Success if the file loads or does not exist; error for other load or parse failures.
+   *
+   * On the first run, defaults are used and the preferences file is written on shutdown.
    */
   Result<> loadPreferences();
+
+  /**
+   * @brief Loads preferences from the specified file path.
+   * @param filepath Preferences JSON file to load.
+   * @return Success if the file loads or does not exist; error for other load or parse failures.
+   *
+   * A missing file leaves the current preferences and defaults unchanged.
+   */
+  Result<> loadPreferences(const std::filesystem::path& filepath);
 
   /**
    * @brief Returns no JSON pipeline builder.
