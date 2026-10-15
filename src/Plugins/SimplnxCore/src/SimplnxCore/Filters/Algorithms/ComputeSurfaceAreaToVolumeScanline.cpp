@@ -1,5 +1,8 @@
 #include "ComputeSurfaceAreaToVolumeScanline.hpp"
 
+#include <cmath>
+#include <vector>
+
 #include "ComputeSurfaceAreaToVolume.hpp"
 
 #include "simplnx/Common/Constants.hpp"
