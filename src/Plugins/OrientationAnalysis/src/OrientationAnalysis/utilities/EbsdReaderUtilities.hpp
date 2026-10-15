@@ -13,6 +13,7 @@
 #include <EbsdLib/IO/TSL/H5AngVolumeReader.h>
 #include <EbsdLib/IO/TSL/H5OIMReader.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Math/EbsdLibMath.h>
 
 #include <concepts>
 #include <functional>
@@ -24,6 +25,37 @@ using namespace nx::core;
 
 namespace EbsdReaderUtilities
 {
+/**
+ * @brief Gives the rotation about the crystal c-axis from the Oxford/HKL hexagonal frame to EDAX/TSL, in radians.
+ * @tparam T Floating-point type for the offset.
+ *
+ * Oxford/HKL uses x || a*. EDAX/TSL uses x || a.
+ */
+template <typename T>
+inline constexpr T k_HexagonalAlignmentRadians = static_cast<T>(30.0) * ebsdlib::constants::k_PiOver180<T>;
+/**
+ * @brief Offset in radians for float32 calculations.
+ */
+inline constexpr float32 k_HexagonalAlignmentRadiansF = k_HexagonalAlignmentRadians<float32>;
+/**
+ * @brief Offset in radians for float64 addition before conversion to float32.
+ */
+inline constexpr float64 k_HexagonalAlignmentRadiansD = k_HexagonalAlignmentRadians<float64>;
+/**
+ * @brief Offset in degrees for CTF data before optional conversion to radians.
+ */
+inline constexpr float64 k_HexagonalAlignmentDegrees = 30.0;
+
+/**
+ * @brief Tests whether a crystal structure uses a hexagonal Laue class.
+ * @param crystalStructure EbsdLib crystal-structure value.
+ * @return True for 6/m or 6/mmm; false for other structures, including unknown.
+ */
+inline constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
+{
+  return crystalStructure == ebsdlib::CrystalStructure::Hexagonal_Low || crystalStructure == ebsdlib::CrystalStructure::Hexagonal_High;
+}
+
 // 1. Base template (empty)
 template <typename ReaderType>
 struct ReaderTraits;

@@ -85,3 +85,24 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 **Affected users:** Anyone who imported a multi-slice `.ctf` with an earlier DREAM3D-NX release received a single-slice geometry with slice-0 data and no warning.
 
 **Recommendation:** Trust SIMPLNX (current). Re-import multi-slice `.ctf` files with a build containing this fix.
+
+---
+
+## ReadCtfDataFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D5` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Affected releases** | none through 7.4.2 — those releases matched 6.5.171 (6/mmm only) |
+| **Status** | active — intentional correction introduced by PR #1781 (2026-10-14) |
+
+**Symptom:** With EDAX hexagonal alignment enabled, simplnx adds 30 degrees to phi2 for both 6/m and 6/mmm phases; legacy DREAM3D 6.5 shifted only 6/mmm phases.
+
+**Root cause:** The Oxford/HKL versus EDAX/TSL x-axis convention depends on the hexagonal lattice, so the correction also applies to `Hexagonal_Low` (6/m).
+
+**Affected users:** Users importing 6/m phases with EDAX hexagonal alignment enabled.
+
+**Correct behavior:** Both hexagonal Laue classes receive the same shift, before optional conversion to radians. Cubic and unindexed points remain unchanged; trigonal phases are outside this correction. Covered by `test/ReadCtfDataTest.cpp::"Euler Conversion Combinations"`.
+
+**Recommendation:** Re-import 6/m data when EDAX alignment is required.

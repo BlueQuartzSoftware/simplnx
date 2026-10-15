@@ -107,8 +107,9 @@ const DataPath k_ImageGeomPath({ImageGeom::k_TypeName});
 const DataPath k_CellAMPath = k_ImageGeomPath.createChildPath(k_CellAttributeMatrixName);
 const DataPath k_EnsembleAMPath = k_ImageGeomPath.createChildPath(k_CellEnsembleAttributeMatrixName);
 
-// EbsdLib/IO/HKL/CtfConstants.h LaueGroupTable: 9 = LG_Hexagonal_High, 11 = LG_Cubic_High.
+// EbsdLib/IO/HKL/CtfConstants.h LaueGroupTable: 8 = LG_Hexagonal_Low, 9 = LG_Hexagonal_High, 11 = LG_Cubic_High.
 // EbsdLib/Core/EbsdLibConstants.h: Hexagonal_High = 0, Cubic_High = 1, UnknownCrystalStructure = 999.
+constexpr int32 k_LaueHexagonalLow = 8;
 constexpr int32 k_LaueHexagonalHigh = 9;
 constexpr int32 k_LaueCubicHigh = 11;
 
@@ -251,6 +252,8 @@ fs::path WriteH5OinaFixture(const std::string& fileName, const std::vector<ScanS
 // carries; the third angle differs from the second so a gamma slot that echoed
 // beta would be visible.
 const PhaseSpec k_HexPhase{"Hex Phase A", k_LaueHexagonalHigh, 194, {2.5F, 2.5F, 4.0F}, {1.5707964F, 1.5707964F, 2.0943952F}};
+// Hexagonal low: Laue group 8 -> CrystalStructure Hexagonal_Low (6/m).
+const PhaseSpec k_HexLowPhase{"Hex Phase Low", k_LaueHexagonalLow, 175, {2.5F, 2.5F, 4.0F}, {1.5707964F, 1.5707964F, 2.0943952F}};
 // Cubic: Laue group 11 -> CrystalStructure Cubic_High (1).
 const PhaseSpec k_CubicPhase{"Cubic Phase B", k_LaueCubicHigh, 225, {3.5F, 3.5F, 3.5F}, {1.5707964F, 1.5707964F, 1.5707964F}};
 
@@ -561,7 +564,11 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinat
 {
   UnitTest::LoadPlugins();
 
-  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_options.h5oina", {MakeFixtureAScan()});
+  auto scan = MakeFixtureAScan();
+  scan.phases.push_back(k_HexLowPhase);
+  scan.phase[4] = 3;
+  scan.phase[5] = 3;
+  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_options.h5oina", {scan});
 
   const auto hexAlignment = GENERATE(true, false);
   const auto convertPhaseToInt32 = GENERATE(true, false);
@@ -579,13 +586,17 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinat
 
     CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler), hexAlignment ? k_FixtureAEulerAligned : k_FixtureAEulerVerbatim);
 
+    CompareArrayValues<uint32>(
+        dataStructure, k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures),
+        {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Hexagonal_Low});
+
     if(convertPhaseToInt32)
     {
-      CompareArrayValues<int32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), {1, 2, 0, 2, 1, 1});
+      CompareArrayValues<int32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), {1, 2, 0, 2, 3, 3});
     }
     else
     {
-      CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), {1, 2, 0, 2, 1, 1});
+      CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), {1, 2, 0, 2, 3, 3});
     }
 
     // The remaining columns are verbatim regardless of either option.
@@ -648,7 +659,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Hexagonal Align
 {
   UnitTest::LoadPlugins();
 
-  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_multiscan_hex.h5oina", {MakeFixtureCScan1(), MakeFixtureCScan2()});
+  auto scan1 = MakeFixtureCScan1();
+  auto scan2 = MakeFixtureCScan2();
+  scan1.phases.push_back(k_HexLowPhase);
+  scan2.phases.push_back(k_HexLowPhase);
+  scan1.phase = {1, 2, 1, 2};
+  scan2.phase = {2, 1, 2, 1};
+  const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_multiscan_hex.h5oina", {scan1, scan2});
 
   ReadH5OinaDataFilter filter;
   DataStructure dataStructure;

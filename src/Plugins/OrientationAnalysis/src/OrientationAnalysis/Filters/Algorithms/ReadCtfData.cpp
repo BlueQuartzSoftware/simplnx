@@ -1,5 +1,7 @@
 #include "ReadCtfData.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -221,9 +223,9 @@ Result<> ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
         float32 euler1 = fComp0[offset + i];
         float32 euler2 = fComp1[offset + i];
         float32 euler3 = fComp2[offset + i];
-        if(csCache[static_cast<usize>(cellPhases[offset + i])] == ebsdlib::CrystalStructure::Hexagonal_High && m_InputValues->EdaxHexagonalAlignment)
+        if(EbsdReaderUtilities::IsHexagonalCrystalStructure(csCache[static_cast<usize>(cellPhases[offset + i])]) && m_InputValues->EdaxHexagonalAlignment)
         {
-          euler3 = static_cast<float32>(static_cast<float64>(euler3) + 30.0);
+          euler3 = static_cast<float32>(static_cast<float64>(euler3) + EbsdReaderUtilities::k_HexagonalAlignmentDegrees);
         }
         if(m_InputValues->DegreesToRadians)
         {

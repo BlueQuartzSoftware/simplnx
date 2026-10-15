@@ -20,6 +20,8 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
@@ -211,7 +213,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "
 }
 
 // The oracle covers DegreesToRadians and EdaxHexagonalAlignment combinations.
-// The 30-degree adjustment applies only to Hexagonal_High points.
+// The 30-degree adjustment applies to both hexagonal Laue classes (6/m and 6/mmm).
 // Cubic and unindexed points are never shifted.
 // Expected values use double precision before the final float32 conversion:
 //   +30      : float32(float64(e3) + 30.0)
@@ -221,7 +223,16 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
 {
   UnitTest::LoadPlugins();
 
-  const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_conversions.ctf", MakeToyCtf());
+  // Laue group 8 is LG_Hexagonal_Low; point 3 exercises it alongside 6/mmm at point 0.
+  const std::string phaseBlock = "Phases\t3\n"
+                                 "2.5;2.5;4.25\t90;90;120\tHex Phase A\t9\tVV toy hexagonal phase\n"
+                                 "3.625;3.625;3.625\t90;90;90\tCopper\t11\tVV toy cubic phase\n"
+                                 "2.5;2.5;4.25\t90;90;120\tHex Phase Low\t8\tVV toy hexagonal low phase\n";
+  std::string dataBlock = k_DataBlock;
+  const usize point3Offset = dataBlock.find("1\t0\t0.5\t");
+  REQUIRE(point3Offset != std::string::npos);
+  dataBlock[point3Offset] = '3';
+  const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_conversions.ctf", MakeToyCtf("", phaseBlock, k_ColumnHeader, dataBlock));
 
   struct ConversionCase
   {
@@ -266,8 +277,11 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
 
       const DataPath cellAMPath = k_DataContainerPath.createChildPath(k_CellData);
       CompareArrayValues<float32>(dataStructure, cellAMPath.createChildPath("EulerAngles"), conversionCase.expectedEulerAngles);
+      CompareArrayValues<uint32>(
+          dataStructure, k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix).createChildPath("CrystalStructures"),
+          {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Hexagonal_Low});
       // The Phase column is never altered by either conversion option.
-      CompareArrayValues<int32>(dataStructure, cellAMPath.createChildPath("Phases"), {1, 2, 0, 1, 2, 0});
+      CompareArrayValues<int32>(dataStructure, cellAMPath.createChildPath("Phases"), {1, 2, 0, 3, 2, 0});
 
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }

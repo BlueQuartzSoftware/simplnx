@@ -57,7 +57,7 @@ None — this filter reads directly from a `.ctf` file on disk.
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ **The result of this is that the filter will by default add 30 degrees to the third Euler angle (phi2) of every point belonging to a hexagonal (6/mmm) phase when reading Oxford Instr (.ctf) files. Unindexed (Phase 0) points are never shifted. This can be disabled by the user if necessary.**
++ **When enabled, EDAX hexagonal alignment adds 30 degrees to the third Euler angle (phi2) of hexagonal phases of both Laue classes (6/m and 6/mmm); unindexed points are unchanged.**
 
 | Figure 1 |
 |--------|

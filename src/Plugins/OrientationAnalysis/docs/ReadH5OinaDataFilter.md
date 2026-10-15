@@ -85,7 +85,7 @@ releases.
 
 ## Algorithm
 
-Selected scans are appended in selection order along the **Image Geometry** Z direction. Each scan's scalar, phase, and Euler values are written at that scan's tuple offset; Euler values use three components per tuple. When hexagonal alignment is enabled, the second Euler component is corrected after the scan offset is applied. Pattern data, when provided by the reader, is stored as unsigned 16-bit values at the corresponding tuple and component offsets. Output transfers use bounded batches, allowing the created arrays to use out-of-core storage.
+Selected scans are appended in selection order along the **Image Geometry** Z direction. Each scan's scalar, phase, and Euler values are written at that scan's tuple offset; Euler values use three components per tuple. When hexagonal alignment is enabled, the third Euler component (phi2) is corrected after the scan offset is applied. Pattern data, when provided by the reader, is stored as unsigned 16-bit values at the corresponding tuple and component offsets. Output transfers use bounded batches, allowing the created arrays to use out-of-core storage.
 
 ### The Axis Alignment Issue for Hexagonal Symmetry [1]
 
@@ -96,7 +96,7 @@ Selected scans are appended in selection order along the **Image Geometry** Z di
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM3D-NX uses the TSL/EDAX convention.
-+ __The result of this is that the filter will by default add 30 degrees to the third Euler angle (phi2) of every point whose phase is Hexagonal-High when reading Oxford `.h5oina` files. Because the file's Euler angles are in radians, the value actually added is 30 degrees expressed in radians (pi/6, about 0.5235988). Points of any other symmetry, and un-indexed points, are never adjusted. This can be disabled by the user if necessary.__
++ **When enabled, EDAX hexagonal alignment adds pi/6 radians (30 degrees) to the third Euler angle (phi2) of hexagonal phases of both Laue classes (6/m and 6/mmm); unindexed points are unchanged.**
 
 | Figure 1 |
 |--------|
@@ -123,7 +123,7 @@ The array names are the H5OINA dataset names, so several contain spaces.
 | `Band Slope` | uint8 | 1 | |
 | `Bands` | uint8 | 1 | |
 | `Error` | uint8 | 1 | AZtec status code; see the note on masking below — do not assume 0 means "indexed" |
-| `Euler` | float32 | 3 | Radians; phi2 optionally shifted for Hexagonal-High points |
+| `Euler` | float32 | 3 | Radians; phi2 optionally shifted for hexagonal points (6/m and 6/mmm) |
 | `Mean Angular Deviation` | float32 | 1 | |
 | `Phase` | int32 or uint8 | 1 | int32 by default; uint8 when *Convert Phase Data to Int32* is off. 0 marks an un-indexed point |
 | `X` | float32 | 1 | |

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -162,7 +163,7 @@ uint64 SumRepeatingModulo(usize count, usize period)
   return fullCycles * periodSum + partialSum;
 }
 
-bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPath, usize xCells, usize yCells)
+bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPath, usize xCells, usize yCells, float32 (*phi2ValuePtr)(usize) = ExpectedPhi2, bool includeHexagonalLow = false)
 {
   {
     std::ofstream cprFile(cprPath, std::ios::out | std::ios::trunc);
@@ -187,8 +188,9 @@ bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPat
             << xCells << "\n"
             << "yCells=" << yCells << "\n\n"
             << "[Phases]\n"
-               "Count=2\n\n"
-               "[Phase1]\n"
+               "Count="
+            << (includeHexagonalLow ? 3 : 2) << "\n\n"
+            << "[Phase1]\n"
                "StructureName=Synthetic Cubic\n"
                "a=1\n"
                "b=1\n"
@@ -213,8 +215,25 @@ bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPat
                "Reference=Deterministic phase two\n"
                "SpaceGroup=194\n"
                "ID1=2\n"
-               "ID2=2\n\n"
-               "[Fields]\n"
+               "ID2=2\n\n";
+    if(includeHexagonalLow)
+    {
+      // CtfConstants.h maps Laue group 8 to LG_Hexagonal_Low (6/m).
+      cprFile << "[Phase3]\n"
+                 "StructureName=Synthetic Hexagonal Low\n"
+                 "a=2\n"
+                 "b=2\n"
+                 "c=3\n"
+                 "alpha=90\n"
+                 "beta=90\n"
+                 "gamma=120\n"
+                 "LaueGroup=8\n"
+                 "Reference=Deterministic phase three\n"
+                 "SpaceGroup=175\n"
+                 "ID1=3\n"
+                 "ID2=3\n\n";
+    }
+    cprFile << "[Fields]\n"
                "Count=7\n"
                "Field1=1\n"
                "Field2=3\n"
@@ -245,11 +264,11 @@ bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPat
     for(usize blockIndex = 0; blockIndex < blockCellCount; blockIndex++)
     {
       const usize cellIndex = blockStart + blockIndex;
-      AppendValue(block, offset, static_cast<uint8>(ExpectedPhase(cellIndex)));
+      AppendValue(block, offset, static_cast<uint8>(includeHexagonalLow ? cellIndex % 4 : ExpectedPhase(cellIndex)));
       AppendValue(block, offset, ExpectedX(cellIndex, xCells));
       AppendValue(block, offset, ExpectedPhi1(cellIndex));
       AppendValue(block, offset, ExpectedPhi(cellIndex));
-      AppendValue(block, offset, ExpectedPhi2(cellIndex));
+      AppendValue(block, offset, phi2ValuePtr(cellIndex));
       AppendValue(block, offset, ExpectedMad(cellIndex));
       AppendValue(block, offset, ExpectedBandContrast(cellIndex));
       AppendValue(block, offset, ExpectedReliabilityIndex(cellIndex));
@@ -529,6 +548,92 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_BatchBoundaries", "[O
     VerifySyntheticChannel5Output(dataStructure, compatibleArrays);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignment", "[OrientationAnalysis][ReadChannel5Data]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const bool compatibleArrays = GENERATE(false, true);
+  const bool hexagonalAlignment = GENERATE(false, true);
+  CAPTURE(compatibleArrays, hexagonalAlignment);
+
+  const fs::path cprPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadChannel5Data_HexagonalAlignment.cpr";
+  const fs::path crcPath = cprPath.parent_path() / "ReadChannel5Data_HexagonalAlignment.crc";
+  const auto fileGuard = MakeScopeGuard([&cprPath, &crcPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(cprPath, errorCode);
+    fs::remove(crcPath, errorCode);
+  });
+  // Include both hexagonal Laue classes, cubic, and unindexed cells in the final partial chunk.
+  constexpr usize cellCount = 65540;
+  const auto inputPhi2Value = [](usize index) -> float32 {
+    // These cells distinguish float64 addition from a float32-rounded shift for both hexagonal Laue classes.
+    return index == 2 || index == 3 ? 0.1F : ExpectedPhi2(index);
+  };
+  REQUIRE(WriteSyntheticChannel5Files(cprPath, crcPath, cellCount, 1, inputPhi2Value, true));
+
+  DataStructure dataStructure;
+  ReadChannel5DataFilter filter;
+  Arguments args = SyntheticChannel5Arguments(cprPath, compatibleArrays);
+  args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(hexagonalAlignment));
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+  const auto& crystalStructuresRef = RequireDataArray<uint32>(dataStructure, k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix).createChildPath(ebsdlib::CtfFile::CrystalStructures));
+  REQUIRE(ReadValue(crystalStructuresRef, 1) == ebsdlib::CrystalStructure::Cubic_High);
+  REQUIRE(ReadValue(crystalStructuresRef, 2) == ebsdlib::CrystalStructure::Hexagonal_High);
+  REQUIRE(ReadValue(crystalStructuresRef, 3) == ebsdlib::CrystalStructure::Hexagonal_Low);
+
+  std::array<std::vector<float32>, 3> components;
+  for(auto& component : components)
+  {
+    component.resize(k_ValidationChunkCells);
+  }
+  std::vector<float32> eulers(k_ValidationChunkCells * 3);
+  const std::array<std::string, 3> rawNames = {ebsdlib::Ctf::phi1, ebsdlib::Ctf::Phi, ebsdlib::Ctf::phi2};
+  for(usize offset = 0; offset < cellCount; offset += k_ValidationChunkCells)
+  {
+    const usize count = std::min(k_ValidationChunkCells, cellCount - offset);
+    if(compatibleArrays)
+    {
+      const auto& eulerArrayRef = RequireDataArray<float32>(dataStructure, cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+      REQUIRE(eulerArrayRef.getNumberOfComponents() == 3);
+      const Result<> readResult = eulerArrayRef.getDataStoreRef().copyIntoBuffer(offset * 3, nonstd::span<float32>(eulers.data(), count * 3));
+      SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+      for(usize i = 0; i < count; i++)
+      {
+        for(usize component = 0; component < 3; component++)
+        {
+          components[component][i] = eulers[i * 3 + component];
+        }
+      }
+    }
+    else
+    {
+      for(usize component = 0; component < 3; component++)
+      {
+        const auto& rawArrayRef = RequireDataArray<float32>(dataStructure, cellDataPath.createChildPath(rawNames[component]));
+        const Result<> readResult = rawArrayRef.getDataStoreRef().copyIntoBuffer(offset, nonstd::span<float32>(components[component].data(), count));
+        SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+      }
+    }
+    for(usize i = 0; i < count; i++)
+    {
+      const usize index = offset + i;
+      CAPTURE(index);
+      const float32 inputPhi2 = inputPhi2Value(index);
+      // Derive the oracle independently from pi/6, without the importer's degree conversion constant.
+      const float32 expectedPhi2 = hexagonalAlignment && (index % 4 == 2 || index % 4 == 3) ? static_cast<float32>(static_cast<float64>(inputPhi2) + (std::acos(-1.0) / 6.0)) : inputPhi2;
+      REQUIRE(components[0][i] == ExpectedPhi1(index));
+      REQUIRE(components[1][i] == ExpectedPhi(index));
+      REQUIRE(components[2][i] == expectedPhi2);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailureAndCancellation", "[OrientationAnalysis][ReadChannel5Data]")

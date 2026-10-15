@@ -4,7 +4,7 @@
 
 This file therefore records, in the same structured form, every difference between the behavior DREAM3D-NX shipped and the correct behavior. Entries are referenced by stable ID (`ReadH5OinaDataFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every released version from 7.0.0 through 7.4.1. D5, D6, D7, D10, D11, and D12 are corrections to EbsdLib's `H5OINAReader` and require EbsdLib 3.1.2.
+The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every released version from 7.0.0 through 7.4.1. D5, D6, D7, D10, D11, and D12 are corrections to EbsdLib's `H5OINAReader` and require EbsdLib 3.1.2. D14 affects every released version from 7.0.0 through 7.4.2 and is resolved on `develop` by PR #1781.
 
 ---
 
@@ -281,6 +281,27 @@ The filter first shipped in DREAM3D-NX 7.0.0. D1 through D13 affect every releas
 **Correct behavior:** Preflight requires finite, positive X, Y, and Z spacing. It reports `-9580` for Z spacing and `-9591` for scan spacing, with the actual values and file context.
 
 **Recommendation:** Trust the corrected behavior. Correct the spacing values or export the file again from AZtec.
+
+---
+
+## ReadH5OinaDataFilter-D14
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadH5OinaDataFilter-D14` |
+| **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
+| **Affected releases** | 7.0.0 through 7.4.2 |
+| **Status** | resolved in PR #1781 (2026-10-14) |
+
+**Symptom:** With "Convert Hexagonal X-Axis to EDAX Standard" on, only scan points whose phase mapped to `Hexagonal_High` (6/mmm) received the pi/6 shift on phi2. Points whose phase mapped to `Hexagonal_Low` (6/m) were left unshifted, so a 6/m phase imported from an `.h5oina` file stayed in the Oxford/HKL x-axis convention while every 6/mmm phase in the same file was moved to the EDAX/TSL convention. Legacy DREAM3D 6.5 had no H5OINA reader, so there is no legacy comparison; its `.ctf` reader had the same 6/mmm-only limitation (see `ReadCtfDataFilter-D5`).
+
+**Root cause:** The Oxford/HKL versus EDAX/TSL x-axis convention depends on the hexagonal lattice, not on the Laue class, so the correction also applies to `Hexagonal_Low` (6/m).
+
+**Affected users:** Users importing 6/m phases with EDAX hexagonal alignment enabled.
+
+**Correct behavior:** Both hexagonal Laue classes receive pi/6 radians on phi2 for either phase output type and in each selected scan. Cubic and unindexed points remain unchanged; trigonal phases are outside this correction. Covered by `test/ReadH5OinaDataTest.cpp::"Conversion Option Combinations"` and `…::"Multi-Scan Hexagonal Alignment"`.
+
+**Recommendation:** Re-import 6/m data when EDAX alignment is required.
 
 ---
 
