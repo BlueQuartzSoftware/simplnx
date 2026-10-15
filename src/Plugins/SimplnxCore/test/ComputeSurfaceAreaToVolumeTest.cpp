@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -155,6 +157,95 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: geometry and FeatureId
   }
   CHECK(dataStructure.getDataAs<IDataArray>(ratioPath) == nullptr);
   CHECK(dataStructure.getDataAs<IDataArray>(sphericityPath) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray selections", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool replaceFeatureIds = GENERATE(true, false);
+  const bool useStringArray = GENERATE(true, false);
+  CAPTURE(replaceFeatureIds, useStringArray);
+
+  DataStructure dataStructure;
+  const DataPath geomPath({"ImageGeom"});
+  const DataPath cellPath = geomPath.createChildPath("CellData");
+  const DataPath featurePath = geomPath.createChildPath("CellFeatureData");
+  const DataPath idsPath = cellPath.createChildPath("FeatureIds");
+  const DataPath countsPath = featurePath.createChildPath("NumCells");
+  const DataPath ratioPath = featurePath.createChildPath("SurfaceAreaVolumeRatio");
+  const DataPath sphericityPath = featurePath.createChildPath("Sphericity");
+  const ShapeType cellShape = {2, 2, 2};
+  const ShapeType featureShape = {2};
+  const std::vector<int32> labels(8, 1);
+  const std::vector<int32> counts = {0, 8};
+
+  auto* geom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({2, 2, 2});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), cellShape, geom->getId());
+  REQUIRE(cellAM != nullptr);
+  geom->setCellData(*cellAM);
+  auto* featureAM = AttributeMatrix::Create(dataStructure, featurePath.getTargetName(), featureShape, geom->getId());
+  REQUIRE(featureAM != nullptr);
+  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
+  auto countsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
+  REQUIRE(idsStore != nullptr);
+  REQUIRE(countsStore != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStore, cellAM->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, countsPath.getTargetName(), countsStore, featureAM->getId()) != nullptr);
+  const auto idsWrite = idsStore->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
+  const auto countsWrite = countsStore->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(countsWrite);
+
+  const auto* parent = replaceFeatureIds ? cellAM : featureAM;
+  const DataPath parentPath = replaceFeatureIds ? cellPath : featurePath;
+  const auto& values = replaceFeatureIds ? labels : counts;
+  const std::string malformedName = useStringArray ? "StringSelection" : "NeighborListSelection";
+  const DataPath malformedPath = parentPath.createChildPath(malformedName);
+  REQUIRE(values.size() == parent->getNumberOfTuples());
+  if(useStringArray)
+  {
+    std::vector<std::string> strings;
+    strings.reserve(values.size());
+    for(const int32 value : values)
+    {
+      strings.push_back(std::to_string(value));
+    }
+    REQUIRE(StringArray::CreateWithValues(dataStructure, malformedName, parent->getShape(), std::move(strings), parent->getId()) != nullptr);
+  }
+  else
+  {
+    auto* lists = NeighborList<int32>::Create(dataStructure, malformedName, parent->getShape(), parent->getId());
+    REQUIRE(lists != nullptr);
+    for(usize index = 0; index < values.size(); ++index)
+    {
+      lists->setList(static_cast<int32>(index), std::vector<int32>{values[index]});
+    }
+    CHECK(lists->getComponentShape() == ShapeType{1});
+  }
+
+  ComputeSurfaceAreaToVolumeFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(replaceFeatureIds ? malformedPath : idsPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(replaceFeatureIds ? countsPath : malformedPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CalculateSphericity_Key, std::make_any<bool>(true));
+
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().size() == 1);
+  const auto& error = preflight.outputActions.errors().front();
+  CHECK(error.code == (replaceFeatureIds ? -12804 : -12801));
+  CHECK(error.message.find(malformedPath.toString()) != std::string::npos);
+  if(replaceFeatureIds)
+  {
+    CHECK(error.message.find("scalar int32 DataArray") != std::string::npos);
+  }
+  CHECK(dataStructure.getData(ratioPath) == nullptr);
+  CHECK(dataStructure.getData(sphericityPath) == nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
