@@ -99,12 +99,16 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIds == nullptr)
+  {
+    return MakePreflightErrorResult(-12804, fmt::format("The selected Feature Ids object '{}' is not an int32 DataArray. Select a scalar int32 DataArray.", pFeatureIdsArrayPathValue.toString()));
+  }
+  if(featureIds->getNumberOfTuples() != imageGeom.getNumberOfCells())
   {
     return MakePreflightErrorResult(
         -12803, fmt::format("The Feature Ids array '{}' has {} tuples, but the selected Image Geometry '{}' has {} cells. Select a Feature Ids array with one tuple per geometry cell.",
-                            pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPathValue.toString(), imageGeom.getNumberOfCells()));
+                            pFeatureIdsArrayPathValue.toString(), featureIds->getNumberOfTuples(), pImageGeometryPathValue.toString(), imageGeom.getNumberOfCells()));
   }
 
   PreflightResult preflightResult;
