@@ -174,7 +174,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 
   std::vector<float32> localSurfaceAreaVolumeRatio(numFeaturesUSize, 0.0f);
 
-  const float64 thirdRootPi = std::pow(nx::core::Constants::k_PiD, 0.333333f);
+  const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
   for(usize i = 1; i < numFeaturesUSize; i++)
   {
     const float64 featureVolume = voxelVol * localNumCells[i];
@@ -196,7 +196,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     for(usize i = 1; i < numFeaturesUSize; i++)
     {
       const float64 featureVolume = voxelVol * localNumCells[i];
-      localSphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 0.66666f)) / featureSurfaceArea[i]);
+      localSphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[i]);
     }
     ioResult = sphericity.copyFromBuffer(0, nonstd::span<const float32>(localSphericity.data(), numFeaturesUSize));
     if(ioResult.invalid())
