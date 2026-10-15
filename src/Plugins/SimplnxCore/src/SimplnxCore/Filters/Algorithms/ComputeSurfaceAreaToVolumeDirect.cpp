@@ -1,6 +1,8 @@
-#include <array>
-
 #include "ComputeSurfaceAreaToVolumeDirect.hpp"
+
+#include <array>
+#include <cmath>
+#include <vector>
 
 #include "ComputeSurfaceAreaToVolume.hpp"
 
@@ -119,26 +121,25 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
           {
             if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5)
             {
-              onSurface = onSurface + xyFaceArea;
+              onSurface += xyFaceArea;
             }
             if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4)
             {
-              onSurface = onSurface + zxFaceArea;
+              onSurface += zxFaceArea;
             }
             if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3)
             {
-              onSurface = onSurface + yzFaceArea;
+              onSurface += yzFaceArea;
             }
           }
         }
-        int32 featureId = featureIdsStoreRef[zStride + yStride + xIdx];
-        featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
+        featureSurfaceArea[currentFeatureId] += onSurface;
       }
     }
   }
 
   const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
-  for(usize i = 1; i < numFeatures; i++)
+  for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
   {
     const float64 featureVolume = voxelVol * numCells[i];
     surfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
