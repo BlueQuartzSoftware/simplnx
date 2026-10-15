@@ -181,6 +181,17 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical single-slic
   SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, pairAxis, FloatVec3{2.0f, 3.0f, 5.0f}, calculateSphericity, SizeVec3{5, 5, 1});
 }
 
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: decimal connected comb", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto spacing = GENERATE(FloatVec3{0.13f, 0.27f, 1.1f}, FloatVec3{0.13f, 0.13f, 0.13f});
+  const auto calculateSphericity = GENERATE(false, true);
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckConnectedCombSurfaceMetrics(scope, spacing, calculateSphericity);
+}
+
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfaceAreaToVolume]")
 {
   UnitTest::LoadPlugins();

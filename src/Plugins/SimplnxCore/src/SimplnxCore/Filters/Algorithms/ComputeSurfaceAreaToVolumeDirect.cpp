@@ -47,11 +47,14 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   auto yPoints = static_cast<int64>(dims[1]);
   auto zPoints = static_cast<int64>(dims[2]);
 
-  float32 voxelVol = spacing[0] * spacing[1] * spacing[2];
+  const float64 voxelVol = static_cast<float64>(spacing[0]) * spacing[1] * spacing[2];
+  const float64 xyFaceArea = static_cast<float64>(spacing[0]) * spacing[1];
+  const float64 yzFaceArea = static_cast<float64>(spacing[1]) * spacing[2];
+  const float64 zxFaceArea = static_cast<float64>(spacing[2]) * spacing[0];
 
   // Multiple cells contribute to one feature, so accumulation stays local until
   // the cell scan is complete.
-  std::vector<float32> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0f);
+  std::vector<float64> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0);
 
   // Flat offsets avoid repeated coordinate-to-index conversion for in-memory
   // six-neighbor reads.
@@ -75,7 +78,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
       int64 yStride = yIdx * xPoints;
       for(int64 xIdx = 0; xIdx < xPoints; xIdx++)
       {
-        float32 onSurface = 0.0f;
+        float64 onSurface = 0.0;
         int32 currentFeatureId = featureIdsStoreRef[zStride + yStride + xIdx];
         // Feature 0 is the background tuple.
         if(currentFeatureId < 1)
@@ -116,15 +119,15 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
           {
             if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5)
             {
-              onSurface = onSurface + spacing[0] * spacing[1];
+              onSurface = onSurface + xyFaceArea;
             }
             if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4)
             {
-              onSurface = onSurface + spacing[0] * spacing[2];
+              onSurface = onSurface + zxFaceArea;
             }
             if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3)
             {
-              onSurface = onSurface + spacing[1] * spacing[2];
+              onSurface = onSurface + yzFaceArea;
             }
           }
         }
@@ -134,11 +137,11 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     }
   }
 
-  const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
+  const float64 thirdRootPi = std::pow(nx::core::Constants::k_PiD, 0.333333f);
   for(usize i = 1; i < numFeatures; i++)
   {
-    float32 featureVolume = voxelVol * numCells[i];
-    surfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
+    const float64 featureVolume = voxelVol * numCells[i];
+    surfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
   }
 
   if(m_InputValues->CalculateSphericity)
@@ -149,8 +152,8 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.
     for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {
-      float32 featureVolume = voxelVol * numCells[i];
-      sphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 0.66666f)) / featureSurfaceArea[i];
+      const float64 featureVolume = voxelVol * numCells[i];
+      sphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 0.66666f)) / featureSurfaceArea[i]);
     }
   }
 
