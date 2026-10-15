@@ -12,20 +12,18 @@ This filter also optionally calculates the [Sphericity](https://en.wikipedia.org
 
 ![Equation for Sphericity used in the filter](Images/Sphericity_Equation.png)
 
-This **Filter** determines whether a **Feature** touches an outer *Surface* of the sample volume. A **Feature** is considered touching the *Surface* of the sample if either of the following conditions are met:
-
-+ Any cell location is x<sub>min</sub>, x<sub>max</sub>, y<sub>min</sub>, y<sub>max</sub>, z<sub>min</sub> or z<sub>max</sub>
-+ Any cell has **Feature ID = 0** as a neighbor.
+Use [Compute Surface Features](ComputeSurfaceFeaturesFilter.md) when you need a separate flag that identifies features touching the sample surface.
 
 ### Required Input Sources
 
 - **Cell Feature Ids** -- the per-**Cell** **Feature** label array, typically produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or another segmentation filter.
+- **Number of Cells** -- the per-feature cell counts, typically produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md).
 
-## Algorithm Details
+The label array must have one tuple per cell in the selected geometry. The array can be stored separately from that geometry. Its tuple count, cell ordering, and feature labels must describe the selected image. Each Feature Id must index a tuple in the selected feature data.
 
-- First, all the boundary **Cells** are found for each **Feature** (see also [Compute Boundary Cells (Image)](ComputeBoundaryCellsFilter.md)). 
-- Next, the surface area for each face that is in contact with a different **Feature** is totalled as long as that neighboring *featureId* is > 0.
-- This number is divided by the volume of each **Feature**, calculated by taking the number of **Cells** of each **Feature** and multiplying by the volume of a **Cell**.
+## Algorithm
+
+For each cell with a positive Feature Id, the filter examines its six face-sharing neighbors within the image. A face contributes area to the current feature when the neighbor has a different Feature Id, including Feature Id 0. An interface between two positive features contributes to each feature's area. Faces outside the image are omitted. Feature Id 0 is the background; its output tuple remains zero.
 
 For cell spacing `(dx, dy, dz)`, the area of a face uses the two spacing components perpendicular to its normal:
 
@@ -33,19 +31,41 @@ For cell spacing `(dx, dy, dz)`, the area of a face uses the two spacing compone
 - Y-normal face: `dx * dz`.
 - Z-normal face: `dx * dy`.
 
-Corrected X/Y face weights can change surface-area-to-volume and sphericity values for images whose X and Y spacings differ. Isotropic results are unchanged.
+The filter calculates each feature's volume as `V = Number of Cells * dx * dy * dz`. It uses the supplied cell count without recounting the labels or checking that the count matches them. The surface-area-to-volume ratio is `S / V`, where `S` is the accumulated face area. Area has units of length squared, and volume has units of length cubed.
+
+When *Calculate Sphericity* is enabled, the filter also calculates `Psi = pi^(1/3) * (6 * V)^(2/3) / S`. Psi is dimensionless. For a complete closed surface and consistent positive volume, a sphere has sphericity 1. Both output arrays use 32-bit floating-point values; face areas, accumulated areas, and metric calculations use 64-bit floating-point values.
+
+### Algorithm selection
+
+The filter automatically uses *Direct* when Cell Feature Ids are stored in memory and *Scanline* when they use out-of-core storage. Both methods use the same face-counting and volume rules.
+
+### Direct
+
+Direct reads neighboring labels from the array and accumulates one surface area per feature. Its additional working memory scales as `O(F)`, where `F` is the number of feature tuples, including background.
+
+### Scanline
+
+Scanline reads labels in sequential slices and keeps three adjacent XY slices in memory. It reads the feature counts and writes the metrics in bulk. Its additional working memory scales as `O(X * Y + F)`, where `X` and `Y` are image dimensions in cells. This avoids buffering the full label volume, but the feature arrays can still be large when the feature count approaches the cell count. These memory estimates exclude the input/output stores and their caches.
+
+### Compatibility with earlier results
+
+Corrected X/Y face weights can change results when X and Y spacings differ. That weight correction alone leaves isotropic face products unchanged. The improved numerical precision and sphericity calculation can also change isotropic results.
 
 ### WARNING - Aliasing
 
 The surface area will be the surface area of the **Cells** in contact with the neighboring **Feature** and will be influenced by the *aliasing* of the structure — the jagged, stair-stepped approximation of a smooth surface that results from representing it on a discrete voxel grid. As a result, the surface area to volume will likely be over-estimated with respect to the *real* **Feature**.
 
-### WARNING - Skewed Results for features touching the surface
+### WARNING - Incomplete surfaces and nonfinite results
 
-Because the filter does not include any surface that is touching/connected to a "FeatureId = 0", those features that are in contact with the edge of the virtual volume or in contact with internal features that are labeled as "FeatureId = 0" will have their values skewed.
+Image-exterior faces are omitted, so a feature touching the image boundary can have an incomplete measured surface. This can reduce its surface-area-to-volume ratio and increase its sphericity, even above 1. In-image faces against Feature Id 0 are included.
+
+The filter does not reject zero or negative supplied cell counts or replace nonfinite results. For positive area and zero volume, the ratio is infinite and sphericity is zero. For positive volume and zero measured area, the ratio is zero and sphericity is infinite. Zero area with zero volume produces NaN (not a number). A negative volume can produce a negative ratio and NaN sphericity. Interpret these values as limitations of the supplied volume or measured surface.
 
 ### Warning - 2D Image Geometry Results
 
-Because even a single slice has *volume* according to DREAM3D-NX, results will still be computed. These results should **NOT** be interpreted as "Boundary Length to Area" values.
+For a single XY slice, each cell still has thickness `dz`, and the filter uses three-dimensional cell volumes. Both Z-normal faces lie outside the image and are omitted. The counted side-face area equals the counted in-plane boundary length times `dz`.
+
+When the supplied counts match the labels, thickness cancels in the ratio. The result then equals counted in-plane boundary length divided by feature area, with units of inverse length. Image-exterior edges remain omitted, so this need not be the feature's full perimeter-to-area ratio. Optional sphericity still uses the three-dimensional formula and depends on the slice thickness; it is not a two-dimensional circularity measure.
 
 % Auto generated parameter table will be inserted here
 
