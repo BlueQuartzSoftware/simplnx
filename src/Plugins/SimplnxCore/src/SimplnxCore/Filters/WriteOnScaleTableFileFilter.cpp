@@ -12,10 +12,16 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <atomic>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -98,10 +104,10 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>(geometryPath);
   const auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(featureIdsPath);
-  if(featureIds.getNumberOfTuples() != geometry.getNumberOfCells())
+  auto cellTupleResult = ValidateCellTupleCount(geometry, geometryPath, featureIds.getNumberOfTuples(), featureIdsPath, -12024);
+  if(cellTupleResult.invalid())
   {
-    return MakePreflightErrorResult(-12024, fmt::format("The array '{}' has {} tuples, but the grid geometry '{}' has {} cells.", featureIdsPath.toString(), featureIds.getNumberOfTuples(),
-                                                        geometryPath.toString(), geometry.getNumberOfCells()));
+    return {ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
