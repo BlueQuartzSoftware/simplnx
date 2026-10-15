@@ -1,5 +1,7 @@
 # Exemplar Provenance: ComputeFeatureCentroidsFilter
 
+This sidecar records the original 2026-07 V&V fixtures and sign-off. The current 2026-10 periodic implementation and its independent weighted sorted-coordinate oracle are described in `../ComputeFeatureCentroidsFilter.md`; the historical periodic expected values below are not a description of every current periodic case.
+
 **No exemplar archive.** As of this V&V cycle (2026-07-07) the filter's correctness tests are **inline Class 1 (Analytical) + Class 4 (Invariant) fixtures** built directly in `test/ComputeFeatureCentroidsTest.cpp` (`namespace CentroidToy`). There is no `.dream3d` gold-master to hash — the oracle lives in the test code as hand-derived `REQUIRE` values.
 
 ## Retired test / circular-oracle removal
