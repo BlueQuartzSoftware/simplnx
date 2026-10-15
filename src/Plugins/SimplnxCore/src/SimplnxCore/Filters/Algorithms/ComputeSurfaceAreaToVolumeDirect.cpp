@@ -120,11 +120,11 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
             }
             if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4)
             {
-              onSurface = onSurface + spacing[1] * spacing[2];
+              onSurface = onSurface + spacing[0] * spacing[2];
             }
             if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3)
             {
-              onSurface = onSurface + spacing[2] * spacing[0];
+              onSurface = onSurface + spacing[1] * spacing[2];
             }
           }
         }
