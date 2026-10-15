@@ -149,7 +149,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: geometry and FeatureId
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     const auto& error = preflight.outputActions.errors().front();
-    CHECK(error.code == -12803);
+    CHECK(error.code == -12804);
     CHECK(error.message.find(idsPath.toString()) != std::string::npos);
     CHECK(error.message.find(geomPath.toString()) != std::string::npos);
     CHECK(error.message.find(fmt::format("{} tuples", labelCount)) != std::string::npos);
@@ -238,11 +238,13 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray 
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.errors().size() == 1);
   const auto& error = preflight.outputActions.errors().front();
-  CHECK(error.code == (replaceFeatureIds ? -12804 : -12801));
+  CHECK(error.code == (replaceFeatureIds ? -12803 : -12801));
   CHECK(error.message.find(malformedPath.toString()) != std::string::npos);
   if(replaceFeatureIds)
   {
+    CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
     CHECK(error.message.find("scalar int32 DataArray") != std::string::npos);
+    CHECK(error.message.find("Select a scalar int32 DataArray") != std::string::npos);
   }
   CHECK(dataStructure.getData(ratioPath) == nullptr);
   CHECK(dataStructure.getData(sphericityPath) == nullptr);
