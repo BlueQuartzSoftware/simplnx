@@ -67,9 +67,10 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath exemplarImageGeomPath = DataPath({"Bruker_Single_Scan"});
+  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName})));
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath));
   const auto& exemplarImageGeom = dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath);
@@ -79,14 +80,16 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
-  // Independent oracle (simplnx #1804): every cell must hold the measurement whose beam coordinates name that cell.
+  // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
   {
-    const DataPath xBeamPath = exemplarImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
-    const DataPath yBeamPath = exemplarImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
     const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
     const auto& yBeam = dataStructure.getDataRefAs<Int32Array>(yBeamPath);
+    REQUIRE(xBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    REQUIRE(yBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
     const SizeVec3 dims = imageGeom.getDimensions();
     const usize numCols = dims[0];
     const usize tuplesPerSlice = dims[0] * dims[1];
@@ -102,7 +105,6 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
     REQUIRE(misplaced == 0);
   }
 
-  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
@@ -146,9 +148,10 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath exemplarImageGeomPath = DataPath({"Bruker_Multi_Scan"});
+  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName})));
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath));
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(generatedImageGeomPath);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath));
   const auto& exemplarImageGeom = dataStructure.getDataRefAs<ImageGeom>(exemplarImageGeomPath);
@@ -158,14 +161,16 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
-  // Independent oracle (simplnx #1804): every cell must hold the measurement whose beam coordinates name that cell.
+  // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
   {
-    const DataPath xBeamPath = exemplarImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
-    const DataPath yBeamPath = exemplarImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
     const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
     const auto& yBeam = dataStructure.getDataRefAs<Int32Array>(yBeamPath);
+    REQUIRE(xBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
+    REQUIRE(yBeam.getNumberOfTuples() == imageGeom.getNumberOfCells());
     const SizeVec3 dims = imageGeom.getDimensions();
     const usize numCols = dims[0];
     const usize tuplesPerSlice = dims[0] * dims[1];
@@ -181,7 +186,6 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
     REQUIRE(misplaced == 0);
   }
 
-  const DataPath generatedImageGeomPath({ImageGeom::k_TypeName});
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
