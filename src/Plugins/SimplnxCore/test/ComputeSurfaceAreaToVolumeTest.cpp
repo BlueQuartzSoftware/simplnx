@@ -1,6 +1,8 @@
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "ComputeSurfaceAreaToVolumeTestUtils.hpp"
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -85,6 +87,29 @@ void BuildOctantWithNumCells(DataStructure& ds)
   SIMPLNX_RESULT_REQUIRE_VALID(numCellsRefWriteResult);
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical interior pair", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto pairAxis = GENERATE(usize{0}, usize{1}, usize{2});
+  const auto spacing = GENERATE(FloatVec3{2.0f, 3.0f, 5.0f}, FloatVec3{1.0f, 1.0f, 1.0f});
+  const auto calculateSphericity = GENERATE(false, true);
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, pairAxis, spacing, calculateSphericity);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical single-slice pair", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto pairAxis = GENERATE(usize{0}, usize{1});
+  const auto calculateSphericity = GENERATE(false, true);
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, pairAxis, FloatVec3{2.0f, 3.0f, 5.0f}, calculateSphericity, SizeVec3{5, 5, 1});
+}
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfaceAreaToVolume]")
 {

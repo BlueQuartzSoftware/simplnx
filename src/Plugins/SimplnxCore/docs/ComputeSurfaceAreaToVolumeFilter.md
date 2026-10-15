@@ -27,6 +27,14 @@ This **Filter** determines whether a **Feature** touches an outer *Surface* of t
 - Next, the surface area for each face that is in contact with a different **Feature** is totalled as long as that neighboring *featureId* is > 0.
 - This number is divided by the volume of each **Feature**, calculated by taking the number of **Cells** of each **Feature** and multiplying by the volume of a **Cell**.
 
+For cell spacing `(dx, dy, dz)`, the area of a face uses the two spacing components perpendicular to its normal:
+
+- X-normal face: `dy * dz`.
+- Y-normal face: `dx * dz`.
+- Z-normal face: `dx * dy`.
+
+Corrected X/Y face weights can change surface-area-to-volume and sphericity values for images whose X and Y spacings differ. Isotropic results are unchanged.
+
 ### WARNING - Aliasing
 
 The surface area will be the surface area of the **Cells** in contact with the neighboring **Feature** and will be influenced by the *aliasing* of the structure — the jagged, stair-stepped approximation of a smooth surface that results from representing it on a discrete voxel grid. As a result, the surface area to volume will likely be over-estimated with respect to the *real* **Feature**.

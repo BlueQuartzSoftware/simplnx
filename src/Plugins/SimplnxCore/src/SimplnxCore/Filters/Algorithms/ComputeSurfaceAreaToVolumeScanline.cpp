@@ -118,7 +118,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice - static_cast<usize>(xPoints)] != currentFeatureId)
           {
-            onSurface += yzFaceArea;
+            onSurface += zxFaceArea;
           }
         }
 
@@ -126,7 +126,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice + static_cast<usize>(xPoints)] != currentFeatureId)
           {
-            onSurface += yzFaceArea;
+            onSurface += zxFaceArea;
           }
         }
 
@@ -134,7 +134,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice - 1] != currentFeatureId)
           {
-            onSurface += zxFaceArea;
+            onSurface += yzFaceArea;
           }
         }
 
@@ -142,7 +142,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice + 1] != currentFeatureId)
           {
-            onSurface += zxFaceArea;
+            onSurface += yzFaceArea;
           }
         }
 
