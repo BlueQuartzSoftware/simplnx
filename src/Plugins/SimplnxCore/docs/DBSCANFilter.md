@@ -188,6 +188,8 @@ The *Distance Metric* parameter provides the following choices:
 - **Pearson [4]**: Uses the Pearson correlation distance, measuring linear correlation dissimilarity.
 - **Squared Pearson [5]**: Uses the squared Pearson correlation distance.
 
+**Cell Mask Array** must have 1 component.
+
 ## Note on Randomness
 
 The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Three parse order options are available: *Low Density First* (deterministic, no seed needed), *Random* (non-deterministic, uses a time-based seed), and *Seeded Random* (deterministic, uses a user-supplied seed value for reproducibility). Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.

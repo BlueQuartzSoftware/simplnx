@@ -1,6 +1,6 @@
-# Deviations from DREAM3D 6.5.172: DBSCANFilter
+# Deviations from DREAM3D 6.5.171: DBSCANFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.172 equivalent (D1–D4), plus within-SIMPLNX changes introduced by this PR that break reproducibility for existing users (D5).
+This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (D1–D4), plus within-SIMPLNX changes introduced by this PR that break reproducibility for existing users (D5–D6).
 
 Entries are referenced by stable ID (`DBSCAN-D<N>`) from the V&V report and from public migration guidance. The Filter UUID fields are the permanent cross-reference anchors.
 
@@ -19,7 +19,7 @@ Entries are referenced by stable ID (`DBSCAN-D<N>`) from the V&V report and from
 
 **Symptom:** Sparse datasets where individual data points each have ≥ minPoints neighbors within ε (and would form clusters under traditional DBSCAN) may produce **more noise (cluster 0) points in SIMPLNX** if those neighborhoods span multiple grid cells with fewer than minPoints points per cell.
 
-**Confirmed (Phase 9, 2026-08-05):** DREAM3D 6.5.172 run on the 6 sklearn toy datasets confirms: legacy finds 6 clusters (ansio) and 11 clusters (varied) — matching sklearn — while SIMPLNX finds only 3 for both. The large-cluster sizes agree for varied ([87,166,169] — exact three-way match); for ansio the large clusters are close but not identical (sklearn oracle: [152,155,157]; SIMPLNX: [153,156,161] — small boundary discrepancy also attributable to GDCF grid-cell vs. point-level core definition). Only the micro-clusters (≤6 points each) are absent in SIMPLNX. Evidence: `dbscan_vv/phase9_comparison_results.json`.
+**Confirmed (Phase 9, 2026-08-05):** The historical local legacy proof build run on the 6 sklearn toy datasets confirms: legacy finds 6 clusters (ansio) and 11 clusters (varied) — matching sklearn — while SIMPLNX finds only 3 for both. The large-cluster sizes agree for varied ([87,166,169] — exact three-way match); for ansio the large clusters are close but not identical (sklearn oracle: [152,155,157]; SIMPLNX: [153,156,161] — small boundary discrepancy also attributable to GDCF grid-cell vs. point-level core definition). Only the micro-clusters (≤6 points each) are absent in SIMPLNX. Evidence: `dbscan_vv/phase9_comparison_results.json`.
 
 **Root cause:** Algorithmic choice. SIMPLNX implements Grid-based DBSCAN (GDCF, Boonchoo et al. 2019). The core-object definition differs fundamentally:
 - **Legacy (traditional DBSCAN)**: A data point `p` is a *core point* if the ε-ball centered on `p` contains ≥ minPoints data points (inclusive of `p` itself). Cluster membership is point-centric.
@@ -117,3 +117,22 @@ The `FromSIMPLJson` converter (`DBSCANFilter.cpp`, starting at line 242) is not 
 **Affected users:** Users who relied on a specific `SeededRandom` seed to reproduce a particular cluster-ID assignment from a pre-PR build. The same seed now produces a correct unbiased shuffle instead of the previously biased one, so the resulting cluster-ID numbers will differ. Users running `LowDensityFirst` (the default) are entirely unaffected. Users running `Random` (time-based seed, non-deterministic by design) are unaffected in practice.
 
 **Recommendation:** If reproducibility of specific cluster-ID values across builds is required, re-run with the same seed on the current build and use the new output as the reference. Cluster membership (grouping) is preserved for densely-clustered datasets; only the numeric label assigned to each cluster may change.
+
+---
+
+## DBSCAN-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `DBSCAN-D6` |
+| **SIMPLNX UUID** | `763dad44-fad7-4606-808f-617867257b98` |
+| **Legacy SIMPL UUID** | `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e` |
+| **Status** | active |
+
+**Symptom:** With **Use Mask Array** enabled, SIMPLNX previously accepted a multi-component or short **Cell Mask Array** in preflight. The Direct path read the mask by flat element, while the external Scanline path rejected it during execution with `-54062`. Both paths now reject these inputs before execution: component shape other than `{1}` produces `-208`, and unequal tuple counts produce `-7587`.
+
+**Root cause:** The mask selection parameter did not restrict component shape, and preflight did not compare the tuple counts of **Cell Mask Array** and **Attribute Array to Cluster**. Validation now applies before algorithm dispatch. This is a within-SIMPLNX correction; no new comparison with DREAM3D 6.5.171 is claimed.
+
+**Affected users:** Users whose pipelines select a multi-component mask or a mask with a different number of tuples from the clustering DataArray. Previously accepted Direct executions may have used unintended mask elements or accessed beyond a short mask.
+
+**Recommendation:** Select a boolean or uint8 mask DataArray with component shape `{1}` and one tuple per tuple in **Attribute Array to Cluster**. The preflight tuple-count error identifies both DataArrays and their tuple counts. Regression coverage: `SimplnxCore::DBSCANFilter: Reject multi-component mask in preflight` and `SimplnxCore::DBSCANFilter: Reject short mask in preflight` in `DBSCANTest.cpp`.

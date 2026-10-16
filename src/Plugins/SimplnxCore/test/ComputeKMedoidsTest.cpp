@@ -1,4 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <cmath>
 #include <filesystem>
@@ -473,4 +474,75 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
       CHECK(args.value<std::string>(ComputeKMedoidsFilter::k_MedoidsArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
+  REQUIRE(cellData != nullptr);
+  auto* input = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellData->getId());
+  (*input)[0] = 0.0F;
+  (*input)[1] = 1.0F;
+  auto* mask = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellData->getId());
+  (*mask)[0] = 1;
+  (*mask)[1] = 0;
+  (*mask)[2] = 1;
+  (*mask)[3] = 1;
+
+  ComputeKMedoidsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Mask"})));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Cell Data", "Input"})));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellData != nullptr);
+  REQUIRE(maskData != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
+  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskData->getId()) != nullptr);
+  const DataPath inputPath({"Cell Data", "Input"});
+  const DataPath maskPath({"Mask Data", "Mask"});
+
+  ComputeKMedoidsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
+
+  SECTION("Enabled mask rejects fewer tuples")
+  {
+    args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    const auto& errors = preflightResult.outputActions.errors();
+    const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7589; });
+    REQUIRE(error != errors.end());
+    CHECK(error->message.find(inputPath.toString()) != std::string::npos);
+    CHECK(error->message.find(maskPath.toString()) != std::string::npos);
+    CHECK(error->message.find("6 tuples") != std::string::npos);
+    CHECK(error->message.find("4 tuples") != std::string::npos);
+  }
+  SECTION("Disabled mask ignores fewer tuples")
+  {
+    args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(false));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

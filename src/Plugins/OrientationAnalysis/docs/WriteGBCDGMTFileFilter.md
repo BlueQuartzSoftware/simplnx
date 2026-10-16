@@ -37,6 +37,8 @@ It samples the GBCD for the selected phase and misorientation and writes the res
 
 % Auto generated parameter table will be inserted here
 
+The GBCD DataArray must have the 6-dimension component shape that Compute GBCD creates (5 positive bin dimensions followed by a final dimension of 2 (hemispheres)).
+
 ## Example Pipelines
 
 + (08) Small IN100 GBCD
