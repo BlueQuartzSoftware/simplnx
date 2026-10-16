@@ -165,6 +165,66 @@ bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath
   return parentId.has_value() && parentId.value() == attributeMatrix.getId();
 }
 
+Result<> ValidateArrayInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& arrayPath, int32 errorCode, std::string_view parameterName)
+{
+  const auto* geometry = dataStructure.getDataAs<IGridGeometry>(geometryPath);
+  if(geometry == nullptr || geometry->getCellData() == nullptr)
+  {
+    return MakeErrorResult(errorCode, fmt::format("**{}** DataArray '{}' requires a Cell Attribute Matrix in the selected grid geometry '{}'. Select a geometry with a Cell Attribute Matrix.",
+                                                  parameterName, arrayPath.toString(), geometryPath.toString()));
+  }
+  if(!IsChildOfAttributeMatrix(dataStructure, arrayPath, *geometry->getCellData()))
+  {
+    return MakeErrorResult(errorCode, fmt::format("**{}** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                                                  parameterName, arrayPath.toString(), geometry->getCellDataPath().toString(), geometryPath.toString()));
+  }
+  return {};
+}
+
+Result<> ValidateArraysInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& arrayPaths, int32 errorCode, std::string_view parameterName)
+{
+  const auto* geometry = dataStructure.getDataAs<IGridGeometry>(geometryPath);
+  if(geometry == nullptr || geometry->getCellData() == nullptr)
+  {
+    const std::string firstArray = arrayPaths.empty() ? "" : fmt::format(" DataArray '{}'", arrayPaths.front().toString());
+    return MakeErrorResult(errorCode, fmt::format("**{}**{} requires a Cell Attribute Matrix in the selected grid geometry '{}'. Select a geometry with a Cell Attribute Matrix.", parameterName,
+                                                  firstArray, geometryPath.toString()));
+  }
+  for(const auto& arrayPath : arrayPaths)
+  {
+    if(!IsChildOfAttributeMatrix(dataStructure, arrayPath, *geometry->getCellData()))
+    {
+      return MakeErrorResult(errorCode, fmt::format("**{}** DataArray '{}' is not in the Cell Attribute Matrix '{}' of the selected geometry '{}'. "
+                                                    "Only DataArrays in that Attribute Matrix are modified, so only they can be ignored.",
+                                                    parameterName, arrayPath.toString(), geometry->getCellDataPath().toString(), geometryPath.toString()));
+    }
+  }
+  return {};
+}
+
+Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
+                                                  std::string_view sourceParameterName, const DataPath& sourceArrayPath)
+{
+  const auto* geometry = dataStructure.getDataAs<IGridGeometry>(geometryPath);
+  if(geometry == nullptr || geometry->getCellData() == nullptr)
+  {
+    return MakeErrorResult(errorCode, fmt::format("The Feature Attribute Matrix '{}' (the parent of **{}** '{}') requires a Cell Attribute Matrix in the selected grid geometry '{}'. "
+                                                  "Select a geometry with a Cell Attribute Matrix.",
+                                                  featureAttributeMatrixPath.toString(), sourceParameterName, sourceArrayPath.toString(), geometryPath.toString()));
+  }
+  const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  const auto parentId = dataStructure.getId(featureAttributeMatrixPath.getParent());
+  if(featureAttributeMatrix == nullptr || featureAttributeMatrixPath.getLength() < 2 || !parentId.has_value() || parentId.value() != geometry->getId() ||
+     featureAttributeMatrix->getId() == geometry->getCellData()->getId())
+  {
+    return MakeErrorResult(errorCode,
+                           fmt::format("The Feature Attribute Matrix '{}' (the parent of **{}** '{}') must be an Attribute Matrix directly under the selected geometry '{}' "
+                                       "and must not be its Cell Attribute Matrix '{}'. Select a feature DataArray from a different Attribute Matrix directly under that geometry.",
+                                       featureAttributeMatrixPath.toString(), sourceParameterName, sourceArrayPath.toString(), geometryPath.toString(), geometry->getCellDataPath().toString()));
+  }
+  return {};
+}
+
 bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
 {
   std::set<nx::core::DataType> types;

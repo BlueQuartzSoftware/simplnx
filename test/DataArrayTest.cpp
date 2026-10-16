@@ -145,6 +145,80 @@ TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUt
   }
 }
 
+TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx][DataArrayUtilities][StrictFeatureIds]")
+{
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Geometry"});
+  IGridGeometry* geometry = nullptr;
+  SECTION("Image Geometry")
+  {
+    geometry = ImageGeom::Create(dataStructure, "Geometry");
+  }
+  SECTION("Rectilinear Grid Geometry")
+  {
+    geometry = RectGridGeom::Create(dataStructure, "Geometry");
+  }
+  REQUIRE(geometry != nullptr);
+  const ShapeType shape{1, 2, 2};
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
+  auto* other = AttributeMatrix::Create(dataStructure, "Other", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  REQUIRE(other != nullptr);
+  geometry->setCellData(*cells);
+  auto* group = DataGroup::Create(dataStructure, "Elsewhere");
+  REQUIRE(group != nullptr);
+  auto* nested = AttributeMatrix::Create(dataStructure, "Features", shape, group->getId());
+  REQUIRE(nested != nullptr);
+  const DataPath cellPath({"Geometry", "Cells"});
+  const DataPath arrayPath = cellPath.createChildPath("Ids");
+  const DataPath otherPath({"Geometry", "Other", "Ids"});
+  REQUIRE(Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cells->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), other->getId()) != nullptr);
+
+  const auto checkError = [](const Result<>& result, const std::vector<std::string>& messageParts) {
+    CHECK(result.invalid());
+    if(result.valid())
+    {
+      return;
+    }
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -12345);
+    for(const auto& part : messageParts)
+    {
+      CHECK(result.errors().front().message.find(part) != std::string::npos);
+    }
+  };
+
+  CHECK(ValidateArrayInGeometryCellData(dataStructure, geometryPath, arrayPath, -12345, "Cell Feature Ids").valid());
+  checkError(ValidateArrayInGeometryCellData(dataStructure, geometryPath, otherPath, -12345, "Cell Feature Ids"),
+             {otherPath.toString(), cellPath.toString(), geometryPath.toString(), "**Cell Feature Ids**"});
+  CHECK(ValidateArraysInGeometryCellData(dataStructure, geometryPath, {}, -12345, "Attribute Arrays to Ignore").valid());
+  CHECK(ValidateArraysInGeometryCellData(dataStructure, geometryPath, {arrayPath}, -12345, "Attribute Arrays to Ignore").valid());
+  checkError(ValidateArraysInGeometryCellData(dataStructure, geometryPath, {arrayPath, otherPath, DataPath({"Missing"})}, -12345, "Attribute Arrays to Ignore"),
+             {otherPath.toString(), cellPath.toString(), "**Attribute Arrays to Ignore**"});
+
+  const DataPath featurePath({"Geometry", "Other"});
+  CHECK(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, featurePath, -12345, "Feature Ranking Array", otherPath).valid());
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, cellPath, -12345, "Feature Ranking Array", arrayPath),
+             {cellPath.toString(), arrayPath.toString(), geometryPath.toString(), "**Feature Ranking Array**"});
+  const DataPath nestedPath({"Elsewhere", "Features"});
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, nestedPath, -12345, "Feature Ranking Array", nestedPath.createChildPath("Rank")),
+             {nestedPath.toString(), nestedPath.createChildPath("Rank").toString(), geometryPath.toString()});
+  REQUIRE(DataGroup::Create(dataStructure, "Not an AM", geometry->getId()) != nullptr);
+  const DataPath groupPath({"Geometry", "Not an AM"});
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, groupPath, -12345, "Feature Ranking Array", groupPath.createChildPath("Rank")),
+             {groupPath.toString(), geometryPath.toString()});
+
+  auto* noCells = ImageGeom::Create(dataStructure, "No Cells");
+  REQUIRE(noCells != nullptr);
+  const DataPath noCellsPath({"No Cells"});
+  checkError(ValidateArrayInGeometryCellData(dataStructure, noCellsPath, arrayPath, -12345, "Cell Feature Ids"), {noCellsPath.toString(), arrayPath.toString()});
+  checkError(ValidateArraysInGeometryCellData(dataStructure, noCellsPath, {}, -12345, "Attribute Arrays to Ignore"), {noCellsPath.toString(), "**Attribute Arrays to Ignore**"});
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, noCellsPath, featurePath, -12345, "Feature Ranking Array", otherPath),
+             {noCellsPath.toString(), featurePath.toString(), otherPath.toString()});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 namespace
 {
 /**
