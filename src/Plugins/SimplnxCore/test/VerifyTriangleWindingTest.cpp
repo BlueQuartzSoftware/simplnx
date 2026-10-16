@@ -15,8 +15,10 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 
 #include <array>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -482,6 +484,9 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves disabled normals", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
   const bool useFaceLabels = GENERATE(false, true);
   const bool hasNormals = GENERATE(false, true);
   DYNAMIC_SECTION("Face labels: " << useFaceLabels << ", existing normals: " << hasNormals)
@@ -568,12 +573,248 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    // Normal repair owns the algorithm selector. This disabled branch uses the shared winding implementation.
-    auto executeResult = filter.execute(dataStructure, args);
+    scope.requireExpectedStore(*verticesPtr);
+    scope.requireExpectedStore(*facesPtr);
+    scope.requireExpectedStore(*idsPtr);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     checkUnchangedInputs();
     CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(expectedFaces.data(), expectedFaces.size()));
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equivalence", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const usize idCase = GENERATE(usize{0}, usize{1}, usize{2}, usize{3});
+  const bool reverseInput = GENERATE(false, true);
+  const bool repairNormals = GENERATE(false, true);
+  CAPTURE(scenario, idCase, reverseInput, repairNormals);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  const DataPath geometryPath({"LatePhaseTetrahedron"});
+  const DataPath facesPath = geometryPath.createChildPath("Faces");
+  const DataPath verticesPath = geometryPath.createChildPath("Vertices");
+  const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
+  const DataPath idsPath = faceDataPath.createChildPath("Ids");
+  const DataPath normalsPath = faceDataPath.createChildPath("Normals");
+  constexpr std::array<float32, 12> vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
+  constexpr std::array<IGeometry::MeshIndexType, 12> outwardFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+  constexpr std::array<float64, 12> sentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
+  auto inputFaces = outwardFaces;
+  auto expectedFaces = outwardFaces;
+  for(usize face = 0; face < 4; ++face)
+  {
+    if(reverseInput)
+    {
+      std::swap(inputFaces[face * 3], inputFaces[face * 3 + 2]);
+    }
+    // A positive label in slot zero uses the opposite volume convention.
+    if(idCase == 3)
+    {
+      std::swap(expectedFaces[face * 3], expectedFaces[face * 3 + 2]);
+    }
+  }
+  const usize idComponents = idCase == 0 ? 1 : 2;
+  std::vector<int32> ids;
+  for(usize face = 0; face < 4; ++face)
+  {
+    if(idCase == 0)
+    {
+      ids.push_back(3);
+    }
+    else if(idCase == 1)
+    {
+      ids.insert(ids.end(), {0, 3});
+    }
+    else if(idCase == 2)
+    {
+      ids.insert(ids.end(), {-1, 3});
+    }
+    else
+    {
+      ids.insert(ids.end(), {3, -1});
+    }
+  }
+
+  DataStructure dataStructure;
+  auto* geometry = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {4}, geometry->getId());
+  REQUIRE(faceData != nullptr);
+  geometry->setFaceAttributeMatrix(*faceData);
+  auto* vertexArray = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, {vertices.data(), vertices.size()});
+  auto* faceArray = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, {inputFaces.data(), inputFaces.size()});
+  auto* idsArray = CreateDisabledNormalsArray<int32>(dataStructure, idsPath, idComponents, {ids.data(), ids.size()});
+  auto* normalsArray = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, {sentinelNormals.data(), sentinelNormals.size()});
+  geometry->setVertices(*vertexArray);
+  geometry->setFaceList(*faceArray);
+  const auto vertexId = vertexArray->getId();
+  const auto faceId = faceArray->getId();
+  const auto idsId = idsArray->getId();
+  const auto normalsId = normalsArray->getId();
+  const auto* vertexStore = vertexArray->getDataStore();
+  const auto* faceStore = faceArray->getDataStore();
+  const auto* idsStore = idsArray->getDataStore();
+  const auto* normalsStore = normalsArray->getDataStore();
+  scope.requireExpectedStore(*vertexArray);
+  scope.requireExpectedStore(*faceArray);
+  scope.requireExpectedStore(*idsArray);
+  scope.requireExpectedStore(*normalsArray);
+
+  VerifyTriangleWindingFilter filter;
+  Arguments args;
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(idsPath));
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(repairNormals));
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, vertexId, vertexStore, 3, {vertices.data(), vertices.size()});
+  CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, faceId, faceStore, 3, {expectedFaces.data(), expectedFaces.size()});
+  CheckDisabledNormalsArray<int32>(dataStructure, idsPath, idsId, idsStore, idComponents, {ids.data(), ids.size()});
+  if(repairNormals)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(normalsPath));
+    const auto& normals = dataStructure.getDataRefAs<Float64Array>(normalsPath);
+    REQUIRE(normals.getId() == normalsId);
+    REQUIRE(normals.getDataStore() == normalsStore);
+    REQUIRE(normals.getTupleShape() == ShapeType{4});
+    REQUIRE(normals.getComponentShape() == ShapeType{3});
+    const float64 diagonal = 1.0 / std::sqrt(3.0);
+    const std::array<float64, 12> outwardNormals = {0, 0, -1, 0, -1, 0, -1, 0, 0, diagonal, diagonal, diagonal};
+    const float64 sign = idCase == 3 ? -1.0 : 1.0;
+    for(usize index = 0; index < outwardNormals.size(); ++index)
+    {
+      if(index < 9)
+      {
+        CHECK(normals[index] == sign * outwardNormals[index]);
+      }
+      else
+      {
+        // Both paths normalize in float64; this tolerates only final rounding.
+        CHECK(normals[index] == Approx(sign * outwardNormals[index]).margin(1.0e-14));
+      }
+    }
+  }
+  else
+  {
+    CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId, normalsStore, 3, {sentinelNormals.data(), sentinelNormals.size()});
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation order", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool reordered = GENERATE(false, true);
+  const usize blockCapacity = GENERATE(usize{1}, usize{3});
+  CAPTURE(scenario, reordered, blockCapacity);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  const DataPath geometryPath({"VolumeOrderTriangles"});
+  const DataPath facesPath = geometryPath.createChildPath("Faces");
+  const DataPath verticesPath = geometryPath.createChildPath("Vertices");
+  const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
+  const DataPath idsPath = faceDataPath.createChildPath("Ids");
+  const DataPath normalsPath = faceDataPath.createChildPath("UnusedNormals");
+  constexpr std::array<float32, 27> vertices = {0, 0, 1, 6, 0, 1, 0, 16777216, 1, 16, 0, 1, 22, 0, 1, 16, 1, 1, 32, 0, 1, 38, 0, 1, 32, 16777216, 1};
+  std::array<IGeometry::MeshIndexType, 9> inputFaces = {0, 2, 1, 3, 5, 4, 6, 7, 8};
+  constexpr std::array<int32, 3> ids = {1, 1, 1};
+  if(reordered)
+  {
+    for(usize corner = 0; corner < 3; ++corner)
+    {
+      std::swap(inputFaces[3 + corner], inputFaces[6 + corner]);
+    }
+  }
+  auto expectedFaces = inputFaces;
+  // Disconnected triangles have no shared edges for the initial repair to change.
+  // Original region contributions are {-2^24, -1, +2^24}: float32 left additions give zero.
+  // In row order {first, third, second}, the sum is -1, so every face must reverse.
+  // A double accumulator or regrouped additions incorrectly reverses the original order.
+  if(reordered)
+  {
+    for(usize face = 0; face < 3; ++face)
+    {
+      std::swap(expectedFaces[face * 3], expectedFaces[face * 3 + 2]);
+    }
+  }
+
+  DataStructure dataStructure;
+  auto* geometry = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {3}, geometry->getId());
+  REQUIRE(faceData != nullptr);
+  geometry->setFaceAttributeMatrix(*faceData);
+  auto vertexStore = std::make_shared<DataStore<float32>>(ShapeType{9}, ShapeType{3}, 0.0f);
+  auto faceStore = std::make_shared<DataStore<IGeometry::MeshIndexType>>(ShapeType{3}, ShapeType{3}, IGeometry::MeshIndexType{0});
+  auto idsStore = std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, int32{0});
+  auto vertexWrite = vertexStore->copyFromBuffer(0, {vertices.data(), vertices.size()});
+  auto faceWrite = faceStore->copyFromBuffer(0, {inputFaces.data(), inputFaces.size()});
+  auto idsWrite = idsStore->copyFromBuffer(0, {ids.data(), ids.size()});
+  SIMPLNX_RESULT_REQUIRE_VALID(vertexWrite);
+  SIMPLNX_RESULT_REQUIRE_VALID(faceWrite);
+  SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
+  auto* vertexArray = Float32Array::Create(dataStructure, verticesPath.getTargetName(), vertexStore, geometry->getId());
+  auto* faceArray = TriangleGeom::SharedFaceList::Create(dataStructure, facesPath.getTargetName(), faceStore, geometry->getId());
+  auto* idsArray = Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStore, faceData->getId());
+  REQUIRE(vertexArray != nullptr);
+  REQUIRE(faceArray != nullptr);
+  REQUIRE(idsArray != nullptr);
+  geometry->setVertices(*vertexArray);
+  geometry->setFaceList(*faceArray);
+  scope.requireExpectedStore(*vertexArray);
+  scope.requireExpectedStore(*faceArray);
+  scope.requireExpectedStore(*idsArray);
+
+  VerifyTriangleWindingFilter filter;
+  Arguments args;
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(idsPath));
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto& budget = CacheMemoryBudgetManager::instance();
+  const uint64 reservedBefore = budget.reservedWorkingMemoryBytes();
+  {
+    CacheMemoryBudgetManager::WorkingMemoryReservation occupied;
+    const uint64 bytesPerTriangle = 3 * sizeof(IGeometry::MeshIndexType) + 3 * sizeof(usize) + 18 * sizeof(float32) + sizeof(int32);
+    const uint64 targetGrant = blockCapacity * bytesPerTriangle;
+    if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    {
+      REQUIRE(budget.maximumWorkingMemoryBytes() >= reservedBefore + targetGrant);
+      const uint64 occupyBytes = budget.maximumWorkingMemoryBytes() - reservedBefore - targetGrant;
+      occupied = budget.reserveWorkingMemory(occupyBytes);
+      REQUIRE(occupied.sizeBytes() == occupyBytes);
+    }
+    uint64 observedGrant = 0;
+    const IFilter::MessageHandler messageHandler{[&](const IFilter::Message& message) {
+      if(message.message == "Scanning feature IDs")
+      {
+        observedGrant = budget.reservedWorkingMemoryBytes() - reservedBefore - occupied.sizeBytes();
+      }
+    }};
+    auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, messageHandler);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    {
+      CHECK(observedGrant == targetGrant);
+    }
+    CHECK(budget.reservedWorkingMemoryBytes() == reservedBefore + occupied.sizeBytes());
+  }
+  CHECK(budget.reservedWorkingMemoryBytes() == reservedBefore);
+  std::array<IGeometry::MeshIndexType, 9> actualFaces = {};
+  auto faceRead = faceArray->getDataStoreRef().copyIntoBuffer(0, {actualFaces.data(), actualFaces.size()});
+  SIMPLNX_RESULT_REQUIRE_VALID(faceRead);
+  CHECK(actualFaces == expectedFaces);
+  CHECK(dataStructure.getData(normalsPath) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
