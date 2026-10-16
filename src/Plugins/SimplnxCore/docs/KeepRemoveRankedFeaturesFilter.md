@@ -6,6 +6,8 @@ This **Filter** keeps or removes a count or percentage of **Features** based on 
 a chosen scalar **Feature** level array. For example, "keep the 10 largest grains by *NumElements*",
 or "remove the smallest 10% of grains".
 
+Cell Feature Ids must be in the selected Image Geometry's Cell Attribute Matrix; when Fill-in Removed Features is on, Attribute Arrays to Ignore must also be in that matrix. The parent of Feature Ranking Array must be a different Attribute Matrix directly under the selected Image Geometry.
+
 This is a **rank** threshold, not a **value** threshold. It answers *"which are the 10 biggest?"*
 rather than *"which are bigger than 100 voxels?"*. The cut therefore depends on the whole population
 rather than on each **Feature** independently. For a value threshold, use **Remove Minimum Size
