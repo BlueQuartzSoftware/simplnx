@@ -350,6 +350,13 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
                       cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
 
+    if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellData))
+    {
+      return IFilter::MakePreflightErrorResult(
+          -55505, fmt::format("**Cell Feature Ids** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected Image Geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                              inputValues.FeatureIdsArrayPath.toString(), srcImagePath.createChildPath(cellDataName).toString(), srcImagePath.toString()));
+    }
+
     ignorePaths.push_back(cellFeatureAttributeMatrixPath);
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
