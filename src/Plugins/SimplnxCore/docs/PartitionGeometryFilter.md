@@ -27,6 +27,8 @@ There are four available partitioning modes to choose from: **1. Basic**, **2. A
 
 This partitioning mode is commonly used to create a partition grid that is exactly the same size as the input geometry and divided up into a specific number of cells in the X, Y, & Z dimensions.  This mode requires the **Starting Feature ID**, **Number of Cells Per Axis**, and (optionally) the **Use Vertex Mask** input parameters.
 
+For a Rectilinear Grid Geometry input, the partition grid origin uses the first bound of each axis. The length of each partition cell on an axis is (last bound − first bound) / (number of cells on that axis).
+
 | Figure 1: 5x5x5 Partition Grid |
 |:---:|
 ![](Images/PartitionGeometry/Basic_Mode.png)

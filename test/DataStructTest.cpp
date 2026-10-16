@@ -1621,6 +1621,40 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
   }
 }
 
+TEST_CASE("HexahedralGeom::findElementSizes rectangular boxes", "[DataStruct][Geometry]")
+{
+  DataStructure dataStructure;
+  auto* hexGeomPtr = HexahedralGeom::Create(dataStructure, "Boxes");
+  REQUIRE(hexGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {16}, {3}, hexGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  const std::vector<float32> coordinates = {0,  0,  0,  2,  0,  0,  2,  3,  0,  0,  3,  0,  0,  0,  5,  2,  0,  5,  2,  3,  5,  0,  3,  5,
+                                            10, 20, 30, 11, 20, 30, 11, 21, 30, 10, 21, 30, 10, 20, 31, 11, 20, 31, 11, 21, 31, 10, 21, 31};
+  for(usize index = 0; index < coordinates.size(); index++)
+  {
+    (*verticesPtr)[index] = coordinates[index];
+  }
+  hexGeomPtr->setVertices(*verticesPtr);
+  auto* cellsPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Cells", {2}, {8}, hexGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  for(usize index = 0; index < 16; index++)
+  {
+    (*cellsPtr)[index] = index;
+  }
+  hexGeomPtr->setPolyhedraList(*cellsPtr);
+
+  const auto result = hexGeomPtr->findElementSizes(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* volumesPtr = hexGeomPtr->getElementSizes();
+  REQUIRE(volumesPtr != nullptr);
+  REQUIRE(volumesPtr->getNumberOfTuples() == 2);
+  // For this vertex order, det(v1-v0, v2-v0, v3-v0)/6 gives positive volumes.
+  // The five tetrahedra contribute 5 + 5 + 10 + 5 + 5 = 30; translation preserves the unit cube's volume.
+  REQUIRE((*volumesPtr)[0] == Approx(30.0f).margin(1.0e-5f));
+  REQUIRE((*volumesPtr)[1] == Approx(1.0f).margin(1.0e-5f));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("CompareDataStructures")
 {
   UnitTest::LoadPlugins();
