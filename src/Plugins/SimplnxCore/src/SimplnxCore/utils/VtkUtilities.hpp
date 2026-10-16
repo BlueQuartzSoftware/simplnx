@@ -408,7 +408,6 @@ struct WriteVtkDataFunctor
 
       for(usize idx = 0; idx < numTuples; idx++)
       {
-        progressThrottle.updatePercent(idx + 1);
         if(shouldCancel)
         {
           return {};
@@ -436,6 +435,7 @@ struct WriteVtkDataFunctor
           outStrm << "\n";
           currentItemCount = 0;
         }
+        progressThrottle.updatePercent(idx + 1);
       }
     }
     outStrm << "\n";

@@ -9,6 +9,8 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+
 using namespace nx::core;
 
 using FaceIds_t = std::vector<int64_t>;
@@ -105,6 +107,8 @@ Result<> FeatureFaceCurvature::operator()()
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
 
+  const usize nonEmptyCount = std::count_if(sharedFeatureFaces.begin(), sharedFeatureFaces.end(), [](const auto& featureFace) { return !featureFace.second.empty(); });
+
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all
  * the tasks while the first tasks start up. TBB will then grab a new task from it's own queue to work on it up to the
@@ -114,14 +118,18 @@ Result<> FeatureFaceCurvature::operator()()
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
+  sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", nonEmptyCount));
 #endif
 
-  m_Throttle.reset(sharedFeatureFaces.size(), "Calculating Curvatures");
+  m_Throttle.reset(nonEmptyCount, "Calculating Curvatures");
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {
     FaceIds_t& triangleIds = sharedFeatureFace.second;
+    if(triangleIds.empty())
+    {
+      continue;
+    }
 
     CalculateTriangleGroupCurvatures func(this, m_InputValues->NRingCount, triangleIds, m_InputValues->useNormalsForCurveFitting, surfaceMeshPrincipalCurvature1sArrayPtr,
                                           surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr, surfaceMeshPrincipalDirection2sArrayPtr,

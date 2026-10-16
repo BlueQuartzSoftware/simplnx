@@ -361,6 +361,7 @@ Result<> WriteAbaqusHexahedron::operator()()
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   int32 err = writeNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode);
+  progressThrottle.flush();
   if(err < 0)
   {
     return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
@@ -370,9 +371,10 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 1, 5, "Nodes");
+  m_MessageHandler.sendInfoMessage("Wrote Nodes (File 1/5)");
 
   err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration);
+  progressThrottle.flush();
   if(err < 0)
   {
     return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
@@ -382,7 +384,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 2, 5, "Elements");
+  m_MessageHandler.sendInfoMessage("Wrote Elements (File 2/5)");
 
   err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
@@ -394,9 +396,10 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 3, 5, "Sections");
+  m_MessageHandler.sendInfoMessage("Wrote Sections (File 3/5)");
 
   Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIdsRef, maxGrainId, useOocAlgorithm, getCancel());
+  progressThrottle.flush();
   if(elsetResult.invalid())
   {
     DeleteFiles(fileList);
@@ -407,7 +410,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 4, 5, "Element Sets");
+  m_MessageHandler.sendInfoMessage("Wrote Element Sets (File 4/5)");
 
   err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
   if(err < 0)
@@ -419,7 +422,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     DeleteFiles(fileList);
     return {};
   }
-  m_MessageHandler.sendProgressCount("Writing Abaqus Files", 5, 5, "Master");
+  m_MessageHandler.sendInfoMessage("Wrote Master (File 5/5)");
 
   // Commits are atomic per file but are not one transaction for the file set.
   for(auto& file : fileList)

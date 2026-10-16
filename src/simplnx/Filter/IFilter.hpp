@@ -150,6 +150,10 @@ public:
      * slices, arrays, or outputs. Keep the total below a few thousand. For a short outer loop around
      * a large inner loop, report the outer count. Add inner-loop percent progress only when one
      * outer iteration is slow enough to make the progress bar look stuck.
+     * When outer units wrap an inner loop reporting percent, send only one of them as progress.
+     * Announce each outer unit with sendInfoMessage() and name the unit in the inner label.
+     * Alternatively, map the inner value into the outer total.
+     * Flush a ThrottledMessageHandler when its unit finishes, before the next unit starts.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far. Send k + 1 after unit k finishes, never at its start.
      * @param max Total items
