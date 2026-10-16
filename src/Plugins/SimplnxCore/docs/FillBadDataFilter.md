@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** distinguishes small *bad-data noise* from large *real defects* in a segmented dataset and fills only the noise. **Cells** with *Feature Id = 0* are considered *bad*; the filter groups them into connected components, classifies each component by its size, and fills components below the user threshold by copying the most common neighbor's data into them. Components at or above the threshold are left intact, since they likely represent real features (pores, cracks, voids).
 
+**Cell Feature Ids** and every array in **Attribute Arrays to Ignore** must be in the selected geometry's Cell Attribute Matrix. **Cell Phases** must also be in that Attribute Matrix when **Store Defects as New Phase** is enabled.
+
 | Small IN100 Before                   | Small IN100 After                   |
 |--------------------------------------|-------------------------------------|
 | ![](Images/fill_bad_data_before.png) | ![](Images/fill_bad_data_after.png) |

@@ -1,10 +1,12 @@
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
 
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/AbstractPipelineNode.hpp"
@@ -546,6 +548,7 @@ TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({1, 1, 1});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 1}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
   UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 1}, {1}, cellDataPtr->getId());
 
   FillBadDataFilter filter;
@@ -879,6 +882,139 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
     }
   }
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadDataFilter: Strict Feature Ids", "[SimplnxCore][FillBadDataFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Strict Geometry"});
+  const DataPath cellPath = geometryPath.createChildPath("Cell Data");
+  const DataPath featureIdsPath = cellPath.createChildPath("Feature Ids");
+  const DataPath otherPath = geometryPath.createChildPath("Other Data").createChildPath("Other Values");
+  const ShapeType shape{1, 2, 2};
+  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 2, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(*cells);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, geometry->getId()) != nullptr);
+  auto* other = AttributeMatrix::Create(dataStructure, "Other Data", shape, geometry->getId());
+  REQUIRE(other != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cells->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), other->getId()) != nullptr);
+
+  FillBadDataFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+
+  int32 expectedCode = 0;
+  SECTION("Correct Cell Attribute Matrix")
+  {
+    args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{featureIdsPath}));
+  }
+  SECTION("Feature Ids in another Attribute Matrix with the same tuple shape")
+  {
+    args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(otherPath));
+    expectedCode = -16501;
+  }
+  SECTION("Ignored array in another Attribute Matrix")
+  {
+    args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{otherPath}));
+    expectedCode = -16503;
+  }
+  SECTION("Modified Cell Phases in another Attribute Matrix")
+  {
+    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(otherPath));
+    expectedCode = -16502;
+  }
+  SECTION("Unused Cell Phases in another Attribute Matrix")
+  {
+    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(otherPath));
+  }
+  SECTION("Modified Cell Phases in the Cell Attribute Matrix")
+  {
+    const auto phasesPath = cellPath.createChildPath("Phases");
+    REQUIRE(Int32Array::Create(dataStructure, "Phases", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cells->getId()) != nullptr);
+    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  }
+  const auto result = filter.preflight(dataStructure, args);
+  if(expectedCode == 0)
+  {
+    REQUIRE(result.outputActions.valid());
+  }
+  else
+  {
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == expectedCode);
+    CHECK(result.outputActions.errors().front().message.find(otherPath.toString()) != std::string::npos);
+    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias", "[SimplnxCore][FillBadDataFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Alias Test Geometry"});
+  const DataPath cellPath = geometryPath.createChildPath("Cells");
+  const DataPath ignoredPath = cellPath.createChildPath("Ignored");
+  const DataPath aliasCellPath({"Alternate Parent", "Cells"});
+  const ShapeType shape{1, 1, 4};
+  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(*cells);
+  auto* alternateParent = DataGroup::Create(dataStructure, "Alternate Parent");
+  REQUIRE(alternateParent != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(cells->getId(), alternateParent->getId()));
+  REQUIRE(geometry->getCellDataPath() == cellPath);
+  auto* ids = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cells->getId());
+  auto* ignored = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cells->getId());
+  REQUIRE(ids != nullptr);
+  REQUIRE(ignored != nullptr);
+  const std::vector<int32> originalIds{1, 0, 0, 1};
+  for(usize index = 0; index < 4; index++)
+  {
+    (*ids)[index] = originalIds[index];
+    (*ignored)[index] = static_cast<int32>(10 * (index + 1));
+  }
+  FillBadDataFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(aliasCellPath.createChildPath("Ids")));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{aliasCellPath.createChildPath("Ignored")}));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
+  const auto preflight = filter.preflight(dataStructure, args);
+  REQUIRE(preflight.outputActions.valid());
+  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  {
+    CHECK(modification.modifiedPath != ignoredPath);
+  }
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  bool idsChanged = false;
+  for(usize index = 0; index < 4; index++)
+  {
+    CHECK((*ignored)[index] == static_cast<int32>(10 * (index + 1)));
+    idsChanged = idsChanged || (*ids)[index] != originalIds[index];
+  }
+  CHECK(idsChanged);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

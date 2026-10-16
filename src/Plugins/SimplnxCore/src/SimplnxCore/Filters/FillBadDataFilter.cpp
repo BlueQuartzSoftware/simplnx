@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/FillBadData.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -10,6 +11,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -82,6 +84,39 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
                                                           const ExecutionContext& executionContext) const
 {
   auto pMinAllowedDefectSizeValue = filterArgs.value<int32>(k_MinAllowedDefectSize_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  auto storeAsNewPhase = filterArgs.value<bool>(k_StoreAsNewPhase_Key);
+  auto cellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, featureIdsPath, -16501, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
+
+  if(storeAsNewPhase)
+  {
+    auto phasesResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, cellPhasesPath, -16502, "Cell Phases");
+    if(phasesResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(phasesResult), {})};
+    }
+  }
+
+  auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -16503, "Attribute Arrays to Ignore");
+  if(ignoredArraysResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+  }
+
+  // Shared Attribute Matrices can have multiple paths; exclusions must use the collection path.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
+  for(auto& ignoredPath : ignoredDataArrayPaths)
+  {
+    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
+  }
 
   if(pMinAllowedDefectSizeValue < 1)
   {
@@ -99,9 +134,7 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
-  auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), ignoredDataArrayPaths);
+  AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, ignoredDataArrayPaths);
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -117,6 +150,14 @@ Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  // Match the collection path for ignored arrays and the Feature Ids special case.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.inputImageGeometry).getCellDataPath();
+  inputValues.featureIdsArrayPath = cellDataPath.createChildPath(inputValues.featureIdsArrayPath.getTargetName());
+  for(auto& ignoredPath : inputValues.ignoredDataArrayPaths)
+  {
+    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
+  }
 
   return FillBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
