@@ -1,8 +1,10 @@
 #include "WriteAbaqusHexahedronFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/WriteAbaqusHexahedron.hpp"
+#include "SimplnxCore/utils/AbaqusElementSets.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -59,11 +61,14 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
       std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
                                                                  "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
-  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
+  params.insert(
+      std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness for C3D8R elements, in the model's stress units such as Pa or MPa.", 250));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The name of the job", "SomeString"));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix to use for each output file.", "SomeString"));
+  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix",
+                                                  "The prefix for each output file. It must be a nonempty plain file name without whitespace or path separators, and cannot be '.' or '..'.",
+                                                  "SomeString"));
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Selected Image Geometry", "The input Image Geometry that will be written.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
@@ -99,6 +104,12 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -1122); prefixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+  }
+
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
 
   // Check Output Path
@@ -107,6 +118,16 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
     return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
   }
 
+  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(pOutputPathValue, prefix, -1123); targetsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+  }
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(filterArgs.value<DataPath>(k_ImageGeometryPath_Key));
+  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+  }
   return {};
 }
 

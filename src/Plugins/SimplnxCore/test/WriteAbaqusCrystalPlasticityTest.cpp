@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -17,9 +18,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <numbers>
 #include <string>
 #include <vector>
@@ -69,9 +72,12 @@ DataStructure CreateDataStructure(const SizeVec3& dimensions, const std::vector<
   REQUIRE(phases.size() == phasesArray->getNumberOfTuples());
   REQUIRE(eulerAngles.size() == eulerAnglesArray->getSize());
 
-  std::copy(featureIds.cbegin(), featureIds.cend(), featureIdsArray->begin());
-  std::copy(phases.cbegin(), phases.cend(), phasesArray->begin());
-  std::copy(eulerAngles.cbegin(), eulerAngles.cend(), eulerAnglesArray->begin());
+  auto featureIdsCopyResult = featureIdsArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIds.data(), featureIds.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(featureIdsCopyResult);
+  auto phasesCopyResult = phasesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phases.data(), phases.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(phasesCopyResult);
+  auto eulerAnglesCopyResult = eulerAnglesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(eulerAngles.data(), eulerAngles.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(eulerAnglesCopyResult);
 
   return dataStructure;
 }
@@ -110,51 +116,100 @@ usize CountOccurrences(const std::string& text, const std::string& value)
   }
   return count;
 }
-} // namespace
-
-TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+/**
+ * @class ActualOocExecutionScope
+ * @brief Preserves automatic dispatch for actual OOC-store tests.
+ *
+ * The shared AlgorithmTestScope supports resident stores only in this branch.
+ * This local scope restores dispatch state and verifies the actual OOC path.
+ */
+class ActualOocExecutionScope
 {
-  UnitTest::LoadPlugins();
+public:
+  /** @brief Saves dispatch flags and execution counters for restoration. */
+  ActualOocExecutionScope()
+  : m_OriginalForceOoc(ForceOocAlgorithm())
+  , m_OriginalForceInCore(ForceInCoreAlgorithm())
+  , m_OriginalCounts(GetAlgorithmPathExecutionCounts())
+  {
+  }
 
-  constexpr float32 k_Pi = std::numbers::pi_v<float32>;
-  DataStructure dataStructure =
-      CreateDataStructure({2, 2, 1}, {1, 1, 2, 2}, {1, 1, 2, 2}, {0.0F, k_Pi / 2.0F, k_Pi, 0.0F, k_Pi / 2.0F, k_Pi, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F});
+  /** @brief Restores dispatch flags and execution counters. */
+  ~ActualOocExecutionScope()
+  {
+    ForceOocAlgorithm() = m_OriginalForceOoc;
+    ForceInCoreAlgorithm() = m_OriginalForceInCore;
+    SetAlgorithmPathExecutionCounts(m_OriginalCounts);
+  }
 
-  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "SyntheticTwoGrain";
-  fs::create_directories(outputPath);
-  const std::string prefix = "Abaqus_CP_Test";
-  const WriteAbaqusCrystalPlasticityFilter filter;
-  Arguments args = CreateArguments(outputPath, prefix);
-  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
+  ActualOocExecutionScope(const ActualOocExecutionScope&) = delete;
+  ActualOocExecutionScope(ActualOocExecutionScope&&) noexcept = delete;
+  ActualOocExecutionScope& operator=(const ActualOocExecutionScope&) = delete;
+  ActualOocExecutionScope& operator=(ActualOocExecutionScope&&) noexcept = delete;
 
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  /**
+   * @brief Runs only the target call with automatic storage-based dispatch.
+   * @tparam CallableT Target callable type.
+   * @param callable Executes the filter under test.
+   * @return Target execution result.
+   */
+  template <typename CallableT>
+  decltype(auto) execute(CallableT&& callable)
+  {
+    ResetAlgorithmPathExecutionCounts();
+    ForceOocAlgorithm() = false;
+    ForceInCoreAlgorithm() = false;
+    return std::invoke(std::forward<CallableT>(callable));
+  }
 
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  /** @brief Requires an OOC execution witness and rejects every other path. */
+  void requireOocStoreExecution() const
+  {
+    const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
+    INFO("Dispatch counts: in-core=" << counts.InCore << ", OOC=" << counts.OutOfCore << ", OOC/resident=" << counts.OutOfCoreOnInMemoryStore << ", OOC/OOC=" << counts.OutOfCoreOnOutOfCoreStore
+                                     << ", in-core/resident=" << counts.InCoreOnInMemoryStore << ", in-core/OOC=" << counts.InCoreOnOutOfCoreStore);
+    REQUIRE(counts.OutOfCore > 0);
+    REQUIRE(counts.InCore == 0);
+    REQUIRE(counts.OutOfCoreOnOutOfCoreStore > 0);
+    REQUIRE(counts.OutOfCoreOnInMemoryStore == 0);
+    REQUIRE(counts.InCoreOnInMemoryStore == 0);
+    REQUIRE(counts.InCoreOnOutOfCoreStore == 0);
+  }
 
+private:
+  bool m_OriginalForceOoc = false;
+  bool m_OriginalForceInCore = false;
+  AlgorithmPathExecutionCounts m_OriginalCounts;
+};
+
+/**
+ * @brief Compares all five files against the independent two-grain deck.
+ * @param outputPath Directory that contains the generated deck.
+ * @param prefix Generated file prefix; the master expectation uses Abaqus_CP_Test.
+ */
+void CompareSyntheticTwoGrain(const fs::path& outputPath, const std::string& prefix)
+{
   const std::string expectedNodes = R"(** ----------------------------------------------------------------
 **
 *Node
-1, 0.000000, 0.000000, 0.000000
-2, 0.500000, 0.000000, 0.000000
-3, 1.000000, 0.000000, 0.000000
-4, 0.000000, 0.500000, 0.000000
-5, 0.500000, 0.500000, 0.000000
-6, 1.000000, 0.500000, 0.000000
-7, 0.000000, 1.000000, 0.000000
-8, 0.500000, 1.000000, 0.000000
-9, 1.000000, 1.000000, 0.000000
-10, 0.000000, 0.000000, 0.500000
-11, 0.500000, 0.000000, 0.500000
-12, 1.000000, 0.000000, 0.500000
-13, 0.000000, 0.500000, 0.500000
-14, 0.500000, 0.500000, 0.500000
-15, 1.000000, 0.500000, 0.500000
-16, 0.000000, 1.000000, 0.500000
-17, 0.500000, 1.000000, 0.500000
-18, 1.000000, 1.000000, 0.500000
+1, 0, 0, 0
+2, 0.5, 0, 0
+3, 1, 0, 0
+4, 0, 0.5, 0
+5, 0.5, 0.5, 0
+6, 1, 0.5, 0
+7, 0, 1, 0
+8, 0.5, 1, 0
+9, 1, 1, 0
+10, 0, 0, 0.5
+11, 0.5, 0, 0.5
+12, 1, 0, 0.5
+13, 0, 0.5, 0.5
+14, 0.5, 0.5, 0.5
+15, 1, 0.5, 0.5
+16, 0, 1, 0.5
+17, 0.5, 1, 0.5
+18, 1, 1, 0.5
 **
 ** ----------------------------------------------------------------
 **
@@ -245,6 +300,82 @@ UnitTest
   REQUIRE(ReadFile(outputPath / fmt::format("{}_elset.inp", prefix)) == expectedElsets);
   REQUIRE(ReadFile(outputPath / fmt::format("{}.inp", prefix)) == expectedMaster);
   REQUIRE(ReadFile(outputPath / fmt::format("{}_sects.inp", prefix)) == expectedSections);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Synthetic Two Grain", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+
+  constexpr float32 k_Pi = std::numbers::pi_v<float32>;
+  DataStructure dataStructure =
+      CreateDataStructure({2, 2, 1}, {1, 1, 2, 2}, {1, 1, 2, 2}, {0.0F, k_Pi / 2.0F, k_Pi, 0.0F, k_Pi / 2.0F, k_Pi, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F});
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "SyntheticTwoGrain";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Abaqus_CP_Test";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  CompareSyntheticTwoGrain(outputPath, prefix);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: OocStoreContract Synthetic Two Grain", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+
+  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+#if SIMPLNX_TEST_ALGORITHM_PATH == 1
+    FAIL("The OOC-only build did not register HDF5-OOC storage.");
+#endif
+    WARN("HDF5-OOC storage is unavailable. The in-core build skips the real-store body.");
+    return;
+  }
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+
+  constexpr float32 k_Pi = std::numbers::pi_v<float32>;
+  DataStructure dataStructure =
+      CreateDataStructure({2, 2, 1}, {1, 1, 2, 2}, {1, 1, 2, 2}, {0.0F, k_Pi / 2.0F, k_Pi, 0.0F, k_Pi / 2.0F, k_Pi, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F, k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F});
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "SyntheticTwoGrainOoc";
+  fs::create_directories(outputPath);
+  const std::string prefix = "Abaqus_CP_Test";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, prefix);
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key, std::make_any<int32>(417));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  for(const auto& path : {k_FeatureIdsPath, k_PhasesPath, k_EulerAnglesPath})
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(path));
+    const auto& array = dataStructure.getDataRefAs<IDataArray>(path);
+    REQUIRE(array.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+    REQUIRE(array.getDataFormat() == "HDF5-OOC");
+  }
+  ActualOocExecutionScope executionScope;
+  auto executeResult = executionScope.execute([&] { return filter.execute(dataStructure, args); });
+  executionScope.requireOocStoreExecution();
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  CompareSyntheticTwoGrain(outputPath, prefix);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -252,6 +383,9 @@ UnitTest
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Angles In Degrees", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr float32 k_Pi = std::numbers::pi_v<float32>;
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, {k_Pi / 4.0F, k_Pi / 6.0F, k_Pi / 3.0F});
@@ -262,7 +396,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Angles In Degr
   Arguments args = CreateArguments(outputPath, prefix);
   args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key, std::make_any<bool>(true));
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
@@ -273,6 +407,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Angles In Degr
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Default Integration Is Standard", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
+  UnitTest::LoadPlugins();
   const Arguments args = WriteAbaqusCrystalPlasticityFilter().getDefaultArguments();
   REQUIRE_FALSE(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
 }
@@ -280,6 +415,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Default Integration 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "StandardIntegration";
@@ -291,7 +429,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string elements = ReadFile(outputPath / fmt::format("{}_elems.inp", prefix));
@@ -307,6 +445,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Standard Integration
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Wrapping Rules", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({4, 4, 2}, std::vector<int32>(32, 1), std::vector<int32>(32, 1), std::vector<float32>(96, 0.0F));
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "WrappingRules";
@@ -317,7 +458,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Wrapping Rules", "[S
   args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumDepvar_Key, std::make_any<int32>(2));
   args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_NumUserOutVar_Key, std::make_any<int32>(1));
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string expectedElsets = R"(** ----------------------------------------------------------------
@@ -371,6 +512,9 @@ UnitTest
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constant Precision", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "ConstantPrecision";
@@ -379,7 +523,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constant Pr
   const WriteAbaqusCrystalPlasticityFilter filter;
   Arguments args = CreateArguments(outputPath, prefix, {{1.0e-5}, {2.1e11}, {0.123456789012}});
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
@@ -392,6 +536,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constant Pr
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layout", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, {0.25F, 0.5F, 0.75F});
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "CustomLayout";
@@ -409,7 +556,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layo
     Arguments args = CreateArguments(outputPath, prefix, constants);
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key, std::make_any<bool>(false));
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(17));
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
@@ -426,7 +573,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Custom Constant Layo
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key, std::make_any<bool>(false));
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(1));
     args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key, std::make_any<bool>(false));
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::string master = ReadFile(outputPath / fmt::format("{}.inp", prefix));
@@ -454,6 +601,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Start Index Ou
       Arguments args = CreateArguments(outputPath, "Start_Index_Range");
       args.insertOrAssign(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key, std::make_any<int32>(badIndex));
       auto preflightResult = filter.preflight(dataStructure, args);
+      REQUIRE(preflightResult.outputActions.invalid());
       REQUIRE(preflightResult.outputActions.errors().size() == 1);
       REQUIRE(preflightResult.outputActions.errors()[0].code == -12017);
     }
@@ -465,6 +613,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Euler Start Index Ou
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Gap In Feature Ids", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({2, 2, 1}, {1, 1, 5, 5}, {1, 1, 2, 2}, std::vector<float32>(12, 0.0F));
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "GapInFeatureIds";
@@ -480,7 +631,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Gap In Feature Ids",
     }
   }};
 
-  auto executeResult = filter.execute(dataStructure, args, nullptr, messageHandler);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args, nullptr, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(warningEmitted);
 
@@ -595,6 +746,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Material Constants R
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Feature Id Zero Skipped", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({3, 1, 1}, {0, 1, 1}, {0, 1, 1}, std::vector<float32>(9, 0.0F));
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "FeatureIdZero";
@@ -605,7 +759,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Feature Id Zero Skip
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string expectedElsets = R"(** ----------------------------------------------------------------
@@ -650,6 +804,9 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tuple Count Mismatch
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Directory", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -665,7 +822,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Missing Output Direc
   REQUIRE(std::count_if(preflightResult.outputActions.warnings().cbegin(), preflightResult.outputActions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
   REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
 
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(fs::is_directory(missingPath));
   for(const auto* suffix : {"_nodes.inp", "_elems.inp", "_sects.inp", "_elset.inp", ".inp"})
@@ -706,8 +863,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Output Path Is A Fil
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
+  auto app = Application::GetOrCreateInstance();
   auto filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -751,4 +908,163 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Comp
       CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Label And Feature Limits", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "Limits";
+  Arguments args = CreateArguments(outputPath, "Limits");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  SECTION("Element count exceeds the label limit")
+  {
+    imageGeom.setDimensions({1000, 1000, 1000});
+    auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().front().code == -1121);
+    REQUIRE(result.outputActions.errors().front().message.find("element count") != std::string::npos);
+    REQUIRE(result.outputActions.errors().front().message.find("999999999") != std::string::npos);
+  }
+  SECTION("Node count exceeds the limit while element count fits")
+  {
+    imageGeom.setDimensions({1000, 1000, 999});
+    auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().front().code == -1121);
+    REQUIRE(result.outputActions.errors().front().message.find("node count") != std::string::npos);
+  }
+  SECTION("Dimension products cannot overflow the check")
+  {
+    imageGeom.setDimensions({std::numeric_limits<usize>::max(), 2, 2});
+    auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().front().code == -1121);
+  }
+  SECTION("Sparse enormous feature ID fails before table allocation")
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath)[0] = 100'000'001;
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto result = filter.execute(dataStructure, args);
+    REQUIRE(result.result.invalid());
+    REQUIRE(result.result.errors().front().code == -1120);
+    REQUIRE(result.result.errors().front().message.find("Renumber") != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tiny Spacing", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "TinySpacing";
+  Arguments args = CreateArguments(outputPath, "Limits");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  imageGeom.setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F});
+  auto result = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  std::ifstream nodes(outputPath / "Limits_nodes.inp");
+  REQUIRE(nodes.is_open());
+  std::string line;
+  bool found = false;
+  while(std::getline(nodes, line))
+  {
+    if(line.starts_with("2, "))
+    {
+      const double x = std::stod(line.substr(3));
+      REQUIRE(std::abs(x - 1.0e-7) < 1.0e-14);
+      found = true;
+    }
+  }
+  REQUIRE(found);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Chunk Boundary Last Cell Wins", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  constexpr usize k_CellCount = 65'539;
+  std::vector<int32> featureIds(k_CellCount, 1);
+  std::vector<int32> phases(k_CellCount, 1);
+  std::vector<float32> angles(k_CellCount * 3, 0.0F);
+  featureIds[65'536] = 2;
+  phases[65'536] = 3;
+  featureIds[65'537] = 0;
+  phases.back() = 7;
+  angles[angles.size() - 3] = 0.25F;
+  angles[angles.size() - 2] = 0.5F;
+  angles.back() = 0.75F;
+  DataStructure dataStructure = CreateDataStructure({k_CellCount, 1, 1}, featureIds, phases, angles);
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusCrystalPlasticity" / "ChunkBoundary";
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  Arguments args = CreateArguments(outputPath, "ChunkBoundary");
+  const auto result = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const std::string master = ReadFile(outputPath / "ChunkBoundary.inp");
+  REQUIRE(master.find("1, 7, 0.25, 0.5, 0.75, 1.5, 2.25\n") != std::string::npos);
+  REQUIRE(master.find("2, 3, 0, 0, 0, 1.5, 2.25\n") != std::string::npos);
+  const std::string elsets = ReadFile(outputPath / "ChunkBoundary_elset.inp");
+  REQUIRE(elsets.find("*Elset, elset=Grain1_Phase7_set\n1, 2, 3") != std::string::npos);
+  REQUIRE(elsets.find("65535, 65536,\n65539\n*Elset, elset=Grain2_Phase3_set\n65537\n") != std::string::npos);
+  REQUIRE(elsets.find("65538") == std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Invalid Output File Prefix", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  const fs::path outputPath(unit_test::k_BinaryTestOutputDir.view());
+  for(const std::string prefix : {"", "my prefix", "../x", "/abs/x", "a\tb", ".", "..", "a\\b", "a\nb", "a\rb", "a\vb", "a\fb"})
+  {
+    DYNAMIC_SECTION("Prefix '" << prefix << "'")
+    {
+      Arguments args = CreateArguments(outputPath, prefix);
+      const auto result = filter.preflight(dataStructure, args);
+      REQUIRE(result.outputActions.invalid());
+      REQUIRE(result.outputActions.errors().size() == 1);
+      REQUIRE(result.outputActions.errors().front().code == -12018);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Output Target Is A Directory", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1}, {1}, {1}, std::vector<float32>(3, 0.0F));
+  const WriteAbaqusCrystalPlasticityFilter filter;
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteAbaqusCrystalPlasticity_TargetDirectory_{}", uniqueSuffix);
+  REQUIRE_FALSE(fs::exists(outputPath));
+  const std::string prefix = "Target_Directory";
+  for(const auto* suffix : {"_nodes.inp", "_elems.inp", "_sects.inp", "_elset.inp", ".inp"})
+  {
+    DYNAMIC_SECTION("Target suffix " << suffix)
+    {
+      const fs::path targetPath = outputPath / (prefix + suffix);
+      REQUIRE(fs::create_directories(targetPath));
+      Arguments args = CreateArguments(outputPath, prefix);
+      const auto result = filter.preflight(dataStructure, args);
+      fs::remove_all(outputPath);
+      REQUIRE(result.outputActions.invalid());
+      REQUIRE(result.outputActions.errors().size() == 1);
+      REQUIRE(result.outputActions.errors().front().code == -12019);
+      REQUIRE(result.outputActions.errors().front().message.find(targetPath.string()) != std::string::npos);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

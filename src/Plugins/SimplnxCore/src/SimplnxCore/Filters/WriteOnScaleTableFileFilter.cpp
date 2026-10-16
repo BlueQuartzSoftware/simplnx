@@ -52,8 +52,8 @@ Parameters WriteOnScaleTableFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The existing directory for the OnScale table file.", fs::path(""),
-                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The directory for the OnScale table file.", fs::path(""), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for the output file.", "SomeString"));
   params.insert(std::make_unique<VectorInt32Parameter>(k_NumKeypoints_Key, "Number of Keypoints", "The number of keypoints along the X, Y, and Z axes.", VectorInt32Parameter::ValueType{2, 2, 2},
                                                        VectorInt32Parameter::NamesType{"x", "y", "z"}));

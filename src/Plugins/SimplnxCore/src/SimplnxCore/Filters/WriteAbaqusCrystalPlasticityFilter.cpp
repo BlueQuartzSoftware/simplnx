@@ -1,6 +1,7 @@
 #include "WriteAbaqusCrystalPlasticityFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/WriteAbaqusCrystalPlasticity.hpp"
+#include "SimplnxCore/utils/AbaqusElementSets.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -55,11 +56,14 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The directory for the Abaqus input files.", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for each output file.", "SomeString"));
+  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix",
+                                                  "The prefix for each output file. It must be a nonempty plain file name without whitespace or path separators, and cannot be '.' or '..'.",
+                                                  "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The Abaqus job name.", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
                                                                  "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
-  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness value for C3D8R elements.", 250));
+  params.insert(
+      std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness for C3D8R elements, in the model's stress units such as Pa or MPa.", 250));
   params.insert(std::make_unique<BoolParameter>(k_WriteEulerAnglesInDegrees_Key, "Write Euler Angles in Degrees",
                                                 "When true, converts the Euler angles from radians to degrees before writing them. When false, writes them in radians.", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
@@ -75,13 +79,14 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
                                                  "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
 
   DynamicTableInfo tableInfo;
-  tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(1, 6, "Constant {}"));
+  tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(1, 6, "User Constant {}"));
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Values"}));
   const DynamicTableInfo::TableDataType defaultTable(6, DynamicTableInfo::RowType(1, 0.0));
   params.insert(std::make_unique<DynamicTableParameter>(
       k_MaterialConstants_Key, "Material Constants",
       "The user constants in table order. Grain and phase IDs, when included, occupy constants 1 and 2. The three Euler angles are inserted at Euler Angles Start Index "
-      "(radians unless Write Euler Angles in Degrees is enabled).",
+      "(radians unless Write Euler Angles in Degrees is enabled). The User Constant number is the table row. Its final position in the *User Material list depends on "
+      "Include Grain and Phase IDs as Constants and Euler Angles Start Index, as described in the documentation.",
       defaultTable, tableInfo));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
@@ -103,9 +108,9 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
 IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() const
 {
-  // First Port from legacy simpl
-  // - adds the integration type and hourglass stiffness parameters. Reduced integration preserves the legacy element type.
-  // - adds Euler-angle units, the unsymmetric solver flag, and the material constant layout options.
+  // Version 1 is the first simplnx version. It adds integration type, hourglass stiffness, Euler-angle units,
+  // the unsymmetric solver flag, grain/phase ID inclusion, and the Euler-angle start index beyond the legacy filter.
+  // Defaults are C3D8, radians, unsymmetric solver on, IDs included, and Euler-angle start index 3.
 
   return 1;
 }
@@ -118,10 +123,21 @@ IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
 IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -12018); prefixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+  }
+
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   if(fs::exists(outputPath) && !fs::is_directory(outputPath))
   {
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
+  }
+
+  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   const int32 numDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
@@ -152,6 +168,10 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
 
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+  }
   const usize cellCount = imageGeom.getNumberOfCells();
 
   constexpr std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
@@ -212,7 +232,7 @@ constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteAbaqusCrystalPlasticityFilter().getDefaultArguments();
-  // Legacy SimulationIO always wrote C3D8R elements.
+  // Legacy SimulationIO wrote C3D8R elements without hourglass stiffness. Conversion keeps C3D8R and adds the default hourglass stiffness record.
   args.insertOrAssign(k_UseReducedIntegration_Key, std::make_any<bool>(true));
   // Legacy SimulationIO wrote Euler angles in degrees.
   args.insertOrAssign(k_WriteEulerAnglesInDegrees_Key, std::make_any<bool>(true));

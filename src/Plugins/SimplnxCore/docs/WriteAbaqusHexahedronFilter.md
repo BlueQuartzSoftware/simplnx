@@ -22,7 +22,9 @@ The filter writes five plain-text files. The first is a master file that pulls i
 - `<prefix>_elset.inp` — the element sets (one set per grain).
 - `<prefix>_sects.inp` — the section definitions assigning a material to each grain set.
 
-Node coordinates are written in the physical units of the **Image Geometry** (for example microns, if the geometry's spacing is in microns). Each node coordinate is the voxel-grid position scaled by the geometry spacing and offset by its origin.
+The *Output File Prefix* must be a nonempty plain file name without spaces, other whitespace, or path separators (`/` or `\`). It cannot be `.` or `..`. Preflight also rejects any of the five target file paths that is an existing directory. Choose another output path or prefix, or remove the conflicting directory.
+
+Node coordinates are written in the physical units of the **Image Geometry** (for example microns, if the geometry's spacing is in microns). Each node coordinate is the voxel-grid position scaled by the geometry spacing and offset by its origin. Coordinates are computed in double precision (`float64`) and written with 9 significant digits, so very small spacings (for example `1e-7`) keep their value.
 
 ### Write Dummy Node
 
@@ -32,12 +34,14 @@ Legacy SIMPL pipeline conversion explicitly enables *Write Dummy Node* to preser
 
 ### Hourglass Stiffness
 
-When *Use Reduced Integration Elements* is enabled, the `_sects.inp` file includes an `*Hourglass Stiffness` value for each grain section. "Hourglass" modes are spurious, zero-energy deformation patterns that reduced-integration brick elements can exhibit; a small artificial stiffness suppresses them. The *Hourglass Stiffness Value* parameter sets this number (default *250*, a dimensionless solver-control value). Standard `C3D8` elements do not use this value, so the filter omits the hourglass records when reduced integration is disabled.
+When *Use Reduced Integration Elements* is enabled, the `_sects.inp` file includes an `*Hourglass Stiffness` value for each grain section. "Hourglass" modes are spurious, zero-energy deformation patterns that reduced-integration brick elements can exhibit; a small artificial stiffness suppresses them. The *Hourglass Stiffness Value* parameter sets the stiffness in the model's stress units, such as Pa or MPa. Its default is 250. Standard `C3D8` elements do not use this value, so the filter omits the hourglass records when reduced integration is disabled.
 
 ### Required Input Sources
 
 - **Image Geometry** -- the voxel grid to export.
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md). One element set is written per Feature Id.
+
+The maximum feature ID is limited to 100,000,000. Larger IDs cause an error during execution; renumber the features to be contiguous. The node and element label limit is 999,999,999. Mesh counts above this limit cause a preflight error.
 
 ### Example Output
 
@@ -64,9 +68,9 @@ The `_nodes.inp` file (node ID followed by x, y, z in geometry units):
 
 ```text
 *Node
-1, 0.000000, 0.000000, 0.000000
-2, 0.500000, 0.000000, 0.000000
-3, 1.000000, 0.000000, 0.000000
+1, 0, 0, 0
+2, 0.5, 0, 0
+3, 1, 0, 0
    ..
 ```
 

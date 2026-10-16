@@ -43,8 +43,8 @@ public:
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
-   * @param json
-   * @return Result<Arguments>
+   * @param json The legacy SIMPL filter JSON object.
+   * @return The converted simplnx Arguments, or conversion errors.
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 

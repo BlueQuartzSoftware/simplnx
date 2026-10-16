@@ -18,6 +18,8 @@ The filter writes five Abaqus input (`.inp`) files:
 
 Keep all five files in the same directory. The master file uses relative file names in its `*Include` statements. The include order is nodes, elements, element sets, and sections. Element sets are included before sections so that each `*Solid Section` refers to an already defined set. The full-model element set is named `cube`; the node and element headers do not create `ALLNODES` or `ALLELEMENTS` sets.
 
+The *Output File Prefix* must be a nonempty plain file name without spaces, other whitespace, or path separators (`/` or `\`). It cannot be `.` or `..`. Preflight also rejects any of the five target file paths that is an existing directory. Choose another output path or prefix, or remove the conflicting directory.
+
 ### Required Input Sources
 
 - **Image Geometry** defines the voxel grid. The mesh equals this grid. Node coordinates use the geometry origin and spacing, and they use the geometry length units.
@@ -25,11 +27,13 @@ Keep all five files in the same directory. The master file uses relative file na
 - **Cell Euler Angles** is a `float32` array with three components. Input angles are in radians. The filter writes the angles in radians by default. Enable *Write Euler Angles in Degrees* to convert them to degrees for output; the input must still be in radians.
 - **Cell Phases** is an `int32` scalar array. Each value assigns the cell to a phase.
 
+Coordinates are computed in double precision (`float64`) and written with 9 significant digits, so very small spacings (for example `1e-7`) keep their value.
+
 The three selected arrays must have one tuple for each cell in the **Image Geometry**. Feature IDs can be produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md). Cell Euler angles and phases can be read together by [Read EDAX EBSD Data (.ang)](../OrientationAnalysis/ReadAngDataFilter.md).
 
 ### Integration Type and Hourglass Stiffness
 
-Enable *Use Reduced Integration Elements* to write `C3D8R` elements. Reduced integration can introduce spurious zero-energy deformation patterns called hourglass modes. The filter writes an `*Hourglass Stiffness` value for each grain section to control these modes. The *Hourglass Stiffness Value* parameter sets this solver-control value and has a default of *250*.
+Enable *Use Reduced Integration Elements* to write `C3D8R` elements. Reduced integration can introduce spurious zero-energy deformation patterns called hourglass modes. The filter writes an `*Hourglass Stiffness` value for each grain section to control these modes. The *Hourglass Stiffness Value* parameter sets the stiffness in the model's stress units, such as Pa or MPa. Its default is 250.
 
 The default standard `C3D8` elements use full integration and do not use hourglass stiffness. When *Use Reduced Integration Elements* is disabled, the filter writes `C3D8` and omits all `*Hourglass Stiffness` records.
 
@@ -49,7 +53,7 @@ The filter writes one material card for each grain. This card is copied from `Ab
 
 `*Depvar` gives the number of solution-dependent state variables that the user material uses. `*User Output Variables` gives the number of user output variables. Both are nonnegative counts.
 
-*Material Constants* requires at least one row and has exactly one column. Each row supplies one user constant, in table order. The units and meaning of these values depend on the user material. Material constants and Euler angles are written at full precision, with a maximum of eight values per line.
+*Material Constants* requires at least one row and has exactly one column. Each row supplies one user constant, in table order. Labels such as "User Constant 1" identify table rows. The final position in the `*User Material` list depends on *Include Grain and Phase IDs as Constants* and *Euler Angles Start Index*. The units and meaning of these values depend on the user material. Material constants and Euler angles are written at full precision, with a maximum of eight values per line.
 
 *Include Grain and Phase IDs as Constants* is enabled by default. It places the grain ID and phase ID at constant positions *1* and *2*. These IDs are dimensionless. Disable this option if the user material does not expect the IDs.
 
@@ -85,11 +89,15 @@ If the output directory does not exist, preflight reports a warning and the filt
 
 The DREAM.3D 6.6 writer used the `_set` suffix in the material-card name. Its section reference used the `_mat` suffix. This filter uses `_mat` in both locations, so the material reference is valid. Element-set names continue to use `_set`.
 
-When converting a legacy SIMPL pipeline, the filter enables reduced integration (`C3D8R`) and *Write Euler Angles in Degrees*, disables *Use Unsymmetric Solver*, and includes grain and phase IDs with *Euler Angles Start Index* set to *3*. This preserves the legacy choices for element type, angle units, solver flag, and constant layout.
+When converting a legacy SIMPL pipeline, the filter enables reduced integration (`C3D8R`) and *Write Euler Angles in Degrees*, disables *Use Unsymmetric Solver*, and includes grain and phase IDs with *Euler Angles Start Index* set to *3*. Conversion preserves the legacy element type, angle units, solver flag, and constant layout. The legacy writer wrote `C3D8R` elements without any `*Hourglass Stiffness` record. The converted pipeline additionally writes `*Hourglass Stiffness` with the default value 250 after each `*Solid Section`. Users who want the exact legacy section file can disable *Use Reduced Integration Elements* only if they also accept `C3D8` elements. There is no option for `C3D8R` without hourglass stiffness.
 
 ### Memory
 
-The temporary element-bucket storage uses 8 bytes for each cell with a positive feature ID. The per-grain phase, orientation, count, and offset storage uses about 32 bytes for each grain.
+Per-grain tables for phase, orientation, and the has-cells flag use about 17 bytes per feature ID through the maximum ID. In-core element-set grouping keeps one element index (8 bytes) per cell with a positive feature ID, plus a small vector per grain.
+
+On out-of-core stores, the writer reads all arrays in chunks of 65,536 cells. It sorts `(feature ID, element ID)` records with the registered bounded external-sort provider. This bounds the cell-processing memory so it does not grow with the cell count. The per-grain tables still depend on the maximum feature ID.
+
+The maximum feature ID is limited to 100,000,000. Larger IDs cause an error during execution; renumber the features to be contiguous. The node and element label limit is 999,999,999. Mesh counts above this limit cause a preflight error.
 
 % Auto generated parameter table will be inserted here
 
@@ -97,30 +105,30 @@ The temporary element-bucket storage uses 8 bytes for each cell with a positive 
 
 These files are copied from the *Synthetic Two Grain* test output. The example uses a `2 x 2 x 1` **Image Geometry** with origin `(0, 0, 0)` and spacing `(0.5, 0.5, 0.5)` in the geometry's length units. Feature IDs are `{1, 1, 2, 2}`. Phases are `{1, 1, 2, 2}`. The output prefix is `Abaqus_CP_Test`. The test explicitly enables reduced integration and sets *Hourglass Stiffness Value* to *417*. It uses radians, the unsymmetric solver, grain and phase IDs, and Euler angles starting at constant *3*. The two user constants are *1.5* and *2.25*, with 3 solution-dependent state variables and 2 user output variables.
 
-`Abaqus_CP_Test_nodes.inp`:
+`Abaqus_CP_Test_nodes.inp` uses coordinates computed in `float64` and written with 9 significant digits:
 
 ```text
 ** ----------------------------------------------------------------
 **
 *Node
-1, 0.000000, 0.000000, 0.000000
-2, 0.500000, 0.000000, 0.000000
-3, 1.000000, 0.000000, 0.000000
-4, 0.000000, 0.500000, 0.000000
-5, 0.500000, 0.500000, 0.000000
-6, 1.000000, 0.500000, 0.000000
-7, 0.000000, 1.000000, 0.000000
-8, 0.500000, 1.000000, 0.000000
-9, 1.000000, 1.000000, 0.000000
-10, 0.000000, 0.000000, 0.500000
-11, 0.500000, 0.000000, 0.500000
-12, 1.000000, 0.000000, 0.500000
-13, 0.000000, 0.500000, 0.500000
-14, 0.500000, 0.500000, 0.500000
-15, 1.000000, 0.500000, 0.500000
-16, 0.000000, 1.000000, 0.500000
-17, 0.500000, 1.000000, 0.500000
-18, 1.000000, 1.000000, 0.500000
+1, 0, 0, 0
+2, 0.5, 0, 0
+3, 1, 0, 0
+4, 0, 0.5, 0
+5, 0.5, 0.5, 0
+6, 1, 0.5, 0
+7, 0, 1, 0
+8, 0.5, 1, 0
+9, 1, 1, 0
+10, 0, 0, 0.5
+11, 0.5, 0, 0.5
+12, 1, 0, 0.5
+13, 0, 0.5, 0.5
+14, 0.5, 0.5, 0.5
+15, 1, 0.5, 0.5
+16, 0, 1, 0.5
+17, 0.5, 1, 0.5
+18, 1, 1, 0.5
 **
 ** ----------------------------------------------------------------
 **
