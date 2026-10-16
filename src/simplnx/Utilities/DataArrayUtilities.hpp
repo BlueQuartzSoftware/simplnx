@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 #if defined(_MSC_VER)
@@ -59,6 +60,42 @@ namespace nx::core
  * It does not check whether the leaf exists or is a DataArray.
  */
 SIMPLNX_EXPORT bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix);
+
+/**
+ * @brief Validates that an array belongs to a grid geometry's Cell Attribute Matrix.
+ * @param dataStructure Resolves the selected objects.
+ * @param geometryPath Identifies the grid geometry.
+ * @param arrayPath Identifies the DataArray to validate.
+ * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
+ * @param parameterName Parameter display name used in the error.
+ * @return Success for a direct child of the Cell Attribute Matrix, or an error.
+ */
+SIMPLNX_EXPORT Result<> ValidateArrayInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& arrayPath, int32 errorCode, std::string_view parameterName);
+
+/**
+ * @brief Validates ignored arrays against a grid geometry's Cell Attribute Matrix.
+ * @param dataStructure Resolves the selected objects.
+ * @param geometryPath Identifies the grid geometry.
+ * @param arrayPaths Identifies the DataArrays to validate, in error-reporting order.
+ * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
+ * @param parameterName Parameter display name used in the error.
+ * @return Error for the first invalid path or missing Cell Attribute Matrix; otherwise success.
+ */
+SIMPLNX_EXPORT Result<> ValidateArraysInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& arrayPaths, int32 errorCode,
+                                                         std::string_view parameterName);
+
+/**
+ * @brief Validates a Feature Attribute Matrix directly under the selected grid geometry.
+ * @param dataStructure Resolves the selected objects.
+ * @param geometryPath Identifies the grid geometry.
+ * @param featureAttributeMatrixPath Identifies the Feature Attribute Matrix to validate.
+ * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
+ * @param sourceParameterName Display name of the parameter that selects the source array.
+ * @param sourceArrayPath Identifies the array whose parent supplies the Feature Attribute Matrix.
+ * @return Success for a direct child Attribute Matrix other than Cell Data, or an error.
+ */
+SIMPLNX_EXPORT Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
+                                                                 std::string_view sourceParameterName, const DataPath& sourceArrayPath);
 
 /**
  * @brief Replaces tuples selected by a mask.
