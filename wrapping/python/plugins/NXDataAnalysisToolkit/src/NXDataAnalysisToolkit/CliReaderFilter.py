@@ -193,7 +193,7 @@ class CliReaderFilter:
       if not layer:
         current_time = time.time()
         if message_handler is not None and (current_time - last_message_time) >= 1:
-          message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Skipping layer {layer_idx + 1}/{len(layer_features)}...'))
+          message_handler.send_progress_count('Importing Layers', layer_idx + 1, len(layer_features), 'Skipping empty layer')
           last_message_time = current_time
           continue
 
@@ -223,10 +223,10 @@ class CliReaderFilter:
       
       current_time = time.time()
       if message_handler is not None and (current_time - last_message_time) >= 1:
-        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Imported layer {layer_idx + 1}/{len(layer_features)}'))
+        message_handler.send_progress_count('Importing Layers', layer_idx + 1, len(layer_features))
         last_message_time = current_time
 
-    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Imported layer {len(layer_features)}/{len(layer_features)}'))
+    message_handler.send_progress_count('Importing Layers', len(layer_features), len(layer_features))
     return Result(value=(start_vertices, end_vertices, data_arrays, num_of_edges))
   
   def _update_edge_geometry(self, data_structure: nx.DataStructure, output_edge_geom_path: nx.DataPath, output_edge_attrmat_name: str,

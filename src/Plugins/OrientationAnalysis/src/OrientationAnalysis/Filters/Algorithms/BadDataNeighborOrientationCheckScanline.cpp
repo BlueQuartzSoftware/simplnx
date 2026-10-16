@@ -259,8 +259,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     {
       changed = false;
       passCount++;
-      const std::string progressLabel = fmt::format("Processing Level {} of {} Pass {}", startLevel - currentLevel + 1, totalLevels, passCount);
-      m_MessageHandler.sendInfoMessage(progressLabel);
+      const std::string progressLabel = fmt::format("Processing Level {}/{} Pass {}", startLevel - currentLevel + 1, totalLevels, passCount);
       progressThrottle.reset(static_cast<usize>(dimZ), progressLabel);
 
       if(Result<> ioResult = loadSlice(0, curQuats, curPhases, curMask); ioResult.invalid())

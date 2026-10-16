@@ -415,7 +415,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
         {
           return r;
         }
-        progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
         if(!changed)
         {
           converged = true;
@@ -688,7 +687,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
       return {};
     }
     sweep(false, changed);
-    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;
@@ -938,7 +936,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
     {
       return r;
     }
-    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break; // reached the fixpoint
@@ -1411,7 +1408,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       progressThrottle.updateCount(tailPlanes + processedPlanes + batchPlanes);
     }
 
-    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;
@@ -1620,7 +1616,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       {
         return r;
       }
-      progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
       if(!changed)
       {
         break;
@@ -1800,7 +1795,6 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
     {
       return r;
     }
-    progressThrottle.queueMessage("Reconstructing Morphology: {} sweep pairs completed", sweepPair + 1);
     if(!changed)
     {
       break;
