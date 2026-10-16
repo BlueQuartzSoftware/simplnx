@@ -11,6 +11,8 @@
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/EmptyListStore.hpp"
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp"
@@ -39,6 +41,53 @@
 #include <vector>
 
 using namespace nx::core;
+
+TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtilities]")
+{
+  const bool useRectGrid = GENERATE(false, true);
+  const bool emptyGeometry = GENERATE(false, true);
+  const usize tupleCount = GENERATE(usize{0}, usize{1}, usize{59}, usize{60}, usize{61});
+  const int32 errorCode = GENERATE(-1234, -5678);
+  const usize cellCount = emptyGeometry ? 0 : 60;
+  CAPTURE(useRectGrid, emptyGeometry, tupleCount, errorCode);
+
+  DataStructure dataStructure;
+  auto* parent = DataGroup::Create(dataStructure, "Geometry Group");
+  REQUIRE(parent != nullptr);
+  const DataPath geometryPath({"Geometry Group", "Selected Geometry"});
+  const DataPath dataPath({"Other Geometry", "Cell Data", "Values"});
+  IGridGeometry* geometry = nullptr;
+  if(useRectGrid)
+  {
+    geometry = RectGridGeom::Create(dataStructure, geometryPath.getTargetName(), parent->getId());
+  }
+  else
+  {
+    geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName(), parent->getId());
+  }
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({emptyGeometry ? usize{0} : usize{4}, 3, 5});
+
+  auto result = ValidateCellTupleCount(*geometry, geometryPath, tupleCount, dataPath, errorCode);
+  if(tupleCount == cellCount)
+  {
+    REQUIRE(result.valid());
+  }
+  else
+  {
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().size() == 1);
+    const auto& error = result.errors().front();
+    CHECK(error.code == errorCode);
+    CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
+    CHECK(error.message.find(dataPath.toString()) != std::string::npos);
+    CHECK(error.message.find(fmt::format("{} tuples", tupleCount)) != std::string::npos);
+    CHECK(error.message.find(fmt::format("{} cells", cellCount)) != std::string::npos);
+    CHECK(error.message.find("Select data with one tuple per geometry cell.") != std::string::npos);
+  }
+  CHECK(result.warnings().empty());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUtilities]")
 {

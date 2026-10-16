@@ -11,8 +11,16 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <any>
+#include <atomic>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace nx::core
 {
@@ -110,11 +118,10 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  auto cellTupleResult = ValidateCellTupleCount(imageGeom, imageGeomPath, featureIds.getNumberOfTuples(), featureIdsPath, k_FeatureIdsTupleCountMismatch);
+  if(cellTupleResult.invalid())
   {
-    return MakePreflightErrorResult(k_FeatureIdsTupleCountMismatch,
-                                    fmt::format("FeatureIds array '{}' contains {} tuples, but Image Geometry '{}' contains {} cells. Select a FeatureIds array that matches the Image Geometry.",
-                                                featureIdsPath.toString(), featureIds.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
+    return {ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   dataArrayPaths.push_back(numNeighborsPath);

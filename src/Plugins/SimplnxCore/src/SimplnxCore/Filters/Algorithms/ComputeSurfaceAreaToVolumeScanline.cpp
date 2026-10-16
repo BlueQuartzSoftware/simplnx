@@ -1,5 +1,8 @@
 #include "ComputeSurfaceAreaToVolumeScanline.hpp"
 
+#include <cmath>
+#include <vector>
+
 #include "ComputeSurfaceAreaToVolume.hpp"
 
 #include "simplnx/Common/Constants.hpp"
@@ -46,15 +49,15 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
   auto yPoints = static_cast<int64>(dims[1]);
   auto zPoints = static_cast<int64>(dims[2]);
 
-  float32 voxelVol = spacing[0] * spacing[1] * spacing[2];
+  const float64 voxelVol = static_cast<float64>(spacing[0]) * spacing[1] * spacing[2];
 
   // Multiple cells contribute to one feature, so accumulation stays local until
   // the cell scan is complete.
-  std::vector<float32> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0f);
+  std::vector<float64> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0);
 
-  const float32 xyFaceArea = spacing[0] * spacing[1];
-  const float32 yzFaceArea = spacing[1] * spacing[2];
-  const float32 zxFaceArea = spacing[2] * spacing[0];
+  const float64 xyFaceArea = static_cast<float64>(spacing[0]) * spacing[1];
+  const float64 yzFaceArea = static_cast<float64>(spacing[1]) * spacing[2];
+  const float64 zxFaceArea = static_cast<float64>(spacing[2]) * spacing[0];
 
   const usize sliceSize = static_cast<usize>(yPoints) * static_cast<usize>(xPoints);
 
@@ -95,7 +98,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
           continue;
         }
 
-        float32 onSurface = 0.0f;
+        float64 onSurface = 0.0;
 
         // Z neighbors use adjacent buffers. X and Y neighbors use the current buffer.
         if(z > 0)
@@ -118,7 +121,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice - static_cast<usize>(xPoints)] != currentFeatureId)
           {
-            onSurface += yzFaceArea;
+            onSurface += zxFaceArea;
           }
         }
 
@@ -126,7 +129,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice + static_cast<usize>(xPoints)] != currentFeatureId)
           {
-            onSurface += yzFaceArea;
+            onSurface += zxFaceArea;
           }
         }
 
@@ -134,7 +137,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice - 1] != currentFeatureId)
           {
-            onSurface += zxFaceArea;
+            onSurface += yzFaceArea;
           }
         }
 
@@ -142,7 +145,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
         {
           if(curSlice[inSlice + 1] != currentFeatureId)
           {
-            onSurface += zxFaceArea;
+            onSurface += yzFaceArea;
           }
         }
 
@@ -172,18 +175,18 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     return ioResult;
   }
 
-  std::vector<float32> localSurfaceAreaVolumeRatio(numFeaturesUSize, 0.0f);
-
-  const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
-  for(usize i = 1; i < numFeaturesUSize; i++)
   {
-    float32 featureVolume = voxelVol * localNumCells[i];
-    localSurfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
-  }
-  ioResult = surfaceAreaVolumeRatio.copyFromBuffer(0, nonstd::span<const float32>(localSurfaceAreaVolumeRatio.data(), numFeaturesUSize));
-  if(ioResult.invalid())
-  {
-    return ioResult;
+    std::vector<float32> localSurfaceAreaVolumeRatio(numFeaturesUSize, 0.0f);
+    for(usize i = 1; i < numFeaturesUSize; i++)
+    {
+      const float64 featureVolume = voxelVol * localNumCells[i];
+      localSurfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
+    }
+    ioResult = surfaceAreaVolumeRatio.copyFromBuffer(0, nonstd::span<const float32>(localSurfaceAreaVolumeRatio.data(), numFeaturesUSize));
+    if(ioResult.invalid())
+    {
+      return ioResult;
+    }
   }
 
   if(m_InputValues->CalculateSphericity)
@@ -191,12 +194,13 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
+    const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.
     std::vector<float32> localSphericity(numFeaturesUSize, 0.0f);
     for(usize i = 1; i < numFeaturesUSize; i++)
     {
-      float32 featureVolume = voxelVol * localNumCells[i];
-      localSphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 0.66666f)) / featureSurfaceArea[i];
+      const float64 featureVolume = voxelVol * localNumCells[i];
+      localSphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[i]);
     }
     ioResult = sphericity.copyFromBuffer(0, nonstd::span<const float32>(localSphericity.data(), numFeaturesUSize));
     if(ioResult.invalid())

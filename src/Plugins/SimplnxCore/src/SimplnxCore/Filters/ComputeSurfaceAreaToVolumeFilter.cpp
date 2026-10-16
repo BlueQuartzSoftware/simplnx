@@ -5,10 +5,12 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -95,6 +97,21 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNumCellsArrayPathValue = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
   auto pCalculateSphericityValue = filterArgs.value<bool>(k_CalculateSphericity_Key);
+  auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
+  const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIds == nullptr)
+  {
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(pFeatureIdsArrayPathValue);
+    return MakePreflightErrorResult(-12803, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+                                                        pFeatureIdsArrayPathValue.toString(), selectedObject.getTypeName()));
+  }
+  auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIds->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12804);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   PreflightResult preflightResult;
 

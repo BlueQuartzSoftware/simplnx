@@ -6,6 +6,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -24,16 +25,20 @@
 #include <Eigen/Dense>
 
 #include <algorithm>
+#include <any>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <iterator>
 #include <numbers>
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -46,7 +51,6 @@ const DataPath k_CellDataPath = k_GeometryPath.createChildPath("Cell Data");
 const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
 const DataPath k_EnsembleDataPath = k_GeometryPath.createChildPath("Cell Ensemble Data");
 const DataPath k_PhaseNamesPath = k_EnsembleDataPath.createChildPath("PhaseNames");
-const DataPath k_WrongFeatureIdsPath({"Wrong FeatureIds"});
 
 template <class T>
 DataStructure CreateImageDataStructure(const SizeVec3& dimensions, const std::vector<T>& featureIds, const std::vector<std::string>& phaseNames, const FloatVec3& spacing = {0.001F, 0.002F, 0.003F},
@@ -570,18 +574,59 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: RectGrid Needs Reorder Fail
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Tuple Count Mismatch", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Selected cell tuple counts", "[SimplnxCore][WriteOnScaleTableFileFilter]")
 {
   UnitTest::LoadPlugins();
+  const bool rectilinear = GENERATE(false, true);
+  const usize tupleCount = GENERATE(usize{3}, usize{4}, usize{5});
+  CAPTURE(rectilinear, tupleCount);
 
-  DataStructure dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
-  auto wrongFeatureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_WrongFeatureIdsPath, {3}, {1});
-  REQUIRE(Int32Array::Create(dataStructure, k_WrongFeatureIdsPath.getTargetName(), wrongFeatureIdsStore) != nullptr);
+  DataStructure dataStructure;
+  if(rectilinear)
+  {
+    const std::array<std::vector<float32>, 3> bounds = {{{0.0F, 1.0F, 2.0F}, {0.0F, 1.0F, 2.0F}, {0.0F, 1.0F}}};
+    dataStructure = CreateRectGridDataStructure<int32>({2, 2, 1}, bounds, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  }
+  else
+  {
+    dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  }
+  auto* selectedGroup = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedGroup != nullptr);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IGridGeometry>(k_GeometryPath));
+  REQUIRE(dataStructure.setAdditionalParent(dataStructure.getDataRefAs<IGridGeometry>(k_GeometryPath).getId(), selectedGroup->getId()));
+  const DataPath geometryPath({"Selected", "Geometry"});
+  auto* storageGroup = DataGroup::Create(dataStructure, "Storage");
+  REQUIRE(storageGroup != nullptr);
+  auto* selectedCellData = AttributeMatrix::Create(dataStructure, "Cell Data", {tupleCount}, storageGroup->getId());
+  REQUIRE(selectedCellData != nullptr);
+  const DataPath featureIdsPath({"Storage", "Cell Data", "FeatureIds"});
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {tupleCount}, {1});
+  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, selectedCellData->getId()) != nullptr);
+
   const WriteOnScaleTableFileFilter filter;
   Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Tuple_Mismatch");
-  args.insertOrAssign(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_WrongFeatureIdsPath));
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  args.insertOrAssign(WriteOnScaleTableFileFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  if(tupleCount == 4)
+  {
+    // The separately stored flat tuple shape is a valid count-only match.
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    const auto& error = preflightResult.outputActions.errors()[0];
+    CHECK(error.code == -12024);
+    CHECK(error.message.find(featureIdsPath.toString()) != std::string::npos);
+    CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
+    CHECK(error.message.find(fmt::format("has {} tuples", tupleCount)) != std::string::npos);
+    CHECK(error.message.find("has 4 cells") != std::string::npos);
+    CHECK(error.message.find("one tuple per geometry cell") != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Empty Phase Names Warns During Preflight", "[SimplnxCore][WriteOnScaleTableFileFilter]")
