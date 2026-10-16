@@ -57,11 +57,11 @@ The Filter refuses to run in two cases:
 
 This filter performs iterative morphological erosion or dilation on "bad" voxels (cells with FeatureId == 0) within an ImageGeom grid.
 
-### Erosion
+### Erosion Algorithm
 
 For each bad voxel, the algorithm examines its 6 face-connected neighbors and tallies the FeatureIds of any good (non-zero) neighbors. The bad voxel is then assigned the FeatureId that appears most frequently among its good neighbors (a "majority vote"). If there is a tie, one of the tied FeatureIds is chosen. This process shrinks bad-data regions by one cell per iteration.
 
-### Dilation
+### Dilation Algorithm
 
 For each bad voxel, the algorithm examines its 6 face-connected neighbors. Any good neighbor adjacent to the bad voxel has its FeatureId set to 0, effectively growing the bad-data region outward by one cell per iteration.
 

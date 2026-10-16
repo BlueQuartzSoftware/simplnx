@@ -25,7 +25,7 @@ Use this filter to extract a smooth surface from continuous scalar data (CT dens
 
 ### Required Input Sources
 
-- **Image Geometry** -- the volume to contour, typically from an image/volume reader such as [Read Image](ReadImageFilter.md) or an upstream processing filter.
+- **Image Geometry** -- the volume to contour, typically from an image/volume reader such as [Read Image](../ImageProcessing/ReadImageFilter.md) or an upstream processing filter.
 - **Data Array to Contour** -- any single-component scalar **Cell Data** array on that geometry.
 
 ![A 3D contour surface extracted from an Image Geometry at the chosen Contour Value.](Images/FlyingEdges3D_1.png)

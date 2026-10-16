@@ -85,12 +85,12 @@ None.
 
 For valid input, the removal and fill outputs match DREAM3D 6.5.171 exactly, and extracted geometries have the same dimensions, origin and cell data. SIMPLNX differs in how it handles malformed input and in how it packages extracted geometries:
 
-- [D3: Fill cannot make progress](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d3) -- SIMPLNX stops with error *-45436*; 6.5.171 runs forever.
-- [D4: Feature ID outside the feature tuple range](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d4) -- SIMPLNX stops with error *-45435*; 6.5.171 reads out of bounds.
-- [D6: Flagged feature with no cells on extract](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d6) -- SIMPLNX warns and skips it; 6.5.171 writes a spurious 1x1x1 geometry.
-- [D7: Extracted geometry naming and contents](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d7) -- SIMPLNX uses `<prefix>-<zero-padded id>` and carries the feature **Attribute Matrix**; 6.5.171 uses `Feature_<id>` with cell data only.
+- [D3: Fill cannot make progress](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d3) -- SIMPLNX stops with error *-45436*; 6.5.171 runs forever.
+- [D4: Feature ID outside the feature tuple range](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d4) -- SIMPLNX stops with error *-45435*; 6.5.171 reads out of bounds.
+- [D6: Flagged feature with no cells on extract](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d6) -- SIMPLNX warns and skips it; 6.5.171 writes a spurious 1x1x1 geometry.
+- [D7: Extracted geometry naming and contents](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d7) -- SIMPLNX uses `<prefix>-<zero-padded id>` and carries the feature **Attribute Matrix**; 6.5.171 uses `Feature_<id>` with cell data only.
 
-DREAM3D-NX releases before the fixes described in [D1](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d1) (v7.4.1 and earlier) and [D2](../vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d2) (v7.4.2 and earlier) could run forever with *Fill-in Removed Features* on. Upgrade or disable fill on those versions.
+DREAM3D-NX releases before the fixes described in [D1](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d1) (v7.4.1 and earlier) and [D2](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/SimplnxCore/vv/deviations/RemoveFlaggedFeaturesFilter.md#removeflaggedfeaturesfilter-d2) (v7.4.2 and earlier) could run forever with *Fill-in Removed Features* on. Upgrade or disable fill on those versions.
 
 ## Related Filters
 
