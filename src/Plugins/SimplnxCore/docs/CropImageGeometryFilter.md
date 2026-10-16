@@ -88,7 +88,7 @@ Renumbering alone never corrected these values. It changed Feature Ids and moved
 | On | Off (default) | Sparse matrix with no arrays. It keeps the source tuple shape and original Feature Ids. Rows for removed features are unused. Use this mode to track features between the original and cropped volumes. |
 | Off | Hidden and ignored | All Attribute Matrices other than the Cell Attribute Matrix are copied unchanged. Feature Ids are unchanged. Use this mode for raw data without features, or for debugging. Copied feature values still describe the original volume. |
 
-*Feature Attribute Matrix*, *Renumber Features*, and *Cell Feature Ids* are shown only when *Clear Feature Attribute Matrix* is on. *Renumber Features* is off by default. Both selection paths are required when Clear is on, even when Renumber is off. Select an `int32` array with one component for *Cell Feature Ids*. When Clear is off, the filter ignores both selections and any saved Renumber setting.
+*Feature Attribute Matrix*, *Renumber Features*, and *Cell Feature Ids* are shown only when *Clear Feature Attribute Matrix* is on. *Renumber Features* is off by default. Both selection paths are required when Clear is on, even when Renumber is off. Select an `int32` array with one component for *Cell Feature Ids*. When Clear and Renumber are both on, *Cell Feature Ids* must be in the selected Image Geometry's Cell Attribute Matrix. When Clear is off, the filter ignores both selections and any saved Renumber setting.
 
 Other Attribute Matrices, including the **Ensemble Attribute Matrix** (data for each phase), are copied unchanged in every mode.
 
@@ -104,6 +104,7 @@ When Clear is on, the selected Feature Attribute Matrix must be a direct child o
 
 - **-50563**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select a Feature Attribute Matrix directly under that geometry.
 - **-50562**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds feature data, or turn Clear off for data without features.
+- **-50564**: Cell Feature Ids must be in the selected Image Geometry's Cell Attribute Matrix when Clear and Renumber are both on.
 
 ### Required Input Sources
 
