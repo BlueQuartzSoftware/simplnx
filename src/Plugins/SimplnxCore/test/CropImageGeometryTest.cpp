@@ -728,6 +728,49 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF ignores stored renumb
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: StrictFeatureIds preflight", "[SimplnxCore][CropImageGeometryFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureCropFixture();
+  const auto* imageGeom = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(imageGeom != nullptr);
+  const auto* cellData = imageGeom->getCellData();
+  REQUIRE(cellData != nullptr);
+  auto* otherData = AttributeMatrix::Create(ds, "Other Cell Data", cellData->getShape(), imageGeom->getId());
+  REQUIRE(otherData != nullptr);
+  auto* misplacedIds = UnitTest::CreateTestDataArray<int32>(ds, "MisplacedFeatureIds", otherData->getShape(), {1}, otherData->getId());
+  REQUIRE(misplacedIds != nullptr);
+  misplacedIds->fill(1);
+
+  CropImageGeometryFilter filter;
+  Arguments args = MakeFeatureCropArgs(true, true);
+  args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Other Cell Data", "MisplacedFeatureIds"})));
+
+  SECTION("Renumber ON rejects Feature Ids in another Attribute Matrix")
+  {
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == -50564);
+    CHECK(result.outputActions.errors().front().message ==
+          "**Cell Feature Ids** DataArray 'Image/Other Cell Data/MisplacedFeatureIds' must be in the Cell Attribute Matrix 'Image/Cell Data' of the selected Image Geometry 'Image'. "
+          "Select the DataArray from that Attribute Matrix.");
+  }
+  SECTION("Renumber OFF accepts Feature Ids in another Attribute Matrix")
+  {
+    args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  SECTION("Renumber ON accepts Feature Ids in the Cell Attribute Matrix")
+  {
+    args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON Feature AM errors", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
