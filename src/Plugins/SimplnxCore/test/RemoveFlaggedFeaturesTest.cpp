@@ -83,6 +83,11 @@ constexpr int32 k_ParentNotAttributeMatrixError = -9892;
 constexpr int32 k_NeighborListRemovalWarning = -5558;
 constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
 
+IFilter::MessageHandler RecordMessages(std::vector<IFilter::Message>& messages)
+{
+  return IFilter::MessageHandler{[&messages](const IFilter::Message& message) { messages.push_back(message); }};
+}
+
 struct FixtureSpec
 {
   SizeVec3 dims;                 // (x, y, z)
@@ -699,6 +704,86 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill pro
 // =====================================================================================================
 // Class 1 analytical oracle: Extract
 // =====================================================================================================
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress completes", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureB());
+  RemoveFlaggedFeaturesFilter filter;
+  const auto args = MakeArgs(k_Extract, false);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  std::vector<IFilter::Message> messages;
+  const auto handler = RecordMessages(messages);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  int32 lastProgress = -1;
+  bool sawSuccess = false;
+  for(const auto& message : messages)
+  {
+    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0)
+    {
+      CHECK(message.progress >= lastProgress);
+      lastProgress = message.progress;
+    }
+    if(message.type == IFilter::Message::Type::Info && message.message == "All Features Successfully Extracted")
+    {
+      sawSuccess = true;
+    }
+  }
+  CHECK(lastProgress == 100);
+  CHECK(sawSuccess);
+  CHECK(ReadInt32(dataStructure, k_NewFeatureIdsPath) == std::vector<int32>{3, 3});
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does not complete after cancellation", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  // One non-background feature makes the first extraction iteration the final crop iteration.
+  BuildFixture(dataStructure, {SizeVec3{2, 1, 1}, {0, 1}, 2, {false, true}});
+  RemoveFlaggedFeaturesFilter filter;
+  const auto args = MakeArgs(k_Extract, false);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  std::atomic_bool cancel{false};
+  std::vector<IFilter::Message> messages;
+  const auto recordingHandler = RecordMessages(messages);
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    recordingHandler.sendMessage(message);
+    // reset() opens the throttle gate, so this callback deterministically precedes the last crop's preflight.
+    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0 && message.progress == 0)
+    {
+      cancel = true;
+    }
+  }};
+  auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler, cancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  CHECK(executeResult.result.errors()[0].code == -1);
+  REQUIRE(cancel.load());
+  CHECK(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-1"})) == nullptr);
+
+  for(const auto& message : messages)
+  {
+    CAPTURE(message.message);
+    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0)
+    {
+      CHECK(message.progress < 100);
+    }
+    CHECK(message.message != "All Features Successfully Extracted");
+  }
+}
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract crops the bounding box of each flagged feature", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {

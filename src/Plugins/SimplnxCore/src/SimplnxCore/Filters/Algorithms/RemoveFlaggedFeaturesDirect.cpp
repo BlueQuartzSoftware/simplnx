@@ -459,6 +459,11 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return MergeResults(std::move(result), std::move(cropResult));
     }
 
+    if(m_ShouldCancel)
+    {
+      return result;
+    }
+
     progressThrottle.updatePercent(featureEnd > 0 ? featureEnd - 1 : 0);
     m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }

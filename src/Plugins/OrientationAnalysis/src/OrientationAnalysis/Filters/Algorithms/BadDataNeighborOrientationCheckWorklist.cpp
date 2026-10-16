@@ -152,6 +152,9 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
     }
   }
 
+  progressThrottle.updatePercent(totalPoints);
+  progressThrottle.flush();
+
   // Descend from six face neighbors to the requested count. One-slice geometries cannot meet the top levels.
   constexpr int32 startLevel = static_cast<int32>(k_NumFaceNeighbors);
   const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
