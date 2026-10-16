@@ -1,11 +1,15 @@
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
+
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <fstream>
+#include <system_error>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -93,6 +97,61 @@ TEST_CASE("Application::loadPreferences", "[Application]")
     app->loadPreferences();
     auto* prefs = app->getPreferences();
     REQUIRE(prefs != nullptr);
+  }
+}
+
+TEST_CASE("Application::loadPreferences from a specified path", "[Application]")
+{
+  const fs::path tempDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("ApplicationPreferences_" + Uuid::GenerateV4().str());
+  REQUIRE(fs::create_directories(tempDir));
+  auto cleanup = MakeScopeGuard([&tempDir]() noexcept {
+    std::error_code error;
+    fs::remove_all(tempDir, error);
+  });
+  const fs::path filepath = tempDir / "preferences.json";
+
+  SECTION("A missing preferences file is a normal first run")
+  {
+    auto app = Application::GetOrCreateInstance();
+    REQUIRE_FALSE(fs::exists(filepath));
+
+    const auto result = app->loadPreferences(filepath);
+
+    REQUIRE(result.valid());
+    REQUIRE(result.warnings().empty());
+    REQUIRE(app->getPreferences() != nullptr);
+    REQUIRE_FALSE(fs::exists(filepath));
+  }
+
+  SECTION("Malformed JSON remains an application error")
+  {
+    {
+      std::ofstream file(filepath);
+      REQUIRE(file.is_open());
+      file << "{ not json";
+      file.close();
+      REQUIRE(file.good());
+    }
+    auto app = Application::GetOrCreateInstance();
+
+    const auto result = app->loadPreferences(filepath);
+
+    REQUIRE(result.invalid());
+    REQUIRE_FALSE(result.errors().empty());
+    REQUIRE(result.errors()[0].code == -1);
+    REQUIRE(result.errors()[0].message.find("Could not load preferences") != std::string::npos);
+  }
+
+  SECTION("Preferences reports the missing-file error code directly")
+  {
+    Preferences preferences;
+    REQUIRE_FALSE(fs::exists(filepath));
+
+    const auto result = preferences.loadFromFile(filepath);
+
+    REQUIRE(result.invalid());
+    REQUIRE_FALSE(result.errors().empty());
+    REQUIRE(result.errors()[0].code == Preferences::k_FileDoesNotExist_Code);
   }
 }
 

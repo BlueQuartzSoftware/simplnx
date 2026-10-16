@@ -29,11 +29,6 @@ constexpr StringLiteral k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 constexpr bool k_AutoRangeComputationDefault = false;
 
-constexpr int32 k_FailedToCreateDirectory_Code = -585;
-constexpr int32 k_FileDoesNotExist_Code = -586;
-constexpr int32 k_FileCouldNotOpen_Code = -587;
-constexpr int32 k_JsonParseError_Code = -588;
-
 constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
 constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
 constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
@@ -208,13 +203,13 @@ Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 {
   if(!std::filesystem::exists(filepath.parent_path()) && !std::filesystem::create_directories(filepath.parent_path()))
   {
-    return MakeErrorResult(k_FailedToCreateDirectory_Code, k_FailedToCreateDirectory_Message);
+    return MakeErrorResult(Preferences::k_FailedToCreateDirectory_Code, k_FailedToCreateDirectory_Message);
   }
 
   std::ofstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
   }
 
   fileStream << m_Values;
@@ -225,19 +220,19 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 {
   if(!std::filesystem::exists(filepath))
   {
-    return MakeErrorResult(k_FileDoesNotExist_Code, k_FileDoesNotExist_Message);
+    return MakeErrorResult(Preferences::k_FileDoesNotExist_Code, k_FileDoesNotExist_Message);
   }
 
   std::ifstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
   }
 
   nlohmann::json parsedResult = nlohmann::json::parse(fileStream, nullptr, false);
   if(parsedResult.is_discarded())
   {
-    return MakeErrorResult(k_JsonParseError_Code, k_JsonParseError_Message);
+    return MakeErrorResult(Preferences::k_JsonParseError_Code, k_JsonParseError_Message);
   }
 
   m_Values = parsedResult;
