@@ -16,6 +16,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -141,6 +142,27 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
 
   auto pFeatureDataPaths = filterArgs.value<std::vector<DataPath>>(k_SelectedFeatureDataArrayPaths_Key);
+  auto fixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
+
+  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  if(fixProblemVoxels)
+  {
+    auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, pGridGeomDataPath, pFeatureIdsArrayPathValue, -76532, "Cell Feature Ids");
+    if(featureIdsResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    }
+  }
+  else
+  {
+    const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
+    if(featureIds.getNumberOfTuples() != gridGeom.getNumberOfCells())
+    {
+      return MakePreflightErrorResult(-76533,
+                                      fmt::format("**Cell Feature Ids** DataArray '{}' has {} tuples, but the selected grid geometry '{}' has {} cells. Select a DataArray with one tuple per cell.",
+                                                  pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pGridGeomDataPath.toString(), gridGeom.getNumberOfCells()));
+    }
+  }
 
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
@@ -148,7 +170,11 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  if(fixProblemVoxels)
+  {
+    const auto featureIdsPath = gridGeom.getCellDataPath().createChildPath(pFeatureIdsArrayPathValue.getTargetName());
+    resultOutputActions.value().appendDataObjectModificationNotification(featureIdsPath, DataObjectModification::ModifiedType::Modified);
+  }
 
   const usize elementTupleCount = gridGeom.getCellData()->getNumberOfTuples();
   constexpr usize numElements = 0;
