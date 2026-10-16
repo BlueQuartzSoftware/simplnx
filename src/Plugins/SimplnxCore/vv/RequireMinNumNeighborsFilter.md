@@ -162,7 +162,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | # | Phase | Path | Test case |
 |---|---|---|---|
 | 1 | Preflight | Feature-level `NumNeighbors` and, when enabled, `FeaturePhases` tuple counts disagree - return `-252`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple count mismatch (-252)` |
-| 2 | Preflight | FeatureIds tuple count differs from the selected Image Geometry cell count - return `-55571`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` |
+| 2 | Preflight | FeatureIds is not in the selected Image Geometry's Cell Attribute Matrix - return `-55575`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)` |
 | 3 | Preflight | NeighborList-removal preflight warning is produced when feature NeighborLists are present. | `SimplnxCore::RequireMinNumNeighborsFilter` - asserts only one `-5558` warning. |
 | 4 | Setup | Cell-data array discovery fails - return `-5556`. | *Not directly tested. Defensive check.* |
 | 5 | Selection | Single-phase mode names a phase absent from `FeaturePhases` - return `-5555`. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)` |
@@ -190,7 +190,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | `SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analytical Fixture` | new-for-V&V | Runs one common input in both phase modes. Checks six arrays with 2,610 exact element comparisons, a 1-vs-1 traversal-order tie, X/Y/Z boundaries, second-pass copying, ignored values, zero-cell feature retention, equal cell output across modes, and tuple dimensions. |
 | `SimplnxCore::RequireMinNumNeighborsFilter` | kept | Modified: loads `6_5_test_data_1_v2.tar.gz`, recomputes neighbors, derives the expected retained `NumElements` sequence from the pre-filter input and threshold, checks all 791 retained values, asserts the single `-5558` preflight warning, and verifies tuple dimensions. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple count mismatch (-252)` | kept | Creates 5-tuple `NumNeighbors` and 4-tuple `Phases` arrays, then asserts invalid preflight and exact code `-252`. |
-| `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` | new-for-V&V | Creates a 5-cell geometry with four `FeatureIds` tuples, then asserts invalid preflight and exact code `-55571`. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)` | new-for-V&V | Places `FeatureIds` in a second Attribute Matrix with the same tuple count as the Cell Attribute Matrix, then asserts invalid preflight and exact code `-55575`. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID out of range (-55567)` | new-for-V&V | Supplies `FeatureIds [1,4,2,3]` for four feature tuples, asserts valid preflight, invalid execution, and exact code `-55567`; covers D2. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned` | new-for-V&V | Supplies `FeatureIds [-1,1,1,2]`, asserts successful execution, and checks all four final IDs equal `[1,1,1,2]`; covers D1. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)` | new-for-V&V | Selects absent phase 5, then asserts valid preflight, invalid execution, and exact code `-5555`. |

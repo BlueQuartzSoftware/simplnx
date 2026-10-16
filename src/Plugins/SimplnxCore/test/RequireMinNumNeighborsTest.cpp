@@ -2,6 +2,7 @@
 #include "SimplnxCore/Filters/ComputeFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/RequireMinNumNeighborsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -610,8 +611,9 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
   imageGeom->setDimensions({4, 1, 1});
 
   // FeatureIds must exist for preflight, but it is not part of the feature-level tuple-count check.
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {4}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {4}, {1}, cellAM->getId());
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAM->getId());
 
   // NumNeighbors has five feature tuples.
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {5}, imageGeom->getId());
@@ -637,17 +639,18 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
   REQUIRE(preflightResult.outputActions.errors()[0].code == -252);
 }
 
-TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({5, 1, 1});
+  imageGeom->setDimensions({4, 1, 1});
   auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "OtherData", {1, 1, 4}, imageGeom->getId());
   auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAM->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, otherAM->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
 
   RequireMinNumNeighborsFilter filter;
@@ -656,13 +659,13 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureI
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
-  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "OtherData", "FeatureIds"})));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -55571);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -55575);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID out of range (-55567)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
@@ -895,6 +898,204 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsen
     CHECK((*featureIds)[i] == -1);
   }
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids", "[SimplnxCore][RequireMinNumNeighborsFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Strict Geometry"});
+  const DataPath cellPath = geometryPath.createChildPath("Cells");
+  const DataPath featurePath = geometryPath.createChildPath("Features");
+  const DataPath idsPath = cellPath.createChildPath("Ids");
+  const DataPath otherPath = geometryPath.createChildPath("Other Cells").createChildPath("Other Values");
+  const ShapeType shape{1, 1, 4};
+  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(*cells);
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {4}, geometry->getId());
+  REQUIRE(features != nullptr);
+  auto* other = AttributeMatrix::Create(dataStructure, "Other Cells", shape, geometry->getId());
+  REQUIRE(other != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cells->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, other->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, features->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cells->getId()) != nullptr);
+  auto* elsewhere = DataGroup::Create(dataStructure, "Elsewhere");
+  REQUIRE(elsewhere != nullptr);
+  auto* externalFeatures = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewhere->getId());
+  REQUIRE(externalFeatures != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeatures->getId()) != nullptr);
+
+  RequireMinNumNeighborsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(idsPath));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Feature Values")));
+
+  int32 expectedCode = 0;
+  DataPath offendingPath;
+  SECTION("Correct Cell and Feature Attribute Matrices")
+  {
+  }
+  SECTION("Feature Ids in a second Attribute Matrix with the same tuple shape")
+  {
+    offendingPath = otherPath;
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(offendingPath));
+    expectedCode = -55575;
+  }
+  SECTION("Feature array outside the selected geometry")
+  {
+    offendingPath = DataPath({"Elsewhere", "External Features", "Feature Values"});
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(offendingPath));
+    expectedCode = -55574;
+  }
+  SECTION("Feature array under a plain DataGroup")
+  {
+    REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewhere->getId()) != nullptr);
+    offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(offendingPath));
+    expectedCode = -55574;
+  }
+  SECTION("Feature array in the Cell Attribute Matrix")
+  {
+    offendingPath = cellPath.createChildPath("Cell Feature Values");
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(offendingPath));
+    expectedCode = -55574;
+  }
+  SECTION("Feature Ids through a shared Cell Attribute Matrix")
+  {
+    REQUIRE(dataStructure.setAdditionalParent(cells->getId(), elsewhere->getId()));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere", "Cells", "Ids"})));
+  }
+  SECTION("Ignored array in a second Attribute Matrix")
+  {
+    offendingPath = otherPath;
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{otherPath}));
+    expectedCode = -55573;
+  }
+  SECTION("Read-only Feature Phases in another Attribute Matrix")
+  {
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(true));
+    args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(otherPath));
+  }
+  const auto result = filter.preflight(dataStructure, args);
+  if(expectedCode == 0)
+  {
+    REQUIRE(result.outputActions.valid());
+    for(const auto& modification : result.outputActions.value().modifiedActions)
+    {
+      CHECK(modification.modifiedPath.getParent() != DataPath({"Elsewhere", "Cells"}));
+    }
+  }
+  else
+  {
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == expectedCode);
+    CHECK(result.outputActions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
+    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix", "[SimplnxCore][RequireMinNumNeighborsFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  const bool useAliasForIds = GENERATE(false, true);
+  CAPTURE(useAliasForIds);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Alias Geometry"});
+  const DataPath cellPath = geometryPath.createChildPath("Cells");
+  const DataPath aliasCellPath({"Earlier Parent", "Cells"});
+  const DataPath featurePath = geometryPath.createChildPath("Features");
+  const ShapeType shape{1, 1, 4};
+  auto* earlierParent = DataGroup::Create(dataStructure, "Earlier Parent");
+  REQUIRE(earlierParent != nullptr);
+  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(*cells);
+  REQUIRE(dataStructure.setAdditionalParent(cells->getId(), earlierParent->getId()));
+  REQUIRE(geometry->getCellDataPath() == cellPath);
+  auto* ids = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cells->getId());
+  auto* values = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cells->getId());
+  auto* ignored = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cells->getId());
+  REQUIRE(ids != nullptr);
+  REQUIRE(values != nullptr);
+  REQUIRE(ignored != nullptr);
+  const std::vector<int32> originalIds{1, 2, 1, 1};
+  for(usize index = 0; index < 4; index++)
+  {
+    (*ids)[index] = originalIds[index];
+    (*values)[index] = static_cast<int32>(10 + index);
+    (*ignored)[index] = static_cast<int32>(100 + index);
+  }
+
+  // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
+  auto* featureValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParent->getId());
+  auto* externalMarker = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParent->getId());
+  REQUIRE(featureValues != nullptr);
+  REQUIRE(externalMarker != nullptr);
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {3}, geometry->getId());
+  REQUIRE(features != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(featureValues->getId(), features->getId()));
+  auto* marker = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, features->getId());
+  REQUIRE(marker != nullptr);
+  for(usize index = 0; index < 3; index++)
+  {
+    (*marker)[index] = static_cast<int32>(11 * index);
+    (*externalMarker)[index] = static_cast<int32>(90 + index);
+  }
+  (*featureValues)[0] = 0;
+  (*featureValues)[1] = 3;
+  (*featureValues)[2] = 1;
+
+  RequireMinNumNeighborsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>((useAliasForIds ? aliasCellPath : cellPath).createChildPath("Ids")));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Feature Values")));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(2));
+  const auto ignoreParent = useAliasForIds ? cellPath : aliasCellPath;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{ignoreParent.createChildPath("Ignored")}));
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool reportsValues = false;
+  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  {
+    CHECK(modification.modifiedPath.getParent() != aliasCellPath);
+    reportsValues = reportsValues || modification.modifiedPath == cellPath.createChildPath("Values");
+  }
+  CHECK(reportsValues);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  for(usize index = 0; index < 4; index++)
+  {
+    CHECK((*ids)[index] == 1);
+    CHECK((*ignored)[index] == static_cast<int32>(100 + index));
+    if(index != 1)
+    {
+      CHECK((*values)[index] == static_cast<int32>(10 + index));
+    }
+  }
+  CHECK(((*values)[1] == 10 || (*values)[1] == 12));
+  CHECK(features->getNumberOfTuples() == 2);
+  REQUIRE(marker->getNumberOfTuples() == 2);
+  CHECK((*marker)[0] == 0);
+  CHECK((*marker)[1] == 11);
+  REQUIRE(externalMarker->getNumberOfTuples() == 3);
+  for(usize index = 0; index < 3; index++)
+  {
+    CHECK((*externalMarker)[index] == static_cast<int32>(90 + index));
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
