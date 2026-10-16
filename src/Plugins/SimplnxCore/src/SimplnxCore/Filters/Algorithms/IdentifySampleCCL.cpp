@@ -13,20 +13,161 @@
 #include "IdentifySample.hpp"
 #include "IdentifySampleCommon.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ExternalEquivalence.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <exception>
 #include <limits>
 #include <memory>
+#include <new>
 #include <nonstd/span.hpp>
+#include <optional>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
+
+#if SIMPLNX_BUILD_TESTS
+namespace
+{
+thread_local IdentifySampleSliceObserverForTesting s_IdentifySampleSliceObserver;
+thread_local IdentifySampleExtraAllocationControlForTesting s_IdentifySampleExtraAllocationControl;
+thread_local IdentifySampleDiagnosticControlForTesting s_IdentifySampleDiagnosticControl;
+
+void ObserveIdentifySampleSlice(const IDataArray* mask, IdentifySampleSliceEventForTesting event, usize values, usize elementBytes, bool success) noexcept
+{
+  if(s_IdentifySampleSliceObserver.callback != nullptr)
+  {
+    s_IdentifySampleSliceObserver.callback(s_IdentifySampleSliceObserver.context, mask, event, values, elementBytes, success);
+  }
+}
+
+/**
+ * @class IdentifySampleCarrierObservation
+ * @brief Records the lifetime of one original slice carrier.
+ * @note Declare this owner before the carrier so its release event follows destruction of the value buffer.
+ */
+class IdentifySampleCarrierObservation
+{
+public:
+  /**
+   * @brief Creates an inactive owner before its carrier allocates.
+   * @param mask Borrows the selected array identity.
+   * @param isXy True for the XY carrier, false for the original plane carrier.
+   * @param elementBytes Bytes in each allocated value.
+   */
+  IdentifySampleCarrierObservation(const IDataArray* mask, bool isXy, usize elementBytes) noexcept
+  : m_Mask(mask)
+  , m_IsXy(isXy)
+  , m_ElementBytes(elementBytes)
+  {
+  }
+
+  /** @brief Reports release after the corresponding value buffer has been destroyed. */
+  ~IdentifySampleCarrierObservation() noexcept
+  {
+    if(m_Allocated)
+    {
+      ObserveIdentifySampleSlice(m_Mask, m_IsXy ? IdentifySampleSliceEventForTesting::XyReleased : IdentifySampleSliceEventForTesting::PlaneReleased, m_Values, m_ElementBytes, true);
+    }
+  }
+
+  /**
+   * @brief Reports successful allocation from the actual allocation site.
+   * @param values Number of values that the carrier allocated.
+   */
+  void acquired(usize values) noexcept
+  {
+    m_Values = values;
+    m_Allocated = true;
+    ObserveIdentifySampleSlice(m_Mask, m_IsXy ? IdentifySampleSliceEventForTesting::XyAllocated : IdentifySampleSliceEventForTesting::PlaneAllocated, values, m_ElementBytes, true);
+  }
+
+  IdentifySampleCarrierObservation(const IdentifySampleCarrierObservation&) = delete;
+  IdentifySampleCarrierObservation& operator=(const IdentifySampleCarrierObservation&) = delete;
+
+private:
+  const IDataArray* m_Mask;
+  bool m_IsXy;
+  usize m_ElementBytes;
+  usize m_Values = 0;
+  bool m_Allocated = false;
+};
+
+/**
+ * @brief Observes the original read exactly once and reports returned failures or exception exit.
+ * @tparam T Mask element type.
+ * @param mask Borrows the selected array identity.
+ * @param store Original mask store.
+ * @param start First flat value index.
+ * @param output Receives mask values.
+ * @return The original read Result.
+ */
+template <class T>
+Result<> ObserveIdentifySampleRead(const IDataArray* mask, AbstractDataStore<T>& store, usize start, nonstd::span<T> output)
+{
+  bool success = false;
+  ObserveIdentifySampleSlice(mask, IdentifySampleSliceEventForTesting::ReadBegin, output.size(), sizeof(T), false);
+  const auto complete = MakeScopeGuard([&]() noexcept { ObserveIdentifySampleSlice(mask, IdentifySampleSliceEventForTesting::ReadEnd, output.size(), sizeof(T), success); });
+  auto result = store.copyIntoBuffer(start, output);
+  success = result.valid();
+  return result;
+}
+
+/**
+ * @brief Observes the original write exactly once and reports returned failures or exception exit.
+ * @tparam T Mask element type.
+ * @param mask Borrows the selected array identity.
+ * @param store Original mask store.
+ * @param start First flat value index.
+ * @param input Supplies mask values.
+ * @return The original write Result.
+ */
+template <class T>
+Result<> ObserveIdentifySampleWrite(const IDataArray* mask, AbstractDataStore<T>& store, usize start, nonstd::span<const T> input)
+{
+  bool success = false;
+  ObserveIdentifySampleSlice(mask, IdentifySampleSliceEventForTesting::WriteBegin, input.size(), sizeof(T), false);
+  const auto complete = MakeScopeGuard([&]() noexcept { ObserveIdentifySampleSlice(mask, IdentifySampleSliceEventForTesting::WriteEnd, input.size(), sizeof(T), success); });
+  auto result = store.copyFromBuffer(start, input);
+  success = result.valid();
+  return result;
+}
+} // namespace
+
+IdentifySampleSliceObserverForTesting nx::core::SetIdentifySampleSliceObserverForTesting(IdentifySampleSliceObserverForTesting observer) noexcept
+{
+  return std::exchange(s_IdentifySampleSliceObserver, observer);
+}
+
+IdentifySampleExtraAllocationControlForTesting nx::core::SetIdentifySampleExtraAllocationControlForTesting(IdentifySampleExtraAllocationControlForTesting control) noexcept
+{
+  return std::exchange(s_IdentifySampleExtraAllocationControl, control);
+}
+
+IdentifySampleDiagnosticControlForTesting nx::core::SetIdentifySampleDiagnosticControlForTesting(IdentifySampleDiagnosticControlForTesting control) noexcept
+{
+  return std::exchange(s_IdentifySampleDiagnosticControl, control);
+}
+
+#define NX_IDENTIFY_SAMPLE_SLICE_READ(mask, store, start, output) ObserveIdentifySampleRead(mask, store, start, output)
+#define NX_IDENTIFY_SAMPLE_SLICE_WRITE(mask, store, start, input) ObserveIdentifySampleWrite(mask, store, start, input)
+#else
+#define NX_IDENTIFY_SAMPLE_SLICE_READ(mask, store, start, output) (store).copyIntoBuffer(start, output)
+#define NX_IDENTIFY_SAMPLE_SLICE_WRITE(mask, store, start, input) (store).copyFromBuffer(start, input)
+#endif
 
 namespace
 {
@@ -726,13 +867,209 @@ Result<> identifyPlane(T* data, int64 dim1, int64 dim2, bool fillHoles, bool all
 }
 
 /**
+ * @brief Multiplies slice counts without unsigned overflow.
+ * @param left First count.
+ * @param right Second count.
+ * @param maskName Identifies the selected mask.
+ * @return Product, or an error with the operands and supported bound.
+ */
+Result<usize> CheckedSliceProduct(usize left, usize right, const std::string& maskName)
+{
+  if(right != 0 && left > std::numeric_limits<usize>::max() / right)
+  {
+    return MakeErrorResult<usize>(-45463, fmt::format("Identify Sample mask '{}': product {} * {} exceeds the supported value {}.", maskName, left, right, std::numeric_limits<usize>::max()));
+  }
+  return {left * right};
+}
+
+/**
+ * @struct IdentifySampleSliceLayout
+ * @brief Holds checked unsigned transfer sizes and signed CCL dimensions.
+ */
+struct IdentifySampleSliceLayout
+{
+  usize x = 0;
+  usize y = 0;
+  usize z = 0;
+  usize xyValues = 0;
+  usize planeValues = 0;
+  usize planeBytes = 0;
+  usize fixedCount = 0;
+  int64 planeDim1 = 0;
+  int64 planeDim2 = 0;
+};
+
+/**
+ * @brief Checks slice offsets, value buffers, and the unchanged CCL label rows.
+ * @param dimensions Image dimensions in X, Y, Z order.
+ * @param plane Selected plane orientation.
+ * @param elementBytes Bytes in one mask value.
+ * @param maskName Identifies the selected mask.
+ * @return Safe layout, or an error before allocation and transfer.
+ */
+Result<IdentifySampleSliceLayout> MakeIdentifySampleSliceLayout(const SizeVec3& dimensions, IdentifySampleSliceBySliceFunctor::Plane plane, usize elementBytes, const std::string& maskName)
+{
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(dimensions[axis] > static_cast<usize>(std::numeric_limits<int64>::max()))
+    {
+      return MakeErrorResult<IdentifySampleSliceLayout>(
+          -45464, fmt::format("Identify Sample mask '{}': axis {} size {} exceeds the signed CCL bound {}.", maskName, axis, dimensions[axis], std::numeric_limits<int64>::max()));
+    }
+  }
+  IdentifySampleSliceLayout layout;
+  layout.x = dimensions[0];
+  layout.y = dimensions[1];
+  layout.z = dimensions[2];
+  if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
+  {
+    layout.planeDim1 = static_cast<int64>(layout.x);
+    layout.planeDim2 = static_cast<int64>(layout.y);
+    layout.fixedCount = layout.z;
+  }
+  else if(plane == IdentifySampleSliceBySliceFunctor::Plane::XZ)
+  {
+    layout.planeDim1 = static_cast<int64>(layout.x);
+    layout.planeDim2 = static_cast<int64>(layout.z);
+    layout.fixedCount = layout.y;
+  }
+  else
+  {
+    layout.planeDim1 = static_cast<int64>(layout.y);
+    layout.planeDim2 = static_cast<int64>(layout.z);
+    layout.fixedCount = layout.x;
+  }
+  auto xyResult = CheckedSliceProduct(layout.x, layout.y, maskName);
+  if(xyResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(xyResult));
+  }
+  layout.xyValues = xyResult.value();
+  auto volumeResult = CheckedSliceProduct(layout.xyValues, layout.z, maskName);
+  if(volumeResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(volumeResult));
+  }
+  auto volumeBytesResult = CheckedSliceProduct(volumeResult.value(), elementBytes, maskName);
+  if(volumeBytesResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(volumeBytesResult));
+  }
+  auto planeResult = CheckedSliceProduct(static_cast<usize>(layout.planeDim1), static_cast<usize>(layout.planeDim2), maskName);
+  if(planeResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(planeResult));
+  }
+  layout.planeValues = planeResult.value();
+  if(layout.planeValues > static_cast<usize>(std::numeric_limits<int64>::max()) || layout.planeDim1 > std::numeric_limits<int64>::max() / 2)
+  {
+    return MakeErrorResult<IdentifySampleSliceLayout>(-45464, fmt::format("Identify Sample mask '{}': plane {} * {} must fit {} values, and its first dimension must not exceed {} for two label rows.",
+                                                                          maskName, layout.planeDim1, layout.planeDim2, std::numeric_limits<int64>::max(), std::numeric_limits<int64>::max() / 2));
+  }
+  auto planeBytesResult = CheckedSliceProduct(layout.planeValues, elementBytes, maskName);
+  if(planeBytesResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(planeBytesResult));
+  }
+  layout.planeBytes = planeBytesResult.value();
+  auto xyBytesResult = CheckedSliceProduct(layout.xyValues, elementBytes, maskName);
+  if(xyBytesResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(xyBytesResult));
+  }
+  const usize allocationBound = static_cast<usize>(std::numeric_limits<std::ptrdiff_t>::max());
+  if(layout.planeBytes > allocationBound || (plane != IdentifySampleSliceBySliceFunctor::Plane::XY && plane != IdentifySampleSliceBySliceFunctor::Plane::XZ && xyBytesResult.value() > allocationBound))
+  {
+    return MakeErrorResult<IdentifySampleSliceLayout>(-45465, fmt::format("Identify Sample mask '{}': plane buffer {} bytes or XY buffer {} bytes exceeds the allocation bound {} bytes.", maskName,
+                                                                          layout.planeBytes, xyBytesResult.value(), allocationBound));
+  }
+  auto labelCountResult = CheckedSliceProduct(usize{2}, static_cast<usize>(layout.planeDim1), maskName);
+  if(labelCountResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(labelCountResult));
+  }
+  auto labelBytesResult = CheckedSliceProduct(labelCountResult.value(), sizeof(int64), maskName);
+  if(labelBytesResult.invalid())
+  {
+    return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(labelBytesResult));
+  }
+  const usize labelBound = std::vector<int64>().max_size();
+  if(labelCountResult.value() > labelBound)
+  {
+    return MakeErrorResult<IdentifySampleSliceLayout>(-45465, fmt::format("Identify Sample mask '{}': two label rows of {} values ({} bytes) exceed the allocation bound {} values.", maskName,
+                                                                          labelCountResult.value(), labelBytesResult.value(), labelBound));
+  }
+  return {layout};
+}
+
+/**
+ * @enum DeferredSlicePhase
+ * @brief Identifies an operation whose failure follows completed planes.
+ */
+enum class DeferredSlicePhase
+{
+  ReportPlane,   ///< Formats or sends the current Slice message.
+  ClassifyPlane, ///< Runs the unchanged per-plane CCL.
+  ReadPrefix,    ///< Reads an XY slice for completed-plane publication.
+  WritePrefix    ///< Writes an XY slice with completed planes.
+};
+
+/**
+ * @struct DeferredSliceFailureLocation
+ * @brief Stores failure context without formatting while an exception is captured.
+ */
+struct DeferredSliceFailureLocation
+{
+  DeferredSlicePhase phase = DeferredSlicePhase::ClassifyPlane;
+  usize planeIndex = 0;
+  usize firstCompletedPlane = 0;
+  usize completedPlaneCount = 0;
+  std::optional<usize> commitZ;
+};
+
+/**
+ * @brief Converts an exception only when a plane step and its prefix publication both fail.
+ * @param failure Captured non-null exception.
+ * @param maskName Identifies the selected mask.
+ * @param location Records the failed operation and its actual indices.
+ * @return Owned diagnostic with the existing filter exception classification.
+ * @note Diagnostic allocation can throw; the caller retains both original failures.
+ */
+Result<> MakeDeferredSliceExceptionResult(const std::exception_ptr& failure, std::string_view maskName, const DeferredSliceFailureLocation& location)
+{
+  std::string context;
+  if(location.phase == DeferredSlicePhase::ReportPlane || location.phase == DeferredSlicePhase::ClassifyPlane)
+  {
+    context = fmt::format("{} {}", location.phase == DeferredSlicePhase::ReportPlane ? "reporting plane" : "classifying plane", location.planeIndex);
+  }
+  else
+  {
+    const char* phase = location.phase == DeferredSlicePhase::ReadPrefix ? "reading completed prefix" : "writing completed prefix";
+    context = fmt::format("{} starting at plane {} with {} planes at Z {}", phase, location.firstCompletedPlane, location.completedPlaneCount, location.commitZ.value());
+  }
+  try
+  {
+    std::rethrow_exception(failure);
+  } catch(const std::bad_alloc&)
+  {
+    return MakeErrorResult(-272, fmt::format("Identify Sample mask '{}': allocation failure while {}.", maskName, context));
+  } catch(const std::exception& exception)
+  {
+    return MakeErrorResult(-2, fmt::format("Identify Sample mask '{}': exception while {}: {}", maskName, context, exception.what()));
+  } catch(...)
+  {
+    return MakeErrorResult(-2, fmt::format("Identify Sample mask '{}': nonstandard exception while {}.", maskName, context));
+  }
+}
+
+/**
  * @struct IdentifySampleSliceCCLFunctor
  * @brief Dispatches bounded slice-by-slice CCL by mask value type.
  */
 struct IdentifySampleSliceCCLFunctor
 {
   /**
-   * @brief Processes selected planes with one plane buffer at a time.
+   * @brief Classifies planes serially and groups YZ transfers within admitted extra memory.
    * @tparam T Mask value type.
    * @param imageGeom Image geometry that supplies dimensions.
    * @param maskArray Mask array modified in place.
@@ -740,140 +1077,351 @@ struct IdentifySampleSliceCCLFunctor
    * @param plane Selected plane orientation.
    * @param messageHandler Receives slice progress messages.
    * @param shouldCancel Cancellation flag.
-   * @return Bulk-I/O, CCL, or cancellation result.
+   * @return Bulk-I/O, CCL, or cancellation result; combined failures retain primary-first order.
+   * @note A lone exception propagates unchanged. Diagnostic assembly failure preserves the original primary and can lose secondary detail.
    *
-   * XY planes transfer contiguously. XZ planes transfer contiguous rows. YZ
-   * planes bulk-read Z slices before extracting and updating one column.
+   * XY transfers whole planes; XZ transfers rows. YZ groups at most eight planes
+   * and publishes only completed planes through fresh XY reads. The reservation
+   * covers extra YZ values, not the original carriers, CCL records, or backend memory.
    */
   template <typename T>
   Result<> operator()(const ImageGeom* imageGeom, IDataArray* maskArray, bool fillHoles, IdentifySampleSliceBySliceFunctor::Plane plane, const IFilter::MessageHandler& messageHandler,
                       const std::atomic_bool& shouldCancel) const
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
     auto& store = maskArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     const bool allowInMemoryFallback = store.getStoreType() != IDataStore::StoreType::OutOfCore;
-    const SizeVec3 dimensions = imageGeom->getDimensions();
-    const int64 dimX = static_cast<int64>(dimensions[0]);
-    const int64 dimY = static_cast<int64>(dimensions[1]);
-    const int64 dimZ = static_cast<int64>(dimensions[2]);
-    const usize zSliceSize = static_cast<usize>(dimX * dimY);
+    const auto maskName = maskArray->getName();
+    auto layoutResult = MakeIdentifySampleSliceLayout(imageGeom->getDimensions(), plane, sizeof(T), maskName);
+    if(layoutResult.invalid())
+    {
+      return ConvertResult(std::move(layoutResult));
+    }
+    const auto& layout = layoutResult.value();
+    if(layout.fixedCount == 0)
+    {
+      return {};
+    }
+    constexpr usize k_MaxYzBatchPlanes = 8;
+    const bool isYz = plane != IdentifySampleSliceBySliceFunctor::Plane::XY && plane != IdentifySampleSliceBySliceFunctor::Plane::XZ;
+    if(isYz && layout.planeBytes != 0)
+    {
+      const usize maximumExtras = std::min(k_MaxYzBatchPlanes - 1, layout.fixedCount - 1);
+      auto extraValuesResult = CheckedSliceProduct(maximumExtras, layout.planeValues, maskName);
+      if(extraValuesResult.invalid())
+      {
+        return ConvertResult(std::move(extraValuesResult));
+      }
+      auto extraBytesResult = CheckedSliceProduct(extraValuesResult.value(), sizeof(T), maskName);
+      if(extraBytesResult.invalid())
+      {
+        return ConvertResult(std::move(extraBytesResult));
+      }
+      if constexpr(std::numeric_limits<usize>::digits > std::numeric_limits<uint64>::digits)
+      {
+        if(extraBytesResult.value() > std::numeric_limits<uint64>::max())
+        {
+          return MakeErrorResult(-45465, fmt::format("Identify Sample mask '{}': {} extra planes * {} bytes exceeds the reservation bound {} bytes.", maskName, maximumExtras, layout.planeBytes,
+                                                     std::numeric_limits<uint64>::max()));
+        }
+      }
+      if(extraBytesResult.value() > static_cast<usize>(std::numeric_limits<std::ptrdiff_t>::max()))
+      {
+        return MakeErrorResult(-45465, fmt::format("Identify Sample mask '{}': {} extra planes * {} bytes exceeds the allocation bound {} bytes.", maskName, maximumExtras, layout.planeBytes,
+                                                   std::numeric_limits<std::ptrdiff_t>::max()));
+      }
+    }
+#if SIMPLNX_BUILD_TESTS
+    IdentifySampleCarrierObservation planeObservation(maskArray, false, sizeof(T));
+#endif
+    auto planeBuffer = std::make_unique<T[]>(layout.planeValues);
+#if SIMPLNX_BUILD_TESTS
+    planeObservation.acquired(layout.planeValues);
+#endif
 
-    int64 planeDim1 = 0;
-    int64 planeDim2 = 0;
-    int64 fixedDim = 0;
-    if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
+    if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY || plane == IdentifySampleSliceBySliceFunctor::Plane::XZ)
     {
-      planeDim1 = dimX;
-      planeDim2 = dimY;
-      fixedDim = dimZ;
+      for(usize fixed = 0; fixed < layout.fixedCount; ++fixed)
+      {
+        if(shouldCancel)
+        {
+          return {};
+        }
+        messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixed));
+        if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
+        {
+          auto readResult = NX_IDENTIFY_SAMPLE_SLICE_READ(maskArray, store, fixed * layout.planeValues, nonstd::span<T>(planeBuffer.get(), layout.planeValues));
+          if(readResult.invalid())
+          {
+            return readResult;
+          }
+        }
+        else
+        {
+          for(usize z = 0; z < layout.z; ++z)
+          {
+            auto readResult = NX_IDENTIFY_SAMPLE_SLICE_READ(maskArray, store, z * layout.xyValues + fixed * layout.x, nonstd::span<T>(planeBuffer.get() + z * layout.x, layout.x));
+            if(readResult.invalid())
+            {
+              return readResult;
+            }
+          }
+        }
+        auto identifyResult = identifyPlane(planeBuffer.get(), layout.planeDim1, layout.planeDim2, fillHoles, allowInMemoryFallback, shouldCancel);
+        if(identifyResult.invalid())
+        {
+          return identifyResult;
+        }
+        if(shouldCancel)
+        {
+          return {};
+        }
+        if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
+        {
+          auto writeResult = NX_IDENTIFY_SAMPLE_SLICE_WRITE(maskArray, store, fixed * layout.planeValues, nonstd::span<const T>(planeBuffer.get(), layout.planeValues));
+          if(writeResult.invalid())
+          {
+            return writeResult;
+          }
+        }
+        else
+        {
+          for(usize z = 0; z < layout.z; ++z)
+          {
+            auto writeResult = NX_IDENTIFY_SAMPLE_SLICE_WRITE(maskArray, store, z * layout.xyValues + fixed * layout.x, nonstd::span<const T>(planeBuffer.get() + z * layout.x, layout.x));
+            if(writeResult.invalid())
+            {
+              return writeResult;
+            }
+          }
+        }
+      }
+      return {};
     }
-    else if(plane == IdentifySampleSliceBySliceFunctor::Plane::XZ)
-    {
-      planeDim1 = dimX;
-      planeDim2 = dimZ;
-      fixedDim = dimY;
-    }
-    else
-    {
-      planeDim1 = dimY;
-      planeDim2 = dimZ;
-      fixedDim = dimX;
-    }
-    const usize planeSize = static_cast<usize>(planeDim1 * planeDim2);
-    auto planeBuffer = std::make_unique<T[]>(planeSize);
-    auto zBuffer = std::make_unique<T[]>(zSliceSize);
 
-    for(int64 fixed = 0; fixed < fixedDim; fixed++)
+#if SIMPLNX_BUILD_TESTS
+    IdentifySampleCarrierObservation xyObservation(maskArray, true, sizeof(T));
+#endif
+    auto zBuffer = std::make_unique<T[]>(layout.xyValues);
+#if SIMPLNX_BUILD_TESTS
+    xyObservation.acquired(layout.xyValues);
+#endif
+    auto& budget = CacheMemoryBudgetManager::instance();
+    for(usize batchStart = 0; batchStart < layout.fixedCount;)
     {
       if(shouldCancel)
       {
         return {};
       }
-      messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", fixed));
-      if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
+      const usize remaining = layout.fixedCount - batchStart;
+      const usize maxExtra = layout.planeBytes == 0 ? 0 : std::min(k_MaxYzBatchPlanes - 1, remaining - 1);
+      // The maximum request was checked before any carrier allocation.
+      const usize requestedBytes = maxExtra * layout.planeBytes;
+#if SIMPLNX_BUILD_TESTS
+      usize retainedBytes = 0;
+      bool reservationConstructed = false;
+      ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraBytesRequested, requestedBytes, 1, true);
+      // Admission can throw before a token exists. Report only an actual token's destruction.
+      const auto reservationObservation = MakeScopeGuard([&]() noexcept {
+        if(reservationConstructed)
+        {
+          ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraReservationReleased, retainedBytes, 1, true);
+        }
+      });
+#endif
+      auto reservation = budget.reserveWorkingMemory(static_cast<uint64>(requestedBytes));
+#if SIMPLNX_BUILD_TESTS
+      reservationConstructed = true;
+#endif
+      const uint64 grantedBytes = reservation.sizeBytes();
+#if SIMPLNX_BUILD_TESTS
+      ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraBytesGranted, static_cast<usize>(grantedBytes), 1, true);
+#endif
+      const usize extras = layout.planeBytes == 0 ? 0 : static_cast<usize>(std::min<uint64>(maxExtra, grantedBytes / layout.planeBytes));
+      // The checked request bounds both products because extras cannot exceed maxExtra.
+      const usize allocatedBytes = extras * layout.planeBytes;
+      const usize extraValues = extras * layout.planeValues;
+      reservation.shrinkTo(static_cast<uint64>(allocatedBytes));
+#if SIMPLNX_BUILD_TESTS
+      retainedBytes = allocatedBytes;
+      ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraBytesRetained, allocatedBytes, 1, true);
+      usize ownedExtraValues = 0;
+      // Values die before their release event, and the token outlives both.
+      const auto extraObservation = MakeScopeGuard([&]() noexcept {
+        if(ownedExtraValues != 0)
+        {
+          ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraPlanesReleased, ownedExtraValues, sizeof(T), true);
+        }
+      });
+#endif
+      std::unique_ptr<T[]> extraPlanes;
+      if(extras != 0)
       {
-        auto readResult = store.copyIntoBuffer(static_cast<usize>(fixed) * planeSize, nonstd::span<T>(planeBuffer.get(), planeSize));
+#if SIMPLNX_BUILD_TESTS
+        if(s_IdentifySampleExtraAllocationControl.beforeAllocate != nullptr)
+        {
+          s_IdentifySampleExtraAllocationControl.beforeAllocate(s_IdentifySampleExtraAllocationControl.context, maskArray, extraValues);
+        }
+#endif
+        extraPlanes = std::make_unique<T[]>(extraValues);
+#if SIMPLNX_BUILD_TESTS
+        ownedExtraValues = extraValues;
+        ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::ExtraPlanesAllocated, extraValues, sizeof(T), true);
+#endif
+      }
+      std::array<T*, k_MaxYzBatchPlanes> planePointers{};
+      planePointers[0] = planeBuffer.get();
+      for(usize p = 1; p <= extras; ++p)
+      {
+        planePointers[p] = extraPlanes.get() + (p - 1) * layout.planeValues;
+      }
+      const usize width = 1 + extras;
+#if SIMPLNX_BUILD_TESTS
+      ObserveIdentifySampleSlice(maskArray, IdentifySampleSliceEventForTesting::BatchWidth, width, 1, true);
+#endif
+      for(usize z = 0; z < layout.z; ++z)
+      {
+        if(shouldCancel)
+        {
+          return {};
+        }
+        auto readResult = NX_IDENTIFY_SAMPLE_SLICE_READ(maskArray, store, z * layout.xyValues, nonstd::span<T>(zBuffer.get(), layout.xyValues));
         if(readResult.invalid())
         {
           return readResult;
         }
-      }
-      else if(plane == IdentifySampleSliceBySliceFunctor::Plane::XZ)
-      {
-        for(int64 z = 0; z < dimZ; z++)
+        for(usize y = 0; y < layout.y; ++y)
         {
-          auto readResult = store.copyIntoBuffer(static_cast<usize>(z * dimX * dimY + fixed * dimX), nonstd::span<T>(planeBuffer.get() + static_cast<usize>(z * dimX), static_cast<usize>(dimX)));
-          if(readResult.invalid())
+          for(usize p = 0; p < width; ++p)
           {
-            return readResult;
-          }
-        }
-      }
-      else
-      {
-        for(int64 z = 0; z < dimZ; z++)
-        {
-          auto readResult = store.copyIntoBuffer(static_cast<usize>(z) * zSliceSize, nonstd::span<T>(zBuffer.get(), zSliceSize));
-          if(readResult.invalid())
-          {
-            return readResult;
-          }
-          for(int64 y = 0; y < dimY; y++)
-          {
-            planeBuffer[static_cast<usize>(z * dimY + y)] = zBuffer[static_cast<usize>(y * dimX + fixed)];
+            planePointers[p][z * layout.y + y] = zBuffer[y * layout.x + batchStart + p];
           }
         }
       }
 
-      auto identifyResult = identifyPlane(planeBuffer.get(), planeDim1, planeDim2, fillHoles, allowInMemoryFallback, shouldCancel);
-      if(identifyResult.invalid())
+      usize completedPlaneCount = 0;
+      Result<> primaryResult;
+      std::exception_ptr primaryException;
+      DeferredSliceFailureLocation primaryLocation;
+      bool terminal = false;
+      for(usize p = 0; p < width; ++p)
       {
-        return identifyResult;
+        if(shouldCancel)
+        {
+          terminal = true;
+          break;
+        }
+        primaryLocation = {DeferredSlicePhase::ReportPlane, batchStart + p, batchStart, completedPlaneCount, std::nullopt};
+        try
+        {
+          messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Slice {}", batchStart + p));
+          primaryLocation.phase = DeferredSlicePhase::ClassifyPlane;
+          auto planeResult = identifyPlane(planePointers[p], layout.planeDim1, layout.planeDim2, fillHoles, allowInMemoryFallback, shouldCancel);
+          if(planeResult.invalid())
+          {
+            primaryResult = std::move(planeResult);
+            terminal = true;
+            break;
+          }
+          if(shouldCancel)
+          {
+            terminal = true;
+            break;
+          }
+          ++completedPlaneCount;
+        } catch(...)
+        {
+          primaryException = std::current_exception();
+          terminal = true;
+          break;
+        }
       }
-      if(shouldCancel)
+
+      Result<> commitResult;
+      std::exception_ptr commitException;
+      DeferredSliceFailureLocation commitLocation;
+      // A completed prefix must finish its publication attempt even after cancellation.
+      for(usize z = 0; completedPlaneCount != 0 && z < layout.z; ++z)
+      {
+        commitLocation = {DeferredSlicePhase::ReadPrefix, 0, batchStart, completedPlaneCount, z};
+        try
+        {
+          auto readResult = NX_IDENTIFY_SAMPLE_SLICE_READ(maskArray, store, z * layout.xyValues, nonstd::span<T>(zBuffer.get(), layout.xyValues));
+          if(readResult.invalid())
+          {
+            commitResult = std::move(readResult);
+            break;
+          }
+          for(usize y = 0; y < layout.y; ++y)
+          {
+            for(usize p = 0; p < completedPlaneCount; ++p)
+            {
+              zBuffer[y * layout.x + batchStart + p] = planePointers[p][z * layout.y + y];
+            }
+          }
+          commitLocation.phase = DeferredSlicePhase::WritePrefix;
+          auto writeResult = NX_IDENTIFY_SAMPLE_SLICE_WRITE(maskArray, store, z * layout.xyValues, nonstd::span<const T>(zBuffer.get(), layout.xyValues));
+          if(writeResult.invalid())
+          {
+            commitResult = std::move(writeResult);
+            break;
+          }
+        } catch(...)
+        {
+          commitException = std::current_exception();
+          break;
+        }
+      }
+
+      const bool primaryFailed = primaryException != nullptr || primaryResult.invalid();
+      const bool commitFailed = commitException != nullptr || commitResult.invalid();
+      if(primaryFailed && commitFailed)
+      {
+        try
+        {
+#if SIMPLNX_BUILD_TESTS
+          if(s_IdentifySampleDiagnosticControl.beforeAggregate != nullptr)
+          {
+            s_IdentifySampleDiagnosticControl.beforeAggregate(s_IdentifySampleDiagnosticControl.context, maskArray);
+          }
+#endif
+          // Preserve both original carriers until all diagnostic allocation succeeds.
+          Result<> first = primaryException ? MakeDeferredSliceExceptionResult(primaryException, maskName, primaryLocation) : primaryResult;
+          Result<> second = commitException ? MakeDeferredSliceExceptionResult(commitException, maskName, commitLocation) : commitResult;
+          return MergeResults(std::move(first), std::move(second));
+        } catch(...)
+        {
+          if(primaryException)
+          {
+            std::rethrow_exception(primaryException);
+          }
+          return primaryResult;
+        }
+      }
+      if(primaryException)
+      {
+        std::rethrow_exception(primaryException);
+      }
+      if(primaryResult.invalid())
+      {
+        return primaryResult;
+      }
+      if(commitException)
+      {
+        std::rethrow_exception(commitException);
+      }
+      if(commitResult.invalid())
+      {
+        return commitResult;
+      }
+      if(terminal || shouldCancel)
       {
         return {};
       }
-
-      if(plane == IdentifySampleSliceBySliceFunctor::Plane::XY)
-      {
-        auto writeResult = store.copyFromBuffer(static_cast<usize>(fixed) * planeSize, nonstd::span<const T>(planeBuffer.get(), planeSize));
-        if(writeResult.invalid())
-        {
-          return writeResult;
-        }
-      }
-      else if(plane == IdentifySampleSliceBySliceFunctor::Plane::XZ)
-      {
-        for(int64 z = 0; z < dimZ; z++)
-        {
-          auto writeResult =
-              store.copyFromBuffer(static_cast<usize>(z * dimX * dimY + fixed * dimX), nonstd::span<const T>(planeBuffer.get() + static_cast<usize>(z * dimX), static_cast<usize>(dimX)));
-          if(writeResult.invalid())
-          {
-            return writeResult;
-          }
-        }
-      }
-      else
-      {
-        for(int64 z = 0; z < dimZ; z++)
-        {
-          auto readResult = store.copyIntoBuffer(static_cast<usize>(z) * zSliceSize, nonstd::span<T>(zBuffer.get(), zSliceSize));
-          if(readResult.invalid())
-          {
-            return readResult;
-          }
-          for(int64 y = 0; y < dimY; y++)
-          {
-            zBuffer[static_cast<usize>(y * dimX + fixed)] = planeBuffer[static_cast<usize>(z * dimY + y)];
-          }
-          auto writeResult = store.copyFromBuffer(static_cast<usize>(z) * zSliceSize, nonstd::span<const T>(zBuffer.get(), zSliceSize));
-          if(writeResult.invalid())
-          {
-            return writeResult;
-          }
-        }
-      }
+      batchStart += width;
     }
     return {};
   }
@@ -1050,3 +1598,6 @@ Result<> IdentifySampleCCL::operator()()
 
   return {};
 }
+
+#undef NX_IDENTIFY_SAMPLE_SLICE_READ
+#undef NX_IDENTIFY_SAMPLE_SLICE_WRITE

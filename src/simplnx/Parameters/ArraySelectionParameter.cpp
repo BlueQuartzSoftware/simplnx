@@ -93,7 +93,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes);
+  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes, m_Location);
 }
 
 std::any ArraySelectionParameter::defaultValue() const
@@ -202,15 +202,34 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
     if(m_Location != DataLocation::Any)
     {
-      IDataStore::StoreType storeType = dataArray->getStoreType();
-
-      if(storeType == IDataStore::StoreType::Empty)
+      const IDataStore::StoreType storeType = dataArray->getStoreType();
+      const bool matches =
+          (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
+      if(storeType != IDataStore::StoreType::Empty && !matches)
       {
-        return {};
-      }
+        const char* actualLocationName = "unsupported";
+        if(storeType == IDataStore::StoreType::InMemory)
+        {
+          actualLocationName = "in-memory";
+        }
+        else if(storeType == IDataStore::StoreType::OutOfCore)
+        {
+          actualLocationName = "out-of-core";
+        }
 
-      return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
-                             fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), fmt::underlying(storeType), fmt::underlying(m_Location)));
+        const char* requestedLocationName = "unsupported";
+        if(m_Location == DataLocation::InMemory)
+        {
+          requestedLocationName = "in-memory";
+        }
+        else if(m_Location == DataLocation::OutOfCore)
+        {
+          requestedLocationName = "out-of-core";
+        }
+
+        return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
+                               fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationName, requestedLocationName));
+      }
     }
   }
   return {};

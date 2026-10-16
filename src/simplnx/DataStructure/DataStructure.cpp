@@ -1,5 +1,6 @@
 #include "DataStructure.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -20,6 +21,8 @@
 
 #include <fmt/core.h>
 
+#include <exception>
+#include <new>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -669,6 +672,114 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
   return insertIntoParent(dataObject, parentGroup);
 }
 
+std::shared_ptr<DataObject> DataStructure::makeImportPublicationCopy(DataObject& source)
+{
+  auto* association = source.m_DataStructure;
+  source.DataObject::setDataStructure(nullptr);
+  const auto restore = MakeScopeGuard([&source, association]() noexcept { source.DataObject::setDataStructure(association); });
+  std::unique_ptr<DataObject> copy(source.shallowCopy());
+  if(copy == nullptr)
+  {
+    return {};
+  }
+  if(auto* group = dynamic_cast<BaseGroup*>(copy.get()); group != nullptr)
+  {
+    group->clear();
+  }
+  copy->DataObject::setDataStructure(nullptr);
+  copy->m_ParentList.clear();
+  return std::shared_ptr<DataObject>(std::move(copy));
+}
+
+bool DataStructure::insertImportedObject(ImportPublicationRecord& record, ImportInsertionStage failAfter, bool rejectBeforeInsert)
+{
+  if(rejectBeforeInsert || record.owner == nullptr || record.owner->getId() != record.id || m_DataObjects.contains(record.id))
+  {
+    return false;
+  }
+  if(record.parent != nullptr && (record.parent->getId() != record.parentId || !record.parent->canInsert(record.owner.get())))
+  {
+    return false;
+  }
+  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
+  if(map.find(record.id) != map.end() || !map.insert(record.owner))
+  {
+    return false;
+  }
+  record.stage = ImportInsertionStage::Hierarchy;
+  if(failAfter == record.stage)
+  {
+    throw std::runtime_error("injected import failure after hierarchy placement");
+  }
+  if(record.parent != nullptr)
+  {
+    record.owner->addParent(record.parent.get());
+  }
+  record.stage = ImportInsertionStage::Parent;
+  if(failAfter == record.stage)
+  {
+    throw std::runtime_error("injected import failure before weak-index registration");
+  }
+  trackDataObject(record.owner);
+  record.stage = ImportInsertionStage::Registered;
+  return true;
+}
+
+DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportPublicationRecord& record) noexcept
+{
+  auto& object = *record.owner;
+  if(object.getId() != record.id || (record.parent != nullptr && record.parent->getId() != record.parentId))
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
+  const auto placement = map.find(record.id);
+  if(placement != map.end() && placement->second.get() != &object)
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  for(const auto parentId : object.m_ParentList)
+  {
+    if(record.parent == nullptr || parentId != record.parentId)
+    {
+      return ImportCleanupStatus::Conflict;
+    }
+  }
+  if(record.parent != nullptr && m_RootGroup.find(record.id) != m_RootGroup.end())
+  {
+    return ImportCleanupStatus::Conflict;
+  }
+  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr && !group->empty())
+  {
+    return ImportCleanupStatus::Children;
+  }
+  const auto indexed = m_DataObjects.find(record.id);
+  if(indexed != m_DataObjects.end() && indexed->second.lock().get() != &object)
+  {
+    // A foreign weak entry must survive. A locally unowned shell must still leave scope without a stale callback.
+    if(placement == map.end() && object.m_ParentList.empty())
+    {
+      object.DataObject::setDataStructure(nullptr);
+    }
+    return ImportCleanupStatus::Conflict;
+  }
+  if(placement != map.end())
+  {
+    map.erase(placement);
+  }
+  if(record.parent != nullptr)
+  {
+    object.m_ParentList.remove(record.parentId);
+  }
+  if(indexed != m_DataObjects.end())
+  {
+    m_DataObjects.erase(indexed);
+  }
+  record.notifyRemoval = object.m_DataStructure == this;
+  object.DataObject::setDataStructure(nullptr);
+  return ImportCleanupStatus::Complete;
+}
+
 DataObject::IdType DataStructure::getNextId() const
 {
   return m_NextId;
@@ -986,6 +1097,83 @@ void DataStructure::flush() const
     }
     sharedObj->flush();
   }
+}
+
+Result<> DataStructure::flushChecked() const
+{
+  ErrorCollection errors;
+  WarningCollection warnings;
+  for(const auto& [id, weakObject] : m_DataObjects)
+  {
+    const auto object = weakObject.lock();
+    if(object == nullptr)
+    {
+      continue;
+    }
+
+    Result<> objectResult;
+    try
+    {
+      objectResult = object->flushChecked();
+    } catch(const std::bad_alloc& error)
+    {
+      objectResult = MakeErrorResult(-272, fmt::format("Memory allocation failed during checked flush: {}", error.what()));
+    } catch(const std::exception& error)
+    {
+      objectResult = MakeErrorResult(-6070, fmt::format("Checked flush failed: {}", error.what()));
+    } catch(...)
+    {
+      objectResult = MakeErrorResult(-6070, "Checked flush failed: unknown storage failure.");
+    }
+    if(objectResult.invalid() && objectResult.errors().empty())
+    {
+      objectResult.errors().push_back({-6070, "Checked flush failed without an error diagnostic."});
+    }
+    if(objectResult.valid() && objectResult.warnings().empty())
+    {
+      continue;
+    }
+
+    // Clean objects avoid path construction. The ID index visits linked objects only once.
+    std::string context = fmt::format("Checked flush for object '{}' (ID {})", object->getName(), id);
+    const auto paths = object->getDataPaths();
+    if(!paths.empty())
+    {
+      context += " at paths [";
+      for(usize pathIdx = 0; pathIdx < paths.size(); ++pathIdx)
+      {
+        if(pathIdx != 0)
+        {
+          context += ", ";
+        }
+        context += fmt::format("'{}'", paths[pathIdx].toString());
+      }
+      context += "]";
+    }
+
+    // Normal vector growth avoids repeatedly reallocating all earlier diagnostics.
+    if(objectResult.invalid())
+    {
+      for(auto& error : objectResult.errors())
+      {
+        error.message = fmt::format("{}: {}", context, error.message);
+        errors.push_back(std::move(error));
+      }
+    }
+    for(auto& warning : objectResult.warnings())
+    {
+      warning.message = fmt::format("{}: {}", context, warning.message);
+      warnings.push_back(std::move(warning));
+    }
+  }
+
+  Result<> result;
+  if(!errors.empty())
+  {
+    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+  }
+  result.warnings() = std::move(warnings);
+  return result;
 }
 
 uint64 DataStructure::memoryUsage() const

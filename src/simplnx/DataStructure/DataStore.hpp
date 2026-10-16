@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Common/BoundedRead.hpp"
+
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
 #include "simplnx/Common/Bit.hpp"
@@ -73,7 +75,7 @@ public:
   /**
    * @brief Creates a one-component data store.
    * @param numTuples Number of tuples.
-   * @param initValue Optional value that initializes every element.
+   * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
   DataStore(usize numTuples, std::optional<T> initValue)
   : DataStore({numTuples}, {1}, initValue)
@@ -84,24 +86,21 @@ public:
    * @brief Creates a data store with a tuple and component shape.
    * @param tupleShape Tuple dimensions in slowest-to-fastest order.
    * @param componentShape Component dimensions in slowest-to-fastest order.
-   * @param initValue Optional value that initializes every element.
+   * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
   DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
-  : parent_type()
+  : parent_type(initValue)
   , m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
-  , m_InitValue(initValue)
   {
-    // new value_type[n] leaves the buffer uninitialized. std::make_unique would
-    // value-initialize it, adding a full pass over every byte of a store the caller is
-    // about to overwrite, and it would turn a read of a never-written element into a
-    // plausible zero instead of visible garbage.
+    // new value_type[n] leaves the buffer uninitialized. Value initialization would add a full pass before the caller overwrites these values.
+    // It would also hide reads of unwritten elements behind plausible zeros.
     m_Data = std::unique_ptr<value_type[]>(new value_type[this->getSize()]);
-    if(m_InitValue.has_value())
+    if(initValue.has_value())
     {
-      std::fill_n(data(), this->getSize(), *m_InitValue);
+      std::fill_n(data(), this->getSize(), *initValue);
     }
   }
 
@@ -115,15 +114,13 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    */
   DataStore(std::unique_ptr<value_type[]> buffer, ShapeType tupleShape, ShapeType componentShape)
-  : parent_type()
+  : parent_type(GetMudflap<T>())
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
-    // Future growth needs a diagnostic value because the supplied buffer has no initialization value.
-    m_InitValue = GetMudflap<T>();
   }
 
   /**
@@ -131,12 +128,11 @@ public:
    * @param other Source data store.
    */
   DataStore(const DataStore& other)
-  : parent_type()
+  : parent_type(other)
   , m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
-  , m_InitValue(other.m_InitValue)
   {
     const usize count = other.getSize();
     auto* data = new value_type[count];
@@ -149,13 +145,12 @@ public:
    * @param other Source data store.
    */
   DataStore(DataStore&& other) noexcept
-  : parent_type()
+  : parent_type(std::move(other))
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
-  , m_InitValue(other.m_InitValue)
   {
   }
 
@@ -173,7 +168,7 @@ public:
     m_Data = std::move(rhs.m_Data);
     m_NumComponents = rhs.m_NumComponents;
     m_NumTuples = rhs.m_NumTuples;
-    m_InitValue = std::move(rhs.m_InitValue);
+    this->setInitValue(rhs.getInitValue());
     return *this;
   }
 
@@ -235,33 +230,6 @@ public:
   }
 
   /**
-   * @brief Returns the value that initializes elements when the store grows.
-   * @return Initialization value, or no value if growth uses the mudflap value.
-   */
-  std::optional<T> getInitValue() const
-  {
-    return m_InitValue;
-  }
-
-  /**
-   * @brief Sets the policy for values added when the store grows.
-   * @param value Initialization value, or no value to use the mudflap value.
-   */
-  void setInitValue(std::optional<T> value)
-  {
-    m_InitValue = value;
-  }
-
-  /**
-   * @brief Sets the value used when the store grows.
-   * @param value Value that initializes new elements.
-   */
-  void setInitValue(T value)
-  {
-    m_InitValue = value;
-  }
-
-  /**
    * @brief Changes the tuple shape.
    *
    * A size change retains values in the shared prefix. When existing storage
@@ -287,9 +255,8 @@ public:
         return {};
       }
 
-      // new value_type[n] leaves the buffer uninitialized. Every element is then either
-      // copied from the previous buffer or set to the initialization or mudflap value, so
-      // value-initializing here would only repeat that work.
+      // new value_type[n] leaves the buffer uninitialized. The following loops copy the retained prefix and initialize the new tail.
+      // Value initialization would repeat that work.
       std::unique_ptr<value_type[]> data(new value_type[newSize]);
       if(m_Data != nullptr)
       {
@@ -298,7 +265,7 @@ public:
           data[valueIndex] = m_Data[valueIndex];
         }
 
-        const T initValue = m_InitValue.has_value() ? *m_InitValue : GetMudflap<T>();
+        const T initValue = this->getGrowthInitValue();
         for(usize valueIndex = oldSize; valueIndex < newSize; ++valueIndex)
         {
           data[valueIndex] = initValue;
@@ -471,6 +438,68 @@ public:
       }
       return {std::move(result)};
     }
+  }
+
+  /**
+   * @brief Reads a validated extent directly into caller storage within a fixed allowance.
+   * @param extent Supplies tuple-space coordinates.
+   * @param destination Receives every component of each selected tuple.
+   * @param scratchBudgetBytes Funds the fixed diagnostic carrier (4096 bytes).
+   * @return True on completion, false below the minimum or for bool, or an invalid result.
+   */
+  [[nodiscard]] Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const override
+  {
+    if(scratchBudgetBytes < BoundedRead::k_DiagnosticBytes || !BoundedRead::DiagnosticRepresentationSupported())
+    {
+      return {false};
+    }
+    BoundedRead::Diagnostic diagnostic;
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      return diagnostic.finish(diagnostic.set(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores."));
+    }
+    uint64 components = 1;
+    for(const auto size : getComponentShape())
+    {
+      if(size == 0 || !BoundedRead::Multiply(components, static_cast<uint64>(size), components))
+      {
+        return diagnostic.finish(diagnostic.set(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64."));
+      }
+    }
+    uint64 selectedTuples = 0;
+    const auto status = BoundedRead::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
+    if(status != BoundedRead::Status::Complete)
+    {
+      return diagnostic.finish(status);
+    }
+    if(m_Data == nullptr)
+    {
+      return diagnostic.finish(diagnostic.set(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer."));
+    }
+    // All products are checked above. Map each selected tuple without coordinate allocation.
+    const auto& shape = getTupleShape();
+    for(uint64 outputTuple = 0; outputTuple < selectedTuples; ++outputTuple)
+    {
+      uint64 remaining = outputTuple;
+      uint64 sourceTuple = 0;
+      uint64 sourceStride = 1;
+      for(usize reverse = shape.size(); reverse != 0; --reverse)
+      {
+        const usize dimension = reverse - 1;
+        const uint64 count = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
+        const uint64 coordinate = extent.min[dimension] + (remaining % count) * extent.stride[dimension];
+        remaining /= count;
+        sourceTuple += coordinate * sourceStride;
+        sourceStride *= static_cast<uint64>(shape[dimension]);
+      }
+      const usize sourceOffset = static_cast<usize>(sourceTuple * components);
+      const usize outputOffset = static_cast<usize>(outputTuple * components);
+      for(usize component = 0; component < static_cast<usize>(components); ++component)
+      {
+        destination[outputOffset + component] = m_Data[sourceOffset + component];
+      }
+    }
+    return {true};
   }
 
   /**
@@ -1054,7 +1083,6 @@ private:
   std::unique_ptr<value_type[]> m_Data = nullptr;
   usize m_NumComponents = {0};
   usize m_NumTuples = {0};
-  std::optional<T> m_InitValue;
 };
 
 /**

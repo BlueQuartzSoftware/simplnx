@@ -34,14 +34,21 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -410,6 +417,14 @@ public:
   PreferencesSentinel(nx::core::DataStorageMode mode, int64 largeDataSize);
 
   /**
+   * @brief Applies a temporary threshold without narrowing its JSON integer type.
+   * @param mode Storage mode to use during the sentinel lifetime.
+   * @param largeDataSize Exact JSON integer
+   * threshold in bytes.
+   */
+  PreferencesSentinel(nx::core::DataStorageMode mode, const nlohmann::json& largeDataSize);
+
+  /**
    * @brief Restores the saved storage preferences without writing a preferences file.
    */
   ~PreferencesSentinel();
@@ -420,8 +435,10 @@ public:
   PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;
 
 private:
-  nx::core::DataStorageMode m_OriginalMode;
-  int64 m_OriginalSize;
+  nlohmann::json m_OriginalMode;
+  nlohmann::json m_OriginalSize;
+  bool m_HadMode = false;
+  bool m_HadSize = false;
 };
 
 /**
@@ -805,6 +822,122 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
 }
 
 /**
+ * @namespace FloatArrayComparisonDetail
+ * @brief Contains internal test comparison support.
+ */
+namespace FloatArrayComparisonDetail
+{
+/**
+ * @struct FloatArrayComparison
+ * @brief Separates numerical differences from errors that prevent a complete comparison.
+ * @tparam T Floating-point element type used for difference calculations.
+ */
+template <typename T>
+struct FloatArrayComparison
+{
+  static_assert(std::is_floating_point_v<T>);
+
+  bool matches = false;
+  T maximumDifference = 0;
+  usize maximumDifferenceIndex = 0;
+  std::optional<usize> firstNanMismatchIndex;
+  T exemplaryNanMismatchValue = {};
+  T generatedNanMismatchValue = {};
+};
+
+/**
+ * @brief Compares all values without making Catch assertions.
+ * @tparam T Floating-point element type used for difference calculations.
+ * @param exemplaryArray Exemplar values.
+ * @param generatedArray Computed values.
+ * @param epsilon Exclusive absolute-difference limit.
+ * @param checkNans True to compare NaN positions; false to omit pairs that contain NaN.
+ * @return Comparison diagnostics, or an error for unequal sizes or a failed read.
+ */
+template <typename T>
+Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& exemplaryArray, const DataArray<T>& generatedArray, const T& epsilon, bool checkNans)
+{
+  static_assert(std::is_floating_point_v<T>);
+  if(exemplaryArray.getNumberOfTuples() != generatedArray.getNumberOfTuples())
+  {
+    return MakeErrorResult<FloatArrayComparison<T>>(
+        -90051, fmt::format("Floating-array comparison requires equal tuple counts: exemplar {}, computed {}.", exemplaryArray.getNumberOfTuples(), generatedArray.getNumberOfTuples()));
+  }
+  if(exemplaryArray.getNumberOfComponents() != generatedArray.getNumberOfComponents())
+  {
+    return MakeErrorResult<FloatArrayComparison<T>>(
+        -90052, fmt::format("Floating-array comparison requires equal component counts: exemplar {}, computed {}.", exemplaryArray.getNumberOfComponents(), generatedArray.getNumberOfComponents()));
+  }
+
+  const auto& oldStore = exemplaryArray.getDataStoreRef();
+  const auto& newStore = generatedArray.getDataStoreRef();
+  const usize totalSize = oldStore.getSize();
+  if(totalSize != newStore.getSize())
+  {
+    return MakeErrorResult<FloatArrayComparison<T>>(-90053, fmt::format("Floating-array comparison requires equal flat sizes: exemplar {}, computed {}.", totalSize, newStore.getSize()));
+  }
+
+  Result<FloatArrayComparison<T>> result;
+  auto& comparison = result.value();
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  // The full scan reports the largest difference for the V&V diagnostic.
+  // Bounded bulk reads keep memory independent of the total element count.
+  // The difference uses T to preserve the input array precision.
+  for(usize offset = 0; offset < totalSize; offset += k_ChunkSize)
+  {
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    auto oldStoreReadResult = oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    result.warnings().insert(result.warnings().end(), oldStoreReadResult.warnings().begin(), oldStoreReadResult.warnings().end());
+    if(oldStoreReadResult.invalid())
+    {
+      result.m_Expected = nonstd::make_unexpected(std::move(oldStoreReadResult.errors()));
+      return result;
+    }
+    auto newStoreReadResult = newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+    result.warnings().insert(result.warnings().end(), newStoreReadResult.warnings().begin(), newStoreReadResult.warnings().end());
+    if(newStoreReadResult.invalid())
+    {
+      result.m_Expected = nonstd::make_unexpected(std::move(newStoreReadResult.errors()));
+      return result;
+    }
+
+    for(usize valueIndex = 0; valueIndex < count; ++valueIndex)
+    {
+      const T oldVal = oldBuf[valueIndex];
+      const T newVal = newBuf[valueIndex];
+      const bool oldIsNan = std::isnan(oldVal);
+      const bool newIsNan = std::isnan(newVal);
+      if(oldIsNan || newIsNan)
+      {
+        if(checkNans && oldIsNan != newIsNan && !comparison.firstNanMismatchIndex.has_value())
+        {
+          comparison.firstNanMismatchIndex = offset + valueIndex;
+          comparison.exemplaryNanMismatchValue = oldVal;
+          comparison.generatedNanMismatchValue = newVal;
+        }
+        // Paired NaNs represent the same missing result. A one-sided NaN does not stop the full diagnostic scan.
+        continue;
+      }
+      if(oldVal != newVal)
+      {
+        const T difference = std::fabs(static_cast<T>(oldVal - newVal));
+        if(difference > comparison.maximumDifference)
+        {
+          comparison.maximumDifference = difference;
+          comparison.maximumDifferenceIndex = offset + valueIndex;
+        }
+      }
+    }
+  }
+  comparison.matches = !comparison.firstNanMismatchIndex.has_value() && comparison.maximumDifference < epsilon;
+  return result;
+}
+} // namespace FloatArrayComparisonDetail
+
+/**
  * @brief Compares two floating-point DataArray objects and reports their largest difference.
  * @tparam T Specifies the floating-point element type.
  * @param dataStructure Contains both arrays.
@@ -817,64 +950,21 @@ template <typename T>
 void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
 {
   static_assert(std::is_floating_point_v<T>);
-
+  INFO(fmt::format("Input Data Array: '{}'  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
-
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
   const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
-
-  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
-
-  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
-  const auto& newStore = generatedDataArray.getDataStoreRef();
-  const usize totalSize = oldStore.getSize();
-
-  constexpr usize k_ChunkSize = 40000;
-  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
-  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
-
-  // The full scan reports the largest difference for the V&V diagnostic.
-  // Bounded bulk reads keep memory independent of the total element count.
-  // The difference uses T to preserve the input array precision.
-  T maxDiff = 0;
-  usize maxDiffIndex = 0;
-
-  for(usize offset = 0; offset < totalSize; offset += k_ChunkSize)
+  auto evaluation = FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(exemplaryDataArray, generatedDataArray, epsilon, checkNans);
+  SIMPLNX_RESULT_REQUIRE_VALID(evaluation);
+  const auto& comparison = evaluation.value();
+  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximumDifference, comparison.maximumDifferenceIndex, epsilon));
+  if(comparison.firstNanMismatchIndex.has_value())
   {
-    const usize count = std::min(k_ChunkSize, totalSize - offset);
-    auto oldStoreReadResult = oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(oldStoreReadResult);
-    auto newStoreReadResult = newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(newStoreReadResult);
-
-    for(usize i = 0; i < count; i++)
-    {
-      const T oldVal = oldBuf[i];
-      const T newVal = newBuf[i];
-      if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
-      {
-        continue;
-      }
-      if(std::isnan(oldVal) && std::isnan(newVal))
-      {
-        // Two NaN values represent the same missing result for this test helper.
-        continue;
-      }
-      if(oldVal != newVal)
-      {
-        const T diff = std::fabs(static_cast<T>(oldVal - newVal));
-        if(diff > maxDiff)
-        {
-          maxDiff = diff;
-          maxDiffIndex = offset + i;
-        }
-      }
-    }
+    UNSCOPED_INFO(
+        fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.firstNanMismatchIndex, comparison.exemplaryNanMismatchValue, comparison.generatedNanMismatchValue));
   }
-  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", maxDiff, maxDiffIndex, epsilon));
-  REQUIRE(maxDiff < epsilon);
+  REQUIRE(comparison.matches);
 }
 
 /**

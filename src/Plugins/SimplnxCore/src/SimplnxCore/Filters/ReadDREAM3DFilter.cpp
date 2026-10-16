@@ -82,12 +82,8 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
 
-  // Preflight metadata is served from Dream3dPreflightCache instead of being
-  // read from the file on every pass: pipelines re-preflight on every
-  // parameter edit, and a full HDF5 metadata traversal per edit freezes the
-  // UI for seconds on high-latency storage (network mounts). After the first
-  // import, each preflight costs a single stat() (see Dream3dPreflightCache).
-  Result<DataStructure> dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetch(importData.FilePath);
+  // Neutral metadata avoids source-policy decisions before the destination action can plan selected arrays.
+  auto dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetchNeutralMetadata(importData.FilePath);
 
   Result<OutputActions> result;
   OutputActions& actions = result.value();
@@ -96,7 +92,8 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
   }
-  auto importedDataStructure = dataStructureResult.value();
+  result.warnings() = std::move(dataStructureResult.warnings());
+  const auto& importedDataStructure = dataStructureResult.value().dataStructure;
 
   if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
@@ -149,7 +146,9 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   }
   else
   {
-    return {MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.")};
+    auto failure = MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.");
+    failure.warnings() = std::move(result.warnings());
+    return {std::move(failure)};
   }
 
   return {result};

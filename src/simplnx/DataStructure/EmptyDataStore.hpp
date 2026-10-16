@@ -93,7 +93,8 @@ public:
    * @param other Source metadata store.
    */
   EmptyDataStore(const EmptyDataStore& other)
-  : m_ComponentShape(other.m_ComponentShape)
+  : AbstractDataStore<T>(other)
+  , m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
@@ -106,7 +107,8 @@ public:
    * @param other Source metadata store.
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
-  : m_ComponentShape(std::move(other.m_ComponentShape))
+  : AbstractDataStore<T>(std::move(other))
+  , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)

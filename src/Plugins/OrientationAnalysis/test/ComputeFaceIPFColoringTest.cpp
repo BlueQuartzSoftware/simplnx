@@ -44,6 +44,56 @@ DataPath faceDataGroup = triangleDataContainerPath.createChildPath(nx::core::Con
 DataPath faceLabels = faceDataGroup.createChildPath(nx::core::Constants::k_FaceLabels);
 DataPath faceNormals = faceDataGroup.createChildPath(nx::core::Constants::k_FaceNormals);
 DataPath faceAreas = faceDataGroup.createChildPath(nx::core::Constants::k_FaceAreas);
+
+const DataPath k_BoundsFaceLabelsPath({"Bounds Data", "FaceLabels"});
+const DataPath k_BoundsFaceNormalsPath({"Bounds Data", "FaceNormals"});
+const DataPath k_BoundsEulerAnglesPath({"Bounds Data", "FeatureEulerAngles"});
+const DataPath k_BoundsFeaturePhasesPath({"Bounds Data", "FeaturePhases"});
+const DataPath k_BoundsCrystalStructuresPath({"Bounds Data", "CrystalStructures"});
+
+Arguments BuildPhaseBoundsFixture(DataStructure& dataStructure)
+{
+  auto* dataGroupPtr = DataGroup::Create(dataStructure, "Bounds Data");
+  REQUIRE(dataGroupPtr != nullptr);
+
+  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BoundsFaceLabelsPath, {1}, {2});
+  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, k_BoundsFaceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
+  REQUIRE(faceLabelsArrayPtr != nullptr);
+  (*faceLabelsStore)[0] = 1;
+  (*faceLabelsStore)[1] = 0;
+
+  auto faceNormalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, k_BoundsFaceNormalsPath, {1}, {3});
+  auto* faceNormalsArrayPtr = Float64Array::Create(dataStructure, k_BoundsFaceNormalsPath.getTargetName(), faceNormalsStore, dataGroupPtr->getId());
+  REQUIRE(faceNormalsArrayPtr != nullptr);
+  (*faceNormalsStore)[2] = 1.0;
+
+  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_BoundsEulerAnglesPath, {2}, {3});
+  auto* eulerAnglesArrayPtr = Float32Array::Create(dataStructure, k_BoundsEulerAnglesPath.getTargetName(), eulerAnglesStore, dataGroupPtr->getId());
+  REQUIRE(eulerAnglesArrayPtr != nullptr);
+
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BoundsFeaturePhasesPath, {2}, {1});
+  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, k_BoundsFeaturePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
+  REQUIRE(featurePhasesArrayPtr != nullptr);
+  (*featurePhasesStore)[0] = 0;
+  (*featurePhasesStore)[1] = 2;
+
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_BoundsCrystalStructuresPath, {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, k_BoundsCrystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
+  REQUIRE(crystalStructuresArrayPtr != nullptr);
+  (*crystalStructuresStore)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresStore)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  ComputeFaceIPFColoringFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_BoundsFaceLabelsPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(k_BoundsFaceNormalsPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_BoundsEulerAnglesPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_BoundsFeaturePhasesPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_BoundsCrystalStructuresPath));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>("First Bounds Colors"));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>("Second Bounds Colors"));
+  return args;
+}
 } // namespace
 
 // =============================================================================
@@ -110,6 +160,10 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   // EbsdLib crystal-structure enum values used as ops[] indices.
   constexpr uint32 k_HexHigh = 0;   // Hexagonal_High (6/mmm)
   constexpr uint32 k_CubicHigh = 1; // Cubic_High (m-3m)
@@ -165,8 +219,24 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceNormalsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceNormalsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(eulerAnglesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(eulerAnglesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(phasesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(crystalStructuresPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(crystalStructuresPath));
+
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath.replaceName(::k_FirstNXFaceIPFColors)));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath.replaceName(::k_FirstNXFaceIPFColors)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath.replaceName(::k_SecondNXFaceIPFColors)));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceLabelsPath.replaceName(::k_SecondNXFaceIPFColors)));
 
   const auto& first = dataStructure.getDataRefAs<UInt8Array>(faceLabelsPath.replaceName(::k_FirstNXFaceIPFColors));
   const auto& second = dataStructure.getDataRefAs<UInt8Array>(faceLabelsPath.replaceName(::k_SecondNXFaceIPFColors));
@@ -202,57 +272,17 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Phase Index Bounds
 
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   DataStructure dataStructure;
-  auto* dataGroupPtr = DataGroup::Create(dataStructure, "Bounds Data");
-  REQUIRE(dataGroupPtr != nullptr);
-
-  const DataPath faceLabelsPath({"Bounds Data", "FaceLabels"});
-  const DataPath faceNormalsPath({"Bounds Data", "FaceNormals"});
-  const DataPath eulerAnglesPath({"Bounds Data", "FeatureEulerAngles"});
-  const DataPath boundsFeaturePhasesPath({"Bounds Data", "FeaturePhases"});
-  const DataPath crystalStructuresPath({"Bounds Data", "CrystalStructures"});
-
-  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, faceLabelsPath, {1}, {2});
-  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, faceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
-  REQUIRE(faceLabelsArrayPtr != nullptr);
-  (*faceLabelsStore)[0] = 1;
-  (*faceLabelsStore)[1] = 0;
-
-  auto faceNormalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, faceNormalsPath, {1}, {3});
-  auto* faceNormalsArrayPtr = Float64Array::Create(dataStructure, faceNormalsPath.getTargetName(), faceNormalsStore, dataGroupPtr->getId());
-  REQUIRE(faceNormalsArrayPtr != nullptr);
-  (*faceNormalsStore)[2] = 1.0;
-
-  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerAnglesPath, {2}, {3});
-  auto* eulerAnglesArrayPtr = Float32Array::Create(dataStructure, eulerAnglesPath.getTargetName(), eulerAnglesStore, dataGroupPtr->getId());
-  REQUIRE(eulerAnglesArrayPtr != nullptr);
-
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, boundsFeaturePhasesPath, {2}, {1});
-  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, boundsFeaturePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
-  REQUIRE(featurePhasesArrayPtr != nullptr);
-  (*featurePhasesStore)[0] = 0;
-  (*featurePhasesStore)[1] = 2;
-
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
-  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
-  REQUIRE(crystalStructuresArrayPtr != nullptr);
-  (*crystalStructuresStore)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-  (*crystalStructuresStore)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  Arguments args = BuildPhaseBoundsFixture(dataStructure);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
 
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(featurePhasesStore->getDataFormat() == "HDF5-OOC");
-    REQUIRE(faceLabelsStore->getDataFormat() == "HDF5-OOC");
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
 
   ComputeFaceIPFColoringFilter filter;
-  Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceNormalsPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(boundsFeaturePhasesPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>("First Bounds Colors"));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>("Second Bounds Colors"));
 
   SECTION("First Feature Phase returns an error")
   {
@@ -263,132 +293,51 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Phase Index Bounds
 
   SECTION("Second Feature Phase returns an error")
   {
-    (*faceLabelsStore)[0] = 0;
-    (*faceLabelsStore)[1] = 1;
+    auto& faceLabelsStore = dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath).getDataStoreRef();
+    faceLabelsStore[0] = 0;
+    faceLabelsStore[1] = 1;
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -24341);
   }
 
-  SECTION("Unreferenced Feature Phase is ignored")
-  {
-    (*faceLabelsStore)[0] = 0;
-    (*faceLabelsStore)[1] = 0;
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
-
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: genuine HDF5 65536-block tail oracle", "[OrientationAnalysis][ComputeFaceIPFColoringFilter][.OocStoreContract]")
+TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Unreferenced Feature Phase resident scenarios", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
   UnitTest::LoadPlugins();
-  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
 
-  constexpr usize k_BlockTuples = 65536;
-  constexpr usize k_FaceTuples = k_BlockTuples + 1;
-  constexpr usize k_LastFullBlockTuple = k_BlockTuples - 1;
-  constexpr usize k_TailTuple = k_BlockTuples;
-
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-
-  const DataPath dataPath({"Boundary Data"});
-  const DataPath faceLabelsPath = dataPath.createChildPath("FaceLabels");
-  const DataPath faceNormalsPath = dataPath.createChildPath("FaceNormals");
-  const DataPath eulerAnglesPath = dataPath.createChildPath("FeatureEulerAngles");
-  const DataPath phasesPath = dataPath.createChildPath("FeaturePhases");
-  const DataPath crystalStructuresPath = dataPath.createChildPath("CrystalStructures");
-  const DataPath firstColorsPath = dataPath.createChildPath("First Boundary Colors");
-  const DataPath secondColorsPath = dataPath.createChildPath("Second Boundary Colors");
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  auto* dataGroup = DataGroup::Create(dataStructure, dataPath.getTargetName());
-  REQUIRE(dataGroup != nullptr);
+  Arguments args = BuildPhaseBoundsFixture(dataStructure);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath));
+  auto& faceLabelsStore = dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath).getDataStoreRef();
+  faceLabelsStore[0] = 0;
+  faceLabelsStore[1] = 0;
 
-  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, faceLabelsPath, {k_FaceTuples}, {2});
-  auto faceNormalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, faceNormalsPath, {k_FaceTuples}, {3});
-  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerAnglesPath, {3}, {3});
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {3}, {1});
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {3}, {1});
-
-  auto* faceLabelsArray = Int32Array::Create(dataStructure, faceLabelsPath.getTargetName(), faceLabelsStore, dataGroup->getId());
-  auto* faceNormalsArray = Float64Array::Create(dataStructure, faceNormalsPath.getTargetName(), faceNormalsStore, dataGroup->getId());
-  auto* eulerAnglesArray = Float32Array::Create(dataStructure, eulerAnglesPath.getTargetName(), eulerAnglesStore, dataGroup->getId());
-  auto* phasesArray = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore, dataGroup->getId());
-  auto* crystalStructuresArray = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroup->getId());
-  REQUIRE(faceLabelsArray != nullptr);
-  REQUIRE(faceNormalsArray != nullptr);
-  REQUIRE(eulerAnglesArray != nullptr);
-  REQUIRE(phasesArray != nullptr);
-  REQUIRE(crystalStructuresArray != nullptr);
-
-  std::vector<int32> faceLabelValues(k_FaceTuples * 2, -1);
-  std::vector<float64> faceNormalValues(k_FaceTuples * 3, 0.0);
-  faceLabelValues[k_LastFullBlockTuple * 2] = 1;
-  faceNormalValues[k_LastFullBlockTuple * 3] = -1.0;
-  faceLabelValues[k_TailTuple * 2 + 1] = 2;
-  faceNormalValues[k_TailTuple * 3] = -1.0;
-
-  const std::array<float32, 9> eulerAngleValues = {0.0F, 0.0F, 0.0F, nx::core::Constants::k_PiOver2F, 0.0F, 0.0F, nx::core::Constants::k_PiOver3F, 0.0F, 0.0F};
-  const std::array<int32, 3> phaseValues = {0, 1, 2};
-  const std::array<uint32, 3> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Hexagonal_High};
-
-  auto faceLabelsWriteResult = faceLabelsArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(faceLabelValues.data(), faceLabelValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(faceLabelsWriteResult);
-  auto faceNormalsWriteResult = faceNormalsArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(faceNormalValues.data(), faceNormalValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(faceNormalsWriteResult);
-  auto eulerAnglesWriteResult = eulerAnglesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(eulerAngleValues.data(), eulerAngleValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(eulerAnglesWriteResult);
-  auto phasesWriteResult = phasesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
-  auto crystalStructuresWriteResult = crystalStructuresArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
-
-  REQUIRE(faceLabelsArray->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(faceNormalsArray->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(eulerAnglesArray->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(phasesArray->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(crystalStructuresArray->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceNormalsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceNormalsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsEulerAnglesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsEulerAnglesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFeaturePhasesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsFeaturePhasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsCrystalStructuresPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsCrystalStructuresPath));
 
   ComputeFaceIPFColoringFilter filter;
-  Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceNormalsPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>(firstColorsPath.getTargetName()));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>(secondColorsPath.getTargetName()));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  REQUIRE(executeResult.result.warnings().empty());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(firstColorsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(secondColorsPath));
-  const auto& firstColors = dataStructure.getDataRefAs<UInt8Array>(firstColorsPath);
-  const auto& secondColors = dataStructure.getDataRefAs<UInt8Array>(secondColorsPath);
-  REQUIRE(firstColors.getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(secondColors.getDataStoreRef().getDataFormat() == "HDF5-OOC");
-
-  const usize lastFullBlockOffset = k_LastFullBlockTuple * 3;
-  REQUIRE(firstColors[lastFullBlockOffset] == 255);
-  REQUIRE(firstColors[lastFullBlockOffset + 1] == 0);
-  REQUIRE(firstColors[lastFullBlockOffset + 2] == 0);
-  REQUIRE(secondColors[lastFullBlockOffset] == 0);
-  REQUIRE(secondColors[lastFullBlockOffset + 1] == 0);
-  REQUIRE(secondColors[lastFullBlockOffset + 2] == 0);
-
-  const usize tailOffset = k_TailTuple * 3;
-  REQUIRE(firstColors[tailOffset] == 0);
-  REQUIRE(firstColors[tailOffset + 1] == 0);
-  REQUIRE(firstColors[tailOffset + 2] == 0);
-  REQUIRE(secondColors[tailOffset] == 0);
-  REQUIRE(secondColors[tailOffset + 1] == 255);
-  REQUIRE(secondColors[tailOffset + 2] == 0);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath.replaceName("First Bounds Colors")));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath.replaceName("First Bounds Colors")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath.replaceName("Second Bounds Colors")));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath.replaceName("Second Bounds Colors")));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -443,10 +392,25 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: ColorKey choice re
 {
   UnitTest::LoadPlugins();
 
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceLabels));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceLabels));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(faceNormals));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(faceNormals));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(avgEulerAnglesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(avgEulerAnglesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(featurePhasesPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(featurePhasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(crystalStructurePath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(crystalStructurePath));
 
   // Run the filter once per kind, writing into uniquely-named output arrays.
   auto runWithKind = [&](ChoicesParameter::ValueType kindIndex, const std::string& firstName, const std::string& secondName) {
@@ -463,8 +427,15 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: ColorKey choice re
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const DataPath firstColorsPath = faceLabels.replaceName(firstName);
+    const DataPath secondColorsPath = faceLabels.replaceName(secondName);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(firstColorsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(firstColorsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(secondColorsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(secondColorsPath));
   };
 
   runWithKind(0, "FirstIPF_TSL", "SecondIPF_TSL");

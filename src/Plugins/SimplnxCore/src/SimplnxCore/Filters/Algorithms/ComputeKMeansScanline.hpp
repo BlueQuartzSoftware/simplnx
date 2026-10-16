@@ -39,7 +39,7 @@ public:
 
   /**
    * @brief Executes K-Means with bounded bulk transfers.
-   * @return Success, or a mask, shape, overflow, or bulk-transfer error.
+   * @return Success, or a zero cluster count, mask, shape, overflow, or bulk-transfer error.
    *
    * Cancellation returns success. Completed assignment pages and centroids from
    * earlier phases remain in the output arrays.
