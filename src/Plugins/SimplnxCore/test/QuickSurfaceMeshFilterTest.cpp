@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -500,6 +501,104 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Strict Feature Ids", "[SimplnxCore][QuickSurfaceMeshFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  const bool rectilinear = GENERATE(false, true);
+  const bool fixProblemVoxels = GENERATE(false, true);
+  CAPTURE(rectilinear, fixProblemVoxels);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Strict Geometry"});
+  const DataPath cellPath = geometryPath.createChildPath("Cell Data");
+  const DataPath featureIdsPath = cellPath.createChildPath("Feature Ids");
+  const ShapeType shape{1, 2, 2};
+  IGridGeometry* geometry = nullptr;
+  if(rectilinear)
+  {
+    geometry = RectGridGeom::Create(dataStructure, geometryPath.getTargetName());
+  }
+  else
+  {
+    geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  }
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 2, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", shape, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(*cells);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, geometry->getId()) != nullptr);
+  auto* other = AttributeMatrix::Create(dataStructure, "Other Data", shape, geometry->getId());
+  REQUIRE(other != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cells->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), other->getId()) != nullptr);
+
+  QuickSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(fixProblemVoxels));
+  DataPath selectedPath = featureIdsPath;
+  int32 expectedCode = 0;
+  SECTION("Correct Cell Attribute Matrix")
+  {
+  }
+  SECTION("Feature Ids in another Attribute Matrix with the same tuple shape")
+  {
+    selectedPath = geometryPath.createChildPath("Other Data").createChildPath("Feature Ids");
+    expectedCode = fixProblemVoxels ? -76532 : 0;
+  }
+  SECTION("Feature Ids through an alias of the Cell Attribute Matrix")
+  {
+    auto* alternateParent = DataGroup::Create(dataStructure, "Alternate Parent");
+    REQUIRE(alternateParent != nullptr);
+    REQUIRE(dataStructure.setAdditionalParent(cells->getId(), alternateParent->getId()));
+    selectedPath = DataPath({"Alternate Parent", "Cell Data", "Feature Ids"});
+    REQUIRE(geometry->getCellDataPath() == cellPath);
+  }
+  SECTION("Feature Ids with fewer tuples than grid cells")
+  {
+    selectedPath = DataPath({"Short Feature Ids"});
+    REQUIRE(Int32Array::Create(dataStructure, "Short Feature Ids", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 1)) != nullptr);
+    expectedCode = fixProblemVoxels ? -76532 : -76533;
+  }
+  SECTION("Feature Ids with more tuples than grid cells")
+  {
+    selectedPath = DataPath({"Long Feature Ids"});
+    REQUIRE(Int32Array::Create(dataStructure, "Long Feature Ids", std::make_shared<DataStore<int32>>(ShapeType{5}, ShapeType{1}, 1)) != nullptr);
+    expectedCode = fixProblemVoxels ? -76532 : -76533;
+  }
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(selectedPath));
+  const auto result = filter.preflight(dataStructure, args);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    const auto& modifications = result.outputActions.value().modifiedActions;
+    if(fixProblemVoxels)
+    {
+      REQUIRE(modifications.size() == 1);
+      CHECK(modifications.front().modifiedPath == featureIdsPath);
+      CHECK(modifications.front().modifiedType == DataObjectModification::ModifiedType::Modified);
+    }
+    else
+    {
+      CHECK(modifications.empty());
+    }
+  }
+  else
+  {
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors().front();
+    CHECK(error.code == expectedCode);
+    CHECK(error.message.find(selectedPath.toString()) != std::string::npos);
+    CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
+    if(expectedCode == -76532)
+    {
+      CHECK(error.message.find(cellPath.toString()) != std::string::npos);
+    }
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

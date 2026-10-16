@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** removes or extracts **Features** that an earlier filter in the pipeline has flagged. The user supplies a boolean (or unsigned 8-bit) array at the **Feature** level. Features with a value of *true* are removed or extracted. This filter discards features by any criterion that a flag can express: biased features, surface features, minority phases, or user-selected features. For the specific case of removing features smaller than a size threshold, see [Remove Minimum Size Features](RequireMinimumSizeFeaturesFilter.md). For a rank-based selection ("remove the 10 smallest"), see [Keep/Remove Ranked Features](KeepRemoveRankedFeaturesFilter.md).
 
+For all operations, Cell Feature Ids must be in the selected Image Geometry's Cell Attribute Matrix; when removing with Fill-in Removed Features on, Attribute Arrays to Ignore must also be in that matrix. The parent of Flagged Features must be a different Attribute Matrix directly under the selected Image Geometry.
+
 ### Selected Operation
 
 The *Selected Operation* parameter provides the following choices:

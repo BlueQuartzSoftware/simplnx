@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** removes **Features** that have fewer contiguous neighboring **Features** than the selected minimum. It uses a precomputed *Number of Neighbors* array, which is normally created by the [Compute Feature Neighbors](./ComputeFeatureNeighborsFilter.md) **Filter**. **Feature** tuple 0 is retained as the background tuple.
 
+Cell Feature Ids and Cell Arrays to Ignore must be in the selected Image Geometry's Cell Attribute Matrix. The parent of Number of Neighbors must be a different Attribute Matrix directly under the selected Image Geometry.
+
 The most common use case is cleaning up isolated single-feature islands left over from segmentation -- features whose surroundings turned out to be too sparsely connected to support a meaningful grain. After flagged features are removed, the remaining features grow outward via [isotropic coarsening](RequireMinimumSizeFeaturesFilter.md) until every cell is reassigned.
 
 The threshold is a **count of contiguous neighbors** (a non-negative integer). Setting the threshold to 0 removes nothing. Setting it larger than the maximum number of neighbors any feature has produces an error (since all features would be removed). Inspect the *Number of Neighbors* output of [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) before choosing a threshold.
@@ -44,7 +46,9 @@ This **Filter** operates in place and does not create a new geometry or output a
 
 ## Validation and Failure Conditions
 
-- Preflight fails with `-55571` when *Cell Feature Ids* does not contain exactly one tuple per **Image Geometry** cell.
+- Preflight fails with `-55575` when *Cell Feature Ids* is not in the selected **Image Geometry**'s Cell Attribute Matrix.
+- Preflight fails with `-55573` when an array in *Cell Arrays to Ignore* is not in that Cell Attribute Matrix.
+- Preflight fails with `-55574` when the parent of *Number of Neighbors* is not an Attribute Matrix directly under the selected **Image Geometry**, or is its Cell Attribute Matrix.
 - Preflight fails with `-252` when *Number of Neighbors* and the enabled *Feature Phases* array do not have matching tuple counts.
 - Execution fails with `-5555` when the selected *Phase Index* is not present in *Feature Phases*.
 - Execution fails with `-55569` when the selected minimum would reject every eligible non-background **Feature**.

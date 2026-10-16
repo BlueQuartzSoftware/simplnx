@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** smooths the interface between *good* and *bad* cells (or, more generally, between any two adjacent feature regions) by removing cells whose neighborhood is mostly the opposite class. It targets isolated voxels and small protrusions that are surrounded by cells of a different feature, then fills them in with their neighbors' data via isotropic coarsening.
 
+**Cell Feature Ids** and every array in **Attribute Arrays to Ignore** must be in the selected geometry's Cell Attribute Matrix.
+
 The *coordination number* is the count of a cell's face-sharing neighbors that belong to a different class. With 6 face neighbors, the coordination number ranges from **0 to 6**:
 
 - **CN = 0** -- all 6 neighbors agree with the cell. Solidly inside a region.

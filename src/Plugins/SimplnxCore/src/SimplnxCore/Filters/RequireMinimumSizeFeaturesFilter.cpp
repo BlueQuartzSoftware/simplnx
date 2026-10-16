@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -26,7 +27,6 @@ using PhasesArrayType = Int32Array;
 namespace
 {
 constexpr int32 k_BadMinAllowedFeatureSize = -5555;
-constexpr int32 k_ParentlessPathError = -5557;
 
 } // namespace
 
@@ -105,6 +105,22 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   auto applyToSinglePhase = filterArgs.value<bool>(k_ApplySinglePhase_Key);
   auto minAllowedFeatureSize = filterArgs.value<int64>(k_MinAllowedFeaturesSize_Key);
 
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -5562, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
+
+  auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, featureNumCellsPath.getParent(), -5563, "Feature Num. Cells", featureNumCellsPath);
+  if(featureAttributeMatrixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+  }
+
+  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
+  featureIdsPath = cellDataPath.createChildPath(featureIdsPath.getTargetName());
+
   std::vector<DataPath> dataArrayPaths;
 
   if(minAllowedFeatureSize < 0)
@@ -130,13 +146,6 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
     return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  DataPath featureGroupDataPath = featureNumCellsPath.getParent();
-  const auto* featureDataGroup = dataStructure.getDataAs<BaseGroup>(featureGroupDataPath);
-  if(nullptr == featureDataGroup)
-  {
-    return {MakeErrorResult<OutputActions>(k_ParentlessPathError, "The provided NumCells DataPath does not have a parent.")};
-  }
-
   // Create the preflightResult object
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -153,7 +162,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -172,6 +181,10 @@ Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStruct
   inputValues.FeaturePhasesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesPath_Key);
   inputValues.ApplySinglePhase = filterArgs.value<BoolParameter::ValueType>(k_ApplySinglePhase_Key);
   inputValues.PhaseNumber = filterArgs.value<Int32Parameter::ValueType>(k_SinglePhaseNumber_Key);
+
+  // Match the collection path for Feature Ids and its sibling Cell arrays.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometryPath).getCellDataPath();
+  inputValues.FeatureIdsPath = cellDataPath.createChildPath(inputValues.FeatureIdsPath.getTargetName());
 
   return RequireMinimumSizeFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

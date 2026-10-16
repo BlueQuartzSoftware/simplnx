@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -100,6 +101,25 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto zDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -14605, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
+
+  auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -14604, "Attribute Arrays to Ignore");
+  if(ignoredArraysResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+  }
+
+  // Shared Attribute Matrices can have multiple paths; exclusions must use the collection path.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
+  for(auto& ignoredPath : pIgnoredDataArrayPathsValue)
+  {
+    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
+  }
+
   PreflightResult preflightResult;
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -125,7 +145,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), pIgnoredDataArrayPathsValue);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return actions and updated preflight values.
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -144,6 +164,14 @@ Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  // Match the collection path for ignored arrays and the Feature Ids special case.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry).getCellDataPath();
+  inputValues.FeatureIdsArrayPath = cellDataPath.createChildPath(inputValues.FeatureIdsArrayPath.getTargetName());
+  for(auto& ignoredPath : inputValues.IgnoredDataArrayPaths)
+  {
+    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
+  }
 
   return ErodeDilateBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
