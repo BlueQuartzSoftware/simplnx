@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** grows or shrinks regions of *bad data* (cells with *Feature Id = 0*) by one cell-layer per iteration, using standard image-morphology operations. It is a building block for cleaning up isolated noise or for compensating for boundaries that were systematically under- or over-measured by the experiment.
 
+**Cell Feature Ids** and every array in **Attribute Arrays to Ignore** must be in the selected geometry's Cell Attribute Matrix.
+
 ![Fig. 1: Dilate grows the bad-data (Feature Id 0) region outward by one cell layer per iteration; Erode shrinks it, reassigning each bad cell to its majority neighbor. The Number of Iterations sets the layer count.](Images/ErodeDilateBadData_IterationSequence.png)
 
 ### Dilation
