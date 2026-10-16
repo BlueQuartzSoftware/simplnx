@@ -10,6 +10,7 @@
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
@@ -309,6 +310,14 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
                                                                  "off 'Clear Feature Attribute Matrix'.",
                                                                  cellFeatureAmPath.toString(), srcImagePath.toString())),
               preflightUpdatedValues};
+    }
+    if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, options.featureIdsPath, *srcImageGeomPtr->getCellData()))
+    {
+      return {
+          MakeErrorResult<OutputActions>(
+              -50564, fmt::format("**Cell Feature Ids** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected Image Geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                                  options.featureIdsPath.toString(), srcImagePath.createChildPath(srcImageGeomPtr->getCellData()->getName()).toString(), srcImagePath.toString())),
+          preflightUpdatedValues};
     }
     ignorePaths.push_back(cellFeatureAmPath);
     const DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
