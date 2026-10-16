@@ -25,7 +25,12 @@ INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
@@ -34,7 +39,12 @@ const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
@@ -44,7 +54,13 @@ INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a shared vertex list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
 const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
@@ -54,7 +70,13 @@ const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a shared vertex list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
 void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexList& vertices)
@@ -206,7 +228,12 @@ AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix()
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix() const
@@ -215,7 +242,12 @@ const AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix() const
   {
     return nullptr;
   }
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef()
@@ -225,7 +257,13 @@ AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a vertex attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
+  DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef() const
@@ -235,7 +273,13 @@ const AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a vertex attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
+  return dataStructurePtr->getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry0D::getVertexAttributeMatrixDataPath() const

@@ -16,7 +16,12 @@ IGeometry::IGeometry(DataStructure& dataStructure, std::string name, IdType impo
 
 const Float32Array* IGeometry::getElementSizes() const
 {
-  return getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  const DataStructure* dataStructurePtr = getDataStructure();
+  if(nullptr == dataStructurePtr)
+  {
+    return nullptr;
+  }
+  return dataStructurePtr->getDataAs<Float32Array>(m_ElementSizesId);
 }
 
 DataObject::OptionalId IGeometry::getElementSizesId() const
