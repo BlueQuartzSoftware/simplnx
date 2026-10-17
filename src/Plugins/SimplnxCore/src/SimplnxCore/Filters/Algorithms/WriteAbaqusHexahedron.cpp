@@ -1,24 +1,16 @@
 #include "WriteAbaqusHexahedron.hpp"
+#include "SimplnxCore/utils/AbaqusElementSets.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <nonstd/span.hpp>
-
-#include <algorithm>
 #include <array>
-#include <cstddef>
-#include <cstring>
 #include <filesystem>
-#include <limits>
-#include <memory>
-#include <type_traits>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -105,10 +97,10 @@ int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& f
     {
       for(usize x = 0; x < pDims[0]; x++)
       {
-        float32 xCoord = origin[0] + (x * spacing[0]);
-        float32 yCoord = origin[1] + (y * spacing[1]);
-        float32 zCoord = origin[2] + (z * spacing[2]);
-        fprintf(f, "%llu, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), xCoord, yCoord, zCoord);
+        const float64 xCoord = static_cast<float64>(origin[0]) + static_cast<float64>(x) * static_cast<float64>(spacing[0]);
+        const float64 yCoord = static_cast<float64>(origin[1]) + static_cast<float64>(y) * static_cast<float64>(spacing[1]);
+        const float64 zCoord = static_cast<float64>(origin[2]) + static_cast<float64>(z) * static_cast<float64>(spacing[2]);
+        fmt::print(f, "{}, {:.9g}, {:.9g}, {:.9g}\n", nodeIndex, xCoord, yCoord, zCoord);
 
         ++nodeIndex;
       }
@@ -128,18 +120,19 @@ int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& f
 }
 
 /**
- * @brief Writes one C3D8 element for every ImageGeom cell.
+ * @brief Writes one C3D8 or C3D8R element for every ImageGeom cell.
  * @param progressThrottle Receives progress messages.
  * @param fileName Temporary element-file path.
  * @param cDims Cell dimensions in X, Y, and Z order.
  * @param pDims Node-grid dimensions in X, Y, and Z order.
  * @param shouldCancel Signals cancellation between Z planes.
+ * @param useReducedIntegration Writes C3D8R elements when true and C3D8 elements otherwise.
  * @return Zero on completion, one on cancellation, or -1 when fopen fails.
  * @pre Dimension products and generated IDs fit the output integer types.
  *
  * C stdio return values are not inspected. Cancellation is checked per Z plane.
  */
-int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel, bool useReducedIntegration)
 {
 
   int32 err = 0;
@@ -154,7 +147,7 @@ int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& f
 
   progressThrottle.reset(cDims[2], "Writing Elements (File 2/5)");
   usize index = 1;
-  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=C3D8\n");
+  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=%s\n", useReducedIntegration ? "C3D8R" : "C3D8");
   for(usize z = 0; z < cDims[2]; z++)
   {
     if(shouldCancel)
@@ -183,374 +176,40 @@ int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& f
 }
 
 /**
- * @brief Finds the maximum Feature ID through bounded reads.
- * @param featureIds Supplies cell Feature IDs.
- * @param shouldCancel Signals cancellation between chunks.
- * @return Maximum ID, source read error, or zero after cancellation.
- */
-Result<int32> findMaximumGrainId(const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
-{
-  const usize totalElements = featureIds.getSize();
-  if(totalElements == 0)
-  {
-    return {int32{0}};
-  }
-
-  constexpr usize k_ChunkSize = 65536;
-  auto buffer = std::make_unique<int32[]>(std::min(k_ChunkSize, totalElements));
-  int32 maximum = std::numeric_limits<int32>::lowest();
-  for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
-  {
-    if(shouldCancel)
-    {
-      return {int32{0}};
-    }
-    const usize count = std::min(k_ChunkSize, totalElements - offset);
-    if(Result<> result = featureIds.copyIntoBuffer(offset, nonstd::span<int32>(buffer.get(), count)); result.invalid())
-    {
-      return ConvertResultTo<int32>(std::move(result), int32{});
-    }
-    maximum = std::max(maximum, *std::max_element(buffer.get(), buffer.get() + count));
-  }
-  return {maximum};
-}
-
-/**
- * @brief Groups resident element indexes by positive grain ID.
- * @param progressThrottle Receives progress messages.
- * @param featureIds Supplies cell Feature IDs.
- * @param maxGrainId Largest Feature ID and final bucket index.
- * @param shouldCancel Signals cancellation between chunks.
- * @return One ascending element-index list per ID, or empty after cancellation.
- *
- * Abaqus requires each grain's element IDs in one contiguous ELSET. One source
- * pass avoids a grain-by-cell rescan. The tradeoff is O(maximum ID plus positive
- * cell count) resident bucket memory.
- */
-Result<std::vector<std::vector<usize>>> groupElementsByGrain(ThrottledMessageHandler& progressThrottle, const Int32AbstractDataStore& featureIds, int32 maxGrainId,
-                                                             const std::atomic_bool& shouldCancel)
-{
-  const usize elsetCount = maxGrainId > 0 ? static_cast<usize>(maxGrainId) + 1 : 0;
-  std::vector<std::vector<usize>> elementsByGrain(elsetCount);
-  if(elsetCount == 0)
-  {
-    return {std::move(elementsByGrain)};
-  }
-
-  constexpr usize k_ChunkSize = 65536;
-  const usize totalElements = featureIds.getSize();
-  auto chunkBuffer = std::make_unique<int32[]>(k_ChunkSize);
-
-  progressThrottle.reset(totalElements, "Grouping Element Sets (File 4/5)");
-  for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
-  {
-    if(shouldCancel)
-    {
-      return {std::vector<std::vector<usize>>{}};
-    }
-
-    const usize count = std::min(k_ChunkSize, totalElements - offset);
-    if(Result<> result = featureIds.copyIntoBuffer(offset, nonstd::span<int32>(chunkBuffer.get(), count)); result.invalid())
-    {
-      return ConvertResultTo<std::vector<std::vector<usize>>>(std::move(result), {});
-    }
-    for(usize i = 0; i < count; i++)
-    {
-      const int32 grainId = chunkBuffer[i];
-      if(grainId > 0 && grainId <= maxGrainId)
-      {
-        elementsByGrain[static_cast<usize>(grainId)].push_back(offset + i);
-      }
-    }
-
-    progressThrottle.updatePercent(offset + count);
-  }
-
-  return {std::move(elementsByGrain)};
-}
-
-/**
- * @brief Appends one element ID with 16 values per line.
- * @param file Open ELSET stream.
- * @param elementId One-based Abaqus element ID.
- * @param elementsOnSet Receives the current grain's written count.
- * @pre file is not null.
- */
-void writeElementId(FILE* file, uint64 elementId, usize& elementsOnSet)
-{
-  if(elementsOnSet != 0)
-  {
-    fprintf(file, (elementsOnSet % 16) != 0u ? ", " : ",\n");
-  }
-  fprintf(file, "%llu", static_cast<unsigned long long int>(elementId));
-  elementsOnSet++;
-}
-
-/**
- * @brief Writes resident grain ELSETs from one grouped source pass.
- * @param progressThrottle Receives progress messages.
- * @param file Open ELSET stream.
- * @param featureIds Supplies cell Feature IDs.
- * @param maxGrainId Largest grain ID to emit.
- * @param shouldCancel Signals cancellation between grouping chunks.
- * @return Grouping source-read result, or success after cancellation.
- * @pre file is not null.
- */
-Result<> writeDirectElsets(ThrottledMessageHandler& progressThrottle, FILE* file, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
-{
-  auto groupedResult = groupElementsByGrain(progressThrottle, featureIds, maxGrainId, shouldCancel);
-  if(groupedResult.invalid())
-  {
-    return ConvertResult(std::move(groupedResult));
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  const auto& elementsByGrain = groupedResult.value();
-  for(int32 grainId = 1; grainId <= maxGrainId; ++grainId)
-  {
-    fprintf(file, "\n*Elset, elset=Grain%d_set\n", grainId);
-    usize elementsOnSet = 0;
-    for(usize elementId : elementsByGrain[static_cast<usize>(grainId)])
-    {
-      writeElementId(file, elementId + 1, elementsOnSet);
-    }
-  }
-  return {};
-}
-
-/**
- * @brief Writes ELSETs by rescanning Feature IDs for every grain.
- * @param file Open ELSET stream.
- * @param featureIds Supplies cell Feature IDs.
- * @param maxGrainId Largest grain ID to emit.
- * @param shouldCancel Signals cancellation between read chunks.
- * @return Source bulk-read result, or success after cancellation.
- * @pre file is not null.
- *
- * This exact bounded fallback is for forced OOC tests on resident data when no
- * sorter exists. Actual OOC input rejects this O(grains times cells) I/O path.
- */
-Result<> writeRepeatedScanElsets(FILE* file, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
-{
-  constexpr usize k_ChunkSize = 65536;
-  const usize totalElements = featureIds.getSize();
-  auto featurePage = std::make_unique<int32[]>(std::min(k_ChunkSize, totalElements));
-  for(int32 grainId = 1; grainId <= maxGrainId; ++grainId)
-  {
-    fprintf(file, "\n*Elset, elset=Grain%d_set\n", grainId);
-    usize elementsOnSet = 0;
-    for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      const usize count = std::min(k_ChunkSize, totalElements - offset);
-      if(Result<> result = featureIds.copyIntoBuffer(offset, nonstd::span<int32>(featurePage.get(), count)); result.invalid())
-      {
-        return result;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        if(featurePage[i] == grainId)
-        {
-          writeElementId(file, offset + i + 1, elementsOnSet);
-        }
-      }
-    }
-  }
-  return {};
-}
-
-/**
- * @struct ElementGrainRecord
- * @brief Stores one grain and one-based element ID for external sorting.
- */
-struct ElementGrainRecord
-{
-  int32 grainId = 0;
-  uint32 reserved = 0;
-  uint64 elementId = 0;
-};
-static_assert(std::is_trivially_copyable_v<ElementGrainRecord>);
-
-/**
- * @brief Writes grain ELSETs through bounded external sorting.
- * @param file Open ELSET stream.
- * @param featureIds Supplies cell Feature IDs.
- * @param maxGrainId Largest grain ID to emit.
- * @param shouldCancel Signals cancellation during source and sort operations.
- * @return Source-I/O, sorter, short-read, or cancellation result.
- * @pre file is not null.
- *
- * Records sort by grain and one-based element ID. This produces contiguous
- * ascending ELSET runs without cell-scale resident buckets.
- */
-Result<> writeExternalSortedElsets(FILE* file, const Int32AbstractDataStore& featureIds, int32 maxGrainId, const std::atomic_bool& shouldCancel)
-{
-  constexpr usize k_ChunkSize = 65536;
-  ExternalSortConfig config;
-  config.recordSize = sizeof(ElementGrainRecord);
-  config.maxRecordsPerBatch = k_ChunkSize;
-  config.compare = [](nonstd::span<const std::byte> leftBytes, nonstd::span<const std::byte> rightBytes) {
-    ElementGrainRecord left;
-    ElementGrainRecord right;
-    std::memcpy(&left, leftBytes.data(), sizeof(left));
-    std::memcpy(&right, rightBytes.data(), sizeof(right));
-    if(left.grainId != right.grainId)
-    {
-      return left.grainId < right.grainId ? int32{-1} : int32{1};
-    }
-    if(left.elementId == right.elementId)
-    {
-      return int32{0};
-    }
-    return left.elementId < right.elementId ? int32{-1} : int32{1};
-  };
-
-  auto sortResult = DataStoreUtilities::GetIOCollection().createExternalSort(config);
-  if(sortResult.invalid())
-  {
-    return ConvertResult(std::move(sortResult));
-  }
-  std::unique_ptr<IExternalSort> externalSort = std::move(sortResult.value());
-  if(externalSort == nullptr)
-  {
-    return MakeErrorResult(-1119, "The external-sort provider returned a null sorter for Abaqus element sets.");
-  }
-
-  const usize totalElements = featureIds.getSize();
-  auto featurePage = std::make_unique<int32[]>(std::min(k_ChunkSize, totalElements));
-  std::vector<ElementGrainRecord> records;
-  records.reserve(std::min(k_ChunkSize, totalElements));
-  for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-    const usize count = std::min(k_ChunkSize, totalElements - offset);
-    if(Result<> result = featureIds.copyIntoBuffer(offset, nonstd::span<int32>(featurePage.get(), count)); result.invalid())
-    {
-      return result;
-    }
-    records.clear();
-    for(usize i = 0; i < count; ++i)
-    {
-      if(featurePage[i] > 0 && featurePage[i] <= maxGrainId)
-      {
-        records.push_back({featurePage[i], 0, offset + i + 1});
-      }
-    }
-    if(records.empty())
-    {
-      continue;
-    }
-    auto bytes = nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(records.data()), records.size() * sizeof(ElementGrainRecord));
-    if(Result<> result = externalSort->append(records.size(), bytes, shouldCancel, {}); result.invalid())
-    {
-      return result;
-    }
-  }
-  if(Result<> result = externalSort->finish(shouldCancel, {}); result.invalid())
-  {
-    return result;
-  }
-
-  int32 currentGrain = 1;
-  usize elementsOnSet = 0;
-  if(maxGrainId > 0)
-  {
-    fprintf(file, "\n*Elset, elset=Grain%d_set\n", currentGrain);
-  }
-  std::vector<ElementGrainRecord> sortedPage(k_ChunkSize);
-  for(uint64 offset = 0; offset < externalSort->recordCount(); offset += k_ChunkSize)
-  {
-    const uint64 count = std::min<uint64>(k_ChunkSize, externalSort->recordCount() - offset);
-    auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(sortedPage.data()), static_cast<usize>(count) * sizeof(ElementGrainRecord));
-    Result<uint64> readResult = externalSort->read(offset, count, bytes, shouldCancel);
-    if(readResult.invalid())
-    {
-      return ConvertResult(std::move(readResult));
-    }
-    if(readResult.value() != count)
-    {
-      return MakeErrorResult(-1117, "Abaqus element-set external sort returned a short read.");
-    }
-    for(uint64 i = 0; i < count; ++i)
-    {
-      const ElementGrainRecord& record = sortedPage[static_cast<usize>(i)];
-      while(currentGrain < record.grainId)
-      {
-        currentGrain++;
-        elementsOnSet = 0;
-        fprintf(file, "\n*Elset, elset=Grain%d_set\n", currentGrain);
-      }
-      writeElementId(file, record.elementId, elementsOnSet);
-    }
-  }
-  while(currentGrain < maxGrainId)
-  {
-    currentGrain++;
-    fprintf(file, "\n*Elset, elset=Grain%d_set\n", currentGrain);
-  }
-  return {};
-}
-
-/**
  * @brief Opens and writes the element-set file with the selected grouping path.
  * @param progressThrottle Receives grouping progress messages.
  * @param fileName Temporary ELSET path.
  * @param totalPoints Number of ImageGeom cells for the generated cube set.
- * @param featureIds Supplies cell Feature IDs.
+ * @param featureIdsRef Supplies cell Feature IDs.
  * @param maxGrainId Largest grain ID to emit.
  * @param useOocAlgorithm True to select external sort or repeated scans.
- * @param requireExternalSort True to reject repeated scans for actual OOC input.
  * @param shouldCancel Signals cancellation during grouping and sorting.
  * @return File-open, source-I/O, sorter, or provider-capability result.
  *
- * The function always closes an opened stream. C stdio write failures are not
- * inspected. A valid cancellation result leaves a partial temporary file.
+ * The function checks stream errors before cancellation. A valid cancellation result leaves a partial temporary file.
  */
-Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIds, int32 maxGrainId, bool useOocAlgorithm,
-                    bool requireExternalSort, const std::atomic_bool& shouldCancel)
+Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
+                    const std::atomic_bool& shouldCancel)
 {
-  FILE* file = fopen(fileName.c_str(), "wb");
-  if(nullptr == file)
+  std::ofstream output(fileName, std::ios::binary);
+  if(!output.is_open())
   {
     return MakeErrorResult(-1116, fmt::format("Could not open Abaqus element-set output file '{}'.", fileName));
   }
-
-  fprintf(file, "** ----------------------------------------------------------------\n**\n** The element sets\n");
-  fprintf(file, "*Elset, elset=cube, generate\n");
-  fprintf(file, "1, %llu, 1\n", static_cast<unsigned long long int>(totalPoints));
-  fprintf(file, "**\n** Each Grain is made up of multiple elements\n**");
-
-  Result<> result;
-  if(!useOocAlgorithm)
-  {
-    result = writeDirectElsets(progressThrottle, file, featureIds, maxGrainId, shouldCancel);
-  }
-  else if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
-  {
-    result = writeExternalSortedElsets(file, featureIds, maxGrainId, shouldCancel);
-  }
-  else if(!requireExternalSort)
-  {
-    result = writeRepeatedScanElsets(file, featureIds, maxGrainId, shouldCancel);
-  }
-  else
-  {
-    result = MakeErrorResult(-1118, "The OOC Abaqus element-set algorithm requires a registered bounded external-sort provider.");
-  }
-
+  output << "** ----------------------------------------------------------------\n**\n** The element sets\n"
+         << "*Elset, elset=cube, generate\n"
+         << fmt::format("1, {}, 1\n", totalPoints) << "**\n** Each Grain is made up of multiple elements\n**";
+  Result<> result =
+      AbaqusElementSets::write(progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
   if(result.valid())
   {
-    fprintf(file, "\n**\n** ----------------------------------------------------------------\n**\n");
+    output << "\n**\n** ----------------------------------------------------------------\n**\n";
   }
-  fclose(file);
+  output.close();
+  if(!output)
+  {
+    return MakeErrorResult(-12013, fmt::format("Writing Abaqus element sets to '{}' failed. Check available disk space.", fileName));
+  }
   return result;
 }
 
@@ -591,12 +250,13 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
  * @brief Writes one solid section for each positive grain ID through the maximum.
  * @param file Temporary section-file path.
  * @param maxGrainId Largest grain ID to emit.
- * @param hourglassStiffness Hourglass stiffness written for every section.
+ * @param useReducedIntegration Writes hourglass stiffness when true.
+ * @param hourglassStiffness Hourglass stiffness written for reduced-integration sections.
  * @return Zero on completion or -1 when fopen fails.
  *
  * C stdio return values are not inspected.
  */
-int32 writeSects(const std::string& file, int32 maxGrainId, int32 hourglassStiffness)
+int32 writeSects(const std::string& file, int32 maxGrainId, bool useReducedIntegration, int32 hourglassStiffness)
 {
   int32 err = 0;
   FILE* f = fopen(file.c_str(), "wb");
@@ -612,7 +272,10 @@ int32 writeSects(const std::string& file, int32 maxGrainId, int32 hourglassStiff
   {
     fprintf(f, "** Section: Grain%d\n", grain);
     fprintf(f, "*Solid Section, elset=Grain%d_set, material=Grain_Mat%d\n", grain, grain);
-    fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    if(useReducedIntegration)
+    {
+      fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+    }
     fprintf(f, "** --------------------------------------\n");
     grain++;
   }
@@ -664,14 +327,14 @@ void WriteAbaqusHexahedron::sendMessage(const std::string& message)
 Result<> WriteAbaqusHexahedron::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
   Vec3<usize> cDims = imageGeom.getDimensions();
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   Vec3<float32> origin = imageGeom.getOrigin();
   Vec3<float32> spacing = imageGeom.getSpacing();
   usize totalPoints = imageGeom.getNumberOfCells();
 
-  Result<int32> maxGrainResult = findMaximumGrainId(featureIds, getCancel());
+  Result<int32> maxGrainResult = AbaqusElementSets::findMaximumGrainId(featureIdsRef, getCancel());
   if(maxGrainResult.invalid())
   {
     return ConvertResult(std::move(maxGrainResult));
@@ -681,7 +344,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   {
     return {};
   }
-  const bool usesOutOfCoreStore = featureIds.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool usesOutOfCoreStore = featureIdsRef.getStoreType() == IDataStore::StoreType::OutOfCore;
   const bool useOocAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOocAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
@@ -714,7 +377,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Writing Sections (File 1/5) Complete");
 
-  err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel());
+  err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration);
   if(err < 0)
   {
     return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
@@ -726,7 +389,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->HourglassStiffness);
+  err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
@@ -738,7 +401,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Writing Sections (File 3/5) Complete");
 
-  Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, maxGrainId, useOocAlgorithm, usesOutOfCoreStore, getCancel());
+  Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIdsRef, maxGrainId, useOocAlgorithm, getCancel());
   if(elsetResult.invalid())
   {
     DeleteFiles(fileList);

@@ -1,8 +1,10 @@
 #include "WriteAbaqusHexahedronFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/WriteAbaqusHexahedron.hpp"
+#include "SimplnxCore/utils/AbaqusElementSets.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -56,12 +58,17 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
-      std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", true));
-  params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The value to use for the Hourglass Stiffness", 250));
+      std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
+                                                                 "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
+  params.insert(
+      std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness for C3D8R elements, in the model's stress units such as Pa or MPa.", 250));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The name of the job", "SomeString"));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix to use for each output file.", "SomeString"));
+  params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix",
+                                                  "The prefix for each output file. It must be a nonempty plain file name without whitespace or path separators, and cannot be '.' or '..'.",
+                                                  "SomeString"));
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Selected Image Geometry", "The input Image Geometry that will be written.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
@@ -70,18 +77,21 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
+  params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteAbaqusHexahedronFilter::parametersVersion() const
 {
-  return 2;
+  return 4;
 
-  // Version 1 -> 2
-  // Change:
-  // Added - k_WriteDummyNode_Key = "write_dummy_node"
-  // Solution - Accept default functionality of parameter (true) to preserve backwards compatibility
+  // Version 2 adds k_WriteDummyNode_Key. The default value preserves the legacy dummy node output.
+
+  // Version 3 adds k_UseReducedIntegration_Key. The default value writes standard C3D8 elements without hourglass stiffness.
+
+  // Version 4 changes the k_WriteDummyNode_Key default to false. Version 1 pipelines, which lack the key, now omit the dummy node.
 }
 
 //------------------------------------------------------------------------------
@@ -94,21 +104,30 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -1122); prefixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+  }
+
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
 
   // Check Output Path
-  if(!fs::exists(pOutputPathValue))
+  if(fs::exists(pOutputPathValue) && !fs::is_directory(pOutputPathValue))
   {
-    return MakePreflightErrorResult(-1111, "The supplied directory path doesn't exist");
-  }
-  else
-  {
-    if(!fs::is_directory(pOutputPathValue))
-    {
-      return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
-    }
+    return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
   }
 
+  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(pOutputPathValue, prefix, -1123); targetsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+  }
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(filterArgs.value<DataPath>(k_ImageGeometryPath_Key));
+  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+  }
   return {};
 }
 
@@ -118,6 +137,7 @@ Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, 
 {
   WriteAbaqusHexahedronInputValues inputValues;
 
+  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
   inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -144,6 +164,7 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 Result<Arguments> WriteAbaqusHexahedronFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
+  args.insertOrAssign(k_WriteDummyNode_Key, std::make_any<bool>(true)); // Legacy SIMPL always wrote the dummy node.
 
   std::vector<Result<>> results;
 

@@ -314,6 +314,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: UInt8 Feature Ids", "[Simpl
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(ExtractMatrBlock(ReadFile(outputPath / "OnScale_UInt8.flxtbl")) == "1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Matr Wraps At Forty", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -336,6 +338,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Matr Wraps At Forty", "[Sim
   const std::string expected = "1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1\n"
                                "2 3 1 2 3 1 2 3 1 2";
   REQUIRE(ExtractMatrBlock(ReadFile(outputPath / "OnScale_MatrWrap.flxtbl")) == expected);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Int64 And UInt64 Feature Ids", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -356,6 +360,9 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Int64 And UInt64 Feature Id
   auto uint64Result = filter.execute(uint64DataStructure, CreateArguments(outputPath, "OnScale_UInt64"));
   SIMPLNX_RESULT_REQUIRE_VALID(uint64Result.result);
   REQUIRE(ExtractMatrBlock(ReadFile(outputPath / "OnScale_UInt64.flxtbl")) == expected);
+
+  UnitTest::CheckArraysInheritTupleDims(int64DataStructure);
+  UnitTest::CheckArraysInheritTupleDims(uint64DataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Negative Feature Ids Fail", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -374,6 +381,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Negative Feature Ids Fail",
   REQUIRE(executeResult.result.errors().front().code == -12037);
   REQUIRE(executeResult.result.errors().front().message == "Found 1 negative feature ids in 'Geometry/Cell Data/FeatureIds'. OnScale material indices must be 0 or greater.");
   REQUIRE_FALSE(fs::exists(outputFile));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: No Positive Feature Ids Warns", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -395,6 +404,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: No Positive Feature Ids War
   REQUIRE(std::any_of(messages.cbegin(), messages.cend(), [](const IFilter::Message& message) {
     return message.type == IFilter::Message::Type::Warning && message.message == "No positive feature ids were found in 'Geometry/Cell Data/FeatureIds'; the name section is empty.";
   }));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Cancel Writes Nothing", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -412,6 +423,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Cancel Writes Nothing", "[S
   REQUIRE(executeResult.result.invalid());
   REQUIRE_FALSE(fs::exists(outputPath / "OnScale_Cancelled.flxtbl"));
   REQUIRE(fs::directory_iterator(outputPath) == fs::directory_iterator());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Cancel During Reorder Writes Nothing", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -438,6 +451,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Cancel During Reorder Write
   REQUIRE(receivedRotateMessage);
   REQUIRE_FALSE(fs::exists(outputPath / "OnScale_Cancelled_During_Reorder.flxtbl"));
   REQUIRE(fs::directory_iterator(outputPath) == fs::directory_iterator());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Non Zero Origin", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -456,6 +471,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Non Zero Origin", "[Simplnx
   REQUIRE(contents.find("xcrd 4\n1.50000000E+00 2.00000000E+00 2.50000000E+00 3.00000000E+00\n") != std::string::npos);
   REQUIRE(contents.find("ycrd 3\n-2.00000000E+00 -1.50000000E+00 -1.00000000E+00\n") != std::string::npos);
   REQUIRE(contents.find("zcrd 2\n2.50000000E-01 7.50000000E-01\n") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: RectGrid Geometry", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -476,6 +493,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: RectGrid Geometry", "[Simpl
   REQUIRE(contents.find("ycrd 3\n0.00000000E+00 1.00000001E-01 7.50000000E-01\n") != std::string::npos);
   REQUIRE(contents.find("zcrd 2\n0.00000000E+00 3.25000000E+00\n") != std::string::npos);
   REQUIRE(contents.find("divisions\n3 2 1\n") != std::string::npos);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Ascending Dims Are Reordered", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -515,6 +534,9 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Ascending Dims Are Reordere
   REQUIRE(ExtractMatrBlock(contents) == "2 8 14 20 4 10 16 22 6 12 18 24 1 7 13 19 3 9 15 21 5 11 17 23");
 
   RequireFeatureIdMultiset(ExtractMatrBlock(contents), featureIds);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(expectedDataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Reorders Z Then X", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -546,6 +568,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Anisotropic Two Axis Reorde
   REQUIRE(executeResult.result.errors().front().message.find("produced dimensions (Z=1, Y=9, X=3)") != std::string::npos);
   REQUIRE(executeResult.result.errors().front().message.find("expected (Z=2, Y=3, X=4)") != std::string::npos);
   REQUIRE_FALSE(fs::exists(outputPath / "OnScale_Anisotropic_Two_Axis.flxtbl"));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Reorders Y Then X", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -568,6 +592,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: RectGrid Needs Reorder Fail
   const WriteOnScaleTableFileFilter filter;
   auto preflightResult = filter.preflight(dataStructure, CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "RectGrid_Reorder"));
   REQUIRE(preflightResult.outputActions.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Tuple Count Mismatch", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -582,6 +608,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Tuple Count Mismatch", "[Si
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_WrongFeatureIdsPath));
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Empty Phase Names Warns During Preflight", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -595,6 +623,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Empty Phase Names Warns Dur
   REQUIRE(preflightResult.outputActions.warnings().size() == 1);
   REQUIRE(preflightResult.outputActions.warnings().front().code == -12038);
   REQUIRE(preflightResult.outputActions.warnings().front().message == "The phase names StringArray 'Geometry/Cell Ensemble Data/PhaseNames' has 0 tuples. Every name will be written as 'Phase_<id>'.");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Missing Output Directory", "[SimplnxCore][WriteOnScaleTableFileFilter]")
@@ -603,12 +633,52 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Missing Output Directory", 
 
   DataStructure dataStructure = CreateImageDataStructure<int32>({1, 1, 1}, {1}, {"", "Phase1"});
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  const fs::path missingPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteOnScaleTableFile_Missing_{}", uniqueSuffix);
+  const fs::path missingPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteOnScaleTableFile_Missing_{}", uniqueSuffix) / "Nested";
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
   REQUIRE_FALSE(fs::exists(missingPath));
 
   const WriteOnScaleTableFileFilter filter;
-  auto preflightResult = filter.preflight(dataStructure, CreateArguments(missingPath, "Missing_Output_Directory"));
+  const std::string prefix = "Missing_Output_Directory";
+  Arguments args = CreateArguments(missingPath, prefix);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(std::count_if(preflightResult.outputActions.warnings().cbegin(), preflightResult.outputActions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
+  REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(fs::is_directory(missingPath));
+  REQUIRE(fs::is_regular_file(missingPath / (prefix + ".flxtbl")));
+
+  fs::remove_all(missingPath.parent_path());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Output Path Is A File", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure = CreateImageDataStructure<int32>({1, 1, 1}, {1}, {"", "Phase1"});
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteOnScaleTableFile_File_{}", uniqueSuffix);
+  fs::create_directories(outputPath.parent_path());
+  REQUIRE_FALSE(fs::exists(outputPath));
+  {
+    std::ofstream output(outputPath);
+    REQUIRE(output.is_open());
+    output << "Existing regular file";
+  }
+  REQUIRE(fs::is_regular_file(outputPath));
+
+  const WriteOnScaleTableFileFilter filter;
+  Arguments args = CreateArguments(outputPath, "Output_Path_Is_A_File");
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -12023);
+
+  fs::remove(outputPath);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteOnScaleTableFileFilter]")
