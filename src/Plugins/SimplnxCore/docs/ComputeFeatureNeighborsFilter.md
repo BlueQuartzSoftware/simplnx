@@ -36,6 +36,8 @@ Two optional outputs can also be stored:
 
 This filter handles Image Geometries of all dimensions (0D/1D/2D/3D). Thus, it is up to the user to ensure spacing is set inline with intended behavior, specifically for Shared Surface Area List calculation. For more details see the Image Geometry section of the Geometry documentation (currently in the python docs).
 
+The Cell Feature Ids DataArray must have one tuple per cell of the selected Image Geometry.
+
 ## Algorithm
 
 This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
