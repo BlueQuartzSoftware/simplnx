@@ -1,7 +1,12 @@
 #include "PartitionGeometryFilter.hpp"
 
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -18,6 +23,8 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <any>
 #include <atomic>
@@ -43,6 +50,25 @@ const ChoicesParameter::ValueType k_BasicModeIndex = 0;
 const ChoicesParameter::ValueType k_AdvancedModeIndex = 1;
 const ChoicesParameter::ValueType k_BoundingBoxModeIndex = 2;
 const ChoicesParameter::ValueType k_ExistingSchemeModeIndex = 3;
+
+/**
+ * @brief Checks the selected tuple count against vertex metadata without reading coordinate values.
+ * @param geometry Supplies the vertex count.
+ * @param geometryPath Selected geometry path, including linked selections.
+ * @param tupleCount Number of tuples in the selected data.
+ * @param dataPath Selected data path, including linked selections.
+ * @return Error -3043 if the counts differ; otherwise, a valid result.
+ */
+Result<> validateVertexTupleCount(const INodeGeometry0D& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath)
+{
+  const usize vertexCount = geometry.getVerticesRef().getNumberOfTuples();
+  if(tupleCount != vertexCount)
+  {
+    return MakeErrorResult(-3043, fmt::format("The selected data '{}' has {} tuples, but the selected node geometry '{}' has {} vertices. Select data with one tuple per geometry vertex.",
+                                              dataPath.toString(), tupleCount, geometryPath.toString(), vertexCount));
+  }
+  return {};
+}
 
 /**
  * @brief Generates the display text that describes the input geometry,
@@ -518,12 +544,11 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
                                                                                        const DataPath& attrMatrixPath) const
 {
   const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
-  const IGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);
-  if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
+  auto vertexTupleResult = validateVertexTupleCount(geometry, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
+  if(vertexTupleResult.invalid())
   {
-    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3014, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).",
-                                                                              humanName(), attrMatrix.getName(), attrMatrix.getNumberOfTuples(), geometry.getName(), geometry.getNumberOfVertices()))};
+    return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(vertexTupleResult), {})};
   }
   Result<> dimensionalityResult = DataCheckDimensionality(geometry);
   if(dimensionalityResult.invalid())
@@ -699,15 +724,8 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
   }
   else
   {
-    const IGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
-    if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
-    {
-      return MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),
-                                                attrMatrix.getNumberOfTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()));
-    }
+    return validateVertexTupleCount(geometryToPartition, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
   }
-
-  return {};
 }
 
 // -----------------------------------------------------------------------------
