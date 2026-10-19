@@ -1,5 +1,9 @@
 #include "OrientationAnalysis/Filters/ComputeShapesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -135,5 +139,50 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: SIMPL Backwards Compatibili
       CHECK(args.value<std::string>(ComputeShapesFilter::k_AspectRatiosArrayName_Key) == "TestName");
       CHECK(args.value<std::string>(ComputeShapesFilter::k_VolumesArrayName_Key) == "TestName");
     }
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count", "[SimplnxCore][ComputeShapesFilter][TupleCount]")
+{
+  using Filter = ComputeShapesFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Grid");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 3, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 3, 4}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // Equal counts remain valid in another Attribute Matrix with a different tuple shape.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Grid"})));
+  args.insertOrAssign(Filter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, geometry->getId());
+  REQUIRE(featureAM != nullptr);
+  REQUIRE(DataArray<float32>::Create(dataStructure, "Centroids", std::make_shared<DataStore<float32>>(ShapeType{2}, ShapeType{3}, 0), featureAM->getId()) != nullptr);
+  args.insertOrAssign(Filter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Grid", "Feature Data", "Centroids"})));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -12804);
+    REQUIRE(error.message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Grid' has 12 cells") != std::string::npos);
   }
 }

@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -99,6 +100,12 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
   auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
   auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
+  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Cell Feature Ids", pFeatureIdsArrayPath}}, -12804);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
+
   auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
   auto pOmega3sArrayPath = featureAttrMatrixPath.createChildPath(pOmega3sArrayName);
   auto pAxisLengthsArrayPath = featureAttrMatrixPath.createChildPath(pAxisLengthsArrayName);
