@@ -176,6 +176,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     auto availableDataSets = reader.getDctDatasetNames();
     for(const auto& dataSetName : availableDataSets)
     {
+      const auto dataTypeIter = nameToDataTypeMap.find(dataSetName);
       if(pConvertPhaseData && dataSetName == GrainMapper3DUtilities::Constants::k_PhaseIdName)
       {
         resultOutputActions.value().appendAction(
@@ -185,17 +186,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
       {
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nameToDataTypeMap[dataSetName], tupleDims, std::vector<usize>{4}, cellAMPath.createChildPath(dataSetName)));
       }
-      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF001Name)
-      {
-        resultOutputActions.value().appendAction(
-            std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
-      }
-      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF010Name)
-      {
-        resultOutputActions.value().appendAction(
-            std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
-      }
-      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF100Name)
+      else if(pConvertIPFColorData && IsIpfColorDataset(dataSetName) && dataTypeIter != nameToDataTypeMap.end() && dataTypeIter->second == DataType::float32)
       {
         resultOutputActions.value().appendAction(
             std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));

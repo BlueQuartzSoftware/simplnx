@@ -25,6 +25,7 @@ order will be changed from wxyz to xyzw and the conjugate will be computed.
 PhaseId data will be converted to *int32* (when the *Create Compatible Phase Data* option is checked) to make that data immediately compatible with DREAM3D-NX's filters.
 
 IPF (inverse pole figure) colors can be stored in the file as either *uint8* or *float32* values. To immediately view the IPF colors that came from the file, the user should check the box for *Create Compatible IPFColor Data*, which converts any *float32* color data to *uint8*.
+The filter imports only the IPF color datasets that exist in the file and converts each dataset independently. Files with a single direction, such as IPF001 only, are supported.
 
 ## Algorithm
 
