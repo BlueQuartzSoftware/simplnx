@@ -3256,11 +3256,6 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return MakeErrorResult(-90546, "M3C out-of-core input dimensions are zero or overflow the cell count.");
   }
   const usize cellCount = dims[0] * dims[1] * dims[2];
-  if(featureIdsStore.getNumberOfTuples() != cellCount)
-  {
-    return MakeErrorResult(-90547, "M3C out-of-core FeatureIds tuple count does not match the Image Geometry.");
-  }
-
   // First bounded pass preserves initialize_micro's zero-feature renumbering
   // without retaining a second copy of the cell data. Large bounded batches
   // are heap-backed so this path remains within the default Windows stack.
