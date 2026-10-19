@@ -11,6 +11,8 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+
 namespace nx::core
 {
 
@@ -91,6 +93,12 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeomPath, {{"Mask Array", goodVoxelsArrayPath}}, -45463); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 

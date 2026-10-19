@@ -22,6 +22,8 @@ If *Fill Holes* is enabled, two additional steps are run:
 
 *Note:* If the sample contains real holes, enabling *Fill Holes* will close them by calling all cells "inside" the sample *good*. To reidentify those holes afterward, re-run the threshold filter with the criteria *GoodVoxels = 1* AND whatever original criterion identified the holes. This limits the original hole-finding criteria to within the sample and not the outer border region.
 
+Mask Array must have one tuple per cell of the Image Geometry.
+
 ## Slice-By-Slice Option
 
 Only completely water-tight, internal holes within the sample are addressed when *Fill Holes* 
