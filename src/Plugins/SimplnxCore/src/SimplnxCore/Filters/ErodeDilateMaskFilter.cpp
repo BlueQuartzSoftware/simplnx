@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -92,6 +93,12 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
 {
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
+
+  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Mask Array Path", pMaskArrayPathValue}}, -14702);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   // The erode/dilate loop runs NumIterations times, so a value below 1 performs no passes and returns
   // the mask untouched. DREAM3D 6.5.171 rejected that in dataCheck rather than silently no-op'ing, and
