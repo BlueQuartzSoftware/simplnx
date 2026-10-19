@@ -1,13 +1,21 @@
+#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceAreaToVolume.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceAreaToVolumeScanline.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "ComputeSurfaceAreaToVolumeTestUtils.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -15,8 +23,16 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <cmath>
 #include <filesystem>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -35,6 +51,46 @@ constexpr usize k_Dim = 200;
 constexpr usize k_TotalVoxels = k_Dim * k_Dim * k_Dim;
 constexpr int32 k_NumOctantFeatures = 8;
 const std::string k_GeomName = "ImageGeom";
+
+// Resident test stores observe Scanline transfers without adding a production fault hook.
+template <typename T>
+class SurfaceMetricTransferStore : public DataStore<T>
+{
+public:
+  SurfaceMetricTransferStore(usize numTuples, T initialValue, usize failRead = 0, usize failWrite = 0)
+  : DataStore<T>(numTuples, initialValue)
+  , m_FailRead(failRead)
+  , m_FailWrite(failWrite)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> buffer) const override
+  {
+    Reads.push_back({offset, buffer.size()});
+    if(Reads.size() == m_FailRead)
+    {
+      return MakeErrorResult(-94801, "Injected surface metric input read failure");
+    }
+    return DataStore<T>::copyIntoBuffer(offset, buffer);
+  }
+
+  Result<> copyFromBuffer(usize offset, nonstd::span<const T> buffer) override
+  {
+    Writes.push_back({offset, buffer.size()});
+    if(Writes.size() == m_FailWrite)
+    {
+      return MakeErrorResult(-94802, "Injected surface metric output write failure");
+    }
+    return DataStore<T>::copyFromBuffer(offset, buffer);
+  }
+
+  mutable std::vector<std::array<usize, 2>> Reads;
+  std::vector<std::array<usize, 2>> Writes;
+
+private:
+  usize m_FailRead = 0;
+  usize m_FailWrite = 0;
+};
 
 void BuildOctantWithNumCells(DataStructure& ds)
 {
@@ -89,6 +145,162 @@ void BuildOctantWithNumCells(DataStructure& ds)
   SIMPLNX_RESULT_REQUIRE_VALID(numCellsRefWriteResult);
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: sparse feature table batch boundaries", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto numFeatures = GENERATE(usize{1}, usize{2}, usize{3}, usize{7}, usize{131071}, usize{131072}, usize{131073});
+  const bool calculateSphericity = GENERATE(false, true);
+  CAPTURE(scenario, numFeatures, calculateSphericity);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  SurfaceAreaToVolumeTest::CheckSparseFeatureSurfaceMetrics(scope, numFeatures, calculateSphericity);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: bounded metric transfers", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  // This targets Scanline directly: the test contract is its bulk-transfer bound, not dispatch.
+  const auto featureAndBatchCounts = GENERATE(std::pair<usize, usize>{0, 1}, std::pair<usize, usize>{1, 1}, std::pair<usize, usize>{2, 1}, std::pair<usize, usize>{3, 1}, std::pair<usize, usize>{7, 3},
+                                              std::pair<usize, usize>{131071, 65535}, std::pair<usize, usize>{131072, 65536}, std::pair<usize, usize>{131073, 65536});
+  const auto [numFeatures, batchCapacity] = featureAndBatchCounts;
+  const bool calculateSphericity = GENERATE(false, true);
+  CAPTURE(numFeatures, batchCapacity, calculateSphericity);
+  DataStructure dataStructure;
+  const auto occupiedFeatures = SurfaceAreaToVolumeTest::BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
+  const DataPath featurePath({"ImageGeom", "CellFeatureData"});
+  const DataPath countsPath = featurePath.createChildPath("NumCells");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
+  const auto featureId = dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getId();
+  auto countsStore = std::make_shared<SurfaceMetricTransferStore<int32>>(numFeatures, 0);
+  for(const usize feature : occupiedFeatures)
+  {
+    countsStore->setValue(feature, 1);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
+  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStore);
+  SIMPLNX_RESULT_REQUIRE_VALID(replacement);
+  auto ratioStore = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
+  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStore, featureId) != nullptr);
+  auto sphericityStore = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
+  if(calculateSphericity)
+  {
+    REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStore, featureId) != nullptr);
+  }
+  const ComputeSurfaceAreaToVolumeInputValues inputValues = {.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"}),
+                                                             .NumCellsArrayPath = countsPath,
+                                                             .SurfaceAreaVolumeRatioArrayName = featurePath.createChildPath("SurfaceAreaVolumeRatio"),
+                                                             .CalculateSphericity = calculateSphericity,
+                                                             .SphericityArrayName = featurePath.createChildPath("Sphericity"),
+                                                             .InputImageGeometry = DataPath({"ImageGeom"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  const auto result = ComputeSurfaceAreaToVolumeScanline(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  std::vector<std::array<usize, 2>> expectedTransfers;
+  for(usize offset = 0; offset < numFeatures; offset += batchCapacity)
+  {
+    expectedTransfers.push_back({offset, std::min(batchCapacity, numFeatures - offset)});
+  }
+  CHECK(countsStore->Reads == expectedTransfers);
+  CHECK(ratioStore->Writes == expectedTransfers);
+  if(calculateSphericity)
+  {
+    CHECK(sphericityStore->Writes == expectedTransfers);
+  }
+  else
+  {
+    CHECK(sphericityStore->Writes.empty());
+  }
+  if(numFeatures > 0)
+  {
+    CHECK(ratioStore->getValue(0) == 0.0f);
+    if(calculateSphericity)
+    {
+      CHECK(sphericityStore->getValue(0) == 0.0f);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O failures preserve prior batches", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Exercise each failed operation on the second batch, after the first batch was written.
+  const int failure = GENERATE(0, 1, 2); // NumCells read, ratio write, sphericity write.
+  CAPTURE(failure);
+  constexpr usize k_NumFeatures = 7;
+  constexpr float32 k_Unwritten = -47.0f;
+  DataStructure dataStructure;
+  const auto occupiedFeatures = SurfaceAreaToVolumeTest::BuildSparseFeatureSurfaceData(dataStructure, k_NumFeatures);
+  const DataPath featurePath({"ImageGeom", "CellFeatureData"});
+  const DataPath countsPath = featurePath.createChildPath("NumCells");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
+  const auto featureId = dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getId();
+  auto countsStore = std::make_shared<SurfaceMetricTransferStore<int32>>(k_NumFeatures, 0, failure == 0 ? 2 : 0);
+  for(const usize feature : occupiedFeatures)
+  {
+    countsStore->setValue(feature, 1);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
+  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStore);
+  SIMPLNX_RESULT_REQUIRE_VALID(replacement);
+  auto ratioStore = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten, 0, failure == 1 ? 2 : 0);
+  auto sphericityStore = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten, 0, failure == 2 ? 2 : 0);
+  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStore, featureId) != nullptr);
+  REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStore, featureId) != nullptr);
+  const ComputeSurfaceAreaToVolumeInputValues inputValues = {.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"}),
+                                                             .NumCellsArrayPath = countsPath,
+                                                             .SurfaceAreaVolumeRatioArrayName = featurePath.createChildPath("SurfaceAreaVolumeRatio"),
+                                                             .CalculateSphericity = true,
+                                                             .SphericityArrayName = featurePath.createChildPath("Sphericity"),
+                                                             .InputImageGeometry = DataPath({"ImageGeom"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  const auto result = ComputeSurfaceAreaToVolumeScanline(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == (failure == 0 ? -94801 : -94802));
+  CHECK(countsStore->Reads.size() == 2);
+  CHECK(ratioStore->Writes.size() == (failure == 0 ? 1 : 2));
+  CHECK(sphericityStore->Writes.size() == (failure == 2 ? 2 : 1));
+
+  const double pi = std::acos(-1.0);
+  const double sphereRadius = std::cbrt(3.0 * 30.0 / (4.0 * pi));
+  const double expectedSphericity = 4.0 * pi * sphereRadius * sphereRadius / 62.0;
+  CHECK(ratioStore->getValue(0) == 0.0f);
+  CHECK(sphericityStore->getValue(0) == 0.0f);
+  for(usize feature = 1; feature < k_NumFeatures; ++feature)
+  {
+    CAPTURE(feature);
+    const bool occupied = std::binary_search(occupiedFeatures.begin(), occupiedFeatures.end(), feature);
+    if(feature < (failure == 2 ? 6 : 3))
+    {
+      if(occupied)
+      {
+        CHECK(ratioStore->getValue(feature) == Approx(62.0 / 30.0).epsilon(1.0e-6));
+      }
+      else
+      {
+        CHECK(std::isnan(ratioStore->getValue(feature)));
+      }
+    }
+    else
+    {
+      CHECK(ratioStore->getValue(feature) == k_Unwritten);
+    }
+    if(feature < 3)
+    {
+      CHECK(sphericityStore->getValue(feature) == Approx(expectedSphericity).epsilon(1.0e-6));
+    }
+    else
+    {
+      CHECK(sphericityStore->getValue(feature) == k_Unwritten);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: geometry and FeatureIds tuple cardinality", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
 {

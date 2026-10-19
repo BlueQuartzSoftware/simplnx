@@ -1,11 +1,14 @@
 #include "ComputeSurfaceAreaToVolumeScanline.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
 #include "ComputeSurfaceAreaToVolume.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -42,6 +45,10 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     return validateNumFeatResult;
   }
   const usize numFeatures = numCells.getNumberOfTuples();
+  if(numFeatures == 0)
+  {
+    return {};
+  }
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
@@ -61,151 +68,166 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 
   const usize sliceSize = static_cast<usize>(yPoints) * static_cast<usize>(xPoints);
 
-  // The rolling window turns Z-neighbor reads into sequential slice I/O.
-  std::vector<int32> prevSlice(sliceSize, 0);
-  std::vector<int32> curSlice(sliceSize, 0);
-  std::vector<int32> nextSlice(sliceSize, 0);
+  {
+    // The rolling window turns Z-neighbor reads into sequential slice I/O.
+    std::vector<int32> prevSlice(sliceSize, 0);
+    std::vector<int32> curSlice(sliceSize, 0);
+    std::vector<int32> nextSlice(sliceSize, 0);
 
-  // A bulk-I/O error stops the scan before later slices or output arrays change.
-  Result<> ioResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(curSlice.data(), sliceSize));
-  if(ioResult.invalid())
-  {
-    return ioResult;
-  }
-  if(zPoints > 1)
-  {
-    ioResult = featureIdsStore.copyIntoBuffer(sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
+    // A bulk-I/O error stops the scan before later slices or output arrays change.
+    Result<> ioResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(curSlice.data(), sliceSize));
     if(ioResult.invalid())
     {
       return ioResult;
     }
-  }
-
-  for(int64 z = 0; z < zPoints; z++)
-  {
-    if(m_ShouldCancel)
+    if(zPoints > 1)
     {
-      return {};
-    }
-    for(int64 y = 0; y < yPoints; y++)
-    {
-      for(int64 x = 0; x < xPoints; x++)
-      {
-        const usize inSlice = static_cast<usize>(y) * static_cast<usize>(xPoints) + static_cast<usize>(x);
-        int32 currentFeatureId = curSlice[inSlice];
-        if(currentFeatureId < 1)
-        {
-          continue;
-        }
-
-        float64 onSurface = 0.0;
-
-        // Z neighbors use adjacent buffers. X and Y neighbors use the current buffer.
-        if(z > 0)
-        {
-          if(prevSlice[inSlice] != currentFeatureId)
-          {
-            onSurface += xyFaceArea;
-          }
-        }
-
-        if(z < zPoints - 1)
-        {
-          if(nextSlice[inSlice] != currentFeatureId)
-          {
-            onSurface += xyFaceArea;
-          }
-        }
-
-        if(y > 0)
-        {
-          if(curSlice[inSlice - static_cast<usize>(xPoints)] != currentFeatureId)
-          {
-            onSurface += zxFaceArea;
-          }
-        }
-
-        if(y < yPoints - 1)
-        {
-          if(curSlice[inSlice + static_cast<usize>(xPoints)] != currentFeatureId)
-          {
-            onSurface += zxFaceArea;
-          }
-        }
-
-        if(x > 0)
-        {
-          if(curSlice[inSlice - 1] != currentFeatureId)
-          {
-            onSurface += yzFaceArea;
-          }
-        }
-
-        if(x < xPoints - 1)
-        {
-          if(curSlice[inSlice + 1] != currentFeatureId)
-          {
-            onSurface += yzFaceArea;
-          }
-        }
-
-        featureSurfaceArea[currentFeatureId] += onSurface;
-      }
-    }
-
-    // Vector swaps rotate the window without copying a slice.
-    std::swap(prevSlice, curSlice);
-    std::swap(curSlice, nextSlice);
-    if(z + 2 < zPoints)
-    {
-      ioResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(z + 2) * sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
+      ioResult = featureIdsStore.copyIntoBuffer(sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
       if(ioResult.invalid())
       {
         return ioResult;
       }
     }
-  }
 
-  // Feature-level caches avoid per-value OOC access during metric calculation.
-  std::vector<int32> localNumCells(numFeatures);
-  ioResult = numCells.copyIntoBuffer(0, nonstd::span<int32>(localNumCells.data(), numFeatures));
-  if(ioResult.invalid())
-  {
-    return ioResult;
-  }
-
-  {
-    std::vector<float32> localSurfaceAreaVolumeRatio(numFeatures, 0.0f);
-    for(usize i = 1; i < numFeatures; i++)
+    for(int64 z = 0; z < zPoints; z++)
     {
-      const float64 featureVolume = voxelVol * localNumCells[i];
-      localSurfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
-    }
-    ioResult = surfaceAreaVolumeRatio.copyFromBuffer(0, nonstd::span<const float32>(localSurfaceAreaVolumeRatio.data(), numFeatures));
-    if(ioResult.invalid())
-    {
-      return ioResult;
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      for(int64 y = 0; y < yPoints; y++)
+      {
+        for(int64 x = 0; x < xPoints; x++)
+        {
+          const usize inSlice = static_cast<usize>(y) * static_cast<usize>(xPoints) + static_cast<usize>(x);
+          int32 currentFeatureId = curSlice[inSlice];
+          if(currentFeatureId < 1)
+          {
+            continue;
+          }
+
+          float64 onSurface = 0.0;
+
+          // Z neighbors use adjacent buffers. X and Y neighbors use the current buffer.
+          if(z > 0)
+          {
+            if(prevSlice[inSlice] != currentFeatureId)
+            {
+              onSurface += xyFaceArea;
+            }
+          }
+
+          if(z < zPoints - 1)
+          {
+            if(nextSlice[inSlice] != currentFeatureId)
+            {
+              onSurface += xyFaceArea;
+            }
+          }
+
+          if(y > 0)
+          {
+            if(curSlice[inSlice - static_cast<usize>(xPoints)] != currentFeatureId)
+            {
+              onSurface += zxFaceArea;
+            }
+          }
+
+          if(y < yPoints - 1)
+          {
+            if(curSlice[inSlice + static_cast<usize>(xPoints)] != currentFeatureId)
+            {
+              onSurface += zxFaceArea;
+            }
+          }
+
+          if(x > 0)
+          {
+            if(curSlice[inSlice - 1] != currentFeatureId)
+            {
+              onSurface += yzFaceArea;
+            }
+          }
+
+          if(x < xPoints - 1)
+          {
+            if(curSlice[inSlice + 1] != currentFeatureId)
+            {
+              onSurface += yzFaceArea;
+            }
+          }
+
+          featureSurfaceArea[currentFeatureId] += onSurface;
+        }
+      }
+
+      // Vector swaps rotate the window without copying a slice.
+      std::swap(prevSlice, curSlice);
+      std::swap(curSlice, nextSlice);
+      if(z + 2 < zPoints)
+      {
+        ioResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(z + 2) * sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
+        if(ioResult.invalid())
+        {
+          return ioResult;
+        }
+      }
     }
   }
 
+  // The slice buffers are released before these batches are allocated. The cap
+  // gives paired count/result buffers a 512 KiB budget, not a feature-count limit.
+  // For F >= 2, B <= F/2 also limits their combined payload to 4*F bytes.
+  constexpr usize k_MaxBatchTuples = 65536;
+  const usize batchCapacity = std::min(k_MaxBatchTuples, std::max(usize{1}, numFeatures / 2));
+  std::vector<int32> localNumCells(batchCapacity);
+  std::vector<float32> localMetrics(batchCapacity);
+
+  AbstractDataStore<float32>* sphericityPtr = nullptr;
   if(m_InputValues->CalculateSphericity)
   {
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
-
-    auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
-    const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
-    // Sphericity is one for a sphere and decreases as the surface becomes less compact.
-    std::vector<float32> localSphericity(numFeatures, 0.0f);
-    for(usize i = 1; i < numFeatures; i++)
-    {
-      const float64 featureVolume = voxelVol * localNumCells[i];
-      localSphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[i]);
-    }
-    ioResult = sphericity.copyFromBuffer(0, nonstd::span<const float32>(localSphericity.data(), numFeatures));
+    sphericityPtr = &m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
+  }
+  const float64 thirdRootPi = m_InputValues->CalculateSphericity ? std::cbrt(nx::core::Constants::k_PiD) : 0.0;
+  for(usize offset = 0; offset < numFeatures;)
+  {
+    const usize batchSize = std::min(batchCapacity, numFeatures - offset);
+    auto ioResult = numCells.copyIntoBuffer(offset, nonstd::span<int32>(localNumCells.data(), batchSize));
     if(ioResult.invalid())
     {
       return ioResult;
     }
+
+    // Background stays zero. Every other tuple uses the supplied cell count.
+    const usize firstFeature = offset == 0 ? 1 : 0;
+    localMetrics[0] = 0.0f;
+    for(usize i = firstFeature; i < batchSize; i++)
+    {
+      const float64 featureVolume = voxelVol * localNumCells[i];
+      localMetrics[i] = static_cast<float32>(featureSurfaceArea[offset + i] / featureVolume);
+    }
+    ioResult = surfaceAreaVolumeRatio.copyFromBuffer(offset, nonstd::span<const float32>(localMetrics.data(), batchSize));
+    if(ioResult.invalid())
+    {
+      return ioResult;
+    }
+
+    if(sphericityPtr != nullptr)
+    {
+      // Reuse the ratio buffer after its write; no second output buffer is needed.
+      for(usize i = firstFeature; i < batchSize; i++)
+      {
+        const float64 featureVolume = voxelVol * localNumCells[i];
+        localMetrics[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[offset + i]);
+      }
+      ioResult = sphericityPtr->copyFromBuffer(offset, nonstd::span<const float32>(localMetrics.data(), batchSize));
+      if(ioResult.invalid())
+      {
+        return ioResult;
+      }
+    }
+    offset += batchSize;
   }
 
   return {};

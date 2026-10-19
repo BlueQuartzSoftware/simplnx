@@ -47,7 +47,11 @@ Direct reads neighboring labels from the array and accumulates one surface area 
 
 ### Scanline
 
-Scanline reads labels in sequential slices and keeps three adjacent XY slices in memory. It reads the feature counts and writes the metrics in bulk. Its additional working memory scales as `O(X * Y + F)`, where `X` and `Y` are image dimensions in cells. This avoids buffering the full label volume, but the feature arrays can still be large when the feature count approaches the cell count. These memory estimates exclude the input/output stores and their caches.
+Scanline reads labels in sequential slices and keeps three adjacent XY slices in memory. It releases these slices before reading feature counts and writing metrics in bounded batches. Each batch has at most `min(65536, max(1, floor(F / 2)))` tuples, where `F` includes background. The count and result buffers together use at most 512 KiB. This is an implementation memory budget, not a limit on the number of features.
+
+The 64-bit area accumulator still uses eight bytes per feature tuple. Additional working memory scales as `O(X * Y + F)`, where `X` and `Y` are image dimensions in cells. Scanline avoids buffering the full label volume, but the area accumulator can still be large when the feature count approaches the cell count. These memory estimates exclude the input/output stores, their caches, and allocator overhead.
+
+A bulk read or write error stops execution. If a feature-count read or metric write fails after earlier batches completed, those earlier outputs remain written. Output updates are not transactional.
 
 ### Compatibility with earlier results
 

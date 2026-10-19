@@ -13,9 +13,13 @@ struct ComputeSurfaceAreaToVolumeInputValues;
  * @class ComputeSurfaceAreaToVolumeScanline
  * @brief Computes surface metrics with a three-slice Feature Id window.
  *
- * The window converts disk-backed neighbor reads to sequential slice I/O. Memory
- * is three cell-scale slices plus feature-scale caches. Feature caches can be
- * large when the feature count approaches the cell count.
+ * The window converts disk-backed neighbor reads to sequential slice I/O. The
+ * three label slices are released before count and metric batches are allocated.
+ * Let F be the number of feature tuples and S the number of cells per XY slice.
+ * For F > 0, these buffers require 8*F + max(12*S, 8*B) bytes.
+ * The batch capacity is B = min(65536, max(1, floor(F/2))).
+ * The 8*F-byte area accumulator can still be large. This estimate excludes
+ * stores, caches, allocator overhead, and the separate Feature Id validation.
  *
  * @see ComputeSurfaceAreaToVolumeDirect for the in-core variant.
  * @see ComputeSurfaceAreaToVolume for the dispatcher.
@@ -48,8 +52,9 @@ public:
    * @brief Calculates surface metrics with bulk I/O.
    * @return Error from Feature Id validation or bulk I/O; success on completion or cancellation.
    *
-   * Cancellation during the cell scan leaves metric outputs unchanged. A bulk-I/O
-   * error stops processing. An output write error can leave partial metric outputs.
+   * At each slice start, cancellation stops processing before metric writes.
+   * A bulk-I/O error stops processing. A later count read or metric write error
+   * can leave earlier batches written. Output updates are not transactional.
    */
   Result<> operator()();
 

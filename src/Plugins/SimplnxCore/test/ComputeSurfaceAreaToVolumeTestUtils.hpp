@@ -2,21 +2,182 @@
 
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <any>
 #include <array>
 #include <cmath>
+#include <string>
 #include <vector>
 
 namespace SurfaceAreaToVolumeTest
 {
+/**
+ * @brief Builds isolated cells that exercise large feature tables in a small image.
+ * @param dataStructure Receives the geometry, labels, and supplied cell counts.
+ * @param numFeatures Number of feature tuples, including background. Zero creates empty inputs.
+ * @return Sorted feature identifiers for the isolated one-cell boxes.
+ */
+inline std::vector<nx::core::usize> BuildSparseFeatureSurfaceData(nx::core::DataStructure& dataStructure, nx::core::usize numFeatures)
+{
+  using namespace nx::core;
+  const DataPath geomPath({"ImageGeom"});
+  const DataPath cellPath = geomPath.createChildPath("CellData");
+  const DataPath featurePath = geomPath.createChildPath("CellFeatureData");
+  const DataPath idsPath = cellPath.createChildPath("FeatureIds");
+  const DataPath countsPath = featurePath.createChildPath("NumCells");
+  const ShapeType cellShape = numFeatures == 0 ? ShapeType{0, 0, 0} : ShapeType{3, 3, 19};
+  const ShapeType featureShape = {numFeatures};
+  auto* geomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({cellShape[2], cellShape[1], cellShape[0]});
+  geomPtr->setSpacing({2.0f, 3.0f, 5.0f});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), cellShape, geomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  geomPtr->setCellData(*cellAMPtr);
+  auto* featureAMPtr = AttributeMatrix::Create(dataStructure, featurePath.getTargetName(), featureShape, geomPtr->getId());
+  REQUIRE(featureAMPtr != nullptr);
+
+  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
+  auto countsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
+  REQUIRE(idsStore != nullptr);
+  REQUIRE(countsStore != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStore, cellAMPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, countsPath.getTargetName(), countsStore, featureAMPtr->getId()) != nullptr);
+  if(numFeatures == 0)
+  {
+    return {};
+  }
+
+  // Probe both sides of the half-table and fixed-cap boundaries, plus the last tuple.
+  std::vector<usize> occupiedFeatures = {1, numFeatures / 2, numFeatures / 2 + 1, numFeatures - 1, 65535, 65536, 65537};
+  if(numFeatures > 3)
+  {
+    occupiedFeatures.push_back(numFeatures / 2 - 1);
+  }
+  std::erase_if(occupiedFeatures, [numFeatures](usize feature) { return feature == 0 || feature >= numFeatures; });
+  std::sort(occupiedFeatures.begin(), occupiedFeatures.end());
+  occupiedFeatures.erase(std::unique(occupiedFeatures.begin(), occupiedFeatures.end()), occupiedFeatures.end());
+  REQUIRE(occupiedFeatures.size() <= 8);
+  std::vector<int32> labels(19 * 3 * 3, 0);
+  std::vector<int32> counts(numFeatures, 0);
+  for(usize index = 0; index < occupiedFeatures.size(); ++index)
+  {
+    // Background separates every one-cell box from its neighbors and the image exterior.
+    labels[(1 * 3 + 1) * 19 + 1 + 2 * index] = static_cast<int32>(occupiedFeatures[index]);
+    counts[occupiedFeatures[index]] = 1;
+  }
+  counts[0] = static_cast<int32>(labels.size() - occupiedFeatures.size());
+  const auto idsWrite = idsStore->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
+  const auto countsWrite = countsStore->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(countsWrite);
+  return occupiedFeatures;
+}
+
+/**
+ * @brief Checks all sparse-table metrics against box and equal-volume sphere geometry.
+ * @tparam ScopeT Verifies the selected algorithm and actual array storage.
+ * @param scope Active algorithm and storage scenario.
+ * @param numFeatures Number of feature tuples, including background. Must be positive.
+ * @param calculateSphericity Enables the optional sphere-area ratio check.
+ */
+template <class ScopeT>
+void CheckSparseFeatureSurfaceMetrics(ScopeT& scope, nx::core::usize numFeatures, bool calculateSphericity)
+{
+  using namespace nx::core;
+  REQUIRE(numFeatures > 0);
+  DataStructure dataStructure;
+  const auto occupiedFeatures = BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
+  const DataPath geomPath({"ImageGeom"});
+  const DataPath idsPath({"ImageGeom", "CellData", "FeatureIds"});
+  const DataPath featurePath({"ImageGeom", "CellFeatureData"});
+  const DataPath countsPath = featurePath.createChildPath("NumCells");
+  const DataPath ratioPath = featurePath.createChildPath("SurfaceAreaVolumeRatio");
+  const DataPath sphericityPath = featurePath.createChildPath("Sphericity");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(idsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(countsPath));
+
+  ComputeSurfaceAreaToVolumeFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(idsPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(countsPath));
+  args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CalculateSphericity_Key, std::make_any<bool>(calculateSphericity));
+  const auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
+  const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);
+  scope.requireExpectedStore(ratios);
+  CHECK(ratios.getTupleShape() == ShapeType{numFeatures});
+  CHECK(ratios.getComponentShape() == ShapeType{1});
+  std::vector<float32> values(numFeatures);
+  const auto ratioRead = ratios.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(ratioRead);
+  CHECK(values[0] == 0.0f);
+  // An isolated 2-by-3-by-5 box has area 62 and volume 30.
+  for(usize feature = 1; feature < numFeatures; ++feature)
+  {
+    CAPTURE(feature);
+    if(std::binary_search(occupiedFeatures.begin(), occupiedFeatures.end(), feature))
+    {
+      REQUIRE(values[feature] == Approx(62.0 / 30.0).epsilon(1.0e-6));
+    }
+    else
+    {
+      REQUIRE(std::isnan(values[feature]));
+    }
+  }
+  if(calculateSphericity)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sphericityPath));
+    const auto& sphericity = dataStructure.getDataRefAs<Float32Array>(sphericityPath);
+    scope.requireExpectedStore(sphericity);
+    CHECK(sphericity.getTupleShape() == ShapeType{numFeatures});
+    CHECK(sphericity.getComponentShape() == ShapeType{1});
+    const auto sphericityRead = sphericity.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values.data(), values.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(sphericityRead);
+    CHECK(values[0] == 0.0f);
+    // Independently calculate the equal-volume sphere from its radius.
+    const double pi = std::acos(-1.0);
+    const double radius = std::cbrt(3.0 * 30.0 / (4.0 * pi));
+    const double expected = 4.0 * pi * radius * radius / 62.0;
+    for(usize feature = 1; feature < numFeatures; ++feature)
+    {
+      CAPTURE(feature);
+      if(std::binary_search(occupiedFeatures.begin(), occupiedFeatures.end(), feature))
+      {
+        REQUIRE(values[feature] == Approx(expected).epsilon(1.0e-6));
+      }
+      else
+      {
+        REQUIRE(std::isnan(values[feature]));
+      }
+    }
+  }
+  else
+  {
+    CHECK(dataStructure.getData(sphericityPath) == nullptr);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 // A wrong X/Y face weight changes the physical area of this interior box.
 template <class ScopeT>
 std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity, bool singleSlice = false,
