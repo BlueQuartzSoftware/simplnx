@@ -136,8 +136,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<std::shared_ptr<IDataArray>> voxelArrays =
-      nx::core::GenerateDataArrayList(m_DataStructure, selectedImageGeom.getCellDataPath().createChildPath(m_InputValues->FeatureIdsArrayPath.getTargetName()), m_InputValues->IgnoredDataArrayPaths);
+  std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
   // Aliases repeat an idempotent tuple copy within one voxel, but must not replay a complete slice twice.
   usize uniqueStoreCount = 0;

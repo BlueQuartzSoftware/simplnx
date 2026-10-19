@@ -1,12 +1,15 @@
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "SimplnxCore/Filters/FillBadDataFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/AbstractPipelineNode.hpp"
@@ -16,11 +19,9 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
-#include "SimplnxCore/Filters/FillBadDataFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-
 #include <algorithm>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace nx::core;

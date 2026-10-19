@@ -1,14 +1,14 @@
+#include "SimplnxCore/Filters/Algorithms/ErodeDilateBadData.hpp"
+#include "SimplnxCore/Filters/ErodeDilateBadDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
+#include <catch2/catch.hpp>
+
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include <catch2/catch.hpp>
-
-#include "SimplnxCore/Filters/Algorithms/ErodeDilateBadData.hpp"
-#include "SimplnxCore/Filters/ErodeDilateBadDataFilter.hpp"
-
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"

@@ -1,11 +1,13 @@
 #include "FeatureRemovalTestUtils.hpp"
 #include "SimplnxCore/Filters/RequireMinimumSizeFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
+#include <catch2/catch.hpp>
+
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -14,8 +16,6 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
-
-#include <catch2/catch.hpp>
 
 #include <chrono>
 #include <filesystem>

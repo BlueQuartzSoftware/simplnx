@@ -1,17 +1,16 @@
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include <catch2/catch.hpp>
-
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-
 #include "SimplnxCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include <catch2/catch.hpp>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"

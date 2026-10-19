@@ -1,7 +1,9 @@
 #include "SimplnxCore/Filters/KeepRemoveRankedFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 
+#include <catch2/catch.hpp>
+
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -11,8 +13,6 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-
-#include <catch2/catch.hpp>
 
 #include <algorithm>
 #include <limits>

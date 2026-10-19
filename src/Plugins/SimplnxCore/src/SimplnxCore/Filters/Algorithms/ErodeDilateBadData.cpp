@@ -111,8 +111,7 @@ Result<> ErodeDilateBadData::operator()()
   // Collect all sibling arrays in the same Attribute Matrix as FeatureIds,
   // excluding user-specified ignored arrays. These will all be updated
   // during the transfer phase to stay consistent with FeatureId changes.
-  const std::vector<std::shared_ptr<IDataArray>> voxelArrays =
-      nx::core::GenerateDataArrayList(m_DataStructure, selectedImageGeom.getCellDataPath().createChildPath(m_InputValues->FeatureIdsArrayPath.getTargetName()), m_InputValues->IgnoredDataArrayPaths);
+  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
   const usize dimZ = static_cast<usize>(dims[2]);
 
   // Commits one Z-slice of marks across all sibling arrays.
