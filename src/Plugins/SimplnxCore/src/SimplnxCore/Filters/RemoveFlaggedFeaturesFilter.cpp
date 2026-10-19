@@ -153,9 +153,13 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 
   DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
 
+  std::vector<PreflightValue> preflightUpdatedValues;
+
   // If we are in any way removing features, inform the user
   if(operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove))
   {
+    nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues);
+
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
@@ -170,7 +174,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

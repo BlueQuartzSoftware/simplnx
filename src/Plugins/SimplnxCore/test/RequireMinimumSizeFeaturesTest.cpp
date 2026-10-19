@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -402,4 +403,52 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: SIMPL Backwards Compat
       CHECK(args.value<DataPath>(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][RequireMinimumSizeFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_min_size_input.dream3d", unit_test::k_TestFilesDir)));
+  const DataPath imageGeomPath({Constants::k_DataContainer});
+  const DataPath featureAMPath = imageGeomPath.createChildPath("Grain Data");
+  const DataPath numCellsPath = featureAMPath.createChildPath("NumElements");
+  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  REQUIRE(featureAM != nullptr);
+  REQUIRE(Int32NeighborList::Create(dataStructure, "StaleArrayTestNeighbors", featureAM->getShape(), featureAM->getId()) != nullptr);
+
+  RequireMinimumSizeFeaturesFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(imageGeomPath));
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(imageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds)));
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(numCellsPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  usize staleArrayCount = 0;
+  for(const auto& value : preflightResult.outputValues)
+  {
+    CHECK(value.name != "Feature Data Modification Warning");
+    if(value.name == "Stale Arrays")
+    {
+      ++staleArrayCount;
+      CHECK(value.value.find(numCellsPath.toString()) != std::string::npos);
+      for(const auto& [identifier, object] : *featureAM)
+      {
+        const std::string path = featureAMPath.createChildPath(object->getName()).toString();
+        if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
+        {
+          CHECK(value.value.find(path) != std::string::npos);
+        }
+        else if(dynamic_cast<const INeighborList*>(object.get()) != nullptr)
+        {
+          CHECK(value.value.find(path) == std::string::npos);
+        }
+      }
+    }
+  }
+  CHECK(staleArrayCount == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
