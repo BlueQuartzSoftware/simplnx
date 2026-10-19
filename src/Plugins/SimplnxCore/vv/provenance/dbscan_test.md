@@ -98,12 +98,12 @@ The circular-oracle situation identified in Phase 2 was resolved in Phase 6 reco
 
 This archive has **not** been regenerated. Regeneration is not needed because the independent oracle confirmed the existing arrays are correct.
 
-## Legacy comparison corroboration (Phase 9, 2026-08-05)
+## Legacy DREAM3D 6.5.171 DBSCAN comparison corroboration (Phase 9, 2026-08-05)
 
 Script: `dbscan_vv/phase9_ab_test.py`
 Results: `dbscan_vv/phase9_comparison_results.json`
 
-DREAM3D 6.5.172 (traditional DBSCAN, via `DREAM3DReview` plugin UUID `c2d4f1e8`) was run against the same 6 sklearn datasets. Three-way comparison (legacy 6.5.172 vs. sklearn 1.7.1 vs. SIMPLNX):
+Legacy DREAM3D 6.5.171 DBSCAN (via `DREAM3DReview` plugin UUID `c2d4f1e8`) was run against the same 6 sklearn datasets. Three-way comparison (legacy DREAM3D 6.5.171 DBSCAN vs. sklearn 1.7.1 vs. SIMPLNX):
 
 | Dataset | Legacy n_clusters | sklearn n_clusters | SIMPLNX n_clusters | Match |
 |---|---|---|---|---|

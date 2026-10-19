@@ -135,4 +135,4 @@ The `FromSIMPLJson` converter (`DBSCANFilter.cpp`, starting at line 242) is not 
 
 **Affected users:** Users whose pipelines select a multi-component mask or a mask with a different number of tuples from the clustering DataArray. Previously accepted Direct executions may have used unintended mask elements or accessed beyond a short mask.
 
-**Recommendation:** Select a boolean or uint8 mask DataArray with component shape `{1}` and one tuple per tuple in **Attribute Array to Cluster**. The preflight tuple-count error identifies both DataArrays and their tuple counts. Regression coverage: `SimplnxCore::DBSCANFilter: Reject multi-component mask in preflight` and `SimplnxCore::DBSCANFilter: Reject short mask in preflight` in `DBSCANTest.cpp`.
+**Recommendation:** Select a boolean or uint8 mask DataArray with component shape `{1}` and one tuple per tuple in **Attribute Array to Cluster**. The preflight tuple-count error identifies both DataArrays and their tuple counts. Regression coverage: `SimplnxCore::DBSCAN: Reject multi-component mask in preflight` and `SimplnxCore::DBSCAN: Reject short mask in preflight` in `DBSCANTest.cpp`.
