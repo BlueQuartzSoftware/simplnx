@@ -1470,3 +1470,57 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility
     }
   }
 }
+
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: Geometry cell tuple count", "[SimplnxCore][ComputeFeatureSizes][TupleCount]")
+{
+  using Filter = ComputeFeatureSizesFilter;
+  DataStructure dataStructure;
+  const bool useRectGrid = GENERATE(false, true);
+  CAPTURE(useRectGrid);
+  IGridGeometry* geometry = nullptr;
+  if(useRectGrid)
+  {
+    geometry = RectGridGeom::Create(dataStructure, "Grid");
+  }
+  else
+  {
+    geometry = ImageGeom::Create(dataStructure, "Grid");
+  }
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 3, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 3, 4}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // Equal counts remain valid in another Attribute Matrix with a different tuple shape.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({"Grid"})));
+  args.insertOrAssign(Filter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, geometry->getId());
+  REQUIRE(featureAM != nullptr);
+  args.insertOrAssign(Filter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Grid", "Feature Data"})));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -74771);
+    REQUIRE(error.message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Grid' has 12 cells") != std::string::npos);
+  }
+}
