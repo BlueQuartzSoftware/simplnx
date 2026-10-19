@@ -100,6 +100,9 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
+  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
+  // Keep the local type checks until the parameter validates supported array kinds.
+  // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
   const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(featureIds == nullptr)
   {
