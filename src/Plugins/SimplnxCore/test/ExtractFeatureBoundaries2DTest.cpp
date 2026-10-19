@@ -281,3 +281,47 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), k_OutputEdgeGeometryPath);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple count", "[SimplnxCore][ExtractFeatureBoundaries2DFilter][TupleCount]")
+{
+  using Filter = ExtractFeatureBoundaries2DFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 3, 1});
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // A matching array is valid outside Cell Data; short and long arrays must fail preflight.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(otherAM->getShape(), ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -1019);
+    const DataPath expectedPath = inputPath;
+    const usize expectedTuples = tuples;
+    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+  }
+}

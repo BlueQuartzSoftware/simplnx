@@ -34,6 +34,8 @@ The algorithm uses a two-pass approach for efficiency:
 
 After edge creation, duplicate vertices are eliminated to ensure a clean, connected edge network.
 
+Feature Ids must have one tuple per cell of the Input Image Geometry.
+
 ## Example Output
 
 ![Example feature boundaries extracted as an Edge Geometry.](Images/ExtractFeatureBoundaries2D_1.png)
