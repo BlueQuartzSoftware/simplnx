@@ -67,6 +67,10 @@
       "name": "ci-asan",
       "inherits": "ci",
       "cacheVariables": {
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{pythonLocation}/bin/python3"
+        },
         "CMAKE_BUILD_TYPE": {
           "type": "STRING",
           "value": "Debug"

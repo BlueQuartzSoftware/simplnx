@@ -158,9 +158,14 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   {
     // Arrays are freshly allocated with default data (not yet populated by the user).
     // Bypass setBounds validation and link IDs directly.
-    const Float32Array* xBoundsArray = createBoundArray(dataStructure, mode, m_XBoundsArrayName, m_NumXBoundTuples, results.errors());
-    const Float32Array* yBoundsArray = createBoundArray(dataStructure, mode, m_YBoundsArrayName, m_NumYBoundTuples, results.errors());
-    const Float32Array* zBoundsArray = createBoundArray(dataStructure, mode, m_ZBoundsArrayName, m_NumZBoundTuples, results.errors());
+    std::vector<Error> errors;
+    const Float32Array* xBoundsArray = createBoundArray(dataStructure, mode, m_XBoundsArrayName, m_NumXBoundTuples, errors);
+    const Float32Array* yBoundsArray = createBoundArray(dataStructure, mode, m_YBoundsArrayName, m_NumYBoundTuples, errors);
+    const Float32Array* zBoundsArray = createBoundArray(dataStructure, mode, m_ZBoundsArrayName, m_NumZBoundTuples, errors);
+    if(!errors.empty())
+    {
+      return {nonstd::make_unexpected(std::move(errors))};
+    }
     if(xBoundsArray != nullptr)
     {
       rectGridGeom->setXBoundsId(xBoundsArray->getId());
@@ -173,6 +178,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
     {
       rectGridGeom->setZBoundsId(zBoundsArray->getId());
     }
+    return {};
   }
 
   return results;
