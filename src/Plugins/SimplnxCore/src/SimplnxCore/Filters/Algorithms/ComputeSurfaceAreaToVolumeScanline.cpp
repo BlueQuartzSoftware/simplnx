@@ -30,7 +30,7 @@ ComputeSurfaceAreaToVolumeScanline::~ComputeSurfaceAreaToVolumeScanline() noexce
 Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 {
   auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
+  const auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
   const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
   auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName)->getDataStoreRef();
 
