@@ -27,9 +27,12 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -243,59 +246,59 @@ const DataPath k_ExistingTuplePartitionGridPath({"ExistingTuplePartitionGrid"});
  * @param rectilinear Chooses a rectilinear grid instead of an image geometry.
  * @param tupleCount Number of tuples in the selected AttributeMatrix.
  */
-void CreateCellTupleValidationInput(DataStructure& dataStructure, bool rectilinear, usize tupleCount)
+void createCellTupleValidationInput(DataStructure& dataStructure, bool rectilinear, usize tupleCount)
 {
-  auto* storedGeometryGroup = DataGroup::Create(dataStructure, "StoredGeometry");
-  REQUIRE(storedGeometryGroup != nullptr);
-  IGridGeometry* geometry = nullptr;
+  auto* storedGeometryGroupPtr = DataGroup::Create(dataStructure, "StoredGeometry");
+  REQUIRE(storedGeometryGroupPtr != nullptr);
+  IGridGeometry* geometryPtr = nullptr;
   if(rectilinear)
   {
-    auto* rectGrid = RectGridGeom::Create(dataStructure, "Geometry", storedGeometryGroup->getId());
-    REQUIRE(rectGrid != nullptr);
-    rectGrid->setDimensions({2, 2, 2});
-    auto* xBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "XBounds", {3}, {1}, rectGrid->getId());
-    auto* yBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "YBounds", {3}, {1}, rectGrid->getId());
-    auto* zBounds = UnitTest::CreateTestDataArray<float32>(dataStructure, "ZBounds", {3}, {1}, rectGrid->getId());
-    REQUIRE(xBounds != nullptr);
-    REQUIRE(yBounds != nullptr);
-    REQUIRE(zBounds != nullptr);
+    auto* rectGridPtr = RectGridGeom::Create(dataStructure, "Geometry", storedGeometryGroupPtr->getId());
+    REQUIRE(rectGridPtr != nullptr);
+    rectGridPtr->setDimensions({2, 2, 2});
+    auto* xBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "XBounds", {3}, {1}, rectGridPtr->getId());
+    auto* yBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "YBounds", {3}, {1}, rectGridPtr->getId());
+    auto* zBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "ZBounds", {3}, {1}, rectGridPtr->getId());
+    REQUIRE(xBoundsPtr != nullptr);
+    REQUIRE(yBoundsPtr != nullptr);
+    REQUIRE(zBoundsPtr != nullptr);
     for(usize index = 0; index < 3; index++)
     {
-      (*xBounds)[index] = static_cast<float32>(index);
-      (*yBounds)[index] = static_cast<float32>(index);
-      (*zBounds)[index] = static_cast<float32>(index);
+      (*xBoundsPtr)[index] = static_cast<float32>(index);
+      (*yBoundsPtr)[index] = static_cast<float32>(index);
+      (*zBoundsPtr)[index] = static_cast<float32>(index);
     }
-    rectGrid->setXBoundsId(xBounds->getId());
-    rectGrid->setYBoundsId(yBounds->getId());
-    rectGrid->setZBoundsId(zBounds->getId());
-    geometry = rectGrid;
+    rectGridPtr->setXBoundsId(xBoundsPtr->getId());
+    rectGridPtr->setYBoundsId(yBoundsPtr->getId());
+    rectGridPtr->setZBoundsId(zBoundsPtr->getId());
+    geometryPtr = rectGridPtr;
   }
   else
   {
-    auto* image = ImageGeom::Create(dataStructure, "Geometry", storedGeometryGroup->getId());
-    REQUIRE(image != nullptr);
-    image->setDimensions({2, 2, 2});
-    image->setSpacing({1.0F, 1.0F, 1.0F});
-    image->setOrigin({0.0F, 0.0F, 0.0F});
-    geometry = image;
+    auto* imagePtr = ImageGeom::Create(dataStructure, "Geometry", storedGeometryGroupPtr->getId());
+    REQUIRE(imagePtr != nullptr);
+    imagePtr->setDimensions({2, 2, 2});
+    imagePtr->setSpacing({1.0F, 1.0F, 1.0F});
+    imagePtr->setOrigin({0.0F, 0.0F, 0.0F});
+    geometryPtr = imagePtr;
   }
-  auto* geometryCellData = AttributeMatrix::Create(dataStructure, "GeometryCellData", {2, 2, 2}, geometry->getId());
-  REQUIRE(geometryCellData != nullptr);
-  geometry->setCellData(*geometryCellData);
-  auto* storedDataGroup = DataGroup::Create(dataStructure, "StoredData");
-  REQUIRE(storedDataGroup != nullptr);
+  auto* geometryCellDataPtr = AttributeMatrix::Create(dataStructure, "GeometryCellData", {2, 2, 2}, geometryPtr->getId());
+  REQUIRE(geometryCellDataPtr != nullptr);
+  geometryPtr->setCellData(*geometryCellDataPtr);
+  auto* storedDataGroupPtr = DataGroup::Create(dataStructure, "StoredData");
+  REQUIRE(storedDataGroupPtr != nullptr);
   // {4, 2} has eight tuples, with neither shape nor ownership matching the grid.
   const ShapeType tupleShape = tupleCount == 8 ? ShapeType{4, 2} : ShapeType{tupleCount};
-  auto* selectedMatrix = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, storedDataGroup->getId());
-  REQUIRE(selectedMatrix != nullptr);
-  auto* selected = DataGroup::Create(dataStructure, "Selected");
-  REQUIRE(selected != nullptr);
-  auto* selectedGeometries = DataGroup::Create(dataStructure, "Geometries", selected->getId());
-  auto* selectedArrays = DataGroup::Create(dataStructure, "Arrays", selected->getId());
-  REQUIRE(selectedGeometries != nullptr);
-  REQUIRE(selectedArrays != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(geometry->getId(), selectedGeometries->getId()));
-  REQUIRE(dataStructure.setAdditionalParent(selectedMatrix->getId(), selectedArrays->getId()));
+  auto* selectedMatrixPtr = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, storedDataGroupPtr->getId());
+  REQUIRE(selectedMatrixPtr != nullptr);
+  auto* selectedPtr = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedPtr != nullptr);
+  auto* selectedGeometriesPtr = DataGroup::Create(dataStructure, "Geometries", selectedPtr->getId());
+  auto* selectedArraysPtr = DataGroup::Create(dataStructure, "Arrays", selectedPtr->getId());
+  REQUIRE(selectedGeometriesPtr != nullptr);
+  REQUIRE(selectedArraysPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(geometryPtr->getId(), selectedGeometriesPtr->getId()));
+  REQUIRE(dataStructure.setAdditionalParent(selectedMatrixPtr->getId(), selectedArraysPtr->getId()));
 }
 
 /**
@@ -303,7 +306,7 @@ void CreateCellTupleValidationInput(DataStructure& dataStructure, bool rectiline
  * @param mode Basic, advanced, or bounding-box mode index.
  * @return Arguments using the linked selected geometry and matrix paths.
  */
-Arguments CreateCellTupleValidationArguments(ChoicesParameter::ValueType mode)
+Arguments createCellTupleValidationArguments(ChoicesParameter::ValueType mode)
 {
   Arguments args = createBasicPartitionGeometryArguments(k_SelectedTupleGeometryPath, k_SelectedTupleMatrixPath, "PartitionIds", {2, 2, 2}, {});
   args.insertOrAssign(PartitionGeometryFilter::k_PartitioningMode_Key, mode);
@@ -370,7 +373,7 @@ void createVertexTupleValidationInput(DataStructure& dataStructure, usize tupleC
  */
 Arguments createVertexTupleValidationArguments(ChoicesParameter::ValueType mode)
 {
-  Arguments args = CreateCellTupleValidationArguments(mode);
+  Arguments args = createCellTupleValidationArguments(mode);
   args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, k_SelectedVertexTupleMatrixPath);
   args.insertOrAssign(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key, k_ExistingTuplePartitionGridPath);
   args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridGeometry_Key, DataPath({"CreatedTuplePartitionGrid"}));
@@ -458,9 +461,9 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Selected cell tuple counts", "[
   const usize tupleCount = GENERATE(usize{7}, usize{8}, usize{9});
   CAPTURE(rectilinear, mode, tupleCount);
   DataStructure dataStructure;
-  CreateCellTupleValidationInput(dataStructure, rectilinear, tupleCount);
+  createCellTupleValidationInput(dataStructure, rectilinear, tupleCount);
   const PartitionGeometryFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, CreateCellTupleValidationArguments(mode));
+  const auto preflightResult = filter.preflight(dataStructure, createCellTupleValidationArguments(mode));
   if(tupleCount == 8)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -487,8 +490,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Partition counts precede image 
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(mode, axis);
   DataStructure dataStructure;
-  CreateCellTupleValidationInput(dataStructure, false, 7);
-  Arguments args = CreateCellTupleValidationArguments(mode);
+  createCellTupleValidationInput(dataStructure, false, 7);
+  Arguments args = createCellTupleValidationArguments(mode);
   std::vector<int32> partitionCounts = {2, 2, 2};
   partitionCounts[axis] = 0;
   args.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, partitionCounts);
@@ -539,6 +542,151 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Selected vertex tuple counts", 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Rejects unsupported active vertex mask kinds", "[Plugins][PartitionGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto mode = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2}, ChoicesParameter::ValueType{3});
+  const bool useStringArray = GENERATE(false, true);
+  CAPTURE(mode, useStringArray);
+  DataStructure dataStructure;
+  createVertexTupleValidationInput(dataStructure, 8);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_SelectedVertexTupleMatrixPath));
+  const auto& parent = dataStructure.getDataRefAs<AttributeMatrix>(k_SelectedVertexTupleMatrixPath);
+  const DataPath maskPath = k_SelectedVertexTupleMatrixPath.createChildPath("RejectedMask");
+  if(useStringArray)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, maskPath.getTargetName(), parent.getShape(), std::vector<std::string>(8, "true"), parent.getId()) != nullptr);
+  }
+  else
+  {
+    auto* listsPtr = NeighborList<int32>::Create(dataStructure, maskPath.getTargetName(), parent.getShape(), parent.getId());
+    REQUIRE(listsPtr != nullptr);
+    for(usize index = 0; index < parent.getNumberOfTuples(); index++)
+    {
+      listsPtr->setList(static_cast<int32>(index), std::vector<int32>{1});
+    }
+    REQUIRE(listsPtr->getTupleShape() == parent.getShape());
+  }
+  auto args = createVertexTupleValidationArguments(mode);
+  args.insertOrAssign(PartitionGeometryFilter::k_UseVertexMask_Key, true);
+  args.insertOrAssign(PartitionGeometryFilter::k_VertexMaskPath_Key, maskPath);
+  const auto initialPaths = dataStructure.getAllDataPaths();
+  const auto initialNextId = dataStructure.getNextId();
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = PartitionGeometryFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  const auto& error = preflightResult.outputActions.errors().front();
+  CHECK(error.code == -3044);
+  CHECK(error.message.find(maskPath.toString()) != std::string::npos);
+  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
+  CHECK(error.message.find("scalar Boolean DataArray") != std::string::npos);
+  CHECK(error.message.find("Select a scalar Boolean DataArray") != std::string::npos);
+  CHECK(dataStructure.getAllDataPaths() == initialPaths);
+  CHECK(dataStructure.getNextId() == initialNextId);
+  CHECK_FALSE(dataStructure.containsData(k_SelectedVertexTupleMatrixPath.createChildPath("PartitionIds")));
+  CHECK_FALSE(dataStructure.containsData(k_SelectedVertexTupleMatrixPath.getParent().createChildPath("PartitionData")));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"CreatedTuplePartitionGrid"})));
+  if(useStringArray)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(maskPath));
+    CHECK(dataStructure.getDataRefAs<StringArray>(maskPath)[0] == "true");
+  }
+  else
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(maskPath));
+    CHECK(dataStructure.getDataRefAs<NeighborList<int32>>(maskPath).getList(0) == std::vector<int32>{1});
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Inactive mask selections and active Boolean arrays pass preflight", "[Plugins][PartitionGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  const usize maskKind = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  CAPTURE(maskKind);
+  DataStructure dataStructure;
+  createVertexTupleValidationInput(dataStructure, 8);
+  const DataPath maskPath({"OptionalMask"});
+  if(maskKind == 0)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, maskPath.getTargetName(), {1}, {"unused"}) != nullptr);
+  }
+  else if(maskKind == 1)
+  {
+    REQUIRE(NeighborList<int32>::Create(dataStructure, maskPath.getTargetName(), {1}) != nullptr);
+  }
+  else if(maskKind >= 3)
+  {
+    auto maskStorePtr = DataStoreUtilities::CreateDataStore<bool>(dataStructure, maskPath, {8}, {1});
+    auto* maskPtr = BoolArray::Create(dataStructure, maskPath.getTargetName(), maskStorePtr);
+    REQUIRE(maskPtr != nullptr);
+    maskPtr->fill(true);
+  }
+  auto args = createVertexTupleValidationArguments(0);
+  args.insertOrAssign(PartitionGeometryFilter::k_UseVertexMask_Key, maskKind == 4);
+  args.insertOrAssign(PartitionGeometryFilter::k_VertexMaskPath_Key, maskPath);
+  const auto initialPaths = dataStructure.getAllDataPaths();
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = PartitionGeometryFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  CHECK(dataStructure.getAllDataPaths() == initialPaths);
+  CHECK_FALSE(dataStructure.containsData(k_SelectedVertexTupleMatrixPath.createChildPath("PartitionIds")));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"CreatedTuplePartitionGrid"})));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry errors precede vertex mask kind errors", "[Plugins][PartitionGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  const usize geometryKind = GENERATE(usize{0}, usize{1}, usize{2});
+  const bool tupleMismatch = GENERATE(false, true);
+  const bool useStringArray = GENERATE(false, true);
+  CAPTURE(geometryKind, tupleMismatch, useStringArray);
+  DataStructure dataStructure;
+  const usize tupleCount = tupleMismatch ? 7 : 8;
+  Arguments args;
+  if(geometryKind == 0)
+  {
+    createVertexTupleValidationInput(dataStructure, tupleCount);
+    args = createVertexTupleValidationArguments(0);
+  }
+  else
+  {
+    createCellTupleValidationInput(dataStructure, geometryKind == 2, tupleCount);
+    args = createCellTupleValidationArguments(0);
+  }
+  const DataPath maskPath({"RejectedMask"});
+  if(useStringArray)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, maskPath.getTargetName(), {8}, std::vector<std::string>(8, "true")) != nullptr);
+  }
+  else
+  {
+    REQUIRE(NeighborList<int32>::Create(dataStructure, maskPath.getTargetName(), {8}) != nullptr);
+  }
+  args.insertOrAssign(PartitionGeometryFilter::k_UseVertexMask_Key, true);
+  args.insertOrAssign(PartitionGeometryFilter::k_VertexMaskPath_Key, maskPath);
+  const auto initialPaths = dataStructure.getAllDataPaths();
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = PartitionGeometryFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  constexpr std::array<int32, 3> tupleErrorCodes = {-3043, -3009, -3010};
+  int32 expectedCode = -3019;
+  if(tupleMismatch)
+  {
+    expectedCode = tupleErrorCodes.at(geometryKind);
+  }
+  else if(geometryKind == 0)
+  {
+    expectedCode = -3044;
+  }
+  CHECK(preflightResult.outputActions.errors().front().code == expectedCode);
+  CHECK(dataStructure.getAllDataPaths() == initialPaths);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Vertex tuple and partition Z count errors are distinct", "[Plugins][PartitionGeometryFilter]")
 {
   UnitTest::LoadPlugins();
@@ -550,8 +698,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Vertex tuple and partition Z co
   CHECK(vertexPreflight.outputActions.errors()[0].code == -3043);
 
   DataStructure imageDataStructure;
-  CreateCellTupleValidationInput(imageDataStructure, false, 8);
-  Arguments imageArgs = CreateCellTupleValidationArguments(0);
+  createCellTupleValidationInput(imageDataStructure, false, 8);
+  Arguments imageArgs = createCellTupleValidationArguments(0);
   imageArgs.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{2, 2, 0});
   const auto imagePreflight = PartitionGeometryFilter().preflight(imageDataStructure, imageArgs);
   SIMPLNX_RESULT_REQUIRE_INVALID(imagePreflight.outputActions);
@@ -570,8 +718,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Mode errors precede image tuple
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(mode, axis);
   DataStructure dataStructure;
-  CreateCellTupleValidationInput(dataStructure, false, 7);
-  Arguments args = CreateCellTupleValidationArguments(mode);
+  createCellTupleValidationInput(dataStructure, false, 7);
+  Arguments args = createCellTupleValidationArguments(mode);
   std::vector<float32> invalidValues = {1.0F, 1.0F, 1.0F};
   if(mode == static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Advanced))
   {

@@ -4,6 +4,8 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
@@ -420,7 +422,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     auto cellTupleResult = ValidateCellTupleCount(geometry, pInputGeometryToPartitionValue, attrMatrix.getNumberOfTuples(), pInputGeomCellAMPathValue, -3010);
     if(cellTupleResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
@@ -534,6 +536,20 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   if(pUseVertexMask && (iGeom.getGeomType() == IGeometry::Type::Image || iGeom.getGeomType() == IGeometry::Type::RectGrid))
   {
     return {MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
+  }
+
+  if(pUseVertexMask)
+  {
+    const auto maskPath = filterArgs.value<DataPath>(k_VertexMaskPath_Key);
+    // ArraySelectionParameter also accepts StringArray and NeighborList for Boolean selections.
+    // Keep the local type check until the parameter validates supported array kinds.
+    // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
+    if(dataStructure.getDataAs<BoolArray>(maskPath) == nullptr)
+    {
+      const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(maskPath);
+      return MakePreflightErrorResult(-3044, fmt::format("The selected Vertex Mask object '{}' has type '{}', but a scalar Boolean DataArray is required. Select a scalar Boolean DataArray.",
+                                                         maskPath.toString(), selectedObject.getTypeName()));
+    }
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
