@@ -445,7 +445,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
     CentroidsBudgetSentinel budget(256 * k_MiB);
     auto& manager = CacheMemoryBudgetManager::instance();
     REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
-    for(uint64 headroom : {uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
+    for(const uint64 headroom : std::array<uint64, 5>{uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
     {
       // Populate in memory so setup does not perform one HDF5 write per voxel.
       auto timingFixture = [&]() {
@@ -901,7 +901,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       auto& manager = CacheMemoryBudgetManager::instance();
       REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
       std::vector<float32> reference;
-      for(uint64 headroom : {uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
+      for(const uint64 headroom : std::array<uint64, 5>{uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
       {
         const uint64 pressureBytes = 64 * k_MiB - headroom;
         auto pressureReservation = manager.reserveWorkingMemory(pressureBytes);
