@@ -1,10 +1,16 @@
 #include "TriangleUtilities.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
@@ -21,6 +27,7 @@
 #include <memory>
 #include <new>
 #include <queue>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -1617,6 +1624,47 @@ void MeshingUtilities::CalculateNormalsImpl::operator()(const nx::core::Range& r
   generate(range.min(), range.max());
 }
 
+namespace
+{
+constexpr usize k_NormalBlockTriangles = 262144;
+constexpr usize k_NormalFastBytesPerFace = (3 * sizeof(IGeometry::MeshIndexType)) + (3 * sizeof(float64));
+constexpr usize k_NormalGatherBytesPerFace = k_NormalFastBytesPerFace + (3 * sizeof(usize)) + (18 * sizeof(float32));
+static_assert(k_NormalBlockTriangles <= std::numeric_limits<usize>::max() / k_NormalGatherBytesPerFace);
+
+struct TriangleNormalWorkingPlan
+{
+  bool CacheVertices = false;
+  usize FaceCapacity = 0;
+  usize PageVertices = 0;
+  usize PayloadBytes = 0;
+};
+
+/** @brief Plans named buffers after the caller checks addressable vertex and face shapes. */
+TriangleNormalWorkingPlan planNormalWorkingMemory(const AbstractDataStore<IGeometry::MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, usize availableBytes)
+{
+  const usize maximumTriangles = std::min(k_NormalBlockTriangles, triangles.getNumberOfTuples());
+  const usize vertexCount = vertices.getNumberOfTuples();
+  const usize vertexBytes = vertexCount * 3 * sizeof(float32);
+  const usize gatherTriangles = std::min(maximumTriangles, availableBytes / k_NormalGatherBytesPerFace);
+  const usize admissionTriangles = std::max(usize{1}, gatherTriangles);
+  // Retaining coordinates must preserve the gathered route's available face capacity.
+  const bool cacheVertices = vertexBytes <= availableBytes && admissionTriangles * k_NormalFastBytesPerFace <= availableBytes - vertexBytes;
+  const usize faceCapacity = cacheVertices ? std::min(maximumTriangles, (availableBytes - vertexBytes) / k_NormalFastBytesPerFace) : gatherTriangles;
+  if(faceCapacity == 0)
+  {
+    return {};
+  }
+  const usize pageVertices = cacheVertices ? 0 : std::min(vertexCount, faceCapacity * 3);
+  const usize coordinateBytes = cacheVertices ? vertexBytes : pageVertices * 3 * sizeof(float32);
+  const usize bytesPerFace = k_NormalFastBytesPerFace + (cacheVertices ? 0 : (3 * sizeof(usize)) + (9 * sizeof(float32)));
+  if(coordinateBytes > availableBytes || faceCapacity > (availableBytes - coordinateBytes) / bytesPerFace)
+  {
+    return {};
+  }
+  return {.CacheVertices = cacheVertices, .FaceCapacity = faceCapacity, .PageVertices = pageVertices, .PayloadBytes = coordinateBytes + (faceCapacity * bytesPerFace)};
+}
+} // namespace
+
 Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
                                                             Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal)
 {
@@ -1627,60 +1675,119 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
     return {};
   }
 
-  // Connectivity needs random vertex access. Cache 3 * N floats once (O(N) memory), about
-  // one quarter of the connectivity bytes for T ~= 2N and 64-bit vertex indexes.
-  std::vector<float32> vertices(verts.getSize());
-  Result<> result = verts.copyIntoBuffer(0, nonstd::span<float32>(vertices.data(), vertices.size()));
-  if(result.invalid())
+  constexpr usize maximum = std::numeric_limits<usize>::max();
+  const usize maximumTriangles = std::min(k_NormalBlockTriangles, numTriangles);
+  if(verts.getNumberOfComponents() != 3 || triangles.getNumberOfComponents() != 3 || numVertices > maximum / (3 * sizeof(float32)) || numTriangles > maximum / 3 ||
+     numVertices * (3 * sizeof(float32)) > maximum - maximumTriangles * k_NormalFastBytesPerFace)
   {
-    return MergeResults(std::move(result), MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."));
+    return MakeErrorResult(-65814, "Triangle normal buffers require addressable three-component vertex and face arrays. Reduce the mesh size or repair the array shapes.");
   }
-
-  // Match ComputeFeatureSizesScanline's 262,144-tuple batches. Connectivity and normals
-  // together use at most 12 MiB of scratch space, independent of the triangle count.
-  constexpr usize k_BlockTriangles = 262144;
-  const usize bufferTriangles = std::min(k_BlockTriangles, numTriangles);
-  std::vector<IGeometry::MeshIndexType> triangleBuffer(bufferTriangles * 3);
-  std::vector<float64> normalBuffer(bufferTriangles * 3);
-  for(usize start = 0; start < numTriangles;)
+  const usize vertexBytes = numVertices * 3 * sizeof(float32);
+  const usize desiredBytes = vertexBytes + (maximumTriangles * k_NormalFastBytesPerFace);
+  auto& budget = CacheMemoryBudgetManager::instance();
+  const uint64 maximumWorkingBytes = budget.maximumWorkingMemoryBytes();
+  const uint64 reservedBytes = budget.reservedWorkingMemoryBytes();
+  const usize observedHeadroom = static_cast<usize>(std::min<uint64>(maximumWorkingBytes > reservedBytes ? maximumWorkingBytes - reservedBytes : 0, maximum));
+  const auto observedPlan = planNormalWorkingMemory(triangles, verts, observedHeadroom);
+  const usize preferredBytes = std::min(desiredBytes, maximumTriangles * k_NormalGatherBytesPerFace);
+  const uint64 requestedBytes = std::min<uint64>(observedPlan.FaceCapacity == 0 ? preferredBytes : observedPlan.PayloadBytes, budget.maximumWorkingMemoryBytes());
+  // A snapshot avoids known excess admission; a racing reservation can still reduce the actual grant.
+  auto reservation = budget.reserveWorkingMemory(requestedBytes);
+  const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+  const auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  const bool cacheVertices = plan.CacheVertices;
+  const usize bufferTriangles = plan.FaceCapacity;
+  if(bufferTriangles == 0)
   {
-    if(shouldCancel)
+    return MakeErrorResult(
+        -65815, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached vertices and one face.",
+                            requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
+  }
+  const usize pageVertices = plan.PageVertices;
+  // The checked plan fits the actual grant; release any remainder before allocations or I/O.
+  reservation.shrinkTo(plan.PayloadBytes);
+  Result<> result;
+  try
+  {
+    std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
+    if(cacheVertices)
     {
-      return result;
-    }
-    const usize count = std::min(k_BlockTriangles, numTriangles - start);
-    result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
-    if(result.invalid())
-    {
-      return MergeResults(std::move(result), MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)));
-    }
-
-    for(usize triangle = 0; triangle < count; ++triangle)
-    {
-      const usize index = triangle * 3;
-      for(usize vertex = 0; vertex < 3; ++vertex)
+      result = MergeResults(std::move(result), verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
+      if(result.invalid())
       {
-        const auto vertexIndex = triangleBuffer[index + vertex];
-        if(vertexIndex >= numVertices)
+        return MergeResults(std::move(result), MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."));
+      }
+    }
+    std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
+    std::vector<float32> gathered(cacheVertices ? 0 : bufferTriangles * 9);
+    std::vector<float32> page(pageVertices * 3);
+    std::vector<IGeometry::MeshIndexType> triangleBuffer(bufferTriangles * 3);
+    std::vector<float64> normalBuffer(bufferTriangles * 3);
+    for(usize start = 0; start < numTriangles;)
+    {
+      if(shouldCancel)
+      {
+        return result;
+      }
+      const usize count = std::min(bufferTriangles, numTriangles - start);
+      result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+      }
+
+      for(usize triangle = 0; triangle < count; ++triangle)
+      {
+        const usize index = triangle * 3;
+        for(usize vertex = 0; vertex < 3; ++vertex)
         {
-          return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.",
-                                                                                     start + triangle, vertexIndex, numVertices, numVertices)));
+          const auto vertexIndex = triangleBuffer[index + vertex];
+          if(vertexIndex >= numVertices)
+          {
+            return MergeResults(std::move(result),
+                                MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.",
+                                                                    start + triangle, vertexIndex, numVertices, numVertices)));
+          }
         }
       }
-      const auto normal = calculateNormal(vertices.data() + triangleBuffer[index] * 3, vertices.data() + triangleBuffer[index + 1] * 3, vertices.data() + triangleBuffer[index + 2] * 3);
-      normalBuffer[index] = normal[0];
-      normalBuffer[index + 1] = normal[1];
-      normalBuffer[index + 2] = normal[2];
-    }
+      if(!cacheVertices)
+      {
+        result =
+            MergeResults(std::move(result), GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
+        if(result.invalid())
+        {
+          return MergeResults(std::move(result), MakeErrorResult(-65810, fmt::format("Error reading vertex coordinates for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+        }
+      }
+      for(usize triangle = 0; triangle < count; ++triangle)
+      {
+        const usize index = triangle * 3;
+        const nonstd::span<const float32> coordinates =
+            cacheVertices ? nonstd::span<const float32>(vertices.data(), vertices.size()) : nonstd::span<const float32>(gathered.data(), gathered.size()).subspan(triangle * 9, 9);
+        const usize firstVertex = cacheVertices ? triangleBuffer[index] * 3 : 0;
+        const usize secondVertex = cacheVertices ? triangleBuffer[index + 1] * 3 : 3;
+        const usize thirdVertex = cacheVertices ? triangleBuffer[index + 2] * 3 : 6;
+        const auto normal = calculateNormal(coordinates.subspan(firstVertex, 3).data(), coordinates.subspan(secondVertex, 3).data(), coordinates.subspan(thirdVertex, 3).data());
+        normalBuffer[index] = normal[0];
+        normalBuffer[index + 1] = normal[1];
+        normalBuffer[index + 2] = normal[2];
+      }
 
-    result = MergeResults(std::move(result), normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
-    if(result.invalid())
-    {
-      return MergeResults(std::move(result), MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)));
+      result = MergeResults(std::move(result), normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)));
+      }
+      start += count;
     }
-    start += count;
+    return result;
+  } catch(const std::bad_alloc&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65816, "Triangle normal calculation could not allocate its admitted working buffers. Reduce the mesh size or free memory."));
+  } catch(const std::length_error&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65816, "Triangle normal calculation exceeded the supported buffer allocation size. Reduce the mesh size."));
   }
-  return result;
 }
 
 Result<> MeshingUtilities::CalculateNormals(const INodeGeometry2D::SharedFaceList& triangles, const INodeGeometry2D::SharedVertexList& verts, Float64AbstractDataStore& normals,
