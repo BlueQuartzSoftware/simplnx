@@ -353,6 +353,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfa
     calculatedPath = DataPath({k_DataContainer, k_CellFeatureData, k_SphericityArrayNameNX});
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarPath));
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(calculatedPath));
+    // The archived exemplar predates the sphericity exponent correction. Its absolute tolerance can hide small output differences; analytical cases establish the corrected exponent behavior.
     CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(exemplarPath), dataStructure.getDataRefAs<IDataArray>(calculatedPath));
   }
 
