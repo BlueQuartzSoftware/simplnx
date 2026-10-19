@@ -2,17 +2,26 @@
 
 #include "SimplnxCore/Filters/Algorithms/ComputeSurfaceAreaToVolume.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+
+#include <fmt/format.h>
+
+#include <utility>
 
 using namespace nx::core;
 
@@ -95,6 +104,24 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNumCellsArrayPathValue = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
   auto pCalculateSphericityValue = filterArgs.value<bool>(k_CalculateSphericity_Key);
+  auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
+  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
+  // Keep the local type checks until the parameter validates supported array kinds.
+  // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIdsPtr == nullptr)
+  {
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(pFeatureIdsArrayPathValue);
+    return MakePreflightErrorResult(-12803, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+                                                        pFeatureIdsArrayPathValue.toString(), selectedObject.getTypeName()));
+  }
+  auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIdsPtr->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12804);
+  if(tupleCountResult.invalid())
+  {
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCountResult))};
+  }
 
   PreflightResult preflightResult;
 

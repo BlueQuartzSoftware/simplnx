@@ -1,8 +1,10 @@
 #include "DataArrayUtilities.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -13,6 +15,7 @@
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;
@@ -141,6 +144,17 @@ struct CreateDefaultValueNeighborListFunctor
 
 namespace nx::core
 {
+Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath, int32 errorCode)
+{
+  const usize cellCount = geometry.getNumberOfCells();
+  if(tupleCount != cellCount)
+  {
+    return MakeErrorResult(errorCode, fmt::format("The selected data '{}' has {} tuples, but the selected grid geometry '{}' has {} cells. Select data with one tuple per geometry cell.",
+                                                  dataPath.toString(), tupleCount, geometryPath.toString(), cellCount));
+  }
+  return {};
+}
+
 bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix)
 {
   if(arrayPath.getLength() < 2)

@@ -6,9 +6,11 @@
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScratchBuffer.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -48,6 +50,21 @@
  */
 namespace nx::core
 {
+class IGridGeometry;
+
+/**
+ * @brief Checks that data has one tuple per geometry cell.
+ * @param geometry Supplies the cell count.
+ * @param geometryPath Identifies the geometry in an error message.
+ * @param tupleCount Number of tuples in the selected data.
+ * @param dataPath Identifies the selected data in an error message.
+ * @param errorCode Error code to return if the counts differ.
+ * @return Empty valid result if the counts match; otherwise, an error with both paths and counts.
+ *
+ * This check compares counts only. It does not read array values or require matching tuple shapes or a common parent.
+ */
+SIMPLNX_EXPORT Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath, int32 errorCode);
+
 /**
  * @brief Tests whether a path's parent identifies the specified Attribute Matrix.
  * @param dataStructure Resolves path identifiers.
