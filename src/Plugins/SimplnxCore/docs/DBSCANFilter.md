@@ -188,7 +188,7 @@ The *Distance Metric* parameter provides the following choices:
 - **Pearson [4]**: Uses the Pearson correlation distance, measuring linear correlation dissimilarity.
 - **Squared Pearson [5]**: Uses the squared Pearson correlation distance.
 
-**Cell Mask Array** must have 1 component.
+When **Use Mask Array** is enabled, **Cell Mask Array** must have 1 component and the same number of tuples as **Attribute Array to Cluster**.
 
 ## Note on Randomness
 
