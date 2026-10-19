@@ -4,6 +4,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -12,7 +13,6 @@
 #include <memory>
 #include <optional>
 #include <ostream>
-#include <span>
 #include <string>
 #include <vector>
 
