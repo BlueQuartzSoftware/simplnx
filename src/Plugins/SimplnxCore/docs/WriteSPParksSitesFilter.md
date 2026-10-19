@@ -51,6 +51,8 @@ More information can be found in the SPPARKS documentation for [read_sites](http
 
 % Auto generated parameter table will be inserted here
 
+Cell Feature Ids must have one tuple per cell of the selected Image Geometry.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

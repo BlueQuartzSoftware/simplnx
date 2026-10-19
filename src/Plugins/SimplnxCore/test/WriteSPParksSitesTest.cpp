@@ -1,4 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/WriteSPParksSitesFilter.hpp"
@@ -94,5 +97,52 @@ TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: SIMPL Backwards Compatibility",
       CHECK(args.value<DataPath>(WriteSPParksSitesFilter::k_ImageGeomPath) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(WriteSPParksSitesFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Geometry cell tuple count", "[SimplnxCore][WriteSPParksSitesFilter][TupleCount]")
+{
+  UnitTest::LoadPlugins();
+  using Filter = WriteSPParksSitesFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 3, 2});
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+
+  // A matching input in another Attribute Matrix must remain valid.
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(Filter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountWriteSPParksSites.txt"));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -77453);
+    const DataPath expectedPath = inputPath;
+    const usize expectedTuples = tuples;
+    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }
