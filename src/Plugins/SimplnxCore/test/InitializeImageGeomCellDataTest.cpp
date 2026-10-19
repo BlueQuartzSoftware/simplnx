@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/InitializeImageGeomCellDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -450,5 +451,55 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: SIMPL Backwards Compa
       CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MinPoint_Key) == std::vector<uint64>{0, 0, 0});
       CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MaxPoint_Key) == std::vector<uint64>{5, 5, 5});
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple count", "[SimplnxCore][InitializeImageGeomCellDataFilter][TupleCount]")
+{
+  using Filter = InitializeImageGeomCellDataFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 3, 2});
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // A matching array is valid outside Cell Data; short and long arrays must fail preflight.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{1, 1, tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(otherAM->getShape(), ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+  const bool shortSecondInput = GENERATE(false, true);
+  CAPTURE(shortSecondInput);
+  auto* secondAM = AttributeMatrix::Create(dataStructure, "Second Data", ShapeType{1, 1, shortSecondInput ? usize{10} : usize{12}});
+  REQUIRE(secondAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Second Values", std::make_shared<DataStore<int32>>(secondAM->getShape(), ShapeType{1}, 0), secondAM->getId()) != nullptr);
+  const DataPath secondPath({"Second Data", "Second Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(Filter::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{inputPath, secondPath}));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12 && !shortSecondInput)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -3557);
+    const DataPath expectedPath = tuples != 12 ? inputPath : secondPath;
+    const usize expectedTuples = tuples != 12 ? tuples : usize{10};
+    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

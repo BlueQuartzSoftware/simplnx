@@ -41,6 +41,8 @@ For boolean arrays in random modes, each cell is set to a uniformly-chosen true/
 
 % Auto generated parameter table will be inserted here
 
+Each array selected in Cell Arrays must have one tuple per cell of the Image Geometry.
+
 ## Example Pipelines
 
 ## License & Copyright
