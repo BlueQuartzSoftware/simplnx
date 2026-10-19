@@ -503,3 +503,30 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple c
     REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }
+
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: External tuple shapes", "[SimplnxCore][InitializeImageGeomCellDataFilter][TupleCount]")
+{
+  const auto tupleShape = GENERATE((ShapeType{12}), (ShapeType{3, 4}), (ShapeType{1, 1, 12}));
+  CAPTURE(tupleShape);
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({3, 4, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 3}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", tupleShape);
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", tupleShape, ShapeType{1}, otherAM->getId()) != nullptr);
+
+  InitializeImageGeomCellDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(InitializeImageGeomCellDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(InitializeImageGeomCellDataFilter::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({"Other Data", "Values"})}));
+  args.insertOrAssign(InitializeImageGeomCellDataFilter::k_MinPoint_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 0}));
+  args.insertOrAssign(InitializeImageGeomCellDataFilter::k_MaxPoint_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{2, 3, 0}));
+
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

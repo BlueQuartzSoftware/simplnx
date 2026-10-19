@@ -231,21 +231,9 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     errors.push_back(Error{-3556, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
-  SizeVec3 imageDims = imageGeom.getDimensions();
-
-  std::vector<usize> reversedImageDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
-
   for(const DataPath& path : cellArrayPaths)
   {
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    ShapeType tupleShape = dataArray.getIDataStoreRef().getTupleShape();
-
-    if(tupleShape.size() != reversedImageDims.size())
-    {
-      errors.push_back(Error{-5560, fmt::format("DataArray at '{}' does not match dimensions of ImageGeometry at '{}'", path.toString(), imageGeomPath.toString())});
-      continue;
-    }
-
     std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray.getName(), initType, initValue, initRange); // NO BOOL
     if(maybeError.has_value())
     {
