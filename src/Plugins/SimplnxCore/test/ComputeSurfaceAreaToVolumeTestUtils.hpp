@@ -19,10 +19,11 @@ namespace SurfaceAreaToVolumeTest
 {
 // A wrong X/Y face weight changes the physical area of this interior box.
 template <class ScopeT>
-std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity,
-                                                                 const nx::core::SizeVec3& dimensions = {5, 5, 5}, nx::core::int32 suppliedPairCount = 2)
+std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity, bool singleSlice = false,
+                                                                 nx::core::int32 suppliedPairCount = 2)
 {
   using namespace nx::core;
+  const SizeVec3 dimensions = singleSlice ? SizeVec3{5, 5, 1} : SizeVec3{5, 5, 5};
   DataStructure dataStructure;
   const DataPath geomPath({"ImageGeom"});
   const DataPath cellPath = geomPath.createChildPath("CellData");
@@ -35,9 +36,7 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   const ShapeType featureShape = {3};
   const ShapeType componentShape = {1};
   const FloatVec3 origin = {-1.0f, 4.0f, 7.0f};
-  const bool singleSlice = dimensions[2] == 1;
   REQUIRE(pairAxis < (singleSlice ? 2 : 3));
-  REQUIRE(dimensions == (singleSlice ? SizeVec3{5, 5, 1} : SizeVec3{5, 5, 5}));
   constexpr usize pairFeature = 2;
   constexpr int32 enclosingFeature = 1;
   const usize cellCount = dimensions[0] * dimensions[1] * dimensions[2];
