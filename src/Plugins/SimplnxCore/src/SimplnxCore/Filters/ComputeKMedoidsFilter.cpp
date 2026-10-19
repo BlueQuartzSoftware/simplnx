@@ -137,7 +137,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
     const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
     if(!CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, maskPath}))
     {
-      const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskPath);
+      const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7589, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
                              pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));

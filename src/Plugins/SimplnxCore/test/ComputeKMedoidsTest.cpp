@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -544,5 +545,38 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellData != nullptr);
+  REQUIRE(maskData != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskData->getId()) != nullptr);
+  const DataPath inputPath({"Cell Data", "Input"});
+  const DataPath maskPath({"Mask Data", "Mask"});
+
+  ComputeKMedoidsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
+
+  args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  const auto& errors = preflightResult.outputActions.errors();
+  const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7589; });
+  REQUIRE(error != errors.end());
+  CHECK(error->message.find(inputPath.toString()) != std::string::npos);
+  CHECK(error->message.find(maskPath.toString()) != std::string::npos);
+  CHECK(error->message.find("6 tuples") != std::string::npos);
+  CHECK(error->message.find("4 tuples") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
