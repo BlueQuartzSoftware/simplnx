@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -623,7 +624,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: default one cluster", "[SimplnxCore][Comp
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   CHECK(ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath) == std::vector<int32>{1, 1, 1});
-  CHECK(ReadKMeansValues<float32>(dataStructure, k_MaskParityMeansPath) == std::vector<float32>{0.0F, 4.0F});
+  CHECK(ReadKMeansValues<float64>(dataStructure, k_MaskParityMeansPath) == std::vector<float64>{0.0, 4.0});
   const auto seedPath = DataPath({args.value<std::string>(ComputeKMeansFilter::k_SeedArrayName_Key)});
   CHECK(ReadKMeansValues<uint64>(dataStructure, seedPath) == std::vector<uint64>{5489});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
