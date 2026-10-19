@@ -2359,6 +2359,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry n
   args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
   args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
   args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
   args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{1, 1, 1}));
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -2410,6 +2411,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: PhysicalCrop_MaxAtBound", "[Sim
   args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, sourcePath);
   args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, croppedPath);
   args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, false);
   args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, false);
   args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, true);
   args.insertOrAssign(CropImageGeometryFilter::k_MinCoord_Key, std::vector<float64>{1.5, 1.0, 2.5});
