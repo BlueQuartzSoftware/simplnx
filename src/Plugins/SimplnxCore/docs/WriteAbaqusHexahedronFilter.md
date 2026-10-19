@@ -110,6 +110,8 @@ The `_sects.inp` file for reduced-integration elements (one section per grain, e
 
 % Auto generated parameter table will be inserted here
 
+Cell Feature Ids must have one tuple per cell of the selected Image Geometry.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

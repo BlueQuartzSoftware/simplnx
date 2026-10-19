@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace fs = std::filesystem;
@@ -104,6 +105,20 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto geometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
+  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+  }
+
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Cell Feature Ids", inputArrayPath}}, -1124); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
+
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -1122); prefixResult.invalid())
   {
@@ -123,11 +138,6 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
     return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(filterArgs.value<DataPath>(k_ImageGeometryPath_Key));
-  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
-  }
   return {};
 }
 
