@@ -38,6 +38,8 @@ If the threshold is set too aggressively or the dataset has large contiguous reg
 
 The example above shows what happens when too much of the data is below threshold: most fine grains and twins do **not** match the true microstructure.
 
+Input Comparison Array must have one tuple per cell of the selected Image Geometry.
+
 ## Example Use Cases
 
 ### Reasonable Use of the Filter
