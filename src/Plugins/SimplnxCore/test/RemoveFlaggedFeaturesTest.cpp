@@ -1686,3 +1686,37 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
     }
   }
 }
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][RemoveFlaggedFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  for(const uint64 operation : {k_Extract, k_Remove, k_ExtractThenRemove})
+  {
+    DYNAMIC_SECTION("Operation=" << operation)
+    {
+      DataStructure dataStructure;
+      BuildFixture(dataStructure, {{3, 1, 1}, {1, 2, 3}, 4, {false, false, true, false}});
+      const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+      REQUIRE(featureAM != nullptr);
+      const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
+      REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+
+      RemoveFlaggedFeaturesFilter filter;
+      auto preflightResult = filter.preflight(dataStructure, MakeArgs(operation, false));
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      usize staleArrayCount = 0;
+      for(const auto& value : preflightResult.outputValues)
+      {
+        if(value.name == "Stale Arrays")
+        {
+          ++staleArrayCount;
+          CHECK(value.value.find(k_FeatureValuePath.toString()) != std::string::npos);
+          CHECK(value.value.find(k_FlaggedFeaturesPath.toString()) != std::string::npos);
+          CHECK(value.value.find(neighborListPath.toString()) == std::string::npos);
+        }
+      }
+      CHECK(staleArrayCount == (operation == k_Extract ? 0 : 1));
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
+}
