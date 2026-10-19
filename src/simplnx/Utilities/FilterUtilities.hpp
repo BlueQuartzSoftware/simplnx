@@ -339,4 +339,16 @@ SIMPLNX_EXPORT void MarkDataPathModified(const DataStructure& dataStructure, nx:
 SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& featureIdsPath, const DataPath& numNeighborsPath,
                                                                          nx::core::Result<OutputActions>& resultOutputActions);
 
+/**
+ * @brief Appends a "Stale Arrays" preflight value for IDataArray children of the Feature Attribute Matrix.
+ * If the path is not an AttributeMatrix or contains no IDataArray children, no value is appended.
+ * NeighborLists and StringArrays are excluded.
+ * @param dataStructure The DataStructure that contains the feature arrays.
+ * @param featureAttributeMatrixPath The path to the Feature Attribute Matrix that the filter compacts.
+ * @param featureIdsPath The path to the FeatureIds array that the filter modifies.
+ * @param preflightUpdatedValues The preflight values to append to.
+ */
+SIMPLNX_EXPORT void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
+                                                           std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
+
 } // namespace nx::core

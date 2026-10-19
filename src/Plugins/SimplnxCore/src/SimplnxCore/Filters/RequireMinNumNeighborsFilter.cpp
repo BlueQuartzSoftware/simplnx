@@ -157,9 +157,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
-  std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
-                                           "level data should be rerun to ensure accurate final results from your pipeline.";
-  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
+  nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, numNeighborsPath.getParent(), featureIdsPath, preflightUpdatedValues);
 
   std::vector<DataPath> dataArrayPaths;
 
