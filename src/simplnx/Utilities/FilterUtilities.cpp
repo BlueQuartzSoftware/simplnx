@@ -1,5 +1,7 @@
 #include "FilterUtilities.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
@@ -87,6 +89,33 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
     resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
   }
   return {};
+}
+
+// -----------------------------------------------------------------------------
+void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
+                                            std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+{
+  const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrix == nullptr)
+  {
+    return;
+  }
+
+  std::string list;
+  for(const auto& [identifier, object] : *featureAttributeMatrix)
+  {
+    if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
+    {
+      list += "\n" + featureAttributeMatrixPath.createChildPath(object->getName()).toString();
+    }
+  }
+
+  if(!list.empty())
+  {
+    preflightUpdatedValues.push_back({"Stale Arrays", fmt::format("This filter modifies '{}' and removes Features from '{}'. The values in the following Feature Data Arrays are not recomputed and "
+                                                                  "will be stale. Recompute any of the following Data Arrays:{}",
+                                                                  featureIdsPath.toString(), featureAttributeMatrixPath.toString(), list)});
+  }
 }
 
 } // namespace nx::core

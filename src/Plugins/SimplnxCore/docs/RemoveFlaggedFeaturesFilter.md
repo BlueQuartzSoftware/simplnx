@@ -42,6 +42,12 @@ A flagged **Feature** that owns no **Cells** has nothing to extract. The filter 
 
 Every value in *Cell Feature Ids* must be in the range 0 through (number of feature tuples - 1), and the array must hold one value per **Cell** of the selected geometry. A value outside that range stops the filter with error *-45435*, and a tuple-count mismatch stops it with error *-45437*, before any data is modified. Flagging every **Feature** stops the filter with error *-45433*.
 
+### WARNING: Feature Data Will Become Invalid
+
+*Remove* and *Extract then Remove* change Feature IDs and compact the Feature **Attribute Matrix**. Existing feature values can become invalid. Recompute those values after this **Filter**. *Extract* alone does not change the source data.
+
+Preflight lists each Data Array in the Feature **Attribute Matrix** under *Stale Arrays* so you can see which ones to recompute.
+
 ### WARNING: NeighborList Removal
 
 When the operation is *Remove* or *Extract then Remove*, any *NeighborList* arrays in the feature **Attribute Matrix** are **removed** because the neighbor relationships have changed. Re-run [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md) afterward to rebuild them.

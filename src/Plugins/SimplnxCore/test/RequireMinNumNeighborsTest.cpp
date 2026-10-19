@@ -1355,3 +1355,40 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibil
     }
   }
 }
+
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  DiscriminatingFixture::PopulateDataStructure(dataStructure);
+  const DataPath featureAMPath({"ImageGeometry", "FeatureData"});
+  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  REQUIRE(featureAM != nullptr);
+  const DataPath neighborListPath = featureAMPath.createChildPath("NeighborList");
+  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+
+  RequireMinNumNeighborsFilter filter;
+  Arguments args;
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(featureAMPath.createChildPath("NumNeighbors")));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(1));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  usize staleArrayCount = 0;
+  for(const auto& value : preflightResult.outputValues)
+  {
+    CHECK(value.name != "Feature Data Modification Warning");
+    if(value.name == "Stale Arrays")
+    {
+      ++staleArrayCount;
+      CHECK(value.value.find(featureAMPath.createChildPath("NumNeighbors").toString()) != std::string::npos);
+      CHECK(value.value.find(featureAMPath.createChildPath("Phases").toString()) != std::string::npos);
+      CHECK(value.value.find(neighborListPath.toString()) == std::string::npos);
+    }
+  }
+  CHECK(staleArrayCount == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
