@@ -28,6 +28,8 @@ If *Use Reference Slice* is enabled, each section is shifted to align with a sin
 
 Some combinations of sample geometry and internal features can cause the alignment to introduce a gradual "shear" across the sample. Enabling *Linear Background Subtraction* corrects for this by fitting a line to the X and Y shifts along the Z-direction and removing the linear trend. This effectively keeps the top and bottom sections of the sample fixed relative to each other.
 
+The Mask Array DataArray must have one tuple per cell of the selected Image Geometry.
+
 ## Algorithm
 
 The algorithm proceeds in two phases:

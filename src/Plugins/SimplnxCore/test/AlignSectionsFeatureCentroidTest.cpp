@@ -1,5 +1,7 @@
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -137,4 +139,46 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple count", "[Reconstruction][AlignSectionsFeatureCentroidFilter][TupleCount]")
+{
+  using Filter = AlignSectionsFeatureCentroidFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 3, 2});
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // Matching arrays remain valid outside the geometry's Cell Attribute Matrix, with a different tuple shape.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<uint8>::Create(dataStructure, "Values", std::make_shared<DataStore<uint8>>(ShapeType{tuples}, ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(Filter::k_MaskArrayPath_Key, std::make_any<DataPath>(inputPath));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -68071);
+    REQUIRE(error.message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+  }
 }
