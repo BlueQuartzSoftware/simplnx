@@ -31,6 +31,7 @@ constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image
 constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
 constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+constexpr nx::core::StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
 
 /**
  * @enum RotationRepresentation
@@ -445,6 +446,9 @@ Result<> ReadH5Ebsd::operator()()
 
       args.insertOrAssign(::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
       args.insertOrAssign(::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+      // Preflight already assigned the transformed origin via UpdateImageGeomAction.
+      // Keep it here so the sample rotation does not transform the origin twice.
+      args.insertOrAssign(::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(true));
 
       args.insertOrAssign(::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(::RotationRepresentation::AxisAngle)));
       args.insertOrAssign(::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
