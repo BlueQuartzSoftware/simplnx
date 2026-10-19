@@ -87,6 +87,10 @@ Source: `Algorithms/FillBadData.cpp` (49 lines), `FillBadDataBFS.cpp` (378 lines
 | 15 | Preflight | `minAllowedDefectSize < 1` → `MakePreflightErrorResult(-16500, …)` | `"SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size"` — inline DataStructure, `minAllowedDefectSize=0`; asserts error code `-16500`. |
 | 16 | Phase 4 | no fillable neighbor for any remaining bad voxel → no-progress break (warning) | `AllBadData_TerminatesWithoutHang` — all-bad-data slab; asserts the filter returns instead of looping forever. |
 | 17 | CCL storage | A threshold-sized defect spans rolling slices, and a smaller defect copies a multi-component tuple | `real HDF5 cross-slice defect oracle` — exact full-volume FeatureIds, Phases, and payload |
+| 18 | Preflight | Cell Feature Ids is not in the selected geometry's Cell Attribute Matrix → error `-16501` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16501`. |
+| 19 | Preflight | Store Defects as New Phase is on and Cell Phases is not in the selected geometry's Cell Attribute Matrix → error `-16502` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16502`; also checks valid Cell Phases and unused external Cell Phases. |
+| 20 | Preflight | An Attribute Arrays to Ignore entry is not in the selected geometry's Cell Attribute Matrix → error `-16503` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16503`. |
+| 21 | Phase 4 — Fill | An ignored array selected through an alias of the Cell Attribute Matrix is excluded from modification | `SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias` — checks unchanged ignored values for each in-memory algorithm scenario. |
 
 ## Test inventory
 
@@ -108,6 +112,8 @@ Source: `Algorithms/FillBadData.cpp` (49 lines), `FillBadDataBFS.cpp` (378 lines
 | `real HDF5 cross-slice defect oracle` | new-for-V&V | Independent HDF5 boundary outputs; 1053 assertions across the configured options. |
 | `200x200x200 Correctness` | kept | Existing large generated-data correctness test; algorithm scopes keep its stores resident. |
 | `200x200x200 Ignored Arrays` | kept | Existing ignored-array preservation regression on resident stores. |
+| `SimplnxCore::FillBadDataFilter: Strict Feature Ids` | new-for-V&V | Six SECTIONs: correct Cell Attribute Matrix; Feature Ids in another Attribute Matrix (`-16501`); ignored array in another Attribute Matrix (`-16503`); modified Cell Phases in another Attribute Matrix (`-16502`); unused Cell Phases in another Attribute Matrix; modified Cell Phases in the Cell Attribute Matrix. Checks preflight validity, exact error codes, and diagnostic paths. Covers Paths 18–20. |
+| `SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias` | new-for-V&V | Cell Attribute Matrix reachable by two paths. Selects the ignored array through the alias path and runs each in-memory algorithm scenario. Checks that Feature Ids change while the ignored array remains unchanged. Covers Path 21. |
 
 OOC recertification (2026-09-21): 15/15 target CTest entries pass in both DREAM3DNX builds. The hidden `real HDF5 cross-slice defect oracle` passes 1053 assertions in the OOC binary. A three-cell defect spans three Z slices and equals the retention threshold. A disconnected one-cell defect must be filled. Exact FeatureIds, Phases, and a two-component payload are checked for every voxel, with StoreAsNewPhase off and on. HDF5 input stores and target-only OOC dispatch counters verify the CCL path. The expected preflight warning -14600 remains present. Existing upstream/develop oracles and tolerances are preserved. No production algorithm or historical sign-off is changed, and no fresh legacy binary run is claimed.
 
