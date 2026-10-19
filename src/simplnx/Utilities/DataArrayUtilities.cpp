@@ -213,9 +213,7 @@ Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStruc
                                                   featureAttributeMatrixPath.toString(), sourceParameterName, sourceArrayPath.toString(), geometryPath.toString()));
   }
   const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
-  const auto parentId = dataStructure.getId(featureAttributeMatrixPath.getParent());
-  if(featureAttributeMatrix == nullptr || featureAttributeMatrixPath.getLength() < 2 || !parentId.has_value() || parentId.value() != geometry->getId() ||
-     featureAttributeMatrix->getId() == geometry->getCellData()->getId())
+  if(featureAttributeMatrix == nullptr || featureAttributeMatrix->getId() == geometry->getCellData()->getId() || !geometry->contains(featureAttributeMatrix))
   {
     return MakeErrorResult(errorCode,
                            fmt::format("The Feature Attribute Matrix '{}' (the parent of **{}** '{}') must be an Attribute Matrix directly under the selected geometry '{}' "

@@ -20,6 +20,7 @@ namespace nx::core
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -252;
+constexpr int32 k_FeatureIdsTupleCountMismatch = -55571;
 
 } // namespace
 
@@ -109,6 +110,19 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
     return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
+  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
+  featureIdsPath = cellDataPath.createChildPath(featureIdsPath.getTargetName());
+
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  {
+    return MakePreflightErrorResult(k_FeatureIdsTupleCountMismatch,
+                                    fmt::format("FeatureIds array '{}' contains {} tuples, but Image Geometry '{}' contains {} cells. Select a FeatureIds array that matches the Image Geometry.",
+                                                featureIdsPath.toString(), featureIds.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
+  }
+
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeomPath, ignoredDataArrayPaths, -55573, "Cell Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
@@ -120,10 +134,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   {
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
-
-  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
-  featureIdsPath = cellDataPath.createChildPath(featureIdsPath.getTargetName());
 
   nx::core::Result<OutputActions> resultOutputActions;
 

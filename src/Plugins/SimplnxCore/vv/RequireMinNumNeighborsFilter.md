@@ -179,6 +179,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 16 | Copy | A source tuple index is outside the cell array or FeatureIds array range - return `-55573` before indexing. | *Not directly tested. Valid face-neighbor computation constrains source indexes to the Image Geometry cell range. Defensive check.* |
 | 17 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter`, both analytical oracle tests, and their exact compacted `NumNeighbors`, `Phases`, and `FeatureIds` assertions. |
 | 18 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
+| 19 | Preflight | FeatureIds tuple count differs from the selected Image Geometry cell count - return `-55571`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` |
 
 ## Test inventory
 
@@ -201,8 +202,9 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | `SIMPL 6.4 (Filter_Name)` | kept | `DYNAMIC_SECTION` using `test/simpl_conversion/6_4/RequireMinNumNeighborsFilter.json`; verifies name-based 6.4 pipeline conversion. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Bad Phase Number` | retired | Removed from `#if 0`; it used stale parameter keys and could not compile. The active `unavailable phase (-5555)` test replaces its intended error coverage. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Phase Array` | retired | Removed from `#if 0`; it used stale parameter keys and could not compile. Current analytical variants cover the all-phase and single-phase selection behavior. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` | new-for-V&V | Creates a 5-cell geometry with four `FeatureIds` tuples in its Cell Attribute Matrix, then asserts invalid preflight and exact code `-55571`. |
 
-There are 11 active `TEST_CASE`s: 3 kept and 8 new for this V&V cycle.
+There are 12 active `TEST_CASE`s: 3 kept and 9 new for this V&V cycle.
 
 ## Exemplar archive
 

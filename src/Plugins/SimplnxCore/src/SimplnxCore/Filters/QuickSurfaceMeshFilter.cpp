@@ -145,22 +145,19 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto fixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
 
   const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
+  if(featureIds.getNumberOfTuples() != gridGeom.getNumberOfCells())
+  {
+    return MakePreflightErrorResult(-76533,
+                                    fmt::format("**Cell Feature Ids** DataArray '{}' has {} tuples, but the selected grid geometry '{}' has {} cells. Select a DataArray with one tuple per cell.",
+                                                pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pGridGeomDataPath.toString(), gridGeom.getNumberOfCells()));
+  }
   if(fixProblemVoxels)
   {
     auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, pGridGeomDataPath, pFeatureIdsArrayPathValue, -76532, "Cell Feature Ids");
     if(featureIdsResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
-    }
-  }
-  else
-  {
-    const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
-    if(featureIds.getNumberOfTuples() != gridGeom.getNumberOfCells())
-    {
-      return MakePreflightErrorResult(-76533,
-                                      fmt::format("**Cell Feature Ids** DataArray '{}' has {} tuples, but the selected grid geometry '{}' has {} cells. Select a DataArray with one tuple per cell.",
-                                                  pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pGridGeomDataPath.toString(), gridGeom.getNumberOfCells()));
     }
   }
 

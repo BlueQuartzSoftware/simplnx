@@ -561,13 +561,13 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Strict Feature Ids", "[SimplnxCo
   {
     selectedPath = DataPath({"Short Feature Ids"});
     REQUIRE(Int32Array::Create(dataStructure, "Short Feature Ids", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 1)) != nullptr);
-    expectedCode = fixProblemVoxels ? -76532 : -76533;
+    expectedCode = -76533;
   }
   SECTION("Feature Ids with more tuples than grid cells")
   {
     selectedPath = DataPath({"Long Feature Ids"});
     REQUIRE(Int32Array::Create(dataStructure, "Long Feature Ids", std::make_shared<DataStore<int32>>(ShapeType{5}, ShapeType{1}, 1)) != nullptr);
-    expectedCode = fixProblemVoxels ? -76532 : -76533;
+    expectedCode = -76533;
   }
   args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(selectedPath));
   const auto result = filter.preflight(dataStructure, args);

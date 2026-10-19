@@ -209,6 +209,9 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
   checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, groupPath, -12345, "Feature Ranking Array", groupPath.createChildPath("Rank")),
              {groupPath.toString(), geometryPath.toString()});
 
+  REQUIRE(dataStructure.setAdditionalParent(other->getId(), group->getId()));
+  CHECK(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, DataPath({"Elsewhere", "Other"}), -12345, "Feature Ranking Array", DataPath({"Elsewhere", "Other", "Ids"})).valid());
+
   auto* noCells = ImageGeom::Create(dataStructure, "No Cells");
   REQUIRE(noCells != nullptr);
   const DataPath noCellsPath({"No Cells"});

@@ -12,7 +12,7 @@ Surface Meshing (Generation)
 
 This **Filter** generates a **Triangle Geometry** surface mesh from a grid **Geometry** (Image or Rectilinear Grid). For every cell face shared between two different **Features** (i.e., a Feature boundary), the filter emits two triangles, producing the *stair-stepped* surface that defines the boundary of each Feature.
 
-When **Attempt to Fix Problem Voxels** is on, **Cell Feature Ids** must be in the selected Image or Rectilinear Grid Geometry's Cell Attribute Matrix because the filter modifies this array in place. When this option is off, **Cell Feature Ids** may be in any Attribute Matrix, but its number of tuples must equal the geometry's number of cells.
+**Cell Feature Ids** must have one tuple per cell of the selected Image or Rectilinear Grid Geometry. When **Attempt to Fix Problem Voxels** is on, **Cell Feature Ids** must also be in that geometry's Cell Attribute Matrix because the filter modifies this array in place. When this option is off, **Cell Feature Ids** may be in any Attribute Matrix.
 
 The resulting mesh is "blocky" because each triangle aligns with a voxel face. To smooth it, apply [Laplacian Smoothing](LaplacianSmoothingFilter.md) afterward -- or, preferably, use [Surface Nets](SurfaceNetsFilter.md), which combines meshing and smoothing in one step.
 
