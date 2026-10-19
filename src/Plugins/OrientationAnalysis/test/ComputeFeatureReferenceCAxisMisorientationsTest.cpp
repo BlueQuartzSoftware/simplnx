@@ -1,5 +1,6 @@
 #include "OrientationAnalysis/Filters/ComputeFeatureReferenceCAxisMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
@@ -726,4 +727,70 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   }
 
   UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Geometry cell tuple counts", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter][TupleCount]")
+{
+  // Cases: all short, all long, all matching outside Cell Data, then each input short.
+  const int testCase = GENERATE(0, 1, 2, 3, 4, 5);
+  CAPTURE(testCase);
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "TupleGeometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 2, 2});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"TupleGeometry"})));
+  const usize commonCount = testCase == 0 ? 4 : (testCase == 1 ? 12 : 8);
+  const usize count0 = testCase == 3 ? 4 : commonCount;
+  auto* inputAM0 = AttributeMatrix::Create(dataStructure, "Input0", {count0});
+  REQUIRE(inputAM0 != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {count0}, {1}, inputAM0->getId()) != nullptr);
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input0", "FeatureIds"})));
+  const usize count1 = testCase == 4 ? 4 : commonCount;
+  auto* inputAM1 = AttributeMatrix::Create(dataStructure, "Input1", {count1});
+  REQUIRE(inputAM1 != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1->getId()) != nullptr);
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input1", "Phases"})));
+  const usize count2 = testCase == 5 ? 4 : commonCount;
+  auto* inputAM2 = AttributeMatrix::Create(dataStructure, "Input2", {count2});
+  REQUIRE(inputAM2 != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count2}, {4}, inputAM2->getId()) != nullptr);
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "Quats"})));
+  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {2});
+  REQUIRE(features != nullptr);
+  REQUIRE(Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "AvgCAxes", {2}, {3}, features->getId()) != nullptr);
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath({"Features", "AvgCAxes"})));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(testCase == 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    if(testCase >= 3)
+    {
+      CHECK(result.outputActions.errors()[0].code == -9800);
+    }
+    else
+    {
+      const auto& error = result.outputActions.errors()[0];
+      CHECK(error.code == -9805);
+      const std::vector<DataPath> inputPaths = {DataPath({"Input0", "FeatureIds"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
+      const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;
+      CHECK(error.message.find(inputPaths[inputIndex].toString()) != std::string::npos);
+      CHECK(error.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
+      CHECK(error.message.find("8 cells") != std::string::npos);
+      CHECK(error.message.find("TupleGeometry") != std::string::npos);
+    }
+  }
 }
