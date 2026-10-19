@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -88,17 +89,16 @@ IFilter::UniquePointer WriteLosAlamosFFTFilter::clone() const
 IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto geometryPath = filterArgs.value<DataPath>(k_ImageGeomPath);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto cellEulerAnglesPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  auto cellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
-  usize fIdsTupCount = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
-  usize eulersTupCount = dataStructure.getDataAs<IDataArray>(pCellEulerAnglesArrayPathValue)->getNumberOfTuples();
-  usize phasesTupCount = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue)->getNumberOfTuples();
-
-  if(fIdsTupCount != eulersTupCount || fIdsTupCount != phasesTupCount)
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath,
+                                                                    {{"Cell Feature Ids", inputArrayPath}, {"Cell Euler Angles", cellEulerAnglesPath}, {"Cell Phases", cellPhasesPath}}, -73461);
+     tupleResult.invalid())
   {
-    return MakePreflightErrorResult(-73460, fmt::format("Tuple Dimensions don't match: Feature Ids - {} || Euler Angles - {} || Phases - {}", fIdsTupCount, eulersTupCount, phasesTupCount));
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};

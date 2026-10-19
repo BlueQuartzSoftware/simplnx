@@ -39,6 +39,8 @@ The output file (columns: Phi1, Phi, Phi2, X, Y, Z, Feature_ID, Phase_ID):
 
 % Auto generated parameter table will be inserted here
 
+Cell Feature Ids, Cell Euler Angles, and Cell Phases must each have one tuple per cell of the selected Image Geometry.
+
 ## References
 
 [1] R.A. Lebensohn, 2001. N-site modeling of a 3D viscoplastic polycrystal using Fast Fourier Transform. Acta mater. 49, 2723-2737.
