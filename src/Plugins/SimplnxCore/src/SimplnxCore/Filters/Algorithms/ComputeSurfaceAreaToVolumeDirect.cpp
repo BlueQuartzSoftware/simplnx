@@ -138,7 +138,6 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     }
   }
 
-  const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
   for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
   {
     const float64 featureVolume = voxelVol * numCells[i];
@@ -148,6 +147,8 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   if(m_InputValues->CalculateSphericity)
   {
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
+
+    const float64 thirdRootPi = std::cbrt(nx::core::Constants::k_PiD);
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.
