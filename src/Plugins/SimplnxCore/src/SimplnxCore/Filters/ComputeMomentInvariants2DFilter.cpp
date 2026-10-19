@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -98,6 +99,12 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   auto pOmega1ArrayNameValue = filterArgs.value<std::string>(k_Omega1ArrayName_Key);
   auto pOmega2ArrayNameValue = filterArgs.value<std::string>(k_Omega2ArrayName_Key);
   auto pSaveCentralMomentsValue = filterArgs.value<bool>(k_SaveCentralMoments_Key);
+
+  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pGeometryPathValue, {{"Cell Feature Ids", pFeatureIdsArrayPathValue}}, -9511);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   const DataPath omega1Path = pFeatureAttributeMatrixPathValue.createChildPath(pOmega1ArrayNameValue);
   const DataPath omega2Path = pFeatureAttributeMatrixPathValue.createChildPath(pOmega2ArrayNameValue);

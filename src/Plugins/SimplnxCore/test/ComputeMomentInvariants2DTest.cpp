@@ -1,4 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include <array>
 #include <catch2/catch.hpp>
 #include <cmath>
@@ -244,5 +247,51 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compati
       CHECK(args.value<bool>(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key) == true);
       CHECK(args.value<std::string>(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key) == "TestArray");
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Geometry cell tuple count", "[SimplnxCore][ComputeMomentInvariants2DFilter][TupleCount]")
+{
+  using Filter = ComputeMomentInvariants2DFilter;
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Grid");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({4, 3, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 3, 4}, geometry->getId());
+  REQUIRE(cellAM != nullptr);
+  geometry->setCellData(*cellAM);
+
+  // Equal counts remain valid in another Attribute Matrix with a different tuple shape.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAM != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  Filter filter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Grid"})));
+  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, geometry->getId());
+  REQUIRE(featureAM != nullptr);
+  args.insertOrAssign(Filter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Grid", "Feature Data"})));
+  REQUIRE(DataArray<uint32>::Create(dataStructure, "Feature Rect", std::make_shared<DataStore<uint32>>(ShapeType{2}, ShapeType{6}, 0), featureAM->getId()) != nullptr);
+  args.insertOrAssign(Filter::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath({"Grid", "Feature Data", "Feature Rect"})));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -9511);
+    REQUIRE(error.message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(error.message.find("'Grid' has 12 cells") != std::string::npos);
   }
 }
