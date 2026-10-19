@@ -36,6 +36,8 @@ The *Scalar Tolerance* is in **the same units as the input scalar array**. There
 
 Start conservative (smaller tolerance -> more, smaller features), inspect the result, and loosen the tolerance if features are being over-split.
 
+Scalar Array to Segment and, when Use Mask Array is enabled, Cell Mask Array must each have one tuple per cell of the selected Image Geometry.
+
 ## Algorithm
 
 The filter has two execution paths selected automatically at runtime:
