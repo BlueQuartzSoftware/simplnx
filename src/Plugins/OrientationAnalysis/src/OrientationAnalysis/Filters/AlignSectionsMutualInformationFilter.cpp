@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -143,6 +144,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
+  auto useMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pStoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -159,11 +161,25 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
         -3541, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
   }
 
-  std::vector<DataPath> dataArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pGoodVoxelsArrayPathValue};
+  std::vector<DataPath> dataArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue};
+  if(useMask)
+  {
+    dataArrayPaths.push_back(pGoodVoxelsArrayPathValue);
+  }
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
     return MakePreflightErrorResult(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
+
+  std::vector<std::pair<std::string_view, DataPath>> cellArrayPaths = {{"Cell Quaternions", pQuatsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}};
+  if(useMask)
+  {
+    cellArrayPaths.emplace_back("Cell Mask Array", pGoodVoxelsArrayPathValue);
+  }
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeometryPath, cellArrayPaths, -3543); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   // Handle Array Creation
