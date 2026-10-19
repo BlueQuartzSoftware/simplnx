@@ -12,6 +12,8 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+
 using namespace nx::core;
 namespace
 {
@@ -90,6 +92,12 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
+
+  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pImageGeomPath, {{"Data Array to Contour", pContouringArrayPath}}, -10510); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

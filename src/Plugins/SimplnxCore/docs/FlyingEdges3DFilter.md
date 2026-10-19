@@ -32,6 +32,8 @@ Use this filter to extract a smooth surface from continuous scalar data (CT dens
 
 % Auto generated parameter table will be inserted here
 
+Data Array to Contour must have one tuple per cell of the Selected Image Geometry.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
