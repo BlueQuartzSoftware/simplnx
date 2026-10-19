@@ -22,8 +22,6 @@ The **Symmetry** column holds the integer crystal-symmetry code corresponding to
 
 Some information about the phase is included in the header section of the file in addition to values for the origin, step size, and dimensions. The origin, **step sizes** (`X_STEP`, `Y_STEP`, `Z_STEP`), and min/max positions in the header are all in **microns**. The header also reports the number of **Features** in the file.
 
-Cell Feature Ids, Cell Phases and Cell Euler Angles must each have one tuple per cell of the selected Image Geometry.
-
 ## Example Output
 
     # File written from DREAM3DLib Version 5.2.1789.6419a8d
@@ -74,6 +72,8 @@ Cell Feature Ids, Cell Phases and Cell Euler Angles must each have one tuple per
 - **Cell Phases** -- read alongside the Euler angles from the same EBSD reader.
 - **Crystal Structures** -- the **Ensemble**-level array read alongside the phases from the same EBSD reader.
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](../SimplnxCore/ScalarSegmentFeaturesFilter.md).
+
+**Cell Feature Ids**, **Cell Phases** and **Cell Euler Angles** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

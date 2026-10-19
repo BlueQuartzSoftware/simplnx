@@ -40,7 +40,7 @@ Chaining an erode and a dilate pass (with equal iteration counts) performs the t
 
 - **Mask Array** -- a boolean cell-level array, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to an EBSD confidence index, image quality, or similar scalar.
 
-Mask Array Path must have one tuple per cell of the selected geometry and may be stored in any Attribute Matrix or DataGroup.
+**Mask Array Path** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 ## Algorithm
 

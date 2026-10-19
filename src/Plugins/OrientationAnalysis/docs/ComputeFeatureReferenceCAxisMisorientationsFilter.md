@@ -35,7 +35,7 @@ Results may differ from the DREAM3D 6.6 version by approximately 0.0001 degrees 
 - **Average C-Axes** -- produced by [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md).
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
-Cell Feature Ids, Cell Phases and Cell Quaternions must each have one tuple per cell of the selected Image Geometry.
+**Cell Feature Ids**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
 
 ## Algorithm
 

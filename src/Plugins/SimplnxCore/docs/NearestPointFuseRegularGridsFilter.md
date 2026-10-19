@@ -27,7 +27,7 @@ The *Sampling* geometry is left unchanged. The *Reference* geometry keeps its ow
 
 - **Reference Image Geometry** and **Sampling Image Geometry** -- two **Image Geometries** (each with a **Cell Attribute Matrix**), typically created by separate import or resampling steps.
 
-Sampling Cell Attribute Matrix and Reference Cell Attribute Matrix must each have one tuple per cell of their respective Image Geometry.
+**Sampling Cell Attribute Matrix** must have one tuple per cell of **Sampling Image Geometry**. **Reference Cell Attribute Matrix** must have one tuple per cell of **Reference Image Geometry**.
 
 ## Algorithm
 

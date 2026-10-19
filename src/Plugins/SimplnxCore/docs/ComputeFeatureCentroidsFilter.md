@@ -10,7 +10,7 @@ This **Filter** calculates the *centroid* of each **Feature** by determining the
 
 A **Feature** with no **Cells** (an unused Feature Id) keeps a centroid of (0, 0, 0).
 
-The Cell Feature Ids DataArray must have one tuple per cell of the selected Image Geometry.
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 ## Algorithm
 

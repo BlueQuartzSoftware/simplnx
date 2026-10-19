@@ -30,6 +30,8 @@ The following algorithm explains the process:
 
 - **Cell Feature Ids** -- the Feature that owns each Cell, produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ### Performance
 
 The bounded-memory scanline implementation is used for every out-of-core array and for most in-memory workloads. Boundary seeds are identified with rolling previous/current/next Z-slices of Feature IDs. On volumes without non-positive Feature IDs, exact Manhattan distances are computed with one forward and one backward sweep per enabled map. If non-positive Feature IDs are present, an exact layer-synchronous fallback preserves their behavior as non-traversable cells. Every store access is a bulk Z-slice transfer.
@@ -37,8 +39,6 @@ The bounded-memory scanline implementation is used for every out-of-core array a
 One measured in-memory case uses the direct parallel implementation: all three distance maps are enabled and the Feature IDs contain non-positive, non-traversable cells. The direct implementation is faster for that combination, but requires full-volume temporary arrays. Out-of-core execution always uses the scanline implementation so resident memory remains bounded.
 
 Resident scratch is proportional to one XY slice, not the volume. Euclidean mode also needs a nearest-seed value for every cell; that scratch is held in a DataStore selected by the active storage policy, so it is disk-backed during OOC execution instead of consuming full-volume RAM.
-
-The Cell Feature Ids DataArray must have one tuple per cell of the selected Image Geometry.
 
 % Auto generated parameter table will be inserted here
 

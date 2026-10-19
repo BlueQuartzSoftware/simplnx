@@ -36,8 +36,6 @@ The *Scalar Tolerance* is in **the same units as the input scalar array**. There
 
 Start conservative (smaller tolerance -> more, smaller features), inspect the result, and loosen the tolerance if features are being over-split.
 
-Scalar Array to Segment and, when Use Mask Array is enabled, Cell Mask Array must each have one tuple per cell of the selected Image Geometry.
-
 ## Algorithm
 
 The filter has two execution paths selected automatically at runtime:
@@ -90,6 +88,8 @@ If the input data represents a **periodic** structure (i.e., features are allowe
 
 - **Input Scalar Array** -- any single-component cell-level scalar array suitable for thresholding. Common sources include image readers such as [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), phase or quality arrays from EBSD readers such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), or any computed per-cell scalar from an earlier filter in the pipeline.
 - **Mask Array** (optional) -- a boolean array marking valid cells, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
+
+**Scalar Array to Segment** must have one tuple per cell of the selected geometry. When **Use Mask Array** is enabled, **Cell Mask Array** must also have one tuple per cell. They can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

@@ -25,7 +25,7 @@ The figures below, from [1], can help classify objects by their Omega values. An
 - **Cell Feature Ids** -- the Feature that owns each Cell, produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 - **Feature Rect** -- the min/max XY pixel coordinates (bounding corners) of each Feature, produced by [Compute Feature Corners](ComputeFeatureRectFilter.md).
 
-Cell Feature Ids must have one tuple per cell of the selected geometry and may be stored in any Attribute Matrix or DataGroup.
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

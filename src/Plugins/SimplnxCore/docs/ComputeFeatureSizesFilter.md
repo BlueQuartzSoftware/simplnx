@@ -18,8 +18,6 @@ Note here that **Image Geometry** will always be faster than its equivalent **Re
 
 During the computation of the **Feature** sizes, the size of each individual **Element** is computed and stored in the corresponding **Geometry**. By default, these sizes are deleted after executing the **Filter** to save memory. If you wish to store the **Element** sizes, select the *Generate Missing Element Sizes* option. The sizes will be stored within the **Geometry** definition itself, not as a separate **Attribute Array**.
 
-Cell Feature Ids must have one tuple per cell of the selected geometry and may be stored in any Attribute Matrix or DataGroup.
-
 ## Algorithm
 
 ### What the filter computes
@@ -88,6 +86,8 @@ To illustrate why this is think about an image geometry with the dimensions of `
 ### Required Input Sources
 
 - **Feature Ids** -- a per-**Cell** integer label array produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

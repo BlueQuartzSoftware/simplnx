@@ -65,7 +65,7 @@ In 3D, the Z Radius works the same way, extending into adjacent slices above and
 
 For related per-feature misorientation metrics, see the **Compute Feature Reference Misorientations** and **Compute Misorientation** filters.
 
-Cell Feature Ids, Cell Phases and Cell Quaternions must each have one tuple per cell of the selected Image Geometry.
+**Cell Feature Ids**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
 
 ## Algorithm
 

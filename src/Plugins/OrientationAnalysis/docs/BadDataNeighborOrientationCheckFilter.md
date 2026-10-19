@@ -55,9 +55,9 @@ The cells that flipped from false (black) to true (IPF-colored) had Confidence I
 - **Cell Phases** -- typically read from EBSD data alongside the quaternions.
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
-% Auto generated parameter table will be inserted here
+**Cell Quaternions**, **Cell Phases** and **Cell Mask Array** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
 
-Cell Quaternions, Cell Phases and Cell Mask Array must each have one tuple per cell of the selected Image Geometry.
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 

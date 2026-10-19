@@ -32,7 +32,7 @@ For shape analysis on triangle geometry meshes rather than voxelized image geome
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](../SimplnxCore/ScalarSegmentFeaturesFilter.md).
 - **Feature Centroids** -- produced by [Compute Feature Centroids](../SimplnxCore/ComputeFeatureCentroidsFilter.md).
 
-Cell Feature Ids must have one tuple per cell of the selected geometry and may be stored in any Attribute Matrix or DataGroup.
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

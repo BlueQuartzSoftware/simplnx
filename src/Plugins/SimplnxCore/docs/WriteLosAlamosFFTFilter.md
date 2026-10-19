@@ -25,6 +25,8 @@ The Euler angles are in degrees. X, Y, Z are integer indices into the **Image** 
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 - **Cell Phases** -- a per-cell phase index, read alongside the Euler angles from the EBSD readers above.
 
+**Cell Feature Ids**, **Cell Euler Angles** and **Cell Phases** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
+
 ### Example Output
 
 The output file (columns: Phi1, Phi, Phi2, X, Y, Z, Feature_ID, Phase_ID):
@@ -38,8 +40,6 @@ The output file (columns: Phi1, Phi, Phi2, X, Y, Z, Feature_ID, Phase_ID):
        ..
 
 % Auto generated parameter table will be inserted here
-
-Cell Feature Ids, Cell Euler Angles, and Cell Phases must each have one tuple per cell of the selected Image Geometry.
 
 ## References
 

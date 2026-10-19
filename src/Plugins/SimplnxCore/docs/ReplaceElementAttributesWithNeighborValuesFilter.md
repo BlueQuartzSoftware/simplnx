@@ -38,8 +38,6 @@ If the threshold is set too aggressively or the dataset has large contiguous reg
 
 The example above shows what happens when too much of the data is below threshold: most fine grains and twins do **not** match the true microstructure.
 
-Input Comparison Array must have one tuple per cell of the selected Image Geometry.
-
 ## Example Use Cases
 
 ### Reasonable Use of the Filter
@@ -81,6 +79,8 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 ### Required Input Sources
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
+
+**Input Comparison Array** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 ## Algorithm
 

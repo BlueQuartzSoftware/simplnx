@@ -185,7 +185,7 @@ This implementation ports the slice-by-slice algorithm of the legacy DREAM.3D `M
 based on the algorithm of Wu & Sullivan, "Multiple material marching cubes algorithm," *International Journal for Numerical
 Methods in Engineering*, 58(2):189–207, 2003.  
 
-Cell Feature Ids and each selected Cell Attribute Array to Transfer must have one tuple per cell of the Image Geometry.
+**Cell Feature Ids** and **Cell Attribute Arrays to Transfer** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
 
 ## Comparison of Surface Meshing Filters
 

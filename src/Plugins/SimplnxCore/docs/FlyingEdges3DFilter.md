@@ -30,9 +30,9 @@ Use this filter to extract a smooth surface from continuous scalar data (CT dens
 
 ![A 3D contour surface extracted from an Image Geometry at the chosen Contour Value.](Images/FlyingEdges3D_1.png)
 
-% Auto generated parameter table will be inserted here
+**Data Array to Contour** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
-Data Array to Contour must have one tuple per cell of the Selected Image Geometry.
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 

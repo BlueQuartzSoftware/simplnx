@@ -24,12 +24,6 @@ Unlike the misorientation-based and mutual-information-based alignment methods, 
 
 If *Use Reference Slice* is enabled, each section is shifted to align with a single fixed reference slice rather than its immediate neighbor. This prevents small errors from accumulating across many sections.
 
-### Linear Background Subtraction
-
-Some combinations of sample geometry and internal features can cause the alignment to introduce a gradual "shear" across the sample. Enabling *Linear Background Subtraction* corrects for this by fitting a line to the X and Y shifts along the Z-direction and removing the linear trend. This effectively keeps the top and bottom sections of the sample fixed relative to each other.
-
-The Mask Array DataArray must have one tuple per cell of the selected Image Geometry.
-
 ## Algorithm
 
 The algorithm proceeds in two phases:
@@ -71,6 +65,8 @@ In previous versions a file would have been produced instead. If you wish to rec
 ### Required Input Sources
 
 - **Mask** -- a boolean array marking valid cells, typically produced by a threshold operation such as [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to quality or confidence-index arrays.
+
+**Mask Array** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

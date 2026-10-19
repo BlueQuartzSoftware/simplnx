@@ -38,7 +38,7 @@ If the structure/data is actually 2D, then the dimension that is planar is not c
 
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
-Cell Feature Ids must have one tuple per cell of the selected geometry and may be stored in any Attribute Matrix or DataGroup.
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

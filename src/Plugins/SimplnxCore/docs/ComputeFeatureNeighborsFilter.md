@@ -23,7 +23,7 @@ The main feature-level outputs are:
 
 - **Neighbor List** -- for each feature, the list of *Feature Ids* of the features it touches.
 - **Number of Neighbors** -- for each feature, the integer count of its contiguous neighbors. Equivalent to the length of each *Neighbor List* entry.
-- **Shared Surface Area List** -- for each pair of neighboring features, the number of cell-faces they share. This is in **cell-face units** (a dimensionless count), not physical area. To convert to physical area, multiply by the area of one cell face (which depends on the cell spacing and the orientation of the shared face).
+- **Shared Surface Area List** -- the total shared boundary area for each neighboring Feature pair, in squared geometry length units. The calculation uses the cell spacing and the face orientation.
 
 Two optional outputs can also be stored:
 
@@ -36,7 +36,7 @@ Two optional outputs can also be stored:
 
 This filter handles Image Geometries of all dimensions (0D/1D/2D/3D). Thus, it is up to the user to ensure spacing is set inline with intended behavior, specifically for Shared Surface Area List calculation. For more details see the Image Geometry section of the Geometry documentation (currently in the python docs).
 
-The Cell Feature Ids DataArray must have one tuple per cell of the selected Image Geometry.
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
 ## Algorithm
 

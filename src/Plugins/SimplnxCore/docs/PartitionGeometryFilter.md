@@ -19,8 +19,6 @@ The *Partitioning Mode* parameter provides the following choices:
 - **Bounding Box (2) [2]**: Creates a custom-sized partition grid defined by minimum and maximum grid coordinates.
 - **Existing Partition Grid (3) [3]**: Uses a partition grid from a previous run of the Partition Geometry filter.
 
-For Image and Rectilinear Grid geometries, Input Geometry Cell Attribute Matrix must have one tuple per cell of the Input Geometry to Partition in every partitioning mode.
-
 ## Partitioning Modes
 
 There are four available partitioning modes to choose from: **1. Basic**, **2. Advanced**, **3. Bounding Box**, and **4. Existing Partition Grid**
@@ -122,6 +120,8 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 - **Input Geometry** -- any supported geometry (Image, RectGrid, Vertex, Edge, Triangle, Quad, Tet, Hex). Typically produced by [Create Geometry](CreateGeometryFilter.md), [Create Image Geometry](CreateImageGeometryFilter.md), or an upstream reader.
 - **Partition Grid Geometry** (only when *Partitioning Mode* is *Existing Partition Grid*) -- an Image Geometry produced by a prior run of this filter.
 - **Vertex Mask** (optional, for vertex-based input geometries) -- a boolean cell-level array on the input geometry's vertices.
+
+**Input Geometry Cell Attribute Matrix** must have one tuple per cell of **Input Geometry to Partition**. This requirement applies to Image and Rectilinear Grid geometries in every partitioning mode.
 
 % Auto generated parameter table will be inserted here
 
