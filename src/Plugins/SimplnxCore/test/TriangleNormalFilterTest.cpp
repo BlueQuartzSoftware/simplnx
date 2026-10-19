@@ -18,6 +18,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -25,6 +26,7 @@
 #include <array>
 #include <atomic>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -650,3 +652,58 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: empty geometry", "[SimplnxCore][Tr
   scope.requireExpectedStore(fixture.output());
   CheckNormalFixture(fixture, 0);
 }
+
+#if SIMPLNX_TEST_ALGORITHM_PATH != 2
+TEST_CASE("SimplnxCore::TriangleNormal: buffered invalid connectivity", "[SimplnxCore][TriangleNormalFilter][N2][InvalidConnectivity]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenarios({UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
+  const auto invalidVertex = GENERATE(IGeometry::MeshIndexType{3}, std::numeric_limits<IGeometry::MeshIndexType>::max());
+  const usize invalidFace = GENERATE(usize{0}, usize{1});
+  const usize invalidCorner = GENERATE(usize{0}, usize{1}, usize{2});
+  CAPTURE(scenario, invalidVertex, invalidFace, invalidCorner);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  NormalTransferState state;
+  NormalFixture fixture(2, &state);
+  auto resizeVertices = fixture.geometryPtr->resizeVertexList(3);
+  auto resizeVertexData = fixture.vertexDataPtr->resizeTuples({3});
+  SIMPLNX_RESULT_REQUIRE_VALID(resizeVertices);
+  SIMPLNX_RESULT_REQUIRE_VALID(resizeVertexData);
+  // Three vertices admit only IDs 0, 1, and 2. Every corner must fail before offset arithmetic.
+  std::array<IGeometry::MeshIndexType, 6> faces = {0, 1, 2, 0, 1, 2};
+  faces.at((invalidFace * 3) + invalidCorner) = invalidVertex;
+  auto facesWrite = fixture.facesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(faces.data(), faces.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(facesWrite);
+  auto* outputPtr = AddNormalReportingOutput(fixture, state);
+  scope.requireExpectedStore(*fixture.verticesPtr);
+  scope.requireExpectedStore(*fixture.facesPtr);
+  scope.requireExpectedStore(*outputPtr);
+  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath = k_NormalGeometryPath, .OutputNormalsArrayName = "Normals"};
+  const IFilter::MessageHandler messages{};
+  const NormalTraceGuard traceGuard(state);
+  const auto result = scope.execute([&] { return TriangleNormal(fixture.dataStructure, messages, state.shouldCancel, &inputValues)(); });
+  state.armed = false;
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -65813);
+  CHECK(result.errors()[0].message == fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is 3. Valid vertex indices are less than 3.", invalidFace, invalidVertex));
+  CHECK(result.warnings().empty());
+  CHECK(state.writes[static_cast<usize>(NormalStoreRole::Normals)] == 0);
+  std::array<float64, 6> actual{};
+  auto outputRead = outputPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(actual.data(), actual.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(outputRead);
+  for(const float64 value : actual)
+  {
+    CHECK(value == k_NormalSentinel);
+  }
+  std::array<IGeometry::MeshIndexType, 6> actualFaces{};
+  auto facesRead = fixture.facesPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(actualFaces.data(), actualFaces.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(facesRead);
+  CHECK(actualFaces == faces);
+  std::array<float32, 9> actualVertices{};
+  auto verticesRead = fixture.verticesPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actualVertices.data(), actualVertices.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(verticesRead);
+  CHECK(std::equal(actualVertices.begin(), actualVertices.end(), k_NormalVertices.begin()));
+  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+}
+#endif
