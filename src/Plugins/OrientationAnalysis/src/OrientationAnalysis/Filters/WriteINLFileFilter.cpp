@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -98,7 +99,18 @@ IFilter::UniquePointer WriteINLFileFilter::clone() const
 IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                            const ExecutionContext& executionContext) const
 {
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto cellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto eulerAnglesPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
+
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeometryPath,
+                                                                    {{"Cell Feature Ids", featureIdsPath}, {"Cell Phases", cellPhasesPath}, {"Cell Euler Angles", eulerAnglesPath}}, -78431);
+     tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
