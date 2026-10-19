@@ -44,6 +44,8 @@ This filter needs to know which cells are near a feature boundary. That informat
 - **Boundary Euclidean Distances** (integer array) -- produced by [Compute Euclidean Distance Map](ComputeEuclideanDistMapFilter.md), then cast to integer with [Convert Data Type](ConvertDataFilter.md).
 - **Image Geometry** containing cell-level data -- typically a synthetic structure from a packing or reconstruction pipeline.
 
+The Boundary Euclidean Distances DataArray must have one tuple per cell of the selected Image Geometry.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

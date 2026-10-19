@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -107,6 +108,12 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pGBEuclideanDistancesArrayPathValue = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
+
+  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pImageGeometryPathValue, {{"Boundary Euclidean Distances", pGBEuclideanDistancesArrayPathValue}}, -76238);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
