@@ -353,6 +353,18 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
+  if(iGeom.getGeomType() == IGeometry::Type::Image && pPartitioningModeValue == k_ExistingSchemeModeIndex)
+  {
+    const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryToPartitionValue).getNumberOfCells();
+    const usize tupleCount = attrMatrix.getNumberOfTuples();
+    if(tupleCount != cellCount)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -3043,
+          fmt::format("**Input Geometry Cell Attribute Matrix** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.",
+                      pInputGeomCellAMPathValue.toString(), tupleCount, pInputGeometryToPartitionValue.toString(), cellCount))};
+    }
+  }
   std::string inputGeometryInformation;
   Result<PartitionGeometry::PSGeomInfo> psInfo;
   switch(iGeom.getGeomType())

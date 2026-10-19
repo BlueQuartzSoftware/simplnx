@@ -19,6 +19,8 @@ The *Partitioning Mode* parameter provides the following choices:
 - **Bounding Box (2) [2]**: Creates a custom-sized partition grid defined by minimum and maximum grid coordinates.
 - **Existing Partition Grid (3) [3]**: Uses a partition grid from a previous run of the Partition Geometry filter.
 
+For Image and Rectilinear Grid geometries, Input Geometry Cell Attribute Matrix must have one tuple per cell of the Input Geometry to Partition in every partitioning mode.
+
 ## Partitioning Modes
 
 There are four available partitioning modes to choose from: **1. Basic**, **2. Advanced**, **3. Bounding Box**, and **4. Existing Partition Grid**
