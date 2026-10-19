@@ -7,6 +7,7 @@
 #include "ComputeSurfaceAreaToVolume.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"

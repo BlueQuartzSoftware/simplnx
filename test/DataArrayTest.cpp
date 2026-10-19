@@ -1,16 +1,19 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/EmptyListStore.hpp"
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
@@ -29,6 +32,7 @@
 #include "DataStructObserver.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 #include <fmt/ranges.h>
 
 #include <array>
@@ -37,6 +41,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -52,23 +57,23 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtil
   CAPTURE(useRectGrid, emptyGeometry, tupleCount, errorCode);
 
   DataStructure dataStructure;
-  auto* parent = DataGroup::Create(dataStructure, "Geometry Group");
-  REQUIRE(parent != nullptr);
+  auto* parentPtr = DataGroup::Create(dataStructure, "Geometry Group");
+  REQUIRE(parentPtr != nullptr);
   const DataPath geometryPath({"Geometry Group", "Selected Geometry"});
   const DataPath dataPath({"Other Geometry", "Cell Data", "Values"});
-  IGridGeometry* geometry = nullptr;
+  IGridGeometry* gridGeomPtr = nullptr;
   if(useRectGrid)
   {
-    geometry = RectGridGeom::Create(dataStructure, geometryPath.getTargetName(), parent->getId());
+    gridGeomPtr = RectGridGeom::Create(dataStructure, geometryPath.getTargetName(), parentPtr->getId());
   }
   else
   {
-    geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName(), parent->getId());
+    gridGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName(), parentPtr->getId());
   }
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({emptyGeometry ? usize{0} : usize{4}, 3, 5});
+  REQUIRE(gridGeomPtr != nullptr);
+  gridGeomPtr->setDimensions({emptyGeometry ? usize{0} : usize{4}, 3, 5});
 
-  auto result = ValidateCellTupleCount(*geometry, geometryPath, tupleCount, dataPath, errorCode);
+  auto result = ValidateCellTupleCount(*gridGeomPtr, geometryPath, tupleCount, dataPath, errorCode);
   if(tupleCount == cellCount)
   {
     REQUIRE(result.valid());

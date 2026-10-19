@@ -89,18 +89,18 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
       }
     }
 
-    for(int64 z = 0; z < zPoints; z++)
+    for(int64 zIndex = 0; zIndex < zPoints; zIndex++)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      for(int64 y = 0; y < yPoints; y++)
+      for(int64 yIndex = 0; yIndex < yPoints; yIndex++)
       {
-        for(int64 x = 0; x < xPoints; x++)
+        for(int64 xIndex = 0; xIndex < xPoints; xIndex++)
         {
-          const usize inSlice = static_cast<usize>(y) * static_cast<usize>(xPoints) + static_cast<usize>(x);
-          int32 currentFeatureId = curSlice[inSlice];
+          const usize inSlice = (static_cast<usize>(yIndex) * static_cast<usize>(xPoints)) + static_cast<usize>(xIndex);
+          const int32 currentFeatureId = curSlice[inSlice];
           if(currentFeatureId < 1)
           {
             continue;
@@ -109,7 +109,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
           float64 onSurface = 0.0;
 
           // Z neighbors use adjacent buffers. X and Y neighbors use the current buffer.
-          if(z > 0)
+          if(zIndex > 0)
           {
             if(prevSlice[inSlice] != currentFeatureId)
             {
@@ -117,7 +117,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
             }
           }
 
-          if(z < zPoints - 1)
+          if(zIndex < zPoints - 1)
           {
             if(nextSlice[inSlice] != currentFeatureId)
             {
@@ -125,7 +125,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
             }
           }
 
-          if(y > 0)
+          if(yIndex > 0)
           {
             if(curSlice[inSlice - static_cast<usize>(xPoints)] != currentFeatureId)
             {
@@ -133,7 +133,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
             }
           }
 
-          if(y < yPoints - 1)
+          if(yIndex < yPoints - 1)
           {
             if(curSlice[inSlice + static_cast<usize>(xPoints)] != currentFeatureId)
             {
@@ -141,7 +141,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
             }
           }
 
-          if(x > 0)
+          if(xIndex > 0)
           {
             if(curSlice[inSlice - 1] != currentFeatureId)
             {
@@ -149,7 +149,7 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
             }
           }
 
-          if(x < xPoints - 1)
+          if(xIndex < xPoints - 1)
           {
             if(curSlice[inSlice + 1] != currentFeatureId)
             {
@@ -164,9 +164,9 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
       // Vector swaps rotate the window without copying a slice.
       std::swap(prevSlice, curSlice);
       std::swap(curSlice, nextSlice);
-      if(z + 2 < zPoints)
+      if(zIndex + 2 < zPoints)
       {
-        ioResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(z + 2) * sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
+        ioResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(zIndex + 2) * sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
         if(ioResult.invalid())
         {
           return ioResult;
@@ -178,8 +178,8 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
   // The slice buffers are released before these batches are allocated. The cap
   // gives paired count/result buffers a 512 KiB budget, not a feature-count limit.
   // For F >= 2, B <= F/2 also limits their combined payload to 4*F bytes.
-  constexpr usize k_MaxBatchTuples = 65536;
-  const usize batchCapacity = std::min(k_MaxBatchTuples, std::max(usize{1}, numFeatures / 2));
+  constexpr usize maxBatchTuples = 65536;
+  const usize batchCapacity = std::min(maxBatchTuples, std::max(usize{1}, numFeatures / 2));
   std::vector<int32> localNumCells(batchCapacity);
   std::vector<float32> localMetrics(batchCapacity);
 
@@ -202,10 +202,10 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     // Background stays zero. Every other tuple uses the supplied cell count.
     const usize firstFeature = offset == 0 ? 1 : 0;
     localMetrics[0] = 0.0f;
-    for(usize i = firstFeature; i < batchSize; i++)
+    for(usize batchIndex = firstFeature; batchIndex < batchSize; batchIndex++)
     {
-      const float64 featureVolume = voxelVol * localNumCells[i];
-      localMetrics[i] = static_cast<float32>(featureSurfaceArea[offset + i] / featureVolume);
+      const float64 featureVolume = voxelVol * localNumCells[batchIndex];
+      localMetrics[batchIndex] = static_cast<float32>(featureSurfaceArea[offset + batchIndex] / featureVolume);
     }
     ioResult = surfaceAreaVolumeRatio.copyFromBuffer(offset, nonstd::span<const float32>(localMetrics.data(), batchSize));
     if(ioResult.invalid())
@@ -216,10 +216,10 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
     if(sphericityPtr != nullptr)
     {
       // Reuse the ratio buffer after its write; no second output buffer is needed.
-      for(usize i = firstFeature; i < batchSize; i++)
+      for(usize batchIndex = firstFeature; batchIndex < batchSize; batchIndex++)
       {
-        const float64 featureVolume = voxelVol * localNumCells[i];
-        localMetrics[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[offset + i]);
+        const float64 featureVolume = voxelVol * localNumCells[batchIndex];
+        localMetrics[batchIndex] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[offset + batchIndex]);
       }
       ioResult = sphericityPtr->copyFromBuffer(offset, nonstd::span<const float32>(localMetrics.data(), batchSize));
       if(ioResult.invalid())

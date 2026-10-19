@@ -1,5 +1,6 @@
 #include "DataArrayUtilities.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -14,6 +15,7 @@
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;

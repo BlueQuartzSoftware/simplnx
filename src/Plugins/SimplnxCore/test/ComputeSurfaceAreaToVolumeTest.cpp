@@ -5,6 +5,8 @@
 
 #include "ComputeSurfaceAreaToVolumeTestUtils.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -13,24 +15,30 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <any>
 #include <array>
 #include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -57,17 +65,43 @@ template <typename T>
 class SurfaceMetricTransferStore : public DataStore<T>
 {
 public:
-  SurfaceMetricTransferStore(usize numTuples, T initialValue, usize failRead = 0, usize failWrite = 0)
+  SurfaceMetricTransferStore(usize numTuples, T initialValue)
   : DataStore<T>(numTuples, initialValue)
-  , m_FailRead(failRead)
-  , m_FailWrite(failWrite)
   {
+  }
+
+  /**
+   * @brief Selects the read that returns an injected error before copying data.
+   * @param readNumber One-based call number; zero disables the injected error.
+   */
+  void failReadOn(usize readNumber)
+  {
+    m_FailRead = readNumber;
+  }
+
+  /**
+   * @brief Selects the write that returns an injected error before copying data.
+   * @param writeNumber One-based call number; zero disables the injected error.
+   */
+  void failWriteOn(usize writeNumber)
+  {
+    m_FailWrite = writeNumber;
+  }
+
+  const std::vector<std::array<usize, 2>>& getReads() const
+  {
+    return m_Reads;
+  }
+
+  const std::vector<std::array<usize, 2>>& getWrites() const
+  {
+    return m_Writes;
   }
 
   Result<> copyIntoBuffer(usize offset, nonstd::span<T> buffer) const override
   {
-    Reads.push_back({offset, buffer.size()});
-    if(Reads.size() == m_FailRead)
+    m_Reads.push_back({offset, buffer.size()});
+    if(m_Reads.size() == m_FailRead)
     {
       return MakeErrorResult(-94801, "Injected surface metric input read failure");
     }
@@ -76,18 +110,17 @@ public:
 
   Result<> copyFromBuffer(usize offset, nonstd::span<const T> buffer) override
   {
-    Writes.push_back({offset, buffer.size()});
-    if(Writes.size() == m_FailWrite)
+    m_Writes.push_back({offset, buffer.size()});
+    if(m_Writes.size() == m_FailWrite)
     {
       return MakeErrorResult(-94802, "Injected surface metric output write failure");
     }
     return DataStore<T>::copyFromBuffer(offset, buffer);
   }
 
-  mutable std::vector<std::array<usize, 2>> Reads;
-  std::vector<std::array<usize, 2>> Writes;
-
 private:
+  mutable std::vector<std::array<usize, 2>> m_Reads;
+  std::vector<std::array<usize, 2>> m_Writes;
   usize m_FailRead = 0;
   usize m_FailWrite = 0;
 };
@@ -154,7 +187,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: sparse feature table b
   const bool calculateSphericity = GENERATE(false, true);
   CAPTURE(scenario, numFeatures, calculateSphericity);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckSparseFeatureSurfaceMetrics(scope, numFeatures, calculateSphericity);
+  surface_area_to_volume_test::CheckSparseFeatureSurfaceMetrics(scope, numFeatures, calculateSphericity);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: bounded metric transfers", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
@@ -167,25 +200,25 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: bounded metric trans
   const bool calculateSphericity = GENERATE(false, true);
   CAPTURE(numFeatures, batchCapacity, calculateSphericity);
   DataStructure dataStructure;
-  const auto occupiedFeatures = SurfaceAreaToVolumeTest::BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
+  const auto occupiedFeatures = surface_area_to_volume_test::BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
   const DataPath featurePath({"ImageGeom", "CellFeatureData"});
   const DataPath countsPath = featurePath.createChildPath("NumCells");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
   const auto featureId = dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getId();
-  auto countsStore = std::make_shared<SurfaceMetricTransferStore<int32>>(numFeatures, 0);
+  auto countsStorePtr = std::make_shared<SurfaceMetricTransferStore<int32>>(numFeatures, 0);
   for(const usize feature : occupiedFeatures)
   {
-    countsStore->setValue(feature, 1);
+    countsStorePtr->setValue(feature, 1);
   }
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStore);
+  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStorePtr);
   SIMPLNX_RESULT_REQUIRE_VALID(replacement);
-  auto ratioStore = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
-  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStore, featureId) != nullptr);
-  auto sphericityStore = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
+  auto ratioStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
+  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStorePtr, featureId) != nullptr);
+  auto sphericityStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, -47.0f);
   if(calculateSphericity)
   {
-    REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStore, featureId) != nullptr);
+    REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStorePtr, featureId) != nullptr);
   }
   const ComputeSurfaceAreaToVolumeInputValues inputValues = {.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"}),
                                                              .NumCellsArrayPath = countsPath,
@@ -203,22 +236,22 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: bounded metric trans
   {
     expectedTransfers.push_back({offset, std::min(batchCapacity, numFeatures - offset)});
   }
-  CHECK(countsStore->Reads == expectedTransfers);
-  CHECK(ratioStore->Writes == expectedTransfers);
+  CHECK(countsStorePtr->getReads() == expectedTransfers);
+  CHECK(ratioStorePtr->getWrites() == expectedTransfers);
   if(calculateSphericity)
   {
-    CHECK(sphericityStore->Writes == expectedTransfers);
+    CHECK(sphericityStorePtr->getWrites() == expectedTransfers);
   }
   else
   {
-    CHECK(sphericityStore->Writes.empty());
+    CHECK(sphericityStorePtr->getWrites().empty());
   }
   if(numFeatures > 0)
   {
-    CHECK(ratioStore->getValue(0) == 0.0f);
+    CHECK(ratioStorePtr->getValue(0) == 0.0f);
     if(calculateSphericity)
     {
-      CHECK(sphericityStore->getValue(0) == 0.0f);
+      CHECK(sphericityStorePtr->getValue(0) == 0.0f);
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -230,26 +263,29 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
   // Exercise each failed operation on the second batch, after the first batch was written.
   const int failure = GENERATE(0, 1, 2); // NumCells read, ratio write, sphericity write.
   CAPTURE(failure);
-  constexpr usize k_NumFeatures = 7;
-  constexpr float32 k_Unwritten = -47.0f;
+  constexpr usize numFeatures = 7;
+  constexpr float32 unwritten = -47.0f;
   DataStructure dataStructure;
-  const auto occupiedFeatures = SurfaceAreaToVolumeTest::BuildSparseFeatureSurfaceData(dataStructure, k_NumFeatures);
+  const auto occupiedFeatures = surface_area_to_volume_test::BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
   const DataPath featurePath({"ImageGeom", "CellFeatureData"});
   const DataPath countsPath = featurePath.createChildPath("NumCells");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
   const auto featureId = dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getId();
-  auto countsStore = std::make_shared<SurfaceMetricTransferStore<int32>>(k_NumFeatures, 0, failure == 0 ? 2 : 0);
+  auto countsStorePtr = std::make_shared<SurfaceMetricTransferStore<int32>>(numFeatures, 0);
+  countsStorePtr->failReadOn(failure == 0 ? 2 : 0);
   for(const usize feature : occupiedFeatures)
   {
-    countsStore->setValue(feature, 1);
+    countsStorePtr->setValue(feature, 1);
   }
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStore);
+  const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStorePtr);
   SIMPLNX_RESULT_REQUIRE_VALID(replacement);
-  auto ratioStore = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten, 0, failure == 1 ? 2 : 0);
-  auto sphericityStore = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten, 0, failure == 2 ? 2 : 0);
-  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStore, featureId) != nullptr);
-  REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStore, featureId) != nullptr);
+  auto ratioStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, unwritten);
+  ratioStorePtr->failWriteOn(failure == 1 ? 2 : 0);
+  auto sphericityStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, unwritten);
+  sphericityStorePtr->failWriteOn(failure == 2 ? 2 : 0);
+  REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStorePtr, featureId) != nullptr);
+  REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStorePtr, featureId) != nullptr);
   const ComputeSurfaceAreaToVolumeInputValues inputValues = {.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"}),
                                                              .NumCellsArrayPath = countsPath,
                                                              .SurfaceAreaVolumeRatioArrayName = featurePath.createChildPath("SurfaceAreaVolumeRatio"),
@@ -262,41 +298,41 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors().front().code == (failure == 0 ? -94801 : -94802));
-  CHECK(countsStore->Reads.size() == 2);
-  CHECK(ratioStore->Writes.size() == (failure == 0 ? 1 : 2));
-  CHECK(sphericityStore->Writes.size() == (failure == 2 ? 2 : 1));
+  CHECK(countsStorePtr->getReads().size() == 2);
+  CHECK(ratioStorePtr->getWrites().size() == (failure == 0 ? 1 : 2));
+  CHECK(sphericityStorePtr->getWrites().size() == (failure == 2 ? 2 : 1));
 
-  const double pi = std::acos(-1.0);
-  const double sphereRadius = std::cbrt(3.0 * 30.0 / (4.0 * pi));
-  const double expectedSphericity = 4.0 * pi * sphereRadius * sphereRadius / 62.0;
-  CHECK(ratioStore->getValue(0) == 0.0f);
-  CHECK(sphericityStore->getValue(0) == 0.0f);
-  for(usize feature = 1; feature < k_NumFeatures; ++feature)
+  const double piValue = std::acos(-1.0);
+  const double sphereRadius = std::cbrt(3.0 * 30.0 / (4.0 * piValue));
+  const double expectedSphericity = 4.0 * piValue * sphereRadius * sphereRadius / 62.0;
+  CHECK(ratioStorePtr->getValue(0) == 0.0f);
+  CHECK(sphericityStorePtr->getValue(0) == 0.0f);
+  for(usize feature = 1; feature < numFeatures; ++feature)
   {
     CAPTURE(feature);
-    const bool occupied = std::binary_search(occupiedFeatures.begin(), occupiedFeatures.end(), feature);
+    const bool occupied = std::ranges::binary_search(occupiedFeatures, feature);
     if(feature < (failure == 2 ? 6 : 3))
     {
       if(occupied)
       {
-        CHECK(ratioStore->getValue(feature) == Approx(62.0 / 30.0).epsilon(1.0e-6));
+        CHECK(ratioStorePtr->getValue(feature) == Approx(62.0 / 30.0).epsilon(1.0e-6));
       }
       else
       {
-        CHECK(std::isnan(ratioStore->getValue(feature)));
+        CHECK(std::isnan(ratioStorePtr->getValue(feature)));
       }
     }
     else
     {
-      CHECK(ratioStore->getValue(feature) == k_Unwritten);
+      CHECK(ratioStorePtr->getValue(feature) == unwritten);
     }
     if(feature < 3)
     {
-      CHECK(sphericityStore->getValue(feature) == Approx(expectedSphericity).epsilon(1.0e-6));
+      CHECK(sphericityStorePtr->getValue(feature) == Approx(expectedSphericity).epsilon(1.0e-6));
     }
     else
     {
-      CHECK(sphericityStore->getValue(feature) == k_Unwritten);
+      CHECK(sphericityStorePtr->getValue(feature) == unwritten);
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -319,30 +355,30 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: geometry and FeatureId
   const DataPath ratioPath = countsPath.replaceName("SurfaceAreaVolumeRatio");
   const DataPath sphericityPath = countsPath.replaceName("Sphericity");
 
-  auto* geom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({4, 3, 5});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {5, 3, 4}, geom->getId());
-  REQUIRE(cellAM != nullptr);
-  geom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "CellFeatureData", {2}, geom->getId());
-  REQUIRE(featureAM != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 3, 5});
+  auto* cellAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellData", {5, 3, 4}, imageGeomPtr->getId());
+  REQUIRE(cellAttributeMatrixPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAttributeMatrixPtr);
+  auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellFeatureData", {2}, imageGeomPtr->getId());
+  REQUIRE(featureAttributeMatrixPtr != nullptr);
 
-  auto* labelGeom = ImageGeom::Create(dataStructure, labelGeomPath.getTargetName());
-  REQUIRE(labelGeom != nullptr);
-  labelGeom->setDimensions(labelDimensions);
-  auto* labelAM = AttributeMatrix::Create(dataStructure, "CellData", labelShape, labelGeom->getId());
-  REQUIRE(labelAM != nullptr);
-  labelGeom->setCellData(*labelAM);
+  auto* labelGeomPtr = ImageGeom::Create(dataStructure, labelGeomPath.getTargetName());
+  REQUIRE(labelGeomPtr != nullptr);
+  labelGeomPtr->setDimensions(labelDimensions);
+  auto* labelAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellData", labelShape, labelGeomPtr->getId());
+  REQUIRE(labelAttributeMatrixPtr != nullptr);
+  labelGeomPtr->setCellData(*labelAttributeMatrixPtr);
 
-  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, labelShape, {1});
-  auto countsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, {2}, {1});
-  REQUIRE(idsStore != nullptr);
-  REQUIRE(countsStore != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", idsStore, labelAM->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "NumCells", countsStore, featureAM->getId()) != nullptr);
+  auto idsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, labelShape, {1});
+  auto countsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, {2}, {1});
+  REQUIRE(idsStorePtr != nullptr);
+  REQUIRE(countsStorePtr != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", idsStorePtr, labelAttributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
 
-  ComputeSurfaceAreaToVolumeFilter filter;
+  const ComputeSurfaceAreaToVolumeFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(idsPath));
@@ -392,31 +428,31 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray 
   const std::vector<int32> labels(8, 1);
   const std::vector<int32> counts = {0, 8};
 
-  auto* geom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({2, 2, 2});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), cellShape, geom->getId());
-  REQUIRE(cellAM != nullptr);
-  geom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, featurePath.getTargetName(), featureShape, geom->getId());
-  REQUIRE(featureAM != nullptr);
-  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
-  auto countsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
-  REQUIRE(idsStore != nullptr);
-  REQUIRE(countsStore != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStore, cellAM->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, countsPath.getTargetName(), countsStore, featureAM->getId()) != nullptr);
-  const auto idsWrite = idsStore->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 2});
+  auto* cellAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), cellShape, imageGeomPtr->getId());
+  REQUIRE(cellAttributeMatrixPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAttributeMatrixPtr);
+  auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, featurePath.getTargetName(), featureShape, imageGeomPtr->getId());
+  REQUIRE(featureAttributeMatrixPtr != nullptr);
+  auto idsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
+  auto countsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
+  REQUIRE(idsStorePtr != nullptr);
+  REQUIRE(countsStorePtr != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, countsPath.getTargetName(), countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
+  const auto idsWrite = idsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
-  const auto countsWrite = countsStore->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
+  const auto countsWrite = countsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(countsWrite);
 
-  const auto* parent = replaceFeatureIds ? cellAM : featureAM;
+  const auto* parentPtr = replaceFeatureIds ? cellAttributeMatrixPtr : featureAttributeMatrixPtr;
   const DataPath parentPath = replaceFeatureIds ? cellPath : featurePath;
   const auto& values = replaceFeatureIds ? labels : counts;
   const std::string malformedName = useStringArray ? "StringSelection" : "NeighborListSelection";
   const DataPath malformedPath = parentPath.createChildPath(malformedName);
-  REQUIRE(values.size() == parent->getNumberOfTuples());
+  REQUIRE(values.size() == parentPtr->getNumberOfTuples());
   if(useStringArray)
   {
     std::vector<std::string> strings;
@@ -425,20 +461,21 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray 
     {
       strings.push_back(std::to_string(value));
     }
-    REQUIRE(StringArray::CreateWithValues(dataStructure, malformedName, parent->getShape(), std::move(strings), parent->getId()) != nullptr);
+    auto* stringsPtr = StringArray::CreateWithValues(dataStructure, malformedName, parentPtr->getShape(), std::move(strings), parentPtr->getId());
+    REQUIRE(stringsPtr != nullptr);
   }
   else
   {
-    auto* lists = NeighborList<int32>::Create(dataStructure, malformedName, parent->getShape(), parent->getId());
-    REQUIRE(lists != nullptr);
+    auto* listsPtr = NeighborList<int32>::Create(dataStructure, malformedName, parentPtr->getShape(), parentPtr->getId());
+    REQUIRE(listsPtr != nullptr);
     for(usize index = 0; index < values.size(); ++index)
     {
-      lists->setList(static_cast<int32>(index), std::vector<int32>{values[index]});
+      listsPtr->setList(static_cast<int32>(index), std::vector<int32>{values[index]});
     }
-    CHECK(lists->getComponentShape() == ShapeType{1});
+    CHECK(listsPtr->getComponentShape() == ShapeType{1});
   }
 
-  ComputeSurfaceAreaToVolumeFilter filter;
+  const ComputeSurfaceAreaToVolumeFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(replaceFeatureIds ? malformedPath : idsPath));
@@ -472,7 +509,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical interior pa
   const auto calculateSphericity = GENERATE(false, true);
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, pairAxis, spacing, calculateSphericity);
+  surface_area_to_volume_test::CheckInteriorPairSurfaceMetrics(scope, pairAxis, spacing, calculateSphericity);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical single-slice pair", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
@@ -483,7 +520,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical single-slic
   const auto calculateSphericity = GENERATE(false, true);
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, pairAxis, FloatVec3{2.0f, 3.0f, 5.0f}, calculateSphericity, true);
+  surface_area_to_volume_test::CheckInteriorPairSurfaceMetrics(scope, pairAxis, FloatVec3{2.0f, 3.0f, 5.0f}, calculateSphericity, true);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: decimal connected comb", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
@@ -494,7 +531,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: decimal connected comb
   const auto calculateSphericity = GENERATE(false, true);
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckConnectedCombSurfaceMetrics(scope, spacing, calculateSphericity);
+  surface_area_to_volume_test::CheckConnectedCombSurfaceMetrics(scope, spacing, calculateSphericity);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: scale-invariant sphericity", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
@@ -503,7 +540,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: scale-invariant spheri
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckScaleInvariantSphericity(scope);
+  surface_area_to_volume_test::CheckScaleInvariantSphericity(scope);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: nonpositive supplied pair counts", "[SimplnxCore][ComputeSurfaceAreaToVolumeFilter]")
@@ -513,7 +550,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: nonpositive supplied p
   const auto suppliedPairCount = GENERATE(int32{0}, int32{-2});
   CAPTURE(scenario, suppliedPairCount);
   UnitTest::AlgorithmTestScope scope(scenario);
-  SurfaceAreaToVolumeTest::CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3{2.0f, 3.0f, 5.0f}, true, false, suppliedPairCount);
+  surface_area_to_volume_test::CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3{2.0f, 3.0f, 5.0f}, true, false, suppliedPairCount);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfaceAreaToVolume]")
