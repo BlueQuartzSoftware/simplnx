@@ -19,7 +19,7 @@ Use [Compute Surface Features](ComputeSurfaceFeaturesFilter.md) when you need a 
 - **Cell Feature Ids** -- the per-**Cell** **Feature** label array, typically produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md) or another segmentation filter.
 - **Number of Cells** -- the per-feature cell counts, typically produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md).
 
-The label array must have one tuple per cell in the selected geometry. The array can be stored separately from that geometry. Its tuple count, cell ordering, and feature labels must describe the selected image. Each Feature Id must index a tuple in the selected feature data.
+The label array must have one tuple per cell in the selected geometry. The array can be stored separately from that geometry. Its tuple count, cell ordering, and feature labels must describe the selected image. You are responsible for checking that the cell ordering and feature labels match the selected image. The tuple-count check cannot verify this correspondence. Each Feature Id must index a tuple in the selected feature data; the filter checks these index bounds.
 
 ## Algorithm
 
