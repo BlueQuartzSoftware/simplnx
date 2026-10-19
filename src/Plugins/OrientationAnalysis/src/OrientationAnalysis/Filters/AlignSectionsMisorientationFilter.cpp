@@ -185,6 +185,16 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
+  std::vector<std::pair<std::string_view, DataPath>> cellArrayPaths = {{"Cell Quaternions", pQuatsArrayPath}, {"Cell Phases", pCellPhasesArrayPath}};
+  if(pUseGoodVoxels)
+  {
+    cellArrayPaths.emplace_back("Cell Mask Array", pGoodVoxelsArrayPath);
+  }
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, inputImageGeometry, cellArrayPaths, -68072); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
+
   const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
   if(inputGeom == nullptr)
   {
