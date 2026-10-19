@@ -32,6 +32,8 @@ Special operations occur for certain statistics if the supplied array is of type
 
 - **Unified Bounds Array** -- a 6-component bounds array produced by the *Unified Array* output option of [Compute Feature Bounding Boxes](ComputeFeatureBoundsFilter.md).
 
+The Attribute Array to Compute Statistics DataArray must have one tuple per cell of the selected Image Geometry.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
