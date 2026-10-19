@@ -27,20 +27,24 @@ namespace nx::core
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
+                             IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(sharedVertexListName)
+  , m_Units(units)
   {
   }
 
-  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
+                             IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(inputVerticesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)
   , m_ArrayHandlingType(arrayType)
+  , m_Units(units)
   {
   }
 
@@ -94,6 +98,7 @@ public:
     }
 
     VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+    vertexGeom->setUnits(m_Units);
 
     ShapeType tupleShape = {m_NumVertices};
 
@@ -158,7 +163,7 @@ public:
 
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName));
+    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units));
     action->m_InputVertices = m_InputVertices;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
     return action;
@@ -172,6 +177,11 @@ public:
   IGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
+  }
+
+  IGeometry::LengthUnit units() const
+  {
+    return m_Units;
   }
 
   DataPath getVertexDataPath() const
@@ -209,6 +219,7 @@ private:
   std::string m_SharedVertexListName;
   DataPath m_InputVertices;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  IGeometry::LengthUnit m_Units = IGeometry::LengthUnit::Meter;
 };
 
 } // namespace nx::core

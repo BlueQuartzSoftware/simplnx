@@ -8,6 +8,8 @@ Visualization (Crystallographic)
 
 For each orientation a point inside the stereographic sphere of radius=1 is generated. There is an option to also ensure the point is within the fundamental zone (FZ) for a given Laue class.
 
+The vertex coordinates are dimensionless orientation-space values, so the geometry length unit is set to "Unspecified".
+
 This is an image of the conversion of a data set of rotation point group 432 into Rodrigues space.
 
 ![](Images/Convert_Orientations_To_Vertex_Geometry_2.png)

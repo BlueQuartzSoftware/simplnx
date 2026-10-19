@@ -2,6 +2,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -93,6 +94,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(dataStructure.getDataRefAs<ImageGeom>(nxPoleFigureSigma3).getUnits() == IGeometry::LengthUnit::Unspecified);
   }
 
   {
@@ -121,6 +123,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(dataStructure.getDataRefAs<ImageGeom>(nxPoleFigureSigma9).getUnits() == IGeometry::LengthUnit::Unspecified);
   }
 
   {
@@ -149,6 +152,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(dataStructure.getDataRefAs<ImageGeom>(nxPoleFigureSigma11).getUnits() == IGeometry::LengthUnit::Unspecified);
   }
 
   {
