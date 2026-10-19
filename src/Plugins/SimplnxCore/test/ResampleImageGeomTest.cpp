@@ -1021,6 +1021,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
   args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(destGeomPath));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.5F, 0.5F, 0.5F}));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
