@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -102,6 +103,13 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pKernelAverageMisorientationsArrayNameValue = pCellPhasesArrayPathValue.replaceName(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(
+         dataStructure, inputImageGeometry, {{"Cell Feature Ids", pFeatureIdsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}, {"Cell Quaternions", pQuatsArrayPathValue}}, -67205);
+     tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
 
   PreflightResult preflightResult;
 
