@@ -38,6 +38,8 @@ One measured in-memory case uses the direct parallel implementation: all three d
 
 Resident scratch is proportional to one XY slice, not the volume. Euclidean mode also needs a nearest-seed value for every cell; that scratch is held in a DataStore selected by the active storage policy, so it is disk-backed during OOC execution instead of consuming full-volume RAM.
 
+The Cell Feature Ids DataArray must have one tuple per cell of the selected Image Geometry.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

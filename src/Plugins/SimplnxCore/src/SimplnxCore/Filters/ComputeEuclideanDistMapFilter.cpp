@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -109,6 +110,13 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   auto pCalculateDistToQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
 
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto tupleCountResult =
+      ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Cell Feature Ids", pFeatureIdsArrayPathValue}}, -12803);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
+
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
 
   PreflightResult preflightResult;
