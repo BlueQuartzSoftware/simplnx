@@ -45,6 +45,8 @@ The *Write Binary File* parameter selects the on-disk encoding: *false* (the def
 
 % Auto generated parameter table will be inserted here
 
+Cell Feature Ids must have one tuple per cell of the selected Image Geometry.
+
 ## Example Pipelines
 
 ## License & Copyright
