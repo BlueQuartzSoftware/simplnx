@@ -381,8 +381,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
   const bool failWrite = GENERATE(false, true);
   CAPTURE(schedule, failWrite);
   const bool useTaubin = schedule != "after plain pass";
-  const usize cancelAtMessage = schedule == "after Taubin pair" ? 2 : 1;
-  const auto& expected = cancelAtMessage == 2 ? k_TaubinCoordinates : k_PlainCoordinates;
+  const auto& expected = schedule == "after Taubin pair" ? k_TaubinCoordinates : k_PlainCoordinates;
   const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
@@ -395,10 +394,11 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
   std::atomic_bool shouldCancel = false;
   std::vector<std::string> iterations;
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
-    if(message.type == IFilter::Message::Type::Info && message.message.starts_with("Iteration "))
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Smoothing Iterations: "))
     {
       iterations.push_back(message.message);
-      if(iterations.size() == cancelAtMessage)
+      const bool atCheckpoint = schedule == "before Taubin second pass" ? message.message.find("Starting Taubin pass") != std::string::npos : message.message.starts_with("Smoothing Iterations: 1/2");
+      if(atCheckpoint)
       {
         shouldCancel.store(true);
       }
@@ -426,7 +426,17 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
     CHECK(result.errors()[0].code == -1);
   }
   CHECK(result.warnings().empty());
-  CHECK(iterations == std::vector<std::string>(cancelAtMessage, "Iteration 0 of 2"));
+  REQUIRE(iterations.size() == (schedule == "after Taubin pair" ? 3 : 2));
+  CHECK(iterations.front() == "Smoothing Iterations: 0/2");
+  if(schedule == "before Taubin second pass")
+  {
+    CHECK(iterations.back().starts_with("Smoothing Iterations: 0/2"));
+    CHECK(iterations.back().find("Starting Taubin pass") != std::string::npos);
+  }
+  else
+  {
+    CHECK(iterations.back().starts_with("Smoothing Iterations: 1/2"));
+  }
   CheckTransfers(trace, k_CompleteTransfers.size());
   CheckPayload(stores.vertices->attemptedWrite, expected);
   CheckGraph(dataStructure, stores, failWrite ? k_InputCoordinates : expected, failWrite);
