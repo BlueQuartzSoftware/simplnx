@@ -30,6 +30,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 #if defined(_MSC_VER)
 /**
@@ -524,6 +525,18 @@ SIMPLNX_EXPORT bool CheckArraysAreSameType(const DataStructure& dataStructure, c
  * @pre dataArrayPaths identify IArray objects.
  */
 SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
+
+/**
+ * @brief Checks that each array has one tuple per cell of a grid geometry.
+ * @param dataStructure Data structure that owns the geometry and arrays.
+ * @param geometryPath Selected grid geometry path.
+ * @param namedArrayPaths Parameter display names paired with selected array paths.
+ * @param errorCode Error code to return for a tuple-count mismatch.
+ * @return The first mismatch naming the parameter, array path and tuple count, and geometry path and cell count.
+ * @pre geometryPath identifies an IGridGeometry and namedArrayPaths identify IArray objects.
+ */
+SIMPLNX_EXPORT Result<> ValidateArrayTupleCountMatchesGeometryCells(const DataStructure& dataStructure, const DataPath& geometryPath,
+                                                                    const std::vector<std::pair<std::string_view, DataPath>>& namedArrayPaths, int32 errorCode);
 
 /**
  * @brief Validates feature identifiers against a source array.

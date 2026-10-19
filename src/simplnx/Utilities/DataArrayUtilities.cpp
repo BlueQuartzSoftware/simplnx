@@ -261,6 +261,22 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
   return types.size() == 1;
 }
 
+Result<> ValidateArrayTupleCountMatchesGeometryCells(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<std::pair<std::string_view, DataPath>>& namedArrayPaths,
+                                                     int32 errorCode)
+{
+  const usize cellCount = dataStructure.getDataRefAs<IGridGeometry>(geometryPath).getNumberOfCells();
+  for(const auto& [parameterName, arrayPath] : namedArrayPaths)
+  {
+    const usize tupleCount = dataStructure.getDataRefAs<IArray>(arrayPath).getNumberOfTuples();
+    if(tupleCount != cellCount)
+    {
+      return MakeErrorResult(errorCode, fmt::format("**{}** DataArray '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select a DataArray with one tuple per cell.", parameterName,
+                                                    arrayPath.toString(), tupleCount, geometryPath.toString(), cellCount));
+    }
+  }
+  return {};
+}
+
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertMask)
 {
   const IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
